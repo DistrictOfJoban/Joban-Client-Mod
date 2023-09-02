@@ -1,55 +1,51 @@
 package com.lx862.jcm.registry;
 
 import com.lx862.jcm.blocks.*;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
-import net.minecraft.block.Block;
-import net.minecraft.client.render.RenderLayer;
+import com.lx862.jcm.util.Logger;
+import net.minecraft.block.AbstractBlock;
+import org.mtr.mapping.holder.Block;
+import org.mtr.mapping.registry.BlockRegistryObject;
 
-public class BlockRegistry {
-    public static final Block CEILING_SLANTED = new CeilingSlantedBlock(Block.Settings.create().strength(4.0f).nonOpaque());
-    public static final Block HK_EXIT_SIGN_ODD = new HKExitSignOdd(Block.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 15));
-    public static final Block LIGHT_LANTERN = new LightLanternBlock(Block.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 15));
-    public static final Block MTR_STAIRS = new MTRStairsBlock(Block.Settings.create().strength(4.0f));
-    public static final Block OPERATOR_BUTTON = new OperatorButtonBlock(Block.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 5), 40);
-    public static final Block SPOT_LAMP = new SpotLampBlock(Block.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 15));
-    public static final Block WRL_STATION_CEILING = new WRLStationCeilingBlock(Block.Settings.create().strength(4.0f).nonOpaque());
-    public static final Block WRL_STATION_CEILING_POLE = new WRLStationCeilingPole(Block.Settings.create().strength(4.0f).nonOpaque());
-    public static final Block TCL_EMG_STOP_BUTTON = new TCLEmergencyButtonBlock(Block.Settings.create().strength(4.0f).nonOpaque());
-    public static final Block TML_EMG_STOP_BUTTON = new TMLEmergencyButtonBlock(Block.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 15));
-    public static final Block SIL_EMG_STOP_BUTTON = new SILEmergencyButtonBlock(Block.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 10));
-    public static final Block TRAIN_MODEL_E44 = new HKTrainModelBlock(Block.Settings.create().strength(4.0f).nonOpaque());
-    public static final Block MTR_TRESPASS_SIGN = new MTRTrespassSignageBlock(Block.Settings.create().strength(4.0f).nonOpaque());
-    public static final Block KCR_TRESPASS_SIGN = new KCRTrespassSignageBlock(Block.Settings.create().strength(4.0f).nonOpaque());
-    public static final Block LRT_TRESPASS_SIGN = new LRTTrespassSignageBlock(Block.Settings.create().strength(4.0f).nonOpaque());
-    public static final Block WATER_MACHINE = new WaterMachineBlock(Block.Settings.create().strength(4.0f).nonOpaque());
+public final class BlockRegistry {
 
-    public static void register() {
-        RegistryHelper.registerBlockItem("ceiling_slanted", CEILING_SLANTED, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("hk_exit_sign_odd", HK_EXIT_SIGN_ODD, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("light_lantern", LIGHT_LANTERN, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("mtr_stairs", MTR_STAIRS, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("operator_button", OPERATOR_BUTTON, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("spot_lamp", SPOT_LAMP, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("wrl_station_ceiling", WRL_STATION_CEILING, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("wrl_station_ceiling_pole", WRL_STATION_CEILING_POLE, ItemGroupRegistry.TYPE.MAIN);
-
-        RegistryHelper.registerBlockItem("tcl_emg_stop_button", TCL_EMG_STOP_BUTTON, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("sil_emg_stop_button", SIL_EMG_STOP_BUTTON, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("tml_emg_stop_button", TML_EMG_STOP_BUTTON, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("train_model_e44", TRAIN_MODEL_E44, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("mtr_trespass_sign", MTR_TRESPASS_SIGN, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("kcr_trespass_sign", KCR_TRESPASS_SIGN, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("lrt_trespass_sign", LRT_TRESPASS_SIGN, ItemGroupRegistry.TYPE.MAIN);
-        RegistryHelper.registerBlockItem("water_machine", WATER_MACHINE, ItemGroupRegistry.TYPE.MAIN);
+    static {
+        CEILING_SLANTED = Registry.registerBlockItem("ceiling_slanted", new Block(new CeilingSlantedBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+        HK_EXIT_SIGN_ODD = Registry.registerBlockItem("hk_exit_sign_odd", new Block(new HKExitSignOdd(AbstractBlock.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 15))), ItemGroupRegistry.JCM_MAIN);
+        LIGHT_LANTERN = Registry.registerBlockItem("light_lantern", new Block(new LightLanternBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 15))), ItemGroupRegistry.JCM_MAIN);
+        MTR_STAIRS = Registry.registerBlockItem("mtr_stairs", new Block(new MTRStairsBlock(AbstractBlock.Settings.create().strength(4.0f))), ItemGroupRegistry.JCM_MAIN);
+        OPERATOR_BUTTON = Registry.registerBlockItem("operator_button", new Block(new OperatorButtonBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 5), 40)), ItemGroupRegistry.JCM_MAIN);
+        SPOT_LAMP = Registry.registerBlockItem("spot_lamp", new Block(new SpotLampBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 15))), ItemGroupRegistry.JCM_MAIN);
+        WRL_STATION_CEILING = Registry.registerBlockItem("wrl_station_ceiling", new Block(new WRLStationCeilingBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+        WRL_STATION_CEILING_POLE = Registry.registerBlockItem("wrl_station_ceiling_pole", new Block(new WRLStationCeilingPole(AbstractBlock.Settings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+        TCL_EMG_STOP_BUTTON = Registry.registerBlockItem("tcl_emg_stop_button", new Block(new TCLEmergencyButtonBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+        TML_EMG_STOP_BUTTON = Registry.registerBlockItem("tml_emg_stop_button", new Block(new TMLEmergencyButtonBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 15))), ItemGroupRegistry.JCM_MAIN);
+        SIL_EMG_STOP_BUTTON = Registry.registerBlockItem("sil_emg_stop_button", new Block(new SILEmergencyButtonBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque().luminance(state -> 10))), ItemGroupRegistry.JCM_MAIN);
+        TRAIN_MODEL_E44 = Registry.registerBlockItem("train_model_e44", new Block(new HKTrainModelBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+        MTR_TRESPASS_SIGN = Registry.registerBlockItem("mtr_trespass_sign", new Block(new MTRTrespassSignageBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+        KCR_TRESPASS_SIGN = Registry.registerBlockItem("kcr_trespass_sign", new Block(new KCRTrespassSignageBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+        LRT_TRESPASS_SIGN = Registry.registerBlockItem("lrt_trespass_sign", new Block(new LRTTrespassSignageBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+        WATER_MACHINE = Registry.registerBlockItem("water_machine", new Block(new WaterMachineBlock(AbstractBlock.Settings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
     }
 
-    public static void registerClient() {
-        BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(),
-                SPOT_LAMP,
-                SIL_EMG_STOP_BUTTON,
-                TML_EMG_STOP_BUTTON,
-                MTR_TRESPASS_SIGN,
-                WATER_MACHINE
-        );
+    public static final BlockRegistryObject CEILING_SLANTED;
+    public static final BlockRegistryObject HK_EXIT_SIGN_ODD;
+    public static final BlockRegistryObject LIGHT_LANTERN;
+    public static final BlockRegistryObject MTR_STAIRS;
+    public static final BlockRegistryObject OPERATOR_BUTTON;
+    public static final BlockRegistryObject SPOT_LAMP;
+    public static final BlockRegistryObject WRL_STATION_CEILING;
+    public static final BlockRegistryObject WRL_STATION_CEILING_POLE;
+    public static final BlockRegistryObject TCL_EMG_STOP_BUTTON;
+    public static final BlockRegistryObject TML_EMG_STOP_BUTTON;
+    public static final BlockRegistryObject SIL_EMG_STOP_BUTTON;
+    public static final BlockRegistryObject TRAIN_MODEL_E44;
+    public static final BlockRegistryObject MTR_TRESPASS_SIGN;
+    public static final BlockRegistryObject KCR_TRESPASS_SIGN;
+    public static final BlockRegistryObject LRT_TRESPASS_SIGN;
+    public static final BlockRegistryObject WATER_MACHINE;
+
+    public static void register() {
+        // We just load the class and it will be registered, nothing else
+        Logger.info("Registering blocks...");
     }
 }
