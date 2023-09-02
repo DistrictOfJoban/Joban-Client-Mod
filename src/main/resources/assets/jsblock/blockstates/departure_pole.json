@@ -1,0 +1,8 @@
+{
+	"variants":{
+		"facing=north": { "model": "jsblock:block/departure_pole" },
+		"facing=east": { "model": "jsblock:block/departure_pole", "y": 90 },
+		"facing=south": { "model": "jsblock:block/departure_pole", "y": 180 },
+		"facing=west": { "model": "jsblock:block/departure_pole", "y": 270 }
+	}
+}

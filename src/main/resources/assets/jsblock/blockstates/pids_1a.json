@@ -1,0 +1,8 @@
+{
+	"variants": {
+		"facing=north": { "model": "jsblock:block/pids_1a" },
+		"facing=east": { "model": "jsblock:block/pids_1a", "y": 90 },
+		"facing=south": { "model": "jsblock:block/pids_1a", "y": 180 },
+		"facing=west": { "model": "jsblock:block/pids_1a", "y": 270 }
+	}
+}

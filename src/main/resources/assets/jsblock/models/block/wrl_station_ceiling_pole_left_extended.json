@@ -1,0 +1,20 @@
+{
+	"textures": {
+		"particle": "mtr:block/metal"
+	},
+	"elements": [
+		{
+			"name": "Pole",
+			"from": [5.5, 0, 7.5],
+			"to": [6.5, 24, 8.5],
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#particle"},
+				"east": {"uv": [0, 0, 16, 16], "texture": "#particle"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#particle"},
+				"west": {"uv": [0, 0, 16, 16], "texture": "#particle"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#particle", "cullface": "up"},
+				"down": {"uv": [0, 0, 0, 0], "texture": "#particle"}
+			}
+		}
+	]
+}

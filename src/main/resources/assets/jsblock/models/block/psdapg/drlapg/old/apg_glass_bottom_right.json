@@ -1,0 +1,9 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "jsblock:block/psdapg/drlapg/apg_glass_right_base",
+	"textures": {
+		"fronttop": "mtr:block/transparent",
+		"frontbottom": "jsblock:block/apg_glass_bottom",
+		"sidebottom": "jsblock:block/psd_side_light"
+	}
+}

@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "jsblock:block/hk_exit_sign_odd" },
+    "facing=east": { "model": "jsblock:block/hk_exit_sign_odd", "y": 90 },
+    "facing=west": { "model": "jsblock:block/hk_exit_sign_odd", "y": 270 },
+    "facing=south": { "model": "jsblock:block/hk_exit_sign_odd", "y": 180 }
+  }
+}

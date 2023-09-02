@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "jsblock:block/tcl_emg_stop_button" },
+    "facing=east": { "model": "jsblock:block/tcl_emg_stop_button", "y": 90 },
+    "facing=south": { "model": "jsblock:block/tcl_emg_stop_button", "y": 180 },
+    "facing=west": { "model": "jsblock:block/tcl_emg_stop_button", "y": 270 }
+  }
+}

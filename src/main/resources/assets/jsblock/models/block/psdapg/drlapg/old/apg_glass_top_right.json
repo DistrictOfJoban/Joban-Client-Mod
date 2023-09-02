@@ -1,0 +1,10 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "jsblock:block/psdapg/drlapg/apg_glass_right_base",
+	"textures": {
+		"frontbottom": "mtr:block/transparent",
+		"fronttop": "jsblock:block/apg_glass_top",
+		"sidetop": "jsblock:block/psd_side_light",
+		"sidetriangle": "jsblock:block/apg_side_triangle"
+	}
+}

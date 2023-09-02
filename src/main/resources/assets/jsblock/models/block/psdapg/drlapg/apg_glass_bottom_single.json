@@ -1,0 +1,10 @@
+{
+	"parent": "jsblock:block/psdapg/drlapg/apg_glass_single_base",
+	"textures": {
+		"fronttop": "jsblock:block/transparent",
+		"sidetop": "jsblock:block/transparent",
+		"frontbottom": "jsblock:block/psdapg/drlapg/apg_glass_single_bottom",
+		"sidebottom": "jsblock:block/psdapg/drlapg/psd_side_light",
+		"sidetriangle": "jsblock:block/transparent"
+	}
+}

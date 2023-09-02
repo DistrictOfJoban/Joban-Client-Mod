@@ -1,0 +1,6 @@
+{
+	"parent": "jsblock:block/helpline_1",
+	"textures": {
+		"0": "jsblock:block/helpline_2"
+	}
+}

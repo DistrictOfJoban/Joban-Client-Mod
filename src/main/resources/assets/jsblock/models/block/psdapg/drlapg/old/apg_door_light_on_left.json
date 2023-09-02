@@ -1,0 +1,50 @@
+{
+	"credit": "Made with Blockbench",
+	"textures": {
+		"light": "jsblock:block/light_on",
+		"lighttriangle": "jsblock:block/apg_light_on_triangle"
+	},
+	"elements": [
+		{
+			"from": [0.785, 1.8, 15.95],
+			"to": [3, 2.05, 16.5],
+			"shade": false,
+			"rotation": {"angle": 22.5, "axis": "z", "origin": [3, 2.05, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#light", "cullface": "north"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#light"}
+			}
+		},
+		{
+			"from": [0.95, 0.95, 15.95],
+			"to": [4.05, 1.232, 16.5],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, -7, 0]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#light"},
+				"west": {"uv": [0, 0, 16, 16], "texture": "#light"},
+				"down": {"uv": [0, 0, 16, 16], "texture": "#light"}
+			}
+		},
+		{
+			"from": [3, 0.95, 15.95],
+			"to": [4.05, 2.05, 16.5],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, -7, 0]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#light", "cullface": "north"},
+				"east": {"uv": [0, 7, 16, 8], "texture": "#light"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#light"}
+			}
+		},
+		{
+			"from": [0.95, 0.95, 15.95],
+			"to": [3, 2.05, 16.5],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, -7, 0]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 8], "texture": "#lighttriangle", "cullface": "north"}
+			}
+		}
+	]
+}

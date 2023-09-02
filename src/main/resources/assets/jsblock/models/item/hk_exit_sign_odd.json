@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "jsblock:item/hk_exit_sign_odd"
+  }
+}

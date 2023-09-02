@@ -1,0 +1,11 @@
+{
+	"required": true,
+	"package": "com.lx862.jcm.mixin",
+	"compatibilityLevel": "JAVA_16",
+	"mixins": [
+		"compat.SimpleDefaultedRegistryMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

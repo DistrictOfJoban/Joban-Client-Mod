@@ -1,0 +1,334 @@
+{
+	"variants": {
+		"facing=north,type=0,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare"
+		},
+		"facing=east,type=0,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare",
+			"y": 90
+		},
+		"facing=south,type=0,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare",
+			"y": 180
+		},
+		"facing=west,type=0,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare",
+			"y": 270
+		},
+		"facing=north,type=1,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_cio"
+		},
+		"facing=east,type=1,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_cio",
+			"y": 90
+		},
+		"facing=south,type=1,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_cio",
+			"y": 180
+		},
+		"facing=west,type=1,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_cio",
+			"y": 270
+		},
+		"facing=north,type=2,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_ckt"
+		},
+		"facing=east,type=2,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_ckt",
+			"y": 90
+		},
+		"facing=south,type=2,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_ckt",
+			"y": 180
+		},
+		"facing=west,type=2,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_ckt",
+			"y": 270
+		},
+		"facing=north,type=3,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_heo"
+		},
+		"facing=east,type=3,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_heo",
+			"y": 90
+		},
+		"facing=south,type=3,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_heo",
+			"y": 180
+		},
+		"facing=west,type=3,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_heo",
+			"y": 270
+		},
+		"facing=north,type=4,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_mos"
+		},
+		"facing=east,type=4,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_mos",
+			"y": 90
+		},
+		"facing=south,type=4,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_mos",
+			"y": 180
+		},
+		"facing=west,type=4,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_mos",
+			"y": 270
+		},
+		"facing=north,type=5,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_plain"
+		},
+		"facing=east,type=5,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_plain",
+			"y": 90
+		},
+		"facing=south,type=5,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_plain",
+			"y": 180
+		},
+		"facing=west,type=5,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_plain",
+			"y": 270
+		},
+		"facing=north,type=6,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_shm"
+		},
+		"facing=east,type=6,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_shm",
+			"y": 90
+		},
+		"facing=south,type=6,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_shm",
+			"y": 180
+		},
+		"facing=west,type=6,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_shm",
+			"y": 270
+		},
+		"facing=north,type=7,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stained"
+		},
+		"facing=east,type=7,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stained",
+			"y": 90
+		},
+		"facing=south,type=7,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stained",
+			"y": 180
+		},
+		"facing=west,type=7,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stained",
+			"y": 270
+		},
+		"facing=north,type=8,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stw"
+		},
+		"facing=east,type=8,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stw",
+			"y": 90
+		},
+		"facing=south,type=8,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stw",
+			"y": 180
+		},
+		"facing=west,type=8,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stw",
+			"y": 270
+		},
+		"facing=north,type=9,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_tsh"
+		},
+		"facing=east,type=9,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_tsh",
+			"y": 90
+		},
+		"facing=south,type=9,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_tsh",
+			"y": 180
+		},
+		"facing=west,type=9,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_tsh",
+			"y": 270
+		},
+		"facing=north,type=10,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_wks"
+		},
+		"facing=east,type=10,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_wks",
+			"y": 90
+		},
+		"facing=south,type=10,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_wks",
+			"y": 180
+		},
+		"facing=west,type=10,flipped=false": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_wks",
+			"y": 270
+		},
+		"facing=north,type=0,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare"
+		},
+		"facing=east,type=0,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare",
+			"y": 90
+		},
+		"facing=south,type=0,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare",
+			"y": 180
+		},
+		"facing=west,type=0,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare",
+			"y": 270
+		},
+		"facing=north,type=1,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_cio_flipped"
+		},
+		"facing=east,type=1,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_cio_flipped",
+			"y": 90
+		},
+		"facing=south,type=1,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_cio_flipped",
+			"y": 180
+		},
+		"facing=west,type=1,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_cio_flipped",
+			"y": 270
+		},
+		"facing=north,type=2,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_ckt_flipped"
+		},
+		"facing=east,type=2,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_ckt_flipped",
+			"y": 90
+		},
+		"facing=south,type=2,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_ckt_flipped",
+			"y": 180
+		},
+		"facing=west,type=2,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_ckt_flipped",
+			"y": 270
+		},
+		"facing=north,type=3,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_heo_flipped"
+		},
+		"facing=east,type=3,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_heo_flipped",
+			"y": 90
+		},
+		"facing=south,type=3,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_heo_flipped",
+			"y": 180
+		},
+		"facing=west,type=3,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_heo_flipped",
+			"y": 270
+		},
+		"facing=north,type=4,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_mos_flipped"
+		},
+		"facing=east,type=4,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_mos_flipped",
+			"y": 90
+		},
+		"facing=south,type=4,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_mos_flipped",
+			"y": 180
+		},
+		"facing=west,type=4,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_mos_flipped",
+			"y": 270
+		},
+		"facing=north,type=5,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_plain_flipped"
+		},
+		"facing=east,type=5,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_plain_flipped",
+			"y": 90
+		},
+		"facing=south,type=5,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_plain_flipped",
+			"y": 180
+		},
+		"facing=west,type=5,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_plain_flipped",
+			"y": 270
+		},
+		"facing=north,type=6,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_shm_flipped"
+		},
+		"facing=east,type=6,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_shm_flipped",
+			"y": 90
+		},
+		"facing=south,type=6,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_shm_flipped",
+			"y": 180
+		},
+		"facing=west,type=6,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_shm_flipped",
+			"y": 270
+		},
+		"facing=north,type=7,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stained_flipped"
+		},
+		"facing=east,type=7,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stained_flipped",
+			"y": 90
+		},
+		"facing=south,type=7,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stained_flipped",
+			"y": 180
+		},
+		"facing=west,type=7,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stained_flipped",
+			"y": 270
+		},
+		"facing=north,type=8,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stw_flipped"
+		},
+		"facing=east,type=8,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stw_flipped",
+			"y": 90
+		},
+		"facing=south,type=8,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stw_flipped",
+			"y": 180
+		},
+		"facing=west,type=8,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_stw_flipped",
+			"y": 270
+		},
+		"facing=north,type=9,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_tsh_flipped"
+		},
+		"facing=east,type=9,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_tsh_flipped",
+			"y": 90
+		},
+		"facing=south,type=9,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_tsh_flipped",
+			"y": 180
+		},
+		"facing=west,type=9,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_tsh_flipped",
+			"y": 270
+		},
+		"facing=north,type=10,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_wks_flipped"
+		},
+		"facing=east,type=10,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_wks_flipped",
+			"y": 90
+		},
+		"facing=south,type=10,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_wks_flipped",
+			"y": 180
+		},
+		"facing=west,type=10,flipped=true": {
+			"model": "jsblock:block/ticket_barrier_1_bare_fence_wks_flipped",
+			"y": 270
+		}
+	}
+}

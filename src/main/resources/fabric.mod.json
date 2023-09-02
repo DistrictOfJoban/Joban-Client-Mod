@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"id": "jsblock",
+	"version": "${version}",
+	"name": "Joban Client Mod Rewrite",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"LX86"
+	],
+	"contact": {
+		"homepage": "https://lx862.com",
+		"sources": "https://github.com/DistrictOfJoban/Joban-Client-Mod"
+	},
+	"license": "MIT",
+	"icon": "assets/jsblock/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.lx862.jcm.JCM"
+		],
+		"client": [
+			"com.lx862.jcm.JCMClient"
+		]
+	},
+	"mixins": [
+		"jsblock.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.21",
+		"minecraft": "~1.20.1",
+		"fabric": "*"
+	}
+}

@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "jsblock:block/subsidy_machine_1" },
+    "facing=east": { "model": "jsblock:block/subsidy_machine_1", "y": 90 },
+    "facing=west": { "model": "jsblock:block/subsidy_machine_1", "y": 270 },
+    "facing=south": { "model": "jsblock:block/subsidy_machine_1", "y": 180 }
+  }
+}

@@ -1,0 +1,68 @@
+{
+	"credit": "DoJ 2022",
+	"textures": {
+		"particle": "mtr:item/apg_glass"
+	},
+	"elements": [
+		{
+			"from": [2, 0, 0],
+			"to": [4, 2, 16],
+			"faces": {
+				"north": {"uv": [12, 14, 14, 16], "texture": "#sidetop", "cullface": "north"},
+				"east": {"uv": [0, 14, 16, 16], "texture": "#fronttop"},
+				"south": {"uv": [2, 14, 4, 16], "texture": "#sidetop", "cullface": "south"},
+				"west": {"uv": [0, 12, 16, 16], "texture": "#fronttop"}
+			}
+		},
+		{
+			"from": [2, 0, 0],
+			"to": [4, 16, 16],
+			"faces": {
+				"north": {"uv": [12, 0, 14, 16], "texture": "#sidebottom", "cullface": "north"},
+				"east": {"uv": [0, 0, 16, 16], "texture": "#frontbottom"},
+				"south": {"uv": [2, 0, 4, 16], "texture": "#sidebottom", "cullface": "south"},
+				"west": {"uv": [16, 0, 0, 16], "texture": "#frontbottom"}
+			}
+		},
+		{
+			"from": [0.95567, 1.34336, 0],
+			"to": [3.12067, 1.54336, 16],
+			"rotation": {"angle": 22.5, "axis": "z", "origin": [2.03817, 1.44336, 8]},
+			"faces": {
+				"north": {"uv": [12.87933, 14.45664, 15.04433, 14.65664], "texture": "#sidetop", "cullface": "north"},
+				"south": {"uv": [0.95567, 14.45664, 3.12067, 14.65664], "texture": "#sidetop", "cullface": "south"},
+				"up": {"uv": [0.95567, 0, 3.12067, 16], "texture": "#sidetop"}
+			}
+		},
+		{
+			"from": [1, 1, 0],
+			"to": [4, 1.172, 16],
+			"faces": {
+				"north": {"uv": [12, 14.828, 15, 15], "texture": "#sidetop"},
+				"south": {"uv": [1, 14.828, 4, 15], "texture": "#sidetop"},
+				"west": {"uv": [0, 14.828, 16, 15], "texture": "#sidetop"},
+				"down": {"uv": [1, 0, 4, 16], "texture": "#sidetop"}
+			}
+		},
+		{
+			"from": [3, 0.95, 0],
+			"to": [4, 1.95, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, -7, 0]},
+			"faces": {
+				"north": {"uv": [12, 14.05, 13, 15.05], "texture": "#sidetop", "cullface": "north"},
+				"east": {"uv": [0, 14.05, 16, 15.05], "texture": "#fronttop"},
+				"south": {"uv": [3, 14.05, 4, 15.05], "texture": "#sidetop", "cullface": "south"},
+				"up": {"uv": [3, 0, 4, 16], "texture": "#sidetop"}
+			}
+		},
+		{
+			"from": [1, 0.95, 0],
+			"to": [3, 1.95, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, -1, 0]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 8], "texture": "#sidetriangle", "cullface": "north"},
+				"south": {"uv": [16, 0, 0, 8], "texture": "#sidetriangle", "cullface": "south"}
+			}
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"variants":{
+		"facing=north,is_slab=false": { "model": "jsblock:block/rv_pids_pole" },
+		"facing=east,is_slab=false": { "model": "jsblock:block/rv_pids_pole", "y": 90 },
+		"facing=south,is_slab=false": { "model": "jsblock:block/rv_pids_pole", "y": 180 },
+		"facing=west,is_slab=false": { "model": "jsblock:block/rv_pids_pole", "y": 270 },
+		"facing=north,is_slab=true": { "model": "jsblock:block/rv_pids_pole_extended" },
+		"facing=east,is_slab=true": { "model": "jsblock:block/rv_pids_pole_extended", "y": 90 },
+		"facing=south,is_slab=true": { "model": "jsblock:block/rv_pids_pole_extended", "y": 180 },
+		"facing=west,is_slab=true": { "model": "jsblock:block/rv_pids_pole_extended", "y": 270 }
+	}
+}

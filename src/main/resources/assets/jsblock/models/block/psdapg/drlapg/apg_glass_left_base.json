@@ -1,0 +1,63 @@
+{
+	"credit": "DoJ 2022",
+	"textures": {
+		"particle": "mtr:item/apg_glass"
+	},
+	"elements": [
+		{
+			"from": [2, 0, 0],
+			"to": [4, 2, 16],
+			"faces": {
+				"east": {"uv": [0, 14, 16, 16], "texture": "#fronttop"},
+				"south": {"uv": [2, 14, 4, 16], "texture": "#sidetop", "cullface": "south"},
+				"west": {"uv": [16, 12, 0, 16], "texture": "#fronttop"}
+			}
+		},
+		{
+			"from": [2, 0, 0],
+			"to": [4, 16, 16],
+			"faces": {
+				"east": {"uv": [0, 0, 16, 16], "texture": "#frontbottom"},
+				"south": {"uv": [2, 0, 4, 16], "texture": "#sidebottom", "cullface": "south"},
+				"west": {"uv": [16, 0, 0, 16], "texture": "#frontbottom"}
+			}
+		},
+		{
+			"from": [0.835, 1.8, 0],
+			"to": [3, 2, 16],
+			"rotation": {"angle": 22.5, "axis": "z", "origin": [3, 2, 8]},
+			"faces": {
+				"south": {"uv": [0.835, 14, 3, 14.2], "texture": "#sidetop", "cullface": "south"},
+				"up": {"uv": [0.835, 0, 3, 16], "texture": "#sidetop"}
+			}
+		},
+		{
+			"from": [1, 1, 0],
+			"to": [4, 1.172, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, -1, 0]},
+			"faces": {
+				"south": {"uv": [1, 14.828, 4, 15], "texture": "#sidetop"},
+				"west": {"uv": [0, 14.828, 16, 15], "texture": "#sidetop"},
+				"down": {"uv": [1, 0, 4, 16], "texture": "#sidetop"}
+			}
+		},
+		{
+			"from": [3, 1, 0],
+			"to": [4, 2, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, -7, 0]},
+			"faces": {
+				"east": {"uv": [0, 14, 16, 15], "texture": "#fronttop"},
+				"south": {"uv": [3, 14, 4, 15], "texture": "#sidetop", "cullface": "south"},
+				"up": {"uv": [3, 0, 4, 16], "texture": "#sidetop"}
+			}
+		},
+		{
+			"from": [1, 1, 0],
+			"to": [3, 2, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, -1, 0]},
+			"faces": {
+				"south": {"uv": [16, 0, 0, 8], "texture": "#sidetriangle", "cullface": "south"}
+			}
+		}
+	]
+}

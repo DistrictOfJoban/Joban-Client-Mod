@@ -1,0 +1,20 @@
+{
+	"credit": "Made with Blockbench",
+	"textures": {
+		"fronttop": "jsblock:block/apg_glass_single_top",
+		"sidetop": "jsblock:block/psd_side_light"
+	},
+	"elements": [
+		{
+			"from": [0, 0, 14],
+			"to": [16, 2, 16.05],
+			"faces": {
+				"north": {"uv": [0, 7, 16, 9], "texture": "#fronttop"},
+				"east": {"uv": [0, 14, 2.05, 16], "texture": "#sidetop", "cullface": "north"},
+				"south": {"uv": [0, 7, 16, 9], "texture": "#fronttop"},
+				"west": {"uv": [13.95, 14, 16, 16], "texture": "#sidetop", "cullface": "south"},
+				"up": {"uv": [0, 13.95, 16, 16], "texture": "#sidetop"}
+			}
+		}
+	]
+}

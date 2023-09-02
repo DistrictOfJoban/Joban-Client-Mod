@@ -1,0 +1,22 @@
+{
+	"texture_size": [16, 32],
+	"textures": {
+		"1": "jsblock:block/sil_emg_stop_button_middle",
+		"particle": "jsblock:block/sil_emg_stop_button_middle"
+	},
+	"elements": [
+		{
+			"from": [4, 0, 7.5],
+			"to": [12, 16, 8.5],
+			"shade": false,
+			"faces": {
+				"north": {"uv": [1, 0, 16, 16], "texture": "#1"},
+				"east": {"uv": [0, 0, 0.875, 16], "texture": "#1"},
+				"south": {"uv": [1.0625, 0, 16, 16], "texture": "#1"},
+				"west": {"uv": [0, 0, 1, 16], "texture": "#1"},
+				"up": {"uv": [8, 15.5, 16, 16], "texture": "#1"},
+				"down": {"uv": [7.375, 6.46875, 15.375, 6.96875], "texture": "#1"}
+			}
+		}
+	]
+}

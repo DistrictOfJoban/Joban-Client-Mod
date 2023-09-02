@@ -1,0 +1,8 @@
+{
+	"variants":{
+		"facing=north": { "model": "jsblock:block/circle_wall_7" },
+		"facing=east": { "model": "jsblock:block/circle_wall_7", "y": 90 },
+		"facing=south": { "model": "jsblock:block/circle_wall_7", "y": 180 },
+		"facing=west": { "model": "jsblock:block/circle_wall_7", "y": 270 }
+	}
+}

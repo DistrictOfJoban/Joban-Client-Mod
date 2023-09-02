@@ -1,0 +1,51 @@
+{
+	"credit": "DoJ 2022",
+	"texture_size": [16, 32],
+	"textures": {
+		"1": "jsblock:block/faresaver1",
+		"2": "jsblock:block/faresaver_banner1",
+		"3": "mtr:block/sign/logo",
+		"particle": "jsblock:block/faresaver_banner1"
+	},
+	"elements": [
+		{
+			"from": [3, 0, 6],
+			"to": [13, 16, 9],
+			"shade": false,
+			"faces": {
+				"north": {"uv": [14.5216, 0, 16, 16], "texture": "#1"},
+				"east": {"uv": [0.5, 0, 2.1875, 16], "texture": "#1"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"west": {"uv": [0.5, 0, 2.125, 16], "texture": "#1"},
+				"up": {"uv": [0, 1.00524, 1.60733, 2.84555], "texture": "#1"},
+				"down": {"uv": [0, 0, 14, 0.5], "texture": "#1"}
+			}
+		},
+		{
+			"from": [4.4375, 0.6, 9.1],
+			"to": [11.6375, 10.2, 9.1],
+			"shade": false,
+			"faces": {
+				"north": {"uv": [0.33508, 0, 1.81348, 16], "texture": "#2"},
+				"east": {"uv": [0, 0, 2.1875, 16], "texture": "#2"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#2"},
+				"west": {"uv": [0, 0, 2.25, 16], "texture": "#2"},
+				"up": {"uv": [0, 1.00524, 1.60733, 2.84555], "texture": "#2"},
+				"down": {"uv": [0, 0, 14, 0.5], "texture": "#2"}
+			}
+		},
+		{
+			"from": [6.7, 10.1, 9.1],
+			"to": [9.1, 12.5, 9.1],
+			"shade": false,
+			"faces": {
+				"north": {"uv": [0.33508, 0, 1.81348, 16], "texture": "#3"},
+				"east": {"uv": [0, 0, 2.1875, 16], "texture": "#3"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#3"},
+				"west": {"uv": [0, 0, 2.25, 16], "texture": "#3"},
+				"up": {"uv": [0, 1.00524, 1.60733, 2.84555], "texture": "#3"},
+				"down": {"uv": [0, 0, 14, 0.5], "texture": "#3"}
+			}
+		}
+	]
+}

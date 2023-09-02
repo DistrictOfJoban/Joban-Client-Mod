@@ -1,0 +1,23 @@
+{
+	"providers": [
+		{
+			"type": "ttf",
+			"file": "jsblock:source_sans_pro.ttf",
+			"shift": [ -0.8, 0.0 ],
+			"size": 12,
+			"oversample": 6.0
+		},
+		{
+			"type": "ttf",
+			"file": "jsblock:noto_serif_hk_medium.otf",
+			"shift": [ -0.8, 0.0 ],
+			"size": 12,
+			"oversample": 6.0
+		},
+		{
+			"type": "legacy_unicode",
+			"sizes": "minecraft:font/glyph_sizes.bin",
+			"template": "minecraft:font/unicode_page_%s.png"
+		}
+	]
+}

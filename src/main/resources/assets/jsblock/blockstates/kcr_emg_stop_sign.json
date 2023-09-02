@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,right=true": { "model": "jsblock:block/kcr_emg_stop_sign" },
+    "facing=east,right=true": { "model": "jsblock:block/kcr_emg_stop_sign", "y": 90 },
+    "facing=west,right=true": { "model": "jsblock:block/kcr_emg_stop_sign", "y": 270 },
+    "facing=south,right=true": { "model": "jsblock:block/kcr_emg_stop_sign", "y": 180 },
+    "facing=north,right=false": { "model": "jsblock:block/kcr_emg_stop_sign_flipped" },
+    "facing=east,right=false": { "model": "jsblock:block/kcr_emg_stop_sign_flipped", "y": 90 },
+    "facing=west,right=false": { "model": "jsblock:block/kcr_emg_stop_sign_flipped", "y": 270 },
+    "facing=south,right=false": { "model": "jsblock:block/kcr_emg_stop_sign_flipped", "y": 180 }
+  }
+}

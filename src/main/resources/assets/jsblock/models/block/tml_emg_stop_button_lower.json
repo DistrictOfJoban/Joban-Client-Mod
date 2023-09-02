@@ -1,0 +1,22 @@
+{
+	"texture_size": [16, 32],
+	"textures": {
+		"1": "jsblock:block/tml_emg_stop_button_lower",
+		"particle": "jsblock:block/tml_emg_stop_button_lower"
+	},
+	"elements": [
+		{
+			"from": [4, 0, 7.5],
+			"to": [12, 16, 8.5],
+			"shade": false,
+			"faces": {
+				"north": {"uv": [1.25, 0, 16, 16], "texture": "#1"},
+				"east": {"uv": [0, 0, 0.9375, 16], "texture": "#1"},
+				"south": {"uv": [1.125, 0, 16, 16], "texture": "#1"},
+				"west": {"uv": [0, 0, 0.875, 16], "texture": "#1"},
+				"up": {"uv": [2.375, 0, 16, 0.5], "texture": "#1"},
+				"down": {"uv": [0, 0, 14, 0.5], "texture": "#1"}
+			}
+		}
+	]
+}

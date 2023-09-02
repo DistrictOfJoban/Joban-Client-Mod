@@ -1,0 +1,21 @@
+{
+	"textures": {
+		"0": "jsblock:block/kcr_trespass_sign",
+		"particle": "jsblock:block/kcr_trespass_sign"
+	},
+	"elements": [
+		{
+			"from": [4, 2, 0],
+			"to": [16, 14, 0.1],
+			"shade": false,
+			"faces": {
+				"north": {"uv": [0, 0, 8, 16], "texture": "#0"},
+				"east": {"uv": [0, 0, 1, 16], "texture": "#0"},
+				"south": {"uv": [0, 0, 8, 16], "texture": "#0"},
+				"west": {"uv": [0, 0, 1, 16], "texture": "#0"},
+				"up": {"uv": [0, 0, 16, 1], "texture": "#0"},
+				"down": {"uv": [0, 0, 16, 1], "texture": "#0"}
+			}
+		}
+	]
+}

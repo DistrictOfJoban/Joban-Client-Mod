@@ -1,0 +1,45 @@
+{
+	"credit": "DoJ 2022",
+	"textures": {
+		"1": "mtr:block/metal",
+		"back": "mtr:block/black",
+		"particle": "mtr:block/metal"
+	},
+	"elements": [
+		{
+			"name": "Main",
+			"from": [6, 0, 0],
+			"to": [10, 11, 16],
+			"faces": {
+				"north": {"uv": [0, 0, 0, 0], "texture": "#1"},
+				"east": {"uv": [0, 5, 16, 16], "texture": "#1"},
+				"south": {"uv": [6, 5, 10, 16], "texture": "#1", "cullface": "south"},
+				"west": {"uv": [0, 5, 16, 16], "texture": "#1"},
+				"up": {"uv": [6, 0, 10, 16], "texture": "#1"},
+				"down": {"uv": [6, 0, 10, 16], "texture": "#1", "cullface": "down"}
+			}
+		},
+		{
+			"name": "Pole",
+			"from": [7.5, 11, 12.5],
+			"to": [8.5, 16, 13.5],
+			"faces": {
+				"north": {"uv": [7.5, 0, 8.5, 5], "texture": "#1"},
+				"east": {"uv": [2.5, 0, 3.5, 5], "texture": "#1"},
+				"south": {"uv": [7.5, 0, 8.5, 5], "texture": "#1"},
+				"west": {"uv": [12.5, 0, 13.5, 5], "texture": "#1"},
+				"up": {"uv": [7.5, 12.5, 8.5, 13.5], "texture": "#1", "cullface": "up"},
+				"down": {"uv": [0, 0, 0, 0], "texture": "#1"}
+			}
+		},
+		{
+			"name": "Background",
+			"from": [5.95, 0.5, 0],
+			"to": [10.05, 10.5, 15.5],
+			"faces": {
+				"east": {"uv": [0.5, 5.5, 16, 15.5], "texture": "#back"},
+				"west": {"uv": [0, 5.5, 15.5, 15.5], "texture": "#back"}
+			}
+		}
+	]
+}

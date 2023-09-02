@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north,third=lower": { "model": "jsblock:block/faresaver_1_lower" },
+    "facing=east,third=lower": { "model": "jsblock:block/faresaver_1_lower", "y": 90 },
+    "facing=west,third=lower": { "model": "jsblock:block/faresaver_1_lower", "y": 270 },
+    "facing=south,third=lower": { "model": "jsblock:block/faresaver_1_lower", "y": 180 },
+    "facing=north,third=middle": { "model": "jsblock:block/faresaver_1_middle" },
+    "facing=east,third=middle": { "model": "jsblock:block/faresaver_1_middle", "y": 90 },
+    "facing=west,third=middle": { "model": "jsblock:block/faresaver_1_middle", "y": 270 },
+    "facing=south,third=middle": { "model": "jsblock:block/faresaver_1_middle", "y": 180 },
+    "facing=north,third=upper": { "model": "jsblock:block/faresaver_1_upper" },
+    "facing=east,third=upper": { "model": "jsblock:block/faresaver_1_upper", "y": 90 },
+    "facing=west,third=upper": { "model": "jsblock:block/faresaver_1_upper", "y": 270 },
+    "facing=south,third=upper": { "model": "jsblock:block/faresaver_1_upper", "y": 180 }
+  }
+}

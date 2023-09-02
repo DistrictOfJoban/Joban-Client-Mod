@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "jsblock:block/helpline_2" },
+    "facing=east": { "model": "jsblock:block/helpline_2", "y": 90 },
+    "facing=west": { "model": "jsblock:block/helpline_2", "y": 270 },
+    "facing=south": { "model": "jsblock:block/helpline_2", "y": 180 }
+  }
+}

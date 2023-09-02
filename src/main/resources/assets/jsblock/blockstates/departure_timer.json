@@ -1,0 +1,8 @@
+{
+	"variants":{
+		"facing=north": { "model": "jsblock:block/departure_timer" },
+		"facing=east": { "model": "jsblock:block/departure_timer", "y": 90 },
+		"facing=south": { "model": "jsblock:block/departure_timer", "y": 180 },
+		"facing=west": { "model": "jsblock:block/departure_timer", "y": 270 }
+	}
+}

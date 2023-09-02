@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north,part=0": { "model": "jsblock:block/sil_emg_stop_button_lower" },
+    "facing=east,part=0": { "model": "jsblock:block/sil_emg_stop_button_lower", "y": 90 },
+    "facing=west,part=0": { "model": "jsblock:block/sil_emg_stop_button_lower", "y": 270 },
+    "facing=south,part=0": { "model": "jsblock:block/sil_emg_stop_button_lower", "y": 180 },
+    "facing=north,part=1": { "model": "jsblock:block/sil_emg_stop_button_middle" },
+    "facing=east,part=1": { "model": "jsblock:block/sil_emg_stop_button_middle", "y": 90 },
+    "facing=west,part=1": { "model": "jsblock:block/sil_emg_stop_button_middle", "y": 270 },
+    "facing=south,part=1": { "model": "jsblock:block/sil_emg_stop_button_middle", "y": 180 },
+    "facing=north,part=2": { "model": "jsblock:block/sil_emg_stop_button_upper" },
+    "facing=east,part=2": { "model": "jsblock:block/sil_emg_stop_button_upper", "y": 90 },
+    "facing=west,part=2": { "model": "jsblock:block/sil_emg_stop_button_upper", "y": 270 },
+    "facing=south,part=2": { "model": "jsblock:block/sil_emg_stop_button_upper", "y": 180 }
+  }
+}

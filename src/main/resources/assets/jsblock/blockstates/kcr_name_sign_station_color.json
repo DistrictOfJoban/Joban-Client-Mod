@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,exit_on_left=true": { "model": "jsblock:block/kcr_name_sign_station_color_left" },
+    "facing=east,exit_on_left=true": { "model": "jsblock:block/kcr_name_sign_station_color_left", "y": 90 },
+    "facing=west,exit_on_left=true": { "model": "jsblock:block/kcr_name_sign_station_color_left", "y": 270 },
+    "facing=south,exit_on_left=true": { "model": "jsblock:block/kcr_name_sign_station_color_left", "y": 180 },
+    "facing=north,exit_on_left=false": { "model": "jsblock:block/kcr_name_sign_station_color_right" },
+    "facing=east,exit_on_left=false": { "model": "jsblock:block/kcr_name_sign_station_color_right", "y": 90 },
+    "facing=west,exit_on_left=false": { "model": "jsblock:block/kcr_name_sign_station_color_right", "y": 270 },
+    "facing=south,exit_on_left=false": { "model": "jsblock:block/kcr_name_sign_station_color_right", "y": 180 }
+  }
+}

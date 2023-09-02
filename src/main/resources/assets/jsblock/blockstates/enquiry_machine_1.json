@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,half=lower": { "model": "jsblock:block/enquiry_machine_1_lower", "y": 90 },
+    "facing=east,half=lower": { "model": "jsblock:block/enquiry_machine_1_lower", "y": 180 },
+    "facing=west,half=lower": { "model": "jsblock:block/enquiry_machine_1_lower" },
+    "facing=south,half=lower": { "model": "jsblock:block/enquiry_machine_1_lower", "y": 270 },
+    "facing=north,half=upper": { "model": "jsblock:block/enquiry_machine_1_upper", "y": 90 },
+    "facing=east,half=upper": { "model": "jsblock:block/enquiry_machine_1_upper", "y": 180 },
+    "facing=west,half=upper": { "model": "jsblock:block/enquiry_machine_1_upper"  },
+    "facing=south,half=upper": { "model": "jsblock:block/enquiry_machine_1_upper", "y": 270 }
+  }
+}

@@ -1,0 +1,21 @@
+{
+	"textures": {
+		"0": "jsblock:block/water_machine",
+		"particle": "jsblock:block/water_machine"
+	},
+	"elements": [
+		{
+			"from": [2.5, 0, 2.5],
+			"to": [13.5, 16, 13.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 10.5]},
+			"faces": {
+				"north": {"uv": [12.22917, 13.3125, 14.67708, 15], "texture": "#0"},
+				"east": {"uv": [10.78125, 8, 16, 16], "texture": "#0"},
+				"south": {"uv": [5.19792, 8, 10.8125, 16], "texture": "#0"},
+				"west": {"uv": [0, 8, 5.11458, 16], "texture": "#0"},
+				"up": {"uv": [1.91667, 9.78125, 4.03125, 11.09375], "rotation": 180, "texture": "#0"},
+				"down": {"uv": [14.6875, 3.3125, 16, 3.79167], "rotation": 180, "texture": "#0"}
+			}
+		}
+	]
+}

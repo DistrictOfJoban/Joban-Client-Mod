@@ -1,0 +1,38 @@
+{
+	"credit": "DoJ 2022",
+	"ambientocclusion": false,
+	"texture_size": [128, 128],
+	"textures": {
+		"0": "jsblock:block/tunnel_wall_1",
+		"1": "jsblock:block/tunnel_wall_atlas",
+		"particle": "jsblock:block/tunnel_wall_1"
+	},
+	"elements": [
+		{
+			"from": [0, -0.55417, -0.39583],
+			"to": [16, 0.44583, 17.60417],
+			"rotation": {"angle": -22.5, "axis": "x", "origin": [0, 0, 0]},
+			"faces": {
+				"north": {"uv": [3, 2.75, 5, 2.875], "texture": "#0"},
+				"east": {"uv": [0.75, 2.75, 3, 2.875], "texture": "#0"},
+				"south": {"uv": [7.25, 2.75, 9.25, 2.875], "texture": "#0"},
+				"west": {"uv": [5, 2.75, 7.25, 2.875], "texture": "#0"},
+				"up": {"uv": [0, 0, 8, 5], "texture": "#0"},
+				"down": {"uv": [7.875, 0, 0, 5], "texture": "#0"}
+			}
+		},
+		{
+			"from": [0, 0, 0.25206],
+			"to": [16, 16, 16.25206],
+			"rotation": {"angle": 0, "axis": "x", "origin": [8, 7, 8.25206]},
+			"faces": {
+				"north": {"uv": [0, 13.8125, 1.71875, 16], "texture": "#1"},
+				"east": {"uv": [2.4375, 16, 0, 12.25], "texture": "#1"},
+				"south": {"uv": [4.875, 16, 4.9375, 14.875], "texture": "#1"},
+				"west": {"uv": [0, 16, 2.4375, 12.25], "texture": "#1"},
+				"up": {"uv": [0, 14.125, 2.0625, 16], "texture": "#1"},
+				"down": {"uv": [16, 0, 8.125, 5], "texture": "#1"}
+			}
+		}
+	]
+}

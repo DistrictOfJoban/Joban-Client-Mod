@@ -1,0 +1,6 @@
+{
+	"parent": "jsblock:block/ticket_barrier_1_bare_fence_base_flipped",
+	"textures": {
+		"particle": "mtr:block/flowers/cio_1"
+	}
+}

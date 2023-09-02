@@ -1,0 +1,21 @@
+{
+	"textures": {
+		"0": "jsblock:block/operator_button",
+		"particle": "jsblock:block/operator_button"
+	},
+	"elements": [
+		{
+			"from": [5, 5, 0],
+			"to": [11, 11.5, 0.2],
+			"shade": false,
+			"faces": {
+				"north": {"uv": [2.15625, 1.9375, 13.75, 13.96875], "texture": "#0"},
+				"east": {"uv": [0, 0, 2.09375, 16], "texture": "#0"},
+				"south": {"uv": [2.25, 1.96875, 13.75, 13.96875], "texture": "#0"},
+				"west": {"uv": [13.84375, 13.5, 16, 15.875], "texture": "#0"},
+				"up": {"uv": [2.25, 0, 13.75, 1.84375], "texture": "#0"},
+				"down": {"uv": [2.0625, 14.03125, 14.0625, 16], "texture": "#0"}
+			}
+		}
+	]
+}

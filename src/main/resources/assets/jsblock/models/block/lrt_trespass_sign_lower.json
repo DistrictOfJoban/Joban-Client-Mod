@@ -1,0 +1,21 @@
+{
+	"textures": {
+		"1": "mtr:block/metal",
+		"particle": "mtr:block/metal"
+	},
+	"elements": [
+		{
+			"name": "pole",
+			"from": [7, 0, 7.5],
+			"to": [8, 16, 8.5],
+			"faces": {
+				"north": {"uv": [0, 0, 0.6, 4], "texture": "#1"},
+				"east": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"south": {"uv": [0, 0, 0.6, 4], "texture": "#1"},
+				"west": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"up": {"uv": [0, 0, 0.6, 0.6], "rotation": 90, "texture": "#1"},
+				"down": {"uv": [0, 0, 0.6, 0.6], "rotation": 270, "texture": "#1"}
+			}
+		}
+	]
+}
