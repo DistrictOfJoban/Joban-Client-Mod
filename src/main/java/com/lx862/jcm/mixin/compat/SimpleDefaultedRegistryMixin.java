@@ -27,7 +27,7 @@ public class SimpleDefaultedRegistryMixin {
 				case "light_1":
 					return new Identifier(id.getNamespace(), "light_lantern");
 				case "light_2":
-					return new Identifier(id.getNamespace(), "spot_light");
+					return new Identifier(id.getNamespace(), "spot_lamp");
 				case "emg_stop_1":
 					return new Identifier(id.getNamespace(), "tcl_emg_stop_button");
 				case "helpline_5":
@@ -40,6 +40,12 @@ public class SimpleDefaultedRegistryMixin {
 					return new Identifier(id.getNamespace(), "operator_button");
 				case "station_ceiling_1":
 					return new Identifier(id.getNamespace(), "wrl_station_ceiling");
+				case "station_ceiling_1_pole":
+					return new Identifier(id.getNamespace(), "wrl_station_ceiling_pole");
+				case "trespass_sign_1":
+					return new Identifier(id.getNamespace(), "mtr_trespass_sign");
+				case "trespass_sign_2":
+					return new Identifier(id.getNamespace(), "kcr_trespass_sign");
 				case "trespass_sign_3":
 					return new Identifier(id.getNamespace(), "lrt_trespass_sign");
 				case "water_machine_1":
