@@ -1,20 +1,18 @@
 package com.lx862.jcm.blocks.base;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldView;
+import org.mtr.mapping.holder.*;
 
 public abstract class PoleBlock extends SlabExtendibleBlock {
-    public PoleBlock(Settings settings) {
+    public PoleBlock(BlockSettings settings) {
         super(settings);
     }
 
     @Override
-    public boolean canPlaceAt(BlockState state, WorldView world, BlockPos pos) {
-        Block blockBelow = world.getBlockState(pos.down()).getBlock();
+    public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
+        Block blockBelow = new Block(world.getBlockState(pos.down().data).getBlock());
 
-        return (blockBelow instanceof PoleBlock) || blockIsAllowed(blockBelow);
+        return (blockBelow.data instanceof PoleBlock) || blockIsAllowed(blockBelow);
     }
 
     public abstract boolean blockIsAllowed(Block block);

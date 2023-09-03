@@ -1,9 +1,10 @@
 package com.lx862.jcm.blocks.base;
 
-import net.minecraft.block.Block;
+import org.mtr.mapping.holder.BlockSettings;
+import org.mtr.mapping.mapper.BlockExtension;
 
-public class JCMBlock extends Block {
-    public JCMBlock(Settings settings) {
+public class JCMBlock extends BlockExtension {
+    public JCMBlock(BlockSettings settings) {
         super(settings);
     }
 }

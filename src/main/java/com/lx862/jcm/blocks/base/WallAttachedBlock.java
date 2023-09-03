@@ -1,43 +1,45 @@
 package com.lx862.jcm.blocks.base;
 
 import com.lx862.jcm.util.BlockUtil;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.WorldAccess;
+import org.mtr.mapping.holder.*;
 import net.minecraft.world.WorldView;
 
 public class WallAttachedBlock extends DirectionalBlock {
 
-    public WallAttachedBlock(Settings settings) {
+    public WallAttachedBlock(BlockSettings settings) {
         super(settings);
     }
 
     @Override
-    public boolean canPlaceAt(BlockState state, WorldView world, BlockPos pos) {
+    public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
         return isAttached(state, pos, world);
     }
 
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
+    public BlockState getPlacementState2(ItemPlacementContext ctx) {
         if(ctx.getSide() == Direction.DOWN || ctx.getSide() == Direction.UP) return null;
 
-        return super.getPlacementState(ctx).with(FACING, ctx.getSide().getOpposite());
+        return super.getPlacementState2(ctx).with(new Property<>(FACING.data), ctx.getSide().getOpposite().data);
     }
 
     @Override
-    public BlockState getStateForNeighborUpdate(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
+    public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         if(!isAttached(state, pos, world)) {
-            return Blocks.AIR.getDefaultState();
+            return Blocks.getAirMapped().getDefaultState();
         }
 
-        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos);
+        return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos);
     }
 
     public static boolean isAttached(BlockState state, BlockPos pos, WorldView world) {
-        BlockPos blockBehindPos = pos.offset(state.get(FACING));
+        BlockPos blockBehindPos = pos.offset(BlockUtil.getStateProperty(state, FACING));
+        BlockState blockBehind = new BlockState(world.getBlockState(blockBehindPos.data));
+
+        return BlockUtil.blockConsideredSolid(blockBehind);
+    }
+
+    public static boolean isAttached(BlockState state, BlockPos pos, WorldAccess world) {
+        BlockPos blockBehindPos = pos.offset(BlockUtil.getStateProperty(state, FACING));
         BlockState blockBehind = world.getBlockState(blockBehindPos);
 
         return BlockUtil.blockConsideredSolid(blockBehind);

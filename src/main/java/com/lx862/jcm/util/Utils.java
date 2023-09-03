@@ -1,8 +1,6 @@
 package com.lx862.jcm.util;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
+import org.mtr.mapping.holder.*;
 
 public class Utils {
     public static void decrementItemFromPlayerHand(PlayerEntity player, Hand hand, int count) {

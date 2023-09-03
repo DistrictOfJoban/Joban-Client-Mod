@@ -16,7 +16,7 @@ public class Registry {
         return org.mtr.mapping.registry.Registry.registerBlock(new Identifier(Constants.MOD_ID, id), () -> block);
     }
 
-    public static ItemRegistryObject registerItem(String id, Item item, @Nullable CreativeModeTabHolder itemGroup) {
+    public static ItemRegistryObject registerItem(String id, Item item, CreativeModeTabHolder itemGroup) {
         return org.mtr.mapping.registry.Registry.registerItem(new Identifier(Constants.MOD_ID, id), (itemSettings) -> item, itemGroup);
     }
 

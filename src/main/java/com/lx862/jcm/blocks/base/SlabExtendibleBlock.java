@@ -1,46 +1,40 @@
 package com.lx862.jcm.blocks.base;
 
 import com.lx862.jcm.blocks.data.BlockProperties;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SlabBlock;
 import net.minecraft.block.enums.SlabType;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.WorldAccess;
-import net.minecraft.world.WorldView;
+import org.mtr.mapping.holder.*;
+import org.mtr.mapping.tool.HolderBase;
+
+import java.util.List;
 
 public class SlabExtendibleBlock extends DirectionalBlock {
     public static final BooleanProperty HAS_TOP = BlockProperties.HAS_TOP;
-    public SlabExtendibleBlock(Settings settings) {
+    public SlabExtendibleBlock(BlockSettings settings) {
         super(settings);
-        setDefaultState(getDefaultState().with(HAS_TOP, false));
+        setDefaultState2(getDefaultState2().with(new Property<>(HAS_TOP.data), false));
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        super.appendProperties(builder);
-        builder.add(HAS_TOP);
+    public void addBlockProperties(List<HolderBase<?>> properties) {
+        super.addBlockProperties(properties);
+        properties.add(HAS_TOP);
     }
 
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return super.getPlacementState(ctx).with(HAS_TOP, shouldExtendForSlab(ctx.getWorld(), ctx.getBlockPos()));
+    public BlockState getPlacementState2(ItemPlacementContext ctx) {
+        return super.getPlacementState2(ctx).with(new Property<>(HAS_TOP.data), shouldExtendForSlab(WorldAccess.cast(ctx.getWorld()), ctx.getBlockPos()));
     }
 
     @Override
-    public BlockState getStateForNeighborUpdate(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos).with(HAS_TOP, shouldExtendForSlab(world, pos));
+    public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
+        return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos).with(new Property<>(HAS_TOP.data), shouldExtendForSlab(world, pos));
     }
 
-    public static boolean shouldExtendForSlab(WorldView world, BlockPos pos) {
+    public static boolean shouldExtendForSlab(WorldAccess world, BlockPos pos) {
         BlockState blockTop = world.getBlockState(pos.up());
 
-        if(blockTop.getBlock() instanceof SlabBlock) {
-            return blockTop.get(SlabBlock.TYPE) == SlabType.TOP;
+        if(blockTop.getBlock().data instanceof net.minecraft.block.SlabBlock) {
+            return blockTop.get(new Property<>(net.minecraft.block.SlabBlock.TYPE)) == SlabType.TOP;
         } else {
             return false;
         }

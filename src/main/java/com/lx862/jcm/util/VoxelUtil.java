@@ -1,8 +1,8 @@
 package com.lx862.jcm.util;
 
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
+import org.mtr.mapping.holder.VoxelShape;
+import org.mtr.mapping.holder.VoxelShapes;
 
 public class VoxelUtil {
     public static VoxelShape getShape16(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {

@@ -2,43 +2,35 @@ package com.lx862.jcm.blocks;
 
 import com.lx862.jcm.blocks.base.WallAttachedBlock;
 import com.lx862.jcm.blocks.data.BlockProperties;
+import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.StateManager;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
+import org.mtr.mapping.holder.*;
+import org.mtr.mapping.holder.BooleanProperty;
+import org.mtr.mapping.tool.HolderBase;
+
+import java.util.List;
 
 public class OperatorButtonBlock extends WallAttachedBlock {
     private final int poweredDuration;
-    public OperatorButtonBlock(Settings settings, int poweredDuration) {
+    public static final BooleanProperty POWERED = BlockProperties.POWERED;
+    public OperatorButtonBlock(BlockSettings settings, int poweredDuration) {
         super(settings);
-        setDefaultState(getDefaultState().with(BlockProperties.POWERED, false));
+        setDefaultState2(getDefaultState2().with(new Property<>(POWERED.data), false));
         this.poweredDuration = poweredDuration;
     }
 
     @Override
-    public VoxelShape getOutlineShape(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(state.get(FACING),5, 5, 0, 11, 11.5, 0.2);
+    public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
+        return VoxelUtil.getDirectionalShape16(BlockUtil.getStateProperty(state, FACING).data,5, 5, 0, 11, 11.5, 0.2);
     }
 
     @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+    public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         // TODO: Temporary item, replace with Driver Key after adding MTR as dependencies
-        if(player.isHolding(Items.GRASS_BLOCK)) {
-            setPowered(world, state, pos, true);
-            world.scheduleBlockTick(pos, this, poweredDuration);
+        if(player.isHolding(Items.getGrassBlockMapped())) {
+            world.setBlockState(pos, state.with(new Property<>(POWERED.data), true));
+            updateNearbyBlock(world, pos, BlockUtil.getStateProperty(state, FACING));
+            world.scheduleBlockTick(pos, new Block(this), poweredDuration);
 
             return ActionResult.SUCCESS;
         } else {
@@ -48,41 +40,44 @@ public class OperatorButtonBlock extends WallAttachedBlock {
     }
 
     @Override
-    public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-        if(state.get(BlockProperties.POWERED)) {
+    public void scheduledTick2(BlockState state, ServerWorld world, BlockPos pos, Random random) {
+        if(state.get(new Property<>(POWERED.data))) {
             setPowered(world, state, pos, false);
         }
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        super.appendProperties(builder);
-        builder.add(BlockProperties.POWERED);
+    public void addBlockProperties(List<HolderBase<?>> properties) {
+        super.addBlockProperties(properties);
+        properties.add(POWERED);
     }
 
 
-
-
     @Override
-    public boolean emitsRedstonePower(BlockState state) {
+    public boolean emitsRedstonePower2(BlockState state) {
         return true;
     }
 
     @Override
-    public int getWeakRedstonePower(BlockState state, BlockView world, BlockPos pos, Direction direction) {
-        return state.get(BlockProperties.POWERED) ? 15 : 0;
+    public int getWeakRedstonePower2(BlockState state, BlockView world, BlockPos pos, Direction direction) {
+        return BlockUtil.getStateProperty(state, POWERED) ? 15 : 0;
     }
 
-    public int getStrongRedstonePower(BlockState state, BlockView world, BlockPos pos, Direction direction) {
-        return state.get(BlockProperties.POWERED) ? 15 : 0;
+    @Override
+    public int getStrongRedstonePower2(BlockState state, BlockView world, BlockPos pos, Direction direction) {
+        return BlockUtil.getStateProperty(state, POWERED) ? 15 : 0;
     }
 
-    private void setPowered(World world, BlockState blockState, BlockPos pos, boolean powered) {
-        world.setBlockState(pos, blockState.with(BlockProperties.POWERED, powered));
-        updateNearbyBlock(world, pos, blockState.get(FACING));
+    private void setPowered(ServerWorld world, BlockState blockState, BlockPos pos, boolean powered) {
+        world.setBlockState(pos, blockState.with(new Property<>(POWERED.data), powered));
+        updateNearbyBlock(world, pos, Direction.convert(blockState.get(new Property<>(FACING.data))));
+    }
+
+    private void updateNearbyBlock(ServerWorld world, BlockPos pos, Direction blockFacing) {
+        world.updateNeighborsAlways(pos.offset(blockFacing), new Block(this));
     }
 
     private void updateNearbyBlock(World world, BlockPos pos, Direction blockFacing) {
-        world.updateNeighborsAlways(pos.offset(blockFacing), this);
+        world.updateNeighborsAlways(pos.offset(blockFacing), new Block(this));
     }
 }
