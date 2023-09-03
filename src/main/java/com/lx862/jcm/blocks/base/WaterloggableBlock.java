@@ -24,7 +24,7 @@ public class WaterloggableBlock extends JCMBlock implements Waterloggable {
 
     @Override
     public FluidState getFluidState2(BlockState state) {
-        return BlockUtil.getStateProperty(state, WATERLOGGED) ? new FluidState(Fluids.WATER.getStill(false)) : super.getFluidState2(state);
+        return BlockUtil.getProperty(state, WATERLOGGED) ? new FluidState(Fluids.WATER.getStill(false)) : super.getFluidState2(state);
     }
 
     @Override
@@ -34,7 +34,7 @@ public class WaterloggableBlock extends JCMBlock implements Waterloggable {
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if (BlockUtil.getStateProperty(state, WATERLOGGED)) {
+        if (BlockUtil.getProperty(state, WATERLOGGED)) {
             world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world.data));
         }
 

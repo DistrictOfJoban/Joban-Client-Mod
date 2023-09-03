@@ -1,8 +1,8 @@
 package com.lx862.jcm.blocks.base;
 
 import com.lx862.jcm.util.BlockUtil;
-import org.mtr.mapping.holder.*;
 import net.minecraft.world.WorldView;
+import org.mtr.mapping.holder.*;
 
 public class WallAttachedBlock extends DirectionalBlock {
 
@@ -17,14 +17,16 @@ public class WallAttachedBlock extends DirectionalBlock {
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        if(ctx.getSide() == Direction.DOWN || ctx.getSide() == Direction.UP) return null;
+        if (ctx.getSide() == Direction.DOWN || ctx.getSide() == Direction.UP) {
+            return Blocks.getAirMapped().getDefaultState();
+        }
 
         return super.getPlacementState2(ctx).with(new Property<>(FACING.data), ctx.getSide().getOpposite().data);
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if(!isAttached(state, pos, world)) {
+        if (!isAttached(state, pos, world)) {
             return Blocks.getAirMapped().getDefaultState();
         }
 
@@ -32,14 +34,14 @@ public class WallAttachedBlock extends DirectionalBlock {
     }
 
     public static boolean isAttached(BlockState state, BlockPos pos, WorldView world) {
-        BlockPos blockBehindPos = pos.offset(BlockUtil.getStateProperty(state, FACING));
+        BlockPos blockBehindPos = pos.offset(BlockUtil.getProperty(state, FACING));
         BlockState blockBehind = new BlockState(world.getBlockState(blockBehindPos.data));
 
         return BlockUtil.blockConsideredSolid(blockBehind);
     }
 
     public static boolean isAttached(BlockState state, BlockPos pos, WorldAccess world) {
-        BlockPos blockBehindPos = pos.offset(BlockUtil.getStateProperty(state, FACING));
+        BlockPos blockBehindPos = pos.offset(BlockUtil.getProperty(state, FACING));
         BlockState blockBehind = world.getBlockState(blockBehindPos);
 
         return BlockUtil.blockConsideredSolid(blockBehind);

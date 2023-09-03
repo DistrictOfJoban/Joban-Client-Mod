@@ -9,23 +9,23 @@ public class BlockUtil {
         return !state.isAir() && !state.isLiquid();
     }
 
-    public static boolean canSurvive(Block instance, WorldAccess world, BlockPos pos, Direction facing, int part, int totalWidthHeight) {
+    public static boolean canSurvive(net.minecraft.block.Block instance, WorldAccess world, BlockPos pos, Direction facing, int part, int totalWidthHeight) {
         boolean checkLeftOrBottom = part != 0;
         boolean checkRightOrTop = part != totalWidthHeight - 1;
         boolean canSurvive = true;
 
-        if(checkLeftOrBottom) {
+        if (checkLeftOrBottom) {
             BlockPos posLeftOrDown = pos.offset(facing.getOpposite());
             BlockState blockLeftOrDown = world.getBlockState(posLeftOrDown);
-            if(blockLeftOrDown.getBlock() != instance) {
+            if (blockLeftOrDown.getBlock().data != instance) {
                 return false;
             }
         }
 
-        if(checkRightOrTop) {
+        if (checkRightOrTop) {
             BlockPos posRightOrUp = pos.offset(facing);
             BlockState blockRightOrUp = world.getBlockState(posRightOrUp);
-            if(blockRightOrUp.getBlock() != instance) {
+            if (blockRightOrUp.getBlock().data != instance) {
                 return false;
             }
         }
@@ -33,29 +33,29 @@ public class BlockUtil {
     }
 
     public static boolean isReplacable(WorldView world, org.mtr.mapping.holder.BlockPos startPos, org.mtr.mapping.holder.Direction direction, int distance) {
-        for(int i = 0; i < distance; i++) {
+        for (int i = 0; i < distance; i++) {
             org.mtr.mapping.holder.BlockPos posUp = startPos.offset(direction, i);
             net.minecraft.block.BlockState blockState = world.getBlockState(posUp.data);
-            if(!blockState.isReplaceable()) {
+            if (!blockState.isReplaceable()) {
                 return false;
             }
         }
         return true;
     }
 
-    public static boolean getStateProperty(BlockState state, BooleanProperty property) {
-        return getStateProperty(state, new Property<>(property.data));
+    public static boolean getProperty(BlockState state, BooleanProperty property) {
+        return getProperty(state, new Property<>(property.data));
     }
 
-    public static Direction getStateProperty(BlockState state, DirectionProperty property) {
-        return Direction.convert(getStateProperty(state, new Property<>(property.data)));
+    public static Direction getProperty(BlockState state, DirectionProperty property) {
+        return Direction.convert(getProperty(state, new Property<>(property.data)));
     }
 
-    public static int getStateProperty(BlockState state, IntegerProperty property) {
-        return getStateProperty(state, new Property<>(property.data));
+    public static int getProperty(BlockState state, IntegerProperty property) {
+        return getProperty(state, new Property<>(property.data));
     }
 
-    static <T extends Comparable<T>> T getStateProperty(BlockState state, Property<T> property) {
+    static <T extends Comparable<T>> T getProperty(BlockState state, Property<T> property) {
         return state.get(property);
     }
 }

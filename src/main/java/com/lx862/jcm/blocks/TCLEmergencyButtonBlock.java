@@ -12,6 +12,6 @@ public class TCLEmergencyButtonBlock extends WallAttachedBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getStateProperty(state, FACING).data,4.5, 3, 0, 11.5, 13, 6);
+        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 4.5, 3, 0, 11.5, 13, 6);
     }
 }

@@ -7,10 +7,9 @@ import org.mtr.mapping.holder.Block;
 import org.mtr.mapping.holder.BlockSettings;
 import org.mtr.mapping.registry.BlockRegistryObject;
 
-public final class BlockRegistry {
+public class BlockRegistry {
 
     static {
-        CEILING_SLANTED = Registry.registerBlockItem("ceiling_slanted", new Block(new CeilingSlantedBlock(BlockSettings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
         HK_EXIT_SIGN_ODD = Registry.registerBlockItem("hk_exit_sign_odd", new Block(new HKExitSignOdd(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15))), ItemGroupRegistry.JCM_MAIN);
         LIGHT_LANTERN = Registry.registerBlockItem("light_lantern", new Block(new LightLanternBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15))), ItemGroupRegistry.JCM_MAIN);
         MTR_STAIRS = Registry.registerBlockItem("mtr_stairs", new Block(new MTRStairsBlock(AbstractBlock.Settings.create().strength(4.0f))), ItemGroupRegistry.JCM_MAIN);
@@ -28,7 +27,7 @@ public final class BlockRegistry {
         WATER_MACHINE = Registry.registerBlockItem("water_machine", new Block(new WaterMachineBlock(BlockSettings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
     }
 
-    public static final BlockRegistryObject CEILING_SLANTED;
+    public static final BlockRegistryObject CEILING_SLANTED = Registry.registerBlockItem("ceiling_slanted", new Block(new CeilingSlantedBlock(BlockSettings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject HK_EXIT_SIGN_ODD;
     public static final BlockRegistryObject LIGHT_LANTERN;
     public static final BlockRegistryObject MTR_STAIRS;

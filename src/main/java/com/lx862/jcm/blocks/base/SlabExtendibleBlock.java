@@ -9,6 +9,7 @@ import java.util.List;
 
 public class SlabExtendibleBlock extends DirectionalBlock {
     public static final BooleanProperty HAS_TOP = BlockProperties.HAS_TOP;
+
     public SlabExtendibleBlock(BlockSettings settings) {
         super(settings);
         setDefaultState2(getDefaultState2().with(new Property<>(HAS_TOP.data), false));
@@ -33,7 +34,7 @@ public class SlabExtendibleBlock extends DirectionalBlock {
     public static boolean shouldExtendForSlab(WorldAccess world, BlockPos pos) {
         BlockState blockTop = world.getBlockState(pos.up());
 
-        if(blockTop.getBlock().data instanceof net.minecraft.block.SlabBlock) {
+        if (blockTop.getBlock().data instanceof net.minecraft.block.SlabBlock) {
             return blockTop.get(new Property<>(net.minecraft.block.SlabBlock.TYPE)) == SlabType.TOP;
         } else {
             return false;

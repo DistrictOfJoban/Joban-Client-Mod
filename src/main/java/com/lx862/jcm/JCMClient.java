@@ -5,8 +5,8 @@ import net.fabricmc.api.ClientModInitializer;
 
 public class JCMClient implements ClientModInitializer {
 
-	@Override
-	public void onInitializeClient() {
-		Registry.registerClient();
-	}
+    @Override
+    public void onInitializeClient() {
+        Registry.registerClient();
+    }
 }

@@ -19,7 +19,7 @@ public class ConfigEntry {
     }
 
     public Object getValue() {
-        if(valueString != null) return valueString;
+        if (valueString != null) return valueString;
         else return valueBoolean;
     }
 }

@@ -24,8 +24,8 @@ public class VerticalMultiBlock extends DirectionalBlock {
 
     @Override
     public void onPlaced2(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-        for(int i = 0; i < height; i++) {
-            if(i == 0) continue;
+        for (int i = 0; i < height; i++) {
+            if (i == 0) continue;
             world.setBlockState(pos.up(i), state.with(new Property<>(PART.data), i));
         }
     }
@@ -34,7 +34,7 @@ public class VerticalMultiBlock extends DirectionalBlock {
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         int thisPart = state.get(new Property<>(PART.data));
 
-        if(!BlockUtil.canSurvive(new Block(this), world, pos, Direction.UP, thisPart, height)) {
+        if (!BlockUtil.canSurvive(this, world, pos, Direction.UP, thisPart, height)) {
             return Blocks.getAirMapped().getDefaultState();
         }
 

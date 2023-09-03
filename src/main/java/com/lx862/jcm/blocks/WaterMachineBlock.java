@@ -15,19 +15,19 @@ public class WaterMachineBlock extends VerticalMultiBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getStateProperty(state, FACING).data,2.5, 0, 2.5, 13.5, 16, 13.5);
+        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 2.5, 0, 2.5, 13.5, 16, 13.5);
     }
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
 
-        if(player.isHolding(Items.getGlassBottleMapped())) {
+        if (player.isHolding(Items.getGlassBottleMapped())) {
             Utils.decrementItemFromPlayerHand(player, hand, 1);
             fillBottleForPlayer(player);
             return ActionResult.SUCCESS;
         }
 
-        if(player.isHolding(Items.getBucketMapped())) {
+        if (player.isHolding(Items.getBucketMapped())) {
             Utils.decrementItemFromPlayerHand(player, hand, 1);
             fillBucketForPlayer(player);
             return ActionResult.SUCCESS;

@@ -1,7 +1,10 @@
 package com.lx862.jcm.blocks.base;
 
 import net.minecraft.world.WorldView;
-import org.mtr.mapping.holder.*;
+import org.mtr.mapping.holder.Block;
+import org.mtr.mapping.holder.BlockPos;
+import org.mtr.mapping.holder.BlockSettings;
+import org.mtr.mapping.holder.BlockState;
 
 public abstract class PoleBlock extends SlabExtendibleBlock {
     public PoleBlock(BlockSettings settings) {

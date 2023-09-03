@@ -1,6 +1,6 @@
 package com.lx862.jcm.util;
 
-import net.minecraft.util.math.Direction;
+import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.VoxelShape;
 import org.mtr.mapping.holder.VoxelShapes;
 
@@ -10,7 +10,7 @@ public class VoxelUtil {
     }
 
     public static VoxelShape getDirectionalShape16(Direction direction, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        switch(direction) {
+        switch (direction) {
             case NORTH:
                 return VoxelUtil.getShape16(minX, minY, minZ, maxX, maxY, maxZ);
             case SOUTH:

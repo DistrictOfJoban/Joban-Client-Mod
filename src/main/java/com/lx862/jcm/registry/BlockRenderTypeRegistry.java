@@ -19,7 +19,7 @@ public final class BlockRenderTypeRegistry {
     }
 
     private static void registerBlockRenderType(RenderLayer renderLayer, BlockRegistryObject... blocks) {
-        for(BlockRegistryObject blockRegistryObject : blocks) {
+        for (BlockRegistryObject blockRegistryObject : blocks) {
             RegistryClient.registerBlockRenderType(renderLayer, blockRegistryObject);
         }
     }

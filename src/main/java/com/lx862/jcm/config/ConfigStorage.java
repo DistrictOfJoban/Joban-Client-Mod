@@ -6,7 +6,6 @@ import net.minecraft.client.MinecraftClient;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +13,7 @@ import java.util.Map;
 public class ConfigStorage {
     private static final Path CONFIG_PATH = MinecraftClient.getInstance().runDirectory.toPath().resolve("config").resolve("jsblock.json");
     public static HashMap<String, ConfigEntry> configs = new HashMap<>();
+
     public static void registerClient() {
         configs.put("disable_rendering", new ConfigEntry("Disable Rendering", "This disables the rendering of all JCM Blocks", false));
     }
@@ -24,15 +24,15 @@ public class ConfigStorage {
 
     public static boolean writeFile() {
         final JsonObject jsonConfig = new JsonObject();
-        for(Map.Entry<String, ConfigEntry> configEntry : configs.entrySet()) {
+        for (Map.Entry<String, ConfigEntry> configEntry : configs.entrySet()) {
             String key = configEntry.getKey();
             ConfigEntry value = configEntry.getValue();
 
-            if(value.getValue() instanceof String) {
-                jsonConfig.addProperty(key, (String)value.getValue());
+            if (value.getValue() instanceof String) {
+                jsonConfig.addProperty(key, (String) value.getValue());
             }
 
-            if(value.getValue() instanceof Boolean) {
+            if (value.getValue() instanceof Boolean) {
                 jsonConfig.addProperty(key, (Boolean) value.getValue());
             }
         }
@@ -47,6 +47,6 @@ public class ConfigStorage {
     }
 
     public static boolean readBoolean(String key) {
-        return (boolean)configs.get(key).getValue();
+        return (boolean) configs.get(key).getValue();
     }
 }

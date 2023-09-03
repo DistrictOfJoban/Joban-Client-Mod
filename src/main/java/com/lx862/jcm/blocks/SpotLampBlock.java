@@ -13,7 +13,7 @@ public class SpotLampBlock extends CeilingGroundAttachedBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        if(BlockUtil.getStateProperty(state, TOP)) {
+        if (BlockUtil.getProperty(state, TOP)) {
             return VoxelUtil.getShape16(4, 15.75, 4, 12, 16, 12);
         } else {
             return VoxelUtil.getShape16(4, 0, 4, 12, 0.25, 12);

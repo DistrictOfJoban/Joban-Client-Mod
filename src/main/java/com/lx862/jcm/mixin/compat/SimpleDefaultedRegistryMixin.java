@@ -16,42 +16,42 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(SimpleDefaultedRegistry.class)
 public class SimpleDefaultedRegistryMixin {
 
-	@ModifyVariable(at = @At("HEAD"), method = "get(Lnet/minecraft/util/Identifier;)Ljava/lang/Object;", ordinal = 0, argsOnly = true)
-	Identifier dataFixerRegistry(@Nullable Identifier id) {
-		if (id != null && id.getNamespace().equals("jsblock")) {
-			switch(id.getPath()) {
-				case "ceiling_1":
-					return new Identifier(id.getNamespace(), "ceiling_slanted");
-				case "exit_sign_1":
-					return new Identifier(id.getNamespace(), "hk_exit_sign_odd");
-				case "light_1":
-					return new Identifier(id.getNamespace(), "light_lantern");
-				case "light_2":
-					return new Identifier(id.getNamespace(), "spot_lamp");
-				case "emg_stop_1":
-					return new Identifier(id.getNamespace(), "tcl_emg_stop_button");
-				case "helpline_5":
-					return new Identifier(id.getNamespace(), "tml_emg_stop_button");
-				case "helpline_6":
-					return new Identifier(id.getNamespace(), "sil_emg_stop_button");
-				case "mtr_stairs_1":
-					return new Identifier(id.getNamespace(), "mtr_stairs");
-				case "op_button":
-					return new Identifier(id.getNamespace(), "operator_button");
-				case "station_ceiling_1":
-					return new Identifier(id.getNamespace(), "wrl_station_ceiling");
-				case "station_ceiling_1_pole":
-					return new Identifier(id.getNamespace(), "wrl_station_ceiling_pole");
-				case "trespass_sign_1":
-					return new Identifier(id.getNamespace(), "mtr_trespass_sign");
-				case "trespass_sign_2":
-					return new Identifier(id.getNamespace(), "kcr_trespass_sign");
-				case "trespass_sign_3":
-					return new Identifier(id.getNamespace(), "lrt_trespass_sign");
-				case "water_machine_1":
-					return new Identifier(id.getNamespace(), "water_machine");
-			}
-		}
-		return id;
-	}
+    @ModifyVariable(at = @At("HEAD"), method = "get(Lnet/minecraft/util/Identifier;)Ljava/lang/Object;", ordinal = 0, argsOnly = true)
+    Identifier dataFixerRegistry(@Nullable Identifier id) {
+        if (id != null && id.getNamespace().equals("jsblock")) {
+            switch (id.getPath()) {
+                case "ceiling_1":
+                    return new Identifier(id.getNamespace(), "ceiling_slanted");
+                case "exit_sign_1":
+                    return new Identifier(id.getNamespace(), "hk_exit_sign_odd");
+                case "light_1":
+                    return new Identifier(id.getNamespace(), "light_lantern");
+                case "light_2":
+                    return new Identifier(id.getNamespace(), "spot_lamp");
+                case "emg_stop_1":
+                    return new Identifier(id.getNamespace(), "tcl_emg_stop_button");
+                case "helpline_5":
+                    return new Identifier(id.getNamespace(), "tml_emg_stop_button");
+                case "helpline_6":
+                    return new Identifier(id.getNamespace(), "sil_emg_stop_button");
+                case "mtr_stairs_1":
+                    return new Identifier(id.getNamespace(), "mtr_stairs");
+                case "op_button":
+                    return new Identifier(id.getNamespace(), "operator_button");
+                case "station_ceiling_1":
+                    return new Identifier(id.getNamespace(), "wrl_station_ceiling");
+                case "station_ceiling_1_pole":
+                    return new Identifier(id.getNamespace(), "wrl_station_ceiling_pole");
+                case "trespass_sign_1":
+                    return new Identifier(id.getNamespace(), "mtr_trespass_sign");
+                case "trespass_sign_2":
+                    return new Identifier(id.getNamespace(), "kcr_trespass_sign");
+                case "trespass_sign_3":
+                    return new Identifier(id.getNamespace(), "lrt_trespass_sign");
+                case "water_machine_1":
+                    return new Identifier(id.getNamespace(), "water_machine");
+            }
+        }
+        return id;
+    }
 }

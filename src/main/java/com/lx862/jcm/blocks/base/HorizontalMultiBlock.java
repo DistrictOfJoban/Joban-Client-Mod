@@ -17,18 +17,18 @@ public class HorizontalMultiBlock extends DirectionalBlock {
     }
 
     @Override
-    public boolean canPlaceAt2(BlockState state, WorldView world, org.mtr.mapping.holder.BlockPos pos) {
+    public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
         return canPlace(state, world, pos, width);
     }
 
     @Override
-    public void onPlaced2(World world, org.mtr.mapping.holder.BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-        placeMultiBlock(world, pos, state, Direction.convert(state.get(new Property<>(FACING.data)).rotateYClockwise()), width);
+    public void onPlaced2(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
+        placeMultiBlock(world, pos, state, BlockUtil.getProperty(state, FACING).rotateYClockwise(), width);
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if(!isConnected(state, world, pos, width)) {
+        if (!isConnected(state, world, pos, width)) {
             return Blocks.getAirMapped().getDefaultState();
         }
 
@@ -42,18 +42,18 @@ public class HorizontalMultiBlock extends DirectionalBlock {
     }
 
     public static boolean canPlace(BlockState state, WorldView world, BlockPos pos, int width) {
-        return BlockUtil.isReplacable(world, pos, BlockUtil.getStateProperty(state, FACING).rotateYClockwise(), width);
+        return BlockUtil.isReplacable(world, pos, BlockUtil.getProperty(state, FACING).rotateYClockwise(), width);
     }
 
     public static void placeMultiBlock(World world, BlockPos pos, BlockState state, Direction directionToPlace, int length) {
-        for(int i = 0; i < length; i++) {
-            if(i == 0) continue;
+        for (int i = 0; i < length; i++) {
+            if (i == 0) continue;
             world.setBlockState(pos.offset(directionToPlace, i), state.with(new Property<>(PART.data), i));
         }
     }
 
-    public static boolean isConnected(BlockState state, org.mtr.mapping.holder.WorldAccess world, org.mtr.mapping.holder.BlockPos pos, int totalWidthHeight) {
+    public static boolean isConnected(BlockState state, WorldAccess world, BlockPos pos, int totalWidthHeight) {
         int thisPart = state.get(new Property<>(PART.data));
-        return BlockUtil.canSurvive(state.getBlock(), world, pos, BlockUtil.getStateProperty(state, FACING).rotateYClockwise(), thisPart, totalWidthHeight);
+        return BlockUtil.canSurvive(state.getBlock().data, world, pos, BlockUtil.getProperty(state, FACING).rotateYClockwise(), thisPart, totalWidthHeight);
     }
 }
