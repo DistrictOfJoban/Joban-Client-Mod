@@ -1,5 +1,6 @@
 package com.lx862.jcm.blocks.base;
 
+import com.lx862.jcm.blocks.data.BlockProperties;
 import com.lx862.jcm.util.BlockUtil;
 import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
@@ -8,7 +9,7 @@ import org.mtr.mapping.tool.HolderBase;
 import java.util.List;
 
 public abstract class CeilingGroundAttachedBlock extends WaterloggableBlock {
-    public static final BooleanProperty TOP = BooleanProperty.of("top");
+    public static final BooleanProperty TOP = BlockProperties.TOP;
     private final boolean canAttachTop;
     private final boolean canAttachBottom;
 

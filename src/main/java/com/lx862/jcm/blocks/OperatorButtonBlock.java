@@ -35,7 +35,7 @@ public class OperatorButtonBlock extends WallAttachedBlock {
 
             return ActionResult.SUCCESS;
         } else {
-            player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "operator_button_unauthorized").formatted(TextFormatting.RED)), true);
+            player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "operator_button.unauthorized").formatted(TextFormatting.RED)), true);
             return ActionResult.FAIL;
         }
     }

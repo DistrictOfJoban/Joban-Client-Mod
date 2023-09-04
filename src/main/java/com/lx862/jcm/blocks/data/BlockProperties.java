@@ -11,5 +11,5 @@ public class BlockProperties {
     public static final IntegerProperty VERTICAL_PART = IntegerProperty.of("part", 0, 2);
     public static final BooleanProperty POWERED = BooleanProperty.of("powered");
     public static final BooleanProperty HAS_TOP = BooleanProperty.of("has_top");
-    public static final BooleanProperty HAS_BOTTOM = BooleanProperty.of("has_bottom");
+    public static final BooleanProperty TOP = BooleanProperty.of("top");
 }
