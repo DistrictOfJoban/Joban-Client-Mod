@@ -15,7 +15,7 @@ public class ConfigStorage {
     public static HashMap<String, ConfigEntry> configs = new HashMap<>();
 
     public static void registerClient() {
-        configs.put("disable_rendering", new ConfigEntry("Disable Rendering", "This disables the rendering of all JCM Blocks", false));
+        configs.put("disable_rendering", new ConfigEntry<>(false, "Disable Rendering", "This disables the rendering of all JCM Blocks"));
     }
 
     public static void readFile() {
@@ -44,9 +44,5 @@ public class ConfigStorage {
             e.printStackTrace();
             return false;
         }
-    }
-
-    public static boolean readBoolean(String key) {
-        return (boolean) configs.get(key).getValue();
     }
 }

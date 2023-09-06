@@ -1,12 +1,14 @@
 package com.lx862.jcm.registry;
 
 import com.lx862.jcm.Constants;
-import org.mtr.mapping.holder.Block;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.Item;
+import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.BlockEntityExtension;
+import org.mtr.mapping.registry.BlockEntityTypeRegistryObject;
 import org.mtr.mapping.registry.BlockRegistryObject;
 import org.mtr.mapping.registry.CreativeModeTabHolder;
 import org.mtr.mapping.registry.ItemRegistryObject;
+
+import java.util.function.BiFunction;
 
 public class Registry {
     public static BlockRegistryObject registerBlockItem(String id, Block block, CreativeModeTabHolder itemGroup) {
@@ -31,8 +33,13 @@ public class Registry {
         return org.mtr.mapping.registry.Registry.registerItem(new Identifier(Constants.MOD_ID, id), (itemSettings) -> item, itemGroup);
     }
 
+    public static <T extends BlockEntityExtension> BlockEntityTypeRegistryObject<T> registerBlockEntity(String id, BiFunction<BlockPos, BlockState, T> constructor, BlockRegistryObject associatedBlock) {
+        return org.mtr.mapping.registry.Registry.registerBlockEntityType(new Identifier(Constants.MOD_ID, id), constructor, associatedBlock.get());
+    }
+
     public static void register() {
         BlockRegistry.register();
+        BlockEntityRegistry.register();
         ItemRegistry.register();
         org.mtr.mapping.registry.Registry.init();
     }

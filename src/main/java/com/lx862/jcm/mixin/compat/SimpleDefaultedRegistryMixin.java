@@ -42,6 +42,8 @@ public class SimpleDefaultedRegistryMixin {
                     return new Identifier(id.getNamespace(), "wrl_station_ceiling");
                 case "station_ceiling_1_pole":
                     return new Identifier(id.getNamespace(), "wrl_station_ceiling_pole");
+                case "subsidy_machine_1":
+                    return new Identifier(id.getNamespace(), "subsidy_machine");
                 case "trespass_sign_1":
                     return new Identifier(id.getNamespace(), "mtr_trespass_sign");
                 case "trespass_sign_2":

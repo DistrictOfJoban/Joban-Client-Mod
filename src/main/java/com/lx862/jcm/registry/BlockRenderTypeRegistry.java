@@ -10,7 +10,7 @@ public final class BlockRenderTypeRegistry {
     public static void registerClient() {
         Logger.info("Registering RenderType...");
         registerBlockRenderType(RenderLayer.getCutout(),
-                BlockRegistry.SPOT_LAMP,
+                BlockRegistry.SUBSIDY_MACHINE,
                 BlockRegistry.SIL_EMG_STOP_BUTTON,
                 BlockRegistry.TML_EMG_STOP_BUTTON,
                 BlockRegistry.MTR_TRESPASS_SIGN,
