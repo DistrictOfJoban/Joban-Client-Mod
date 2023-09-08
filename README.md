@@ -3,15 +3,6 @@ This is an experimental rewrite of the Joban Client Mod from scratch.
 This is not production ready yet and contains many changes (Including block ids) from Joban Client Mod 1.x.x series which may not be migrated properly to v2.  
 Use with caution!
 
-## Minecraft Mappings
-### Roadblock
-- Returning `false` in `canPlaceAt` would crash the game
-- - Cannot read field "data" because the return value of "org.mtr.mapping.holder.BlockItemAbstractMapping.getPlacementState2(org.mtr.mapping.holder.ItemPlacementContext)" is null
-- Still seems slower compared to vanilla Fabric on dev session, but is "ok" for now.
-- Might need more jank to integrate with vanilla mixin?
-- You get like 2 and 3 for the mapped method name, which is workable but is not something I am too happy with
-- No Javadoc (https://github.com/jonafanho/Minecraft-Mappings/issues/1), especially useful on block classes.
-
 ## Roadmap
 ### Implemented
 - Creative Inventory Tabs Registration
@@ -39,7 +30,6 @@ Use with caution!
 ## To be done
 - Add MTR Mod as dependencies (Need a way to depend on 4.0?)
 - Finish all uncompleted blocks
-- Block Entity
 - Block Entity Rendering
 - GUI Screen
 - Networking (Packets)
