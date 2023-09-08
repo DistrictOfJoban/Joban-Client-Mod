@@ -1,6 +1,0 @@
-{
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "jsblock:item/inter_car_barrier_1_right"
-  }
-}

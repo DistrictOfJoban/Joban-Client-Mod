@@ -27,6 +27,7 @@ Use with caution!
   - MTR Station Ceiling Pole (2009)
   - Light Lantern
   - MTR Stairs
+  - LRT Inter Car Barriers
   - Operator Button
   - Emergency Button (TCL)
   - Emergency Button (TML)

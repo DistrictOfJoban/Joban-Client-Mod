@@ -1,8 +1,7 @@
 {
-	"credit": "DoJ 2022",
 	"textures": {
-		"0": "jsblock:block/inter_car_barrier_1",
-		"particle": "jsblock:block/inter_car_barrier_1"
+		"0": "jsblock:block/lrt_inter_car_barrier",
+		"particle": "jsblock:block/lrt_inter_car_barrier"
 	},
 	"elements": [
 		{

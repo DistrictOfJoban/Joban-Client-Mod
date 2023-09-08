@@ -1,8 +1,0 @@
-{
-  "variants": {
-    "facing=north": { "model": "jsblock:block/inter_car_barrier_1_left", "y": 90 },
-    "facing=east": { "model": "jsblock:block/inter_car_barrier_1_left", "y": 180 },
-    "facing=west": { "model": "jsblock:block/inter_car_barrier_1_left" },
-    "facing=south": { "model": "jsblock:block/inter_car_barrier_1_left", "y": 270 }
-  }
-}
