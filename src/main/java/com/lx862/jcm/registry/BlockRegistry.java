@@ -8,7 +8,6 @@ import org.mtr.mapping.holder.BlockSettings;
 import org.mtr.mapping.registry.BlockRegistryObject;
 
 public final class BlockRegistry {
-
     public static final BlockRegistryObject CEILING_SLANTED = Registry.registerBlockItem("ceiling_slanted", new Block(new CeilingSlantedBlock(BlockSettings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject HK_EXIT_SIGN_ODD = Registry.registerBlockItem("hk_exit_sign_odd", new Block(new HKExitSignOdd(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15))), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject LIGHT_LANTERN = Registry.registerBlockItem("light_lantern", new Block(new LightLanternBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15))), ItemGroupRegistry.JCM_MAIN);
@@ -18,6 +17,9 @@ public final class BlockRegistry {
     public static final BlockRegistryObject SUBSIDY_MACHINE = Registry.registerBlockItem("subsidy_machine", new Block(new SubsidyMachineBlock(BlockSettings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject WRL_STATION_CEILING = Registry.registerBlockItem("wrl_station_ceiling", new Block(new WRLStationCeilingBlock(BlockSettings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject WRL_STATION_CEILING_POLE = Registry.registerBlockItem("wrl_station_ceiling_pole", new Block(new WRLStationCeilingPole(BlockSettings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject HELPLINE_1 = Registry.registerBlockItem("helpline_1", new Block(new WallAttachedHelpLineBlock(BlockSettings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject HELPLINE_2 = Registry.registerBlockItem("helpline_2", new Block(new WallAttachedHelpLineBlock(BlockSettings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
+
     public static final BlockRegistryObject TCL_EMG_STOP_BUTTON = Registry.registerBlockItem("tcl_emg_stop_button", new Block(new TCLEmergencyButtonBlock(BlockSettings.create().strength(4.0f).nonOpaque())), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject TML_EMG_STOP_BUTTON = Registry.registerBlockItem("tml_emg_stop_button", new Block(new TMLEmergencyButtonBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15))), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject SIL_EMG_STOP_BUTTON = Registry.registerBlockItem("sil_emg_stop_button", new Block(new SILEmergencyButtonBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 10))), ItemGroupRegistry.JCM_MAIN);
