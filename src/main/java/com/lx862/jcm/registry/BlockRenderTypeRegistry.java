@@ -11,10 +11,13 @@ import org.mtr.mapping.registry.RegistryClient;
 public final class BlockRenderTypeRegistry {
     public static void registerClient() {
         Logger.info("Registering RenderType...");
+
         registerBlockRenderType(RenderLayer.getCutout(),
                 BlockRegistry.SUBSIDY_MACHINE,
                 BlockRegistry.HELPLINE_1,
                 BlockRegistry.HELPLINE_2,
+                BlockRegistry.HELPLINE_STANDING,
+                BlockRegistry.HELPLINE_STANDING_EAL,
                 BlockRegistry.SIL_EMG_STOP_BUTTON,
                 BlockRegistry.TML_EMG_STOP_BUTTON,
                 BlockRegistry.MTR_TRESPASS_SIGN,

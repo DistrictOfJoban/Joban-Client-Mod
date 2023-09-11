@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "jsblock:item/helpline_3"
+    "layer0": "jsblock:item/helpline_standing_eal"
   }
 }

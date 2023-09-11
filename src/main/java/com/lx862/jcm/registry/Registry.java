@@ -19,6 +19,10 @@ public class Registry {
         return org.mtr.mapping.registry.Registry.registerBlockWithBlockItem(new Identifier(Constants.MOD_ID, id), () -> block, itemGroup);
     }
 
+    public static BlockRegistryObject registerBlockItem(String id, net.minecraft.block.Block block, CreativeModeTabHolder itemGroup) {
+        return registerBlockItem(id, new Block(block), itemGroup);
+    }
+
     public static BlockRegistryObject registerBlock(String id, Block block) {
         // Registry.register(Registries.BLOCK, new Identifier(Constants.MOD_ID, id), block);
         return org.mtr.mapping.registry.Registry.registerBlock(new Identifier(Constants.MOD_ID, id), () -> block);

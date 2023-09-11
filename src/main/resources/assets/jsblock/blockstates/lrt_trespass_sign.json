@@ -7,10 +7,6 @@
     "facing=north,part=1": { "model": "jsblock:block/lrt_trespass_sign_upper", "y": 90 },
     "facing=east,part=1": { "model": "jsblock:block/lrt_trespass_sign_upper", "y": 180 },
     "facing=south,part=1": { "model": "jsblock:block/lrt_trespass_sign_upper", "y": 270 },
-    "facing=west,part=1": { "model": "jsblock:block/lrt_trespass_sign_upper" },
-    "facing=north,part=2": { "model": "jsblock:block/empty" },
-    "facing=east,part=2": { "model": "jsblock:block/empty", "y": 90 },
-    "facing=south,part=2": { "model": "jsblock:block/empty", "y": 180 },
-    "facing=west,part=2": { "model": "jsblock:block/empty", "y": 270 }
+    "facing=west,part=1": { "model": "jsblock:block/lrt_trespass_sign_upper" }
   }
 }

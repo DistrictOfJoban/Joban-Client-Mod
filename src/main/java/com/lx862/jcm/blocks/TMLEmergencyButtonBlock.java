@@ -1,13 +1,13 @@
 package com.lx862.jcm.blocks;
 
-import com.lx862.jcm.blocks.base.VerticalMultiBlock;
+import com.lx862.jcm.blocks.base.VerticalTripleBlock;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class TMLEmergencyButtonBlock extends VerticalMultiBlock {
+public class TMLEmergencyButtonBlock extends VerticalTripleBlock {
     public TMLEmergencyButtonBlock(BlockSettings settings) {
-        super(settings, 3);
+        super(settings);
     }
 
     @Override

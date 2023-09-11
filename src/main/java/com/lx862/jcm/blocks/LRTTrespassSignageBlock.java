@@ -1,14 +1,14 @@
 package com.lx862.jcm.blocks;
 
-import com.lx862.jcm.blocks.base.VerticalMultiBlock;
+import com.lx862.jcm.blocks.base.VerticalDoubleBlock;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class LRTTrespassSignageBlock extends VerticalMultiBlock {
+public class LRTTrespassSignageBlock extends VerticalDoubleBlock {
 
     public LRTTrespassSignageBlock(BlockSettings settings) {
-        super(settings, 2);
+        super(settings);
     }
 
     @Override

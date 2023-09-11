@@ -8,33 +8,27 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public class VerticalMultiBlock extends DirectionalBlock {
-    private final int height;
-    public static final IntegerProperty PART = BlockProperties.VERTICAL_PART;
+public abstract class VerticalTripleBlock extends VerticalMultiBlockBase {
+    private static final int height = 3;
+    public static final IntegerProperty PART = BlockProperties.VERTICAL_PART_3;
 
-    public VerticalMultiBlock(BlockSettings settings, int height) {
+    public VerticalTripleBlock(BlockSettings settings) {
         super(settings);
-        this.height = height;
     }
 
     @Override
     public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
-        return BlockUtil.isReplacable(world, pos, Direction.UP, height);
+        return VerticalMultiBlockBase.canBePlaced(state, world, pos, height);
     }
 
     @Override
     public void onPlaced2(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-        for (int i = 0; i < height; i++) {
-            if (i == 0) continue;
-            world.setBlockState(pos.up(i), state.with(new Property<>(PART.data), i));
-        }
+        VerticalMultiBlockBase.placeAllBlock(world, pos, state, new Property<>(PART.data), height);
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        int thisPart = state.get(new Property<>(PART.data));
-
-        if (!BlockUtil.canSurvive(this, world, pos, Direction.UP, thisPart, height)) {
+        if(VerticalMultiBlockBase.shouldRemove(world, pos, state, this, new Property<>(PART.data), height)) {
             return Blocks.getAirMapped().getDefaultState();
         }
 
