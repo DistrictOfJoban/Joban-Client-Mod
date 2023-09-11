@@ -1,16 +1,16 @@
 package com.lx862.jcm.blocks.base;
 
-import com.lx862.jcm.blocks.data.BlockProperties;
+import com.lx862.jcm.data.BlockProperties;
 import net.minecraft.block.enums.SlabType;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public class SlabExtendibleBlock extends DirectionalBlock {
+public abstract class SlabExtendableBlock extends DirectionalBlock {
     public static final BooleanProperty HAS_TOP = BlockProperties.HAS_TOP;
 
-    public SlabExtendibleBlock(BlockSettings settings) {
+    public SlabExtendableBlock(BlockSettings settings) {
         super(settings);
         setDefaultState2(getDefaultState2().with(new Property<>(HAS_TOP.data), false));
     }

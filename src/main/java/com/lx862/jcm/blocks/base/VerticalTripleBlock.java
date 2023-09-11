@@ -1,7 +1,6 @@
 package com.lx862.jcm.blocks.base;
 
-import com.lx862.jcm.blocks.data.BlockProperties;
-import com.lx862.jcm.util.BlockUtil;
+import com.lx862.jcm.data.BlockProperties;
 import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
@@ -18,17 +17,17 @@ public abstract class VerticalTripleBlock extends VerticalMultiBlockBase {
 
     @Override
     public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
-        return VerticalMultiBlockBase.canBePlaced(state, world, pos, height);
+        return canBePlaced(state, world, pos, height);
     }
 
     @Override
     public void onPlaced2(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-        VerticalMultiBlockBase.placeAllBlock(world, pos, state, new Property<>(PART.data), height);
+        placeAllBlock(world, pos, state, new Property<>(PART.data), height);
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if(VerticalMultiBlockBase.shouldRemove(world, pos, state, this, new Property<>(PART.data), height)) {
+        if(shouldRemove(world, pos, state, this, new Property<>(PART.data), height)) {
             return Blocks.getAirMapped().getDefaultState();
         }
 

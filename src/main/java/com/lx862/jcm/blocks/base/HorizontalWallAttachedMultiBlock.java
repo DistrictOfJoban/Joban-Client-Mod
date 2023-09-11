@@ -4,7 +4,7 @@ import com.lx862.jcm.util.BlockUtil;
 import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 
-public class HorizontalWallAttachedMultiBlock extends HorizontalMultiBlock {
+public abstract class HorizontalWallAttachedMultiBlock extends HorizontalMultiBlock {
 
     public HorizontalWallAttachedMultiBlock(BlockSettings settings) {
         super(settings);
@@ -13,12 +13,12 @@ public class HorizontalWallAttachedMultiBlock extends HorizontalMultiBlock {
     @Override
     public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
         boolean willBeFullyAttached = WallAttachedBlock.isAttached(state, pos, world) && WallAttachedBlock.isAttached(state, pos.offset(BlockUtil.getProperty(state, FACING).rotateYClockwise()), world);
-        return willBeFullyAttached && HorizontalMultiBlock.canPlace(state, world, pos, width);
+        return willBeFullyAttached && canPlace(state, world, pos, width);
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if (!HorizontalMultiBlock.isConnected(state, world, pos, width) || !WallAttachedBlock.isAttached(state, pos, world)) {
+        if (!isConnected(state, world, pos, width) || !WallAttachedBlock.isAttached(state, pos, world)) {
             return Blocks.getAirMapped().getDefaultState();
         }
 

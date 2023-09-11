@@ -19,4 +19,10 @@ public class ScoreboardUtil {
             return true;
         }
     }
+
+    public static ScoreboardPlayerScore getPlayerMTRBalanceScore(World world, PlayerEntity player) {
+        String playerName = player.getGameProfile().getName();
+        ScoreboardObjective mtrScoreboard = getOrCreateObjective(world, "mtr_balance", ScoreboardCriterion.getDummyMapped(), Text.cast(TextHelper.literal("Balance")), ScoreboardCriterionRenderType.INTEGER);
+        return world.getScoreboard().getPlayerScore(playerName, mtrScoreboard);
+    }
 }

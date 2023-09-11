@@ -9,7 +9,7 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public class WaterloggableBlock extends JCMBlock implements Waterloggable {
+public abstract class WaterloggableBlock extends JCMBlock implements Waterloggable {
     public static final BooleanProperty WATERLOGGED = new BooleanProperty(Properties.WATERLOGGED);
 
     public WaterloggableBlock(BlockSettings settings) {

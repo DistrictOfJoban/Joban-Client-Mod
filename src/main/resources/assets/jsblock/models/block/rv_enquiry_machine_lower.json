@@ -1,15 +1,14 @@
 {
-	"credit": "DoJ 2022",
 	"texture_size": [48, 48],
 	"textures": {
-		"0": "jsblock:block/enquiry_machine_2_lower",
-		"particle": "jsblock:block/enquiry_machine_2_lower"
+		"0": "jsblock:block/rv_enquiry_machine_lower",
+		"particle": "jsblock:block/rv_enquiry_machine_lower"
 	},
 	"elements": [
 		{
-			"from": [0, 0, 3],
-			"to": [6, 16, 13],
-			"rotation": {"angle": 0, "axis": "y", "origin": [12, 7, 8]},
+			"from": [2, 0, 3],
+			"to": [8, 16, 13],
+			"rotation": {"angle": 0, "axis": "y", "origin": [14, 7, 8]},
 			"faces": {
 				"north": {"uv": [6.66667, 8.66667, 8.66667, 14], "texture": "#0"},
 				"east": {"uv": [0, 0, 3.33333, 5.33333], "texture": "#0"},
@@ -20,9 +19,9 @@
 			}
 		},
 		{
-			"from": [6, 3.38, 4],
-			"to": [11, 16, 12],
-			"rotation": {"angle": 0, "axis": "y", "origin": [16, 0.38, 7]},
+			"from": [8, 3.38, 4],
+			"to": [13, 16, 12],
+			"rotation": {"angle": 0, "axis": "y", "origin": [18, 0.38, 7]},
 			"faces": {
 				"north": {"uv": [9.33333, 0, 11, 4.20833], "texture": "#0"},
 				"east": {"uv": [7, 0, 9, 3.66667], "texture": "#0"},
@@ -33,9 +32,9 @@
 			}
 		},
 		{
-			"from": [3.26339, 0.72543, 3],
-			"to": [4.26339, 16.34543, 13],
-			"rotation": {"angle": -22.5, "axis": "z", "origin": [7.26339, -3.27457, 8]},
+			"from": [5.26339, 0.72543, 3],
+			"to": [6.26339, 16.34543, 13],
+			"rotation": {"angle": -22.5, "axis": "z", "origin": [9.26339, -3.27457, 8]},
 			"faces": {
 				"north": {"uv": [5.66667, 10.66667, 6, 15.875], "texture": "#0"},
 				"east": {"uv": [0, 5.33333, 3.33333, 10.54167], "texture": "#0"},

@@ -6,7 +6,7 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockSettings;
 import org.mtr.mapping.holder.BlockState;
 
-public abstract class PoleBlock extends SlabExtendibleBlock {
+public abstract class PoleBlock extends SlabExtendableBlock {
     public PoleBlock(BlockSettings settings) {
         super(settings);
     }

@@ -1,16 +1,15 @@
 {
-	"credit": "DoJ 2022",
 	"ambientocclusion": false,
 	"texture_size": [22, 22],
 	"textures": {
-		"0": "jsblock:block/enquiry_machine_3",
-		"particle": "jsblock:block/enquiry_machine_3"
+		"0": "jsblock:block/mtr_enquiry_machine_wall",
+		"particle": "jsblock:block/mtr_enquiry_machine_wall"
 	},
 	"elements": [
 		{
 			"name": "main",
-			"from": [2.5, 0, 0.1],
-			"to": [13.5, 14, 0.1],
+			"from": [2.5, 1, 0.1],
+			"to": [13.5, 15, 0.1],
 			"shade": false,
 			"faces": {
 				"north": {"uv": [0, 0, 8, 10.18182], "texture": "#0"},

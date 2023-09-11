@@ -1,4 +1,4 @@
-package com.lx862.jcm.blocks.blockentity;
+package com.lx862.jcm.blocks.entity;
 
 import org.mtr.mapping.holder.BlockEntityType;
 import org.mtr.mapping.holder.BlockPos;

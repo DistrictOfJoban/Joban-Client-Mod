@@ -1,4 +1,4 @@
-package com.lx862.jcm.blocks.data;
+package com.lx862.jcm.data;
 
 import net.minecraft.state.property.Properties;
 import org.mtr.mapping.holder.BooleanProperty;

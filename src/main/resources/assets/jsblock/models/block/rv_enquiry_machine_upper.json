@@ -1,14 +1,13 @@
 {
-	"credit": "DoJ 2022",
 	"textures": {
-		"0": "jsblock:block/enquiry_machine_2_upper",
-		"particle": "jsblock:block/enquiry_machine_2_upper"
+		"0": "jsblock:block/rv_enquiry_machine_upper",
+		"particle": "jsblock:block/rv_enquiry_machine_upper"
 	},
 	"elements": [
 		{
-			"from": [7.01202, 9.42892, 3],
-			"to": [8.01202, 12.04892, 13],
-			"rotation": {"angle": 0, "axis": "y", "origin": [11.01202, 0.42892, 8]},
+			"from": [9.01202, 9.42892, 3],
+			"to": [10.01202, 12.04892, 13],
+			"rotation": {"angle": 0, "axis": "y", "origin": [13.01202, 0.42892, 8]},
 			"faces": {
 				"north": {"uv": [10.18182, 7.27273, 10.54545, 8.22727], "texture": "#0"},
 				"east": {"uv": [10.54545, 10.18182, 14.18182, 11.13636], "texture": "#0"},
@@ -19,9 +18,9 @@
 			}
 		},
 		{
-			"from": [6, 0, 4],
-			"to": [11, 11.62, 12],
-			"rotation": {"angle": 0, "axis": "y", "origin": [16, 0, 7]},
+			"from": [8, 0, 4],
+			"to": [13, 11.62, 12],
+			"rotation": {"angle": 0, "axis": "y", "origin": [18, 0, 7]},
 			"faces": {
 				"north": {"uv": [8.76894, 8.72727, 10.54545, 12.95455], "texture": "#0"},
 				"east": {"uv": [7.83333, 0.45833, 9.89583, 4.10417], "texture": "#0"},
@@ -32,9 +31,9 @@
 			}
 		},
 		{
-			"from": [0, 0, 3],
-			"to": [6, 11.62, 13],
-			"rotation": {"angle": 0, "axis": "y", "origin": [18, 0, 7]},
+			"from": [2, 0, 3],
+			"to": [8, 11.62, 13],
+			"rotation": {"angle": 0, "axis": "y", "origin": [20, 0, 7]},
 			"faces": {
 				"north": {"uv": [0, 8.36364, 2.18182, 12.59091], "texture": "#0"},
 				"east": {"uv": [0, 0, 3.63636, 4.22727], "texture": "#0"},
@@ -45,9 +44,9 @@
 			}
 		},
 		{
-			"from": [14.21579, 1.83313, 3],
-			"to": [15.21579, 12.45313, 13],
-			"rotation": {"angle": 22.5, "axis": "z", "origin": [18.21579, -7.16687, 8]},
+			"from": [16.21579, 1.83313, 3],
+			"to": [17.21579, 12.45313, 13],
+			"rotation": {"angle": 22.5, "axis": "z", "origin": [20.21579, -7.16687, 8]},
 			"faces": {
 				"north": {"uv": [12, 0, 12.36364, 3.86364], "texture": "#0"},
 				"east": {"uv": [0, 4.36364, 3.63636, 8.22727], "texture": "#0"},

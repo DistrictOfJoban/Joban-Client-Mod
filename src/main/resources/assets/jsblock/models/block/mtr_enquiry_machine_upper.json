@@ -1,14 +1,14 @@
 {
 	"credit": "DoJ 2022",
 	"textures": {
-		"0": "jsblock:block/enquiry_machine_1",
-		"particle": "jsblock:block/enquiry_machine_1"
+		"0": "jsblock:block/mtr_enquiry_machine",
+		"particle": "jsblock:block/mtr_enquiry_machine"
 	},
 	"elements": [
 		{
-			"from": [7, 0, 4],
-			"to": [14, 5.62, 12],
-			"rotation": {"angle": 0, "axis": "y", "origin": [17, -9, 8]},
+			"from": [4.5, 0, 4],
+			"to": [11.5, 5.62, 12],
+			"rotation": {"angle": 0, "axis": "y", "origin": [14.5, -9, 8]},
 			"faces": {
 				"north": {"uv": [9.59375, 0.5, 6.625, 3.125], "texture": "#0"},
 				"east": {"uv": [8.46875, 0, 9.5, 0.90625], "texture": "#0"},
@@ -19,9 +19,9 @@
 			}
 		},
 		{
-			"from": [8.375, 5.64583, 4],
-			"to": [8.375, 10.14583, 12],
-			"rotation": {"angle": 0, "axis": "y", "origin": [17, -9, 8]},
+			"from": [5.84214, 5.65686, 4],
+			"to": [5.84214, 10.15686, 12],
+			"rotation": {"angle": 0, "axis": "y", "origin": [16.96714, -8.98897, 8]},
 			"faces": {
 				"north": {"uv": [9.59375, 0.5, 6.625, 3.125], "texture": "#0"},
 				"east": {"uv": [9.59375, 7.34375, 16, 12.375], "texture": "#0"},
@@ -32,9 +32,9 @@
 			}
 		},
 		{
-			"from": [10.28787, -6.32482, 4],
-			"to": [10.28787, 1.67518, 12],
-			"rotation": {"angle": 45, "axis": "z", "origin": [4.5097, 1.31732, 8]},
+			"from": [7.78787, -6.32482, 4],
+			"to": [7.78787, 1.67518, 12],
+			"rotation": {"angle": 45, "axis": "z", "origin": [2.0097, 1.31732, 8]},
 			"faces": {
 				"north": {"uv": [12.6875, 13.8125, 16, 16], "texture": "#0"},
 				"east": {"uv": [9.59375, 0, 16, 7.28125], "texture": "#0"},

@@ -20,7 +20,6 @@ public class WaterMachineBlock extends VerticalDoubleBlock {
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-
         if (player.isHolding(Items.getGlassBottleMapped())) {
             Utils.decrementItemFromPlayerHand(player, hand, 1);
             fillBottleForPlayer(player);

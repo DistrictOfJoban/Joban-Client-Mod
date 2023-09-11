@@ -1,7 +1,7 @@
 package com.lx862.jcm.blocks;
 
 import com.lx862.jcm.blocks.base.PoleBlock;
-import com.lx862.jcm.blocks.data.BlockProperties;
+import com.lx862.jcm.data.BlockProperties;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;

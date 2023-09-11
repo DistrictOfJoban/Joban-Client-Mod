@@ -4,7 +4,7 @@ import com.lx862.jcm.util.BlockUtil;
 import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 
-public class WallAttachedBlock extends DirectionalBlock {
+public abstract class WallAttachedBlock extends DirectionalBlock {
 
     public WallAttachedBlock(BlockSettings settings) {
         super(settings);

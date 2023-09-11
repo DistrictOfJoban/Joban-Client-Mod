@@ -13,10 +13,10 @@ public abstract class VerticalMultiBlockBase extends DirectionalBlock {
         return BlockUtil.isReplacable(world, pos, Direction.UP, height);
     }
 
-    public static void placeAllBlock(World world, BlockPos startPos, BlockState state, Property property, int height) {
+    public static void placeAllBlock(World world, BlockPos startPos, BlockState state, Property<Integer> partProperty, int height) {
         for (int i = 0; i < height; i++) {
             if (i == 0) continue;
-            world.setBlockState(startPos.up(i), state.with(property, i));
+            world.setBlockState(startPos.up(i), state.with(partProperty, i));
         }
     }
 

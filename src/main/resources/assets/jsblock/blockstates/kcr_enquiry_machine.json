@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "jsblock:block/kcr_enquiry_machine" },
+    "facing=east": { "model": "jsblock:block/kcr_enquiry_machine", "y": 90 },
+    "facing=south": { "model": "jsblock:block/kcr_enquiry_machine", "y": 180 },
+    "facing=west": { "model": "jsblock:block/kcr_enquiry_machine", "y": 270 }
+  }
+}

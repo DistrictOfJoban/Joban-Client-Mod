@@ -28,6 +28,14 @@ public class SimpleDefaultedRegistryMixin {
                     return new Identifier(id.getNamespace(), "helpline_standing_eal");
                 case "helpline_4":
                     return new Identifier(id.getNamespace(), "helpline_standing");
+                case "enquiry_machine_1":
+                    return new Identifier(id.getNamespace(), "mtr_enquiry_machine");
+                case "enquiry_machine_2":
+                    return new Identifier(id.getNamespace(), "rv_enquiry_machine");
+                case "enquiry_machine_3":
+                    return new Identifier(id.getNamespace(), "mtr_enquiry_machine_wall");
+                case "enquiry_machine_4":
+                    return new Identifier(id.getNamespace(), "kcr_enquiry_machine");
                 case "light_1":
                     return new Identifier(id.getNamespace(), "light_lantern");
                 case "light_2":

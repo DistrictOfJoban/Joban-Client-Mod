@@ -1,13 +1,14 @@
 package com.lx862.jcm.blocks;
 
 import com.lx862.jcm.blocks.base.WallAttachedBlock;
-import com.lx862.jcm.blocks.blockentity.SubsidyMachineBlockEntity;
+import com.lx862.jcm.blocks.entity.SubsidyMachineBlockEntity;
+import com.lx862.jcm.data.JCMStats;
 import com.lx862.jcm.util.*;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+import net.minecraft.SharedConstants;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
-import org.mtr.mapping.mapper.TextHelper;
 
 import java.util.UUID;
 
@@ -24,24 +25,29 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(world.isClient()) return ActionResult.SUCCESS;
+        super.onUse2(state, world, pos, player, hand, hit);
+        return ActionResult.SUCCESS;
+    }
 
+    @Override
+    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         SubsidyMachineBlockEntity thisEntity = (SubsidyMachineBlockEntity)world.getBlockEntity(pos).data;
 
         if (Utils.playerHoldingBrush(player)) {
             //TODO: Open GUI Screen
-        } else {
-            if(cooldownExpired(player, thisEntity.getTimeout())) {
-                int finalBalance = addMTRBalanceToPlayer(world, player, thisEntity.getSubsidyAmount());
-                updateCooldown(player);
-                player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "subsidy_machine.success", thisEntity.getSubsidyAmount(), finalBalance)), true);
-            } else {
-                player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "subsidy_machine.fail").formatted(TextFormatting.RED)), true);
-            }
+            return;
         }
 
-        return ActionResult.SUCCESS;
+        if(cooldownExpired(player, thisEntity.getCooldown())) {
+            updateCooldown(player);
+            int finalBalance = addMTRBalanceToPlayer(world, player, thisEntity.getSubsidyAmount());
+            player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "subsidy_machine.success", thisEntity.getSubsidyAmount(), finalBalance)), true);
+        } else {
+            int remainingSec = (int)Math.round((thisEntity.getCooldown() - getCooldown(player)) / (double)SharedConstants.TICKS_PER_SECOND);
+            player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "subsidy_machine.fail", remainingSec).formatted(TextFormatting.RED)), true);
+        }
     }
+
 
     @Override
     public BlockEntityExtension createBlockEntity(BlockPos blockPos, BlockState blockState) {
@@ -49,20 +55,21 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
     }
 
     private int addMTRBalanceToPlayer(World world, PlayerEntity player, int amount) {
-        String playerName = player.getGameProfile().getName();
-        ScoreboardObjective mtrScoreboard = ScoreboardUtil.getOrCreateObjective(world, "mtr_balance", ScoreboardCriterion.getDummyMapped(), Text.cast(TextHelper.literal("Balance")), ScoreboardCriterionRenderType.INTEGER);
-        ScoreboardPlayerScore mtrBalanceScore = world.getScoreboard().getPlayerScore(playerName, mtrScoreboard);
+        ScoreboardPlayerScore mtrBalanceScore = ScoreboardUtil.getPlayerMTRBalanceScore(world, player);
 
         ScoreboardUtil.incrementNonOverflow(mtrBalanceScore, amount);
         return mtrBalanceScore.getScore();
     }
 
-    private boolean cooldownExpired(PlayerEntity player, int cooldownSeconds) {
-        //TODO: Count tick instead of currentTimeMs
-        return System.currentTimeMillis() - cooldownMap.getOrDefault(player.getUuid(), 0) > cooldownSeconds;
+    private boolean cooldownExpired(PlayerEntity player, int cooldownTick) {
+        return getCooldown(player) > cooldownTick;
+    }
+
+    private long getCooldown(PlayerEntity player) {
+        return JCMStats.getGameTick() - cooldownMap.getOrDefault(player.getUuid(), 0);
     }
 
     private void updateCooldown(PlayerEntity player) {
-        cooldownMap.put(player.getUuid(), System.currentTimeMillis());
+        cooldownMap.put(player.getUuid(), JCMStats.getGameTick());
     }
 }

@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "jsblock:block/mtr_enquiry_machine_wall" },
+    "facing=east": { "model": "jsblock:block/mtr_enquiry_machine_wall", "y": 90 },
+    "facing=south": { "model": "jsblock:block/mtr_enquiry_machine_wall", "y": 180 },
+    "facing=west": { "model": "jsblock:block/mtr_enquiry_machine_wall", "y": 270 }
+  }
+}

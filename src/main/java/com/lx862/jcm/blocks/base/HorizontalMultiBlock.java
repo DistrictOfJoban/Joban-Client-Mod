@@ -1,6 +1,6 @@
 package com.lx862.jcm.blocks.base;
 
-import com.lx862.jcm.blocks.data.BlockProperties;
+import com.lx862.jcm.data.BlockProperties;
 import com.lx862.jcm.util.BlockUtil;
 import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
@@ -8,7 +8,7 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public class HorizontalMultiBlock extends DirectionalBlock {
+public abstract class HorizontalMultiBlock extends DirectionalBlock {
     public static final int width = 2;
     public static final IntegerProperty PART = BlockProperties.HORIZONTAL_PART;
 

@@ -1,12 +1,12 @@
 package com.lx862.jcm.blocks.base;
 
-import com.lx862.jcm.blocks.data.BlockProperties;
+import com.lx862.jcm.data.BlockProperties;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public class DirectionalBlock extends WaterloggableBlock {
+public abstract class DirectionalBlock extends WaterloggableBlock {
     public static final DirectionProperty FACING = BlockProperties.FACING;
 
     public DirectionalBlock(BlockSettings settings) {

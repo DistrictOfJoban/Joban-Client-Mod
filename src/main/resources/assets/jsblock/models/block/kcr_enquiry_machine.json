@@ -1,16 +1,15 @@
 {
-	"credit": "Made with Blockbench",
 	"ambientocclusion": false,
 	"texture_size": [22, 22],
 	"textures": {
-		"0": "jsblock:block/enquiry_machine_4",
-		"particle": "jsblock:block/enquiry_machine_4"
+		"0": "jsblock:block/kcr_enquiry_machine",
+		"particle": "jsblock:block/kcr_enquiry_machine"
 	},
 	"elements": [
 		{
 			"name": "main",
-			"from": [3.5, 0, 0],
-			"to": [12.5, 11, 1],
+			"from": [3.5, 2.5, 0],
+			"to": [12.5, 13.5, 1],
 			"shade": false,
 			"faces": {
 				"north": {"uv": [0, 0, 6.54545, 8], "texture": "#0"},

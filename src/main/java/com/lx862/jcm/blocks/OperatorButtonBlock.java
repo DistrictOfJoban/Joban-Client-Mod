@@ -1,12 +1,11 @@
 package com.lx862.jcm.blocks;
 
 import com.lx862.jcm.blocks.base.WallAttachedBlock;
-import com.lx862.jcm.blocks.data.BlockProperties;
+import com.lx862.jcm.data.BlockProperties;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.TextUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
-import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
@@ -28,15 +27,22 @@ public class OperatorButtonBlock extends WallAttachedBlock {
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        super.onUse2(state, world, pos, player, hand, hit);
+        // TODO: Temporary item, replace with Driver Key after adding MTR as dependencies
+        if (player.isHolding(Items.getGrassBlockMapped())) {
+            return ActionResult.SUCCESS;
+        } else {
+            player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "operator_button.fail").formatted(TextFormatting.RED)), true);
+            return ActionResult.FAIL;
+        }
+    }
+
+    @Override
+    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         // TODO: Temporary item, replace with Driver Key after adding MTR as dependencies
         if (player.isHolding(Items.getGrassBlockMapped())) {
             setPowered(world, state, pos, true);
             world.scheduleBlockTick(pos, new Block(this), poweredDuration);
-
-            return ActionResult.SUCCESS;
-        } else {
-            player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "operator_button.unauthorized").formatted(TextFormatting.RED)), true);
-            return ActionResult.FAIL;
         }
     }
 

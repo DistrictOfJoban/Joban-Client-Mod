@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "jsblock:item/enquiry_machine_4"
+    "layer0": "jsblock:item/mtr_enquiry_machine"
   }
 }

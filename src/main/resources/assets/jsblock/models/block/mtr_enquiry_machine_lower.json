@@ -1,13 +1,12 @@
 {
-	"credit": "DoJ 2022",
 	"textures": {
-		"0": "jsblock:block/enquiry_machine_1",
-		"particle": "jsblock:block/enquiry_machine_1"
+		"0": "jsblock:block/mtr_enquiry_machine",
+		"particle": "jsblock:block/mtr_enquiry_machine"
 	},
 	"elements": [
 		{
-			"from": [7, 0, 4],
-			"to": [14, 16, 12],
+			"from": [4.5, 0, 4],
+			"to": [11.5, 16, 12],
 			"rotation": {"angle": 0, "axis": "y", "origin": [12, 7, 8]},
 			"faces": {
 				"north": {"uv": [9.5, 3.1875, 6.6875, 16], "texture": "#0"},

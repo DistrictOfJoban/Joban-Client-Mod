@@ -45,6 +45,7 @@ public class Registry {
         BlockRegistry.register();
         BlockEntityRegistry.register();
         ItemRegistry.register();
+        EventRegistry.register();
         org.mtr.mapping.registry.Registry.init();
     }
 

@@ -1,6 +1,6 @@
 package com.lx862.jcm.registry;
 
-import com.lx862.jcm.blocks.blockentity.SubsidyMachineBlockEntity;
+import com.lx862.jcm.blocks.entity.SubsidyMachineBlockEntity;
 import com.lx862.jcm.util.Logger;
 import org.mtr.mapping.registry.BlockEntityTypeRegistryObject;
 
