@@ -7,6 +7,7 @@ Use with caution!
 ### Implemented
 - Creative Inventory Tabs Registration
 - Block and Item Registration
+- Integrate '''Minecraft Mapping''' project to provide cross version and cross-platform compatibility
 - Blocks:
   - Slanted Ceiling
   - Exit Sign (Odd)
@@ -18,6 +19,8 @@ Use with caution!
   - MTR Station Ceiling Pole (2009)
   - Light Lantern
   - MTR Stairs
+  - Wall attached Helpline (Sticker & No Sticker)
+  - Standinh Helpline (Normal & EAL)
   - LRT Inter Car Barriers
   - Operator Button
   - Emergency Button (TCL)
@@ -33,7 +36,6 @@ Use with caution!
 - Block Entity Rendering
 - GUI Screen
 - Networking (Packets)
-- Integrate the '''Minecraft Mapping''' project to provide cross version and cross-platform compatibility. (May not be used if it severely hinders performance!) ~~(Yes I am looking at you Architectury)~~
 - Migration path for JCM Legacy 1.x.x
   - Roadblock:  
   No official path to migrate blockstates and id, will have to find our own, potentially dangerous path... or have to leave all the player unsatisfied
