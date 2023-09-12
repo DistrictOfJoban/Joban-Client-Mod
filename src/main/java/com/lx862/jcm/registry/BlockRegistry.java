@@ -7,6 +7,7 @@ import org.mtr.mapping.holder.BlockSettings;
 import org.mtr.mapping.registry.BlockRegistryObject;
 
 public final class BlockRegistry {
+    public static final BlockRegistryObject BUFFER_STOP = Registry.registerBlockItem("buffer_stop", new BufferStopBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 8)), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject CEILING_SLANTED = Registry.registerBlockItem("ceiling_slanted", new CeilingSlantedBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject DEPARTURE_POLE = Registry.registerBlockItem("departure_pole", new DeparturePoleBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject HK_EXIT_SIGN_ODD = Registry.registerBlockItem("hk_exit_sign_odd", new HKExitSignOdd(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroupRegistry.JCM_MAIN);

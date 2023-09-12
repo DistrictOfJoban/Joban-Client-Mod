@@ -20,6 +20,8 @@ public class SimpleDefaultedRegistryMixin {
     Identifier dataFixerRegistry(@Nullable Identifier id) {
         if (id != null && id.getNamespace().equals("jsblock")) {
             switch (id.getPath()) {
+                case "bufferstop_1":
+                    return new Identifier(id.getNamespace(), "buffer_stop");
                 case "ceiling_1":
                     return new Identifier(id.getNamespace(), "ceiling_slanted");
                 case "exit_sign_1":

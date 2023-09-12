@@ -8,7 +8,7 @@
   "block.jsblock.auto_iron_door": "鐵門 (自動)",
   "block.jsblock.block.rv_pids_pole": "必須在原有的鐵路願景乘客資訊顯示屏柱上放置",
   "block.jsblock.butterfly_light": "關門指示燈 (蝴蝶燈)",
-  "block.jsblock.bufferstop_1": "止衝擋 (東鐵綫款式)",
+  "block.jsblock.buffer_stop": "止衝擋 (東鐵綫款式)",
   "block.jsblock.ceiling_slanted": "天花 (傾斜)",
   "block.jsblock.circle_wall_1": "圓形隧道 (1)",
   "block.jsblock.circle_wall_2": "圓形隧道 (2)",

@@ -13,6 +13,7 @@ public final class BlockRenderTypeRegistry {
         Logger.info("Registering RenderType...");
 
         registerBlockRenderType(RenderLayer.getCutout(),
+                BlockRegistry.BUFFER_STOP,
                 BlockRegistry.MTR_ENQUIRY_MACHINE,
                 BlockRegistry.RV_ENQUIRY_MACHINE,
                 BlockRegistry.SUBSIDY_MACHINE,

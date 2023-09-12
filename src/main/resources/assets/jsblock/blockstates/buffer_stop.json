@@ -1,0 +1,8 @@
+{
+	"variants":{
+		"facing=north": { "model": "jsblock:block/buffer_stop" },
+		"facing=east": { "model": "jsblock:block/buffer_stop", "y": 90 },
+		"facing=south": { "model": "jsblock:block/buffer_stop", "y": 180 },
+		"facing=west": { "model": "jsblock:block/buffer_stop", "y": 270 }
+	}
+}
