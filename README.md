@@ -9,18 +9,24 @@ Use with caution!
 - Block and Item Registration
 - Integrate '''Minecraft Mapping''' project to provide cross version and cross-platform compatibility
 - Blocks:
+  - Buffered Stop (East Rail Line)
+  - Departure Pole
   - Slanted Ceiling
   - Exit Sign (Odd)
   - E44 Train Model
   - MTR Trespass Signage
   - KCR Trespass Signage
   - LRT Trespass Signage
+  - MTR Enquiry Machine
+  - MTR Wall Mounted Enquiry Machine
+  - KCR Wall Mounted Enquiry Machine
+  - MTR Railway Vision Enquiry Machine
   - MTR Station Ceiling (2009)
   - MTR Station Ceiling Pole (2009)
   - Light Lantern
   - MTR Stairs
   - Wall attached Helpline (Sticker & No Sticker)
-  - Standinh Helpline (Normal & EAL)
+  - Standing Helpline (Normal & EAL)
   - LRT Inter Car Barriers
   - Operator Button
   - Emergency Button (TCL)
