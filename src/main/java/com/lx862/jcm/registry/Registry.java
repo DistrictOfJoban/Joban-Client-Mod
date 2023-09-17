@@ -38,7 +38,7 @@ public class Registry {
     }
 
     public static <T extends BlockEntityExtension> BlockEntityTypeRegistryObject<T> registerBlockEntity(String id, BiFunction<BlockPos, BlockState, T> constructor, BlockRegistryObject associatedBlock) {
-        return org.mtr.mapping.registry.Registry.registerBlockEntityType(new Identifier(Constants.MOD_ID, id), constructor, associatedBlock.get());
+        return org.mtr.mapping.registry.Registry.registerBlockEntityType(new Identifier(Constants.MOD_ID, id), constructor, associatedBlock::get);
     }
 
     public static void register() {

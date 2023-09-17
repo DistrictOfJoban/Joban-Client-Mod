@@ -5,6 +5,9 @@ import org.mtr.mapping.holder.BooleanProperty;
 import org.mtr.mapping.holder.DirectionProperty;
 import org.mtr.mapping.holder.IntegerProperty;
 
+/**
+ * Stores all block properties, block class should reference block properties in here
+ */
 public class BlockProperties {
     public static final DirectionProperty FACING = new DirectionProperty(Properties.HORIZONTAL_FACING);
     public static final IntegerProperty HORIZONTAL_PART = IntegerProperty.of("part", 0, 1);

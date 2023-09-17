@@ -10,6 +10,10 @@ public class Logger {
         LOGGER.info(Constants.LOGGING_PREFIX + s);
     }
 
+    public static void info(String s, Object... o) {
+        LOGGER.info(Constants.LOGGING_PREFIX + s, o);
+    }
+
     public static void warn(String s) {
         LOGGER.warn(Constants.LOGGING_PREFIX + s);
     }

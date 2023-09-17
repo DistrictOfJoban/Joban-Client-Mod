@@ -16,10 +16,10 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.lx862.jcm.JCM"
+			"com.lx862.jcm.entrypointtemp.Main"
 		],
 		"client": [
-			"com.lx862.jcm.JCMClient"
+			"com.lx862.jcm.entrypointtemp.MainClient"
 		]
 	},
 	"mixins": [
