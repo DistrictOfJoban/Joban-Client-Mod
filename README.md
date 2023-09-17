@@ -32,6 +32,7 @@ Use with caution!
   - Emergency Button (TCL)
   - Emergency Button (TML)
   - Emergency Button (SIL)
+  - KCR Emergency Stop Sign
   - Station Ceiling
   - Spot Lamp
   - Water Machine

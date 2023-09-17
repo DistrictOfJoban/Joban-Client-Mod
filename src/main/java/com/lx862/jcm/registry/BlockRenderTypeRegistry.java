@@ -14,6 +14,7 @@ public final class BlockRenderTypeRegistry {
 
         registerBlockRenderType(RenderLayer.getCutout(),
                 BlockRegistry.BUFFER_STOP,
+                BlockRegistry.KCR_EMG_STOP_SIGN,
                 BlockRegistry.MTR_ENQUIRY_MACHINE,
                 BlockRegistry.RV_ENQUIRY_MACHINE,
                 BlockRegistry.SUBSIDY_MACHINE,

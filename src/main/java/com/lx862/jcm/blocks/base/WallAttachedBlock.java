@@ -5,14 +5,14 @@ import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 
 public abstract class WallAttachedBlock extends DirectionalBlock {
-
     public WallAttachedBlock(BlockSettings settings) {
         super(settings);
     }
 
     @Override
     public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
-        return isAttached(state, pos, world);
+        Direction facing = BlockUtil.getProperty(state, FACING);
+        return isAttached(pos, world, getOffsetDirection(facing));
     }
 
     @Override
@@ -26,24 +26,26 @@ public abstract class WallAttachedBlock extends DirectionalBlock {
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if (!isAttached(state, pos, world)) {
+        Direction facing = BlockUtil.getProperty(state, FACING);
+        if (!isAttached(pos, world, getOffsetDirection(facing))) {
             return Blocks.getAirMapped().getDefaultState();
         }
 
         return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos);
     }
 
-    public static boolean isAttached(BlockState state, BlockPos pos, WorldView world) {
-        BlockPos blockBehindPos = pos.offset(BlockUtil.getProperty(state, FACING));
-        BlockState blockBehind = new BlockState(world.getBlockState(blockBehindPos.data));
+    public static boolean isAttached(BlockPos pos, WorldView world, Direction offsetDirection) {
+        BlockPos attachedBlockPos = pos.offset(offsetDirection);
+        BlockState attachedBlock = new BlockState(world.getBlockState(attachedBlockPos.data));
 
-        return BlockUtil.blockConsideredSolid(blockBehind);
+        return BlockUtil.blockConsideredSolid(attachedBlock);
     }
 
-    public static boolean isAttached(BlockState state, BlockPos pos, WorldAccess world) {
-        BlockPos blockBehindPos = pos.offset(BlockUtil.getProperty(state, FACING));
-        BlockState blockBehind = world.getBlockState(blockBehindPos);
+    public static boolean isAttached(BlockPos pos, WorldAccess world, Direction offsetDirection) {
+        return isAttached(pos, world.data, offsetDirection);
+    }
 
-        return BlockUtil.blockConsideredSolid(blockBehind);
+    public Direction getOffsetDirection(Direction defaultDirection) {
+        return defaultDirection;
     }
 }
