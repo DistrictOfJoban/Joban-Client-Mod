@@ -1,11 +1,11 @@
 package com.lx862.jcm.blocks;
 
-import com.lx862.jcm.blocks.base.HorizontalWallAttachedMultiBlock;
+import com.lx862.jcm.blocks.base.HorizontalWallAttached2Block;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class KCRTrespassSignageBlock extends HorizontalWallAttachedMultiBlock {
+public class KCRTrespassSignageBlock extends HorizontalWallAttached2Block {
 
     public KCRTrespassSignageBlock(BlockSettings settings) {
         super(settings);

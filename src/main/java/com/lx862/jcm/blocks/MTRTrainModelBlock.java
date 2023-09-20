@@ -1,11 +1,11 @@
 package com.lx862.jcm.blocks;
 
-import com.lx862.jcm.blocks.base.HorizontalMultiBlock;
+import com.lx862.jcm.blocks.base.Horizontal2Block;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class MTRTrainModelBlock extends HorizontalMultiBlock {
+public class MTRTrainModelBlock extends Horizontal2Block {
     public MTRTrainModelBlock(BlockSettings settings) {
         super(settings);
     }

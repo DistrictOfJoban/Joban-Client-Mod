@@ -1,11 +1,11 @@
 package com.lx862.jcm.blocks;
 
-import com.lx862.jcm.blocks.base.CeilingGroundAttachedDirectionalBlock;
+import com.lx862.jcm.blocks.base.VerticallyAttachedDirectionalBlock;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class ExitSignOdd extends CeilingGroundAttachedDirectionalBlock {
+public class ExitSignOdd extends VerticallyAttachedDirectionalBlock {
 
     public ExitSignOdd(BlockSettings settings) {
         super(settings, true, false);

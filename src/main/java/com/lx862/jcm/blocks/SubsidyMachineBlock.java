@@ -54,22 +54,22 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
         return new SubsidyMachineBlockEntity(blockPos, blockState);
     }
 
-    private int addMTRBalanceToPlayer(World world, PlayerEntity player, int amount) {
+    private static int addMTRBalanceToPlayer(World world, PlayerEntity player, int amount) {
         ScoreboardPlayerScore mtrBalanceScore = ScoreboardUtil.getPlayerMTRBalanceScore(world, player);
 
         ScoreboardUtil.incrementNonOverflow(mtrBalanceScore, amount);
         return mtrBalanceScore.getScore();
     }
 
-    private boolean cooldownExpired(PlayerEntity player, int cooldownTick) {
+    private static boolean cooldownExpired(PlayerEntity player, int cooldownTick) {
         return getCooldown(player) > cooldownTick;
     }
 
-    private long getCooldown(PlayerEntity player) {
+    private static long getCooldown(PlayerEntity player) {
         return JCMStats.getGameTick() - cooldownMap.getOrDefault(player.getUuid(), 0);
     }
 
-    private void updateCooldown(PlayerEntity player) {
+    private static void updateCooldown(PlayerEntity player) {
         cooldownMap.put(player.getUuid(), JCMStats.getGameTick());
     }
 }

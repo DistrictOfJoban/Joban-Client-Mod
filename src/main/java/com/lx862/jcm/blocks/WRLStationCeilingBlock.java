@@ -1,11 +1,11 @@
 package com.lx862.jcm.blocks;
 
-import com.lx862.jcm.blocks.base.CeilingGroundAttachedDirectionalMultiBlock;
+import com.lx862.jcm.blocks.base.VerticallyAttachedDirectionalMultiBlock;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class WRLStationCeilingBlock extends CeilingGroundAttachedDirectionalMultiBlock {
+public class WRLStationCeilingBlock extends VerticallyAttachedDirectionalMultiBlock {
 
     public WRLStationCeilingBlock(BlockSettings settings) {
         super(settings, true, false);

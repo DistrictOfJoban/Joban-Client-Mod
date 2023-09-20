@@ -9,7 +9,7 @@ public class BlockUtil {
         return !state.isAir() && !state.isLiquid();
     }
 
-    public static boolean canSurvive(net.minecraft.block.Block instance, WorldAccess world, BlockPos pos, Direction facing, int part, int totalWidthHeight) {
+    public static boolean canSurvive(Block instance, WorldAccess world, BlockPos pos, Direction facing, int part, int totalWidthHeight) {
         boolean checkLeftOrBottom = part != 0;
         boolean checkRightOrTop = part != totalWidthHeight - 1;
         boolean canSurvive = true;
@@ -17,7 +17,7 @@ public class BlockUtil {
         if (checkLeftOrBottom) {
             BlockPos posLeftOrDown = pos.offset(facing.getOpposite());
             BlockState blockLeftOrDown = world.getBlockState(posLeftOrDown);
-            if (blockLeftOrDown.getBlock().data != instance) {
+            if (!blockLeftOrDown.getBlock().equals(instance)) {
                 return false;
             }
         }
@@ -25,7 +25,7 @@ public class BlockUtil {
         if (checkRightOrTop) {
             BlockPos posRightOrUp = pos.offset(facing);
             BlockState blockRightOrUp = world.getBlockState(posRightOrUp);
-            if (blockRightOrUp.getBlock().data != instance) {
+            if (!blockRightOrUp.getBlock().equals(instance)) {
                 return false;
             }
         }

@@ -1,6 +1,6 @@
 package com.lx862.jcm.blocks;
 
-import com.lx862.jcm.blocks.base.VerticalDoubleBlock;
+import com.lx862.jcm.blocks.base.Vertical2Block;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.Utils;
 import com.lx862.jcm.util.VoxelUtil;
@@ -8,7 +8,7 @@ import net.minecraft.potion.PotionUtil;
 import net.minecraft.potion.Potions;
 import org.mtr.mapping.holder.*;
 
-public class WaterMachineBlock extends VerticalDoubleBlock {
+public class WaterMachineBlock extends Vertical2Block {
     public WaterMachineBlock(BlockSettings settings) {
         super(settings);
     }

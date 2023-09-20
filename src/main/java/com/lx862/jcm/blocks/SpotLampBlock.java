@@ -1,11 +1,11 @@
 package com.lx862.jcm.blocks;
 
-import com.lx862.jcm.blocks.base.CeilingGroundAttachedBlock;
+import com.lx862.jcm.blocks.base.VerticallyAttachedBlock;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class SpotLampBlock extends CeilingGroundAttachedBlock {
+public class SpotLampBlock extends VerticallyAttachedBlock {
 
     public SpotLampBlock(BlockSettings settings) {
         super(settings, true, true);

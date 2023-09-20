@@ -1,11 +1,11 @@
 package com.lx862.jcm.blocks;
 
-import com.lx862.jcm.blocks.base.VerticalTripleBlock;
+import com.lx862.jcm.blocks.base.Vertical3Block;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class HelpLineStandingBlock extends VerticalTripleBlock {
+public class HelpLineStandingBlock extends Vertical3Block {
     public HelpLineStandingBlock(BlockSettings settings) {
         super(settings);
     }

@@ -1,13 +1,12 @@
 package com.lx862.jcm.blocks;
 
-import com.lx862.jcm.blocks.base.VerticalDoubleBlock;
-import com.lx862.jcm.blocks.base.WallAttachedBlock;
+import com.lx862.jcm.blocks.base.Vertical2Block;
 import com.lx862.jcm.blocks.behavior.EnquiryMachine;
 import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class MTREnquiryMachine extends VerticalDoubleBlock implements EnquiryMachine {
+public class MTREnquiryMachine extends Vertical2Block implements EnquiryMachine {
     public MTREnquiryMachine(BlockSettings settings) {
         super(settings);
     }

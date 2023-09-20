@@ -8,12 +8,12 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public abstract class CeilingGroundAttachedBlock extends WaterloggableBlock {
+public abstract class VerticallyAttachedBlock extends WaterloggableBlock {
     public static final BooleanProperty TOP = BlockProperties.TOP;
     private final boolean canAttachTop;
     private final boolean canAttachBottom;
 
-    public CeilingGroundAttachedBlock(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom) {
+    public VerticallyAttachedBlock(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom) {
         super(settings);
         setDefaultState2(getDefaultState2().with(new Property<>(TOP.data), false));
         this.canAttachTop = canAttachTop;
