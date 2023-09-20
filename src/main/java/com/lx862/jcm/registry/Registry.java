@@ -42,15 +42,15 @@ public class Registry {
     }
 
     public static void register() {
-        BlockRegistry.register();
-        BlockEntityRegistry.register();
-        ItemRegistry.register();
-        EventRegistry.register();
+        Blocks.register();
+        BlockEntities.register();
+        Items.register();
+        Events.register();
         org.mtr.mapping.registry.Registry.init();
     }
 
     public static void registerClient() {
-        BlockRenderTypeRegistry.registerClient();
+        BlockRenderTypes.registerClient();
         org.mtr.mapping.registry.RegistryClient.init();
     }
 }

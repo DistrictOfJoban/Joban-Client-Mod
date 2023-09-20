@@ -1,8 +1,6 @@
 package com.lx862.jcm.entrypointtemp;
 
 import com.lx862.jcm.JCMClient;
-import com.lx862.jcm.config.ClientConfig;
-import com.lx862.jcm.registry.Registry;
 import net.fabricmc.api.ClientModInitializer;
 
 /**
@@ -11,6 +9,6 @@ import net.fabricmc.api.ClientModInitializer;
 public class MainClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        JCMClient.onInitializeClient();
+        JCMClient.initializeClient();
     }
 }

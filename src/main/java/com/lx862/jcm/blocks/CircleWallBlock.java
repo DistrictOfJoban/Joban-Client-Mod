@@ -1,8 +1,7 @@
 package com.lx862.jcm.blocks;
 
 import com.lx862.jcm.blocks.base.DirectionalBlock;
-import com.lx862.jcm.registry.BlockRegistry;
-import com.lx862.jcm.util.BlockUtil;
+import com.lx862.jcm.registry.Blocks;
 import org.mtr.mapping.holder.*;
 
 public class CircleWallBlock extends DirectionalBlock {
@@ -38,12 +37,12 @@ public class CircleWallBlock extends DirectionalBlock {
         Block blockBelow = world.getBlockState(pos.down()).getBlock();
         BlockPos shiftedBlockPos = null;
 
-        if(blockBelow.equals(BlockRegistry.CIRCLE_WALL_1.get()) && thisBlock.equals(BlockRegistry.CIRCLE_WALL_2.get())) {
+        if(blockBelow.equals(Blocks.CIRCLE_WALL_1.get()) && thisBlock.equals(Blocks.CIRCLE_WALL_2.get())) {
             shiftedBlockPos = pos.offset(playerFacing);
         }
 
-        if(blockBelow.equals(BlockRegistry.CIRCLE_WALL_4.get()) && thisBlock.equals(BlockRegistry.CIRCLE_WALL_5.get()) ||
-           blockBelow.equals(BlockRegistry.CIRCLE_WALL_5.get()) && thisBlock.equals(BlockRegistry.CIRCLE_WALL_6.get())
+        if(blockBelow.equals(Blocks.CIRCLE_WALL_4.get()) && thisBlock.equals(Blocks.CIRCLE_WALL_5.get()) ||
+           blockBelow.equals(Blocks.CIRCLE_WALL_5.get()) && thisBlock.equals(Blocks.CIRCLE_WALL_6.get())
         ) {
             shiftedBlockPos = pos.offset(playerFacing.getOpposite());
         }

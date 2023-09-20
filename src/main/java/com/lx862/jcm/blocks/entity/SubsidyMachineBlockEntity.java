@@ -1,6 +1,6 @@
 package com.lx862.jcm.blocks.entity;
 
-import com.lx862.jcm.registry.BlockEntityRegistry;
+import com.lx862.jcm.registry.BlockEntities;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.CompoundTag;
@@ -9,7 +9,7 @@ public class SubsidyMachineBlockEntity extends JCMBlockEntity {
     private int subsidyAmount = 10;
     private int cooldown = 0;
     public SubsidyMachineBlockEntity(BlockPos blockPos, BlockState blockState) {
-        super(BlockEntityRegistry.SUBSIDY_MACHINE.get(), blockPos, blockState);
+        super(BlockEntities.SUBSIDY_MACHINE.get(), blockPos, blockState);
     }
 
     @Override
