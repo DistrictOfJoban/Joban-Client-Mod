@@ -14,6 +14,12 @@ public final class BlockRenderTypeRegistry {
 
         registerBlockRenderType(RenderLayer.getCutout(),
                 BlockRegistry.BUFFER_STOP,
+                BlockRegistry.CIRCLE_WALL_1,
+                BlockRegistry.CIRCLE_WALL_2,
+                BlockRegistry.CIRCLE_WALL_3,
+                BlockRegistry.CIRCLE_WALL_4,
+                BlockRegistry.CIRCLE_WALL_5,
+                BlockRegistry.CIRCLE_WALL_6,
                 BlockRegistry.KCR_EMG_STOP_SIGN,
                 BlockRegistry.MTR_ENQUIRY_MACHINE,
                 BlockRegistry.RV_ENQUIRY_MACHINE,

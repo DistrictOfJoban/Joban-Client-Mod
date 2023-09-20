@@ -10,6 +10,7 @@ Use with caution!
 - Integrate '''Minecraft Mapping''' project to provide cross version and cross-platform compatibility
 - Blocks:
   - Buffered Stop (East Rail Line)
+  - Circle Walls
   - Departure Pole
   - Slanted Ceiling
   - Exit Sign (Odd)

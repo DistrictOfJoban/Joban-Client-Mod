@@ -8,9 +8,16 @@ import org.mtr.mapping.registry.BlockRegistryObject;
 
 public final class BlockRegistry {
     public static final BlockRegistryObject BUFFER_STOP = Registry.registerBlockItem("buffer_stop", new BufferStopBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 8)), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_1 = Registry.registerBlockItem("circle_wall_1", new CircleWallBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_2 = Registry.registerBlockItem("circle_wall_2", new CircleWallBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_3 = Registry.registerBlockItem("circle_wall_3", new CircleWallBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_4 = Registry.registerBlockItem("circle_wall_4", new CircleWallBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_5 = Registry.registerBlockItem("circle_wall_5", new CircleWallBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_6 = Registry.registerBlockItem("circle_wall_6", new CircleWallBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_7 = Registry.registerBlockItem("circle_wall_7", new CircleWallBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject CEILING_SLANTED = Registry.registerBlockItem("ceiling_slanted", new CeilingSlantedBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject DEPARTURE_POLE = Registry.registerBlockItem("departure_pole", new DeparturePoleBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
-    public static final BlockRegistryObject HK_EXIT_SIGN_ODD = Registry.registerBlockItem("hk_exit_sign_odd", new HKExitSignOdd(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject HK_EXIT_SIGN_ODD = Registry.registerBlockItem("hk_exit_sign_odd", new ExitSignOdd(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject LIGHT_LANTERN = Registry.registerBlockItem("light_lantern", new LightLanternBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject MTR_STAIRS = Registry.registerBlockItem("mtr_stairs", new MTRStairsBlock(AbstractBlock.Settings.create().strength(4.0f)), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject OPERATOR_BUTTON = Registry.registerBlockItem("operator_button", new OperatorButtonBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 5), 40), ItemGroupRegistry.JCM_MAIN);
@@ -30,7 +37,7 @@ public final class BlockRegistry {
     public static final BlockRegistryObject TCL_EMG_STOP_BUTTON = Registry.registerBlockItem("tcl_emg_stop_button", new TCLEmergencyButtonBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject TML_EMG_STOP_BUTTON = Registry.registerBlockItem("tml_emg_stop_button", new TMLEmergencyButtonBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject SIL_EMG_STOP_BUTTON = Registry.registerBlockItem("sil_emg_stop_button", new SILEmergencyButtonBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 10)), ItemGroupRegistry.JCM_MAIN);
-    public static final BlockRegistryObject TRAIN_MODEL_E44 = Registry.registerBlockItem("train_model_e44", new HKTrainModelBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
+    public static final BlockRegistryObject TRAIN_MODEL_E44 = Registry.registerBlockItem("train_model_e44", new MTRTrainModelBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject MTR_TRESPASS_SIGN = Registry.registerBlockItem("mtr_trespass_sign", new MTRTrespassSignageBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject KCR_TRESPASS_SIGN = Registry.registerBlockItem("kcr_trespass_sign", new KCRTrespassSignageBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);
     public static final BlockRegistryObject LRT_TRESPASS_SIGN = Registry.registerBlockItem("lrt_trespass_sign", new LRTTrespassSignageBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroupRegistry.JCM_MAIN);

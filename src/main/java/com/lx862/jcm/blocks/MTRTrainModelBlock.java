@@ -5,8 +5,8 @@ import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class HKTrainModelBlock extends HorizontalMultiBlock {
-    public HKTrainModelBlock(BlockSettings settings) {
+public class MTRTrainModelBlock extends HorizontalMultiBlock {
+    public MTRTrainModelBlock(BlockSettings settings) {
         super(settings);
     }
 

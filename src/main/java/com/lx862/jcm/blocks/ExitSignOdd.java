@@ -5,9 +5,9 @@ import com.lx862.jcm.util.BlockUtil;
 import com.lx862.jcm.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class HKExitSignOdd extends CeilingGroundAttachedDirectionalBlock {
+public class ExitSignOdd extends CeilingGroundAttachedDirectionalBlock {
 
-    public HKExitSignOdd(BlockSettings settings) {
+    public ExitSignOdd(BlockSettings settings) {
         super(settings, true, false);
     }
 
