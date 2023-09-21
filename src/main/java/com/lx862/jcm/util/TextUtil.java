@@ -5,11 +5,11 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.TextHelper;
 
 public class TextUtil {
-    public static MutableText getTranslatable(CATEGORY category, String id, Object... variables) {
-        return TextHelper.translatable(category.prefix + "." + Constants.MOD_ID + "." + id, variables);
+    public static MutableText getTranslatable(TextCategory textCategory, String id, Object... variables) {
+        return TextHelper.translatable(textCategory.prefix + "." + Constants.MOD_ID + "." + id, variables);
     }
 
-    public enum CATEGORY {
+    public enum TextCategory {
         HUD("hud"),
         BLOCK("block"),
         ITEM("item"),
@@ -17,7 +17,7 @@ public class TextUtil {
 
         final String prefix;
 
-        CATEGORY(String prefix) {
+        TextCategory(String prefix) {
             this.prefix = prefix;
         }
     }

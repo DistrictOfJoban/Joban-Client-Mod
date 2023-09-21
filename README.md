@@ -14,6 +14,7 @@ Use with caution!
   - Departure Pole
   - Slanted Ceiling
   - Exit Sign (Odd)
+  - Exit Sign (Even)
   - E44 Train Model
   - MTR Trespass Signage
   - KCR Trespass Signage
@@ -49,7 +50,7 @@ Use with caution!
   No official path to migrate blockstates and id, will have to find our own, potentially dangerous path... or have to leave all the player unsatisfied
 
 ## Contributing
-This project is still in an early stage, feel free to PR stuff mentioned in the **To be done** category.  
+This project is still in an early stage, feel free to PR stuff mentioned in the **To be done** textCategory.  
 Note that I also have my own scheduling and thoughts on handling the new rewrite, as such I may modify your PR (Usually commiting on it or afterwards) before merging.
 
 ## Setup

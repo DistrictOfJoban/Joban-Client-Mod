@@ -41,7 +41,7 @@ public class KCREmergencyStopSign extends WallAttachedBlock {
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if(Utils.playerHoldingBrush(player)) {
             world.setBlockState(pos, state.cycle(new Property<>(POINT_TO_RIGHT.data)));
-            MutableText text = BlockUtil.getProperty(state, POINT_TO_RIGHT) ? TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "kcr_emg_stop_sign.success_right") : TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "kcr_emg_stop_sign.success_left");
+            MutableText text = BlockUtil.getProperty(state, POINT_TO_RIGHT) ? TextUtil.getTranslatable(TextUtil.TextCategory.HUD, "kcr_emg_stop_sign.success_right") : TextUtil.getTranslatable(TextUtil.TextCategory.HUD, "kcr_emg_stop_sign.success_left");
             player.sendMessage(Text.cast(text), true);
         }
     }

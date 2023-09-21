@@ -32,7 +32,7 @@ public class OperatorButtonBlock extends WallAttachedBlock {
         if (player.isHolding(Items.getGrassBlockMapped())) {
             return ActionResult.SUCCESS;
         } else {
-            player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.CATEGORY.HUD, "operator_button.fail").formatted(TextFormatting.RED)), true);
+            player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.TextCategory.HUD, "operator_button.fail").formatted(TextFormatting.RED)), true);
             return ActionResult.FAIL;
         }
     }

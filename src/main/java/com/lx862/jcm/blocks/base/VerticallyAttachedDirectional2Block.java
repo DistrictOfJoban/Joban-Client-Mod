@@ -9,11 +9,11 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public abstract class VerticallyAttachedDirectionalMultiBlock extends VerticallyAttachedDirectionalBlock implements HorizontalMultiBlock {
+public abstract class VerticallyAttachedDirectional2Block extends VerticallyAttachedDirectionalBlock implements HorizontalMultiBlock {
     public static final int width = 2;
     public static final IntegerProperty PART = BlockProperties.HORIZONTAL_PART;
 
-    public VerticallyAttachedDirectionalMultiBlock(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom) {
+    public VerticallyAttachedDirectional2Block(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom) {
         super(settings, canAttachTop, canAttachBottom);
     }
 
