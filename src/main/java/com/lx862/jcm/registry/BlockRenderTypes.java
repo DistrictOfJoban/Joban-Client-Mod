@@ -20,6 +20,7 @@ public final class BlockRenderTypes {
                 Blocks.CIRCLE_WALL_4,
                 Blocks.CIRCLE_WALL_5,
                 Blocks.CIRCLE_WALL_6,
+                Blocks.FIRE_ALARM,
                 Blocks.KCR_EMG_STOP_SIGN,
                 Blocks.MTR_ENQUIRY_MACHINE,
                 Blocks.RV_ENQUIRY_MACHINE,

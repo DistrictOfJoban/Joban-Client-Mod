@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "jsblock:block/fire_alarm" },
+    "facing=east": { "model": "jsblock:block/fire_alarm", "y": 90 },
+    "facing=south": { "model": "jsblock:block/fire_alarm", "y": 180 },
+    "facing=west": { "model": "jsblock:block/fire_alarm", "y": 270 }
+  }
+}

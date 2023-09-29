@@ -27,6 +27,7 @@
   "block.jsblock.exit_sign_odd": "Exit Signs",
   "block.jsblock.exit_sign_even": "Exit Signs (Even)",
   "block.jsblock.faresaver_1": "Fare Saver",
+  "block.jsblock.firealarm": "Fire Alarm (REMOVE ON INITIAL RELEASE)",
   "block.jsblock.kcr_name_sign": "KCR Station Name Sign",
   "block.jsblock.kcr_name_sign_station_color": "KCR Station Name Sign (Station Colored)",
   "block.jsblock.kcr_emg_stop_sign": "KCR Emergency Stop Sign",
