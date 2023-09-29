@@ -1,7 +1,7 @@
 {
-  "itemGroup.jsblock.ceiling": "Joban Client Mod 方塊 - 天花板",
-  "itemGroup.jsblock.main": "Joban Client Mod 方塊",
-  "itemGroup.jsblock.pids": "Joban Client Mod 方塊 - 乘客資訊顯示屏",
+  "itemGroup.jsblock.ceiling": "常磐裝飾模組方塊 - 天花板",
+  "itemGroup.jsblock.main": "常磐裝飾模組方塊",
+  "itemGroup.jsblock.pids": "常磐裝飾模組方塊 - 乘客資訊顯示屏",
   "block.jsblock.apg_door_drl": "自動月台閘門 (迪士尼綫)",
   "block.jsblock.apg_glass_drl": "自動月台閘門 (迪士尼綫)",
   "block.jsblock.apg_glass_end_drl": "自動月台閘門 (迪士尼綫)",
@@ -78,7 +78,7 @@
   "hud.jsblock.subsidy_machine.success": "已將 $%d 加入你的餘額，你現在的餘額是 $%d",
   "hud.jsblock.subsidy_machine.fail": "請等待%d秒後再重試。",
 
-  "gui.jsblock.brand": "Joban Client Mod",
+  "gui.jsblock.brand": "常磐裝飾模組",
   "gui.jsblock.butterfly_countdown": "列車關門前時間開始閃動(秒)",
   "gui.jsblock.version": "版本 %s",
   "gui.jsblock.cantsave": "未能儲存設定檔!",
