@@ -16,18 +16,18 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.lx862.jcm.entrypointtemp.Main"
+          "com.lx862.jcm.entrypoint.Main"
 		],
 		"client": [
-			"com.lx862.jcm.entrypointtemp.MainClient"
+          "com.lx862.jcm.entrypoint.MainClient"
 		]
 	},
 	"mixins": [
 		"jsblock.mixins.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.14.21",
-		"minecraft": "~1.20.1",
+		"fabricloader": ">=0.14.15",
+		"minecraft": "~1.20.2",
 		"fabric": "*"
 	}
 }
