@@ -16,5 +16,6 @@ public class BlockProperties {
     public static final BooleanProperty POWERED = BooleanProperty.of("powered");
     public static final BooleanProperty HAS_TOP = BooleanProperty.of("has_top");
     public static final BooleanProperty TOP = BooleanProperty.of("top");
+    public static final BooleanProperty LIT = BooleanProperty.of("lit");
     public static final BooleanProperty POINT_TO_RIGHT = BooleanProperty.of("right");
 }

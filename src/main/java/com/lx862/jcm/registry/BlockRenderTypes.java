@@ -14,6 +14,7 @@ public final class BlockRenderTypes {
 
         registerBlockRenderType(RenderLayer.getCutout(),
                 Blocks.BUFFER_STOP,
+                Blocks.BUTTERFLY_LIGHT,
                 Blocks.CIRCLE_WALL_1,
                 Blocks.CIRCLE_WALL_2,
                 Blocks.CIRCLE_WALL_3,
