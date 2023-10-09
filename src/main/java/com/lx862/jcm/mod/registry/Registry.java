@@ -50,7 +50,8 @@ public class Registry {
     }
 
     public static void registerClient() {
-        BlockRenderTypes.registerClient();
+        RenderLayers.registerClient();
+        BlockEntityRenderers.registerClient();
         org.mtr.mapping.registry.RegistryClient.init();
     }
 }

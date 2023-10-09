@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.registry;
 
-import com.lx862.jcm.mod.blocks.*;
-import com.lx862.jcm.mod.util.Logger;
+import com.lx862.jcm.mod.block.*;
+import com.lx862.jcm.mod.util.JCMLogger;
 import net.minecraft.block.AbstractBlock;
 import org.mtr.mapping.holder.BlockSettings;
 import org.mtr.mapping.registry.BlockRegistryObject;
@@ -18,6 +18,8 @@ public final class Blocks {
     public static final BlockRegistryObject CIRCLE_WALL_7 = Registry.registerBlockItem("circle_wall_7", new CircleWallBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject CEILING_SLANTED = Registry.registerBlockItem("ceiling_slanted", new CeilingSlantedBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject DEPARTURE_POLE = Registry.registerBlockItem("departure_pole", new DeparturePoleBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject DEPARTURE_TIMER = Registry.registerBlockItem("departure_timer", new DepartureTimerBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 4)), ItemGroups.JCM_MAIN);
+
     public static final BlockRegistryObject EXIT_SIGN_ODD = Registry.registerBlockItem("exit_sign_odd", new ExitSignOdd(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject EXIT_SIGN_EVEN = Registry.registerBlockItem("exit_sign_even", new ExitSignEven(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject FIRE_ALARM = Registry.registerBlockItem("fire_alarm", new FireAlarmWall(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
@@ -51,6 +53,6 @@ public final class Blocks {
 
     public static void register() {
         // We just load the class and it will be registered, nothing else
-        Logger.info("Registering blocks...");
+        JCMLogger.info("Registering blocks...");
     }
 }

@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.config;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.lx862.jcm.mod.util.Logger;
+import com.lx862.jcm.mod.util.JCMLogger;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.mtr.mapping.holder.MinecraftClient;
@@ -21,11 +21,11 @@ public class ClientConfig {
 
     public static void readFile() {
         if(!Files.exists(CONFIG_PATH)) {
-            Logger.info("Config not found, generating one!");
+            JCMLogger.info("Config not found, generating one!");
             writeFile();
             readFile();
         } else {
-            Logger.info("Reading Config...");
+            JCMLogger.info("Reading Config...");
             try {
                 final JsonObject jsonConfig = new JsonParser().parse(String.join("", Files.readAllLines(CONFIG_PATH))).getAsJsonObject();
 
@@ -44,7 +44,7 @@ public class ClientConfig {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                Logger.warn("Failed to read config file, all config will be left at it's default state.");
+                JCMLogger.warn("Failed to read config file, all config will be left at it's default state.");
             }
         }
     }
