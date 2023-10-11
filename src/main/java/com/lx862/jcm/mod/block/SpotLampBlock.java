@@ -1,7 +1,9 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.VerticallyAttachedBlock;
+import com.lx862.jcm.mod.gui.DemoScreen;
 import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.util.Utils;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
@@ -9,6 +11,16 @@ public class SpotLampBlock extends VerticallyAttachedBlock {
 
     public SpotLampBlock(BlockSettings settings) {
         super(settings, true, true);
+    }
+
+    // TODO: FOR PREVIEW ONLY, REMOVE
+    @Override
+    public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        super.onUse2(state, world, pos, player, hand, hit);
+        if(Utils.playerHoldingBrush(player) && world.isClient()) {
+            MinecraftClient.getInstance().openScreen(new Screen(new DemoScreen()));
+        }
+        return ActionResult.SUCCESS;
     }
 
     @Override

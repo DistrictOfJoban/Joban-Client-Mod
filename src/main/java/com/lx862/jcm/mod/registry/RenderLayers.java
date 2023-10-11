@@ -26,6 +26,7 @@ public final class RenderLayers {
                 Blocks.MTR_ENQUIRY_MACHINE,
                 Blocks.RV_ENQUIRY_MACHINE,
                 Blocks.SUBSIDY_MACHINE,
+                Blocks.SPOT_LAMP,
                 Blocks.HELPLINE_1,
                 Blocks.HELPLINE_2,
                 Blocks.HELPLINE_STANDING,

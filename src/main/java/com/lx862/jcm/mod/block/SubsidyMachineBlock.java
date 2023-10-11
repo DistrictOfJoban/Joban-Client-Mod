@@ -3,6 +3,8 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
 import com.lx862.jcm.mod.block.entity.SubsidyMachineBlockEntity;
 import com.lx862.jcm.mod.data.JCMStats;
+import com.lx862.jcm.mod.gui.DemoScreen;
+import com.lx862.jcm.mod.gui.SubsidyMachineScreen;
 import com.lx862.jcm.mod.util.*;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.SharedConstants;
@@ -26,6 +28,9 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         super.onUse2(state, world, pos, player, hand, hit);
+        if(Utils.playerHoldingBrush(player) && world.isClient()) {
+            MinecraftClient.getInstance().openScreen(new Screen(new SubsidyMachineScreen(pos)));
+        }
         return ActionResult.SUCCESS;
     }
 
