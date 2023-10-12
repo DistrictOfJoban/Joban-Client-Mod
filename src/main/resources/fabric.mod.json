@@ -2,7 +2,7 @@
 	"schemaVersion": 1,
 	"id": "jsblock",
 	"version": "${version}",
-	"name": "Joban Client Mod Rewrite",
+	"name": "Joban Client Mod",
 	"description": "This is an example description! Tell everyone what your mod is about!",
 	"authors": [
 		"LX86"
