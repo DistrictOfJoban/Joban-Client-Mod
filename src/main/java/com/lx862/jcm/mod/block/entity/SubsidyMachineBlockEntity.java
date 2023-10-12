@@ -26,9 +26,9 @@ public class SubsidyMachineBlockEntity extends JCMBlockEntityBase {
         compoundTag.putInt("timeout", cooldown);
     }
 
-    public void setData(int pricePerUse, int timeout) {
+    public void setData(int pricePerUse, int cooldown) {
         this.subsidyAmount = pricePerUse;
-        this.cooldown = timeout;
+        this.cooldown = cooldown;
         this.markDirty2();
     }
 

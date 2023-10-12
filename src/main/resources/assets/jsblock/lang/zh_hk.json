@@ -80,10 +80,10 @@
   "hud.jsblock.subsidy_machine.fail": "請等待%d秒後再重試。",
 
   "gui.jsblock.brand": "常磐裝飾模組",
+  "gui.jsblock.config.version": "版本 %s",
+
   "gui.jsblock.butterfly_countdown": "列車關門前時間開始閃動(秒)",
-  "gui.jsblock.version": "版本 %s",
   "gui.jsblock.cantsave": "未能儲存設定檔!",
-  "gui.jsblock.config": "Joban Client Mod 設定",
   "gui.jsblock.faresaver.currency": "$%d",
   "gui.jsblock.faresaver.discount": "優惠",
   "gui.jsblock.hide_platform_number": "隱藏月台號碼",
@@ -98,8 +98,8 @@
   "gui.jsblock.looper.sound_vol": "音量 (乘以 100，預設為 100)",
   "gui.jsblock.mismatched_versions": "請將 Joban Client Mod 更新，並再重試。",
   "gui.jsblock.pids_preset": "顯示格式",
-  "gui.jsblock.subsidyScreen.price": "補貼金額",
-  "gui.jsblock.subsidyScreen.timeout": "速度限制 (秒)",
+  "gui.jsblock.subsidy_machine.price": "補貼金額",
+  "gui.jsblock.subsidy_machine.cooldown": "速度限制 (秒)",
   "item.jsblock.apg_door_drl": "自動月台閘門 (迪士尼綫)",
   "item.jsblock.apg_glass_drl": "自動月台閘門 (迪士尼綫)",
   "item.jsblock.apg_glass_end_drl": "自動月台閘門 (迪士尼綫)"

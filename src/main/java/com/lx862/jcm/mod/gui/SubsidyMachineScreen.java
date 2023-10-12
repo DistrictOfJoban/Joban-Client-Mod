@@ -1,38 +1,47 @@
 package com.lx862.jcm.mod.gui;
 
+import com.lx862.jcm.mod.gui.widget.NumericTextField;
+import com.lx862.jcm.mod.network.block.SubsidyMachineUpdatePacket;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MutableText;
-import org.mtr.mapping.holder.Text;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.registry.RegistryClient;
 
 // TODO: Finish this thing
-public class SubsidyMachineScreen extends BasicScreenBase {
-    private final BlockPos blockPos;
-    public SubsidyMachineScreen(BlockPos blockPos) {
-        super(false);
-        this.blockPos = blockPos;
+public class SubsidyMachineScreen extends BlockConfigurationScreenBase {
+    private final NumericTextField priceTextField;
+    private final NumericTextField cooldownTextField;
+    public SubsidyMachineScreen(BlockPos blockPos, int pricePerUse, int cooldown) {
+        super(blockPos);
+        this.priceTextField = new NumericTextField(0, 0, 60, 20, 0, 50000, 10, "$");
+        this.cooldownTextField = new NumericTextField(0, 0, 60, 20, 0, 1200, 0, null);
+
+        this.priceTextField.setValue(pricePerUse);
+        this.cooldownTextField.setValue(cooldown);
     }
 
     @Override
     public MutableText getScreenTitle() {
-        return TextUtil.getTranslatable(TextUtil.TextCategory.BLOCK, "subsidy_machine");
+        return TextUtil.translatable(TextUtil.TextCategory.BLOCK, "subsidy_machine");
     }
 
     @Override
-    public MutableText getScreenSubtitle() {
-        String posText = String.format("%d %d %d", blockPos.getX(), blockPos.getY(), blockPos.getZ());
-        String stationText = "Near 中環 Central";
-        return Text.literal("At: " + posText + " | " + stationText);
-    }
+    public void addConfigEntries() {
+        addDrawableChild2(priceTextField);
+        addDrawableChild2(cooldownTextField);
 
-    @Override
-    protected void init2() {
-        super.init2();
+        listViewWidget.add(TextUtil.translatable(TextUtil.TextCategory.GUI, "subsidy_machine.price"), priceTextField);
+        listViewWidget.add(TextUtil.translatable(TextUtil.TextCategory.GUI, "subsidy_machine.cooldown"), cooldownTextField);
     }
 
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
         super.render(graphicsHolder, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public void onSave() {
+        RegistryClient.sendPacketToServer(new SubsidyMachineUpdatePacket(blockPos, priceTextField.getValue(), cooldownTextField.getValue()));
     }
 }

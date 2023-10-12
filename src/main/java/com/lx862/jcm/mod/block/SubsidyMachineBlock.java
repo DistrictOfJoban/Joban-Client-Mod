@@ -3,14 +3,14 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
 import com.lx862.jcm.mod.block.entity.SubsidyMachineBlockEntity;
 import com.lx862.jcm.mod.data.JCMStats;
-import com.lx862.jcm.mod.gui.DemoScreen;
-import com.lx862.jcm.mod.gui.SubsidyMachineScreen;
+import com.lx862.jcm.mod.network.gui.SubsidyMachineScreenPacket;
 import com.lx862.jcm.mod.util.*;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.SharedConstants;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
+import org.mtr.mapping.registry.Registry;
 
 import java.util.UUID;
 
@@ -28,9 +28,6 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         super.onUse2(state, world, pos, player, hand, hit);
-        if(Utils.playerHoldingBrush(player) && world.isClient()) {
-            MinecraftClient.getInstance().openScreen(new Screen(new SubsidyMachineScreen(pos)));
-        }
         return ActionResult.SUCCESS;
     }
 
@@ -39,17 +36,17 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
         SubsidyMachineBlockEntity thisEntity = (SubsidyMachineBlockEntity)world.getBlockEntity(pos).data;
 
         if (Utils.playerHoldingBrush(player)) {
-            //TODO: Open GUI Screen
+            Registry.sendPacketToClient(ServerPlayerEntity.cast(player), new SubsidyMachineScreenPacket(pos, thisEntity.getSubsidyAmount(), thisEntity.getCooldown()));
             return;
         }
 
         if(cooldownExpired(player, thisEntity.getCooldown())) {
             updateCooldown(player);
             int finalBalance = addMTRBalanceToPlayer(world, player, thisEntity.getSubsidyAmount());
-            player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.TextCategory.HUD, "subsidy_machine.success", thisEntity.getSubsidyAmount(), finalBalance)), true);
+            player.sendMessage(Text.cast(TextUtil.translatable(TextUtil.TextCategory.HUD, "subsidy_machine.success", thisEntity.getSubsidyAmount(), finalBalance)), true);
         } else {
-            int remainingSec = (int)Math.round((thisEntity.getCooldown() - getCooldown(player)) / (double)SharedConstants.TICKS_PER_SECOND);
-            player.sendMessage(Text.cast(TextUtil.getTranslatable(TextUtil.TextCategory.HUD, "subsidy_machine.fail", remainingSec).formatted(TextFormatting.RED)), true);
+            int remainingSec = Math.round(thisEntity.getCooldown() - getCooldown(player));
+            player.sendMessage(Text.cast(TextUtil.translatable(TextUtil.TextCategory.HUD, "subsidy_machine.fail", remainingSec).formatted(TextFormatting.RED)), true);
         }
     }
 
@@ -66,12 +63,12 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
         return mtrBalanceScore.getScore();
     }
 
-    private static boolean cooldownExpired(PlayerEntity player, int cooldownTick) {
-        return getCooldown(player) > cooldownTick;
+    private static boolean cooldownExpired(PlayerEntity player, int cooldown) {
+        return getCooldown(player) >= cooldown;
     }
 
     private static long getCooldown(PlayerEntity player) {
-        return JCMStats.getGameTick() - cooldownMap.getOrDefault(player.getUuid(), 0);
+        return (JCMStats.getGameTick() - cooldownMap.getOrDefault(player.getUuid(), 0)) / SharedConstants.TICKS_PER_SECOND;
     }
 
     private static void updateCooldown(PlayerEntity player) {

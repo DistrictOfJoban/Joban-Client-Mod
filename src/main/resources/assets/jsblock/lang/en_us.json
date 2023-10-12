@@ -84,10 +84,17 @@
   "hud.jsblock.subsidy_machine.fail": "Please wait %d seconds before trying again.",
   
   "gui.jsblock.brand": "Joban Client Mod",
+  "gui.jsblock.config.version": "Version %s",
+  "gui.jsblock.block_config.subtitle": "At: %d %d %d",
+  "gui.jsblock.block_config.subtitle_near": "At: %d %d %d | Near %s",
+  "gui.jsblock.block_config.subtitle_in": "At: %d %d %d | In %s",
+
+  "gui.jsblock.block_config.save": "Save Settings",
+  "gui.jsblock.block_config.discard": "Discard Settings",
+
   "gui.jsblock.butterfly_countdown": "Dwell time left when starts blinking",
-  "gui.jsblock.version": "Version %s",
   "gui.jsblock.cantsave": "Config cannot be saved!",
-  "gui.jsblock.config": "Joban Client Mod Config",
+
   "gui.jsblock.faresaver.currency": "$%d",
   "gui.jsblock.faresaver.discount": "Discount",
   "gui.jsblock.hide_platform_number": "Hide Platform Number",
@@ -102,8 +109,13 @@
   "gui.jsblock.looper.sound_vol": "Sound Volume (Multiplied by 100, Default is 100)",
   "gui.jsblock.mismatched_versions": "Please update the Joban Client Mod and try again.",
   "gui.jsblock.pids_preset": "PIDS Preset",
-  "gui.jsblock.subsidyScreen.price": "Subsidy Balance",
-  "gui.jsblock.subsidyScreen.timeout": "Timeout (In Seconds)",
+
+  "gui.jsblock.subsidy_machine.price": "Subsidy Balance",
+  "gui.jsblock.subsidy_machine.cooldown": "Cooldown (Second)",
+
+  "gui.jsblock.numeric_text_field.increment": "▲",
+  "gui.jsblock.numeric_text_field.decrement": "▼",
+
   "item.jsblock.apg_door_drl": "APG (Disneyland Resorts Line Variants)",
   "item.jsblock.apg_glass_drl": "APG (Disneyland Resorts Line Variants)",
   "item.jsblock.apg_glass_end_drl": "APG (Disneyland Resorts Line Variants)",

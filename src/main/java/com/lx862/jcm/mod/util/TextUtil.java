@@ -5,7 +5,7 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.TextHelper;
 
 public class TextUtil {
-    public static MutableText getTranslatable(TextCategory textCategory, String id, Object... variables) {
+    public static MutableText translatable(TextCategory textCategory, String id, Object... variables) {
         return TextHelper.translatable(textCategory.prefix + "." + Constants.MOD_ID + "." + id, variables);
     }
 

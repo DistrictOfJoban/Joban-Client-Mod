@@ -2,10 +2,12 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.VerticallyAttachedBlock;
 import com.lx862.jcm.mod.gui.DemoScreen;
+import com.lx862.jcm.mod.network.gui.DemoScreenPacket;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.Utils;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.registry.Registry;
 
 public class SpotLampBlock extends VerticallyAttachedBlock {
 
@@ -15,15 +17,13 @@ public class SpotLampBlock extends VerticallyAttachedBlock {
 
     // TODO: FOR PREVIEW ONLY, REMOVE
     @Override
-    public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        super.onUse2(state, world, pos, player, hand, hit);
-        if(Utils.playerHoldingBrush(player) && world.isClient()) {
-            MinecraftClient.getInstance().openScreen(new Screen(new DemoScreen()));
+    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        if(Utils.playerHoldingBrush(player)) {
+            Registry.sendPacketToClient(ServerPlayerEntity.cast(player), new DemoScreenPacket());
         }
-        return ActionResult.SUCCESS;
     }
 
-    @Override
+        @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
         if (BlockUtil.getProperty(state, TOP)) {
             return VoxelUtil.getShape16(4, 15.75, 4, 12, 16, 12);

@@ -58,4 +58,9 @@ public class BlockUtil {
     static <T extends Comparable<T>> T getProperty(BlockState state, Property<T> property) {
         return state.get(property);
     }
+
+    public static BlockEntity getBlockEntityOrNull(World world, BlockPos pos) {
+        if(!world.isChunkLoaded(pos)) return null;
+        return world.getBlockEntity(pos);
+    }
 }

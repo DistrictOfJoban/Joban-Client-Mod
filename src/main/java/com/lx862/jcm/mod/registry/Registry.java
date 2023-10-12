@@ -3,10 +3,7 @@ package com.lx862.jcm.mod.registry;
 import com.lx862.jcm.mod.Constants;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
-import org.mtr.mapping.registry.BlockEntityTypeRegistryObject;
-import org.mtr.mapping.registry.BlockRegistryObject;
-import org.mtr.mapping.registry.CreativeModeTabHolder;
-import org.mtr.mapping.registry.ItemRegistryObject;
+import org.mtr.mapping.registry.*;
 
 import java.util.function.BiFunction;
 
@@ -46,12 +43,14 @@ public class Registry {
         BlockEntities.register();
         Items.register();
         Events.register();
+        Packets.register();
         org.mtr.mapping.registry.Registry.init();
     }
 
     public static void registerClient() {
         RenderLayers.registerClient();
         BlockEntityRenderers.registerClient();
+        Packets.registerClient();
         org.mtr.mapping.registry.RegistryClient.init();
     }
 }
