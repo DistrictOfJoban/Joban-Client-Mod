@@ -67,7 +67,6 @@ public class ListViewWidget extends ClickableWidgetExtension implements Renderab
             } else {
                 drawRectangle(new GuiDrawing(graphicsHolder), x, entryY, width, entryHeight, 0xAA999999);
                 graphicsHolder.drawCenteredText(listEntry.title, (x + width / 2), entryY + (entryHeight / 4), 0xFFFFFFFF);
-
             }
         }
     }

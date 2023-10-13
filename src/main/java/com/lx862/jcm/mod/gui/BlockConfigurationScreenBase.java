@@ -8,6 +8,7 @@ import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
+    public static final int MAX_CONTENT_WIDTH = 400;
     protected final BlockPos blockPos;
     protected final ListViewWidget listViewWidget;
     private final ButtonWidgetExtension saveButton;
@@ -32,20 +33,20 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
     @Override
     protected void init2() {
         super.init2();
-        int listWidgetWidth = (int)(width * 0.75);
-        int listWidgetHeight = (int)((height - 60) * 0.75);
-        int startX = (width - listWidgetWidth) / 2;
-        int startY = 60;
+        int contentWidth = (int)Math.min((width * 0.75), MAX_CONTENT_WIDTH);
+        int listViewHeight = (int)((height - 60) * 0.75);
+        int startX = (width - contentWidth) / 2;
+        int startY = TEXT_PADDING * 6;
 
         listViewWidget.reset();
         addConfigEntries();
-        listViewWidget.setXYSize(startX, startY, listWidgetWidth, listWidgetHeight);
+        listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
 
-        int bottomBtnY = (height - 10 - ((height - listWidgetHeight - 60) / 2));
-        saveButton.setPosition(startX, bottomBtnY);
-        saveButton.setWidth(listWidgetWidth / 2);
-        discardButton.setPosition(startX + (listWidgetWidth / 2), bottomBtnY);
-        discardButton.setWidth(listWidgetWidth / 2);
+        int bottomWidgetsStartY = startY + listViewHeight + TEXT_PADDING;
+        saveButton.setPosition(startX, bottomWidgetsStartY);
+        saveButton.setWidth(contentWidth / 2);
+        discardButton.setPosition(startX + (contentWidth / 2), bottomWidgetsStartY);
+        discardButton.setWidth(contentWidth / 2);
 
         addDrawableChild2(saveButton);
         addDrawableChild2(discardButton);
