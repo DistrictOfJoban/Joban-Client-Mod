@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.block.base;
 
+import com.lx862.jcm.mod.util.Utils;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockExtension;
 
@@ -22,5 +23,9 @@ public abstract class JCMBlock extends BlockExtension {
      */
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
 
+    }
+
+    public ActionResult getBrushActionResult(PlayerEntity player) {
+        return Utils.playerHoldingBrush(player) ? ActionResult.SUCCESS : ActionResult.PASS;
     }
 }

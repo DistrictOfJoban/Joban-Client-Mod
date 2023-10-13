@@ -15,9 +15,4 @@ public class ExitSignOdd extends VerticallyAttachedDirectionalBlock {
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
         return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 9, 7.9, 16, 16, 8.1);
     }
-
-    @Override
-    protected boolean shouldBreakOnBlockUpdate() {
-        return true;
-    }
 }

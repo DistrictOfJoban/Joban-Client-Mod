@@ -23,6 +23,7 @@ public final class Blocks {
     public static final BlockRegistryObject EXIT_SIGN_ODD = Registry.registerBlockItem("exit_sign_odd", new ExitSignOdd(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject EXIT_SIGN_EVEN = Registry.registerBlockItem("exit_sign_even", new ExitSignEven(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject FIRE_ALARM = Registry.registerBlockItem("fire_alarm", new FireAlarmWall(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject KCR_STATION_NAME_SIGN = Registry.registerBlockItem("kcr_name_sign", new KCRStationNameSignBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject LIGHT_LANTERN = Registry.registerBlockItem("light_lantern", new LightLanternBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject MTR_STAIRS = Registry.registerBlockItem("mtr_stairs", new MTRStairsBlock(AbstractBlock.Settings.create().strength(4.0f)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject OPERATOR_BUTTON = Registry.registerBlockItem("operator_button", new OperatorButtonBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 5), 40), ItemGroups.JCM_MAIN);
@@ -53,6 +54,6 @@ public final class Blocks {
 
     public static void register() {
         // We just load the class and it will be registered, nothing else
-        JCMLogger.info("Registering blocks...");
+        JCMLogger.debug("Registering blocks...");
     }
 }

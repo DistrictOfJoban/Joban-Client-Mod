@@ -54,5 +54,7 @@ public abstract class VerticallyAttachedBlock extends WaterloggableBlock {
         properties.add(TOP);
     }
 
-    protected abstract boolean shouldBreakOnBlockUpdate();
+    protected boolean shouldBreakOnBlockUpdate() {
+        return true;
+    }
 }

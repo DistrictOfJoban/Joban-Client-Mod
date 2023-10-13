@@ -13,6 +13,7 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
         graphicsHolder.push();
         scaleCentered(graphicsHolder, 0.018F, 0.018F, 0.018F);
         rotateToBlockDirection(graphicsHolder, blockEntity);
+
         graphicsHolder.rotateZDegrees(180);
         graphicsHolder.translate(-12.5, -2, -4.1);
         graphicsHolder.drawText("0:00", 0, 0, 0xFFEE2233, false, MAX_RENDER_LIGHT);

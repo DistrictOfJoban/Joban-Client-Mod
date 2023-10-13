@@ -22,9 +22,4 @@ public class ExitSignEven extends VerticallyAttachedDirectional2Block {
                 return VoxelShapes.empty();
         }
     }
-
-    @Override
-    protected boolean shouldBreakOnBlockUpdate() {
-        return true;
-    }
 }

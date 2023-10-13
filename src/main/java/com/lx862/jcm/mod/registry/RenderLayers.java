@@ -10,7 +10,7 @@ import org.mtr.mapping.registry.RegistryClient;
 @Environment(EnvType.CLIENT)
 public final class RenderLayers {
     public static void registerClient() {
-        JCMLogger.info("Registering RenderType...");
+        JCMLogger.debug("Registering RenderLayers...");
 
         registerRenderLayers(RenderLayer.getCutout(),
                 Blocks.BUFFER_STOP,
@@ -22,6 +22,7 @@ public final class RenderLayers {
                 Blocks.CIRCLE_WALL_5,
                 Blocks.CIRCLE_WALL_6,
                 Blocks.FIRE_ALARM,
+                Blocks.KCR_STATION_NAME_SIGN,
                 Blocks.KCR_EMG_STOP_SIGN,
                 Blocks.MTR_ENQUIRY_MACHINE,
                 Blocks.RV_ENQUIRY_MACHINE,

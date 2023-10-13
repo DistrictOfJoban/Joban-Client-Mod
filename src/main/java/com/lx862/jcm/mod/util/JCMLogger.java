@@ -25,4 +25,8 @@ public class JCMLogger {
     public static void debug(String s) {
         LOGGER.debug(Constants.LOGGING_PREFIX + s);
     }
+
+    public static void debug(String s, Object... o) {
+        LOGGER.debug(Constants.LOGGING_PREFIX + s, o);
+    }
 }

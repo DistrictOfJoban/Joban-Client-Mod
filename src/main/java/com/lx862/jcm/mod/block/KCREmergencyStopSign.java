@@ -12,7 +12,7 @@ import org.mtr.mapping.tool.HolderBase;
 import java.util.List;
 
 public class KCREmergencyStopSign extends WallAttachedBlock {
-    public static final BooleanProperty POINT_TO_RIGHT = BlockProperties.POINT_TO_RIGHT;
+    public static final BooleanProperty POINT_TO_LEFT = BlockProperties.POINT_TO_LEFT;
     public KCREmergencyStopSign(BlockSettings settings) {
         super(settings);
     }
@@ -34,22 +34,21 @@ public class KCREmergencyStopSign extends WallAttachedBlock {
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         super.onUse2(state, world, pos, player, hand, hit);
-        return ActionResult.SUCCESS;
+        return getBrushActionResult(player);
     }
 
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if(Utils.playerHoldingBrush(player)) {
-            world.setBlockState(pos, state.cycle(new Property<>(POINT_TO_RIGHT.data)));
-            MutableText text = BlockUtil.getProperty(state, POINT_TO_RIGHT) ? TextUtil.translatable(TextUtil.TextCategory.HUD, "kcr_emg_stop_sign.success_right") : TextUtil.translatable(TextUtil.TextCategory.HUD, "kcr_emg_stop_sign.success_left");
-            player.sendMessage(Text.cast(text), true);
+            world.setBlockState(pos, state.cycle(new Property<>(POINT_TO_LEFT.data)));
+            player.sendMessage(Text.cast(TextUtil.translatable(TextUtil.TextCategory.HUD, "kcr_emg_stop_sign.success")), true);
         }
     }
 
     @Override
     public void addBlockProperties(List<HolderBase<?>> properties) {
         super.addBlockProperties(properties);
-        properties.add(POINT_TO_RIGHT);
+        properties.add(POINT_TO_LEFT);
     }
 
     @Override
