@@ -31,13 +31,13 @@ public class DemoScreen extends BasicScreenBase {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
-        super.render(graphicsHolder, mouseX, mouseY, delta);
+    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
+        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
 
     }
 
     @Override
-    public void drawBackground(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
+    public void drawBackground(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         double terrainHeight = (width / 3.75);
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
         drawTexture(guiDrawing, TEXTURE_BACKGROUND, 0, 0, width, height);
@@ -55,7 +55,7 @@ public class DemoScreen extends BasicScreenBase {
         int times = 10;
         for(int i = 0; i < times; i++) {
             double radius = 80 * animationProgress;
-            double angle = ((i / (double)times) * (Math.PI * 2)) - (elapsed / 200);
+            double angle = ((i / (double)times) * (Math.PI * 2)) - (elapsed / 10);
             double x = Math.sin(angle) * radius;
             double y = Math.cos(angle) * radius;
             graphicsHolder.push();

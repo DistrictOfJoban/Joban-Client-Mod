@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.gui.base;
 
+import net.minecraft.SharedConstants;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.ScreenExtension;
 
@@ -15,12 +16,13 @@ public abstract class AnimatableScreenBase extends ScreenExtension {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
-        super.render(graphicsHolder, mouseX, mouseY, delta);
+    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
+        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
+        double frameDelta = (tickDelta / SharedConstants.TICKS_PER_SECOND);
         if(!shouldAnimate) {
             linearAnimationProgress = 1;
         } else {
-            linearAnimationProgress = closing ? Math.max(0, linearAnimationProgress - (delta / 15)) : Math.min(1, linearAnimationProgress + (delta / 15));
+            linearAnimationProgress = closing ? Math.max(0, linearAnimationProgress - frameDelta) : Math.min(1, linearAnimationProgress + (tickDelta / 15));
 
             if(linearAnimationProgress <= 0 && closing) {
                 onClose2();

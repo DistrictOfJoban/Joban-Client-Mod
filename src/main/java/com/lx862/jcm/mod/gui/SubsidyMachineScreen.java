@@ -37,8 +37,8 @@ public class SubsidyMachineScreen extends BlockConfigurationScreenBase {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
-        super.render(graphicsHolder, mouseX, mouseY, delta);
+    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
+        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
     }
 
     @Override

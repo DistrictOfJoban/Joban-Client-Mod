@@ -48,7 +48,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
+    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         TextRenderer textRenderer = new TextRenderer(MinecraftClient.getInstance().textRenderer);
 
         if(prefix != null) {
@@ -56,11 +56,11 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         }
         drawUpDownButton(graphicsHolder, textRenderer);
 
-        super.render(graphicsHolder, mouseX, mouseY, delta);
+        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
     }
 
     private void drawPrefix(GraphicsHolder graphicsHolder, TextRenderer textRenderer) {
-        int prefixWidth = textRenderer.getWidth(prefix);
+        int prefixWidth = GraphicsHolder.getTextWidth(prefix);
         int prefixX = getX2() - prefixWidth;
         int prefixY = getY2() + (getHeight2() / 2) - (textRenderer.getFontHeightMapped() / 2);
 
@@ -72,8 +72,8 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         MutableText dnArrow = TextUtil.translatable(TextUtil.TextCategory.GUI, "numeric_text_field.decrement");
         int fontHeight = textRenderer.getFontHeightMapped();
         int startY = (height - (fontHeight * 2));
-        int upWidth = textRenderer.getWidth(upArrow.getString());
-        int dnWidth = textRenderer.getWidth(dnArrow.getString());
+        int upWidth = GraphicsHolder.getTextWidth(upArrow);
+        int dnWidth = GraphicsHolder.getTextWidth(dnArrow);
         graphicsHolder.drawText(upArrow, getX2() + width - upWidth - 2, getY2() + startY, 0xFFFFFFFF, false, MAX_RENDER_LIGHT);
         graphicsHolder.drawText(dnArrow, getX2() + width - dnWidth - 2, getY2() + startY + fontHeight, 0xFFFFFFFF, false, MAX_RENDER_LIGHT);
     }
@@ -95,8 +95,8 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         MutableText dnArrow = TextUtil.translatable(TextUtil.TextCategory.GUI, "numeric_text_field.decrement");
         int fontHeight = textRenderer.getFontHeightMapped();
         int startY = getY2() + (height - (fontHeight * 2)) / 2;
-        int upWidth = textRenderer.getWidth(upArrow.getString());
-        int dnWidth = textRenderer.getWidth(dnArrow.getString());
+        int upWidth = GraphicsHolder.getTextWidth(upArrow.getString());
+        int dnWidth = GraphicsHolder.getTextWidth(dnArrow.getString());
 
         if(inRectangle(mouseX, mouseY, getX2() + width - upWidth - 2, startY, upWidth, fontHeight)) {
             increment();

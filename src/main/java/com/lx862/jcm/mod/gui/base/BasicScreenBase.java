@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.gui.base;
 
 import com.lx862.jcm.mod.render.Renderable;
+import net.minecraft.SharedConstants;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
@@ -13,38 +14,42 @@ public abstract class BasicScreenBase extends AnimatableScreenBase implements Re
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
-        drawBackground(graphicsHolder, mouseX, mouseY, delta);
+    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
+        drawBackground(graphicsHolder, mouseX, mouseY, tickDelta);
 
         drawTitle(graphicsHolder);
         drawSubtitle(graphicsHolder);
 
-        elapsed += delta;
-        super.render(graphicsHolder, mouseX, mouseY, delta);
+        elapsed += tickDelta / SharedConstants.TICKS_PER_SECOND;
+        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
     }
 
     public abstract MutableText getScreenTitle();
     public abstract MutableText getScreenSubtitle();
-    public void drawBackground(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
+    public void drawBackground(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         super.renderBackground(graphicsHolder);
     }
 
     private void drawTitle(GraphicsHolder graphicsHolder) {
         int titleHeight = (textRenderer.fontHeight * TITLE_SCALE);
+        MutableText titleText = getScreenTitle();
         graphicsHolder.push();
         graphicsHolder.translate(width / 2.0, TEXT_PADDING, 0);
         graphicsHolder.translate(0, -((titleHeight + TEXT_PADDING) * (1 - animationProgress)), 0);
         graphicsHolder.scale(TITLE_SCALE, TITLE_SCALE, TITLE_SCALE);
-        graphicsHolder.drawCenteredText(getScreenTitle(), 0, 0, 0xFFFFFFFF);
+        scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(titleText), width / TITLE_SCALE, true);
+        graphicsHolder.drawCenteredText(titleText, 0, 0, 0xFFFFFFFF);
         graphicsHolder.pop();
     }
 
     private void drawSubtitle(GraphicsHolder graphicsHolder) {
         double titleHeight = (textRenderer.fontHeight * TITLE_SCALE);
+        MutableText subtitleText = getScreenSubtitle();
         graphicsHolder.push();
         graphicsHolder.translate(width / 2.0, titleHeight * animationProgress, 0);
         graphicsHolder.translate(0, TEXT_PADDING * 1.5, 0);
-        graphicsHolder.drawCenteredText(getScreenSubtitle(), 0, 0, 0xFFFFFFFF);
+        scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(subtitleText), width, true);
+        graphicsHolder.drawCenteredText(subtitleText, 0, 0, 0xFFFFFFFF);
         graphicsHolder.pop();
     }
 }

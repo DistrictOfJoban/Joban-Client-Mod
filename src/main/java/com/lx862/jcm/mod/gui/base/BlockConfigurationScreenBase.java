@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.gui.base;
 
+import com.lx862.jcm.mod.gui.widget.ButtonSetsWidget;
 import com.lx862.jcm.mod.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.BlockPos;
@@ -11,6 +12,7 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
     public static final int MAX_CONTENT_WIDTH = 400;
     protected final BlockPos blockPos;
     protected final ListViewWidget listViewWidget;
+    protected final ButtonSetsWidget bottomEntryWidget;
     private final ButtonWidgetExtension saveButton;
     private final ButtonWidgetExtension discardButton;
     private boolean discardConfig = false;
@@ -28,6 +30,7 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
         });
 
         this.listViewWidget = new ListViewWidget(20);
+        this.bottomEntryWidget = new ButtonSetsWidget();
     }
 
     @Override
@@ -36,24 +39,29 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
         int contentWidth = (int)Math.min((width * 0.75), MAX_CONTENT_WIDTH);
         int listViewHeight = (int)((height - 60) * 0.75);
         int startX = (width - contentWidth) / 2;
-        int startY = TEXT_PADDING * 6;
+        int startY = TEXT_PADDING * 5;
+        int bottomEntryMargin = 10;
+        int bottomEntryHeight = (height - startY - listViewHeight - bottomEntryMargin - bottomEntryMargin);
 
         listViewWidget.reset();
         addConfigEntries();
         listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
 
-        int bottomWidgetsStartY = startY + listViewHeight + TEXT_PADDING;
-        saveButton.setPosition(startX, bottomWidgetsStartY);
-        saveButton.setWidth(contentWidth / 2);
-        discardButton.setPosition(startX + (contentWidth / 2), bottomWidgetsStartY);
-        discardButton.setWidth(contentWidth / 2);
-
-        addDrawableChild2(saveButton);
-        addDrawableChild2(discardButton);
+        bottomEntryWidget.reset();
+        addBottomRowButtons();
+        bottomEntryWidget.setXYSize(startX, startY + listViewHeight + bottomEntryMargin, contentWidth, bottomEntryHeight);
     }
 
     public abstract void addConfigEntries();
     public abstract void onSave();
+
+    protected void addBottomRowButtons() {
+        addDrawableChild2(saveButton);
+        addDrawableChild2(discardButton);
+
+        bottomEntryWidget.add(saveButton);
+        bottomEntryWidget.add(discardButton);
+    }
 
     @Override
     public MutableText getScreenSubtitle() {
@@ -65,9 +73,9 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
-        super.render(graphicsHolder, mouseX, mouseY, delta);
-        listViewWidget.render(graphicsHolder, mouseX, mouseY, delta);
+    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
+        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
+        listViewWidget.render(graphicsHolder, mouseX, mouseY, tickDelta);
     }
 
     @Override
