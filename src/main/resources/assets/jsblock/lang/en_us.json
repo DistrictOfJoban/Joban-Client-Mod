@@ -26,7 +26,7 @@
   "block.jsblock.kcr_enquiry_machine": "KCR Enquiry Machine (Wall mounted)",
   "block.jsblock.exit_sign_odd": "Exit Signs",
   "block.jsblock.exit_sign_even": "Exit Signs (Even)",
-  "block.jsblock.faresaver_1": "Fare Saver",
+  "block.jsblock.faresaver": "Fare Saver",
   "block.jsblock.fire_alarm": "Fire Alarm (REMOVE ON INITIAL RELEASE)",
   "block.jsblock.kcr_name_sign": "KCR Station Name Sign",
   "block.jsblock.kcr_name_sign_station_color": "KCR Station Name Sign (Station Colored)",
@@ -72,9 +72,14 @@
   "block.jsblock.lrt_trespass_sign": "LRT Trespass Signage",
   "block.jsblock.water_machine": "Water Machine",
 
+  "item.jsblock.apg_door_drl": "APG (Disneyland Resorts Line Variants)",
+  "item.jsblock.apg_glass_drl": "APG (Disneyland Resorts Line Variants)",
+  "item.jsblock.apg_glass_end_drl": "APG (Disneyland Resorts Line Variants)",
+
   "hud.jsblock.enquiry_machine.success": "Balance: $%s",
-  "hud.jsblock.faresaver.done": "The $%d discount will be used next time you exit a station.",
-  "hud.jsblock.faresaver.done_sarcasm": "This so called \"discount\" will be used next time you exit a station.",
+  "hud.jsblock.faresaver.success": "The $%d discount will be used next time you exit a station.",
+  "hud.jsblock.faresaver.success.sarcasm": "This so called \"discount\" will be used next time you exit a station.",
+  "hud.jsblock.faresaver.fail": "You already have a $%d discount applied on your next journey!",
   "hud.jsblock.faresaver.saved": "You have saved $%d.",
   "hud.jsblock.faresaver.saved_sarcasm": "You have wasted $%d.",
   "hud.jsblock.kcr_name_sign.success": "Direction changed!",
@@ -84,20 +89,16 @@
   "hud.jsblock.subsidy_machine.fail": "Please wait %d seconds before trying again.",
   
   "gui.jsblock.brand": "Joban Client Mod",
+  "gui.jsblock.butterfly_light.countdown": "Dwell time left when starts blinking",
   "gui.jsblock.config.version": "Version %s",
+  "gui.jsblock.config.fail": "Config cannot be saved!",
   "gui.jsblock.block_config.subtitle": "At: %d %d %d",
   "gui.jsblock.block_config.subtitle_near": "At: %d %d %d | Near %s",
   "gui.jsblock.block_config.subtitle_in": "At: %d %d %d | In %s",
-
   "gui.jsblock.block_config.save": "Save Settings",
   "gui.jsblock.block_config.discard": "Discard Settings",
-
-  "gui.jsblock.butterfly_countdown": "Dwell time left when starts blinking",
-  "gui.jsblock.cantsave": "Config cannot be saved!",
-
-  "gui.jsblock.faresaver.currency": "$%d",
-  "gui.jsblock.faresaver.discount": "Discount",
-  "gui.jsblock.hide_platform_number": "Hide Platform Number",
+  "gui.jsblock.faresaver.currency": "$",
+  "gui.jsblock.faresaver.discount": "Discount amount",
   "gui.jsblock.looper": "Sound Looper/Repeater",
   "gui.jsblock.looper.limit_range": "Limit sound range",
   "gui.jsblock.looper.need_redstone": "Require Redstone Power",
@@ -108,17 +109,15 @@
   "gui.jsblock.looper.sound_source": "Sound Source/Category",
   "gui.jsblock.looper.sound_vol": "Sound Volume (Multiplied by 100, Default is 100)",
   "gui.jsblock.mismatched_versions": "Please update the Joban Client Mod and try again.",
+  "gui.jsblock.pids.hide_platform_number": "Hide Platform Number",
   "gui.jsblock.pids_preset": "PIDS Preset",
-
+  "gui.jsblock.subsidy_machine.currency": "$",
   "gui.jsblock.subsidy_machine.price": "Subsidy Balance",
   "gui.jsblock.subsidy_machine.cooldown": "Cooldown (Second)",
 
   "gui.jsblock.numeric_text_field.increment": "▲",
   "gui.jsblock.numeric_text_field.decrement": "▼",
 
-  "item.jsblock.apg_door_drl": "APG (Disneyland Resorts Line Variants)",
-  "item.jsblock.apg_glass_drl": "APG (Disneyland Resorts Line Variants)",
-  "item.jsblock.apg_glass_end_drl": "APG (Disneyland Resorts Line Variants)",
   "gui.jsblock.mismatched_protocol_update": "Incompatible Joban Client Mod Version!\nYou are on JCM v%s, you need to update your mod to v%s in order to join the server.",
   "gui.jsblock.mismatched_protocol_downgrade": "Incompatible Joban Client Mod Version!\nYou are on JCM v%s, you need to downgrade your mod to v%s in order to join the server.",
   "gui.jsblock.legacy_no_protocol": "Incompatible Joban Client Mod Version!\nEither contact the server owner to update JCM to v%s, or downgrade your JCM to v%s."

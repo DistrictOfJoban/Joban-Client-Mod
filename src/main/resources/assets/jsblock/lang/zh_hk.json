@@ -26,7 +26,7 @@
   "block.jsblock.kcr_enquiry_machine": "九鐵八達通查閱器 (掛墻式)",
   "block.jsblock.exit_sign_odd": "出口指示牌",
   "block.jsblock.exit_sign_even": "出口指示牌 (雙數)",
-  "block.jsblock.faresaver_1": "特惠站",
+  "block.jsblock.faresaver": "特惠站",
   "block.jsblock.fire_alarm": "火警鐘",
   "block.jsblock.helpline_1": "召援專綫 (連貼紙)",
   "block.jsblock.helpline_2": "召援專綫",
@@ -72,21 +72,22 @@
   "block.jsblock.ticket_barrier_1_exit": "Thales 閘機 (出口)",
   "block.jsblock.ticket_barrier_1_bare": "Thales 閘機 (側殼)",
 
-  "hud.jsblock.faresaver.done": "$%d 優惠將會在下一次出閘時使用。",
-  "hud.jsblock.faresaver.done_sarcasm": "所謂的 \"優惠\" 將會在下一次出閘時使用。",
+  "item.jsblock.apg_door_drl": "自動月台閘門 (迪士尼綫)",
+  "item.jsblock.apg_glass_drl": "自動月台閘門 (迪士尼綫)",
+  "item.jsblock.apg_glass_end_drl": "自動月台閘門 (迪士尼綫)",
+
+  "hud.jsblock.faresaver.success": "$%d 優惠將會在下一次出閘時使用。",
+  "hud.jsblock.faresaver.success.sarcasm": "所謂的 \"優惠\" 將會在下一次出閘時使用。",
   "hud.jsblock.faresaver.saved": "你節省了 $%d。",
   "hud.jsblock.faresaver.saved_sarcasm": "你額外花費了 $%d。",
   "hud.jsblock.subsidy_machine.success": "已將 $%d 加入你的餘額，你現在的餘額是 $%d",
   "hud.jsblock.subsidy_machine.fail": "請等待%d秒後再重試。",
 
   "gui.jsblock.brand": "常磐裝飾模組",
+  "gui.jsblock.butterfly_light.countdown": "列車關門前時間開始閃動(秒)",
+  "gui.jsblock.config.fail": "未能儲存設定檔!",
   "gui.jsblock.config.version": "版本 %s",
-
-  "gui.jsblock.butterfly_countdown": "列車關門前時間開始閃動(秒)",
-  "gui.jsblock.cantsave": "未能儲存設定檔!",
-  "gui.jsblock.faresaver.currency": "$%d",
   "gui.jsblock.faresaver.discount": "優惠",
-  "gui.jsblock.hide_platform_number": "隱藏月台號碼",
   "gui.jsblock.looper": "聲音循環器",
   "gui.jsblock.looper.limit_range": "限制聲音範圍",
   "gui.jsblock.looper.need_redstone": "需要紅石信號",
@@ -97,10 +98,8 @@
   "gui.jsblock.looper.sound_source": "聲音類別",
   "gui.jsblock.looper.sound_vol": "音量 (乘以 100，預設為 100)",
   "gui.jsblock.mismatched_versions": "請將 Joban Client Mod 更新，並再重試。",
+  "gui.jsblock.pids.hide_platform_number": "隱藏月台號碼",
   "gui.jsblock.pids_preset": "顯示格式",
   "gui.jsblock.subsidy_machine.price": "補貼金額",
-  "gui.jsblock.subsidy_machine.cooldown": "速度限制 (秒)",
-  "item.jsblock.apg_door_drl": "自動月台閘門 (迪士尼綫)",
-  "item.jsblock.apg_glass_drl": "自動月台閘門 (迪士尼綫)",
-  "item.jsblock.apg_glass_end_drl": "自動月台閘門 (迪士尼綫)"
+  "gui.jsblock.subsidy_machine.cooldown": "速度限制 (秒)"
 }

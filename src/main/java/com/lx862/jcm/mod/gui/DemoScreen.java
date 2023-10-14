@@ -68,7 +68,7 @@ public class DemoScreen extends BasicScreenBase {
     private void drawPride(GraphicsHolder graphicsHolder) {
         graphicsHolder.push();
         graphicsHolder.rotateYDegrees(5);
-        graphicsHolder.scale((float) linearAnimationProgress, 1, 1);
+        graphicsHolder.scale((float) animationProgress, 1, 1);
         double halfWidth = width / 2.0;
 
         // TODO: where my matrices :(

@@ -14,8 +14,8 @@ public class SubsidyMachineScreen extends BlockConfigurationScreenBase {
     private final NumericTextField cooldownTextField;
     public SubsidyMachineScreen(BlockPos blockPos, int pricePerUse, int cooldown) {
         super(blockPos);
-        this.priceTextField = new NumericTextField(0, 0, 60, 20, 0, 50000, 10, "$");
-        this.cooldownTextField = new NumericTextField(0, 0, 60, 20, 0, 1200, 0, null);
+        this.priceTextField = new NumericTextField(0, 0, 60, 20, 0, 50000, 10, TextUtil.translatable(TextUtil.TextCategory.GUI, "subsidy_machine.currency"));
+        this.cooldownTextField = new NumericTextField(0, 0, 60, 20, 0, 1200, 0);
 
         this.priceTextField.setValue(pricePerUse);
         this.cooldownTextField.setValue(cooldown);

@@ -19,10 +19,10 @@ public final class Blocks {
     public static final BlockRegistryObject CEILING_SLANTED = Registry.registerBlockItem("ceiling_slanted", new CeilingSlantedBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject DEPARTURE_POLE = Registry.registerBlockItem("departure_pole", new DeparturePoleBlock(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject DEPARTURE_TIMER = Registry.registerBlockItem("departure_timer", new DepartureTimerBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 4)), ItemGroups.JCM_MAIN);
-
     public static final BlockRegistryObject EXIT_SIGN_ODD = Registry.registerBlockItem("exit_sign_odd", new ExitSignOdd(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject EXIT_SIGN_EVEN = Registry.registerBlockItem("exit_sign_even", new ExitSignEven(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject FIRE_ALARM = Registry.registerBlockItem("fire_alarm", new FireAlarmWall(BlockSettings.create().strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject FARE_SAVER = Registry.registerBlockItem("faresaver", new FareSaverBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN = Registry.registerBlockItem("kcr_name_sign", new KCRStationNameSignBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject LIGHT_LANTERN = Registry.registerBlockItem("light_lantern", new LightLanternBlock(BlockSettings.create().strength(4.0f).nonOpaque().luminance(state -> 15)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject MTR_STAIRS = Registry.registerBlockItem("mtr_stairs", new MTRStairsBlock(AbstractBlock.Settings.create().strength(4.0f)), ItemGroups.JCM_MAIN);

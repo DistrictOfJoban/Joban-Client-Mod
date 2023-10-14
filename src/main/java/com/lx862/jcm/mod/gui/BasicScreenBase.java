@@ -15,8 +15,10 @@ public abstract class BasicScreenBase extends AnimatableScreenBase implements Re
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
         drawBackground(graphicsHolder, mouseX, mouseY, delta);
+
         drawTitle(graphicsHolder);
         drawSubtitle(graphicsHolder);
+
         elapsed += delta;
         super.render(graphicsHolder, mouseX, mouseY, delta);
     }
@@ -28,9 +30,10 @@ public abstract class BasicScreenBase extends AnimatableScreenBase implements Re
     }
 
     private void drawTitle(GraphicsHolder graphicsHolder) {
+        int titleHeight = (textRenderer.fontHeight * TITLE_SCALE);
         graphicsHolder.push();
         graphicsHolder.translate(width / 2.0, TEXT_PADDING, 0);
-        graphicsHolder.translate(0, -(TITLE_SCALE * textRenderer.fontHeight + TEXT_PADDING) * (1 - animationProgress), 0);
+        graphicsHolder.translate(0, -((titleHeight + TEXT_PADDING) * (1 - animationProgress)), 0);
         graphicsHolder.scale(TITLE_SCALE, TITLE_SCALE, TITLE_SCALE);
         graphicsHolder.drawCenteredText(getScreenTitle(), 0, 0, 0xFFFFFFFF);
         graphicsHolder.pop();
@@ -39,8 +42,8 @@ public abstract class BasicScreenBase extends AnimatableScreenBase implements Re
     private void drawSubtitle(GraphicsHolder graphicsHolder) {
         double titleHeight = (textRenderer.fontHeight * TITLE_SCALE);
         graphicsHolder.push();
-        graphicsHolder.translate(width / 2.0, (TEXT_PADDING + (TEXT_PADDING / 2.0)), 0);
-        graphicsHolder.translate(0, titleHeight * animationProgress, 0);
+        graphicsHolder.translate(width / 2.0, titleHeight * animationProgress, 0);
+        graphicsHolder.translate(0, TEXT_PADDING * 1.5, 0);
         graphicsHolder.drawCenteredText(getScreenSubtitle(), 0, 0, 0xFFFFFFFF);
         graphicsHolder.pop();
     }

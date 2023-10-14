@@ -26,6 +26,8 @@ public class SimpleDefaultedRegistryMixin {
                     return new Identifier(id.getNamespace(), "ceiling_slanted");
                 case "exit_sign_1":
                     return new Identifier(id.getNamespace(), "exit_sign_odd");
+                case "faresaver_1":
+                    return new Identifier(id.getNamespace(), "faresaver");
                 case "helpline_3":
                     return new Identifier(id.getNamespace(), "helpline_standing_eal");
                 case "helpline_4":

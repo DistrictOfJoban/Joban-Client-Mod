@@ -26,7 +26,7 @@
   "block.jsblock.kcr_enquiry_machine": "Macchina di inchiesta KCR (Montata sul muro)",
   "block.jsblock.exit_sign_odd": "Cartello di uscita",
   "block.jsblock.exit_sign_even": "Cartello di uscita (Orientazione para)",
-  "block.jsblock.faresaver_1": "Salvaprezzo",
+  "block.jsblock.faresaver": "Salvaprezzo",
   "block.jsblock.fire_alarm": "Allarme Incendio (RIMUOVERE AL PRIMO UTILIZZO)",
   "block.jsblock.kcr_name_sign": "Cartello con il nome stazione (Stile KCR)",
   "block.jsblock.kcr_name_sign_station_color": "Cartello con il nome stazione (Stile KCR) (Colore Stazione)",
@@ -72,9 +72,13 @@
   "block.jsblock.lrt_trespass_sign": "Cartello LRT:'Vietato oltrepassare' ",
   "block.jsblock.water_machine": "Fontana d'acqua",
 
+  "item.jsblock.apg_door_drl": "APG (Variante Linea Disneyland Resorts)",
+  "item.jsblock.apg_glass_drl": "APG (Variante Linea Disneyland Resorts)",
+  "item.jsblock.apg_glass_end_drl": "APG (Variante Linea Disneyland Resorts)",
+
   "hud.jsblock.enquiry_machine.success": "Soldi Caricati: $%s",
-  "hud.jsblock.faresaver.done": "Lo sconto di $%d sarà usato alla prossima uscita da una stazione",
-  "hud.jsblock.faresaver.done_sarcasm": "Il così chiamato \"Sconto\" sarà usato alla prossima uscita da una stazione.",
+  "hud.jsblock.faresaver.success": "Lo sconto di $%d sarà usato alla prossima uscita da una stazione",
+  "hud.jsblock.faresaver.success.sarcasm": "Il così chiamato \"Sconto\" sarà usato alla prossima uscita da una stazione.",
   "hud.jsblock.faresaver.saved": "Hai salvato $%d.",
   "hud.jsblock.faresaver.saved_sarcasm": "Hai perso $%d.",
   "hud.jsblock.kcr_name_sign.success": "Direzione Cambiata!",
@@ -84,20 +88,15 @@
   "hud.jsblock.subsidy_machine.fail": "Prima di riprovare, Attendi %d secondi.",
   
   "gui.jsblock.brand": "Mod Joban Client",
+  "gui.jsblock.butterfly_light.countdown": "Tempo di fermata rimasto quando inizia a lampeggiare",
+  "gui.jsblock.config.fail": "La Configurazione non può essere salvata!",
   "gui.jsblock.config.version": "Versione %s",
   "gui.jsblock.block_config.subtitle": "A: %d %d %d",
   "gui.jsblock.block_config.subtitle_near": "A: %d %d %d | Vicino %s",
   "gui.jsblock.block_config.subtitle_in": "A: %d %d %d | In %s",
-
   "gui.jsblock.block_config.save": "Salva Impostazioni",
   "gui.jsblock.block_config.discard": "Elimina Impostazioni",
-
-  "gui.jsblock.butterfly_countdown": "Tempo di fermata rimasto quando inizia a lampeggiare",
-  "gui.jsblock.cantsave": "La Configurazione non può essere salvata!",
-
-  "gui.jsblock.faresaver.currency": "$%d",
   "gui.jsblock.faresaver.discount": "Sconto",
-  "gui.jsblock.hide_platform_number": "Nascondi numero binario",
   "gui.jsblock.looper": "Ripetitore Suoni",
   "gui.jsblock.looper.limit_range": "Limita la gamma sonora",
   "gui.jsblock.looper.need_redstone": "Richiede l'alimentazione di pietrarossa",
@@ -108,6 +107,7 @@
   "gui.jsblock.looper.sound_source": "Categoria/Sorgente Suono",
   "gui.jsblock.looper.sound_vol": "Volume Suono (Moltiplicato per 100, Valore prestabilito è 100)",
   "gui.jsblock.mismatched_versions": "Per favore aggiorna la Mod Joban Client e prova di nuovo.",
+  "gui.jsblock.pids.hide_platform_number": "Nascondi numero binario",
   "gui.jsblock.pids_preset": "Preimpostazione PIDS",
 
   "gui.jsblock.subsidy_machine.price": "Quantità di ricarica",
@@ -116,9 +116,6 @@
   "gui.jsblock.numeric_text_field.increment": "▲",
   "gui.jsblock.numeric_text_field.decrement": "▼",
 
-  "item.jsblock.apg_door_drl": "APG (Variante Linea Disneyland Resorts)",
-  "item.jsblock.apg_glass_drl": "APG (Variante Linea Disneyland Resorts)",
-  "item.jsblock.apg_glass_end_drl": "APG (Variante Linea Disneyland Resorts)",
   "gui.jsblock.mismatched_protocol_update": "Versione Mod Joban Client Incompatibile!\nSei in versione JCM v%s, per poter entrare nel server, devi aggiornare la mod a v%s.",
   "gui.jsblock.mismatched_protocol_downgrade": "Versione Mod Joban Client Incompatibile!\nSei in versione JCM v%s,per poter entrare nel server, devi usare la versione v%s.",
   "gui.jsblock.legacy_no_protocol": "Versione Mod Joban Client Incompatibile!\nContatta il proprietario del server ad aggiornare a v%s, oppure usa la versione v%s della mod."

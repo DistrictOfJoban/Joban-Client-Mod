@@ -26,7 +26,7 @@
   "block.jsblock.kcr_enquiry_machine": "九铁八达通查阅器 (挂墙式)",
   "block.jsblock.exit_sign_odd": "出口指示牌",
   "block.jsblock.exit_sign_even": "出口指示牌 (双数)",
-  "block.jsblock.faresaver_1": "特惠站",
+  "block.jsblock.faresaver": "特惠站",
   "block.jsblock.fire_alarm": "报警装置",
   "block.jsblock.helpline_1": "召援专线 (连贴纸)",
   "block.jsblock.helpline_2": "召援专线",
@@ -72,20 +72,22 @@
   "block.jsblock.ticket_barrier_1_exit": "Thales 闸机 (出口)",
   "block.jsblock.ticket_barrier_1_bare": "Thales 闸机 (侧壳)",
 
-  "hud.jsblock.faresaver.done": "$%d 优惠将会在下一次出闸时使用。",
-  "hud.jsblock.faresaver.done_sarcasm": "所谓的 \"优惠\" 将会在下一次出闸时套用。",
+  "item.jsblock.apg_door_drl": "自动月台闸门 (迪士尼线)",
+  "item.jsblock.apg_glass_drl": "自动月台闸门 (迪士尼线)",
+  "item.jsblock.apg_glass_end_drl": "自动月台闸门 (迪士尼线)",
+
+  "hud.jsblock.faresaver.success": "$%d 优惠将会在下一次出闸时使用。",
+  "hud.jsblock.faresaver.success.sarcasm": "所谓的 \"优惠\" 将会在下一次出闸时套用。",
   "hud.jsblock.faresaver.saved": "你节省了 $%d。",
   "hud.jsblock.faresaver.saved_sarcasm": "你额外花费了 $%d。",
   "hud.jsblock.subsidy_machine.success": "已把 $%d 加入你的余额，你现在的余额是 $%d",
   "hud.jsblock.subsidy_machine.fail": "请等待%d秒后再重试。",
 
   "gui.jsblock.brand": "常磐装饰模组",
+  "gui.jsblock.butterfly_light.countdown": "列车关门前时间开始闪动(秒)",
+  "gui.jsblock.config.fail": "未能储存设定档!",
   "gui.jsblock.config.version": "版本 %s",
-  "gui.jsblock.butterfly_countdown": "列车关门前时间开始闪动(秒)",
-  "gui.jsblock.cantsave": "未能储存设定档!",
-  "gui.jsblock.faresaver.currency": "$%d",
   "gui.jsblock.faresaver.discount": "优惠",
-  "gui.jsblock.hide_platform_number": "隐藏月台号码",
   "gui.jsblock.looper": "声音循环器",
   "gui.jsblock.looper.limit_range": "限制声音范围",
   "gui.jsblock.looper.need_redstone": "需要红石信号",
@@ -96,12 +98,9 @@
   "gui.jsblock.looper.sound_source": "声音类别",
   "gui.jsblock.looper.sound_vol": "音量 (乘以 100，默认为 100)",
   "gui.jsblock.mismatched_versions": "请把 Joban Client Mod 更新，并再重试。",
+  "gui.jsblock.pids.hide_platform_number": "隐藏月台号码",
   "gui.jsblock.pids_preset": "显示格式",
 
   "gui.jsblock.subsidy_machine.price": "补贴金额",
-  "gui.jsblock.subsidy_machine.cooldown": "速度限制 (秒)",
-
-  "item.jsblock.apg_door_drl": "自动月台闸门 (迪士尼线)",
-  "item.jsblock.apg_glass_drl": "自动月台闸门 (迪士尼线)",
-  "item.jsblock.apg_glass_end_drl": "自动月台闸门 (迪士尼线)"
+  "gui.jsblock.subsidy_machine.cooldown": "速度限制 (秒)"
 }

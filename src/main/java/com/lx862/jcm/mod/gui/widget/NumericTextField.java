@@ -15,6 +15,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
     private final int max;
     private final String prefix;
     private final int defaultValue;
+
     public NumericTextField(int x, int y, int width, int height, int min, int max, int defaultValue, @Nullable String prefix) {
         super(x, y, width, height, 12, TextCase.LOWER, null, String.valueOf(defaultValue));
         this.min = min;
@@ -23,7 +24,15 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         this.defaultValue = defaultValue;
     }
 
-    @Override
+    public NumericTextField(int x, int y, int width, int height, int min, int max, int defaultValue, MutableText prefix) {
+        this(x, y, width, height, min, max, defaultValue, prefix.getString());
+    }
+
+    public NumericTextField(int x, int y, int width, int height, int min, int max, int defaultValue) {
+        this(x, y, width, height, min, max, defaultValue, (String)null);
+    }
+
+        @Override
     public boolean charTyped2(char chr, int modifiers) {
         try {
             int val = Integer.parseInt(getText2() + chr);

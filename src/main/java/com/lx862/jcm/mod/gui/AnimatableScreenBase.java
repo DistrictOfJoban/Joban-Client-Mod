@@ -5,12 +5,13 @@ import org.mtr.mapping.mapper.ScreenExtension;
 
 public abstract class AnimatableScreenBase extends ScreenExtension {
     protected double linearAnimationProgress = 0;
-    protected double animationProgress = 0;
+    protected double animationProgress;
     private boolean closing = false;
     private final boolean shouldAnimate;
     public AnimatableScreenBase(boolean animatable) {
         super();
         this.shouldAnimate = animatable;
+        this.animationProgress = animatable ? 0 : 1;
     }
 
     @Override
