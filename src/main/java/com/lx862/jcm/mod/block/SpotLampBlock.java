@@ -1,12 +1,12 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.VerticallyAttachedBlock;
-import com.lx862.jcm.mod.network.gui.DemoScreenPacket;
+import com.lx862.jcm.mod.network.gui.DemoScreenGUIPacket;
+import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.Utils;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
-import org.mtr.mapping.registry.Registry;
 
 public class SpotLampBlock extends VerticallyAttachedBlock {
 
@@ -18,7 +18,7 @@ public class SpotLampBlock extends VerticallyAttachedBlock {
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if(Utils.playerHoldingBrush(player)) {
-            Registry.sendPacketToClient(ServerPlayerEntity.cast(player), new DemoScreenPacket());
+            Networking.sendPacketToClient(player, new DemoScreenGUIPacket());
         }
     }
 

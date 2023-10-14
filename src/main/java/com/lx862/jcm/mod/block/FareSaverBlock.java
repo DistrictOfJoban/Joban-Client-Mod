@@ -2,7 +2,8 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.Vertical3Block;
 import com.lx862.jcm.mod.block.entity.FareSaverBlockEntity;
-import com.lx862.jcm.mod.network.gui.FareSaverScreenPacket;
+import com.lx862.jcm.mod.network.gui.FareSaverGUIPacket;
+import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.lx862.jcm.mod.util.Utils;
@@ -10,7 +11,6 @@ import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
-import org.mtr.mapping.registry.Registry;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -39,7 +39,7 @@ public class FareSaverBlock extends Vertical3Block implements BlockWithEntity {
         int discount = thisEntity.getDiscount();
 
         if (Utils.playerHoldingBrush(player)) {
-            Registry.sendPacketToClient(ServerPlayerEntity.cast(player), new FareSaverScreenPacket(pos, discount));
+            Networking.sendPacketToClient(player, new FareSaverGUIPacket(pos, discount));
             return;
         }
 

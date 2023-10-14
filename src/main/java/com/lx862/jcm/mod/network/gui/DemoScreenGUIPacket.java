@@ -6,12 +6,12 @@ import org.mtr.mapping.holder.PacketBuffer;
 import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.registry.PacketHandler;
 
-public class DemoScreenPacket extends PacketHandler {
+public class DemoScreenGUIPacket extends PacketHandler {
 
-    public DemoScreenPacket(PacketBuffer packetBuffer) {
+    public DemoScreenGUIPacket(PacketBuffer packetBuffer) {
     }
 
-    public DemoScreenPacket() {
+    public DemoScreenGUIPacket() {
     }
 
     @Override

@@ -43,14 +43,14 @@ public class Registry {
         BlockEntities.register();
         Items.register();
         Events.register();
-        Network.register();
+        Networking.register();
         org.mtr.mapping.registry.Registry.init();
     }
 
     public static void registerClient() {
         RenderLayers.registerClient();
         BlockEntityRenderers.registerClient();
-        Network.registerClient();
+        Networking.registerClient();
         org.mtr.mapping.registry.RegistryClient.init();
     }
 }

@@ -3,14 +3,14 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
 import com.lx862.jcm.mod.block.entity.SubsidyMachineBlockEntity;
 import com.lx862.jcm.mod.data.JCMStats;
-import com.lx862.jcm.mod.network.gui.SubsidyMachineScreenPacket;
+import com.lx862.jcm.mod.network.gui.SubsidyMachineGUIPacket;
+import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.*;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.SharedConstants;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
-import org.mtr.mapping.registry.Registry;
 
 import java.util.UUID;
 
@@ -36,7 +36,7 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
         SubsidyMachineBlockEntity thisEntity = (SubsidyMachineBlockEntity)world.getBlockEntity(pos).data;
 
         if (Utils.playerHoldingBrush(player)) {
-            Registry.sendPacketToClient(ServerPlayerEntity.cast(player), new SubsidyMachineScreenPacket(pos, thisEntity.getSubsidyAmount(), thisEntity.getCooldown()));
+            Networking.sendPacketToClient(player, new SubsidyMachineGUIPacket(pos, thisEntity.getSubsidyAmount(), thisEntity.getCooldown()));
             return;
         }
 

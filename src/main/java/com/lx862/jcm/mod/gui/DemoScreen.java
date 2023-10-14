@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.gui;
 
+import com.lx862.jcm.mod.gui.base.BasicScreenBase;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;

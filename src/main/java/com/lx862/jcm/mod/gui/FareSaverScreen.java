@@ -1,13 +1,13 @@
 package com.lx862.jcm.mod.gui;
 
+import com.lx862.jcm.mod.gui.base.BlockConfigurationScreenBase;
 import com.lx862.jcm.mod.gui.widget.NumericTextField;
 import com.lx862.jcm.mod.network.block.FareSaverUpdatePacket;
-import com.lx862.jcm.mod.network.block.SubsidyMachineUpdatePacket;
+import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mapping.registry.RegistryClient;
 
 public class FareSaverScreen extends BlockConfigurationScreenBase {
     private final NumericTextField discountTextField;
@@ -35,6 +35,6 @@ public class FareSaverScreen extends BlockConfigurationScreenBase {
 
     @Override
     public void onSave() {
-        RegistryClient.sendPacketToServer(new FareSaverUpdatePacket(blockPos, discountTextField.getValue()));
+        Networking.sendPacketToServer(new FareSaverUpdatePacket(blockPos, discountTextField.getValue()));
     }
 }

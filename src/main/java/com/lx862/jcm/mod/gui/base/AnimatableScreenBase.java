@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.gui;
+package com.lx862.jcm.mod.gui.base;
 
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.ScreenExtension;

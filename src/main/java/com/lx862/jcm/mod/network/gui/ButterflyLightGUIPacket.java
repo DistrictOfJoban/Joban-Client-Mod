@@ -1,34 +1,34 @@
 package com.lx862.jcm.mod.network.gui;
 
-import com.lx862.jcm.mod.gui.FareSaverScreen;
+import com.lx862.jcm.mod.gui.ButterflyLightScreen;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.PacketBuffer;
 import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.registry.PacketHandler;
 
-public class FareSaverScreenPacket extends PacketHandler {
+public class ButterflyLightGUIPacket extends PacketHandler {
     private final BlockPos blockPos;
-    private final int discount;
+    private final int secondsToBlink;
 
-    public FareSaverScreenPacket(PacketBuffer packetBuffer) {
+    public ButterflyLightGUIPacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
-        this.discount = packetBuffer.readInt();
+        this.secondsToBlink = packetBuffer.readInt();
     }
 
-    public FareSaverScreenPacket(BlockPos blockPos, int discount) {
+    public ButterflyLightGUIPacket(BlockPos blockPos, int secondsToBlink) {
         this.blockPos = blockPos;
-        this.discount = discount;
+        this.secondsToBlink = secondsToBlink;
     }
 
     @Override
     public void write(PacketBuffer packetBuffer) {
         packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeInt(discount);
+        packetBuffer.writeInt(secondsToBlink);
     }
 
     @Override
     public void runClientQueued() {
-        MinecraftClient.getInstance().openScreen(new Screen(new FareSaverScreen(blockPos, discount)));
+        MinecraftClient.getInstance().openScreen(new Screen(new ButterflyLightScreen(blockPos, secondsToBlink)));
     }
 }

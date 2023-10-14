@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.gui;
+package com.lx862.jcm.mod.gui.base;
 
 import com.lx862.jcm.mod.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.util.TextUtil;

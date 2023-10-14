@@ -1,14 +1,12 @@
 package com.lx862.jcm.mod.block.entity;
 
-import com.lx862.jcm.mod.data.JCMStats;
 import com.lx862.jcm.mod.registry.BlockEntities;
-import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.CompoundTag;
 
 public class ButterflyLightBlockEntity extends JCMBlockEntityBase {
-    private int secondsLeftUntilBlink = 10;
+    private int secondsToBlink = 10;
     public ButterflyLightBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(BlockEntities.BUTTERFLY_LIGHT.get(), blockPos, blockState);
     }
@@ -16,28 +14,26 @@ public class ButterflyLightBlockEntity extends JCMBlockEntityBase {
     @Override
     public void readCompoundTag(CompoundTag compoundTag) {
         super.readCompoundTag(compoundTag);
-        this.secondsLeftUntilBlink = compoundTag.getInt("seconds_to_blink");
+        this.secondsToBlink = compoundTag.getInt("seconds_to_blink");
     }
 
     @Override
     public void writeCompoundTag(CompoundTag compoundTag) {
         super.writeCompoundTag(compoundTag);
-        compoundTag.putInt("seconds_to_blink", secondsLeftUntilBlink);
+        compoundTag.putInt("seconds_to_blink", secondsToBlink);
     }
 
     @Override
     public void blockEntityTick() {
-        if(JCMStats.getGameTick() % 100 == 0) {
-            JCMLogger.info("Butterfly light block entity ticking");
-        }
+        //TODO: Implement Butterfly Light checking and blockstate change
     }
 
-    public void setData(int secondsLeftUntilBlink) {
-        this.secondsLeftUntilBlink = secondsLeftUntilBlink;
+    public void setData(int secondsToBlink) {
+        this.secondsToBlink = secondsToBlink;
         this.markDirty2();
     }
 
-    public int getSecondsLeftUntilBlink() {
-        return secondsLeftUntilBlink;
+    public int getSecondsToBlink() {
+        return secondsToBlink;
     }
 }

@@ -7,18 +7,18 @@ import org.mtr.mapping.holder.PacketBuffer;
 import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.registry.PacketHandler;
 
-public class SubsidyMachineScreenPacket extends PacketHandler {
+public class SubsidyMachineGUIPacket extends PacketHandler {
     private final BlockPos blockPos;
     private final int pricePerUse;
     private final int cooldown;
 
-    public SubsidyMachineScreenPacket(PacketBuffer packetBuffer) {
+    public SubsidyMachineGUIPacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
         this.pricePerUse = packetBuffer.readInt();
         this.cooldown = packetBuffer.readInt();
     }
 
-    public SubsidyMachineScreenPacket(BlockPos blockPos, int pricePerUse, int cooldown) {
+    public SubsidyMachineGUIPacket(BlockPos blockPos, int pricePerUse, int cooldown) {
         this.blockPos = blockPos;
         this.pricePerUse = pricePerUse;
         this.cooldown = cooldown;

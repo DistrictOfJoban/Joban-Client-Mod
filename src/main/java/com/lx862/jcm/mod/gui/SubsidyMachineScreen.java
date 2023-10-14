@@ -1,12 +1,13 @@
 package com.lx862.jcm.mod.gui;
 
+import com.lx862.jcm.mod.gui.base.BlockConfigurationScreenBase;
 import com.lx862.jcm.mod.gui.widget.NumericTextField;
 import com.lx862.jcm.mod.network.block.SubsidyMachineUpdatePacket;
+import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mapping.registry.RegistryClient;
 
 // TODO: Finish this thing
 public class SubsidyMachineScreen extends BlockConfigurationScreenBase {
@@ -42,6 +43,6 @@ public class SubsidyMachineScreen extends BlockConfigurationScreenBase {
 
     @Override
     public void onSave() {
-        RegistryClient.sendPacketToServer(new SubsidyMachineUpdatePacket(blockPos, priceTextField.getValue(), cooldownTextField.getValue()));
+        Networking.sendPacketToServer(new SubsidyMachineUpdatePacket(blockPos, priceTextField.getValue(), cooldownTextField.getValue()));
     }
 }
