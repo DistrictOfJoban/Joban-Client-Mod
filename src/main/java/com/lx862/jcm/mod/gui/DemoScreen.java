@@ -1,11 +1,11 @@
 package com.lx862.jcm.mod.gui;
 
 import com.lx862.jcm.mod.gui.base.BasicScreenBase;
+import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
-import org.mtr.mapping.mapper.TextHelper;
 
 public class DemoScreen extends BasicScreenBase {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/gui/config_screen/bg.png");
@@ -17,23 +17,17 @@ public class DemoScreen extends BasicScreenBase {
 
     @Override
     public MutableText getScreenTitle() {
-        return TextHelper.literal("Demo Screen");
+        return TextUtil.literal("Demo Screen");
     }
 
     @Override
     public MutableText getScreenSubtitle() {
-        return TextHelper.literal("Hello World ^_^");
+        return TextUtil.literal("Hello World ^_^");
     }
 
     @Override
     protected void init2() {
         super.init2();
-    }
-
-    @Override
-    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
-        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
-
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
@@ -32,7 +33,7 @@ public class OperatorButtonBlock extends WallAttachedBlock {
         if (player.isHolding(Items.getGrassBlockMapped())) {
             return ActionResult.SUCCESS;
         } else {
-            player.sendMessage(Text.cast(TextUtil.translatable(TextUtil.TextCategory.HUD, "operator_button.fail").formatted(TextFormatting.RED)), true);
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "operator_button.fail").formatted(TextFormatting.RED)), true);
             return ActionResult.FAIL;
         }
     }

@@ -2,14 +2,17 @@ package com.lx862.jcm.mod.gui.base;
 
 import com.lx862.jcm.mod.gui.widget.ButtonSetsWidget;
 import com.lx862.jcm.mod.gui.widget.ListViewWidget;
+import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.BlockPos;
+import org.mtr.mapping.holder.ClickableWidget;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
     public static final int MAX_CONTENT_WIDTH = 400;
+    public static final int BOTTOM_ROW_MARGIN = 10;
     protected final BlockPos blockPos;
     protected final ListViewWidget listViewWidget;
     protected final ButtonSetsWidget bottomEntryWidget;
@@ -20,11 +23,11 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
         super(false);
         this.blockPos = blockPos;
 
-        this.saveButton = new ButtonWidgetExtension(0, 0, 0, 20, TextUtil.translatable(TextUtil.TextCategory.GUI, "block_config.save"), (btn) -> {
+        this.saveButton = new ButtonWidgetExtension(0, 0, 0, 20, TextUtil.translatable(TextCategory.GUI, "block_config.save"), (btn) -> {
             onClose2();
         });
 
-        this.discardButton = new ButtonWidgetExtension(0, 0, 0, 20, TextUtil.translatable(TextUtil.TextCategory.GUI, "block_config.discard"), (btn) -> {
+        this.discardButton = new ButtonWidgetExtension(0, 0, 0, 20, TextUtil.translatable(TextCategory.GUI, "block_config.discard"), (btn) -> {
             discardConfig = true;
             onClose2();
         });
@@ -40,8 +43,7 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
         int listViewHeight = (int)((height - 60) * 0.75);
         int startX = (width - contentWidth) / 2;
         int startY = TEXT_PADDING * 5;
-        int bottomEntryMargin = 10;
-        int bottomEntryHeight = (height - startY - listViewHeight - bottomEntryMargin - bottomEntryMargin);
+        int bottomEntryHeight = (height - startY - listViewHeight - (BOTTOM_ROW_MARGIN * 2));
 
         listViewWidget.reset();
         addConfigEntries();
@@ -49,15 +51,15 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
 
         bottomEntryWidget.reset();
         addBottomRowButtons();
-        bottomEntryWidget.setXYSize(startX, startY + listViewHeight + bottomEntryMargin, contentWidth, bottomEntryHeight);
+        bottomEntryWidget.setXYSize(startX, startY + listViewHeight + BOTTOM_ROW_MARGIN, contentWidth, bottomEntryHeight);
     }
 
     public abstract void addConfigEntries();
     public abstract void onSave();
 
     protected void addBottomRowButtons() {
-        addDrawableChild2(saveButton);
-        addDrawableChild2(discardButton);
+        addChild(new ClickableWidget(saveButton));
+        addChild(new ClickableWidget(discardButton));
 
         bottomEntryWidget.add(saveButton);
         bottomEntryWidget.add(discardButton);
@@ -65,7 +67,7 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
 
     @Override
     public MutableText getScreenSubtitle() {
-        return TextUtil.translatable(TextUtil.TextCategory.GUI,
+        return TextUtil.translatable(TextCategory.GUI,
                 "block_config.subtitle_near",
                 blockPos.getX(), blockPos.getY(), blockPos.getZ(),
                 "中環 Central" //TODO: Get real data
@@ -85,5 +87,10 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
             onSave();
         }
         super.onClose2();
+    }
+
+    @Override
+    public boolean isPauseScreen2() {
+        return false;
     }
 }

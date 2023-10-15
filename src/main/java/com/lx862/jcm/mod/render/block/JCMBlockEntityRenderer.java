@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render.block;
 
 import com.lx862.jcm.mod.data.BlockProperties;
-import com.lx862.jcm.mod.render.Renderable;
+import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
@@ -10,7 +10,7 @@ import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> extends BlockEntityRenderer<T> implements Renderable {
+public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> extends BlockEntityRenderer<T> implements RenderHelper {
 
     public JCMBlockEntityRenderer(Argument argument) {
         super(argument);

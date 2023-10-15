@@ -43,10 +43,10 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
         if(cooldownExpired(player, thisEntity.getCooldown())) {
             updateCooldown(player);
             int finalBalance = addMTRBalanceToPlayer(world, player, thisEntity.getSubsidyAmount());
-            player.sendMessage(Text.cast(TextUtil.translatable(TextUtil.TextCategory.HUD, "subsidy_machine.success", thisEntity.getSubsidyAmount(), finalBalance)), true);
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "subsidy_machine.success", thisEntity.getSubsidyAmount(), finalBalance)), true);
         } else {
             int remainingSec = Math.round(thisEntity.getCooldown() - getCooldown(player));
-            player.sendMessage(Text.cast(TextUtil.translatable(TextUtil.TextCategory.HUD, "subsidy_machine.fail", remainingSec).formatted(TextFormatting.RED)), true);
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "subsidy_machine.fail", remainingSec).formatted(TextFormatting.RED)), true);
         }
     }
 

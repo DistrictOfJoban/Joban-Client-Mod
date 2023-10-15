@@ -116,10 +116,12 @@
   "gui.jsblock.subsidy_machine.price": "Subsidy Balance",
   "gui.jsblock.subsidy_machine.cooldown": "Cooldown (Second)",
 
-  "gui.jsblock.numeric_text_field.increment": "▲",
-  "gui.jsblock.numeric_text_field.decrement": "▼",
-
   "gui.jsblock.mismatched_protocol_update": "Incompatible Joban Client Mod Version!\nYou are on JCM v%s, you need to update your mod to v%s in order to join the server.",
   "gui.jsblock.mismatched_protocol_downgrade": "Incompatible Joban Client Mod Version!\nYou are on JCM v%s, you need to downgrade your mod to v%s in order to join the server.",
-  "gui.jsblock.legacy_no_protocol": "Incompatible Joban Client Mod Version!\nEither contact the server owner to update JCM to v%s, or downgrade your JCM to v%s."
+  "gui.jsblock.legacy_no_protocol": "Incompatible Joban Client Mod Version!\nEither contact the server owner to update JCM to v%s, or downgrade your JCM to v%s.",
+
+  "gui.jsblock.widget.button.true": "Yes",
+  "gui.jsblock.widget.button.false": "no",
+  "gui.jsblock.widget.numeric_text_field.increment": "▲",
+  "gui.jsblock.widget.numeric_text_field.decrement": "▼"
 }

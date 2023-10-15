@@ -4,10 +4,7 @@ import com.lx862.jcm.mod.block.base.Vertical3Block;
 import com.lx862.jcm.mod.block.entity.FareSaverBlockEntity;
 import com.lx862.jcm.mod.network.gui.FareSaverGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.TextUtil;
-import com.lx862.jcm.mod.util.Utils;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import com.lx862.jcm.mod.util.*;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
@@ -44,16 +41,16 @@ public class FareSaverBlock extends Vertical3Block implements BlockWithEntity {
         }
 
         if(discountList.containsKey(playerUuid)) {
-            player.sendMessage(Text.cast(TextUtil.translatable(TextUtil.TextCategory.HUD, "faresaver.fail", discountList.get(playerUuid))), true);
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "faresaver.fail", discountList.get(playerUuid))), true);
             return;
         }
 
         discountList.put(playerUuid, discount);
 
         if(discount > 0) {
-            player.sendMessage(Text.cast(TextUtil.translatable(TextUtil.TextCategory.HUD, "faresaver.success", discount)), true);
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "faresaver.success", discount)), true);
         } else {
-            player.sendMessage(Text.cast(TextUtil.translatable(TextUtil.TextCategory.HUD, "faresaver.success.sarcasm", discount)), true);
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "faresaver.success.sarcasm", discount)), true);
         }
     }
 

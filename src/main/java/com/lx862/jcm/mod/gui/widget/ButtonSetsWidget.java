@@ -1,13 +1,13 @@
 package com.lx862.jcm.mod.gui.widget;
 
-import com.lx862.jcm.mod.render.Renderable;
+import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.ClickableWidgetExtension;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ButtonSetsWidget extends ClickableWidgetExtension implements Renderable {
+public class ButtonSetsWidget extends ClickableWidgetExtension implements RenderHelper {
     public static final int WIDGET_X_PADDING = 10;
     private final List<List<ButtonWidgetExtension>> widgetRows = new ArrayList<>();
     public ButtonSetsWidget() {

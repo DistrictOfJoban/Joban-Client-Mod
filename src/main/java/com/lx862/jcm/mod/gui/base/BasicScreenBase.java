@@ -1,11 +1,11 @@
 package com.lx862.jcm.mod.gui.base;
 
-import com.lx862.jcm.mod.render.Renderable;
+import com.lx862.jcm.mod.render.RenderHelper;
 import net.minecraft.SharedConstants;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public abstract class BasicScreenBase extends AnimatableScreenBase implements Renderable {
+public abstract class BasicScreenBase extends AnimatableScreenBase implements RenderHelper {
     public static final int TEXT_PADDING = 10;
     public static final int TITLE_SCALE = 2;
     protected double elapsed = 0;

@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.gui.widget;
 
-import com.lx862.jcm.mod.render.Renderable;
+import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import net.minecraft.client.MinecraftClient;
 import org.jetbrains.annotations.Nullable;
@@ -10,7 +11,7 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
-public class NumericTextField extends TextFieldWidgetExtension implements Renderable {
+public class NumericTextField extends TextFieldWidgetExtension implements RenderHelper {
     private final int min;
     private final int max;
     private final String prefix;
@@ -49,14 +50,14 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
 
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
+        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
         TextRenderer textRenderer = new TextRenderer(MinecraftClient.getInstance().textRenderer);
 
         if(prefix != null) {
             drawPrefix(graphicsHolder, textRenderer);
         }
-        drawUpDownButton(graphicsHolder, textRenderer);
 
-        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
+        drawUpDownButton(graphicsHolder, textRenderer);
     }
 
     private void drawPrefix(GraphicsHolder graphicsHolder, TextRenderer textRenderer) {
@@ -68,8 +69,8 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
     }
 
     private void drawUpDownButton(GraphicsHolder graphicsHolder, TextRenderer textRenderer) {
-        MutableText upArrow = TextUtil.translatable(TextUtil.TextCategory.GUI, "numeric_text_field.increment");
-        MutableText dnArrow = TextUtil.translatable(TextUtil.TextCategory.GUI, "numeric_text_field.decrement");
+        MutableText upArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.increment");
+        MutableText dnArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.decrement");
         int fontHeight = textRenderer.getFontHeightMapped();
         int startY = (height - (fontHeight * 2));
         int upWidth = GraphicsHolder.getTextWidth(upArrow);
@@ -91,8 +92,8 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
     @Override
     public boolean mouseClicked2(double mouseX, double mouseY, int button) {
         TextRenderer textRenderer = new TextRenderer(MinecraftClient.getInstance().textRenderer);
-        MutableText upArrow = TextUtil.translatable(TextUtil.TextCategory.GUI, "numeric_text_field.increment");
-        MutableText dnArrow = TextUtil.translatable(TextUtil.TextCategory.GUI, "numeric_text_field.decrement");
+        MutableText upArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.increment");
+        MutableText dnArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.decrement");
         int fontHeight = textRenderer.getFontHeightMapped();
         int startY = getY2() + (height - (fontHeight * 2)) / 2;
         int upWidth = GraphicsHolder.getTextWidth(upArrow.getString());

@@ -22,7 +22,7 @@ public abstract class AnimatableScreenBase extends ScreenExtension {
         if(!shouldAnimate) {
             linearAnimationProgress = 1;
         } else {
-            linearAnimationProgress = closing ? Math.max(0, linearAnimationProgress - frameDelta) : Math.min(1, linearAnimationProgress + (tickDelta / 15));
+            linearAnimationProgress = closing ? Math.max(0, linearAnimationProgress - frameDelta) : Math.min(1, linearAnimationProgress + frameDelta);
 
             if(linearAnimationProgress <= 0 && closing) {
                 onClose2();

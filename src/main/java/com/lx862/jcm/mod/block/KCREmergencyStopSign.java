@@ -2,10 +2,7 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
-import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.TextUtil;
-import com.lx862.jcm.mod.util.Utils;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import com.lx862.jcm.mod.util.*;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
@@ -41,7 +38,7 @@ public class KCREmergencyStopSign extends WallAttachedBlock {
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if(Utils.playerHoldingBrush(player)) {
             world.setBlockState(pos, state.cycle(new Property<>(POINT_TO_LEFT.data)));
-            player.sendMessage(Text.cast(TextUtil.translatable(TextUtil.TextCategory.HUD, "kcr_emg_stop_sign.success")), true);
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "kcr_emg_stop_sign.success")), true);
         }
     }
 
