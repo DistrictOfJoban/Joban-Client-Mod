@@ -110,15 +110,15 @@
   "gui.jsblock.mismatched_versions": "Per favore aggiorna la Mod Joban Client e prova di nuovo.",
   "gui.jsblock.pids.hide_platform_number": "Nascondi numero binario",
   "gui.jsblock.pids_preset": "Preimpostazione PIDS",
-
   "gui.jsblock.subsidy_machine.price": "Quantità di ricarica",
   "gui.jsblock.subsidy_machine.cooldown": "Intervallo (Secondi)",
 
-  "gui.jsblock.numeric_text_field.increment": "▲",
-  "gui.jsblock.numeric_text_field.decrement": "▼",
 
   "gui.jsblock.mismatched_protocol_update": "Versione Mod Joban Client Incompatibile!\nSei in versione JCM v%s, per poter entrare nel server, devi aggiornare la mod a v%s.",
   "gui.jsblock.mismatched_protocol_downgrade": "Versione Mod Joban Client Incompatibile!\nSei in versione JCM v%s,per poter entrare nel server, devi usare la versione v%s.",
   "gui.jsblock.legacy_no_protocol": "Versione Mod Joban Client Incompatibile!\nContatta il proprietario del server ad aggiornare a v%s, oppure usa la versione v%s della mod."
+
+  "gui.jsblock.widget.numeric_text_field.increment": "▲",
+  "gui.jsblock.widget.numeric_text_field.decrement": "▼"
 }
  

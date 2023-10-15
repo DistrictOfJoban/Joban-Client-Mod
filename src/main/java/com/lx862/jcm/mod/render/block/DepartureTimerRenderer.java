@@ -9,7 +9,7 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
     }
 
     @Override
-    public void render(DepartureTimerBlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
+    public void renderCurated(DepartureTimerBlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
         graphicsHolder.push();
         scaleCentered(graphicsHolder, 0.018F, 0.018F, 0.018F);
         rotateToBlockDirection(graphicsHolder, blockEntity);

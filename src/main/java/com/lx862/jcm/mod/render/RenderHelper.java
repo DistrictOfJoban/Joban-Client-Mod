@@ -24,10 +24,20 @@ public interface RenderHelper {
     }
 
     default void scaleToFitBoundary(GraphicsHolder graphicsHolder, int targetW, double maxW, boolean keepAspectRatio) {
+        scaleToFitBoundary(graphicsHolder, targetW, maxW, keepAspectRatio, 0);
+    }
+
+    default void scaleToFitBoundary(GraphicsHolder graphicsHolder, int targetW, double maxW, boolean keepAspectRatio, int height) {
         double scaleX = Math.min(1, maxW / targetW);
         if(scaleX < 1) {
             if(keepAspectRatio) {
+                if(height > 0) {
+                    graphicsHolder.translate(0, height / 2.5, 0);
+                }
                 graphicsHolder.scale((float)scaleX, (float)scaleX, (float)scaleX);
+                if(height > 0) {
+                    graphicsHolder.translate(0, -height / 2.5, 0);
+                }
             } else {
                 graphicsHolder.scale((float)scaleX, 1, 1);
             }

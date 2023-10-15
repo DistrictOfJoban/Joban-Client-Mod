@@ -9,7 +9,7 @@ public class KCRStationNameSignRenderer extends JCMBlockEntityRenderer<KCRStatio
     }
 
     @Override
-    public void render(KCRStationNameSignBlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
+    public void renderCurated(KCRStationNameSignBlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
         graphicsHolder.push();
         scaleCentered(graphicsHolder, 0.018F, 0.018F, 0.018F);
         rotateToBlockDirection(graphicsHolder, blockEntity);
