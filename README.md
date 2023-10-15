@@ -16,6 +16,7 @@ Use with caution!
   - Circle Walls
   - Departure Pole
   - Departure Timer
+  - Fare Saver
   - Slanted Ceiling
   - Exit Sign (Odd)
   - Exit Sign (Even)
@@ -47,15 +48,14 @@ Use with caution!
 - Add MTR Mod as dependencies (Need a way to depend on 4.0?)
 - Finish all incompleted blocks and functionalities
 - GUI Config Screen
-- Client-Side Config (Disable custom fonts, debug mode, etc).
-- Build for multiple minecraft version
+- Start building for multiple minecraft version
 - Start building for different modloaders
 - Migration path for JCM Legacy 1.x.x
   - Roadblock:  
   No official path to migrate blockstates and id, will have to find our own, potentially dangerous path... or have to leave all the player unsatisfied
 
 ## Contributing
-This project is still in an early stage, feel free to PR stuff mentioned in the **To be done** textCategory.  
+This project is still in an early stage, feel free to PR stuff mentioned in the **To be done** category.  
 Note that I also have my own scheduling and thoughts on handling the new rewrite, as such I may modify your PR (Usually commiting on it or afterwards) before merging.
 
 ## License
