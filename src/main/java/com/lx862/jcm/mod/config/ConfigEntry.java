@@ -6,8 +6,8 @@ public class ConfigEntry<T> {
     private T value;
     private final String name;
     private final String description;
+    private final Class<T> targetClass;
     private Consumer<ConfigEntry<T>> onSetCallback;
-    public final Class<T> targetClass;
 
     public ConfigEntry(Class<T> targetClass, T defaultValue, String name, String description) {
         this.value = defaultValue;
@@ -20,7 +20,7 @@ public class ConfigEntry<T> {
         this.onSetCallback = callback;
     }
 
-    public void setValue(Object newValue) {
+    public <U> void set(U newValue) {
         this.value = (T)newValue;
         onSetCallback.accept(this);
     }
@@ -33,7 +33,10 @@ public class ConfigEntry<T> {
         return description;
     }
 
-    public T getValue() {
+    public T get() {
         return value;
+    }
+    public boolean is(Class<?> cls) {
+        return targetClass == cls;
     }
 }
