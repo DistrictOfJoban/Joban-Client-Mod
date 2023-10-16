@@ -20,6 +20,9 @@
 		],
 		"client": [
           "com.lx862.jcm.entrypoint.MainClient"
+		],
+		"modmenu": [
+			"com.lx862.jcm.entrypoint.ModMenuConfig"
 		]
 	},
 	"mixins": [

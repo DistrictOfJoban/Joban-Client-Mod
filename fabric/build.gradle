@@ -12,8 +12,13 @@ base {
     archivesName = "${rootProject.archives_base_name}-fabric"
 }
 
+repositories {
+    maven { url = "https://maven.terraformersmc.com/" }
+}
+
 def yarn_version = project.properties["yarn_mappings_${rootProject.minecraft_version}"]
 def fabric_api_version = project.properties["fabric_api_version_${rootProject.minecraft_version}"]
+def mod_menu_version = project.properties["mod_menu_version_${rootProject.minecraft_version}"]
 
 dependencies {
     // To change the versions see the gradle.properties file
@@ -22,6 +27,7 @@ dependencies {
     shadowImplementation "org.mtr:Minecraft-Mappings-fabric-${rootProject.minecraft_version}:0.0.1-dev"
     modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    modApi "com.terraformersmc:modmenu:${mod_menu_version}"
 }
 
 processResources {
