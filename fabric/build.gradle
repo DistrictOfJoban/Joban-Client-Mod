@@ -57,3 +57,12 @@ remapJar {
     mustRunAfter(shadowJar)
     inputFile = file(shadowJar.archivePath)
 }
+
+tasks.register('moveBuildFile', Copy) {
+    from "${project.projectDir}/build/libs/${base.archivesName.get()}-${version}.jar"
+    into "${rootProject.projectDir}/build"
+}
+
+build {
+    finalizedBy moveBuildFile
+}
