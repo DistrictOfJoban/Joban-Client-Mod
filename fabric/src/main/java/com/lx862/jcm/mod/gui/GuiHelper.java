@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.widget.Widget;
+import org.mtr.mapping.holder.ButtonWidget;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.Text;
@@ -13,6 +14,8 @@ import org.mtr.mapping.mapper.*;
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
 public interface GuiHelper {
+    int MAX_CONTENT_WIDTH = 400;
+    int BOTTOM_ROW_MARGIN = 10;
     static void drawWidget(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta, Widget widget) {
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension)widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
@@ -27,8 +30,8 @@ public interface GuiHelper {
         }
     }
 
-    default void setButtonReadableText(ButtonWidgetExtension widget, boolean bl) {
-        widget.setMessage2(Text.cast(bl ? TextUtil.translatable(TextCategory.GUI, "widget.button.true") : TextUtil.translatable(TextCategory.GUI, "widget.button.false")));
+    default void setReadableText(ButtonWidget widget, boolean bl) {
+        widget.setMessage(Text.cast(bl ? TextUtil.translatable(TextCategory.GUI, "widget.button.true") : TextUtil.translatable(TextCategory.GUI, "widget.button.false")));
     }
 
     default void drawScrollableText(GraphicsHolder graphicsHolder, MutableText text, double elapsed, int x, int y, int maxW, int fullHeight, int color, boolean shadow) {

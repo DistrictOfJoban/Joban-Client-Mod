@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ButtonSetsWidget extends ClickableWidgetExtension implements RenderHelper {
-    public static final int WIDGET_X_PADDING = 10;
+    public static final int WIDGET_X_MARGIN = 10;
     private final List<List<ButtonWidgetExtension>> widgetRows = new ArrayList<>();
-    public ButtonSetsWidget() {
+    private final int maxWidgetHeight;
+    public ButtonSetsWidget(int maxWidgetHeight) {
         super(0, 0, 0, 0);
+        this.maxWidgetHeight = maxWidgetHeight;
     }
 
     public void setXYSize(int x, int y, int width, int height) {
@@ -22,9 +24,9 @@ public class ButtonSetsWidget extends ClickableWidgetExtension implements Render
         positionWidgets();
     }
 
-    public void add(ButtonWidgetExtension widget) {
+    public void addWidget(ButtonWidgetExtension widget) {
         if(widgetRows.isEmpty()) {
-            widgetRows.add(new ArrayList<>());
+            insertRow();
         }
 
         int lastRowIndex = widgetRows.size() - 1;
@@ -33,7 +35,7 @@ public class ButtonSetsWidget extends ClickableWidgetExtension implements Render
         widgetRows.set(lastRowIndex, lastRow);
     }
 
-    public void addRow() {
+    public void insertRow() {
         widgetRows.add(new ArrayList<>());
     }
 
@@ -44,18 +46,18 @@ public class ButtonSetsWidget extends ClickableWidgetExtension implements Render
     private void positionWidgets() {
         int x = getX2();
         int y = getY2();
-        int width = getWidth2() + WIDGET_X_PADDING;
-        int widgetHeight = Math.min(20, (int)(20 * ((double)getHeight2() / (widgetRows.size() * 20))));
+        int width = getWidth2() + WIDGET_X_MARGIN;
+        int widgetHeight = Math.min(maxWidgetHeight, (int)(maxWidgetHeight * ((double)getHeight2() / (widgetRows.size() * maxWidgetHeight))));
 
         for(int i = 0; i < widgetRows.size(); i++) {
             List<ButtonWidgetExtension> rowWidgets = widgetRows.get(i);
 
-            double perWidgetWidth = ((double)width / rowWidgets.size()) - WIDGET_X_PADDING;
+            double perWidgetWidth = ((double)width / rowWidgets.size()) - WIDGET_X_MARGIN;
             int rowY = y + (i * widgetHeight);
 
             for (int j = 0; j < rowWidgets.size(); j++) {
                 ButtonWidgetExtension widget = rowWidgets.get(j);
-                double widgetStartX = x + (j * perWidgetWidth) + (j * WIDGET_X_PADDING);
+                double widgetStartX = x + (j * perWidgetWidth) + (j * WIDGET_X_MARGIN);
 
                 widget.setX2((int)Math.round(widgetStartX));
                 widget.setY2(rowY);

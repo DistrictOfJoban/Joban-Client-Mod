@@ -2,12 +2,11 @@ package com.lx862.jcm.mod.gui.base;
 
 import net.minecraft.SharedConstants;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mapping.mapper.ScreenExtension;
 
-public abstract class AnimatableScreenBase extends ScreenExtension {
+public abstract class AnimatableScreenBase extends ScreenBase {
     protected double linearAnimationProgress = 0;
     protected double animationProgress;
-    private boolean closing = false;
+    protected boolean closing = false;
     private final boolean shouldAnimate;
     public AnimatableScreenBase(boolean animatable) {
         super();
@@ -42,6 +41,6 @@ public abstract class AnimatableScreenBase extends ScreenExtension {
 
     private double getEaseAnimation() {
         double x = linearAnimationProgress;
-        return 1 - Math.pow(1 - x, 4);
+        return 1 - Math.pow(1 - x, 5);
     }
 }

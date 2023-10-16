@@ -15,6 +15,7 @@ public class ConfigStorage {
         return entry;
     }
 
+
     private void updateConfig(String id, ConfigEntry<?> newEntry) {
         this.configList.put(id, newEntry);
     }

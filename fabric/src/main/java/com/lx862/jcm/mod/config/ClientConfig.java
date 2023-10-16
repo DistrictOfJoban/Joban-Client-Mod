@@ -70,4 +70,10 @@ public class ClientConfig {
             return false;
         }
     }
+
+    public static void resetConfig() {
+        for(Map.Entry<String, ConfigEntry<?>> entry : configStorage.configList.entrySet()) {
+            entry.getValue().reset();
+        }
+    }
 }

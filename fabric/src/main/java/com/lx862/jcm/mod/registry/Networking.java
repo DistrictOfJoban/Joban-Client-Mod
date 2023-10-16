@@ -5,7 +5,6 @@ import com.lx862.jcm.mod.network.block.ButterflyLightUpdatePacket;
 import com.lx862.jcm.mod.network.block.FareSaverUpdatePacket;
 import com.lx862.jcm.mod.network.block.SubsidyMachineUpdatePacket;
 import com.lx862.jcm.mod.network.gui.ButterflyLightGUIPacket;
-import com.lx862.jcm.mod.network.gui.DemoScreenGUIPacket;
 import com.lx862.jcm.mod.network.gui.FareSaverGUIPacket;
 import com.lx862.jcm.mod.network.gui.SubsidyMachineGUIPacket;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -34,7 +33,6 @@ public class Networking {
 
         // GUI Screen
         registerPacket(ButterflyLightGUIPacket.class, ButterflyLightGUIPacket::new);
-        registerPacket(DemoScreenGUIPacket.class, DemoScreenGUIPacket::new);
         registerPacket(FareSaverGUIPacket.class, FareSaverGUIPacket::new);
         registerPacket(SubsidyMachineGUIPacket.class, SubsidyMachineGUIPacket::new);
     }

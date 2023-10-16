@@ -4,16 +4,18 @@ import java.util.function.Consumer;
 
 public class ConfigEntry<T> {
     private T value;
+    private final T defaultValue;
     private final String name;
     private final String description;
     private final Class<T> targetClass;
     private Consumer<ConfigEntry<T>> onSetCallback;
 
     public ConfigEntry(Class<T> targetClass, T defaultValue, String name, String description) {
-        this.value = defaultValue;
         this.name = name;
         this.description = description;
         this.targetClass = targetClass;
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
     }
 
     public void setCallback(Consumer<ConfigEntry<T>> callback) {
@@ -25,7 +27,7 @@ public class ConfigEntry<T> {
         onSetCallback.accept(this);
     }
 
-    public String getName() {
+    public String getTitle() {
         return name;
     }
 
@@ -38,5 +40,8 @@ public class ConfigEntry<T> {
     }
     public boolean is(Class<?> cls) {
         return targetClass == cls;
+    }
+    public void reset() {
+        set(defaultValue);
     }
 }

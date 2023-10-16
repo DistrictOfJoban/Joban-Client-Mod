@@ -52,7 +52,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
 
         // Background
-        drawRectangle(guiDrawing, getX2(), getY2(), width, height, 0x09FFFFFF);
+        drawRectangle(guiDrawing, getX2(), getY2(), width, height, 0x4F4C4C4C);
 
         for(int i = 0; i < entryList.size(); i++) {
             ListEntry listEntry = entryList.get(i);
@@ -65,6 +65,11 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
                 drawListEntry(graphicsHolder, listEntry, entryX, entryY, mouseX, mouseY, i, tickDelta);
             }
         }
+    }
+
+    private void drawListCategory(GraphicsHolder graphicsHolder, ListEntry listEntry, int entryX, int entryY) {
+        drawRectangle(new GuiDrawing(graphicsHolder), entryX, entryY, width, entryHeight, 0x99999999);
+        graphicsHolder.drawCenteredText(listEntry.title, (entryX + width / 2), entryY + (entryHeight / 4), 0xFFFFFFFF);
     }
 
     private void drawListEntry(GraphicsHolder graphicsHolder, ListEntry entry, int entryX, int entryY, int mouseX, int mouseY, int entryIndex, float tickDelta) {
@@ -104,17 +109,12 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         graphicsHolder.pop();
     }
     private void drawListEntryHighlight(GuiDrawing guiDrawing, int entryIndex, int x, int y) {
-        int highlightAlpha = (int)(80 * entryHighlightAnimation.get(entryIndex));
-        int highlightColor = (highlightAlpha << 24) | (190 << 16) | (190 << 8) | 190;
+        int highlightAlpha = (int)(100 * entryHighlightAnimation.get(entryIndex));
+        int highlightColor = (highlightAlpha << 24) | (150 << 16) | (150 << 8) | 150;
 
         if(entryHighlightAnimation.get(entryIndex) > 0) {
             drawRectangle(guiDrawing, x, y, width, entryHeight, highlightColor);
         }
-    }
-
-    private void drawListCategory(GraphicsHolder graphicsHolder, ListEntry listEntry, int entryX, int entryY) {
-        drawRectangle(new GuiDrawing(graphicsHolder), entryX, entryY, width, entryHeight, 0xAA999999);
-        graphicsHolder.drawCenteredText(listEntry.title, (entryX + width / 2), entryY + (entryHeight / 4), 0xFFFFFFFF);
     }
 
     private void positionWidgets() {

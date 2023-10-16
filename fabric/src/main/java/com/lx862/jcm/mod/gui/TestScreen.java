@@ -7,11 +7,11 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
-public class DemoScreen extends BasicScreenBase {
+public class TestScreen extends BasicScreenBase {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/gui/config_screen/bg.png");
     private static final Identifier TEXTURE_TERRAIN = new Identifier("jsblock:textures/gui/config_screen/terrain.png");
 
-    public DemoScreen() {
+    public TestScreen() {
         super(true);
     }
 
@@ -48,7 +48,7 @@ public class DemoScreen extends BasicScreenBase {
 
         int times = 10;
         for(int i = 0; i < times; i++) {
-            double radius = 80 * animationProgress;
+            double radius = 90 * animationProgress;
             double angle = ((i / (double)times) * (Math.PI * 2)) - (elapsed / 10);
             double x = Math.sin(angle) * radius;
             double y = Math.cos(angle) * radius;
@@ -66,7 +66,6 @@ public class DemoScreen extends BasicScreenBase {
         graphicsHolder.scale((float) animationProgress, 1, 1);
         double halfWidth = width / 2.0;
 
-        // TODO: where my matrices :(
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
         drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 0, width * animationProgress, 8, 0xFFDF6277);
         drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 8, width * animationProgress, 8, 0xFFFB9168);

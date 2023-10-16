@@ -1,10 +1,7 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.VerticallyAttachedBlock;
-import com.lx862.jcm.mod.network.gui.DemoScreenGUIPacket;
-import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.Utils;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
@@ -14,15 +11,7 @@ public class SpotLampBlock extends VerticallyAttachedBlock {
         super(settings, true, true);
     }
 
-    // TODO: FOR PREVIEW ONLY, REMOVE
     @Override
-    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(Utils.playerHoldingBrush(player)) {
-            Networking.sendPacketToClient(player, new DemoScreenGUIPacket());
-        }
-    }
-
-        @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
         if (BlockUtil.getProperty(state, TOP)) {
             return VoxelUtil.getShape16(4, 15.75, 4, 12, 16, 12);

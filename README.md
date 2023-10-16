@@ -47,7 +47,6 @@ Use with caution!
 ## To be done
 - Add MTR Mod as dependencies (Need a way to depend on 4.0?)
 - Finish all incompleted blocks and functionalities
-- GUI Config Screen
 - Start building for multiple minecraft version
 - Start building for different modloaders
 - Migration path for JCM Legacy 1.x.x

@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.gui.base;
 
+import com.lx862.jcm.mod.gui.GuiHelper;
 import com.lx862.jcm.mod.gui.widget.ButtonSetsWidget;
 import com.lx862.jcm.mod.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.util.TextCategory;
@@ -10,9 +11,7 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
-    public static final int MAX_CONTENT_WIDTH = 400;
-    public static final int BOTTOM_ROW_MARGIN = 10;
+public abstract class BlockConfigurationScreenBase extends BasicScreenBase implements GuiHelper {
     protected final BlockPos blockPos;
     protected final ListViewWidget listViewWidget;
     protected final ButtonSetsWidget bottomEntryWidget;
@@ -33,7 +32,7 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
         });
 
         this.listViewWidget = new ListViewWidget(20);
-        this.bottomEntryWidget = new ButtonSetsWidget();
+        this.bottomEntryWidget = new ButtonSetsWidget(20);
     }
 
     @Override
@@ -61,8 +60,8 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase {
         addChild(new ClickableWidget(saveButton));
         addChild(new ClickableWidget(discardButton));
 
-        bottomEntryWidget.add(saveButton);
-        bottomEntryWidget.add(discardButton);
+        bottomEntryWidget.addWidget(saveButton);
+        bottomEntryWidget.addWidget(discardButton);
     }
 
     @Override
