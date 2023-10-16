@@ -3,117 +3,117 @@
     {
       "when": {
         "facing": "north",
-        "third": "lower"
+        "part": "0"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_bottom"
+        "model": "jsblock:block/station_name_standing_bottom"
       }
     },
     {
       "when": {
         "facing": "east",
-        "third": "lower"
+        "part": "0"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_bottom",
+        "model": "jsblock:block/station_name_standing_bottom",
         "y": 90
       }
     },
     {
       "when": {
         "facing": "south",
-        "third": "lower"
+        "part": "0"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_bottom",
+        "model": "jsblock:block/station_name_standing_bottom",
         "y": 180
       }
     },
     {
       "when": {
         "facing": "west",
-        "third": "lower"
+        "part": "0"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_bottom",
+        "model": "jsblock:block/station_name_standing_bottom",
         "y": 270
       }
     },
     {
       "when": {
         "facing": "north",
-        "third": "middle"
+        "part": "1"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_middle"
+        "model": "jsblock:block/station_name_standing_middle"
       }
     },
     {
       "when": {
         "facing": "east",
-        "third": "middle"
+        "part": "1"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_middle",
+        "model": "jsblock:block/station_name_standing_middle",
         "y": 90
       }
     },
     {
       "when": {
         "facing": "south",
-        "third": "middle"
+        "part": "1"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_middle",
+        "model": "jsblock:block/station_name_standing_middle",
         "y": 180
       }
     },
     {
       "when": {
         "facing": "west",
-        "third": "middle"
+        "part": "1"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_middle",
+        "model": "jsblock:block/station_name_standing_middle",
         "y": 270
       }
     },
     {
       "when": {
         "facing": "north",
-        "third": "upper"
+        "part": "2"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_top"
+        "model": "jsblock:block/station_name_standing_top"
       }
     },
     {
       "when": {
         "facing": "east",
-        "third": "upper"
+        "part": "2"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_top",
+        "model": "jsblock:block/station_name_standing_top",
         "y": 90
       }
     },
     {
       "when": {
         "facing": "south",
-        "third": "upper"
+        "part": "2"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_top",
+        "model": "jsblock:block/station_name_standing_top",
         "y": 180
       }
     },
     {
       "when": {
         "facing": "west",
-        "third": "upper"
+        "part": "2"
       },
       "apply": {
-        "model": "jsblock:block/station_name_tall_stand_top",
+        "model": "jsblock:block/station_name_standing_top",
         "y": 270
       }
     }

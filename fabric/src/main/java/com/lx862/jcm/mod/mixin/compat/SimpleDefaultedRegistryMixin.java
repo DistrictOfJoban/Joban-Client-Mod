@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.mixin.compat;
 
+import com.lx862.jcm.mod.Constants;
 import net.minecraft.registry.SimpleDefaultedRegistry;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -21,59 +22,61 @@ public class SimpleDefaultedRegistryMixin {
         if (id != null && id.getNamespace().equals("jsblock")) {
             switch (id.getPath()) {
                 case "bufferstop_1":
-                    return new Identifier(id.getNamespace(), "buffer_stop");
+                    return new Identifier(Constants.MOD_ID, "buffer_stop");
                 case "ceiling_1":
-                    return new Identifier(id.getNamespace(), "ceiling_slanted");
+                    return new Identifier(Constants.MOD_ID, "ceiling_slanted");
                 case "exit_sign_1":
-                    return new Identifier(id.getNamespace(), "exit_sign_odd");
+                    return new Identifier(Constants.MOD_ID, "exit_sign_odd");
                 case "faresaver_1":
-                    return new Identifier(id.getNamespace(), "faresaver");
+                    return new Identifier(Constants.MOD_ID, "faresaver");
                 case "helpline_3":
-                    return new Identifier(id.getNamespace(), "helpline_standing_eal");
+                    return new Identifier(Constants.MOD_ID, "helpline_standing_eal");
                 case "helpline_4":
-                    return new Identifier(id.getNamespace(), "helpline_standing");
+                    return new Identifier(Constants.MOD_ID, "helpline_standing");
                 case "enquiry_machine_1":
-                    return new Identifier(id.getNamespace(), "mtr_enquiry_machine");
+                    return new Identifier(Constants.MOD_ID, "mtr_enquiry_machine");
                 case "enquiry_machine_2":
-                    return new Identifier(id.getNamespace(), "rv_enquiry_machine");
+                    return new Identifier(Constants.MOD_ID, "rv_enquiry_machine");
                 case "enquiry_machine_3":
-                    return new Identifier(id.getNamespace(), "mtr_enquiry_machine_wall");
+                    return new Identifier(Constants.MOD_ID, "mtr_enquiry_machine_wall");
                 case "enquiry_machine_4":
-                    return new Identifier(id.getNamespace(), "kcr_enquiry_machine");
+                    return new Identifier(Constants.MOD_ID, "kcr_enquiry_machine");
                 case "light_1":
-                    return new Identifier(id.getNamespace(), "light_lantern");
+                    return new Identifier(Constants.MOD_ID, "light_lantern");
                 case "light_2":
-                    return new Identifier(id.getNamespace(), "spot_lamp");
+                    return new Identifier(Constants.MOD_ID, "spot_lamp");
                 case "emg_stop_1":
-                    return new Identifier(id.getNamespace(), "tcl_emg_stop_button");
+                    return new Identifier(Constants.MOD_ID, "tcl_emg_stop_button");
                 case "helpline_5":
-                    return new Identifier(id.getNamespace(), "tml_emg_stop_button");
+                    return new Identifier(Constants.MOD_ID, "tml_emg_stop_button");
                 case "helpline_6":
-                    return new Identifier(id.getNamespace(), "sil_emg_stop_button");
+                    return new Identifier(Constants.MOD_ID, "sil_emg_stop_button");
                 case "mtr_stairs_1":
-                    return new Identifier(id.getNamespace(), "mtr_stairs");
+                    return new Identifier(Constants.MOD_ID, "mtr_stairs");
                 case "op_button":
-                    return new Identifier(id.getNamespace(), "operator_button");
+                    return new Identifier(Constants.MOD_ID, "operator_button");
                 case "station_ceiling_1":
-                    return new Identifier(id.getNamespace(), "wrl_station_ceiling");
+                    return new Identifier(Constants.MOD_ID, "wrl_station_ceiling");
                 case "station_ceiling_1_pole":
-                    return new Identifier(id.getNamespace(), "wrl_station_ceiling_pole");
+                    return new Identifier(Constants.MOD_ID, "wrl_station_ceiling_pole");
+                case "station_name_tall_stand":
+                    return new Identifier(Constants.MOD_ID, "station_name_standing");
                 case "inter_car_barrier_1_left":
-                    return new Identifier(id.getNamespace(), "lrt_inter_car_barrier_left");
+                    return new Identifier(Constants.MOD_ID, "lrt_inter_car_barrier_left");
                 case "inter_car_barrier_1_middle":
-                    return new Identifier(id.getNamespace(), "lrt_inter_car_barrier_middle");
+                    return new Identifier(Constants.MOD_ID, "lrt_inter_car_barrier_middle");
                 case "inter_car_barrier_1_right":
-                    return new Identifier(id.getNamespace(), "lrt_inter_car_barrier_right");
+                    return new Identifier(Constants.MOD_ID, "lrt_inter_car_barrier_right");
                 case "subsidy_machine_1":
-                    return new Identifier(id.getNamespace(), "subsidy_machine");
+                    return new Identifier(Constants.MOD_ID, "subsidy_machine");
                 case "trespass_sign_1":
-                    return new Identifier(id.getNamespace(), "mtr_trespass_sign");
+                    return new Identifier(Constants.MOD_ID, "mtr_trespass_sign");
                 case "trespass_sign_2":
-                    return new Identifier(id.getNamespace(), "kcr_trespass_sign");
+                    return new Identifier(Constants.MOD_ID, "kcr_trespass_sign");
                 case "trespass_sign_3":
-                    return new Identifier(id.getNamespace(), "lrt_trespass_sign");
+                    return new Identifier(Constants.MOD_ID, "lrt_trespass_sign");
                 case "water_machine_1":
-                    return new Identifier(id.getNamespace(), "water_machine");
+                    return new Identifier(Constants.MOD_ID, "water_machine");
             }
         }
         return id;

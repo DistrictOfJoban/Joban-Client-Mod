@@ -10,6 +10,7 @@ public final class BlockEntities {
     public static final BlockEntityTypeRegistryObject<DepartureTimerBlockEntity> DEPARTURE_TIMER = Registry.registerBlockEntity("departure_timer", DepartureTimerBlockEntity::new, Blocks.DEPARTURE_TIMER);
     public static final BlockEntityTypeRegistryObject<FareSaverBlockEntity> FARE_SAVER = Registry.registerBlockEntity("faresaver_1", FareSaverBlockEntity::new, Blocks.FARE_SAVER);
     public static final BlockEntityTypeRegistryObject<KCRStationNameSignBlockEntity> KCR_STATION_NAME_SIGN = Registry.registerBlockEntity("kcr_name_sign", KCRStationNameSignBlockEntity::new, Blocks.KCR_STATION_NAME_SIGN);
+    public static final BlockEntityTypeRegistryObject<StationNameStandingBlockEntity> STATION_NAME_STANDING = Registry.registerBlockEntity("station_name_tall_stand", StationNameStandingBlockEntity::new, Blocks.STATION_NAME_STANDING);
 
 
     public static void register() {
