@@ -51,6 +51,7 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         int listViewHeight = (int)((height - 60) * 0.75);
         int startX = (width - contentWidth) / 2;
         int startY = TEXT_PADDING * 5;
+
         int bottomEntryHeight = (height - startY - listViewHeight - (BOTTOM_ROW_MARGIN * 2));
 
         addConfigEntries();
@@ -166,8 +167,6 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         drawRectangle(guiDrawing, 0, startY + h*3, width * prideAnimationProgress, h, 0xFF7AB392);
         drawRectangle(guiDrawing, 0, startY + h*4, width * prideAnimationProgress, h, 0xFF4B7CBC);
         drawRectangle(guiDrawing, 0, startY + h*5, width * prideAnimationProgress, h, 0xFF6F488C);
-
-        guiDrawing.finishDrawingRectangle();
         graphicsHolder.pop();
     }
 

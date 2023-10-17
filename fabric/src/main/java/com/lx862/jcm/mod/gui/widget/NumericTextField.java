@@ -18,7 +18,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
     private final int defaultValue;
 
     public NumericTextField(int x, int y, int width, int height, int min, int max, int defaultValue, @Nullable String prefix) {
-        super(x, y, width, height, 12, TextCase.LOWER, null, String.valueOf(defaultValue));
+        super(x, y, width, height, 16, TextCase.LOWER, null, String.valueOf(defaultValue));
         this.min = min;
         this.max = max;
         this.prefix = prefix;

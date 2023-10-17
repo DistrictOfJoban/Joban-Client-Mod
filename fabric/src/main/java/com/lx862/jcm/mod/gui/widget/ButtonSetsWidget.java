@@ -59,11 +59,9 @@ public class ButtonSetsWidget extends ClickableWidgetExtension implements Render
                 ButtonWidgetExtension widget = rowWidgets.get(j);
                 double widgetStartX = x + (j * perWidgetWidth) + (j * WIDGET_X_MARGIN);
 
-                widget.setX((int)Math.round(widgetStartX));
-                widget.setY(rowY);
-                widget.setWidth((int)Math.round(perWidgetWidth));
-                // TODO: How
-                //widget.setHeight(widgetHeight);
+                widget.setX2((int)Math.round(widgetStartX));
+                widget.setY2(rowY);
+                widget.setWidth2((int)Math.round(perWidgetWidth));
             }
         }
     }

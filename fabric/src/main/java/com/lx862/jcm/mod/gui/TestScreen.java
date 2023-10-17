@@ -73,7 +73,6 @@ public class TestScreen extends BasicScreenBase {
         drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 24, width * animationProgress, 8, 0xFF7AB392);
         drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 32, width * animationProgress, 8, 0xFF4B7CBC);
         drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 40, width * animationProgress, 8, 0xFF6F488C);
-        guiDrawing.finishDrawingRectangle();
         graphicsHolder.pop();
     }
 }

@@ -15,7 +15,7 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
 public interface GuiHelper {
     int MAX_CONTENT_WIDTH = 400;
-    int BOTTOM_ROW_MARGIN = 10;
+    int BOTTOM_ROW_MARGIN = 6;
     static void drawWidget(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta, Widget widget) {
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension)widget).render(graphicsHolder, mouseX, mouseY, tickDelta);

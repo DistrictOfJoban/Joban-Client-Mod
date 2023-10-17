@@ -16,7 +16,6 @@ public abstract class BasicScreenBase extends AnimatableScreenBase implements Re
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         drawBackground(graphicsHolder, mouseX, mouseY, tickDelta);
-
         drawTitle(graphicsHolder);
         drawSubtitle(graphicsHolder);
 

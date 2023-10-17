@@ -31,7 +31,7 @@ public abstract class BlockConfigurationScreenBase extends BasicScreenBase imple
             onClose2();
         });
 
-        this.listViewWidget = new ListViewWidget(20);
+        this.listViewWidget = new ListViewWidget(22);
         this.bottomEntryWidget = new ButtonSetsWidget(20);
     }
 
