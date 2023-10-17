@@ -6,7 +6,7 @@ import org.mtr.mapping.holder.*;
 public class BlockUtil {
 
     public static boolean blockConsideredSolid(BlockState state) {
-        return !state.isAir() && !state.isLiquid();
+        return !state.isAir();
     }
 
     public static boolean canSurvive(Block instance, WorldAccess world, BlockPos pos, Direction facing, int part, int totalWidthHeight) {

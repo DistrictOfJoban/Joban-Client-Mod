@@ -24,7 +24,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         setX2(x);
         setY2(y);
         setWidth2(width);
-        setHeight2(height);
+        setHeightMapped(height);
         positionWidgets();
     }
 

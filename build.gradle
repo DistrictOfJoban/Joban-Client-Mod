@@ -7,7 +7,7 @@ subprojects {
 	apply plugin: "com.github.johnrengelman.shadow"
 
 	group project.maven_group
-	version rootProject.properties.mod_version
+	version "${rootProject.properties.mod_version}+${rootProject.properties.minecraft_version}"
 
 	configurations {
 		shadowImplementation

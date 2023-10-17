@@ -20,7 +20,7 @@ public class ButtonSetsWidget extends ClickableWidgetExtension implements Render
         setX2(x);
         setY2(y);
         setWidth2(width);
-        setHeight2(height);
+        setHeightMapped(height);
         positionWidgets();
     }
 
@@ -59,10 +59,11 @@ public class ButtonSetsWidget extends ClickableWidgetExtension implements Render
                 ButtonWidgetExtension widget = rowWidgets.get(j);
                 double widgetStartX = x + (j * perWidgetWidth) + (j * WIDGET_X_MARGIN);
 
-                widget.setX2((int)Math.round(widgetStartX));
-                widget.setY2(rowY);
-                widget.setWidth2((int)Math.round(perWidgetWidth));
-                widget.setHeight2(widgetHeight);
+                widget.setX((int)Math.round(widgetStartX));
+                widget.setY(rowY);
+                widget.setWidth((int)Math.round(perWidgetWidth));
+                // TODO: How
+                //widget.setHeight(widgetHeight);
             }
         }
     }
