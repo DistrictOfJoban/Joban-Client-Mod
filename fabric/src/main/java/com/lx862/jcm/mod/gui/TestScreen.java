@@ -48,7 +48,7 @@ public class TestScreen extends BasicScreenBase {
 
         int times = 10;
         for(int i = 0; i < times; i++) {
-            double radius = 90 * animationProgress;
+            double radius = 80 * animationProgress;
             double angle = ((i / (double)times) * (Math.PI * 2)) - (elapsed / 10);
             double x = Math.sin(angle) * radius;
             double y = Math.cos(angle) * radius;

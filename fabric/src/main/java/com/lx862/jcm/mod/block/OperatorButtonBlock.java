@@ -43,7 +43,7 @@ public class OperatorButtonBlock extends WallAttachedBlock {
         // TODO: Temporary item, replace with Driver Key after adding MTR as dependencies
         if (player.isHolding(Items.getGrassBlockMapped())) {
             setPowered(world, state, pos, true);
-            world.scheduleBlockTick(pos, new Block(this), poweredDuration);
+            scheduleBlockTick(world, pos, new Block(this), poweredDuration);
         }
     }
 

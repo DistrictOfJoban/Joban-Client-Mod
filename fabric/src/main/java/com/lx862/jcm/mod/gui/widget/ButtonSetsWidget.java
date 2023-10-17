@@ -7,6 +7,10 @@ import org.mtr.mapping.mapper.ClickableWidgetExtension;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Creates a set of buttons within a defined area.
+ * Able to tile the widgets horizontally and add new rows.
+ */
 public class ButtonSetsWidget extends ClickableWidgetExtension implements RenderHelper {
     public static final int WIDGET_X_MARGIN = 10;
     private final List<List<ButtonWidgetExtension>> widgetRows = new ArrayList<>();

@@ -7,12 +7,12 @@
 			"size": 12,
 			"oversample": 6.0
 		},
-		{
+{
 			"type": "ttf",
-			"file": "jsblock:noto_serif_hk_medium.otf",
-			"shift": [ -0.8, 0.0 ],
-			"size": 12,
-			"oversample": 6.0
+			"file": "mtr:noto-serif-cjk-tc-semibold.ttf",
+			"shift": [ 0, 0.5 ],
+			"size": 12.0,
+			"oversample": 16.0
 		},
 		{
 			"type": "legacy_unicode",

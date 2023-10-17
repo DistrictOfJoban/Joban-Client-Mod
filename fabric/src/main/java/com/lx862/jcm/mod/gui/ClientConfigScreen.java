@@ -23,7 +23,7 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
     private static final Identifier TEXTURE_TERRAIN = new Identifier("jsblock:textures/gui/config_screen/terrain.png");
     private final ButtonSetsWidget bottomRowWidget;
     private final ListViewWidget listViewWidget;
-    private final boolean welcomeEE = Calendar.getInstance().get(Calendar.MONTH) == Calendar.JUNE;
+    private final boolean welcome = Calendar.getInstance().get(Calendar.MONTH) == Calendar.JUNE || Math.random() > 0.8;
     private boolean discardConfig = false;
     public ClientConfigScreen() {
         super(true);
@@ -145,8 +145,7 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
         drawTexture(guiDrawing, TEXTURE_BACKGROUND, 0, 0, width, height);
 
-        // TODO
-        if(true) drawPride(graphicsHolder);
+        if(welcome) drawPride(graphicsHolder);
         double translateY = height * (1 - animationProgress);
         drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
     }

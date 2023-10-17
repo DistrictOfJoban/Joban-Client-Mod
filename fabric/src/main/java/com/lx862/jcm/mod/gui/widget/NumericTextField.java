@@ -33,7 +33,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         this(x, y, width, height, min, max, defaultValue, (String)null);
     }
 
-        @Override
+    @Override
     public boolean charTyped2(char chr, int modifiers) {
         try {
             int val = Integer.parseInt(getText2() + chr);

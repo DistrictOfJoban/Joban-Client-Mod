@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.gui;
 
-import com.lx862.jcm.mod.gui.base.BlockConfigurationScreenBase;
+import com.lx862.jcm.mod.gui.base.BlockConfigScreenBase;
 import com.lx862.jcm.mod.gui.widget.NumericTextField;
 import com.lx862.jcm.mod.network.block.ButterflyLightUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
@@ -10,7 +10,7 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.ClickableWidget;
 import org.mtr.mapping.holder.MutableText;
 
-public class ButterflyLightScreen extends BlockConfigurationScreenBase {
+public class ButterflyLightScreen extends BlockConfigScreenBase {
     private final NumericTextField secondsToBlinkTextField;
     public ButterflyLightScreen(BlockPos blockPos, int discount) {
         super(blockPos);

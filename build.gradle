@@ -15,6 +15,7 @@ subprojects {
 	}
 
 	dependencies {
+		annotationProcessor 'systems.manifold:manifold-preprocessor:+'
 		implementation 'com.google.code.findbugs:jsr305:3.0.2'
 		shadowImplementation "org.mtr:Minecraft-Mappings-common:0.0.1"
 	}
@@ -28,5 +29,16 @@ subprojects {
 		configurations = [project.configurations.shadowImplementation]
 		enableRelocation = true
 		relocationPrefix = "com.lx862.jcm.libraries"
+	}
+
+	/* Manifold support */
+	tasks.withType(JavaCompile).forEach {
+		def mc_ver = rootProject.properties.minecraft_version
+		def mc_major = mc_ver.split("\\.")[0]
+		def mc_main = mc_ver.split("\\.")[1]
+		def mc_minor = mc_ver.split("\\.").size() > 2 ? (mc_ver.split("\\.")[2] as String).padLeft(2, '0') : 0
+		def manifold_mc_version = "$mc_major$mc_main$mc_minor"
+
+		it.options.compilerArgs += ["-Xplugin:Manifold", "-AMC_VERSION=$manifold_mc_version"]
 	}
 }
