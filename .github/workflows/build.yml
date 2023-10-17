@@ -10,9 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
-        java: [
-          17,
-        ]
+        minecraft: [1.19.4, 1.20.2]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -27,7 +25,7 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
       - name: Build
-        run: ./gradlew build
+        run: ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Capture build artifacts
         uses: actions/upload-artifact@v3
         with:
