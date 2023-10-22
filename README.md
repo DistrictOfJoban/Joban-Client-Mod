@@ -11,12 +11,11 @@ Use with caution!
 - Block Entity
 - Block Entity Rendering
 - GUI Screen
-- Integrate '''Minecraft Mapping''' project to provide cross version (1.19.4-1.20) and ~~cross-platform~~ compatibility
+- Integrate '''Minecraft Mapping''' project to provide cross version (1.16.5-1.20.2) and ~~cross-platform~~ compatibility
 
 ## To be done
 - Add MTR Mod as dependencies (Need a way to depend on 4.0?)
 - Finish all incomplete blocks and functionalities
-- Make this mod build for Minecraft 1.16.5 - 1.18.2
 - Start building for different modloaders
 - Migration path for JCM Legacy 1.x.x
   - Roadblock:  
