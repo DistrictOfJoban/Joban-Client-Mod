@@ -48,16 +48,16 @@ public class SimpleDefaultedRegistryMixin {
                     return new Identifier(Constants.MOD_ID, "mtr_enquiry_machine_wall");
                 case "enquiry_machine_4":
                     return new Identifier(Constants.MOD_ID, "kcr_enquiry_machine");
-                case "light_1":
-                    return new Identifier(Constants.MOD_ID, "light_lantern");
-                case "light_2":
-                    return new Identifier(Constants.MOD_ID, "spot_lamp");
                 case "emg_stop_1":
                     return new Identifier(Constants.MOD_ID, "tcl_emg_stop_button");
                 case "helpline_5":
                     return new Identifier(Constants.MOD_ID, "tml_emg_stop_button");
                 case "helpline_6":
                     return new Identifier(Constants.MOD_ID, "sil_emg_stop_button");
+                case "light_1":
+                    return new Identifier(Constants.MOD_ID, "light_lantern");
+                case "light_2":
+                    return new Identifier(Constants.MOD_ID, "spot_lamp");
                 case "mtr_stairs_1":
                     return new Identifier(Constants.MOD_ID, "mtr_stairs");
                 case "op_button":
@@ -68,6 +68,12 @@ public class SimpleDefaultedRegistryMixin {
                     return new Identifier(Constants.MOD_ID, "wrl_station_ceiling_pole");
                 case "station_name_tall_stand":
                     return new Identifier(Constants.MOD_ID, "station_name_standing");
+                case "ticket_barrier_1_entrance":
+                    return new Identifier(Constants.MOD_ID, "thales_ticket_barrier_entrance");
+                case "ticket_barrier_1_exit":
+                    return new Identifier(Constants.MOD_ID, "thales_ticket_barrier_exit");
+                case "ticket_barrier_1_bare":
+                    return new Identifier(Constants.MOD_ID, "thales_ticket_barrier_bare");
                 case "inter_car_barrier_1_left":
                     return new Identifier(Constants.MOD_ID, "lrt_inter_car_barrier_left");
                 case "inter_car_barrier_1_middle":

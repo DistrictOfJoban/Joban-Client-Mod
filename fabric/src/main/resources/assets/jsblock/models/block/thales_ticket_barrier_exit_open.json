@@ -1,11 +1,10 @@
 {
-	"credit": "DoJ 2022",
 	"textures": {
-		"2": "jsblock:block/ticket_barrier_1_screen",
-		"3": "jsblock:block/ticket_barrier_color",
-		"particle": "jsblock:block/ticket_barrier_1_entrance",
-		"tex": "jsblock:block/ticket_barrier_1_entrance",
-		"barrier": "jsblock:block/ticket_barrier_1_door"
+		"2": "jsblock:block/thales_ticket_barrier_screen",
+		"3": "jsblock:block/thales_ticket_barrier_color",
+		"particle": "jsblock:block/thales_ticket_barrier_entrance",
+		"tex": "jsblock:block/thales_ticket_barrier_entrance",
+		"barrier": "jsblock:block/thales_ticket_barrier_door"
 	},
 	"elements": [
 		{

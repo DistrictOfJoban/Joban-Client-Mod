@@ -1,9 +1,8 @@
 {
-	"credit": "DoJ 2022",
 	"textures": {
 		"1": "mtr:block/metal",
-		"particle": "jsblock:block/ticket_barrier_1_bare",
-		"tex": "jsblock:block/ticket_barrier_1_bare"
+		"particle": "jsblock:block/thales_ticket_barrier_bare",
+		"tex": "jsblock:block/thales_ticket_barrier_bare"
 	},
 	"elements": [
 		{

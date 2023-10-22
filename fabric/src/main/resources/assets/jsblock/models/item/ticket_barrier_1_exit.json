@@ -1,6 +1,0 @@
-{
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "jsblock:item/ticket_barrier_1_exit"
-  }
-}

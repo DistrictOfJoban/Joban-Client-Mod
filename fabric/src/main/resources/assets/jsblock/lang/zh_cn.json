@@ -69,9 +69,9 @@
   "block.jsblock.lrt_trespass_sign": "轻铁 \"严禁进入路轨\" 标示",
   "block.jsblock.water_machine": "饮水机",
   "block.jsblock.pids_4": "乘客资讯显示屏",
-  "block.jsblock.ticket_barrier_1_entrance": "Thales 闸机 (入口)",
-  "block.jsblock.ticket_barrier_1_exit": "Thales 闸机 (出口)",
-  "block.jsblock.ticket_barrier_1_bare": "Thales 闸机 (侧壳)",
+  "block.jsblock.thales_ticket_barrier_entrance": "Thales 闸机 (入口)",
+  "block.jsblock.thales_ticket_barrier_exit": "Thales 闸机 (出口)",
+  "block.jsblock.thales_ticket_barrier_bare": "Thales 闸机 (侧壳)",
 
   "item.jsblock.apg_door_drl": "自动月台闸门 (迪士尼线)",
   "item.jsblock.apg_glass_drl": "自动月台闸门 (迪士尼线)",

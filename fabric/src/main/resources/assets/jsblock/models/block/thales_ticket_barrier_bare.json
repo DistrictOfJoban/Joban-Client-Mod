@@ -1,96 +1,9 @@
 {
-	"credit": "DoJ 2022",
 	"textures": {
-		"1": "mtr:block/metal",
-		"particle": "jsblock:block/ticket_barrier_1_bare",
-		"tex": "jsblock:block/ticket_barrier_1_bare"
+		"particle": "jsblock:block/thales_ticket_barrier_bare",
+		"tex": "jsblock:block/thales_ticket_barrier_bare"
 	},
 	"elements": [
-		{
-			"name": "Glass bottom",
-			"from": [0.5, 0, 1],
-			"to": [11.5, 16, 1],
-			"color": 2,
-			"faces": {
-				"north": {"uv": [13, 2, 0, 16], "texture": "#particle"},
-				"south": {"uv": [0, 2, 13, 16], "texture": "#particle"}
-			}
-		},
-		{
-			"name": "Left side",
-			"from": [0, 0, 0],
-			"to": [0.5, 16, 3],
-			"faces": {
-				"north": {"uv": [15.5, 0, 16, 16], "texture": "#1"},
-				"east": {"uv": [13, 0, 16, 16], "texture": "#1"},
-				"south": {"uv": [0, 0, 0.5, 16], "texture": "#1"},
-				"west": {"uv": [0, 0, 3, 16], "texture": "#1"},
-				"up": {"uv": [0, 0, 0.5, 3], "texture": "#1"},
-				"down": {"uv": [0, 13, 0.5, 16], "texture": "#1"}
-			}
-		},
-		{
-			"name": "Right side",
-			"from": [11.5, 0, 0],
-			"to": [12, 16, 3],
-			"faces": {
-				"north": {"uv": [4, 0, 4.5, 16], "texture": "#1"},
-				"east": {"uv": [13, 0, 16, 16], "texture": "#1"},
-				"south": {"uv": [11.5, 0, 12, 16], "texture": "#1"},
-				"west": {"uv": [0, 0, 3, 16], "texture": "#1"},
-				"up": {"uv": [11.5, 0, 12, 3], "texture": "#1"},
-				"down": {"uv": [11.5, 13, 12, 16], "texture": "#1"}
-			}
-		},
-		{
-			"name": "Left side",
-			"from": [0, 16, 0],
-			"to": [0.5, 18, 3],
-			"faces": {
-				"north": {"uv": [15.5, 0, 16, 2], "texture": "#1"},
-				"east": {"uv": [13, 0, 16, 2], "texture": "#1"},
-				"south": {"uv": [0, 0, 0.5, 2], "texture": "#1"},
-				"west": {"uv": [0, 0, 3, 2], "texture": "#1"},
-				"up": {"uv": [0, 0, 0.5, 3], "texture": "#1"},
-				"down": {"uv": [0, 13, 0.5, 16], "texture": "#1"}
-			}
-		},
-		{
-			"name": "Top",
-			"from": [0, 18, 0],
-			"to": [12, 19, 3],
-			"faces": {
-				"north": {"uv": [4, 0, 16, 1], "texture": "#1"},
-				"east": {"uv": [13, 0, 16, 1], "texture": "#1"},
-				"south": {"uv": [0, 0, 12, 1], "texture": "#1"},
-				"west": {"uv": [0, 0, 3, 1], "texture": "#1"},
-				"up": {"uv": [0, 0, 12, 3], "texture": "#1"},
-				"down": {"uv": [0, 13, 12, 16], "texture": "#1"}
-			}
-		},
-		{
-			"name": "Glass top",
-			"from": [0.5, 16, 1],
-			"to": [11.5, 18, 1],
-			"color": 2,
-			"faces": {
-				"north": {"uv": [13, 0, 0, 2], "texture": "#particle"},
-				"south": {"uv": [0, 0, 13, 2], "texture": "#particle"}
-			}
-		},
-		{
-			"name": "Right side",
-			"from": [11.5, 16, 0],
-			"to": [12, 18, 3],
-			"faces": {
-				"north": {"uv": [4, 0, 4.5, 2], "texture": "#1"},
-				"east": {"uv": [13, 0, 16, 2], "texture": "#1"},
-				"south": {"uv": [11.5, 0, 12, 2], "texture": "#1"},
-				"west": {"uv": [0, 0, 3, 2], "texture": "#1"},
-				"up": {"uv": [11.5, 0, 12, 3], "texture": "#1"},
-				"down": {"uv": [11.5, 13, 12, 16], "texture": "#1"}
-			}
-		},
 		{
 			"from": [12, 13.93397, -3.51554],
 			"to": [16, 14.93397, -0.51554],
@@ -211,16 +124,32 @@
 	],
 	"groups": [
 		{
-			"name": "fence",
+			"name": "group",
 			"origin": [0, 0, 0],
 			"color": 0,
-			"children": [0, 1, 2, 3, 4, 5, 6]
-		},
-		{
-			"name": "barrier",
-			"origin": [0, 0, 0],
-			"color": 0,
-			"children": [7, 8, 9, 10, 11, 12, 13, 14, 15]
+			"children": [
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				{
+					"name": "door",
+					"origin": [0, 0, 0],
+					"color": 0,
+					"children": []
+				},
+				{
+					"name": "door",
+					"origin": [0, 0, 0],
+					"color": 0,
+					"children": []
+				}
+			]
 		}
 	]
 }

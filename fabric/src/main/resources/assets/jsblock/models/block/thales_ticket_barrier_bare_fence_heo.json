@@ -1,0 +1,6 @@
+{
+	"parent": "jsblock:block/thales_ticket_barrier_bare_fence_base",
+	"textures": {
+		"particle": "mtr:block/flowers/heo_1"
+	}
+}
