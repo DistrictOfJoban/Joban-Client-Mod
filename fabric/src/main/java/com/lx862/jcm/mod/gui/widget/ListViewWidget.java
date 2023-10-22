@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.gui.widget;
 import com.lx862.jcm.mod.gui.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.widget.Widget;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.*;
 
@@ -28,7 +27,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         positionWidgets();
     }
 
-    public void add(MutableText text, Widget widget) {
+    public void add(MutableText text, MappedWidget widget) {
         add(new ListEntry(text, widget));
     }
 

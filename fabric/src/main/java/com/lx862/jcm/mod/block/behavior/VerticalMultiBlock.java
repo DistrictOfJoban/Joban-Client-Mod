@@ -1,12 +1,11 @@
 package com.lx862.jcm.mod.block.behavior;
 
 import com.lx862.jcm.mod.util.BlockUtil;
-import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 
 public interface VerticalMultiBlock {
-    static boolean canBePlaced(BlockState state, WorldView world, BlockPos pos, int height) {
-        return BlockUtil.isReplacable(world, pos, Direction.UP, height);
+    static boolean canBePlaced(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx, int height) {
+        return BlockUtil.isReplacable(world, pos, Direction.UP, ctx, height);
     }
 
     static void placeBlock(World world, BlockPos startPos, BlockState state, Property<Integer> partProperty, int height) {

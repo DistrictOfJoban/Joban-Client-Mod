@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.block.behavior.VerticalMultiBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
-import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
@@ -17,8 +16,8 @@ public abstract class Vertical2Block extends DirectionalBlock implements Vertica
     }
 
     @Override
-    public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
-        return VerticalMultiBlock.canBePlaced(state, world, pos, height);
+    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
+        return VerticalMultiBlock.canBePlaced(state, world, pos, ctx, height);
     }
 
     @Override

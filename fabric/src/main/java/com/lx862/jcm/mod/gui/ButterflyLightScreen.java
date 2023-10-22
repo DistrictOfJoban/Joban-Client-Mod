@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.gui;
 
 import com.lx862.jcm.mod.gui.base.BlockConfigScreenBase;
+import com.lx862.jcm.mod.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.gui.widget.NumericTextField;
 import com.lx862.jcm.mod.network.block.ButterflyLightUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
@@ -26,7 +27,7 @@ public class ButterflyLightScreen extends BlockConfigScreenBase {
     @Override
     public void addConfigEntries() {
         addChild(new ClickableWidget(secondsToBlinkTextField));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "butterfly_light.countdown"), secondsToBlinkTextField);
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "butterfly_light.countdown"), new MappedWidget(secondsToBlinkTextField));
     }
 
     @Override

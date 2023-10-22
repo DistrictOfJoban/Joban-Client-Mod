@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.util.BlockUtil;
-import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 
 public abstract class WallAttachedBlock extends DirectionalBlock {
@@ -10,7 +9,7 @@ public abstract class WallAttachedBlock extends DirectionalBlock {
     }
 
     @Override
-    public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
+    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
         Direction facing = BlockUtil.getProperty(state, FACING);
         return isAttached(pos, world, getOffsetDirection(facing));
     }
@@ -34,15 +33,15 @@ public abstract class WallAttachedBlock extends DirectionalBlock {
         return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos);
     }
 
-    public static boolean isAttached(BlockPos pos, WorldView world, Direction offsetDirection) {
+    public static boolean isAttached(BlockPos pos, World world, Direction offsetDirection) {
         BlockPos attachedBlockPos = pos.offset(offsetDirection);
-        BlockState attachedBlock = new BlockState(world.getBlockState(attachedBlockPos.data));
+        BlockState attachedBlock = world.getBlockState(attachedBlockPos);
 
         return BlockUtil.blockConsideredSolid(attachedBlock);
     }
 
     public static boolean isAttached(BlockPos pos, WorldAccess world, Direction offsetDirection) {
-        return isAttached(pos, world.data, offsetDirection);
+        return isAttached(pos, World.cast(world), offsetDirection);
     }
 
     public Direction getOffsetDirection(Direction defaultDirection) {

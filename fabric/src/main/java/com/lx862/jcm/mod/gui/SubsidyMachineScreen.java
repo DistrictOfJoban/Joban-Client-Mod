@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.gui;
 
 import com.lx862.jcm.mod.gui.base.BlockConfigScreenBase;
+import com.lx862.jcm.mod.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.gui.widget.NumericTextField;
 import com.lx862.jcm.mod.network.block.SubsidyMachineUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
@@ -32,8 +33,8 @@ public class SubsidyMachineScreen extends BlockConfigScreenBase {
         addChild(new ClickableWidget(priceTextField));
         addChild(new ClickableWidget(cooldownTextField));
 
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "subsidy_machine.price"), priceTextField);
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "subsidy_machine.cooldown"), cooldownTextField);
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "subsidy_machine.price"), new MappedWidget(priceTextField));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "subsidy_machine.cooldown"), new MappedWidget(cooldownTextField));
     }
 
     @Override

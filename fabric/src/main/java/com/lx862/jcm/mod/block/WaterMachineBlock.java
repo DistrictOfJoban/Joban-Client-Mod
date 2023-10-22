@@ -19,32 +19,42 @@ public class WaterMachineBlock extends Vertical2Block {
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (player.isHolding(Items.getGlassBottleMapped())) {
-            player.getStackInHand(hand).decrement(1);
-            fillBottleForPlayer(player);
+        if(player.isHolding(Items.getGlassBottleMapped())) {
+            fillBottleForPlayer(player, hand);
             return ActionResult.SUCCESS;
         }
 
-        if (player.isHolding(Items.getBucketMapped())) {
-            player.getStackInHand(hand).decrement(1);
-            fillBucketForPlayer(player);
+        if(player.isHolding(Items.getBucketMapped())) {
+            fillBucketForPlayer(player, hand);
             return ActionResult.SUCCESS;
         }
 
         return ActionResult.FAIL;
     }
 
-    private static void fillBottleForPlayer(PlayerEntity player) {
+    private static void fillBottleForPlayer(PlayerEntity player, Hand hand) {
         ItemStack newWaterBottle = new ItemStack(new net.minecraft.item.ItemStack(Items.getPotionMapped().data));
         PotionUtil.setPotion(newWaterBottle.data, Potions.WATER);
-        player.getInventory().offerOrDrop(newWaterBottle);
+
+        offerOrDrop(player, hand, newWaterBottle);
         playSplashSoundToPlayer(player);
     }
 
-    private static void fillBucketForPlayer(PlayerEntity player) {
+    private static void fillBucketForPlayer(PlayerEntity player, Hand hand) {
         ItemStack newWaterBucket = new ItemStack(new net.minecraft.item.ItemStack(Items.getWaterBucketMapped().data));
-        player.getInventory().offerOrDrop(newWaterBucket);
+        offerOrDrop(player, hand, newWaterBucket);
         playSplashSoundToPlayer(player);
+    }
+
+    private static void offerOrDrop(PlayerEntity player, Hand hand, ItemStack stack) {
+        ItemStack playerHolding = player.getStackInHand(hand);
+        playerHolding.decrement(1);
+
+        if(playerHolding.isEmpty()) {
+            player.setStackInHand(hand, stack);
+        } else {
+            player.giveItemStack(stack);
+        }
     }
 
     private static void playSplashSoundToPlayer(PlayerEntity player) {

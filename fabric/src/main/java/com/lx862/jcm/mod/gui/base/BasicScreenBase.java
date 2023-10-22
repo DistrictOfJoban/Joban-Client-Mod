@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.gui.base;
 
+import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.render.RenderHelper;
-import net.minecraft.SharedConstants;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
@@ -19,7 +19,7 @@ public abstract class BasicScreenBase extends AnimatableScreenBase implements Re
         drawTitle(graphicsHolder);
         drawSubtitle(graphicsHolder);
 
-        elapsed += tickDelta / SharedConstants.TICKS_PER_SECOND;
+        elapsed += tickDelta / Constants.MC_TICK_PER_SECOND;
         super.render(graphicsHolder, mouseX, mouseY, tickDelta);
     }
 

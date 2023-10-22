@@ -32,11 +32,12 @@ public class BlockUtil {
         return canSurvive;
     }
 
-    public static boolean isReplacable(WorldView world, org.mtr.mapping.holder.BlockPos startPos, org.mtr.mapping.holder.Direction direction, int distance) {
+    public static boolean isReplacable(World world, BlockPos startPos, Direction direction, ItemPlacementContext ctx, int distance) {
         for (int i = 0; i < distance; i++) {
-            org.mtr.mapping.holder.BlockPos posUp = startPos.offset(direction, i);
-            net.minecraft.block.BlockState blockState = world.getBlockState(posUp.data);
-            if (!blockState.isReplaceable()) {
+            BlockPos posUp = startPos.offset(direction, i);
+            BlockState blockState = world.getBlockState(posUp);
+            /* FIXME: This returns true? */
+            if (!blockState.canReplace(ctx)) {
                 return false;
             }
         }

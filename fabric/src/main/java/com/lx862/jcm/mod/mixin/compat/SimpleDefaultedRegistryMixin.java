@@ -1,8 +1,12 @@
 package com.lx862.jcm.mod.mixin.compat;
 
 import com.lx862.jcm.mod.Constants;
-import net.minecraft.registry.SimpleDefaultedRegistry;
 import net.minecraft.util.Identifier;
+#if MC_VERSION < "11904"
+import net.minecraft.util.registry.DefaultedRegistry;
+#else
+import net.minecraft.registry.SimpleDefaultedRegistry;
+#endif
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,9 +18,12 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  * See <a href="https://github.com/Noaaan/MythicMetals/blob/1.20/src/main/java/nourl/mythicmetals/mixin/DefaultedRegistryMixin.java">here</a>
  * And <a href="https://github.com/orgs/FabricMC/discussions/2361">https://github.com/orgs/FabricMC/discussions/2361</a>
  */
-@Mixin(SimpleDefaultedRegistry.class)
+#if MC_VERSION < "11904"
+    @Mixin(DefaultedRegistry.class)
+#else
+    @Mixin(SimpleDefaultedRegistry.class)
+#endif
 public class SimpleDefaultedRegistryMixin {
-
     @ModifyVariable(at = @At("HEAD"), method = "get(Lnet/minecraft/util/Identifier;)Ljava/lang/Object;", ordinal = 0, argsOnly = true)
     Identifier dataFixerRegistry(@Nullable Identifier id) {
         if (id != null && id.getNamespace().equals("jsblock")) {

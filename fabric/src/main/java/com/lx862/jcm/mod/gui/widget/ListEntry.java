@@ -1,25 +1,23 @@
 package com.lx862.jcm.mod.gui.widget;
 
 import com.lx862.jcm.mod.render.RenderHelper;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.Widget;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GuiDrawing;
 
 public class ListEntry {
     public final MutableText title;
-    public final Widget widget;
+    public final MappedWidget widget;
     public final boolean isCategory;
     public DrawIconCallback drawIconCallback = null;
 
-    public ListEntry(MutableText title, Widget widget, boolean isCategory) {
+    public ListEntry(MutableText title, MappedWidget widget, boolean isCategory) {
         this.title = title;
         this.widget = widget;
         this.isCategory = isCategory;
     }
 
-    public ListEntry(MutableText title, Widget widget) {
+    public ListEntry(MutableText title, MappedWidget widget) {
         this.title = title;
         this.widget = widget;
         this.isCategory = false;

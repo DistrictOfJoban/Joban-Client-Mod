@@ -2,10 +2,11 @@ package com.lx862.jcm.mod.util;
 
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.config.ClientConfig;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class JCMLogger {
-    public static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(Constants.MOD_ID);
+    public static final Logger LOGGER = LogManager.getLogger(Constants.MOD_ID);
 
     public static void info(String s) {
         LOGGER.info(Constants.LOGGING_PREFIX + s);

@@ -18,8 +18,8 @@ public abstract class Horizontal2Block extends DirectionalBlock implements Horiz
     }
 
     @Override
-    public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
-        return HorizontalMultiBlock.canBePlaced(state, world, pos, width);
+    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
+        return HorizontalMultiBlock.canBePlaced(state, world, pos, ctx, width);
     }
 
     @Override

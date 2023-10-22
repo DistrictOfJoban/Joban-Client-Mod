@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.gui;
 
 import com.lx862.jcm.mod.gui.base.BlockConfigScreenBase;
+import com.lx862.jcm.mod.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.gui.widget.NumericTextField;
 import com.lx862.jcm.mod.network.block.FareSaverUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
@@ -26,7 +27,7 @@ public class FareSaverScreen extends BlockConfigScreenBase {
     @Override
     public void addConfigEntries() {
         addChild(new ClickableWidget(discountTextField));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "faresaver.discount"), discountTextField);
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "faresaver.discount"), new MappedWidget(discountTextField));
     }
     @Override
     public void onSave() {

@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.block;
 
+import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
 import com.lx862.jcm.mod.block.entity.SubsidyMachineBlockEntity;
 import com.lx862.jcm.mod.data.JCMStats;
@@ -68,7 +69,7 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
     }
 
     private static long getCooldown(PlayerEntity player) {
-        return (JCMStats.getGameTick() - cooldownMap.getOrDefault(player.getUuid(), 0)) / SharedConstants.TICKS_PER_SECOND;
+        return (JCMStats.getGameTick() - cooldownMap.getOrDefault(player.getUuid(), 0)) / Constants.MC_TICK_PER_SECOND;
     }
 
     private static void updateCooldown(PlayerEntity player) {

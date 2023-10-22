@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.block.base;
 import com.lx862.jcm.mod.block.behavior.HorizontalMultiBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
-import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
@@ -18,9 +17,9 @@ public abstract class VerticallyAttachedDirectional2Block extends VerticallyAtta
     }
 
     @Override
-    public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
-        boolean canPlaceMultiBlock = HorizontalMultiBlock.canBePlaced(state, world, pos, width);
-        boolean canBeAttached = super.canPlaceAt2(state, world, pos) && super.canPlaceAt2(state, world, pos.offset(BlockUtil.getProperty(state, FACING).rotateYClockwise()));
+    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
+        boolean canPlaceMultiBlock = HorizontalMultiBlock.canBePlaced(state, world, pos, ctx, width);
+        boolean canBeAttached = super.canPlace(state, world, pos, ctx) && super.canPlace(state, world, pos.offset(BlockUtil.getProperty(state, FACING).rotateYClockwise()), ctx);
         return canPlaceMultiBlock && canBeAttached;
     }
 

@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.config.ClientConfig;
 import com.lx862.jcm.mod.gui.base.BasicScreenBase;
 import com.lx862.jcm.mod.gui.widget.ButtonSetsWidget;
 import com.lx862.jcm.mod.gui.widget.ListViewWidget;
+import com.lx862.jcm.mod.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -89,11 +90,11 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         setEntryStateFromClientConfig();
 
         listViewWidget.addCategory(TextHelper.literal("General"));
-        listViewWidget.add(TextUtil.literal(ClientConfig.DISABLE_RENDERING.getTitle()), disableRenderingButton);
+        listViewWidget.add(TextUtil.literal(ClientConfig.DISABLE_RENDERING.getTitle()), new MappedWidget(disableRenderingButton));
 
         listViewWidget.addCategory(TextHelper.literal("Debug"));
-        listViewWidget.add(TextUtil.literal(ClientConfig.DEBUG_MODE.getTitle()), debugModeButton);
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.entries.open_test_screen"), testScreenButton);
+        listViewWidget.add(TextUtil.literal(ClientConfig.DEBUG_MODE.getTitle()), new MappedWidget(debugModeButton));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.entries.open_test_screen"), new MappedWidget(testScreenButton));
 
         addChild(new ClickableWidget(disableRenderingButton));
         addChild(new ClickableWidget(debugModeButton));

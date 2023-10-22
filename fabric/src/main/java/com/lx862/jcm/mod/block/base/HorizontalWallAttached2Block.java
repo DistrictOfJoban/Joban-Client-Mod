@@ -11,9 +11,9 @@ public abstract class HorizontalWallAttached2Block extends Horizontal2Block impl
     }
     
     @Override
-    public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
+    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
         boolean willBeFullyAttached = WallAttachedBlock.isAttached(pos, world, BlockUtil.getProperty(state, FACING)) && WallAttachedBlock.isAttached(pos.offset(BlockUtil.getProperty(state, FACING).rotateYClockwise()), world, BlockUtil.getProperty(state, FACING));
-        return willBeFullyAttached && HorizontalMultiBlock.canBePlaced(state, world, pos, width);
+        return willBeFullyAttached && HorizontalMultiBlock.canBePlaced(state, world, pos, ctx, width);
     }
 
     @Override

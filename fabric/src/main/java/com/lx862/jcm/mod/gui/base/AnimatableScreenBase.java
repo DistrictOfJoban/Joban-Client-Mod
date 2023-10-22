@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.gui.base;
 
-import net.minecraft.SharedConstants;
+import com.lx862.jcm.mod.Constants;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public abstract class AnimatableScreenBase extends ScreenBase {
@@ -17,7 +17,7 @@ public abstract class AnimatableScreenBase extends ScreenBase {
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         super.render(graphicsHolder, mouseX, mouseY, tickDelta);
-        double frameDelta = (tickDelta / SharedConstants.TICKS_PER_SECOND);
+        double frameDelta = (tickDelta / Constants.MC_TICK_PER_SECOND);
         if(!shouldAnimate) {
             linearAnimationProgress = 1;
         } else {

@@ -35,7 +35,13 @@ public abstract class WaterloggableBlock extends JCMBlock implements Waterloggab
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         if (BlockUtil.getProperty(state, WATERLOGGED)) {
-            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world.data));
+            #if MC_VERSION == "11802"
+                world.createAndScheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world.data));
+            #elif MC_VERSION < "11904"
+                world.getFluidTickScheduler().schedule(pos.data, Fluids.WATER, Fluids.WATER.getTickRate(world.data));
+            #else
+                world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world.data));
+            #endif
         }
 
         return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos);
