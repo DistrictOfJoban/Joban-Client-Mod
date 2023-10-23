@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 
 public interface VerticalMultiBlock {
-    static boolean canBePlaced(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx, int height) {
+    static boolean canBePlaced(World world, BlockPos pos, ItemPlacementContext ctx, int height) {
         return BlockUtil.isReplacable(world, pos, Direction.UP, ctx, height);
     }
 

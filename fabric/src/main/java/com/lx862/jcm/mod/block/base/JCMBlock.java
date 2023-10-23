@@ -9,16 +9,6 @@ public abstract class JCMBlock extends BlockExtension {
         super(settings);
     }
 
-    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
-        return true;
-    }
-
-    @Override
-    public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        if(!canPlace(ctx.getWorld().getBlockState(ctx.getBlockPos()), ctx.getWorld(), ctx.getBlockPos(), ctx)) return null;
-        return getDefaultState2();
-    }
-
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if(!world.isClient()) {

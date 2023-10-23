@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.block.base;
 import com.lx862.jcm.mod.block.behavior.HorizontalMultiBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
-import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
@@ -18,8 +17,8 @@ public abstract class Horizontal2Block extends DirectionalBlock implements Horiz
     }
 
     @Override
-    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
-        return HorizontalMultiBlock.canBePlaced(state, world, pos, ctx, width);
+    public BlockState getPlacementState2(ItemPlacementContext ctx) {
+        return HorizontalMultiBlock.canBePlaced(super.getPlacementState2(ctx), ctx, width) ? super.getPlacementState2(ctx) : null;
     }
 
     @Override

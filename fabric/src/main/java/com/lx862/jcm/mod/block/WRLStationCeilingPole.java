@@ -31,11 +31,16 @@ public class WRLStationCeilingPole extends PoleBlock {
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
+        BlockState superState = super.getPlacementState2(ctx);
+        if(superState == null) return null;
+
         BlockState blockBelow = ctx.getWorld().getBlockState(ctx.getBlockPos().down());
         if ((blockBelow.getBlock().data instanceof WRLStationCeilingPole) || blockIsAllowed(blockBelow.getBlock())) {
-            return super.getPlacementState2(ctx).with(new Property<>(PART.data), BlockUtil.getProperty(blockBelow, PART)).with(new Property<>(FACING.data), BlockUtil.getProperty(blockBelow, FACING).data);
+            return superState
+                    .with(new Property<>(PART.data), BlockUtil.getProperty(blockBelow, PART))
+                    .with(new Property<>(FACING.data), BlockUtil.getProperty(blockBelow, FACING).data);
         } else {
-            return Blocks.getAirMapped().getDefaultState();
+            return null;
         }
     }
 

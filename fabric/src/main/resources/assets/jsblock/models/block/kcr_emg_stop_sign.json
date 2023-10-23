@@ -1,5 +1,5 @@
 {
-	"credit": "DoJ 2022",
+	"ambientocclusion": false,
 	"texture_size": [16, 64],
 	"textures": {
 		"0": "jsblock:block/metal_name_sign",

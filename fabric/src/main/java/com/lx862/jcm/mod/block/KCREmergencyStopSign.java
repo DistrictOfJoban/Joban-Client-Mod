@@ -21,11 +21,7 @@ public class KCREmergencyStopSign extends WallAttachedBlock {
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        if (ctx.getSide() == Direction.DOWN || ctx.getSide() == Direction.UP) {
-            return Blocks.getAirMapped().getDefaultState();
-        }
-
-        return super.getPlacementState2(ctx).with(new Property<>(FACING.data), ctx.getPlayerFacing().data);
+        return super.getPlacementState2(ctx) == null ? null : super.getPlacementState2(ctx).with(new Property<>(FACING.data), Direction.fromHorizontal(ctx.getPlayerFacing().getHorizontal()).data);
     }
 
     @Override

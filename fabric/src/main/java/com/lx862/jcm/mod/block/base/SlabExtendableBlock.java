@@ -23,7 +23,7 @@ public abstract class SlabExtendableBlock extends DirectionalBlock {
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        return super.getPlacementState2(ctx).with(new Property<>(HAS_TOP.data), shouldExtendForSlab(WorldAccess.cast(ctx.getWorld()), ctx.getBlockPos()));
+        return super.getPlacementState2(ctx) == null ? null : super.getPlacementState2(ctx).with(new Property<>(HAS_TOP.data), shouldExtendForSlab(WorldAccess.cast(ctx.getWorld()), ctx.getBlockPos()));
     }
 
     @Override

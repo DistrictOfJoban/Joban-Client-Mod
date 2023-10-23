@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
-import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
@@ -10,8 +9,8 @@ import java.util.List;
 
 public abstract class VerticallyAttachedBlock extends WaterloggableBlock {
     public static final BooleanProperty TOP = BlockProperties.TOP;
-    private final boolean canAttachTop;
-    private final boolean canAttachBottom;
+    protected final boolean canAttachTop;
+    protected final boolean canAttachBottom;
 
     public VerticallyAttachedBlock(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom) {
         super(settings);
@@ -21,18 +20,10 @@ public abstract class VerticallyAttachedBlock extends WaterloggableBlock {
     }
 
     @Override
-    public boolean canPlaceAt2(BlockState state, WorldView world, org.mtr.mapping.holder.BlockPos pos) {
-        boolean blockAboveSolid = BlockUtil.blockConsideredSolid(new BlockState(world.getBlockState(pos.up().data)));
-        boolean blockBelowSolid = BlockUtil.blockConsideredSolid(new BlockState(world.getBlockState(pos.down().data)));
-
-        if (!blockAboveSolid && !blockBelowSolid) return false;
-        if (!canAttachTop && !blockBelowSolid) return false;
-        return canAttachBottom || blockAboveSolid;
-    }
-
-    @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
         BlockState blockAbove = ctx.getWorld().getBlockState(ctx.getBlockPos().up());
+        if(super.getPlacementState2(ctx) == null) return null;
+        if(!com.lx862.jcm.mod.block.behavior.VerticallyAttachedBlock.canPlace(canAttachTop, canAttachBottom, ctx)) return null;
 
         return super.getPlacementState2(ctx).with(new Property<>(TOP.data), BlockUtil.blockConsideredSolid(blockAbove));
     }

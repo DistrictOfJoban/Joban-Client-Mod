@@ -205,11 +205,12 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
                         long ts2 = crashReportFormat.parse(filename2).getTime();
                         return ts1 > ts2 ? -1 : 1;
                     } catch (ParseException e) {
-                        JCMLogger.debug("Cannot parse crash report file name " + filename1 + "/" + filename2);
+                        JCMLogger.debug("Cannot compare crash report file name " + filename1 + " <-> " + filename2);
                     }
                     return 1;
                 });
 
+                JCMLogger.debug("Latest crash report is: " + crashReports[0].getName());
                 Util.getOperatingSystem().open(crashReports[0]);
             }
         }

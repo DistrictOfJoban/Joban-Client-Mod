@@ -16,8 +16,8 @@ public abstract class Vertical3Block extends DirectionalBlock implements Vertica
     }
 
     @Override
-    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
-        return VerticalMultiBlock.canBePlaced(state, world, pos, ctx, height);
+    public BlockState getPlacementState2(ItemPlacementContext ctx) {
+        return VerticalMultiBlock.canBePlaced(ctx.getWorld(), ctx.getBlockPos(), ctx, height) ? super.getPlacementState2(ctx) : null;
     }
 
     @Override

@@ -8,19 +8,18 @@ public abstract class WallAttachedBlock extends DirectionalBlock {
         super(settings);
     }
 
-    @Override
-    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
+    public boolean canPlace(BlockState state, World world, BlockPos pos) {
+        if(state == null) return false;
         Direction facing = BlockUtil.getProperty(state, FACING);
         return isAttached(pos, world, getOffsetDirection(facing));
     }
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        if (ctx.getSide() == Direction.DOWN || ctx.getSide() == Direction.UP) {
-            return Blocks.getAirMapped().getDefaultState();
-        }
+        if (super.getPlacementState2(ctx) == null) return null;
+        if(!canPlace(super.getPlacementState2(ctx), ctx.getWorld(), ctx.getBlockPos())) return null;
 
-        return super.getPlacementState2(ctx).with(new Property<>(FACING.data), ctx.getSide().getOpposite().data);
+        return super.getPlacementState2(ctx).with(new Property<>(FACING.data), Direction.fromHorizontal(ctx.getSide().getHorizontal()).getOpposite().data);
     }
 
     @Override

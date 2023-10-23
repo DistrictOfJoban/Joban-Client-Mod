@@ -14,15 +14,14 @@ public abstract class Vertical2Block extends DirectionalBlock implements Vertica
     public Vertical2Block(BlockSettings settings) {
         super(settings);
     }
-
-    @Override
-    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
-        return VerticalMultiBlock.canBePlaced(state, world, pos, ctx, height);
-    }
-
     @Override
     public void onPlaced2(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
         VerticalMultiBlock.placeBlock(world, pos, state, new Property<>(PART.data), height);
+    }
+
+    @Override
+    public BlockState getPlacementState2(ItemPlacementContext ctx) {
+        return VerticalMultiBlock.canBePlaced(ctx.getWorld(), ctx.getBlockPos(), ctx, height) ? super.getPlacementState2(ctx) : null;
     }
 
     @Override

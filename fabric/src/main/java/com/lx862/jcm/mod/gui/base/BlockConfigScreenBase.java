@@ -69,7 +69,7 @@ public abstract class BlockConfigScreenBase extends BasicScreenBase implements G
         return TextUtil.translatable(TextCategory.GUI,
                 "block_config.subtitle_near",
                 blockPos.getX(), blockPos.getY(), blockPos.getZ(),
-                "中環 Central" //TODO: Get real data
+                "車站 Station" //TODO: Get real data
         );
     }
 

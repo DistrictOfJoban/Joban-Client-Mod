@@ -2,18 +2,23 @@ package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.block.behavior.HorizontalMultiBlock;
 import com.lx862.jcm.mod.util.BlockUtil;
-import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 
 public abstract class HorizontalWallAttached2Block extends Horizontal2Block implements HorizontalMultiBlock {
     public HorizontalWallAttached2Block(BlockSettings settings) {
         super(settings);
     }
-    
+
+    public boolean canPlace(BlockState blockState, ItemPlacementContext ctx) {
+        boolean firstBlockCanAttach = WallAttachedBlock.isAttached(ctx.getBlockPos(), ctx.getWorld(), BlockUtil.getProperty(blockState, FACING));
+        boolean secondBlockCanAttach = WallAttachedBlock.isAttached(ctx.getBlockPos().offset(BlockUtil.getProperty(blockState, FACING).rotateYClockwise()), ctx.getWorld(), BlockUtil.getProperty(blockState, FACING));
+
+        return firstBlockCanAttach && secondBlockCanAttach && HorizontalMultiBlock.canBePlaced(blockState, ctx, width);
+    }
+
     @Override
-    public boolean canPlace(BlockState state, World world, BlockPos pos, ItemPlacementContext ctx) {
-        boolean willBeFullyAttached = WallAttachedBlock.isAttached(pos, world, BlockUtil.getProperty(state, FACING)) && WallAttachedBlock.isAttached(pos.offset(BlockUtil.getProperty(state, FACING).rotateYClockwise()), world, BlockUtil.getProperty(state, FACING));
-        return willBeFullyAttached && HorizontalMultiBlock.canBePlaced(state, world, pos, ctx, width);
+    public BlockState getPlacementState2(ItemPlacementContext ctx) {
+        return canPlace(super.getPlacementState2(ctx), ctx) ? super.getPlacementState2(ctx) : null;
     }
 
     @Override
