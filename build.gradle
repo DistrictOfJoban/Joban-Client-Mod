@@ -1,5 +1,5 @@
 plugins {
-	id "com.github.johnrengelman.shadow" version "8.1.1" apply false
+	id "com.github.johnrengelman.shadow" version "+" apply false
 }
 
 subprojects {
@@ -16,7 +16,7 @@ subprojects {
 
 	dependencies {
 		annotationProcessor 'systems.manifold:manifold-preprocessor:+'
-		implementation 'com.google.code.findbugs:jsr305:3.0.2'
+		implementation 'com.google.code.findbugs:jsr305:+'
 		shadowImplementation "org.mtr:Minecraft-Mappings-common:0.0.1"
 	}
 
