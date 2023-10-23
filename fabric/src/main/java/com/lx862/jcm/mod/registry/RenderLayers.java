@@ -33,6 +33,7 @@ public final class RenderLayers {
                 Blocks.HELPLINE_STANDING,
                 Blocks.HELPLINE_STANDING_EAL,
                 Blocks.SIL_EMG_STOP_BUTTON,
+                Blocks.STATION_NAME_STANDING,
                 Blocks.TML_EMG_STOP_BUTTON,
                 Blocks.MTR_TRESPASS_SIGN,
                 Blocks.WATER_MACHINE
