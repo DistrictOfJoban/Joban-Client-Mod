@@ -13,8 +13,7 @@
 				"east": {"uv": [0, 0, 2.1875, 16], "texture": "#particle"},
 				"south": {"uv": [2.375, 0, 16, 16], "texture": "#particle"},
 				"west": {"uv": [0, 0, 2.25, 16], "texture": "#particle"},
-				"up": {"uv": [2.375, 0, 16, 0.5], "texture": "#particle"},
-				"down": {"uv": [0, 0, 14, 0.5], "texture": "#particle"}
+				"down": {"uv": [0, 0, 14, 0.5], "texture": "#particle", "cullface": "down"}
 			}
 		}
 	]

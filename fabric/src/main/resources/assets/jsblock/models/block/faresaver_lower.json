@@ -1,8 +1,8 @@
 {
 	"texture_size": [16, 32],
 	"textures": {
-		"particle": "jsblock:block/faresaver3",
-		"1": "jsblock:block/faresaver3"
+		"1": "jsblock:block/faresaver3",
+		"particle": "jsblock:block/faresaver3"
 	},
 	"elements": [
 		{
@@ -14,7 +14,7 @@
 				"east": {"uv": [0.67016, 0, 1.85242, 14.0733], "texture": "#1"},
 				"south": {"uv": [2.375, 3.26702, 11.72775, 13.7801], "texture": "#1"},
 				"west": {"uv": [7.20419, 4.56545, 9.62173, 12.64921], "texture": "#1"},
-				"up": {"uv": [2.375, 0, 16, 0.5], "texture": "#1"},
+				"up": {"uv": [2.375, 0, 16, 0.5], "texture": "#1", "cullface": "up"},
 				"down": {"uv": [4.52356, 0.71204, 10.81675, 2.30105], "texture": "#1"}
 			}
 		},
@@ -27,8 +27,7 @@
 				"east": {"uv": [3.8534, 0, 8.97284, 2.72251], "texture": "#1"},
 				"south": {"uv": [4.05039, 0.16754, 8.37696, 2.63874], "texture": "#1"},
 				"west": {"uv": [6.86911, 0.62827, 11.38089, 2.51309], "texture": "#1"},
-				"up": {"uv": [2.375, 0, 16, 0.5], "texture": "#1"},
-				"down": {"uv": [5.43455, 1.25654, 12.56545, 1.67277], "texture": "#1"}
+				"down": {"uv": [5.43455, 1.25654, 12.56545, 1.67277], "texture": "#1", "cullface": "down"}
 			}
 		}
 	]
