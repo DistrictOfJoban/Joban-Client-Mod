@@ -1,7 +1,10 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.DirectionalBlock;
+import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.registry.Blocks;
+import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
 public class CircleWallBlock extends DirectionalBlock {
@@ -13,26 +16,30 @@ public class CircleWallBlock extends DirectionalBlock {
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
         BlockState superState = super.getPlacementState2(ctx);
 
-        if(autoPlace(ctx, ctx.getWorld(), ctx.getBlockPos(), superState, ctx.getPlayerFacing())) {
+        if(ctx.getPlayer() != null && autoPlace(ctx.getWorld(), ctx.getBlockPos(), superState, ctx.getPlayerFacing())) {
+            ctx.getPlayer().swingHand(ctx.getHand(), !ctx.getWorld().isClient());
             return null;
         } else {
             return superState;
         }
     }
 
+    // Why does light still pass through aaaaa
     @Override
-    public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelShapes.fullCube();
+    public boolean isTranslucent2(BlockState state, BlockView world, BlockPos pos) {
+        return false;
+    }
+
+    @Override
+    public VoxelShape getCullingShape2(BlockState state, BlockView world, BlockPos pos) {
+        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 0, 0, 16, 16, 15);
     }
 
     /**
      * Automatically place tunnel walls in a shifted block position to provide easier placement
      * @return True if the block is successfully placed in the shifted position, False otherwise
      */
-    private boolean autoPlace(ItemPlacementContext ctx, World world, BlockPos pos, BlockState state, Direction playerFacing) {
-        PlayerEntity player = ctx.getPlayer();
-        if(player == null) return false;
-
+    private boolean autoPlace(World world, BlockPos pos, BlockState state, Direction playerFacing) {
         Block thisBlock = this.asBlock2();
         Block blockBelow = world.getBlockState(pos.down()).getBlock();
         BlockPos shiftedBlockPos = null;

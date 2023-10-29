@@ -8,12 +8,12 @@ import org.mtr.mapping.registry.BlockRegistryObject;
 public final class Blocks {
     public static final BlockRegistryObject BUTTERFLY_LIGHT = Registry.registerBlockItem("butterfly_light", new ButterflyLightBlock(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject BUFFER_STOP = Registry.registerBlockItem("buffer_stop", new BufferStopBlock(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
-    public static final BlockRegistryObject CIRCLE_WALL_1 = Registry.registerBlockItem("circle_wall_1", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
-    public static final BlockRegistryObject CIRCLE_WALL_2 = Registry.registerBlockItem("circle_wall_2", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
-    public static final BlockRegistryObject CIRCLE_WALL_3 = Registry.registerBlockItem("circle_wall_3", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
-    public static final BlockRegistryObject CIRCLE_WALL_4 = Registry.registerBlockItem("circle_wall_4", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
-    public static final BlockRegistryObject CIRCLE_WALL_5 = Registry.registerBlockItem("circle_wall_5", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
-    public static final BlockRegistryObject CIRCLE_WALL_6 = Registry.registerBlockItem("circle_wall_6", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_1 = Registry.registerBlockItem("circle_wall_1", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f)), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_2 = Registry.registerBlockItem("circle_wall_2", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f)), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_3 = Registry.registerBlockItem("circle_wall_3", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f)), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_4 = Registry.registerBlockItem("circle_wall_4", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f)), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_5 = Registry.registerBlockItem("circle_wall_5", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f)), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject CIRCLE_WALL_6 = Registry.registerBlockItem("circle_wall_6", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject CIRCLE_WALL_7 = Registry.registerBlockItem("circle_wall_7", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject CEILING_SLANTED = Registry.registerBlockItem("ceiling_slanted", new CeilingSlantedBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject DEPARTURE_POLE = Registry.registerBlockItem("departure_pole", new DeparturePoleBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
