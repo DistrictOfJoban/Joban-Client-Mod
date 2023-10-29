@@ -8,8 +8,12 @@ public interface RenderHelper {
     int MAX_RENDER_LIGHT = 0xF000F0;
 
     default void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height) {
+        drawTexture(guiDrawing, identifier, x, y, width, height, 0, 0, 1, 1);
+    }
+
+    default void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height, float u1, float v1, float u2, float v2) {
         guiDrawing.beginDrawingTexture(identifier);
-        guiDrawing.drawTexture(x, y, x + width, y + height, 0, 0, 1, 1);
+        guiDrawing.drawTexture(x, y, x + width, y + height, u1, v1, u2, v2);
         guiDrawing.finishDrawingTexture();
     }
 

@@ -81,8 +81,10 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         }
 
         drawListEntryHighlight(new GuiDrawing(graphicsHolder), entryIndex, entryX, entryY);
-        // We have to draw our widget (Right side) again after rendering the highlight so it doesn't get covered.
-        GuiHelper.drawWidget(graphicsHolder, mouseX, mouseY, tickDelta, entry.widget);
+        if(entry.widget != null) {
+            // We have to draw our widget (Right side) again after rendering the highlight so it doesn't get covered.
+            GuiHelper.drawWidget(graphicsHolder, mouseX, mouseY, tickDelta, entry.widget);
+        }
         drawListEntryDescription(graphicsHolder, entry, entryX, entryY);
     }
 
@@ -90,7 +92,8 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         int textHeight = MinecraftClient.getInstance().textRenderer.fontHeight;
         boolean hasIcon = entry.hasIcon();
         int iconSize = hasIcon ? entryHeight - ENTRY_PADDING : 0;
-        int entryTextWidth = width - entry.widget.getWidth() - ENTRY_PADDING - iconSize;
+        int widgetWidth = entry.widget == null ? 0 : entry.widget.getWidth();
+        int availableTextWidth = width - widgetWidth - ENTRY_PADDING - iconSize;
         int textY = (entryHeight / 2) - (textHeight / 2);
 
         graphicsHolder.push();
@@ -103,7 +106,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
             graphicsHolder.translate(iconSize + ENTRY_PADDING, 0, 0);
         }
 
-        scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(entry.title) + ENTRY_PADDING, entryTextWidth - iconSize, false);
+        scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(entry.title) + ENTRY_PADDING, availableTextWidth - iconSize, false);
         graphicsHolder.drawText(entry.title, 0, textY, 0xFFFFFFFF, true, MAX_RENDER_LIGHT);
         graphicsHolder.pop();
     }
