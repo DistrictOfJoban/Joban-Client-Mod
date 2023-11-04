@@ -13,3 +13,4 @@
 - Subsidy Machine cooldown will no longer includes an extra second
 - PIDS Text will no longer flicker if being too far away (z-fighting)
 - Fare Saver Machine's Discount Dollar text will no longer shift downwards as it gets longer
+- GUI Element (e.g. Text Field/Checkbox) will no longer reset their state/value when the Minecraft window is resized
