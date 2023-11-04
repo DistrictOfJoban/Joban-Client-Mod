@@ -11,13 +11,16 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
+/**
+ * Text Field Widget that is specifically designed for entering number only
+ */
 public class NumericTextField extends TextFieldWidgetExtension implements RenderHelper {
-    private final int min;
-    private final int max;
+    private final long min;
+    private final long max;
     private final String prefix;
-    private final int defaultValue;
+    private final long defaultValue;
 
-    public NumericTextField(int x, int y, int width, int height, int min, int max, int defaultValue, @Nullable String prefix) {
+    public NumericTextField(int x, int y, int width, int height, long min, long max, long defaultValue, @Nullable String prefix) {
         super(x, y, width, height, 16, TextCase.LOWER, null, String.valueOf(defaultValue));
         this.min = min;
         this.max = max;
@@ -110,7 +113,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         return super.mouseClicked2(mouseX, mouseY, button);
     }
 
-    public int getValue() {
+    public long getValue() {
         try {
             return Integer.parseInt(getText2());
         } catch (Exception e) {
@@ -118,7 +121,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         }
     }
 
-    public void setValue(int value) {
+    public void setValue(long value) {
         if(value < min || value > max) return;
         setText2(String.valueOf(value));
     }

@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.render.block;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
-import com.lx862.jcm.mod.data.pids.base.PIDSPreset;
+import com.lx862.jcm.mod.data.pids.base.PIDSPresetBase;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
@@ -20,7 +20,7 @@ public class RVPIDSRenderer extends JCMBlockEntityRenderer<PIDSBlockEntity> {
         World world = blockEntity.getWorld2();
         if(world == null) return;
 
-        PIDSPreset pidsPreset = getPreset(blockEntity, "rv_pids");
+        PIDSPresetBase pidsPreset = getPreset(blockEntity, "rv_pids");
 
         graphicsHolder.push();
         scaleCentered(graphicsHolder, 0.008F, 0.008F, 0.008F);
@@ -35,7 +35,7 @@ public class RVPIDSRenderer extends JCMBlockEntityRenderer<PIDSBlockEntity> {
         graphicsHolder.pop();
     }
 
-    private PIDSPreset getPreset(PIDSBlockEntity blockEntity, String defaultId) {
+    private PIDSPresetBase getPreset(PIDSBlockEntity blockEntity, String defaultId) {
         return PIDSManager.presetList.getOrDefault(blockEntity.getPidsPresetId(), PIDSManager.presetList.get(defaultId));
     }
 }

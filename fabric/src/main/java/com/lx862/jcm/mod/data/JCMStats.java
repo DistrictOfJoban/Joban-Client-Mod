@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.data;
 
 /**
- * Dynamic statistics that JCM has to keep track of
+ * Dynamic global statistics that JCM keeps track of
  */
 public class JCMStats {
     private static int currentGameTick = 0;

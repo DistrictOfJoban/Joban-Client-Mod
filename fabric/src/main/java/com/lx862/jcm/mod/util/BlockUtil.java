@@ -1,8 +1,10 @@
 package com.lx862.jcm.mod.util;
 
-import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 
+/**
+ * Contains utilities method for block checking/manipulation
+ */
 public class BlockUtil {
 
     public static boolean blockConsideredSolid(BlockState state) {

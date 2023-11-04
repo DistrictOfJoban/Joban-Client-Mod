@@ -6,7 +6,7 @@ import org.mtr.mapping.holder.DirectionProperty;
 import org.mtr.mapping.holder.IntegerProperty;
 
 /**
- * Stores all block properties, block class should reference block properties in here
+ * Stores all block properties JCM uses. Block classes from JCM should reference the block properties in here
  */
 public class BlockProperties {
     public static final DirectionProperty FACING = new DirectionProperty(Properties.HORIZONTAL_FACING);

@@ -3,9 +3,6 @@ package com.lx862.jcm.entrypoint;
 import com.lx862.jcm.mod.JCM;
 import net.fabricmc.api.ModInitializer;
 
-/**
- * TODO: Move this to Fabric and Forge subproject
- */
 public class Main implements ModInitializer {
     @Override
     public void onInitialize() {

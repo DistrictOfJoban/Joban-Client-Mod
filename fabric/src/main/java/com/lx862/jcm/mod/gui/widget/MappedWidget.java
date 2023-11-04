@@ -8,6 +8,11 @@ import org.mtr.mapping.mapper.*;
 public class MappedWidget {
     private final Object widget;
     public MappedWidget(Object widget) {
+        if(!(widget instanceof ButtonWidgetExtension || widget instanceof TextFieldWidgetExtension ||
+                widget instanceof CheckboxWidgetExtension || widget instanceof SliderWidgetExtension)) {
+            throw new IllegalArgumentException("Widget is not an instance of ButtonWidgetExtension, TextFieldWidgetExtension, CheckboxWidgetExtension or SliderWidgetExtension!");
+        }
+
         this.widget = widget;
     }
 

@@ -176,10 +176,11 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
 
     @Override
     public void onClose2() {
-        // Save config by default, unless explicitly requested not to
         if(!discardConfig) {
-            // TODO: Also revert changes from memory
             ClientConfig.writeFile();
+        } else {
+            // Don't save our change to disk, and read it from disk, effectively discarding the config
+            ClientConfig.readFile();
         }
         super.onClose2();
     }

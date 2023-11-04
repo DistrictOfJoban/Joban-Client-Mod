@@ -35,6 +35,10 @@ public class ClientConfig {
                             configEntry.set(jsonConfig.get(key).getAsString());
                         }
 
+                        if(configEntry.is(Integer.class)) {
+                            configEntry.set(jsonConfig.get(key).getAsInt());
+                        }
+
                         if(configEntry.is(Boolean.class)) {
                             configEntry.set(jsonConfig.get(key).getAsBoolean());
                         }
@@ -42,7 +46,7 @@ public class ClientConfig {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                JCMLogger.warn("Failed to read config file, all config will be left at it's default state.");
+                JCMLogger.warn("Failed to read config file, config may be left at it's default state.");
             }
         }
     }
@@ -55,6 +59,10 @@ public class ClientConfig {
 
             if (value.get() instanceof String) {
                 jsonConfig.addProperty(key, (String) value.get());
+            }
+
+            if (value.get() instanceof Integer) {
+                jsonConfig.addProperty(key, (Integer) value.get());
             }
 
             if (value.get() instanceof Boolean) {

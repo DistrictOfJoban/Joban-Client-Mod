@@ -5,6 +5,9 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GuiDrawing;
 
+/**
+ * Represent a row in {@link ListViewWidget}
+ */
 public class ListEntry {
     public final MutableText title;
     public final MappedWidget widget;

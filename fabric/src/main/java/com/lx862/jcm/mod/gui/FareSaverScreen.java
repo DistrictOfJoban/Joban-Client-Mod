@@ -31,6 +31,6 @@ public class FareSaverScreen extends BlockConfigScreenBase {
     }
     @Override
     public void onSave() {
-        Networking.sendPacketToServer(new FareSaverUpdatePacket(blockPos, discountTextField.getValue()));
+        Networking.sendPacketToServer(new FareSaverUpdatePacket(blockPos, (int)discountTextField.getValue()));
     }
 }

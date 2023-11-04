@@ -11,6 +11,9 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
+/**
+ * GUI Screen for configuring block settings, you should extend this class for your own block config screen
+ */
 public abstract class BlockConfigScreenBase extends BasicScreenBase implements GuiHelper {
     protected final BlockPos blockPos;
     protected final ListViewWidget listViewWidget;

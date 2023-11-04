@@ -2,14 +2,14 @@ package com.lx862.jcm.mod.data.pids;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
-import com.lx862.jcm.mod.data.pids.base.PIDSPreset;
+import com.lx862.jcm.mod.data.pids.base.PIDSPresetBase;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.WorldHelper;
 
-public class RVPIDSPreset extends PIDSPreset implements RenderHelper {
+public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/block/pids/rv_default.png");
     public RVPIDSPreset() {
         super("rv_pids");

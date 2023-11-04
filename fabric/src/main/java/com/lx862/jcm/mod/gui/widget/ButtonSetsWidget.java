@@ -8,16 +8,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Creates a set of buttons within a defined area.
- * Able to tile the widgets horizontally and add new rows.
+ * Holds a set of widget within a defined area.
+ * Able to tile the widgets horizontally and add new rows like a grid/table.
  */
 public class ButtonSetsWidget extends ClickableWidgetExtension implements RenderHelper {
-    public static final int WIDGET_X_MARGIN = 10;
-    private final List<List<ButtonWidgetExtension>> widgetRows = new ArrayList<>();
+    public int widgetXMargin;
+    private final List<List<MappedWidget>> widgetRows = new ArrayList<>();
     private final int maxWidgetHeight;
-    public ButtonSetsWidget(int maxWidgetHeight) {
+
+    public ButtonSetsWidget(int maxWidgetHeight, int widgetXMargin) {
         super(0, 0, 0, 0);
         this.maxWidgetHeight = maxWidgetHeight;
+        this.widgetXMargin = widgetXMargin;
+    }
+    public ButtonSetsWidget(int maxWidgetHeight) {
+        this(maxWidgetHeight, 10);
     }
 
     public void setXYSize(int x, int y, int width, int height) {
@@ -29,12 +34,16 @@ public class ButtonSetsWidget extends ClickableWidgetExtension implements Render
     }
 
     public void addWidget(ButtonWidgetExtension widget) {
+        addWidget(new MappedWidget(widget));
+    }
+
+    public void addWidget(MappedWidget widget) {
         if(widgetRows.isEmpty()) {
             insertRow();
         }
 
         int lastRowIndex = widgetRows.size() - 1;
-        List<ButtonWidgetExtension> lastRow = widgetRows.get(lastRowIndex);
+        List<MappedWidget> lastRow = widgetRows.get(lastRowIndex);
         lastRow.add(widget);
         widgetRows.set(lastRowIndex, lastRow);
     }
@@ -50,22 +59,22 @@ public class ButtonSetsWidget extends ClickableWidgetExtension implements Render
     private void positionWidgets() {
         int x = getX2();
         int y = getY2();
-        int width = getWidth2() + WIDGET_X_MARGIN;
+        int width = getWidth2() + widgetXMargin;
         int widgetHeight = Math.min(maxWidgetHeight, (int)(maxWidgetHeight * ((double)getHeight2() / (widgetRows.size() * maxWidgetHeight))));
 
         for(int i = 0; i < widgetRows.size(); i++) {
-            List<ButtonWidgetExtension> rowWidgets = widgetRows.get(i);
+            List<MappedWidget> rowWidgets = widgetRows.get(i);
 
-            double perWidgetWidth = ((double)width / rowWidgets.size()) - WIDGET_X_MARGIN;
+            double perWidgetWidth = ((double)width / rowWidgets.size()) - widgetXMargin;
             int rowY = y + (i * widgetHeight);
 
             for (int j = 0; j < rowWidgets.size(); j++) {
-                ButtonWidgetExtension widget = rowWidgets.get(j);
-                double widgetStartX = x + (j * perWidgetWidth) + (j * WIDGET_X_MARGIN);
+                MappedWidget widget = new MappedWidget(rowWidgets.get(j));
+                double widgetStartX = x + (j * perWidgetWidth) + (j * widgetXMargin);
 
-                widget.setX2((int)Math.round(widgetStartX));
-                widget.setY2(rowY);
-                widget.setWidth2((int)Math.round(perWidgetWidth));
+                widget.setX((int)Math.round(widgetStartX));
+                widget.setY(rowY);
+                widget.setWidth((int)Math.round(perWidgetWidth));
             }
         }
     }

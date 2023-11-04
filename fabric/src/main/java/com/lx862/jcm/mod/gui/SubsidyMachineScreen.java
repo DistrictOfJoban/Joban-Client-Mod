@@ -39,6 +39,6 @@ public class SubsidyMachineScreen extends BlockConfigScreenBase {
 
     @Override
     public void onSave() {
-        Networking.sendPacketToServer(new SubsidyMachineUpdatePacket(blockPos, priceTextField.getValue(), cooldownTextField.getValue()));
+        Networking.sendPacketToServer(new SubsidyMachineUpdatePacket(blockPos, (int)priceTextField.getValue(), (int)cooldownTextField.getValue()));
     }
 }

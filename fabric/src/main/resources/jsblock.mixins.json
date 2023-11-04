@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "com.lx862.jcm.mod.mixin",
+	"package": "com.lx862.jcm.mixin",
 	"compatibilityLevel": "JAVA_8",
 	"mixins": [
 		"compat.SimpleDefaultedRegistryMixin"
