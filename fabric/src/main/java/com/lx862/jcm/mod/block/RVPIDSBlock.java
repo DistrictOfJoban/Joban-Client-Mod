@@ -2,6 +2,8 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.Horizontal2MirroredBlock;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
@@ -14,7 +16,7 @@ public class RVPIDSBlock extends Horizontal2MirroredBlock implements BlockWithEn
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelShapes.fullCube();
+        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 6, -3, 0, 10, 16, 12);
     }
 
     @Override

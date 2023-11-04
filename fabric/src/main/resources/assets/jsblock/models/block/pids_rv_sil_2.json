@@ -2,7 +2,7 @@
 	"textures": {
 		"1": "mtr:block/metal",
 		"2": "jsblock:block/pids_rv_sil_2",
-		"3": "mtr:block/black",
+		"3": "jsblock:block/black",
 		"particle": "mtr:block/metal"
 	},
 	"elements": [

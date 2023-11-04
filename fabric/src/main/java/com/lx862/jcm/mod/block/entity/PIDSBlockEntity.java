@@ -42,4 +42,8 @@ public class PIDSBlockEntity extends JCMBlockEntityBase {
     public void setData() {
         this.markDirty2();
     }
+
+    public String getPidsPresetId() {
+        return pidsPresetId;
+    }
 }

@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.data.pids.base;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public abstract class BasicPIDSPreset extends CustomPIDSPreset {
+public abstract class BasicPIDSPreset extends PIDSPreset {
     private String thumbnail;
     private String background;
     public BasicPIDSPreset(String id, String thumbnail, String background) {
