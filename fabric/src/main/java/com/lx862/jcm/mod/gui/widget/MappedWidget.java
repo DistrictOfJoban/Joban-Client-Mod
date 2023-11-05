@@ -29,6 +29,9 @@ public class MappedWidget {
         if(widget instanceof SliderWidgetExtension) {
             return ((SliderWidgetExtension) widget).getX2();
         }
+        if(widget instanceof MappedWidget) {
+            return ((MappedWidget) widget).getX();
+        }
         return 0;
     }
 
@@ -44,6 +47,9 @@ public class MappedWidget {
         }
         if(widget instanceof SliderWidgetExtension) {
             return ((SliderWidgetExtension) widget).getY2();
+        }
+        if(widget instanceof MappedWidget) {
+            return ((MappedWidget) widget).getY();
         }
         return 0;
     }
@@ -61,6 +67,9 @@ public class MappedWidget {
         if(widget instanceof SliderWidgetExtension) {
             return ((SliderWidgetExtension) widget).getHeight2();
         }
+        if(widget instanceof MappedWidget) {
+            return ((MappedWidget) widget).getWidth();
+        }
         return 0;
     }
 
@@ -76,6 +85,9 @@ public class MappedWidget {
         }
         if(widget instanceof SliderWidgetExtension) {
             return ((SliderWidgetExtension) widget).getHeight2();
+        }
+        if(widget instanceof MappedWidget) {
+            return ((MappedWidget) widget).getHeight();
         }
         return 0;
     }
@@ -93,6 +105,9 @@ public class MappedWidget {
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setWidth2(width);
         }
+        if(widget instanceof MappedWidget) {
+            ((MappedWidget) widget).setWidth(width);
+        }
     }
 
     public void setX(int newX) {
@@ -107,6 +122,9 @@ public class MappedWidget {
         }
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setX2(newX);
+        }
+        if(widget instanceof MappedWidget) {
+            ((MappedWidget) widget).setX(newX);
         }
     }
 
@@ -123,6 +141,9 @@ public class MappedWidget {
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setY2(newY);
         }
+        if(widget instanceof MappedWidget) {
+            ((MappedWidget) widget).setY(newY);
+        }
     }
 
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
@@ -137,6 +158,9 @@ public class MappedWidget {
         }
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
+        }
+        if(widget instanceof MappedWidget) {
+            ((MappedWidget) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
         }
     }
 }

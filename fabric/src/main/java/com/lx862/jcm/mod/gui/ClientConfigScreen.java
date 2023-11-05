@@ -149,7 +149,7 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         double translateY = height * (1 - animationProgress);
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
         drawTexture(guiDrawing, TEXTURE_BACKGROUND, 0, 0, width, height);
-        drawTexture(guiDrawing, TEXTURE_STAR, 0, translateY * 1.5, starSize, starSize, 0, 0, starUVSize, starUVSize);
+        drawTexture(guiDrawing, TEXTURE_STAR, 0, translateY * 0.2, starSize, starSize, 0, 0, starUVSize, starUVSize);
 
         if(welcome) drawPride(graphicsHolder);
         drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
