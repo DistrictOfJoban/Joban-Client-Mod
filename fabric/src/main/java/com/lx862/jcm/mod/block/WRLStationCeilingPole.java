@@ -35,13 +35,9 @@ public class WRLStationCeilingPole extends PoleBlock {
         if(superState == null) return null;
 
         BlockState blockBelow = ctx.getWorld().getBlockState(ctx.getBlockPos().down());
-        if ((blockBelow.getBlock().data instanceof WRLStationCeilingPole) || blockIsAllowed(blockBelow.getBlock())) {
-            return superState
-                    .with(new Property<>(PART.data), BlockUtil.getProperty(blockBelow, PART))
-                    .with(new Property<>(FACING.data), BlockUtil.getProperty(blockBelow, FACING).data);
-        } else {
-            return null;
-        }
+        return superState
+                .with(new Property<>(PART.data), BlockUtil.getProperty(blockBelow, PART))
+                .with(new Property<>(FACING.data), BlockUtil.getProperty(blockBelow, FACING).data);
     }
 
     @Override
@@ -52,6 +48,6 @@ public class WRLStationCeilingPole extends PoleBlock {
 
     @Override
     public boolean blockIsAllowed(Block block) {
-        return block.data instanceof WRLStationCeilingBlock;
+        return block.data instanceof WRLStationCeilingBlock || block.data instanceof WRLStationCeilingPole;
     }
 }

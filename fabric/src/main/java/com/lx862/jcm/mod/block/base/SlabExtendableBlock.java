@@ -8,27 +8,27 @@ import org.mtr.mapping.tool.HolderBase;
 import java.util.List;
 
 public abstract class SlabExtendableBlock extends DirectionalBlock {
-    public static final BooleanProperty HAS_TOP = BlockProperties.HAS_TOP;
+    public static final BooleanProperty IS_SLAB = BlockProperties.IS_SLAB;
 
     public SlabExtendableBlock(BlockSettings settings) {
         super(settings);
-        setDefaultState2(getDefaultState2().with(new Property<>(HAS_TOP.data), false));
+        setDefaultState2(getDefaultState2().with(new Property<>(IS_SLAB.data), false));
     }
 
     @Override
     public void addBlockProperties(List<HolderBase<?>> properties) {
         super.addBlockProperties(properties);
-        properties.add(HAS_TOP);
+        properties.add(IS_SLAB);
     }
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        return super.getPlacementState2(ctx) == null ? null : super.getPlacementState2(ctx).with(new Property<>(HAS_TOP.data), shouldExtendForSlab(WorldAccess.cast(ctx.getWorld()), ctx.getBlockPos()));
+        return super.getPlacementState2(ctx) == null ? null : super.getPlacementState2(ctx).with(new Property<>(IS_SLAB.data), shouldExtendForSlab(WorldAccess.cast(ctx.getWorld()), ctx.getBlockPos()));
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos).with(new Property<>(HAS_TOP.data), shouldExtendForSlab(world, pos));
+        return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos).with(new Property<>(IS_SLAB.data), shouldExtendForSlab(world, pos));
     }
 
     public static boolean shouldExtendForSlab(WorldAccess world, BlockPos pos) {
