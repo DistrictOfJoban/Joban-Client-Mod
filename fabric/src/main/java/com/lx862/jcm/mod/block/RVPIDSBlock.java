@@ -16,7 +16,9 @@ public class RVPIDSBlock extends Horizontal2MirroredBlock implements BlockWithEn
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 6, -3, 0, 10, 16, 12);
+        VoxelShape vx1 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 6, -3, 0, 10, 11, 12);
+        VoxelShape vx2 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 7.5, 0, 8.5, 8.5, 16, 9.5);
+        return VoxelShapes.union(vx1, vx2);
     }
 
     @Override

@@ -27,6 +27,26 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
     private final ListViewWidget listViewWidget;
     private final boolean welcome = Calendar.getInstance().get(Calendar.MONTH) == Calendar.JUNE || Math.random() > 0.9;
     private boolean discardConfig = false;
+
+
+
+    CheckboxWidgetExtension disableRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+        ClientConfig.DISABLE_RENDERING.set(bool);
+    });
+
+    CheckboxWidgetExtension useCustomFontButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+        ClientConfig.USE_CUSTOM_FONT.set(bool);
+    });
+
+    CheckboxWidgetExtension debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+        ClientConfig.DEBUG_MODE.set(bool);
+    });
+
+    ButtonWidgetExtension testScreenButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.entries.widget.open_test_screen"), (buttonWidget -> {
+        MinecraftClient.getInstance().openScreen(new Screen(
+                new TestScreen().withPreviousScreen(new Screen(this))
+        ));
+    }));
     public ClientConfigScreen() {
         super(true);
         bottomRowWidget = new ButtonSetsWidget(20);
@@ -68,22 +88,9 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         super.render(graphicsHolder, mouseX, mouseY, tickDelta);
         listViewWidget.render(graphicsHolder, mouseX, mouseY, tickDelta);
     }
-
-    CheckboxWidgetExtension disableRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        ClientConfig.DISABLE_RENDERING.set(bool);
-    });
-
-    CheckboxWidgetExtension debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        ClientConfig.DEBUG_MODE.set(bool);
-    });
-
-    ButtonWidgetExtension testScreenButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.entries.widget.open_test_screen"), (buttonWidget -> {
-        MinecraftClient.getInstance().openScreen(new Screen(
-                new TestScreen().withPreviousScreen(new Screen(this))
-        ));
-    }));
     private void setEntryStateFromClientConfig() {
         disableRenderingButton.setChecked(ClientConfig.DISABLE_RENDERING.get());
+        useCustomFontButton.setChecked(ClientConfig.USE_CUSTOM_FONT.get());
         debugModeButton.setChecked(ClientConfig.DEBUG_MODE.get());
     }
 
@@ -92,12 +99,14 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
 
         listViewWidget.addCategory(TextHelper.literal("General"));
         listViewWidget.add(TextUtil.literal(ClientConfig.DISABLE_RENDERING.getTitle()), new MappedWidget(disableRenderingButton));
+        listViewWidget.add(TextUtil.literal(ClientConfig.USE_CUSTOM_FONT.getTitle()), new MappedWidget(useCustomFontButton));
 
         listViewWidget.addCategory(TextHelper.literal("Debug"));
         listViewWidget.add(TextUtil.literal(ClientConfig.DEBUG_MODE.getTitle()), new MappedWidget(debugModeButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.entries.open_test_screen"), new MappedWidget(testScreenButton));
 
         addChild(new ClickableWidget(disableRenderingButton));
+        addChild(new ClickableWidget(useCustomFontButton));
         addChild(new ClickableWidget(debugModeButton));
         addChild(new ClickableWidget(testScreenButton));
     }

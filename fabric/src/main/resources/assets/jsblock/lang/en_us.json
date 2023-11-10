@@ -53,6 +53,7 @@
   "block.jsblock.pids_rv_sil": "Railway Vision PIDS (SIL, Ocean Park Station and Wong Chuk Hang Station Variant)",
   "block.jsblock.pids_rv_sil_2": "Railway Vision PIDS (SIL, Admiralty Station and South Horizon Station Variant)",
   "block.jsblock.rv_pids_pole": "Railway Vision PIDS Pole",
+  "block.jsblock.pids.time": "%02d:%02d",
   "block.jsblock.signal_light_red_1": "Signal Light (Red, Bottom)",
   "block.jsblock.signal_light_red_2": "Signal Light (Red, Top)",
   "block.jsblock.signal_light_blue": "Signal Light (Blue, Top)",

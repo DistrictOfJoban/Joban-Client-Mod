@@ -1,12 +1,15 @@
 package com.lx862.jcm.mod.data.pids.base;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.util.TextUtil;
+import org.mtr.mapping.holder.TextRenderer;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 import javax.annotation.Nullable;
 
-public abstract class PIDSPresetBase {
+public abstract class PIDSPresetBase implements RenderHelper {
     private final String id;
     private final String name;
     public PIDSPresetBase(String id, @Nullable String name) {
@@ -29,5 +32,22 @@ public abstract class PIDSPresetBase {
         return name;
     }
 
+    protected void drawPIDSText(GraphicsHolder graphicsHolder, String text, int x, int y, int textColor) {
+        drawText(graphicsHolder, TextUtil.withFont(TextUtil.literal(text), getFont()), x, y, textColor);
+    }
+
+    protected void drawPIDSCenteredText(GraphicsHolder graphicsHolder, String text, int x, int y, int textColor) {
+        drawCenteredText(graphicsHolder, TextUtil.withFont(TextUtil.literal(text), getFont()), x, y, textColor);
+    }
+
+    public String getFont() {
+        return null;
+    }
+
     public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, float tickDelta, int x, int y, int width, int height, int light, int overlay);
+
+    @FunctionalInterface
+    public interface DrawRowCallback extends RenderHelper {
+        void accept(GraphicsHolder graphicsHolder, int width);
+    }
 }

@@ -1,6 +1,8 @@
 package com.lx862.jcm.mod.util;
 
 import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.config.ClientConfig;
+import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.TextHelper;
 
@@ -11,5 +13,13 @@ public class TextUtil {
 
     public static MutableText translatable(TextCategory textCategory, String id, Object... variables) {
         return TextHelper.translatable(textCategory.prefix + "." + Constants.MOD_ID + "." + id, variables);
+    }
+
+    public static MutableText withFont(MutableText text, String font) {
+        if(ClientConfig.USE_CUSTOM_FONT.get()) {
+            return text.styled(style -> style.withFont(new Identifier(font).data));
+        }  else {
+            return text;
+        }
     }
 }

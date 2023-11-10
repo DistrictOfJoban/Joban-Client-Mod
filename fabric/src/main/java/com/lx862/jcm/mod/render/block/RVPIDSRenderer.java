@@ -23,14 +23,14 @@ public class RVPIDSRenderer extends JCMBlockEntityRenderer<PIDSBlockEntity> {
         PIDSPresetBase pidsPreset = getPreset(blockEntity, "rv_pids");
 
         graphicsHolder.push();
-        scaleCentered(graphicsHolder, 0.008F, 0.008F, 0.008F);
+        scaleCentered(graphicsHolder, 0.009F, 0.009F, 0.009F);
         BlockState state = blockEntity.getWorld2().getBlockState(blockEntity.getPos2());
         Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
         graphicsHolder.rotateYDegrees(90 - facing.asRotation());
         graphicsHolder.rotateZDegrees(180);
-        graphicsHolder.translate(-25, -18, -17);
+        graphicsHolder.translate(-22.5, -17, -14.5);
 
-        pidsPreset.render(blockEntity, graphicsHolder, blockEntity.getWorld2(), tickDelta, 0, 0, 175, 97, 0xFFFFFFFF, MAX_RENDER_LIGHT);
+        pidsPreset.render(blockEntity, graphicsHolder, blockEntity.getWorld2(), tickDelta, 0, 0, 156, 88, 0xFFFFFFFF, MAX_RENDER_LIGHT);
 
         graphicsHolder.pop();
     }

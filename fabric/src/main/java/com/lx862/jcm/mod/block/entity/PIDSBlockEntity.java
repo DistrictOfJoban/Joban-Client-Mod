@@ -46,4 +46,8 @@ public class PIDSBlockEntity extends JCMBlockEntityBase {
     public String getPidsPresetId() {
         return pidsPresetId;
     }
+
+    public int getRowAmount() {
+        return 4;
+    }
 }
