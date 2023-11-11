@@ -15,7 +15,6 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
     private static final int PIDS_MARGIN = 8;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
     private static final Identifier TEXTURE_PLATFORM_CIRCLE = new Identifier("jsblock:textures/block/pids/plat_circle.png");
-    // private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/block/pids/t1.png");
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/block/pids/rv_default.png");
     private static final Identifier ICON_WEATHER_SUNNY = new Identifier("jsblock:textures/block/pids/weather_sunny.png");
     private static final Identifier ICON_WEATHER_RAINY = new Identifier("jsblock:textures/block/pids/weather_rainy.png");
@@ -31,20 +30,23 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
         int rowAmount = be.getRowAmount();
 
         // Draw Textures
-        graphicsHolder.translate(x, y, 0);
         drawBackground(graphicsHolder, width, height, facing);
+        graphicsHolder.translate(0, 0, -0.5);
         titleDrawWeatherIcon(graphicsHolder, world, facing, PIDS_MARGIN);
         arrivalsDrawPlatformIcon(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, rowAmount);
 
         // Text
+        graphicsHolder.translate(0, 0, -0.5);
         graphicsHolder.createVertexConsumer(RenderLayer.getTextSeeThrough(TEXTURE_BACKGROUND));
         titleDrawClock(graphicsHolder, world, contentWidth - 19, 2, ARGB_WHITE);
         arrivalsDrawText(graphicsHolder, PIDS_MARGIN, 15, contentWidth, rowAmount, ARGB_BLACK);
     }
 
     protected void drawBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
-        graphicsHolder.createVertexConsumer(RenderLayer.getEntityShadow(TEXTURE_BACKGROUND));
+        graphicsHolder.push();
+        graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(TEXTURE_BACKGROUND, false));
         RenderHelper.drawTexture(graphicsHolder, TEXTURE_BACKGROUND, 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+        graphicsHolder.pop();
     }
 
     private void drawArrivalEntryCallback(GraphicsHolder graphicsHolder, int x, int y, int width, int rowAmount, DrawRowCallback drawRowCallback) {
@@ -67,7 +69,7 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
         });
     }
     private void arrivalsDrawPlatformIcon(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int rowAmount) {
-        rawGraphicsHolder.createVertexConsumer(RenderLayer.getEntityShadow(TEXTURE_PLATFORM_CIRCLE));
+        rawGraphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(TEXTURE_PLATFORM_CIRCLE, true));
 
         drawArrivalEntryCallback(rawGraphicsHolder, x, y, rawWidth, rowAmount, (graphicsHolder, width) -> {
             RenderHelper.drawTexture(graphicsHolder, 44 * ARRIVAL_TEXT_SCALE, 0, 0, 9, 9, facing, ARGB_BLACK, MAX_RENDER_LIGHT);
@@ -115,11 +117,11 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
 
     private void titleDrawWeatherIcon(GraphicsHolder graphicsHolder, World world, Direction facing, float x) {
         if(world.isRaining()) {
-            graphicsHolder.createVertexConsumer(RenderLayer.getEntityShadow(ICON_WEATHER_RAINY));
+            graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(ICON_WEATHER_RAINY, true));
         } else if(world.isThundering()) {
-            graphicsHolder.createVertexConsumer(RenderLayer.getEntityShadow(ICON_WEATHER_THUNDER));
+            graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(ICON_WEATHER_THUNDER, true));
         } else {
-            graphicsHolder.createVertexConsumer(RenderLayer.getEntityShadow(ICON_WEATHER_SUNNY));
+            graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(ICON_WEATHER_SUNNY, true));
         }
         RenderHelper.drawTexture(graphicsHolder, x, 0, 0, 11, 11, Direction.convert(facing.data), ARGB_WHITE, MAX_RENDER_LIGHT);
     }
