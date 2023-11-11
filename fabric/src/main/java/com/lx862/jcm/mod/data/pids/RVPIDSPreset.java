@@ -1,12 +1,10 @@
 package com.lx862.jcm.mod.data.pids;
 
-import com.google.common.graph.Graph;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.data.pids.base.PIDSPresetBase;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.TextUtil;
 import net.minecraft.client.MinecraftClient;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -31,9 +29,8 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
         int rowAmount = be.getRowAmount();
 
         // Draw Textures
-        graphicsHolder.createVertexConsumer(RenderLayer.getEntityShadow(TEXTURE_BACKGROUND));
         graphicsHolder.translate(x, y, 0);
-        RenderHelper.drawTexture(graphicsHolder, 0, 0, 0, width, height, facing, color, MAX_RENDER_LIGHT);
+        drawBackground(graphicsHolder, width, height, facing);
         titleDrawWeatherIcon(graphicsHolder, world, facing, PIDS_MARGIN);
         arrivalsDrawPlatformIcon(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, rowAmount);
 
@@ -41,6 +38,11 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
         graphicsHolder.createVertexConsumer(RenderLayer.getTextSeeThrough(TEXTURE_BACKGROUND));
         titleDrawClock(graphicsHolder, world, contentWidth - 19, 2, ARGB_WHITE);
         arrivalsDrawText(graphicsHolder, PIDS_MARGIN, 15, contentWidth, rowAmount, ARGB_BLACK);
+    }
+
+    protected void drawBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
+        graphicsHolder.createVertexConsumer(RenderLayer.getEntityShadow(TEXTURE_BACKGROUND));
+        RenderHelper.drawTexture(graphicsHolder, 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
     private void drawArrivalEntryCallback(GraphicsHolder graphicsHolder, int x, int y, int width, int rowAmount, DrawRowCallback drawRowCallback) {
