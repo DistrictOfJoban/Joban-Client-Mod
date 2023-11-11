@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.data.pids.base.PIDSPresetBase;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.util.TextUtil;
 import net.minecraft.client.MinecraftClient;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -14,6 +15,7 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
     private static final int PIDS_MARGIN = 8;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
     private static final Identifier TEXTURE_PLATFORM_CIRCLE = new Identifier("jsblock:textures/block/pids/plat_circle.png");
+    // private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/block/pids/t1.png");
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/block/pids/rv_default.png");
     private static final Identifier ICON_WEATHER_SUNNY = new Identifier("jsblock:textures/block/pids/weather_sunny.png");
     private static final Identifier ICON_WEATHER_RAINY = new Identifier("jsblock:textures/block/pids/weather_rainy.png");
@@ -42,7 +44,7 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
 
     protected void drawBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
         graphicsHolder.createVertexConsumer(RenderLayer.getEntityShadow(TEXTURE_BACKGROUND));
-        RenderHelper.drawTexture(graphicsHolder, 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+        RenderHelper.drawTexture(graphicsHolder, TEXTURE_BACKGROUND, 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
     private void drawArrivalEntryCallback(GraphicsHolder graphicsHolder, int x, int y, int width, int rowAmount, DrawRowCallback drawRowCallback) {
@@ -81,11 +83,11 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
         graphicsHolder.push();
         if(destinationWidth > destinationMaxWidth) {
             scaleToFitBoundary(graphicsHolder, destinationWidth, destinationMaxWidth - 2, false);
-            drawPIDSText(graphicsHolder, leftDestination, 0, 0, 0);
+            drawPIDSText(graphicsHolder, leftDestination, 0, 0, textColor);
             // TODO: Make marquee an option in custom PIDS Preset
-            //drawMarqueeText(graphicsHolder, TextUtil.withFont(TextUtil.literal(leftDestination), getFont()), (int)destinationMaxWidth - 2, 0, 0, 0);
+            //drawMarqueeText(graphicsHolder, TextUtil.withFont(TextUtil.literal(leftDestination), getFont()), (int)destinationMaxWidth - 2, 0, 0, textColor);
         } else {
-            drawPIDSText(graphicsHolder, leftDestination, 0, 0, 0);
+            drawPIDSText(graphicsHolder, leftDestination, 0, 0, textColor);
         }
         graphicsHolder.pop();
 

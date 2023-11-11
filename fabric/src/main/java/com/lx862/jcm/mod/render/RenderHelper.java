@@ -1,7 +1,9 @@
 package com.lx862.jcm.mod.render;
 
 import com.lx862.jcm.mod.data.JCMStats;
+import com.lx862.jcm.mod.render.data.McMetaManager;
 import com.lx862.jcm.mod.util.TextUtil;
+import net.minecraft.util.Pair;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
@@ -109,6 +111,15 @@ public interface RenderHelper {
                 graphicsHolder.scale((float)scaleX, 1, 1);
             }
         }
+    }
+
+    /**
+     * Draw a texture to the world, it will automatically look up for mcmeta data and set the appropriate UV.<br>
+     * Use this method if you need support for drawing animated McMeta textures
+     */
+    static void drawTexture(GraphicsHolder graphicsHolder, Identifier textureId, float x, float y, float z, float width, float height, Direction facing, int color, int light) {
+        Pair<Float, Float> uv = McMetaManager.getUV(textureId);
+        drawTexture(graphicsHolder, x, y, z, x + width, y + height, z, 0, uv.getLeft(), 1, uv.getRight(), facing, color, light);
     }
 
     static void drawTexture(GraphicsHolder graphicsHolder, float x, float y, float z, float width, float height, Direction facing, int color, int light) {

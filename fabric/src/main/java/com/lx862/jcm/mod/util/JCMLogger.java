@@ -23,6 +23,10 @@ public class JCMLogger {
         LOGGER.warn(Constants.LOGGING_PREFIX + s);
     }
 
+    public static void warn(String s, Object o) {
+        LOGGER.warn(Constants.LOGGING_PREFIX + s, o);
+    }
+
     public static void error(String s) {
         LOGGER.error(Constants.LOGGING_PREFIX + s);
     }
