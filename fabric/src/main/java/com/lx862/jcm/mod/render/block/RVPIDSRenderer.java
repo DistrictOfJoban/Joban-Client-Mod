@@ -21,6 +21,7 @@ public class RVPIDSRenderer extends JCMBlockEntityRenderer<PIDSBlockEntity> {
         if(world == null) return;
 
         PIDSPresetBase pidsPreset = getPreset(blockEntity, "rv_pids");
+        if(pidsPreset == null) return;
 
         graphicsHolder.push();
         scaleCentered(graphicsHolder, 0.009F, 0.009F, 0.009F);
@@ -30,12 +31,12 @@ public class RVPIDSRenderer extends JCMBlockEntityRenderer<PIDSBlockEntity> {
         graphicsHolder.rotateZDegrees(180);
         graphicsHolder.translate(-22.5, -17, -14.5);
 
-        pidsPreset.render(blockEntity, graphicsHolder, blockEntity.getWorld2(), tickDelta, 0, 0, 156, 88, 0xFFFFFFFF, MAX_RENDER_LIGHT);
+        pidsPreset.render(blockEntity, graphicsHolder, blockEntity.getWorld2(), facing, tickDelta, 0, 0, 156, 88, 0xFFFFFFFF, MAX_RENDER_LIGHT);
 
         graphicsHolder.pop();
     }
 
     private PIDSPresetBase getPreset(PIDSBlockEntity blockEntity, String defaultId) {
-        return PIDSManager.presetList.getOrDefault(blockEntity.getPidsPresetId(), PIDSManager.presetList.get(defaultId));
+        return PIDSManager.getPreset(blockEntity.getPidsPresetId(), PIDSManager.getBuiltInPreset(defaultId));
     }
 }

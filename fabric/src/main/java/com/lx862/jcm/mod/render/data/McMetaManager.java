@@ -31,7 +31,7 @@ public class McMetaManager {
                 String str = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
                 McMeta mcMeta = McMeta.parse(str);
 
-                Identifier imgName = new Identifier(id.getNamespace(), id.getPath().replace(".mcmeta", ".png"));
+                Identifier imgName = new Identifier(id.getNamespace(), id.getPath().replace(".mcmeta", ""));
                 readImage(mcMeta, imgName, mcMeta1 -> {
                     mcMetaList.put(imgName, mcMeta1);
                 });

@@ -23,9 +23,7 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
         super("rv_pids");
     }
 
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, float tickDelta, int x, int y, int width, int height, int color, int light) {
-        BlockState bs = world.getBlockState(be.getPos2());
-        Direction facing = BlockUtil.getProperty(bs, BlockProperties.FACING);
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, float tickDelta, int x, int y, int width, int height, int color, int light) {
         int contentWidth = width - (PIDS_MARGIN * 2);
         int rowAmount = be.getRowAmount();
 

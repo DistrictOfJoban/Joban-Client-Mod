@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.data.pids.base;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.TextUtil;
+import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.TextRenderer;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -44,7 +45,7 @@ public abstract class PIDSPresetBase implements RenderHelper {
         return null;
     }
 
-    public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, float tickDelta, int x, int y, int width, int height, int light, int overlay);
+    public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, float tickDelta, int x, int y, int width, int height, int light, int overlay);
 
     @FunctionalInterface
     public interface DrawRowCallback extends RenderHelper {
