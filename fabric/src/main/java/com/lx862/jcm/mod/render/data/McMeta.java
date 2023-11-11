@@ -16,7 +16,7 @@ public class McMeta {
 
     public static McMeta parse(String json) {
         McMeta mcMeta = new McMeta();
-        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+        JsonObject jsonObject =  new JsonParser().parse(json).getAsJsonObject();
         JsonObject animation = jsonObject.getAsJsonObject("animation");
         int frameTime;
         if(animation.has("frametime")) {
