@@ -1,8 +1,8 @@
-package com.lx862.jcm.mod.gui.base;
+package com.lx862.jcm.mod.render.screen.base;
 
-import com.lx862.jcm.mod.gui.GuiHelper;
-import com.lx862.jcm.mod.gui.widget.ButtonSetsWidget;
-import com.lx862.jcm.mod.gui.widget.ListViewWidget;
+import com.lx862.jcm.mod.render.GuiHelper;
+import com.lx862.jcm.mod.render.screen.widget.ButtonSetsWidget;
+import com.lx862.jcm.mod.render.screen.widget.ListViewWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.BlockPos;

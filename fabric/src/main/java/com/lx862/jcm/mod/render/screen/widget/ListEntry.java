@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.gui.widget;
+package com.lx862.jcm.mod.render.screen.widget;
 
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Identifier;

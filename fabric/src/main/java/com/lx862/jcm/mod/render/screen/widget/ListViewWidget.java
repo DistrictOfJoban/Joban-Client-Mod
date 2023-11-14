@@ -1,6 +1,6 @@
-package com.lx862.jcm.mod.gui.widget;
+package com.lx862.jcm.mod.render.screen.widget;
 
-import com.lx862.jcm.mod.gui.GuiHelper;
+import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import net.minecraft.client.MinecraftClient;
 import org.mtr.mapping.holder.MutableText;

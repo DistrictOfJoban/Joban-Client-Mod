@@ -1,6 +1,6 @@
-package com.lx862.jcm.mod.gui;
+package com.lx862.jcm.mod.render.screen;
 
-import com.lx862.jcm.mod.gui.base.BasicScreenBase;
+import com.lx862.jcm.mod.render.screen.base.BasicScreenBase;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;

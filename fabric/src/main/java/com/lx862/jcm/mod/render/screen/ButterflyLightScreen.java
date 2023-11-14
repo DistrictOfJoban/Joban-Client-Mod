@@ -1,8 +1,8 @@
-package com.lx862.jcm.mod.gui;
+package com.lx862.jcm.mod.render.screen;
 
-import com.lx862.jcm.mod.gui.base.BlockConfigScreenBase;
-import com.lx862.jcm.mod.gui.widget.MappedWidget;
-import com.lx862.jcm.mod.gui.widget.NumericTextField;
+import com.lx862.jcm.mod.render.screen.base.BlockConfigScreenBase;
+import com.lx862.jcm.mod.render.screen.widget.MappedWidget;
+import com.lx862.jcm.mod.render.screen.widget.NumericTextField;
 import com.lx862.jcm.mod.network.block.ButterflyLightUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.TextCategory;

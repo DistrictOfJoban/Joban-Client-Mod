@@ -1,6 +1,6 @@
-package com.lx862.jcm.mod.gui;
+package com.lx862.jcm.mod.render;
 
-import com.lx862.jcm.mod.gui.widget.MappedWidget;
+import com.lx862.jcm.mod.render.screen.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.mojang.blaze3d.systems.RenderSystem;

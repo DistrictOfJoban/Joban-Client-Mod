@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.gui.base;
+package com.lx862.jcm.mod.render.screen.base;
 
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.render.RenderHelper;

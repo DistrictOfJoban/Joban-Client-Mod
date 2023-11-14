@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.network.gui;
 
-import com.lx862.jcm.mod.gui.SubsidyMachineScreen;
+import com.lx862.jcm.mod.render.screen.SubsidyMachineScreen;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.PacketBuffer;

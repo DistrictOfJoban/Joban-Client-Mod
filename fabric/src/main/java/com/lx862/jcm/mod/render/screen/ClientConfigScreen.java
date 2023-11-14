@@ -1,11 +1,12 @@
-package com.lx862.jcm.mod.gui;
+package com.lx862.jcm.mod.render.screen;
 
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.config.ClientConfig;
-import com.lx862.jcm.mod.gui.base.BasicScreenBase;
-import com.lx862.jcm.mod.gui.widget.ButtonSetsWidget;
-import com.lx862.jcm.mod.gui.widget.ListViewWidget;
-import com.lx862.jcm.mod.gui.widget.MappedWidget;
+import com.lx862.jcm.mod.render.GuiHelper;
+import com.lx862.jcm.mod.render.screen.base.BasicScreenBase;
+import com.lx862.jcm.mod.render.screen.widget.ButtonSetsWidget;
+import com.lx862.jcm.mod.render.screen.widget.ListViewWidget;
+import com.lx862.jcm.mod.render.screen.widget.MappedWidget;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
