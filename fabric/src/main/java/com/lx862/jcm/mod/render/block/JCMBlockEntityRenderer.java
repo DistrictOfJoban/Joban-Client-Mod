@@ -1,9 +1,10 @@
 package com.lx862.jcm.mod.render.block;
 
-import com.lx862.jcm.mod.block.entity.FareSaverBlockEntity;
+import com.lx862.jcm.mod.config.ClientConfig;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
+import net.fabricmc.loader.api.FabricLoader;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
@@ -19,10 +20,19 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
 
     @Override
     public void render(T blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
-        // TODO: Add checks for rendering disabled in config
-        if(blockEntity.getWorld2() == null) return;
+        if(ClientConfig.DISABLE_RENDERING.get() || blockEntity.getWorld2() == null) return;
+        if(blockEntity.getWorld2().getBlockState(blockEntity.getPos2()).isAir()) return;
 
-        renderCurated(blockEntity, tickDelta, graphicsHolder, light, i1);
+        try {
+            renderCurated(blockEntity, tickDelta, graphicsHolder, light, i1);
+        } catch (Exception e) {
+            if(FabricLoader.getInstance().isDevelopmentEnvironment()) {
+                e.printStackTrace();
+            } else {
+                throw e;
+            }
+        }
+
     }
 
     /**

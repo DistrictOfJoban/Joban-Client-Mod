@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
+import com.lx862.jcm.mod.trm.TextRenderingManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
@@ -21,6 +22,7 @@ public class JCMResourceManager {
 
     private static void reloadPIDSPreset() {
         PIDSManager.clearAll();
+        TextRenderingManager.initialize();
 
         ResourceManagerHelper.readResource(CUSTOM_RESOURCE_PATH, (inputStream -> {
             try {

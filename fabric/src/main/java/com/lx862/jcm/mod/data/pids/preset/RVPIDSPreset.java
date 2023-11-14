@@ -1,7 +1,10 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.jcm.mod.data.JCMStats;
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.trm.TextRenderingManager;
+import com.lx862.jcm.mod.trm.TextureTextRenderer;
 import net.minecraft.client.MinecraftClient;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -25,6 +28,7 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
 
         // Draw Textures
         drawBackground(graphicsHolder, width, height, facing);
+        drawTestBackground(graphicsHolder, width, height, facing);
         graphicsHolder.translate(0, 0, -0.5);
         titleDrawWeatherIcon(graphicsHolder, world, facing, PIDS_MARGIN);
         arrivalsDrawPlatformIcon(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, rowAmount);
@@ -39,6 +43,12 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
     protected void drawBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
         graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(TEXTURE_BACKGROUND, false));
         RenderHelper.drawTexture(graphicsHolder, TEXTURE_BACKGROUND, 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+    }
+
+    private void drawTestBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
+        TextureTextRenderer.stressTest(20);
+        TextRenderingManager.bind(graphicsHolder);
+        RenderHelper.drawTexture(graphicsHolder,0, height, 0, width, width, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
     private void drawArrivalEntryCallback(GraphicsHolder graphicsHolder, int x, int y, int width, int rowAmount, DrawRowCallback drawRowCallback) {

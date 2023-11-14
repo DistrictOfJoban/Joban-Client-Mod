@@ -119,14 +119,18 @@ public interface RenderHelper {
      */
     static void drawTexture(GraphicsHolder graphicsHolder, Identifier textureId, float x, float y, float z, float width, float height, Direction facing, int color, int light) {
         Pair<Float, Float> uv = McMetaManager.getUV(textureId);
-        drawTexture(graphicsHolder, x, y, z, x + width, y + height, z, 0, uv.getLeft(), 1, uv.getRight(), facing, color, light);
+        drawTextureRaw(graphicsHolder, x, y, z, x + width, y + height, z, 0, uv.getLeft(), 1, uv.getRight(), facing, color, light);
+    }
+
+    static void drawTexture(GraphicsHolder graphicsHolder, float x, float y, float z, float width, float height, int u1, int v1, int u2, int v2, Direction facing, int color, int light) {
+        drawTextureRaw(graphicsHolder, x, y, z, x + width, y + height, z, u1, v1, u2, v2, facing, color, light);
     }
 
     static void drawTexture(GraphicsHolder graphicsHolder, float x, float y, float z, float width, float height, Direction facing, int color, int light) {
-        drawTexture(graphicsHolder, x, y, z, x + width, y + height, z, 0, 0, 1, 1, facing, color, light);
+        drawTextureRaw(graphicsHolder, x, y, z, x + width, y + height, z, 0, 0, 1, 1, facing, color, light);
     }
 
-    static void drawTexture(GraphicsHolder graphicsHolder, float x1, float y1, float z1, float x2, float y2, float z2, float u1, float v1, float u2, float v2, Direction facing, int color, int light) {
+    static void drawTextureRaw(GraphicsHolder graphicsHolder, float x1, float y1, float z1, float x2, float y2, float z2, float u1, float v1, float u2, float v2, Direction facing, int color, int light) {
         graphicsHolder.drawTextureInWorld(x1, y2, z1, x2, y2, z2, x2, y1, z2, x1, y1, z1, u1, v1, u2, v2, facing, color, light);
     }
 }

@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.data.pids;
 
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
+import com.lx862.jcm.mod.data.pids.preset.RVPIDSPreset;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 
 public class PIDSManager {
