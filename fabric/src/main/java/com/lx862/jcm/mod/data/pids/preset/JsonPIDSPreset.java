@@ -1,11 +1,11 @@
-package com.lx862.jcm.mod.data.pids;
+package com.lx862.jcm.mod.data.pids.preset;
 
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.data.pids.base.PIDSPresetBase;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.data.McMetaManager;
-import com.lx862.jcm.mod.render.data.TextOverflowMode;
+import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
+import com.lx862.jcm.mod.render.TextOverflowMode;
+import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.RenderLayer;
@@ -57,13 +57,15 @@ public class JsonPIDSPreset extends PIDSPresetBase {
             textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
         }
         if(jsonObject.has("background")) {
-            String backgroundId = jsonObject.get("background").getAsString();
-
-            if(backgroundId.contains(".mcmeta")) {
-                McMetaManager.load(new Identifier(backgroundId));
-                backgroundId = backgroundId.replace(".mcmeta", "");
+            Identifier backgroundId = new Identifier(jsonObject.get("background").getAsString());
+            try {
+                McMetaManager.load(backgroundId);
+            } catch (Exception e) {
+                e.printStackTrace();
+                JCMLogger.warn("Failed to parse mcmeta animation file: " + backgroundId.getPath());
             }
-            background = new Identifier(backgroundId);
+
+            background = backgroundId;
         }
         return new JsonPIDSPreset(id, name, background, font, textOverflowMode, showClock, showWeather, textColor);
     }
@@ -78,9 +80,8 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     protected void drawBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
-        graphicsHolder.push();
+        if(background == null) return;
         graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(background, false));
         RenderHelper.drawTexture(graphicsHolder, background, 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
-        graphicsHolder.pop();
     }
 }

@@ -6,11 +6,17 @@ import org.mtr.mapping.holder.Items;
 import org.mtr.mapping.holder.PlayerEntity;
 
 public class Utils {
+    /**
+     * Whether the player is holding an MTR Brush / An item used for configuring blocks
+     */
     public static boolean playerHoldingBrush(PlayerEntity player) {
         // TODO: Temporary, will replace with Brush after adding MTR as dependencies
         return player.isHolding(Items.getGrassBlockMapped());
     }
 
+    /**
+     * For block ID migration only, returns an identifier with the latest block id.
+     */
     public static Identifier getMigrationId(Identifier checkId) {
         if (checkId.getNamespace().equals("jsblock")) {
             switch (checkId.getPath()) {

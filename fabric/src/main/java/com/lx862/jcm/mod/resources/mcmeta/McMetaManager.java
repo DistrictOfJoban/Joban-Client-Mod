@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.render.data;
+package com.lx862.jcm.mod.resources.mcmeta;
 
 import com.lx862.jcm.mod.util.JCMLogger;
 import net.minecraft.util.Pair;
@@ -14,29 +14,31 @@ import java.util.HashMap;
 import java.util.function.Consumer;
 
 /**
- * Class to handle McMeta animation textures, as I couldn't figure out how MC does it :D
+ * Class to handle McMeta animated textures, as I couldn't figure out how MC does it :D
  */
 public class McMetaManager {
     private static final HashMap<Identifier, McMeta> mcMetaList = new HashMap<>();
 
     /**
-     * Load an mcmeta file
-     * @param id The identifier that leads to the mcmeta file
+     * Try to load an animated mcmeta file if it exists, will do nothing otherwise
+     * @param imagePath The identifier path that leads to the png file
      */
-    public static void load(Identifier id) {
-        ResourceManagerHelper.readResource(id, inputStream -> {
-            JCMLogger.info("Found mcmeta file: " + id.getPath());
+    public static void load(Identifier imagePath) {
+        Identifier mcmetaFile = new Identifier(imagePath.getNamespace(), imagePath.getPath() + ".mcmeta");
+
+        ResourceManagerHelper.readResource(mcmetaFile, inputStream -> {
+            JCMLogger.info("Loading mcmeta file: " + imagePath.getPath());
 
             try {
                 String str = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
                 McMeta mcMeta = McMeta.parse(str);
 
-                Identifier imgName = new Identifier(id.getNamespace(), id.getPath().replace(".mcmeta", ""));
-                readImage(mcMeta, imgName, mcMeta1 -> {
-                    mcMetaList.put(imgName, mcMeta1);
+                readImage(mcMeta, imagePath, mcMeta1 -> {
+                    mcMetaList.put(imagePath, mcMeta1);
                 });
             } catch (IOException e) {
-                JCMLogger.warn("{} is not a valid mcmeta file!", id.toString());
+                e.printStackTrace();
+                JCMLogger.warn("Cannot read mcmeta file {}!", imagePath.toString());
             }
         });
     }
@@ -67,11 +69,11 @@ public class McMetaManager {
                 BufferedImage bufferedImage = ImageIO.read(inputStream);
                 int width = bufferedImage.getWidth();
                 int height = bufferedImage.getHeight();
-                JCMLogger.info("Loaded image metadata: {} ({})", imageFile.getPath(), width + "x" + height);
+                JCMLogger.info("Loaded mcmeta image metadata: {} ({})", imageFile.getPath(), width + "x" + height);
                 mcMeta.setVerticalPart((height / width));
                 callback.accept(mcMeta);
             } catch (IOException e) {
-                JCMLogger.warn( "{} is not a valid image file!", imageFile.getPath());
+                JCMLogger.warn( "Failed to read mcmeta image file {}!", imageFile.getPath());
             }
         }));
     }

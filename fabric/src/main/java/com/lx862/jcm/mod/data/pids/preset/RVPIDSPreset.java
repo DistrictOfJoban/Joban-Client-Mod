@@ -1,11 +1,7 @@
-package com.lx862.jcm.mod.data.pids;
+package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.data.BlockProperties;
-import com.lx862.jcm.mod.data.pids.base.PIDSPresetBase;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.TextUtil;
 import net.minecraft.client.MinecraftClient;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -41,10 +37,8 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
     }
 
     protected void drawBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
-        graphicsHolder.push();
         graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(TEXTURE_BACKGROUND, false));
         RenderHelper.drawTexture(graphicsHolder, TEXTURE_BACKGROUND, 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
-        graphicsHolder.pop();
     }
 
     private void drawArrivalEntryCallback(GraphicsHolder graphicsHolder, int x, int y, int width, int rowAmount, DrawRowCallback drawRowCallback) {

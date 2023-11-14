@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.render.block;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
-import com.lx862.jcm.mod.data.pids.base.PIDSPresetBase;
+import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;

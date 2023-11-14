@@ -2,6 +2,8 @@ package com.lx862.jcm.mod.util;
 
 import org.mtr.mapping.holder.*;
 
+import javax.annotation.Nullable;
+
 /**
  * Contains utilities method for block checking/manipulation
  */
@@ -62,7 +64,10 @@ public class BlockUtil {
         return state.get(property);
     }
 
-    public static BlockEntity getBlockEntityOrNull(World world, BlockPos pos) {
+    /**
+     * Get block entity in world, but will return null if chunk is not loaded (And will not attempt to load the chunk).
+     */
+    public static @Nullable BlockEntity getBlockEntityOrNull(World world, BlockPos pos) {
         if(!world.isChunkLoaded(pos)) return null;
         return world.getBlockEntity(pos);
     }

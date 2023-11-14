@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.pids.base;
+package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;

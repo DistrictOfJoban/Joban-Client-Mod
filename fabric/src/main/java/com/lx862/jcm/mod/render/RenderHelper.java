@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render;
 
 import com.lx862.jcm.mod.data.JCMStats;
-import com.lx862.jcm.mod.render.data.McMetaManager;
+import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.util.TextUtil;
 import net.minecraft.util.Pair;
 import org.mtr.mapping.holder.Direction;

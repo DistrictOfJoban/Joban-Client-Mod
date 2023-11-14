@@ -4,7 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.data.pids.JsonPIDSPreset;
+import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.apache.commons.io.IOUtils;

@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.data.JCMStats;
-import com.lx862.jcm.mod.render.data.McMetaManager;
+import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 
 public class Events {
     public static void register() {
