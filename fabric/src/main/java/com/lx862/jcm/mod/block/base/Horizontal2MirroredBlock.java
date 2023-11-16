@@ -14,7 +14,7 @@ public abstract class Horizontal2MirroredBlock extends DirectionalBlock {
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        Direction placeDirection = Direction.fromHorizontal(ctx.getPlayerLookDirection().getHorizontal()).getOpposite();
+        Direction placeDirection = ctx.getPlayerFacing().getOpposite();
         return BlockUtil.isReplacable(ctx.getWorld(), ctx.getBlockPos(), placeDirection, ctx, 2) && super.getPlacementState2(ctx) != null ? super.getPlacementState2(ctx).with(new Property<>(FACING.data), placeDirection.data) : null;
     }
 
