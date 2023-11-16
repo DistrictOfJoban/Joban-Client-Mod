@@ -2,16 +2,13 @@ package com.lx862.jcm.mod.trm;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.*;
-
 public class TextSlot implements Comparable<TextSlot> {
-    private static final long EXPIRE_TIME = 1000;
+    private static final long EXPIRE_TIME = 500;
     private final int startX;
     private final int startY;
     private long lastAccessTime = System.currentTimeMillis();
     private int width;
-    private int color;
-    private String text = null;
+    private TextInfo text = null;
 
     public TextSlot(int startX, int startY) {
         this.startX = startX;
@@ -25,7 +22,7 @@ public class TextSlot implements Comparable<TextSlot> {
         return System.currentTimeMillis() - lastAccessTime > EXPIRE_TIME;
     }
 
-    public String getText() {
+    public TextInfo getText() {
         return text;
     }
 
@@ -41,39 +38,23 @@ public class TextSlot implements Comparable<TextSlot> {
         return startY;
     }
 
-    public int getWidth() {
+    public int getPixelWidth() {
         return width;
     }
 
-    public int getColor() {
-        return color;
+    public double getPhysicalWidth() {
+        return ((double)width / TextureTextRenderer.FONT_RESOLUTION) * TextureTextRenderer.RENDERED_TEXT_SIZE;
     }
 
-    public double getScaledWidth() {
-        return (double)width / TextureTextRenderer.FONT_RESOLUTION;
-    }
-
-    public void setText(String text, Graphics graphics) {
+    public void setContent(TextInfo text, int textWidth) {
         this.text = text;
         this.lastAccessTime = System.currentTimeMillis();
-        this.width = graphics.getFontMetrics().stringWidth(text);
+        this.width = textWidth;
     }
 
-    public void setColor(int color) {
-        this.color = color;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if(!(other instanceof TextSlot)) return false;
-        TextSlot textSlot = (TextSlot) other;
-        return textSlot.getText().equals(this.getText()) &&
-                textSlot.getColor() == this.getColor();
-    }
-
-    public boolean equals(String text, int color) {
-        if(getText() == null || text == null) return false;
-        return this.getText().equals(text) && this.color == color;
+    public boolean isHoldingText(TextInfo text) {
+        if(this.text == null || text == null) return false;
+        return this.text.equals(text);
     }
 
     @Override

@@ -40,8 +40,7 @@ public abstract class PIDSPresetBase implements RenderHelper {
     }
 
     protected void drawPIDSCenteredText(GraphicsHolder graphicsHolder, Direction facing, String text, int x, int y, int textColor) {
-        //TODO: Center it
-        TextRenderingManager.draw(graphicsHolder, text, facing, x, y, textColor, true);
+        TextRenderingManager.drawCentered(graphicsHolder, text, facing, x, y, textColor);
         //drawCenteredText(graphicsHolder, TextUtil.withFont(TextUtil.literal(text), getFont()), x, y, textColor);
     }
 

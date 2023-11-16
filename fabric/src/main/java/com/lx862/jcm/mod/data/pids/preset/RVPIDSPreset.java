@@ -2,7 +2,9 @@ package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.trm.TextInfo;
 import com.lx862.jcm.mod.trm.TextRenderingManager;
+import com.lx862.jcm.mod.trm.TextureTextRenderer;
 import net.minecraft.client.MinecraftClient;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -26,8 +28,8 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
 
         // Draw Textures
         drawBackground(graphicsHolder, width, height, facing);
-        //TextureTextRenderer.stressTest(20);
-        //drawTestBackground(graphicsHolder, width, height, facing);
+        //TextureTextRenderer.stressTest(5);
+        drawTestBackground(graphicsHolder, width, height, facing);
 
         graphicsHolder.translate(0, 0, -0.5);
         titleDrawWeatherIcon(graphicsHolder, world, facing, PIDS_MARGIN);
@@ -79,8 +81,9 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
 
     private void drawArrivalEntry(GraphicsHolder graphicsHolder, TextRenderer textRenderer, Direction facing, int width, String lrtNumber, String destination, int car, long arrivalTime, boolean showCar, int textColor) {
         String leftDestination = lrtNumber + " " +  destination;
+        TextInfo ti = new TextInfo(leftDestination).withColor(textColor);
 
-        int destinationWidth = GraphicsHolder.getTextWidth(leftDestination);
+        int destinationWidth = TextRenderingManager.getTextWidth(ti);
         float destinationMaxWidth = true ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
 
         graphicsHolder.push();

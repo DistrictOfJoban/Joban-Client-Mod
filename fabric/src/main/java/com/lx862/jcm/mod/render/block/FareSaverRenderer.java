@@ -8,10 +8,7 @@ import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import net.minecraft.client.MinecraftClient;
-import org.mtr.mapping.holder.BlockState;
-import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.MutableText;
-import org.mtr.mapping.holder.TextRenderer;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEntity> implements RenderHelper {
@@ -28,7 +25,7 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
         if(part != 2) return;
 
         TextRenderer textRenderer = new TextRenderer(MinecraftClient.getInstance().textRenderer);
-        MutableText discountText = TextUtil.translatable(TextCategory.BLOCK, "faresaver.currency", blockEntity.getDiscount());
+        MutableText discountText = TextUtil.translatable(TextCategory.BLOCK, "faresaver.currency", blockEntity.getDiscount()).formatted(TextFormatting.WHITE);
 
         graphicsHolder.push();
         scaleCentered(graphicsHolder, 0.011F, 0.011F, 0.011F);
@@ -38,7 +35,7 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
         graphicsHolder.translate(0, 13, -6);
         scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(discountText), 12, true, textRenderer.getFontHeightMapped());
         TextRenderingManager.bind(graphicsHolder);
-        TextRenderingManager.draw(graphicsHolder, discountText, facing, 0, 0, 0xFFFFFFFF);
+        TextRenderingManager.draw(graphicsHolder, discountText, facing, 0, 0);
         graphicsHolder.pop();
     }
 }
