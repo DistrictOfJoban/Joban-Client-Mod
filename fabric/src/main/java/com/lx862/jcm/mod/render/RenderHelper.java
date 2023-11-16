@@ -122,7 +122,7 @@ public interface RenderHelper {
         drawTextureRaw(graphicsHolder, x, y, z, x + width, y + height, z, 0, uv.getLeft(), 1, uv.getRight(), facing, color, light);
     }
 
-    static void drawTexture(GraphicsHolder graphicsHolder, float x, float y, float z, float width, float height, int u1, int v1, int u2, int v2, Direction facing, int color, int light) {
+    static void drawTexture(GraphicsHolder graphicsHolder, float x, float y, float z, float width, float height, float u1, float v1, float u2, float v2, Direction facing, int color, int light) {
         drawTextureRaw(graphicsHolder, x, y, z, x + width, y + height, z, u1, v1, u2, v2, facing, color, light);
     }
 

@@ -3,12 +3,16 @@ package com.lx862.jcm.mod.trm;
 import com.lx862.jcm.mod.data.JCMStats;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.JCMLogger;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 import java.awt.*;
+import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
+import java.text.AttributedString;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,26 +20,34 @@ import java.util.stream.Collectors;
  * Experimental text renderer using texture atlas
  */
 public class TextureTextRenderer implements RenderHelper {
-    private static final int ATLAS_WIDTH = 1024;
-    private static final int ATLAS_HEIGHT = 1024;
+    /**
+     * The size that will actually be rendered into the Minecraft world. (Final text size should be similar to vanilla's text rendering)
+     */
+    private static final int RENDERED_TEXT_SIZE = 10;
+    private static final int DEFAULT_ATLAS_WIDTH = 1024;
+    private static final int DEFAULT_ATLAS_HEIGHT = 1024;
     private static final int MAX_ATLAS_SIZE = 4096;
-    private static final List<TextSlot> textSlots = new ArrayList<>();
+    private static final ObjectList<TextSlot> textSlots = new ObjectArrayList<>();
     private static NativeImageBackedTexture nativeImageBackedTexture = null;
     private static BufferedImage bufferedImageForTextGen = null;
-    public static int fontResolution = 64;
+    private static int width;
+    private static int height;
+    public static final int FONT_RESOLUTION = 64;
     public static Identifier textAtlas = null;
 
     public static void initialize() {
         if(bufferedImageForTextGen != null) {
             bufferedImageForTextGen.getGraphics().dispose();
         }
-        bufferedImageForTextGen = new BufferedImage(fontResolution * 4, fontResolution, BufferedImage.TYPE_INT_ARGB);
-        initTextureAtlas(ATLAS_WIDTH, ATLAS_HEIGHT);
+        bufferedImageForTextGen = new BufferedImage(FONT_RESOLUTION * 4, FONT_RESOLUTION, BufferedImage.TYPE_INT_ARGB);
+        initTextureAtlas(DEFAULT_ATLAS_WIDTH, DEFAULT_ATLAS_HEIGHT);
         JCMLogger.info("TextureRenderingManager Initialized.");
     }
 
     private static void initTextureAtlas(int width, int height) {
         textSlots.clear();
+        TextureTextRenderer.width = width;
+        TextureTextRenderer.height = height;
         NativeImage nativeImage = new NativeImage(width, height, false);
         nativeImage.fillRect(0, 0, width, height, 0xFF0000FF);
 
@@ -50,9 +62,9 @@ public class TextureTextRenderer implements RenderHelper {
         }
         textAtlas = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("jcm_atlas_text", nativeImageBackedTexture);
 
-        for(int i = 0; i < height / fontResolution; i++) {
+        for(int i = 0; i < height / FONT_RESOLUTION; i++) {
             int startX = 0;
-            int startY = i * fontResolution;
+            int startY = i * FONT_RESOLUTION;
             textSlots.add(new TextSlot(startX, startY));
         }
     }
@@ -61,8 +73,13 @@ public class TextureTextRenderer implements RenderHelper {
         if(getTextSlot(text, color) == null) {
             Graphics2D graphics = bufferedImageForTextGen.createGraphics();
             graphics.setComposite(AlphaComposite.SrcOver);
+            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+            Font font = new Font("Roboto", Font.PLAIN, FONT_RESOLUTION);
+
             graphics.setColor(new Color(color));
-            graphics.setFont(new Font("Arial", Font.PLAIN, fontResolution));
+            graphics.setFont(font);
             int textWidth = graphics.getFontMetrics().stringWidth(text);
 
             if(textWidth > bufferedImageForTextGen.getWidth()) {
@@ -71,8 +88,8 @@ public class TextureTextRenderer implements RenderHelper {
                 return;
             }
 
-            graphics.drawString(text, 0, graphics.getFontMetrics().getAscent());
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            AttributedString astr = getFormattedString(text, font);
+            graphics.drawString(astr.getIterator(), 0, graphics.getFontMetrics().getAscent() - (graphics.getFontMetrics().getDescent() / 2));
 
             findSlotAndDraw(bufferedImageForTextGen, graphics, text, color);
             nativeImageBackedTexture.upload();
@@ -82,6 +99,40 @@ public class TextureTextRenderer implements RenderHelper {
             graphics.fillRect(0, 0, bufferedImageForTextGen.getWidth(), bufferedImageForTextGen.getHeight());
             graphics.setComposite(AlphaComposite.SrcOver);
         }
+    }
+
+    private static AttributedString getFormattedString(String text, Font font) {
+        String filteredString = MCTextHelper.removeColorCode(text);
+        Int2IntArrayMap mcColorCodeMap = MCTextHelper.getColorCodeMap(text);
+
+        AttributedString attributedString = new AttributedString(filteredString);
+        attributedString.addAttribute(TextAttribute.FONT, font);
+
+        int currentTextColor = -1;
+        // Change font of individual characters so they still get rendered with a fallback font
+        for(int i = 0; i < filteredString.length(); i++) {
+            char currentChar = filteredString.charAt(i);
+
+            if(!font.canDisplay(currentChar)) {
+                for(Font sysFont : GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts()) {
+                    if(sysFont.canDisplay(filteredString.charAt(i))) {
+                        // FIXME: Temp Blacklist for local wacky font
+                        if(sysFont.getFontName().startsWith("Casey")) continue;
+                        attributedString.addAttribute(TextAttribute.FONT, sysFont.deriveFont(Font.PLAIN, FONT_RESOLUTION), i, i+1);
+                        break;
+                    }
+                }
+            }
+
+            if(mcColorCodeMap.containsKey(i)) {
+                currentTextColor = mcColorCodeMap.get(i);
+            }
+
+            if(currentTextColor != -1) {
+                attributedString.addAttribute(TextAttribute.FOREGROUND, new Color(currentTextColor), i, i+1);
+            }
+        }
+        return attributedString;
     }
 
     public static void resizeGenerationBufferImage(int width) {
@@ -95,7 +146,7 @@ public class TextureTextRenderer implements RenderHelper {
         if(availableSlots.isEmpty()) {
             // We have absolutely no space left (Not even any reusable), probably a good idea to resize to a bigger image
             JCMLogger.debug("[TextureTextRenderer] No space left to render text, resizing to a bigger atlas!");
-            initTextureAtlas(nativeImageBackedTexture.getImage().getWidth(), Math.min(nativeImageBackedTexture.getImage().getHeight() + 1024, MAX_ATLAS_SIZE));
+            initTextureAtlas(width, Math.min(height + 1024, MAX_ATLAS_SIZE));
             return;
         }
 
@@ -104,13 +155,13 @@ public class TextureTextRenderer implements RenderHelper {
         firstAvailableSlot.setColor(textColor);
 
         TextSlot textSlot = firstAvailableSlot;
-        drawToNativeImage(bufferedImage, textSlot.getStartX(), textSlot.getStartY(), textSlot.getWidth(), fontResolution);
+        drawToNativeImage(bufferedImage, textSlot.getStartX(), textSlot.getStartY(), textSlot.getWidth(), FONT_RESOLUTION);
     }
 
     private static void drawToNativeImage(BufferedImage bufferedImage, int x, int y, int width, int height) {
         for(int w = 0; w < width; w++) {
             for(int h = 0; h < height; h++) {
-                if(w >= nativeImageBackedTexture.getImage().getWidth() || h >= nativeImageBackedTexture.getImage().getHeight()) continue;
+                if(w >= TextureTextRenderer.width || h >= TextureTextRenderer.height) continue;
                 nativeImageBackedTexture.getImage().setPixelColor(x + w, y + h, bufferedImage.getRGB(w, h));
             }
         }
@@ -125,14 +176,32 @@ public class TextureTextRenderer implements RenderHelper {
         return null;
     }
 
-    public static void draw(GraphicsHolder graphicsHolder, String text, Direction facing, int x, int y, int color) {
+    public static void draw(GraphicsHolder graphicsHolder, String text, Direction facing, int x, int y, int color, boolean centered) {
         TextSlot textSlot = getTextSlot(text, color);
         if(textSlot == null) {
             addText(text, color);
             textSlot = getTextSlot(text, color);
         }
 
-        RenderHelper.drawTexture(graphicsHolder, x, y, 11 * textSlot.getScaledWidth(), 11, 0, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+        if(textSlot != null) {
+            float finalX = centered ? x - (float)((RENDERED_TEXT_SIZE * textSlot.getScaledWidth()) / 2F) : x;
+            drawToWorld(graphicsHolder, textSlot, facing, finalX, y);
+        }
+    }
+
+    private static void drawToWorld(GraphicsHolder graphicsHolder, TextSlot textSlot, Direction facing, float x, float y) {
+        if(textSlot != null) {
+            textSlot.updateLastAccessTime();
+            float startY = textSlot.getStartY();
+            float onePart = (float) FONT_RESOLUTION / height;
+
+            float u1 = 0;
+            float u2 = (float)textSlot.getWidth() / width;
+            float v1 = startY / height;
+            float v2 = v1 + onePart;
+
+            RenderHelper.drawTexture(graphicsHolder, x, y - 0.75F, 0, (int)(RENDERED_TEXT_SIZE * textSlot.getScaledWidth()), RENDERED_TEXT_SIZE, u1, v1, u2, v2, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+        }
     }
 
     public static void stressTest(int updateFrequency) {

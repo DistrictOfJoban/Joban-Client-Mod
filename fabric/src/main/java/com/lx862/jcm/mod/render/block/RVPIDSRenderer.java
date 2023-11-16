@@ -33,7 +33,6 @@ public class RVPIDSRenderer extends JCMBlockEntityRenderer<PIDSBlockEntity> {
         graphicsHolder.translate(-22.5, -17, -14.5);
 
         pidsPreset.render(blockEntity, graphicsHolder, blockEntity.getWorld2(), facing, tickDelta, 0, 0, 156, 88, 0xFFFFFFFF, MAX_RENDER_LIGHT);
-
         graphicsHolder.pop();
     }
 

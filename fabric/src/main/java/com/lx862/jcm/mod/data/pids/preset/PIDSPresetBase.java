@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.trm.TextRenderingManager;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.TextRenderer;
@@ -33,12 +34,15 @@ public abstract class PIDSPresetBase implements RenderHelper {
         return name;
     }
 
-    protected void drawPIDSText(GraphicsHolder graphicsHolder, String text, int x, int y, int textColor) {
-        drawText(graphicsHolder, TextUtil.withFont(TextUtil.literal(text), getFont()), x, y, textColor);
+    protected void drawPIDSText(GraphicsHolder graphicsHolder, Direction facing, String text, int x, int y, int textColor) {
+        TextRenderingManager.draw(graphicsHolder, text, facing, x, y, textColor);
+        //drawText(graphicsHolder, TextUtil.withFont(TextUtil.literal(text), getFont()), x, y, textColor);
     }
 
-    protected void drawPIDSCenteredText(GraphicsHolder graphicsHolder, String text, int x, int y, int textColor) {
-        drawCenteredText(graphicsHolder, TextUtil.withFont(TextUtil.literal(text), getFont()), x, y, textColor);
+    protected void drawPIDSCenteredText(GraphicsHolder graphicsHolder, Direction facing, String text, int x, int y, int textColor) {
+        //TODO: Center it
+        TextRenderingManager.draw(graphicsHolder, text, facing, x, y, textColor, true);
+        //drawCenteredText(graphicsHolder, TextUtil.withFont(TextUtil.literal(text), getFont()), x, y, textColor);
     }
 
     public String getFont() {

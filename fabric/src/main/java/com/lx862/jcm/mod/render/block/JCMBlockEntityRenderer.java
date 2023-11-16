@@ -4,9 +4,10 @@ import com.lx862.jcm.mod.config.ClientConfig;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
-import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.util.crash.CrashReport;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
+import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
@@ -20,19 +21,18 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
 
     @Override
     public void render(T blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
-        if(ClientConfig.DISABLE_RENDERING.get() || blockEntity.getWorld2() == null) return;
-        if(blockEntity.getWorld2().getBlockState(blockEntity.getPos2()).isAir()) return;
-
         try {
+            if(ClientConfig.DISABLE_RENDERING.get() || blockEntity.getWorld2() == null) return;
+            if(blockEntity.getWorld2().getBlockState(blockEntity.getPos2()).isAir()) return;
+
             renderCurated(blockEntity, tickDelta, graphicsHolder, light, i1);
         } catch (Exception e) {
-            if(FabricLoader.getInstance().isDevelopmentEnvironment()) {
-                e.printStackTrace();
-            } else {
-                throw e;
-            }
+            e.printStackTrace();
+            CrashReport crashReport = new CrashReport("Exception caught in JCM Block Entity Rendering", e);
+            MinecraftClient.getInstance().addDetailsToCrashReport(crashReport);
+            MinecraftClient.getInstance().cleanUpAfterCrash();
+            MinecraftClient.getInstance().printCrashReport(crashReport);
         }
-
     }
 
     /**

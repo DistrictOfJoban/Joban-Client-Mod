@@ -8,7 +8,7 @@ public class TextSlot implements Comparable<TextSlot> {
     private static final long EXPIRE_TIME = 1000;
     private final int startX;
     private final int startY;
-    private long allocationTime = System.currentTimeMillis();
+    private long lastAccessTime = System.currentTimeMillis();
     private int width;
     private int color;
     private String text = null;
@@ -22,11 +22,15 @@ public class TextSlot implements Comparable<TextSlot> {
     }
 
     public boolean canReuse() {
-        return System.currentTimeMillis() - allocationTime > EXPIRE_TIME;
+        return System.currentTimeMillis() - lastAccessTime > EXPIRE_TIME;
     }
 
     public String getText() {
         return text;
+    }
+
+    public void updateLastAccessTime() {
+        this.lastAccessTime = System.currentTimeMillis();
     }
 
     public int getStartX() {
@@ -45,13 +49,13 @@ public class TextSlot implements Comparable<TextSlot> {
         return color;
     }
 
-    public int getScaledWidth() {
-        return width / TextureTextRenderer.fontResolution;
+    public double getScaledWidth() {
+        return (double)width / TextureTextRenderer.FONT_RESOLUTION;
     }
 
     public void setText(String text, Graphics graphics) {
         this.text = text;
-        this.allocationTime = System.currentTimeMillis();
+        this.lastAccessTime = System.currentTimeMillis();
         this.width = graphics.getFontMetrics().stringWidth(text);
     }
 
@@ -74,6 +78,6 @@ public class TextSlot implements Comparable<TextSlot> {
 
     @Override
     public int compareTo(@NotNull TextSlot o) {
-        return (int)(this.allocationTime - o.allocationTime);
+        return (int)(this.lastAccessTime - o.lastAccessTime);
     }
 }

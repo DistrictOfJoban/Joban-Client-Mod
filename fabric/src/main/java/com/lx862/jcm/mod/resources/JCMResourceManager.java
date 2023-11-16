@@ -18,11 +18,11 @@ public class JCMResourceManager {
     private static final Identifier CUSTOM_RESOURCE_PATH = new Identifier(Constants.MOD_ID, "joban_custom_resources.json");
     public static void reload() {
         reloadPIDSPreset();
+        TextRenderingManager.initialize();
     }
 
     private static void reloadPIDSPreset() {
         PIDSManager.clearAll();
-        TextRenderingManager.initialize();
 
         ResourceManagerHelper.readResource(CUSTOM_RESOURCE_PATH, (inputStream -> {
             try {
