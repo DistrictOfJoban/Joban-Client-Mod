@@ -7,7 +7,8 @@ public interface MCTextHelper {
     /**
      * Get a hashmap of color code, with key representing the text position, and value being the integer color
      */
-    static Int2IntArrayMap getColorCodeMap(String text) {
+    static Int2IntArrayMap getColorCodeMap(TextInfo textInfo) {
+        String text = textInfo.getContent();
         Int2IntArrayMap colorCodeMap = new Int2IntArrayMap();
         boolean hadSectionSign = false;
 
@@ -21,11 +22,12 @@ public interface MCTextHelper {
 
                 if(newColorCode != -1) {
                     int decodedColor = getColorCodeColor(newColorCode);
+
                     if(decodedColor != -1) colorCodeMap.put(trueCharCount, decodedColor);
                 }
 
                 if(currentChar == 'r') {
-                    colorCodeMap.put(i, -2);
+                    colorCodeMap.put(i, textInfo.getTextColor());
                 }
                 hadSectionSign = false;
             } else {
@@ -96,7 +98,7 @@ public interface MCTextHelper {
             case 13:
                 return 0xFF55FF;
             case 14:
-                return 0xFFFF55;
+                return 0xFF0000;
             case 15:
                 return 0xFFFFFF;
             default:

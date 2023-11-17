@@ -4,7 +4,6 @@ import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.trm.TextInfo;
 import com.lx862.jcm.mod.trm.TextRenderingManager;
-import com.lx862.jcm.mod.trm.TextureTextRenderer;
 import net.minecraft.client.MinecraftClient;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -68,7 +67,7 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
         TextRenderer textRenderer = new TextRenderer(MinecraftClient.getInstance().textRenderer);
 
         drawArrivalEntryCallback(rawGraphicsHolder, x, y, rawWidth, rowAmount, (graphicsHolder, width) -> {
-            drawArrivalEntry(graphicsHolder, textRenderer, facing, (int)(width / ARRIVAL_TEXT_SCALE), "610", "§cTuen Mun §dFerry Pier", 2, 50000, false, textColor);
+            drawArrivalEntry(graphicsHolder, textRenderer, facing, (int)(width / ARRIVAL_TEXT_SCALE), "610", "§eTuen Mun §dFerry Pier", 2, 50000, false, textColor);
         });
     }
     private void arrivalsDrawPlatformIcon(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int rowAmount) {
@@ -88,10 +87,10 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
 
         graphicsHolder.push();
         if(destinationWidth > destinationMaxWidth) {
-            scaleToFitBoundary(graphicsHolder, destinationWidth, destinationMaxWidth - 2, false);
-            drawPIDSText(graphicsHolder, facing, leftDestination, 0, 0, textColor);
+            //scaleToFitBoundary(graphicsHolder, destinationWidth, destinationMaxWidth - 2, false);
+            //drawPIDSText(graphicsHolder, facing, leftDestination, 0, 0, textColor);
             // TODO: Make marquee an option in custom PIDS Preset
-            //drawMarqueeText(graphicsHolder, TextUtil.withFont(TextUtil.literal(leftDestination), getFont()), (int)destinationMaxWidth - 2, 0, 0, textColor);
+            drawPIDSScrollingText(graphicsHolder, facing, leftDestination, 0, 0, textColor, (int)destinationMaxWidth - 2);
         } else {
             drawPIDSText(graphicsHolder, facing, leftDestination, 0, 0, textColor);
         }
@@ -135,7 +134,7 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
         long hours = timeNow / 1000;
         long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
         String timeString = String.format("%02d:%02d", hours % 24, minutes % 60);
-        TextRenderingManager.draw(graphicsHolder, timeString, facing, x, y, textColor);
+        drawPIDSText(graphicsHolder, facing, timeString, x, y, textColor);
     }
 
     @Override

@@ -6,7 +6,6 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-
 public class TextRenderingManager implements RenderHelper {
     private static final boolean FALLBACK = false;
     public static void initialize() {
@@ -21,20 +20,12 @@ public class TextRenderingManager implements RenderHelper {
         }
     }
 
-    public static void drawCentered(GraphicsHolder graphicsHolder, String text, Direction facing, int x, int y, int color) {
-        drawCentered(graphicsHolder, new TextInfo(text).withColor(color), facing, x, y);
-    }
-
-    public static void drawCentered(GraphicsHolder graphicsHolder, MutableText text, Direction facing, int x, int y) {
-        drawCentered(graphicsHolder, new TextInfo(text), facing, x, y);
+    public static void drawScrollingText(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y, float textWidth) {
+        draw(graphicsHolder, text.withMaxWidth(textWidth).withScrollingText(), facing, x, y);
     }
 
     public static void drawCentered(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y) {
-        draw(graphicsHolder, text, facing, x, y, true);
-    }
-
-    public static void draw(GraphicsHolder graphicsHolder, String text, Direction facing, int x, int y, int color) {
-        draw(graphicsHolder, new TextInfo(text).withColor(color), facing, x, y, false);
+        drawInternal(graphicsHolder, text, facing, x, y, true);
     }
 
     public static void draw(GraphicsHolder graphicsHolder, MutableText text, Direction facing, int x, int y) {
@@ -42,14 +33,16 @@ public class TextRenderingManager implements RenderHelper {
     }
 
     public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y) {
-        draw(graphicsHolder, text, facing, x, y, false);
+        drawInternal(graphicsHolder, text, facing, x, y, false);
     }
 
-
-    public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y, boolean centered) {
+    private static void drawInternal(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y, boolean centered) {
         if(FALLBACK) {
-            int finalX = centered ? x - (GraphicsHolder.getTextWidth(text.getContent()) / 2) : x;
-            graphicsHolder.drawText(text.getContent(), finalX, y, text.getTextColor(), false, MAX_RENDER_LIGHT);
+            if(text.isForScrollingText()) {
+                VanillaTextRenderer.drawVanillaScrollingText(graphicsHolder, text.getContent(), (int)text.getWidthInfo().getMaxWidth(), x, y, text.getTextColor());
+            } else {
+                VanillaTextRenderer.draw(graphicsHolder, text, x, y, centered);
+            }
         } else {
             TextureTextRenderer.draw(graphicsHolder, text, facing, x, y, centered);
         }
@@ -57,7 +50,7 @@ public class TextRenderingManager implements RenderHelper {
 
     public static int getTextWidth(TextInfo text) {
         if(FALLBACK) {
-            return GraphicsHolder.getTextWidth(text.getContent());
+            return VanillaTextRenderer.getTextWidth(text);
         } else {
             return TextureTextRenderer.getPhysicalWidth(text);
         }

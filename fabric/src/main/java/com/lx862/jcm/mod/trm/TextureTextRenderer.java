@@ -31,6 +31,7 @@ public class TextureTextRenderer implements RenderHelper {
     private static final int DEFAULT_ATLAS_WIDTH = 1024;
     private static final int DEFAULT_ATLAS_HEIGHT = 1024;
     private static final int MAX_ATLAS_SIZE = 8192;
+    public static final double MARQUEE_SPACING_RATIO = 0.8;
     private static final ObjectList<TextSlot> textSlots = new ObjectArrayList<>();
     private static NativeImageBackedTexture nativeImageBackedTexture = null;
     private static BufferedImage bufferedImageForTextGen = null;
@@ -86,12 +87,12 @@ public class TextureTextRenderer implements RenderHelper {
             Rectangle2D fullTextBound = getTextBound(astr);
 
             if(text.isForScrollingText()) {
-                affineTransform.scale(width / fullTextBound.getWidth(), 1);
+                affineTransform.scale((width / fullTextBound.getWidth()) * MARQUEE_SPACING_RATIO, 1);
             } else if(fullTextBound.getWidth() > width) {
-                affineTransform.scale(fullTextBound.getWidth() / width, 1);
+                affineTransform.scale(width / fullTextBound.getWidth(), 1);
             }
 
-//            graphics.setTransform(affineTransform);
+            graphics.setTransform(affineTransform);
             graphics.drawString(astr.getIterator(), 0, graphics.getFontMetrics().getAscent() - (graphics.getFontMetrics().getDescent() / 2));
 
             findSlotAndDraw(bufferedImageForTextGen, graphics, text);
@@ -105,7 +106,7 @@ public class TextureTextRenderer implements RenderHelper {
 
     private static AttributedString getFormattedString(TextInfo text, Font font) {
         String filteredString = MCTextHelper.removeColorCode(text.getContent());
-        Int2IntArrayMap mcColorCodeMap = MCTextHelper.getColorCodeMap(text.getContent());
+        Int2IntArrayMap mcColorCodeMap = MCTextHelper.getColorCodeMap(text);
 
         AttributedString attributedString = new AttributedString(filteredString);
         attributedString.addAttribute(TextAttribute.FONT, font);
@@ -134,10 +135,6 @@ public class TextureTextRenderer implements RenderHelper {
             if(currentTextColor != -1) {
                 attributedString.addAttribute(TextAttribute.FOREGROUND, new Color(currentTextColor), i, i+1);
             }
-
-            if(currentTextColor == -2) {
-                attributedString.addAttribute(TextAttribute.FOREGROUND, text.getTextColor(), i, i+1);
-            }
         }
         return attributedString;
     }
@@ -147,8 +144,8 @@ public class TextureTextRenderer implements RenderHelper {
         List<TextSlot> availableSlots = textSlots.stream().filter(e -> (allUsedUp ? e.canReuse() : e.unused())).sorted().collect(Collectors.toList());
         if(availableSlots.isEmpty()) {
             // We have absolutely no space left (Not even any reusable), probably a good idea to resize to a bigger image
-            JCMLogger.debug("[TextureTextRenderer] No space left to render text, resizing to a bigger atlas!");
             if(height + 1024 <= MAX_ATLAS_SIZE) {
+                JCMLogger.debug("[TextureTextRenderer] No space left to draw text, resizing to a bigger atlas!");
                 initTextureAtlas(width, Math.min(height + 1024, MAX_ATLAS_SIZE));
             }
             return;
@@ -156,6 +153,8 @@ public class TextureTextRenderer implements RenderHelper {
 
         TextSlot firstAvailableSlot = availableSlots.get(0);
         int textWidth = (int)getTextBound(text, graphics.getTransform()).getWidth();
+        if(text.isForScrollingText()) textWidth = width;
+
         firstAvailableSlot.setContent(text, textWidth);
         drawToNativeImage(bufferedImage, firstAvailableSlot.getStartX(), firstAvailableSlot.getStartY(), firstAvailableSlot.getPixelWidth(), FONT_RESOLUTION);
     }
@@ -174,7 +173,7 @@ public class TextureTextRenderer implements RenderHelper {
             // But for reasons (I haven't looked deep yet), when rapidly generating images, sometimes it will show an older image before showing a new one
             // I hope a 8192px texture atlas is enough for you to work with~
             nativeImageBackedTexture.bindTexture();
-            nativeImageBackedTexture.getImage().upload(0, 0, y, 0, y, TextureTextRenderer.width - (TextureTextRenderer.width - x - width), height, false, false, false, false);
+            nativeImageBackedTexture.getImage().upload(0, x, y, x, y, width, height, false, false, false, false);
         }
     }
 
@@ -189,6 +188,7 @@ public class TextureTextRenderer implements RenderHelper {
 
     public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y, boolean centered) {
         TextSlot textSlot = getTextSlot(text);
+
         if(textSlot == null) {
             addText(text);
             textSlot = getTextSlot(text);
@@ -210,6 +210,14 @@ public class TextureTextRenderer implements RenderHelper {
             float u2 = (float)textSlot.getPixelWidth() / width;
             float v1 = startY / height;
             float v2 = v1 + onePart;
+
+            if(textSlot.getText().isForScrollingText()) {
+                float ratio = textSlot.getMaxWidth() / (float)textSlot.getActualPhysicalWidth();
+                u2 = u2 * ratio;
+
+                u1 += (JCMStats.getGameTick() % 100) / 100F;
+                u2 += (JCMStats.getGameTick() % 100) / 100F;
+            }
 
             RenderHelper.drawTexture(graphicsHolder, x, y - 0.75F, 0, (int)textSlot.getPhysicalWidth(), RENDERED_TEXT_SIZE, u1, v1, u2, v2, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
         }
@@ -250,7 +258,7 @@ public class TextureTextRenderer implements RenderHelper {
     public static Rectangle2D getTextBound(AttributedString attributedString, AffineTransform affineTransform) {
         FontRenderContext fontRenderContext = new FontRenderContext(affineTransform, true, true);
         TextLayout textLayout = new TextLayout(attributedString.getIterator(), fontRenderContext);
-        return new Rectangle((int)textLayout.getBounds().getX(), (int)textLayout.getBounds().getY(), (int)textLayout.getAdvance(), (int)textLayout.getBounds().getHeight());
+        return new Rectangle((int)textLayout.getBounds().getX(), (int)textLayout.getBounds().getY(), (int)(textLayout.getAdvance() * affineTransform.getScaleX()), (int)(textLayout.getBounds().getHeight() * affineTransform.getScaleY()));
     }
 
     public static int getPhysicalWidth(TextInfo textInfo) {
