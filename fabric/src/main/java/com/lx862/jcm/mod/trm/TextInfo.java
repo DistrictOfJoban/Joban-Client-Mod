@@ -8,6 +8,7 @@ public class TextInfo {
     private final WidthInfo widthInfo;
     private int textColor;
     private boolean forScrollingText = false;
+    private boolean centered = false;
 
     public TextInfo(String content) {
         this.content = content;
@@ -39,6 +40,10 @@ public class TextInfo {
         return widthInfo;
     }
 
+    public boolean isCentered() {
+        return centered;
+    }
+
     public boolean isForScrollingText() {
         return this.forScrollingText;
     }
@@ -50,6 +55,11 @@ public class TextInfo {
 
     public TextInfo withColor(int color) {
         this.textColor = color;
+        return this;
+    }
+
+    public TextInfo withCentered() {
+        this.centered = true;
         return this;
     }
 

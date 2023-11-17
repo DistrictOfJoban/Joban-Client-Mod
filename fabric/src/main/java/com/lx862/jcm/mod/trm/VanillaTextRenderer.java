@@ -6,13 +6,16 @@ import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
+/**
+ * Wrapper around vanilla text rendering
+ */
 public class VanillaTextRenderer implements RenderHelper {
-    public static void draw(GraphicsHolder graphicsHolder, TextInfo text, int x, int y, boolean centered) {
-        drawInternal(graphicsHolder, text, x, y, centered);
+    public static void draw(GraphicsHolder graphicsHolder, TextInfo text, int x, int y) {
+        drawInternal(graphicsHolder, text, x, y);
     }
 
-    private static void drawInternal(GraphicsHolder graphicsHolder, TextInfo text, int x, int y, boolean centered) {
-        int finalX = centered ? x - (GraphicsHolder.getTextWidth(text.getContent()) / 2) : x;
+    private static void drawInternal(GraphicsHolder graphicsHolder, TextInfo text, int x, int y) {
+        int finalX = text.isCentered() ? x - (GraphicsHolder.getTextWidth(text.getContent()) / 2) : x;
         graphicsHolder.drawText(text.getContent(), finalX, y, text.getTextColor(), false, MAX_RENDER_LIGHT);
     }
 

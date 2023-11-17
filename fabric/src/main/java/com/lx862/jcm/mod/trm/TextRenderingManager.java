@@ -6,17 +6,30 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
+/**
+ * The text rendering manager for JCM, served as a wrapper for {@link VanillaTextRenderer} and {@link TextureTextRenderer} depending on whether fallback rendering is used.<br>
+ * All text rendering in the 3D world should be performed in this class.
+ */
 public class TextRenderingManager implements RenderHelper {
     private static final boolean FALLBACK = false;
+
+    /**
+     * Initialize the texture atlas for {@link TextureTextRenderer}<br>
+     * Nothing will be performed if fallback mode is enabled / using {@link VanillaTextRenderer}
+     */
     public static void initialize() {
         if(!FALLBACK) {
             TextureTextRenderer.initialize();
         }
     }
 
+    /**
+     * This binds the texture in {@link TextureTextRenderer} for use when drawing the text, bind it before you draw texts.<br>
+     * Nothing will be performed if fallback mode is enabled / using {@link VanillaTextRenderer}
+     */
     public static void bind(GraphicsHolder graphicsHolder) {
         if(!FALLBACK) {
-            graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(TextureTextRenderer.textAtlas, true));
+            graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(TextureTextRenderer.getAtlasIdentifier(), true));
         }
     }
 
@@ -25,7 +38,7 @@ public class TextRenderingManager implements RenderHelper {
     }
 
     public static void drawCentered(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y) {
-        drawInternal(graphicsHolder, text, facing, x, y, true);
+        drawInternal(graphicsHolder, text.withCentered(), facing, x, y);
     }
 
     public static void draw(GraphicsHolder graphicsHolder, MutableText text, Direction facing, int x, int y) {
@@ -33,18 +46,18 @@ public class TextRenderingManager implements RenderHelper {
     }
 
     public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y) {
-        drawInternal(graphicsHolder, text, facing, x, y, false);
+        drawInternal(graphicsHolder, text, facing, x, y);
     }
 
-    private static void drawInternal(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y, boolean centered) {
+    private static void drawInternal(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y) {
         if(FALLBACK) {
             if(text.isForScrollingText()) {
                 VanillaTextRenderer.drawVanillaScrollingText(graphicsHolder, text.getContent(), (int)text.getWidthInfo().getMaxWidth(), x, y, text.getTextColor());
             } else {
-                VanillaTextRenderer.draw(graphicsHolder, text, x, y, centered);
+                VanillaTextRenderer.draw(graphicsHolder, text, x, y);
             }
         } else {
-            TextureTextRenderer.draw(graphicsHolder, text, facing, x, y, centered);
+            TextureTextRenderer.draw(graphicsHolder, text, facing, x, y);
         }
     }
 

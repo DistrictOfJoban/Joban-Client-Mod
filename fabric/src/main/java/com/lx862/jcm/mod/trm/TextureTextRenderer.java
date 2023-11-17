@@ -21,24 +21,27 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Experimental text renderer using texture atlas
+ * <h2>Textured Text Renderer</h2>
+ * <p>Draws a string to a texture atlas, which can then be drawn with 1 quad via UV selecting.</p>
+ * <p>Under the vanilla rendering routine, this should offer substantial frame-rates improvement over the vanilla text renderer, at the cost of needing to constantly manage the atlas and being more memory intensive/less robust.</p>
+ * <p>Call {@link TextRenderingManager#bind(GraphicsHolder)} to bind the texture, then call it's relevant draw method</p>
  */
 public class TextureTextRenderer implements RenderHelper {
     /**
      * The size that will actually be rendered into the Minecraft world. (Final text size should be similar to vanilla's text rendering)
      */
-    public static final int RENDERED_TEXT_SIZE = 10;
     private static final int DEFAULT_ATLAS_WIDTH = 1024;
     private static final int DEFAULT_ATLAS_HEIGHT = 1024;
     private static final int MAX_ATLAS_SIZE = 8192;
-    public static final double MARQUEE_SPACING_RATIO = 0.8;
     private static final ObjectList<TextSlot> textSlots = new ObjectArrayList<>();
     private static NativeImageBackedTexture nativeImageBackedTexture = null;
     private static BufferedImage bufferedImageForTextGen = null;
     private static int width;
     private static int height;
+    private static Identifier textAtlas = null;
+    public static final int RENDERED_TEXT_SIZE = 10;
+    public static final double MARQUEE_SPACING_RATIO = 0.8;
     public static final int FONT_RESOLUTION = 64;
-    public static Identifier textAtlas = null;
 
     public static void initialize() {
         initTextureAtlas(DEFAULT_ATLAS_WIDTH, DEFAULT_ATLAS_HEIGHT);
@@ -83,8 +86,8 @@ public class TextureTextRenderer implements RenderHelper {
             graphics.setFont(new Font(text.getFont(), Font.PLAIN, FONT_RESOLUTION));
 
             AffineTransform affineTransform = new AffineTransform();
-            AttributedString astr = getFormattedString(text, new Font(text.getFont(), Font.PLAIN, FONT_RESOLUTION));
-            Rectangle2D fullTextBound = getTextBound(astr);
+            AttributedString attributedString = getFormattedString(text, new Font(text.getFont(), Font.PLAIN, FONT_RESOLUTION));
+            Rectangle2D fullTextBound = getTextBound(attributedString);
 
             if(text.isForScrollingText()) {
                 affineTransform.scale((width / fullTextBound.getWidth()) * MARQUEE_SPACING_RATIO, 1);
@@ -93,7 +96,7 @@ public class TextureTextRenderer implements RenderHelper {
             }
 
             graphics.setTransform(affineTransform);
-            graphics.drawString(astr.getIterator(), 0, graphics.getFontMetrics().getAscent() - (graphics.getFontMetrics().getDescent() / 2));
+            graphics.drawString(attributedString.getIterator(), 0, graphics.getFontMetrics().getAscent() - (graphics.getFontMetrics().getDescent() / 2));
 
             findSlotAndDraw(bufferedImageForTextGen, graphics, text);
 
@@ -194,7 +197,7 @@ public class TextureTextRenderer implements RenderHelper {
         return null;
     }
 
-    public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y, boolean centered) {
+    public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y) {
         TextSlot textSlot = getTextSlot(text);
 
         if(textSlot == null) {
@@ -203,7 +206,7 @@ public class TextureTextRenderer implements RenderHelper {
         }
 
         if(textSlot != null) {
-            float finalX = centered ? x - (float)(textSlot.getPhysicalWidth() / 2F) : x;
+            float finalX = text.isCentered() ? x - (float)(textSlot.getPhysicalWidth() / 2F) : x;
             drawToWorld(graphicsHolder, textSlot, facing, finalX, y);
         }
     }
@@ -275,5 +278,9 @@ public class TextureTextRenderer implements RenderHelper {
             return (int)textSlot.getPhysicalWidth();
         }
         return 0;
+    }
+
+    public static Identifier getAtlasIdentifier() {
+        return textAtlas;
     }
 }
