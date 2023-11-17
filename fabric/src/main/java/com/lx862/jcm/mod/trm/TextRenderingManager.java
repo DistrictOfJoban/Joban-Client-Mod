@@ -7,8 +7,9 @@ import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 /**
- * The text rendering manager for JCM, served as a wrapper for {@link VanillaTextRenderer} and {@link TextureTextRenderer} depending on whether fallback rendering is used.<br>
- * All text rendering in the 3D world should be performed in this class.
+ * <h2>Text Rendering Manager</h2>
+ * <p>The text rendering manager for JCM serves as a wrapper for {@link VanillaTextRenderer} and {@link TextureTextRenderer} depending on whether fallback rendering is used.</p>
+ * <p>All text rendering in the 3D world should be performed in this class.</p>
  */
 public class TextRenderingManager implements RenderHelper {
     private static final boolean FALLBACK = false;
