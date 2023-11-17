@@ -163,7 +163,7 @@ public class TextureTextRenderer implements RenderHelper {
         for(int w = 0; w < width; w++) {
             for(int h = 0; h < height; h++) {
                 if(w >= TextureTextRenderer.width || h >= TextureTextRenderer.height) continue;
-                nativeImageBackedTexture.getImage().setPixelColor(x + w, y + h, bufferedImage.getRGB(w, h));
+                nativeImageBackedTexture.getImage().setPixelColor(x + w, y + h, toAbgr(bufferedImage.getRGB(w, h)));
             }
         }
 
@@ -175,6 +175,14 @@ public class TextureTextRenderer implements RenderHelper {
             nativeImageBackedTexture.bindTexture();
             nativeImageBackedTexture.getImage().upload(0, x, y, x, y, width, height, false, false, false, false);
         }
+    }
+
+    private static int toAbgr(int rgb) {
+        int a = (rgb >> 24) & 255;
+        int r = (rgb >> 16) & 255;
+        int g = (rgb >> 8) & 255;
+        int b = (rgb >> 0) & 255;
+        return a << 24 | b << 16 | g << 8 | r;
     }
 
     private static TextSlot getTextSlot(TextInfo textInfo) {

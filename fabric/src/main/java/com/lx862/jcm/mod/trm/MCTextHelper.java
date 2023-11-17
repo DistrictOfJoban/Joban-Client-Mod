@@ -98,7 +98,7 @@ public interface MCTextHelper {
             case 13:
                 return 0xFF55FF;
             case 14:
-                return 0xFF0000;
+                return 0xFFFF55;
             case 15:
                 return 0xFFFFFF;
             default:
