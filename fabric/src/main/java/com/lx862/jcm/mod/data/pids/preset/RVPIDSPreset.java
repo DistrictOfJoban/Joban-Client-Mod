@@ -87,10 +87,10 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
 
         graphicsHolder.push();
         if(destinationWidth > destinationMaxWidth) {
-            //scaleToFitBoundary(graphicsHolder, destinationWidth, destinationMaxWidth - 2, false);
-            //drawPIDSText(graphicsHolder, facing, leftDestination, 0, 0, textColor);
+            scaleToFitBoundary(graphicsHolder, destinationWidth, destinationMaxWidth - 2, false);
+            drawPIDSText(graphicsHolder, facing, leftDestination, 0, 0, textColor);
             // TODO: Make marquee an option in custom PIDS Preset
-            drawPIDSScrollingText(graphicsHolder, facing, leftDestination, 0, 0, textColor, (int)destinationMaxWidth - 2);
+            //drawPIDSScrollingText(graphicsHolder, facing, leftDestination, 0, 0, textColor, (int)destinationMaxWidth - 2);
         } else {
             drawPIDSText(graphicsHolder, facing, leftDestination, 0, 0, textColor);
         }
