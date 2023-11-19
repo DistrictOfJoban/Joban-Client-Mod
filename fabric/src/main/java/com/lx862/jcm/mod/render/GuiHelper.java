@@ -1,14 +1,10 @@
 package com.lx862.jcm.mod.render;
 
 import com.lx862.jcm.mod.render.screen.widget.MappedWidget;
-import com.lx862.jcm.mod.util.TextCategory;
-import com.lx862.jcm.mod.util.TextUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
-import org.mtr.mapping.holder.ButtonWidget;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.MutableText;
-import org.mtr.mapping.holder.Text;
-import org.mtr.mapping.mapper.*;
+import org.mtr.mapping.mapper.GraphicsHolder;
 
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
@@ -19,24 +15,34 @@ public interface GuiHelper {
         widget.render(graphicsHolder, mouseX, mouseY, tickDelta);
     }
 
-    default void setReadableText(ButtonWidget widget, boolean bl) {
-        widget.setMessage(Text.cast(bl ? TextUtil.translatable(TextCategory.GUI, "widget.button.true") : TextUtil.translatable(TextCategory.GUI, "widget.button.false")));
-    }
-
-    default void drawScrollableText(GraphicsHolder graphicsHolder, MutableText text, double elapsed, int x, int y, int maxW, int fullHeight, int color, boolean shadow) {
+    /**
+     * Draw text that would shift back and fourth if there's not enough space to display
+     * Similar to the scrollable text added in Minecraft 1.19.4
+     * @param graphicsHolder Graphics holder
+     * @param text The text to display
+     * @param elapsed The time elapsed, this would dictate the scrolling animation speed
+     * @param startX The start X where your text should be clipped. (Measure from the left edge of your window)
+     * @param textX The text X that would be rendered
+     * @param textY The text Y that would be rendered
+     * @param maxW The maximum width allowed for your text
+     * @param color Color of the text
+     * @param shadow Whether text should be rendered with shadow
+     */
+    default void drawScrollableText(GraphicsHolder graphicsHolder, MutableText text, double elapsed, int startX, int textX, int textY, int maxW, int color, boolean shadow) {
         int textWidth = GraphicsHolder.getTextWidth(text);
-        double d = MinecraftClient.getInstance().getWindow().getScaleFactor();
-        int i = MinecraftClient.getInstance().getWindow().getFramebufferHeight();
+        double scale = MinecraftClient.getInstance().getWindow().getScaleFactor();
+        int windowHeight = MinecraftClient.getInstance().getWindow().getHeight();
 
         if(textWidth > maxW) {
-            double slideProgress = -((Math.sin(elapsed) / 2) + 0.5);
-            graphicsHolder.translate(slideProgress * (textWidth - maxW), 0, 0);
-            // TODO: Scissor not working :(
-            RenderSystem.enableScissor((int) (x * d), 0, (int) (maxW * d), i);
-            graphicsHolder.drawText(text, x, y, color, shadow, MAX_RENDER_LIGHT);
+            double slideProgress = ((Math.sin(elapsed / 2)) / 2) + 0.5;
+            graphicsHolder.translate(-slideProgress * (textWidth - maxW), 0, 0);
+            double clipStartX = startX * scale;
+            double clipEndX = maxW * scale;
+            RenderSystem.enableScissor((int)clipStartX, 0, (int)clipEndX, windowHeight);
+            graphicsHolder.drawText(text, textX, textY, color, shadow, MAX_RENDER_LIGHT);
             RenderSystem.disableScissor();
         } else {
-            graphicsHolder.drawText(text, x, y, color, shadow, MAX_RENDER_LIGHT);
+            graphicsHolder.drawText(text, textX, textY, color, shadow, MAX_RENDER_LIGHT);
         }
     }
 

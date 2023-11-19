@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.render.screen.widget;
 
+import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import net.minecraft.client.MinecraftClient;
@@ -14,6 +15,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
     public static final int ENTRY_PADDING = 5;
     private double currentScroll = 0;
     private final int entryHeight;
+    private float elapsed;
     private final List<ListEntry> entryList = new ArrayList<>();
     private final List<Double> entryHighlightAnimation = new ArrayList<>();
     public ListViewWidget(int entryHeight) {
@@ -52,6 +54,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         enableScissor(getX2(), getY2(), getWidth2(), getHeight2());
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
+        elapsed += (tickDelta / Constants.MC_TICK_PER_SECOND);
 
         // Background
         drawRectangle(guiDrawing, getX2(), getY2(), width, height, 0x4F4C4C4C);
@@ -155,8 +158,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
             graphicsHolder.translate(iconSize + ENTRY_PADDING, 0, 0);
         }
 
-        scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(entry.title) + ENTRY_PADDING, availableTextWidth - iconSize, false);
-        graphicsHolder.drawText(entry.title, 0, textY, ARGB_WHITE, true, MAX_RENDER_LIGHT);
+        drawScrollableText(graphicsHolder, entry.title, elapsed, entryX + ENTRY_PADDING + iconSize, 0, textY, availableTextWidth - iconSize - ENTRY_PADDING, ARGB_WHITE, true);
         graphicsHolder.pop();
     }
     private void drawListEntryHighlight(GuiDrawing guiDrawing, int entryIndex, int x, int y) {
