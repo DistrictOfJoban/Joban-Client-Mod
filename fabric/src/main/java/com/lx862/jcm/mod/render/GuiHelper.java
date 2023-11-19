@@ -46,13 +46,20 @@ public interface GuiHelper {
         }
     }
 
-    default void enableScissor(int x, int y, int width, int height) {
+    /**
+     * Enable clipping to only render content within boundary
+     * @param x Start X of your rectangle
+     * @param y Start Y of your rectangle
+     * @param width Width of your rectangle
+     * @param height Height of your rectangle
+     */
+    static void enableClip(int x, int y, int width, int height) {
         double scale = net.minecraft.client.MinecraftClient.getInstance().getWindow().getScaleFactor();
         int windowHeight = net.minecraft.client.MinecraftClient.getInstance().getWindow().getHeight();
         RenderSystem.enableScissor((int)(x * scale), (int)(windowHeight - (y + height) * scale), (int)(width * scale), (int)(height * scale));
     }
 
-    default void disableScissor() {
+    static void disableClip() {
         RenderSystem.disableScissor();
     }
 }

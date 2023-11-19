@@ -52,7 +52,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
 
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
-        enableScissor(getX2(), getY2(), getWidth2(), getHeight2());
+        GuiHelper.enableClip(getX2(), getY2(), getWidth2(), getHeight2());
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
         elapsed += (tickDelta / Constants.MC_TICK_PER_SECOND);
 
@@ -71,7 +71,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
             }
         }
         drawScrollbar(guiDrawing);
-        disableScissor();
+        GuiHelper.disableClip();
     }
 
     @Override
