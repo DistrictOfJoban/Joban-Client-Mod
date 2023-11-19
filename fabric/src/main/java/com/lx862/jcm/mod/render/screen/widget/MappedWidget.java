@@ -163,4 +163,22 @@ public class MappedWidget {
             ((MappedWidget) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
         }
     }
+
+    public void setVisible(boolean value) {
+        if(widget instanceof ButtonWidgetExtension) {
+            ((ButtonWidgetExtension) widget).setVisibleMapped(value);
+        }
+        if(widget instanceof TextFieldWidgetExtension) {
+            ((TextFieldWidgetExtension) widget).setVisibleMapped(value);
+        }
+        if(widget instanceof CheckboxWidgetExtension) {
+            ((CheckboxWidgetExtension) widget).setVisibleMapped(value);
+        }
+        if(widget instanceof SliderWidgetExtension) {
+            ((SliderWidgetExtension) widget).setVisibleMapped(value);
+        }
+        if(widget instanceof MappedWidget) {
+            ((MappedWidget) widget).setVisible(value);
+        }
+    }
 }

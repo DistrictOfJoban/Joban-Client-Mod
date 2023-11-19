@@ -9,8 +9,10 @@ import org.mtr.mapping.mapper.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListViewWidget extends ClickableWidgetExtension implements RenderHelper {
+public class ListViewWidget extends ClickableWidgetExtension implements RenderHelper, GuiHelper {
+    public static final int SCROLLBAR_WIDTH = 6;
     public static final int ENTRY_PADDING = 5;
+    private double currentScroll = 0;
     private final int entryHeight;
     private final List<ListEntry> entryList = new ArrayList<>();
     private final List<Double> entryHighlightAnimation = new ArrayList<>();
@@ -24,7 +26,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         setY2(y);
         setWidth2(width);
         setHeightMapped(height);
-        positionWidgets();
+        positionWidgets(currentScroll);
     }
 
     public void add(MutableText text, MappedWidget widget) {
@@ -48,6 +50,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
 
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
+        enableScissor(getX2(), getY2(), getWidth2(), getHeight2());
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
 
         // Background
@@ -56,7 +59,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         for(int i = 0; i < entryList.size(); i++) {
             ListEntry listEntry = entryList.get(i);
             int entryX = getX2();
-            int entryY = getY2() + (i * entryHeight);
+            int entryY = getY2() + (i * entryHeight) - (int)currentScroll;
 
             if(listEntry.isCategory) {
                 drawListCategory(graphicsHolder, listEntry, entryX, entryY);
@@ -64,11 +67,49 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
                 drawListEntry(graphicsHolder, listEntry, entryX, entryY, mouseX, mouseY, i, tickDelta);
             }
         }
+        drawScrollbar(guiDrawing);
+        disableScissor();
+    }
+
+    @Override
+    public boolean mouseScrolled3(double mouseX, double mouseY, double amount) {
+        amount *= 6;
+        double scrollableArea = Math.max(0, getMaxScrollPosition() - getHeight2());
+        if(amount > 0) {
+            currentScroll = Math.max(0, currentScroll - amount);
+        } else {
+            currentScroll = Math.min(scrollableArea, currentScroll - amount);
+        }
+        positionWidgets(currentScroll);
+        return true;
+    }
+
+    private void drawScrollbar(GuiDrawing guiDrawing) {
+        int fullHeight = getMaxScrollPosition();
+        int visible = getHeight2();
+
+        if(visible >= fullHeight) return;
+        double scrollableArea = Math.max(0, getMaxScrollPosition() - getHeight2());
+        double scrollbarHeight = getHeight2() - scrollableArea;
+        int scrollBarWidth = getScrollbarWidth();
+        drawRectangle(guiDrawing, getX2() + getWidth2() - scrollBarWidth, getY2() + currentScroll, scrollBarWidth, scrollbarHeight, 0xFFC0C0C0);
+
+        // Border
+        drawRectangle(guiDrawing, getX2() + getWidth2() - 1, getY2() + currentScroll, 1, scrollbarHeight, 0xFF808080);
+        drawRectangle(guiDrawing, getX2() + getWidth2() - scrollBarWidth, getY2() + currentScroll + scrollbarHeight - 1, scrollBarWidth, 1, 0xFF808080);
+    }
+
+    private int getMaxScrollPosition() {
+        return entryHeight * entryList.size();
+    }
+
+    private int getScrollbarWidth() {
+        return (getMaxScrollPosition() > getHeight2()) ? SCROLLBAR_WIDTH : 0;
     }
 
     private void drawListCategory(GraphicsHolder graphicsHolder, ListEntry listEntry, int entryX, int entryY) {
-        drawRectangle(new GuiDrawing(graphicsHolder), entryX, entryY, width, entryHeight, 0x99999999);
-        graphicsHolder.drawCenteredText(listEntry.title, (entryX + width / 2), entryY + (entryHeight / 4), 0xFFFFFFFF);
+        drawRectangle(new GuiDrawing(graphicsHolder), entryX, entryY, width - getScrollbarWidth(), entryHeight, 0x99999999);
+        graphicsHolder.drawCenteredText(listEntry.title, (entryX + width / 2), entryY + (entryHeight / 4), ARGB_WHITE);
     }
 
     private void drawListEntry(GraphicsHolder graphicsHolder, ListEntry entry, int entryX, int entryY, int mouseX, int mouseY, int entryIndex, float tickDelta) {
@@ -82,6 +123,14 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
 
         drawListEntryHighlight(new GuiDrawing(graphicsHolder), entryIndex, entryX, entryY);
         if(entry.widget != null) {
+            boolean topLeftVisible = inRectangle(entry.widget.getX(), entry.widget.getY(), getX2(), getY2(), getWidth2(), getHeight2());
+            boolean topRightVisible = inRectangle(entry.widget.getX() + entry.widget.getWidth(), entry.widget.getY() + entry.widget.getHeight(), getX2(), getY2(), getWidth2(), getHeight2());
+
+            if(!topLeftVisible || !topRightVisible) {
+                entry.widget.setVisible(false);
+            } else {
+                entry.widget.setVisible(true);
+            }
             // We have to draw our widget (Right side) again after rendering the highlight so it doesn't get covered.
             GuiHelper.drawWidget(graphicsHolder, mouseX, mouseY, tickDelta, entry.widget);
         }
@@ -107,7 +156,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         }
 
         scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(entry.title) + ENTRY_PADDING, availableTextWidth - iconSize, false);
-        graphicsHolder.drawText(entry.title, 0, textY, 0xFFFFFFFF, true, MAX_RENDER_LIGHT);
+        graphicsHolder.drawText(entry.title, 0, textY, ARGB_WHITE, true, MAX_RENDER_LIGHT);
         graphicsHolder.pop();
     }
     private void drawListEntryHighlight(GuiDrawing guiDrawing, int entryIndex, int x, int y) {
@@ -115,11 +164,11 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         int highlightColor = (highlightAlpha << 24) | (150 << 16) | (150 << 8) | 150;
 
         if(entryHighlightAnimation.get(entryIndex) > 0) {
-            drawRectangle(guiDrawing, x, y, width, entryHeight, highlightColor);
+            drawRectangle(guiDrawing, x, y, width - getScrollbarWidth(), entryHeight, highlightColor);
         }
     }
 
-    private void positionWidgets() {
+    private void positionWidgets(double scroll) {
         int startX = getX2();
         int startY = getY2();
 
@@ -127,8 +176,8 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
             ListEntry listEntry = entryList.get(i);
             if(listEntry.isCategory) continue;
             int entryY = startY + (i * entryHeight);
-            int x = (startX + width) - (listEntry.widget.getWidth()) - (ENTRY_PADDING);
-            int y = (entryY) + ((entryHeight - listEntry.widget.getHeight()) / 2);
+            int x = (startX + width - getScrollbarWidth()) - (listEntry.widget.getWidth()) - (ENTRY_PADDING);
+            int y = (int)(-scroll + entryY) + ((entryHeight - listEntry.widget.getHeight()) / 2);
             listEntry.widget.setX(x);
             listEntry.widget.setY(y);
         }

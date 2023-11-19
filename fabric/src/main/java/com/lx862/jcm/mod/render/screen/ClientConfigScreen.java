@@ -29,8 +29,6 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
     private final boolean welcome = Calendar.getInstance().get(Calendar.MONTH) == Calendar.JUNE || Math.random() > 0.9;
     private boolean discardConfig = false;
 
-
-
     CheckboxWidgetExtension disableRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
         ClientConfig.DISABLE_RENDERING.set(bool);
     });
@@ -78,16 +76,16 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         int bottomEntryHeight = (height - startY - listViewHeight - (BOTTOM_ROW_MARGIN * 2));
 
         addConfigEntries();
-        listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
-
         addBottomButtons();
+        addChild(new ClickableWidget(listViewWidget));
+        addChild(new ClickableWidget(bottomRowWidget));
+        listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
         bottomRowWidget.setXYSize(startX, startY + listViewHeight + BOTTOM_ROW_MARGIN, contentWidth, bottomEntryHeight);
     }
 
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         super.render(graphicsHolder, mouseX, mouseY, tickDelta);
-        listViewWidget.render(graphicsHolder, mouseX, mouseY, tickDelta);
     }
     private void setEntryStateFromClientConfig() {
         disableRenderingButton.setChecked(ClientConfig.DISABLE_RENDERING.get());
@@ -164,6 +162,15 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         if(welcome) drawPride(graphicsHolder);
         drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
     }
+
+//    @Override
+//    public boolean mouseScrolled3(double mouseX, double mouseY, double amount) {
+//        if(listViewWidget.isMouseOver2(mouseX, mouseY)) {
+//            listViewWidget.mouseScrolled3(mouseX, mouseY, amount);
+//            return true;
+//        }
+//        return super.mouseScrolled3(mouseX, mouseY, amount);
+//    }
 
     private void drawPride(GraphicsHolder graphicsHolder) {
         graphicsHolder.push();

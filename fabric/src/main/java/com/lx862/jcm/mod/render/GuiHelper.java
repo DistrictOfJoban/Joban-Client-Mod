@@ -39,4 +39,14 @@ public interface GuiHelper {
             graphicsHolder.drawText(text, x, y, color, shadow, MAX_RENDER_LIGHT);
         }
     }
+
+    default void enableScissor(int x, int y, int width, int height) {
+        double scale = net.minecraft.client.MinecraftClient.getInstance().getWindow().getScaleFactor();
+        int windowHeight = net.minecraft.client.MinecraftClient.getInstance().getWindow().getHeight();
+        RenderSystem.enableScissor((int)(x * scale), (int)(windowHeight - (y + height) * scale), (int)(width * scale), (int)(height * scale));
+    }
+
+    default void disableScissor() {
+        RenderSystem.disableScissor();
+    }
 }

@@ -9,7 +9,6 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.ClickableWidget;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
-import org.mtr.mapping.mapper.GraphicsHolder;
 
 /**
  * GUI Screen for configuring block settings, you should extend this class for your own block config screen
@@ -48,11 +47,13 @@ public abstract class BlockConfigScreenBase extends BasicScreenBase implements G
         int bottomEntryHeight = (height - startY - listViewHeight - (BOTTOM_ROW_MARGIN * 2));
 
         listViewWidget.reset();
-        addConfigEntries();
-        listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
-
         bottomEntryWidget.reset();
+
+        addConfigEntries();
         addBottomRowButtons();
+        addChild(new ClickableWidget(listViewWidget));
+        addChild(new ClickableWidget(bottomEntryWidget));
+        listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
         bottomEntryWidget.setXYSize(startX, startY + listViewHeight + BOTTOM_ROW_MARGIN, contentWidth, bottomEntryHeight);
     }
 
@@ -74,12 +75,6 @@ public abstract class BlockConfigScreenBase extends BasicScreenBase implements G
                 blockPos.getX(), blockPos.getY(), blockPos.getZ(),
                 "車站 Station" //TODO: Get real data
         );
-    }
-
-    @Override
-    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
-        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
-        listViewWidget.render(graphicsHolder, mouseX, mouseY, tickDelta);
     }
 
     @Override
