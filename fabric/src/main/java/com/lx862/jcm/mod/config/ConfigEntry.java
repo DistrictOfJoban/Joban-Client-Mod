@@ -1,16 +1,19 @@
 package com.lx862.jcm.mod.config;
 
+import org.mtr.mapping.holder.MutableText;
+import org.mtr.mapping.holder.Text;
+
 import java.util.function.Consumer;
 
 public class ConfigEntry<T> {
     private T value;
     private final T defaultValue;
-    private final String name;
-    private final String description;
+    private final MutableText name;
+    private final MutableText description;
     private final Class<T> targetClass;
     private Consumer<ConfigEntry<T>> onSetCallback;
 
-    public ConfigEntry(Class<T> targetClass, T defaultValue, String name, String description) {
+    public ConfigEntry(Class<T> targetClass, T defaultValue, MutableText name, MutableText description) {
         this.name = name;
         this.description = description;
         this.targetClass = targetClass;
@@ -27,11 +30,11 @@ public class ConfigEntry<T> {
         onSetCallback.accept(this);
     }
 
-    public String getTitle() {
+    public MutableText getTitle() {
         return name;
     }
 
-    public String getDescription() {
+    public MutableText getDescription() {
         return description;
     }
 

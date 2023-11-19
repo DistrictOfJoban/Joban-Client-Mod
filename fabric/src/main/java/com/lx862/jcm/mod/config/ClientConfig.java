@@ -4,6 +4,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.jcm.mod.util.TextCategory;
+import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.MinecraftClient;
 
 import java.nio.file.Files;
@@ -14,9 +16,9 @@ import java.util.Map;
 public class ClientConfig {
     private static final Path CONFIG_PATH = MinecraftClient.getInstance().getRunDirectoryMapped().toPath().resolve("config").resolve("jsblock_client.json");
     private static final ConfigStorage configStorage = new ConfigStorage();
-    public static final ConfigEntry<Boolean> DISABLE_RENDERING = configStorage.registerConfig("disable_rendering", new ConfigEntry<>(Boolean.class,false, "Disable Rendering", "This disables the rendering of all JCM Blocks"));
-    public static final ConfigEntry<Boolean> USE_CUSTOM_FONT = configStorage.registerConfig("custom_font", new ConfigEntry<>(Boolean.class,false, "Use Custom Font", "Use custom font if available"));
-    public static final ConfigEntry<Boolean> DEBUG_MODE = configStorage.registerConfig("debug_mode", new ConfigEntry<>(Boolean.class,false, "Enable Debug Mode", "This enables debug mode, usually used by developer or to troubleshoot issues"));
+    public static final ConfigEntry<Boolean> DISABLE_RENDERING = configStorage.registerConfig("disable_rendering", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.disable_rendering"), TextUtil.literal("This disables the rendering of all JCM Blocks")));
+    public static final ConfigEntry<Boolean> USE_CUSTOM_FONT = configStorage.registerConfig("custom_font", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.custom_font"), TextUtil.literal("Use custom font if available")));
+    public static final ConfigEntry<Boolean> DEBUG_MODE = configStorage.registerConfig("debug_mode", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.debug_mode"), TextUtil.literal("This enables debug mode, usually used by developer or to troubleshoot issues")));
 
     public static void readFile() {
         if(!Files.exists(CONFIG_PATH)) {

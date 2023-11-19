@@ -97,12 +97,12 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         setEntryStateFromClientConfig();
 
         listViewWidget.addCategory(TextHelper.literal("General"));
-        listViewWidget.add(TextUtil.literal(ClientConfig.DISABLE_RENDERING.getTitle()), new MappedWidget(disableRenderingButton));
-        listViewWidget.add(TextUtil.literal(ClientConfig.USE_CUSTOM_FONT.getTitle()), new MappedWidget(useCustomFontButton));
+        listViewWidget.add(ClientConfig.DISABLE_RENDERING.getTitle(), new MappedWidget(disableRenderingButton));
+        listViewWidget.add(ClientConfig.USE_CUSTOM_FONT.getTitle(), new MappedWidget(useCustomFontButton));
 
         listViewWidget.addCategory(TextHelper.literal("Debug"));
-        listViewWidget.add(TextUtil.literal(ClientConfig.DEBUG_MODE.getTitle()), new MappedWidget(debugModeButton));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.entries.open_test_screen"), new MappedWidget(testScreenButton));
+        listViewWidget.add(ClientConfig.DEBUG_MODE.getTitle(), new MappedWidget(debugModeButton));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.entries.title.open_test_screen"), new MappedWidget(testScreenButton));
 
         addChild(new ClickableWidget(disableRenderingButton));
         addChild(new ClickableWidget(useCustomFontButton));
