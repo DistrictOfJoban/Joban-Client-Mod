@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
+import com.lx862.jcm.mod.trm.FontManager;
 import com.lx862.jcm.mod.trm.TextRenderingManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.apache.commons.io.IOUtils;
@@ -19,6 +20,7 @@ public class JCMResourceManager {
     public static void reload() {
         reloadPIDSPreset();
         TextRenderingManager.initialize();
+        FontManager.initializes();
     }
 
     private static void reloadPIDSPreset() {

@@ -68,7 +68,7 @@
   "block.jsblock.kcr_trespass_sign": "九铁 \"严禁进入路轨\" 标示",
   "block.jsblock.lrt_trespass_sign": "轻铁 \"严禁进入路轨\" 标示",
   "block.jsblock.water_machine": "饮水机",
-  "block.jsblock.pids_4": "乘客资讯显示屏",
+  "block.jsblock.pids_lcd": "乘客资讯显示屏",
   "block.jsblock.thales_ticket_barrier_entrance": "Thales 闸机 (入口)",
   "block.jsblock.thales_ticket_barrier_exit": "Thales 闸机 (出口)",
   "block.jsblock.thales_ticket_barrier_bare": "Thales 闸机 (侧壳)",

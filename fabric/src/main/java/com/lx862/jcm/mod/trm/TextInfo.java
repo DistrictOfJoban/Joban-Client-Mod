@@ -1,11 +1,14 @@
 package com.lx862.jcm.mod.trm;
 
+import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
+
+import java.awt.*;
 
 public class TextInfo {
     private final String content;
-    private final String font;
     private final WidthInfo widthInfo;
+    private Identifier fontId;
     private int textColor;
     private boolean forScrollingText = false;
     private boolean centered = false;
@@ -13,14 +16,12 @@ public class TextInfo {
     public TextInfo(String content) {
         this.content = content;
         this.textColor = 0;
-        this.font = "Roboto";
         this.widthInfo = new WidthInfo();
     }
 
     public TextInfo(MutableText text) {
         this.content = text.getString();
         this.textColor = text.getStyle().getColor() == null ? 0 : text.getStyle().getColor().getRgb();
-        this.font = "Roboto";/*text.getStyle().getFont().getNamespace() + ":" + text.getStyle().getFont().getPath()*/;
         this.widthInfo = new WidthInfo();
     }
 
@@ -30,10 +31,6 @@ public class TextInfo {
 
     public int getTextColor() {
         return textColor;
-    }
-
-    public String getFont() {
-        return font;
     }
 
     public WidthInfo getWidthInfo() {
@@ -71,6 +68,32 @@ public class TextInfo {
     public TextInfo withMaxWidth(float maxWidth) {
         this.widthInfo.setMaxWidth(maxWidth);
         return this;
+    }
+
+    /**
+     * Get the vanilla font identifier
+     */
+    public Identifier getFontId() {
+        return fontId;
+    }
+
+    public TextInfo withFont(String font) {
+        this.fontId = new Identifier(font);
+        return this;
+    }
+
+    /**
+     * Get an awt Font, looked up from {@link FontManager}
+     * @param fontSize The font size of the font
+     * @return An awt Font with the corresponding font size
+     */
+    public Font getFont(int fontSize) {
+        Font preloadedFont = FontManager.getFont(fontId);
+        if(preloadedFont != null) {
+            return preloadedFont.deriveFont(Font.PLAIN, fontSize);
+        } else {
+            return new Font("Roboto", Font.PLAIN, fontSize);
+        }
     }
 
     @Override

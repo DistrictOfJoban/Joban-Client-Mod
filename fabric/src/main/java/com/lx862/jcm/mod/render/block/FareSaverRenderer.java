@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.render.block;
 import com.lx862.jcm.mod.block.entity.FareSaverBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.trm.TextInfo;
 import com.lx862.jcm.mod.trm.TextRenderingManager;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.TextCategory;
@@ -35,7 +36,7 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
         graphicsHolder.translate(0, 13, -6);
         scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(discountText), 12, true, textRenderer.getFontHeightMapped());
         TextRenderingManager.bind(graphicsHolder);
-        TextRenderingManager.draw(graphicsHolder, discountText, facing, 0, 0);
+        TextRenderingManager.draw(graphicsHolder, new TextInfo(discountText).withFont("jsblock:deptimer"), facing, 0, 0);
         graphicsHolder.pop();
     }
 }

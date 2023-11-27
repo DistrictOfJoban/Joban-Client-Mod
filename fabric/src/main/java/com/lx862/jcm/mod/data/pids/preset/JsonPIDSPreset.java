@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.render.TextOverflowMode;
+import com.lx862.jcm.mod.trm.FontManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
@@ -52,6 +53,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         }
         if(jsonObject.has("font")) {
             font = jsonObject.get("font").getAsString();
+            FontManager.loadVanillaFont(font);
         }
         if(jsonObject.has("textOverflowMode")) {
             textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
@@ -68,6 +70,11 @@ public class JsonPIDSPreset extends PIDSPresetBase {
             background = backgroundId;
         }
         return new JsonPIDSPreset(id, name, background, font, textOverflowMode, showClock, showWeather, textColor);
+    }
+
+    @Override
+    public String getFont() {
+        return fontId;
     }
 
     @Override

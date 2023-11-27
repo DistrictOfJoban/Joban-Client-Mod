@@ -48,7 +48,7 @@
   "block.jsblock.mtr_stairs": "MTR Stairs",
   "block.jsblock.operator_button": "Operator button",
   "block.jsblock.pids_1a": "Passenger Information Display System",
-  "block.jsblock.pids_4": "Old Tsueng Kwan O Line PIDS",
+  "block.jsblock.pids_lcd": "Old Tsueng Kwan O Line PIDS",
   "block.jsblock.pids_rv": "Railway Vision PIDS",
   "block.jsblock.pids_rv_sil": "Railway Vision PIDS (SIL, Ocean Park Station and Wong Chuk Hang Station Variant)",
   "block.jsblock.pids_rv_sil_2": "Railway Vision PIDS (SIL, Admiralty Station and South Horizon Station Variant)",

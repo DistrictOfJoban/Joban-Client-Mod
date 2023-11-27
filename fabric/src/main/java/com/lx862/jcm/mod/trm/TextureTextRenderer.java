@@ -83,10 +83,10 @@ public class TextureTextRenderer implements RenderHelper {
             graphics.setComposite(AlphaComposite.SrcOver);
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            graphics.setFont(new Font(text.getFont(), Font.PLAIN, FONT_RESOLUTION));
+            graphics.setFont(text.getFont(FONT_RESOLUTION));
 
             AffineTransform affineTransform = new AffineTransform();
-            AttributedString attributedString = getFormattedString(text, new Font(text.getFont(), Font.PLAIN, FONT_RESOLUTION));
+            AttributedString attributedString = getFormattedString(text, text.getFont(FONT_RESOLUTION));
             Rectangle2D fullTextBound = getTextBound(attributedString);
 
             if(text.isForScrollingText()) {
@@ -96,7 +96,7 @@ public class TextureTextRenderer implements RenderHelper {
             }
 
             graphics.setTransform(affineTransform);
-            graphics.drawString(attributedString.getIterator(), 0, graphics.getFontMetrics().getAscent() - (graphics.getFontMetrics().getDescent() / 2));
+            graphics.drawString(attributedString.getIterator(), 0, graphics.getFontMetrics().getAscent());
 
             findSlotAndDraw(bufferedImageForTextGen, graphics, text);
 
@@ -257,8 +257,7 @@ public class TextureTextRenderer implements RenderHelper {
     }
 
     public static Rectangle2D getTextBound(TextInfo textInfo, AffineTransform affineTransform) {
-        // TODO: Custom Font Loading
-        AttributedString attributedString = getFormattedString(textInfo, new Font("Roboto", Font.PLAIN, FONT_RESOLUTION));
+        AttributedString attributedString = getFormattedString(textInfo, textInfo.getFont(FONT_RESOLUTION));
         return getTextBound(attributedString, affineTransform);
     }
 

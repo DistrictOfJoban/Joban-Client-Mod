@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render.block;
 
+import com.lx862.jcm.mod.block.entity.LCDPIDSBlockEntity;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.block.entity.RVPIDSBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
@@ -11,13 +11,16 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public class RVPIDSRenderer extends JCMBlockEntityRenderer<RVPIDSBlockEntity> {
-    public RVPIDSRenderer(Argument argument) {
+public class LCDPIDSRenderer extends JCMBlockEntityRenderer<LCDPIDSBlockEntity> {
+    public LCDPIDSRenderer(Argument argument) {
         super(argument);
     }
 
     @Override
-    public void renderCurated(RVPIDSBlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
+    public void renderCurated(LCDPIDSBlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
+        World world = blockEntity.getWorld2();
+        if(world == null) return;
+
         PIDSPresetBase pidsPreset = getPreset(blockEntity, "rv_pids");
         if(pidsPreset == null) return;
 
@@ -28,9 +31,9 @@ public class RVPIDSRenderer extends JCMBlockEntityRenderer<RVPIDSBlockEntity> {
         scaleCentered(graphicsHolder, 0.009F, 0.009F, 0.009F);
         graphicsHolder.rotateYDegrees(90 - facing.asRotation());
         graphicsHolder.rotateZDegrees(180);
-        graphicsHolder.translate(-22.5, -17, -14.5);
+        graphicsHolder.translate(-20, -14.5, -14.5);
 
-        pidsPreset.render(blockEntity, graphicsHolder, blockEntity.getWorld2(), facing, tickDelta, 0, 0, 156, 88, 0xFFFFFFFF, MAX_RENDER_LIGHT);
+        pidsPreset.render(blockEntity, graphicsHolder, blockEntity.getWorld2(), facing, tickDelta, 0, 0, 153, 84, 0xFFFFFFFF, MAX_RENDER_LIGHT);
         graphicsHolder.pop();
     }
 

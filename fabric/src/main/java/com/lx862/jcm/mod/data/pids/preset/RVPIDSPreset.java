@@ -32,13 +32,13 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
 
         graphicsHolder.translate(0, 0, -0.5);
         titleDrawWeatherIcon(graphicsHolder, world, facing, PIDS_MARGIN);
-        arrivalsDrawPlatformIcon(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, rowAmount);
+        arrivalsDrawPlatformIcon(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, height, rowAmount);
 
         // Text
         graphicsHolder.translate(0, 0, -0.5);
         TextRenderingManager.bind(graphicsHolder);
         titleDrawClock(graphicsHolder, facing, world, contentWidth - 19, 2, ARGB_WHITE);
-        arrivalsDrawTable(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, rowAmount, ARGB_BLACK);
+        arrivalsDrawTable(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, height, rowAmount, ARGB_BLACK);
     }
 
     protected void drawBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
@@ -51,29 +51,29 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
         RenderHelper.drawTexture(graphicsHolder,0, height, 0, width, width, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
-    private void drawArrivalEntryCallback(GraphicsHolder graphicsHolder, int x, int y, int width, int rowAmount, DrawRowCallback drawRowCallback) {
+    private void drawArrivalEntryCallback(GraphicsHolder graphicsHolder, int x, int y, int width, int height, int rowAmount, DrawRowCallback drawRowCallback) {
         graphicsHolder.push();
         graphicsHolder.translate(x, y, 0);
         graphicsHolder.scale(ARRIVAL_TEXT_SCALE, ARRIVAL_TEXT_SCALE, ARRIVAL_TEXT_SCALE);
 
         for(int i = 0; i < rowAmount; i++) {
             drawRowCallback.accept(graphicsHolder, width);
-            graphicsHolder.translate(0, 10.75 * ARRIVAL_TEXT_SCALE, 0);
+            graphicsHolder.translate(0, ((height - 11) / 7.25) * ARRIVAL_TEXT_SCALE, 0);
         }
         graphicsHolder.pop();
     }
 
-    private void arrivalsDrawTable(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int rowAmount, int textColor) {
+    private void arrivalsDrawTable(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int height, int rowAmount, int textColor) {
         TextRenderer textRenderer = new TextRenderer(MinecraftClient.getInstance().textRenderer);
 
-        drawArrivalEntryCallback(rawGraphicsHolder, x, y, rawWidth, rowAmount, (graphicsHolder, width) -> {
+        drawArrivalEntryCallback(rawGraphicsHolder, x, y, rawWidth, height, rowAmount, (graphicsHolder, width) -> {
             drawArrivalEntry(graphicsHolder, textRenderer, facing, (int)(width / ARRIVAL_TEXT_SCALE), "610", "§eTuen Mun §dFerry Pier", 2, 50000, false, textColor);
         });
     }
-    private void arrivalsDrawPlatformIcon(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int rowAmount) {
+    private void arrivalsDrawPlatformIcon(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int height, int rowAmount) {
         rawGraphicsHolder.createVertexConsumer(RenderLayer.getText(TEXTURE_PLATFORM_CIRCLE));
 
-        drawArrivalEntryCallback(rawGraphicsHolder, x, y, rawWidth, rowAmount, (graphicsHolder, width) -> {
+        drawArrivalEntryCallback(rawGraphicsHolder, x, y, rawWidth, height, rowAmount, (graphicsHolder, width) -> {
             RenderHelper.drawTexture(graphicsHolder, 44 * ARRIVAL_TEXT_SCALE, 0, 0, 9, 9, facing, ARGB_BLACK, MAX_RENDER_LIGHT);
         });
     }
@@ -134,11 +134,11 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
         long hours = timeNow / 1000;
         long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
         String timeString = String.format("%02d:%02d", hours % 24, minutes % 60);
-        drawPIDSText(graphicsHolder, facing, timeString, x, y, textColor);
+        drawPIDSText(graphicsHolder, facing, timeString,  x, y, textColor);
     }
 
     @Override
     public String getFont() {
-        return "jsblock:kcr_sign";
+        return "jsblock:deptimer";
     }
 }

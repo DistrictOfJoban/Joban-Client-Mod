@@ -34,8 +34,7 @@ public abstract class PIDSPresetBase implements RenderHelper {
     }
 
     protected void drawPIDSText(GraphicsHolder graphicsHolder, Direction facing, String text, int x, int y, int textColor) {
-        TextRenderingManager.draw(graphicsHolder, new TextInfo(text).withColor(textColor), facing, x, y);
-        //drawText(graphicsHolder, TextUtil.withFont(TextUtil.literal(text), getFont()), x, y, textColor);
+        TextRenderingManager.draw(graphicsHolder, new TextInfo(text).withColor(textColor).withFont(getFont()), facing, x, y);
     }
 
     protected void drawPIDSScrollingText(GraphicsHolder graphicsHolder, Direction facing, String text, int x, int y, int textColor, float textWidth) {
@@ -43,13 +42,10 @@ public abstract class PIDSPresetBase implements RenderHelper {
     }
 
     protected void drawPIDSCenteredText(GraphicsHolder graphicsHolder, Direction facing, String text, int x, int y, int textColor) {
-        TextRenderingManager.drawCentered(graphicsHolder, new TextInfo(text).withColor(textColor), facing, x, y);
-        //drawCenteredText(graphicsHolder, TextUtil.withFont(TextUtil.literal(text), getFont()), x, y, textColor);
+        TextRenderingManager.drawCentered(graphicsHolder, new TextInfo(text).withColor(textColor).withFont(getFont()), facing, x, y);
     }
 
-    public String getFont() {
-        return null;
-    }
+    public abstract String getFont();
 
     public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, float tickDelta, int x, int y, int width, int height, int light, int overlay);
 

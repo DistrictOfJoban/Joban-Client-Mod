@@ -47,7 +47,7 @@
   "block.jsblock.mtr_stairs": "Scale MTR",
   "block.jsblock.operator_button": "Bottone riservato a Operatori",
   "block.jsblock.pids_1a": "Sistema di Visualizzazione delle Informazioni Passeggere (PIDS)",
-  "block.jsblock.pids_4": "PIDS Vecchia Linea Tsueng Kwan O",
+  "block.jsblock.pids_lcd": "PIDS Vecchia Linea Tsueng Kwan O",
   "block.jsblock.pids_rv": "PIDS della Railway Vision",
   "block.jsblock.pids_rv_sil": "PIDS della Railway Vision (Variante SIL, Stazione Ocean Park e Stazione Wong Chuk Hang)",
   "block.jsblock.pids_rv_sil_2": "PIDS della Railway Vision (Variante SIL, Stazione Admiralty e Stazione South Horizon)",

@@ -54,6 +54,8 @@ public class Utils {
                     return new Identifier(Constants.MOD_ID, "mtr_stairs");
                 case "op_button":
                     return new Identifier(Constants.MOD_ID, "operator_button");
+                case "pids_4":
+                    return new Identifier(Constants.MOD_ID, "pids_lcd");
                 case "station_ceiling_1":
                     return new Identifier(Constants.MOD_ID, "wrl_station_ceiling");
                 case "station_ceiling_1_pole":
