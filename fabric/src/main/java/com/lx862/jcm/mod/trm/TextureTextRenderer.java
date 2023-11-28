@@ -38,6 +38,7 @@ public class TextureTextRenderer implements RenderHelper {
     private static BufferedImage bufferedImageForTextGen = null;
     private static int width;
     private static int height;
+    private static boolean initialized;
     private static Identifier textAtlas = null;
     public static final int RENDERED_TEXT_SIZE = 10;
     public static final double MARQUEE_SPACING_RATIO = 0.8;
@@ -45,7 +46,24 @@ public class TextureTextRenderer implements RenderHelper {
 
     public static void initialize() {
         initTextureAtlas(DEFAULT_ATLAS_WIDTH, DEFAULT_ATLAS_HEIGHT);
-        JCMLogger.info("TextureRenderingManager Initialized.");
+        initialized = true;
+    }
+
+    public static void close() {
+        if(initialized) {
+            nativeImageBackedTexture.close();
+            bufferedImageForTextGen.createGraphics().dispose();
+            textSlots.clear();
+            initialized = false;
+        }
+    }
+
+    private static void ensureInitialized() {
+        if(!initialized) initialize();
+    }
+
+    public static boolean initialized() {
+        return initialized;
     }
 
     private static void initTextureAtlas(int width, int height) {
@@ -77,7 +95,17 @@ public class TextureTextRenderer implements RenderHelper {
         }
     }
 
+    public static int getAtlasWidth() {
+        return initialized() ? width : -1;
+    }
+
+    public static int getAtlasHeight() {
+        return initialized() ? height : -1;
+    }
+
     public static void addText(TextInfo text) {
+        ensureInitialized();
+
         if(getTextSlot(text) == null) {
             Graphics2D graphics = bufferedImageForTextGen.createGraphics();
             graphics.setComposite(AlphaComposite.SrcOver);
@@ -96,7 +124,9 @@ public class TextureTextRenderer implements RenderHelper {
             }
 
             graphics.setTransform(affineTransform);
-            graphics.drawString(attributedString.getIterator(), 0, graphics.getFontMetrics().getAscent());
+            int offset = graphics.getFontMetrics().getMaxAscent();
+
+            graphics.drawString(attributedString.getIterator(), 0, offset);
 
             findSlotAndDraw(bufferedImageForTextGen, graphics, text);
 
@@ -143,6 +173,8 @@ public class TextureTextRenderer implements RenderHelper {
     }
 
     private static void findSlotAndDraw(BufferedImage bufferedImage, Graphics2D graphics, TextInfo text) {
+        ensureInitialized();
+
         boolean allUsedUp = textSlots.stream().noneMatch(TextSlot::unused);
         List<TextSlot> availableSlots = textSlots.stream().filter(e -> (allUsedUp ? e.canReuse() : e.unused())).sorted().collect(Collectors.toList());
         if(availableSlots.isEmpty()) {
@@ -198,6 +230,8 @@ public class TextureTextRenderer implements RenderHelper {
     }
 
     public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y) {
+        ensureInitialized();
+
         TextSlot textSlot = getTextSlot(text);
 
         if(textSlot == null) {
@@ -212,26 +246,26 @@ public class TextureTextRenderer implements RenderHelper {
     }
 
     private static void drawToWorld(GraphicsHolder graphicsHolder, TextSlot textSlot, Direction facing, float x, float y) {
-        if(textSlot != null) {
-            textSlot.updateLastAccessTime();
-            float startY = textSlot.getStartY();
-            float onePart = (float) FONT_RESOLUTION / height;
+        ensureInitialized();
 
-            float u1 = 0;
-            float u2 = (float)textSlot.getPixelWidth() / width;
-            float v1 = startY / height;
-            float v2 = v1 + onePart;
+        textSlot.updateLastAccessTime();
+        float startY = textSlot.getStartY();
+        float onePart = (float) FONT_RESOLUTION / height;
 
-            if(textSlot.getText().isForScrollingText()) {
-                float ratio = textSlot.getMaxWidth() / (float)textSlot.getActualPhysicalWidth();
-                u2 = u2 * ratio;
+        float u1 = 0;
+        float u2 = (float)textSlot.getPixelWidth() / width;
+        float v1 = startY / height;
+        float v2 = v1 + onePart;
 
-                u1 += (JCMStats.getGameTick() % 100) / 100F;
-                u2 += (JCMStats.getGameTick() % 100) / 100F;
-            }
+        if(textSlot.getText().isForScrollingText()) {
+            float ratio = textSlot.getMaxWidth() / (float)textSlot.getActualPhysicalWidth();
+            u2 = u2 * ratio;
 
-            RenderHelper.drawTexture(graphicsHolder, x, y - 0.75F, 0, (int)textSlot.getPhysicalWidth(), RENDERED_TEXT_SIZE, u1, v1, u2, v2, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+            u1 += (JCMStats.getGameTick() % 100) / 100F;
+            u2 += (JCMStats.getGameTick() % 100) / 100F;
         }
+
+        RenderHelper.drawTexture(graphicsHolder, x, y - 0.75F, 0, (int)textSlot.getPhysicalWidth(), RENDERED_TEXT_SIZE, u1, v1, u2, v2, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
     public static void stressTest(int updateFrequency) {

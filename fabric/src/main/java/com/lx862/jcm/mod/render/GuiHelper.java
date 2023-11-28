@@ -1,18 +1,31 @@
 package com.lx862.jcm.mod.render;
 
-import com.lx862.jcm.mod.render.screen.widget.MappedWidget;
-import com.mojang.blaze3d.systems.RenderSystem;
-import org.mtr.mapping.holder.MinecraftClient;
+import com.lx862.jcm.mod.render.fundamental.ClipStack;
+import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.GuiDrawing;
 
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
 public interface GuiHelper {
     int MAX_CONTENT_WIDTH = 400;
     int BOTTOM_ROW_MARGIN = 6;
-    static void drawWidget(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta, MappedWidget widget) {
-        widget.render(graphicsHolder, mouseX, mouseY, tickDelta);
+
+    default void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height) {
+        drawTexture(guiDrawing, identifier, x, y, width, height, 0, 0, 1, 1);
+    }
+
+    default void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height, float u1, float v1, float u2, float v2) {
+        guiDrawing.beginDrawingTexture(identifier);
+        guiDrawing.drawTexture(x, y, x + width, y + height, u1, v1, u2, v2);
+        guiDrawing.finishDrawingTexture();
+    }
+
+    default void drawRectangle(GuiDrawing guiDrawing, double x, double y, double width, double height, int color) {
+        guiDrawing.beginDrawingRectangle();
+        guiDrawing.drawRectangle(x, y, x + width, y + height, color);
+        guiDrawing.finishDrawingRectangle();
     }
 
     /**
@@ -28,38 +41,17 @@ public interface GuiHelper {
      * @param color Color of the text
      * @param shadow Whether text should be rendered with shadow
      */
-    default void drawScrollableText(GraphicsHolder graphicsHolder, MutableText text, double elapsed, int startX, int textX, int textY, int maxW, int color, boolean shadow) {
+    static void drawScrollableText(GraphicsHolder graphicsHolder, MutableText text, double elapsed, int startX, int textX, int textY, int maxW, int color, boolean shadow) {
         int textWidth = GraphicsHolder.getTextWidth(text);
-        double scale = MinecraftClient.getInstance().getWindow().getScaleFactor();
-        int windowHeight = MinecraftClient.getInstance().getWindow().getHeight();
 
         if(textWidth > maxW) {
-            double slideProgress = ((Math.sin(elapsed / 2)) / 2) + 0.5;
+            double slideProgress = ((Math.sin(elapsed / 4)) / 2) + 0.5;
             graphicsHolder.translate(-slideProgress * (textWidth - maxW), 0, 0);
-            double clipStartX = startX * scale;
-            double clipEndX = maxW * scale;
-            RenderSystem.enableScissor((int)clipStartX, 0, (int)clipEndX, windowHeight);
+            ClipStack.push(startX, 0, maxW, 1000);
             graphicsHolder.drawText(text, textX, textY, color, shadow, MAX_RENDER_LIGHT);
-            RenderSystem.disableScissor();
+            ClipStack.pop();
         } else {
             graphicsHolder.drawText(text, textX, textY, color, shadow, MAX_RENDER_LIGHT);
         }
-    }
-
-    /**
-     * Enable clipping to only render content within boundary
-     * @param x Start X of your rectangle
-     * @param y Start Y of your rectangle
-     * @param width Width of your rectangle
-     * @param height Height of your rectangle
-     */
-    static void enableClip(int x, int y, int width, int height) {
-        double scale = net.minecraft.client.MinecraftClient.getInstance().getWindow().getScaleFactor();
-        int windowHeight = net.minecraft.client.MinecraftClient.getInstance().getWindow().getHeight();
-        RenderSystem.enableScissor((int)(x * scale), (int)(windowHeight - (y + height) * scale), (int)(width * scale), (int)(height * scale));
-    }
-
-    static void disableClip() {
-        RenderSystem.disableScissor();
     }
 }

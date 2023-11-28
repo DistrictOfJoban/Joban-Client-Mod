@@ -5,7 +5,7 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public abstract class BasicScreenBase extends AnimatableScreenBase implements RenderHelper {
+public abstract class BasicScreenBase extends AnimatableScreenBase {
     public static final int TEXT_PADDING = 10;
     public static final int TITLE_SCALE = 2;
     protected double elapsed = 0;
@@ -36,7 +36,7 @@ public abstract class BasicScreenBase extends AnimatableScreenBase implements Re
         graphicsHolder.translate(width / 2.0, TEXT_PADDING, 0);
         graphicsHolder.translate(0, -((titleHeight + TEXT_PADDING) * (1 - animationProgress)), 0);
         graphicsHolder.scale(TITLE_SCALE, TITLE_SCALE, TITLE_SCALE);
-        scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(titleText), width / TITLE_SCALE, true);
+        RenderHelper.scaleToFit(graphicsHolder, GraphicsHolder.getTextWidth(titleText), width / TITLE_SCALE, true);
         graphicsHolder.drawCenteredText(titleText, 0, 0, 0xFFFFFFFF);
         graphicsHolder.pop();
     }
@@ -47,7 +47,7 @@ public abstract class BasicScreenBase extends AnimatableScreenBase implements Re
         graphicsHolder.push();
         graphicsHolder.translate(width / 2.0, titleHeight * animationProgress, 0);
         graphicsHolder.translate(0, TEXT_PADDING * 1.5, 0);
-        scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(subtitleText), width, true);
+        RenderHelper.scaleToFit(graphicsHolder, GraphicsHolder.getTextWidth(subtitleText), width, true);
         graphicsHolder.drawCenteredText(subtitleText, 0, 0, 0xFFFFFFFF);
         graphicsHolder.pop();
     }

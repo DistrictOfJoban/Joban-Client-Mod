@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.render.screen.widget;
 
+import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
@@ -8,7 +9,7 @@ import org.mtr.mapping.mapper.GuiDrawing;
 /**
  * Represent a row in {@link ListViewWidget}
  */
-public class ListEntry {
+public class ListEntry implements GuiHelper {
     public final MutableText title;
     public final MappedWidget widget;
     public final boolean isCategory;

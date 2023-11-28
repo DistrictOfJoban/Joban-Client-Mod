@@ -1,41 +1,22 @@
 package com.lx862.jcm.mod.render;
 
-import com.lx862.jcm.mod.data.JCMStats;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
-import com.lx862.jcm.mod.util.TextUtil;
 import net.minecraft.util.Pair;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mapping.mapper.GuiDrawing;
 
 public interface RenderHelper {
     int MAX_RENDER_LIGHT = 0xF000F0;
     int ARGB_BLACK = 0xFF000000;
     int ARGB_WHITE = 0xFFFFFFFF;
 
-    default void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height) {
-        drawTexture(guiDrawing, identifier, x, y, width, height, 0, 0, 1, 1);
-    }
-
-    default void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height, float u1, float v1, float u2, float v2) {
-        guiDrawing.beginDrawingTexture(identifier);
-        guiDrawing.drawTexture(x, y, x + width, y + height, u1, v1, u2, v2);
-        guiDrawing.finishDrawingTexture();
-    }
-
-    default void drawRectangle(GuiDrawing guiDrawing, double x, double y, double width, double height, int color) {
-        guiDrawing.beginDrawingRectangle();
-        guiDrawing.drawRectangle(x, y, x + width, y + height, color);
-        guiDrawing.finishDrawingRectangle();
-    }
-
-    default void drawText(GraphicsHolder graphicsHolder, MutableText text, int x, int y, int textColor) {
+    static void drawText(GraphicsHolder graphicsHolder, MutableText text, int x, int y, int textColor) {
         graphicsHolder.drawText(text, x, y, textColor, false, MAX_RENDER_LIGHT);
     }
 
-    default void drawCenteredText(GraphicsHolder graphicsHolder, MutableText text, int x, int y, int textColor) {
+    static void drawCenteredText(GraphicsHolder graphicsHolder, MutableText text, int x, int y, int textColor) {
         int w = GraphicsHolder.getTextWidth(text.asOrderedText());
         graphicsHolder.drawText(text, x - (w / 2), y, textColor, false, MAX_RENDER_LIGHT);
     }
@@ -44,11 +25,11 @@ public interface RenderHelper {
         return (targetX > rectX && targetX <= rectX + rectW) && (targetY > rectY && targetY <= rectY + rectH);
     }
 
-    default void scaleToFitBoundary(GraphicsHolder graphicsHolder, int targetW, double maxW, boolean keepAspectRatio) {
-        scaleToFitBoundary(graphicsHolder, targetW, maxW, keepAspectRatio, 0);
+    static void scaleToFit(GraphicsHolder graphicsHolder, int targetW, double maxW, boolean keepAspectRatio) {
+        scaleToFit(graphicsHolder, targetW, maxW, keepAspectRatio, 0);
     }
 
-    default void scaleToFitBoundary(GraphicsHolder graphicsHolder, int targetW, double maxW, boolean keepAspectRatio, int height) {
+    static void scaleToFit(GraphicsHolder graphicsHolder, int targetW, double maxW, boolean keepAspectRatio, int height) {
         double scaleX = Math.min(1, maxW / targetW);
         if(scaleX < 1) {
             if(keepAspectRatio) {

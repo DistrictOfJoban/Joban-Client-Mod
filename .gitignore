@@ -32,6 +32,9 @@ bin/
 
 fabric/run/
 
+# Temporary: Can't get MTR with JCM to launch *in dev environment*, so have to copy all assets from MTR to JCM for testing, no plan to bundle it with the mod
+fabric/src/main/resources/assets/mtr/
+
 # java
 
 hs_err_*.log

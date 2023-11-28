@@ -37,13 +37,16 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         ClientConfig.USE_CUSTOM_FONT.set(bool);
     });
 
+    CheckboxWidgetExtension useNewTextRendererButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+        ClientConfig.NEW_TEXT_RENDERER.set(bool);
+    });
+
     CheckboxWidgetExtension debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
         ClientConfig.DEBUG_MODE.set(bool);
     });
-
-    ButtonWidgetExtension testScreenButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.entries.widget.open_test_screen"), (buttonWidget -> {
+    ButtonWidgetExtension textAtlasButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.entries.widget.open"), (buttonWidget -> {
         MinecraftClient.getInstance().openScreen(new Screen(
-                new TestScreen().withPreviousScreen(new Screen(this))
+                new TextureTextAtlasScreen().withPreviousScreen(new Screen(this))
         ));
     }));
     public ClientConfigScreen() {
@@ -83,31 +86,35 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         bottomRowWidget.setXYSize(startX, startY + listViewHeight + BOTTOM_ROW_MARGIN, contentWidth, bottomEntryHeight);
     }
 
-    @Override
-    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
-        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
-    }
     private void setEntryStateFromClientConfig() {
         disableRenderingButton.setChecked(ClientConfig.DISABLE_RENDERING.get());
         useCustomFontButton.setChecked(ClientConfig.USE_CUSTOM_FONT.get());
+        useNewTextRendererButton.setChecked(ClientConfig.DEBUG_MODE.get());
         debugModeButton.setChecked(ClientConfig.DEBUG_MODE.get());
     }
 
     private void addConfigEntries() {
         setEntryStateFromClientConfig();
 
-        listViewWidget.addCategory(TextHelper.literal("General"));
+        // General
+        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.entries.categories.general"));
         listViewWidget.add(ClientConfig.DISABLE_RENDERING.getTitle(), new MappedWidget(disableRenderingButton));
         listViewWidget.add(ClientConfig.USE_CUSTOM_FONT.getTitle(), new MappedWidget(useCustomFontButton));
 
-        listViewWidget.addCategory(TextHelper.literal("Debug"));
+        // Experimental
+        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.entries.categories.experimental"));
+        listViewWidget.add(ClientConfig.NEW_TEXT_RENDERER.getTitle(), new MappedWidget(useNewTextRendererButton));
+
+        // Debug
+        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.entries.categories.debug"));
         listViewWidget.add(ClientConfig.DEBUG_MODE.getTitle(), new MappedWidget(debugModeButton));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.entries.title.open_test_screen"), new MappedWidget(testScreenButton));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.entries.title.open_atlas_screen"), new MappedWidget(textAtlasButton));
 
         addChild(new ClickableWidget(disableRenderingButton));
         addChild(new ClickableWidget(useCustomFontButton));
+        addChild(new ClickableWidget(useNewTextRendererButton));
         addChild(new ClickableWidget(debugModeButton));
-        addChild(new ClickableWidget(testScreenButton));
+        addChild(new ClickableWidget(textAtlasButton));
     }
 
 
@@ -162,15 +169,6 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         if(welcome) drawPride(graphicsHolder);
         drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
     }
-
-//    @Override
-//    public boolean mouseScrolled3(double mouseX, double mouseY, double amount) {
-//        if(listViewWidget.isMouseOver2(mouseX, mouseY)) {
-//            listViewWidget.mouseScrolled3(mouseX, mouseY, amount);
-//            return true;
-//        }
-//        return super.mouseScrolled3(mouseX, mouseY, amount);
-//    }
 
     private void drawPride(GraphicsHolder graphicsHolder) {
         graphicsHolder.push();

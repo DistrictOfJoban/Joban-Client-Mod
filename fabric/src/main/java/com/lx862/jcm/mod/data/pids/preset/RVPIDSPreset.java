@@ -9,7 +9,7 @@ import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.WorldHelper;
 
-public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
+public class RVPIDSPreset extends PIDSPresetBase {
     private static final int PIDS_MARGIN = 8;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
     private static final Identifier TEXTURE_PLATFORM_CIRCLE = new Identifier("jsblock:textures/block/pids/plat_circle.png");
@@ -87,7 +87,7 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
 
         graphicsHolder.push();
         if(destinationWidth > destinationMaxWidth) {
-            scaleToFitBoundary(graphicsHolder, destinationWidth, destinationMaxWidth - 2, false);
+            RenderHelper.scaleToFit(graphicsHolder, destinationWidth, destinationMaxWidth - 2, false);
             drawPIDSText(graphicsHolder, facing, leftDestination, 0, 0, textColor);
             // TODO: Make marquee an option in custom PIDS Preset
             //drawPIDSScrollingText(graphicsHolder, facing, leftDestination, 0, 0, textColor, (int)destinationMaxWidth - 2);
@@ -102,7 +102,7 @@ public class RVPIDSPreset extends PIDSPresetBase implements RenderHelper {
             int platTextWidth = GraphicsHolder.getTextWidth("2");
             graphicsHolder.translate((44 * ARRIVAL_TEXT_SCALE) + 5, 1.75, 0);
             graphicsHolder.scale(0.75F, 0.75F, 0.75F);
-            scaleToFitBoundary(graphicsHolder, platTextWidth, 8, true, textRenderer.getFontHeightMapped());
+            RenderHelper.scaleToFit(graphicsHolder, platTextWidth, 8, true, textRenderer.getFontHeightMapped());
             drawPIDSCenteredText(graphicsHolder,facing, "2", 0, 0, ARGB_WHITE);
             graphicsHolder.pop();
         }

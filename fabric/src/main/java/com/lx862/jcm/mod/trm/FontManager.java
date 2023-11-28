@@ -15,11 +15,12 @@ import java.util.HashMap;
 public class FontManager {
     public static final HashMap<Identifier, Font> fontList = new HashMap<>();
 
-    public static void initializes() {
+    public static void initialize() {
         fontList.clear();
 
         JCMLogger.debug("[FontManager] Loading default fonts");
         loadVanillaFont("jsblock:deptimer");
+        loadVanillaFont("mtr:mtr");
     }
 
     private static void loadFontFile(Identifier id, Identifier path) {

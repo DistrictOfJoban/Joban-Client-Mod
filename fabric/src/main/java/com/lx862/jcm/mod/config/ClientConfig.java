@@ -19,7 +19,7 @@ public class ClientConfig {
     public static final ConfigEntry<Boolean> DISABLE_RENDERING = configStorage.registerConfig("disable_rendering", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.disable_rendering"), TextUtil.literal("This disables the rendering of all JCM Blocks")));
     public static final ConfigEntry<Boolean> USE_CUSTOM_FONT = configStorage.registerConfig("custom_font", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.custom_font"), TextUtil.literal("Use custom font if available")));
     public static final ConfigEntry<Boolean> DEBUG_MODE = configStorage.registerConfig("debug_mode", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.debug_mode"), TextUtil.literal("This enables debug mode, usually used by developer or to troubleshoot issues")));
-
+    public static final ConfigEntry<Boolean> NEW_TEXT_RENDERER = configStorage.registerConfig("new_text_renderer", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.new_text_rendering"), TextUtil.literal("This enables a new texture-based font rendering technique, which may improve performance and quality, but might be unstable")));
     public static void readFile() {
         if(!Files.exists(CONFIG_PATH)) {
             JCMLogger.info("Config not found, generating one!");

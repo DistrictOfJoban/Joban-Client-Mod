@@ -12,7 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEntity> implements RenderHelper {
+public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEntity> {
     public static final int TEXT_TILT_ANGLE = -10;
     public FareSaverRenderer(Argument argument) {
         super(argument);
@@ -26,7 +26,7 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
         if(part != 2) return;
 
         TextRenderer textRenderer = new TextRenderer(MinecraftClient.getInstance().textRenderer);
-        MutableText discountText = TextUtil.translatable(TextCategory.BLOCK, "faresaver.currency", blockEntity.getDiscount()).formatted(TextFormatting.WHITE);
+        MutableText discountText = TextUtil.translatable(TextCategory.BLOCK, "faresaver.currency", blockEntity.getDiscount());
 
         graphicsHolder.push();
         scaleCentered(graphicsHolder, 0.011F, 0.011F, 0.011F);
@@ -34,9 +34,9 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
         graphicsHolder.rotateZDegrees(180);
         graphicsHolder.rotateZDegrees(TEXT_TILT_ANGLE);
         graphicsHolder.translate(0, 13, -6);
-        scaleToFitBoundary(graphicsHolder, GraphicsHolder.getTextWidth(discountText), 12, true, textRenderer.getFontHeightMapped());
+        RenderHelper.scaleToFit(graphicsHolder, GraphicsHolder.getTextWidth(discountText), 12, true, textRenderer.getFontHeightMapped());
         TextRenderingManager.bind(graphicsHolder);
-        TextRenderingManager.draw(graphicsHolder, new TextInfo(discountText).withFont("jsblock:deptimer"), facing, 0, 0);
+        TextRenderingManager.draw(graphicsHolder, new TextInfo(discountText).withFont("mtr:mtr").withColor(ARGB_WHITE), facing, 0, 0);
         graphicsHolder.pop();
     }
 }

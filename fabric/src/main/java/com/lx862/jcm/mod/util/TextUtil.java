@@ -16,6 +16,10 @@ public class TextUtil {
         return TextHelper.translatable(textCategory.prefix + "." + Constants.MOD_ID + "." + id, variables);
     }
 
+    public static MutableText translatable(String id, Object... variables) {
+        return TextHelper.translatable(id, variables);
+    }
+
     public static MutableText withFont(MutableText text, Identifier fontId) {
         if(ClientConfig.USE_CUSTOM_FONT.get()) {
             return text.styled(style -> style.withFont(fontId.data));

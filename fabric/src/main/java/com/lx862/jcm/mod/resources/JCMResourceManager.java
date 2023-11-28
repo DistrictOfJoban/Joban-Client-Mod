@@ -20,7 +20,7 @@ public class JCMResourceManager {
     public static void reload() {
         reloadPIDSPreset();
         TextRenderingManager.initialize();
-        FontManager.initializes();
+        FontManager.initialize();
     }
 
     private static void reloadPIDSPreset() {

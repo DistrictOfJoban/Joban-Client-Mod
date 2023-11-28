@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.render.screen;
 
+import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.screen.base.BasicScreenBase;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Identifier;
@@ -7,7 +8,7 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
-public class TestScreen extends BasicScreenBase {
+public class TestScreen extends BasicScreenBase implements GuiHelper {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/gui/config_screen/bg.png");
     private static final Identifier TEXTURE_TERRAIN = new Identifier("jsblock:textures/gui/config_screen/terrain.png");
 
@@ -22,7 +23,7 @@ public class TestScreen extends BasicScreenBase {
 
     @Override
     public MutableText getScreenSubtitle() {
-        return TextUtil.literal("Hello World ^_^");
+        return TextUtil.literal("Hello World :3");
     }
 
     @Override
