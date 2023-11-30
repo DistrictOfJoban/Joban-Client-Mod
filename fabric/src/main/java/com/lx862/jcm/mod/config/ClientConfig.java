@@ -4,22 +4,14 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.util.JCMLogger;
-import com.lx862.jcm.mod.util.TextCategory;
-import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.MinecraftClient;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Map;
 
 public class ClientConfig {
     private static final Path CONFIG_PATH = MinecraftClient.getInstance().getRunDirectoryMapped().toPath().resolve("config").resolve("jsblock_client.json");
-    private static final ConfigStorage configStorage = new ConfigStorage();
-    public static final ConfigEntry<Boolean> DISABLE_RENDERING = configStorage.registerConfig("disable_rendering", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.disable_rendering"), TextUtil.literal("This disables the rendering of all JCM Blocks")));
-    public static final ConfigEntry<Boolean> USE_CUSTOM_FONT = configStorage.registerConfig("custom_font", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.custom_font"), TextUtil.literal("Use custom font if available")));
-    public static final ConfigEntry<Boolean> DEBUG_MODE = configStorage.registerConfig("debug_mode", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.debug_mode"), TextUtil.literal("This enables debug mode, usually used by developer or to troubleshoot issues")));
-    public static final ConfigEntry<Boolean> NEW_TEXT_RENDERER = configStorage.registerConfig("new_text_renderer", new ConfigEntry<>(Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.new_text_rendering"), TextUtil.literal("This enables a new texture-based font rendering technique, which may improve performance and quality, but might be unstable")));
     public static void readFile() {
         if(!Files.exists(CONFIG_PATH)) {
             JCMLogger.info("Config not found, generating one!");
@@ -30,20 +22,18 @@ public class ClientConfig {
             try {
                 final JsonObject jsonConfig = new JsonParser().parse(String.join("", Files.readAllLines(CONFIG_PATH))).getAsJsonObject();
 
-                for(Map.Entry<String, ConfigEntry<?>> entry : configStorage.configList.entrySet()) {
-                    String key = entry.getKey();
-                    ConfigEntry<?> configEntry = entry.getValue();
-                    if(jsonConfig.has(key)) {
-                        if(configEntry.is(String.class)) {
-                            configEntry.set(jsonConfig.get(key).getAsString());
+                for(ConfigEntry entry : ConfigEntry.values()) {
+                    if(jsonConfig.has(entry.getKeyName())) {
+                        if(entry.is(String.class)) {
+                            entry.set(jsonConfig.get(entry.getKeyName()).getAsString());
                         }
 
-                        if(configEntry.is(Integer.class)) {
-                            configEntry.set(jsonConfig.get(key).getAsInt());
+                        if(entry.is(Integer.class)) {
+                            entry.set(jsonConfig.get(entry.getKeyName()).getAsInt());
                         }
 
-                        if(configEntry.is(Boolean.class)) {
-                            configEntry.set(jsonConfig.get(key).getAsBoolean());
+                        if(entry.is(Boolean.class)) {
+                            entry.set(jsonConfig.get(entry.getKeyName()).getAsBoolean());
                         }
                     }
                 }
@@ -56,20 +46,19 @@ public class ClientConfig {
 
     public static boolean writeFile() {
         final JsonObject jsonConfig = new JsonObject();
-        for (Map.Entry<String, ConfigEntry<?>> configEntry : configStorage.configList.entrySet()) {
-            String key = configEntry.getKey();
-            ConfigEntry<?> value = configEntry.getValue();
+        for(ConfigEntry entry : ConfigEntry.values()) {
+            String key = entry.getKeyName();
 
-            if (value.get() instanceof String) {
-                jsonConfig.addProperty(key, (String) value.get());
+            if (entry.is(String.class)) {
+                jsonConfig.addProperty(key, entry.getString());
             }
 
-            if (value.get() instanceof Integer) {
-                jsonConfig.addProperty(key, (Integer) value.get());
+            if (entry.is(Integer.class)) {
+                jsonConfig.addProperty(key, entry.getInt());
             }
 
-            if (value.get() instanceof Boolean) {
-                jsonConfig.addProperty(key, (Boolean) value.get());
+            if (entry.is(Boolean.class)) {
+                jsonConfig.addProperty(key, entry.getBool());
             }
         }
 
@@ -83,8 +72,8 @@ public class ClientConfig {
     }
 
     public static void resetConfig() {
-        for(Map.Entry<String, ConfigEntry<?>> entry : configStorage.configList.entrySet()) {
-            entry.getValue().reset();
+        for(ConfigEntry configEntry : ConfigEntry.values()) {
+            configEntry.reset();
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.render.block;
 
-import com.lx862.jcm.mod.config.ClientConfig;
+import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
@@ -22,7 +22,7 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
     @Override
     public void render(T blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
         try {
-            if(ClientConfig.DISABLE_RENDERING.get() || blockEntity.getWorld2() == null) return;
+            if(ConfigEntry.DISABLE_RENDERING.getBool() || blockEntity.getWorld2() == null) return;
             if(blockEntity.getWorld2().getBlockState(blockEntity.getPos2()).isAir()) return;
 
             renderCurated(blockEntity, tickDelta, graphicsHolder, light, i1);

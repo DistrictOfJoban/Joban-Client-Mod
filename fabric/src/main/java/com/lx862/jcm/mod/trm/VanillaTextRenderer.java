@@ -24,7 +24,7 @@ public class VanillaTextRenderer implements RenderHelper {
         graphicsHolder.drawText(finalText, finalX, y, text.getTextColor(), false, MAX_RENDER_LIGHT);
     }
 
-    public static void drawVanillaScrollingText(GraphicsHolder graphicsHolder, String text, int maxW, int x, int y, int textColor) {
+    public static void drawScrollingText(GraphicsHolder graphicsHolder, String text, int maxW, int x, int y, int textColor) {
         String str = text;
         int scrollSpeed = str.length() * 6;
         int fullTick = (JCMStats.getGameTick() % (int)(scrollSpeed * 1.5));

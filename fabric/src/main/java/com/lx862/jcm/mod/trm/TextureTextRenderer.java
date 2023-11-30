@@ -103,6 +103,11 @@ public class TextureTextRenderer implements RenderHelper {
         return initialized() ? height : -1;
     }
 
+    public static void bindTexture(GraphicsHolder graphicsHolder) {
+        ensureInitialized();
+        graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(getAtlasIdentifier(), true));
+    }
+
     public static void addText(TextInfo text) {
         ensureInitialized();
 

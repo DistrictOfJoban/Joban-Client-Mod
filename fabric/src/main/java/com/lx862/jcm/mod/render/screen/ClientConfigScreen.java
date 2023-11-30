@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.render.screen;
 
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.config.ClientConfig;
+import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.screen.base.BasicScreenBase;
 import com.lx862.jcm.mod.render.screen.widget.ButtonSetsWidget;
@@ -30,19 +31,19 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
     private boolean discardConfig = false;
 
     CheckboxWidgetExtension disableRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        ClientConfig.DISABLE_RENDERING.set(bool);
+        ConfigEntry.DISABLE_RENDERING.set(bool);
     });
 
     CheckboxWidgetExtension useCustomFontButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        ClientConfig.USE_CUSTOM_FONT.set(bool);
+        ConfigEntry.USE_CUSTOM_FONT.set(bool);
     });
 
     CheckboxWidgetExtension useNewTextRendererButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        ClientConfig.NEW_TEXT_RENDERER.set(bool);
+        ConfigEntry.NEW_TEXT_RENDERER.set(bool);
     });
 
     CheckboxWidgetExtension debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        ClientConfig.DEBUG_MODE.set(bool);
+        ConfigEntry.DEBUG_MODE.set(bool);
     });
     ButtonWidgetExtension textAtlasButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.entries.widget.open"), (buttonWidget -> {
         MinecraftClient.getInstance().openScreen(new Screen(
@@ -87,10 +88,10 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
     }
 
     private void setEntryStateFromClientConfig() {
-        disableRenderingButton.setChecked(ClientConfig.DISABLE_RENDERING.get());
-        useCustomFontButton.setChecked(ClientConfig.USE_CUSTOM_FONT.get());
-        useNewTextRendererButton.setChecked(ClientConfig.DEBUG_MODE.get());
-        debugModeButton.setChecked(ClientConfig.DEBUG_MODE.get());
+        disableRenderingButton.setChecked(ConfigEntry.DISABLE_RENDERING.getBool());
+        useCustomFontButton.setChecked(ConfigEntry.USE_CUSTOM_FONT.getBool());
+        useNewTextRendererButton.setChecked(ConfigEntry.NEW_TEXT_RENDERER.getBool());
+        debugModeButton.setChecked(ConfigEntry.DEBUG_MODE.getBool());
     }
 
     private void addConfigEntries() {
@@ -98,16 +99,16 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
 
         // General
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.entries.categories.general"));
-        listViewWidget.add(ClientConfig.DISABLE_RENDERING.getTitle(), new MappedWidget(disableRenderingButton));
-        listViewWidget.add(ClientConfig.USE_CUSTOM_FONT.getTitle(), new MappedWidget(useCustomFontButton));
+        listViewWidget.add(ConfigEntry.DISABLE_RENDERING.getTitle(), new MappedWidget(disableRenderingButton));
+        listViewWidget.add(ConfigEntry.USE_CUSTOM_FONT.getTitle(), new MappedWidget(useCustomFontButton));
 
         // Experimental
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.entries.categories.experimental"));
-        listViewWidget.add(ClientConfig.NEW_TEXT_RENDERER.getTitle(), new MappedWidget(useNewTextRendererButton));
+        listViewWidget.add(ConfigEntry.NEW_TEXT_RENDERER.getTitle(), new MappedWidget(useNewTextRendererButton));
 
         // Debug
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.entries.categories.debug"));
-        listViewWidget.add(ClientConfig.DEBUG_MODE.getTitle(), new MappedWidget(debugModeButton));
+        listViewWidget.add(ConfigEntry.DEBUG_MODE.getTitle(), new MappedWidget(debugModeButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.entries.title.open_atlas_screen"), new MappedWidget(textAtlasButton));
 
         addChild(new ClickableWidget(disableRenderingButton));

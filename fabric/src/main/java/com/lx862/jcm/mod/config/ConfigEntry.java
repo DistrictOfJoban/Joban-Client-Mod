@@ -1,19 +1,24 @@
 package com.lx862.jcm.mod.config;
 
+import com.lx862.jcm.mod.util.TextCategory;
+import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.MutableText;
-import org.mtr.mapping.holder.Text;
 
-import java.util.function.Consumer;
+public enum ConfigEntry {
+    DISABLE_RENDERING("disable_rendering", Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.disable_rendering"), TextUtil.literal("This disables the rendering of all JCM Blocks")),
+    USE_CUSTOM_FONT("custom_font", Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.custom_font"), TextUtil.literal("Use custom font if available")),
+    DEBUG_MODE("debug_mode", Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.debug_mode"), TextUtil.literal("This enables debug mode, usually used by developer or to troubleshoot issues")),
+    NEW_TEXT_RENDERER("new_text_renderer", Boolean.class,false, TextUtil.translatable(TextCategory.GUI, "config.entries.title.new_text_rendering"), TextUtil.literal("This enables a new texture-based font rendering technique, which may improve performance and quality, but might be unstable"));
 
-public class ConfigEntry<T> {
-    private T value;
-    private final T defaultValue;
+    private Object value;
+    private final Object defaultValue;
     private final MutableText name;
+    private final String keyName;
     private final MutableText description;
-    private final Class<T> targetClass;
-    private Consumer<ConfigEntry<T>> onSetCallback;
+    private final Class<?> targetClass;
 
-    public ConfigEntry(Class<T> targetClass, T defaultValue, MutableText name, MutableText description) {
+    ConfigEntry(String keyName, Class<?> targetClass, Object defaultValue, MutableText name, MutableText description) {
+        this.keyName = keyName;
         this.name = name;
         this.description = description;
         this.targetClass = targetClass;
@@ -21,13 +26,8 @@ public class ConfigEntry<T> {
         this.value = defaultValue;
     }
 
-    public void setCallback(Consumer<ConfigEntry<T>> callback) {
-        this.onSetCallback = callback;
-    }
-
-    public <U> void set(U newValue) {
-        this.value = (T)newValue;
-        onSetCallback.accept(this);
+    public void set(Object newValue) {
+        this.value = newValue;
     }
 
     public MutableText getTitle() {
@@ -38,9 +38,26 @@ public class ConfigEntry<T> {
         return description;
     }
 
-    public T get() {
+    public String getKeyName() {
+        return keyName;
+    }
+
+    public Object get() {
         return value;
     }
+
+    public int getInt() {
+        return (int)value;
+    }
+
+    public String getString() {
+        return (String)value;
+    }
+
+    public boolean getBool() {
+        return (boolean)value;
+    }
+
     public boolean is(Class<?> cls) {
         return targetClass == cls;
     }
