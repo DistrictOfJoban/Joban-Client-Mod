@@ -15,6 +15,11 @@ public abstract class VerticallyAttachedDirectionalBlock extends VerticallyAttac
     }
 
     @Override
+    public BlockState getPlacementState2(ItemPlacementContext ctx) {
+        return super.getPlacementState2(ctx) == null ? null : super.getPlacementState2(ctx).with(new Property<>(FACING.data), ctx.getPlayerFacing().data);
+    }
+
+    @Override
     public void addBlockProperties(List<HolderBase<?>> properties) {
         super.addBlockProperties(properties);
         properties.add(FACING);
