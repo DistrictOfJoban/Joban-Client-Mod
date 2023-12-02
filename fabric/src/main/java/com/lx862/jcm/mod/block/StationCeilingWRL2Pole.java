@@ -9,10 +9,10 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public class WRLStationCeilingPole extends PoleBlock {
+public class StationCeilingWRL2Pole extends PoleBlock {
     public static final IntegerProperty PART = BlockProperties.HORIZONTAL_PART;
 
-    public WRLStationCeilingPole(BlockSettings settings) {
+    public StationCeilingWRL2Pole(BlockSettings settings) {
         super(settings);
     }
 
@@ -48,6 +48,6 @@ public class WRLStationCeilingPole extends PoleBlock {
 
     @Override
     public boolean blockIsAllowed(Block block) {
-        return block.data instanceof WRLStationCeilingBlock || block.data instanceof WRLStationCeilingPole;
+        return block.data instanceof StationCeilingWRL2Block || block.data instanceof StationCeilingWRL2Pole;
     }
 }

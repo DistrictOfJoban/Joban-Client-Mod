@@ -1,0 +1,8 @@
+{
+	"variants": {
+		"facing=north": { "model": "jsblock:block/station_ceiling_wrl_single" },
+		"facing=east": { "model": "jsblock:block/station_ceiling_wrl_single", "y": 90 },
+		"facing=south": { "model": "jsblock:block/station_ceiling_wrl_single", "y": 180 },
+		"facing=west": { "model": "jsblock:block/station_ceiling_wrl_single", "y": 270 }
+	}
+}

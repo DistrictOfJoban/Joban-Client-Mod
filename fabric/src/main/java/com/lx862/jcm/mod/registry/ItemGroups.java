@@ -15,6 +15,6 @@ public class ItemGroups {
 
     public static final CreativeModeTabHolder JCM_CEILING = Registry.createCreativeModeTabHolder(
             new Identifier(Constants.MOD_ID, "ceiling"),
-            () -> new ItemStack(new ItemConvertible(Blocks.WRL_STATION_CEILING.get().data))
+            () -> new ItemStack(new ItemConvertible(Blocks.STATION_CEILING_WRL.get().data))
     );
 }

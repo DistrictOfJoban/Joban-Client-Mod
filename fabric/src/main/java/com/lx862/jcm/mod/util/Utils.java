@@ -57,9 +57,11 @@ public class Utils {
                 case "pids_4":
                     return new Identifier(Constants.MOD_ID, "pids_lcd");
                 case "station_ceiling_1":
-                    return new Identifier(Constants.MOD_ID, "wrl_station_ceiling");
-                case "station_ceiling_1_pole":
-                    return new Identifier(Constants.MOD_ID, "wrl_station_ceiling_pole");
+                    return new Identifier(Constants.MOD_ID, "station_ceiling_wrl");
+                case "station_ceiling_1_station_color":
+                    return new Identifier(Constants.MOD_ID, "station_ceiling_wrl_station_colored");
+                case "station_ceiling_pole":
+                    return new Identifier(Constants.MOD_ID, "station_ceiling_wrl_pole");
                 case "station_name_tall_stand":
                     return new Identifier(Constants.MOD_ID, "station_name_standing");
                 case "ticket_barrier_1_entrance":

@@ -1,0 +1,35 @@
+{
+	"textures": {
+		"0": "jsblock:block/station_ceiling_wrl",
+		"1": "mtr:block/metal",
+		"particle": "jsblock:block/station_ceiling_wrl"
+	},
+	"elements": [
+		{
+			"name": "Main",
+			"from": [0.5, 8, 1],
+			"to": [15.5, 9, 15],
+			"faces": {
+				"north": {"uv": [0, 14.67268, 7.90675, 15.39624], "texture": "#0"},
+				"east": {"uv": [0, 14.66928, 8, 15.42415], "texture": "#0"},
+				"south": {"uv": [0, 14.67268, 7.86046, 15.42758], "texture": "#0"},
+				"west": {"uv": [7.96869, 14.68152, 16, 15.40512], "texture": "#0"},
+				"up": {"uv": [0, 6.5, 8, 14.5], "texture": "#0"},
+				"down": {"uv": [7.96796, 0, 16, 14.68493], "texture": "#0"}
+			}
+		},
+		{
+			"name": "Pole",
+			"from": [7.5, 9, 7.5],
+			"to": [8.5, 16, 8.5],
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"east": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"west": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#1", "cullface": "up"},
+				"down": {"uv": [0, 0, 0, 0], "texture": "#1"}
+			}
+		}
+	]
+}

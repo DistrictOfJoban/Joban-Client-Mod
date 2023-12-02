@@ -5,9 +5,9 @@ import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class WRLStationCeilingBlock extends VerticallyAttachedDirectional2Block {
+public class StationCeilingWRL2Block extends VerticallyAttachedDirectional2Block {
 
-    public WRLStationCeilingBlock(BlockSettings settings) {
+    public StationCeilingWRL2Block(BlockSettings settings) {
         super(settings, true, false);
     }
 
