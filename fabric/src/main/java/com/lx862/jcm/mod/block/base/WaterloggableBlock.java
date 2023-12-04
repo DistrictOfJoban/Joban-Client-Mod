@@ -29,6 +29,7 @@ public abstract class WaterloggableBlock extends JCMBlock implements Waterloggab
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
+        // TODO Deprecated
         return this.getDefaultState2().with(new Property<>(WATERLOGGED.data), ctx.getWorld().getFluidState(ctx.getBlockPos()).getFluid() == Fluids.WATER);
     }
 

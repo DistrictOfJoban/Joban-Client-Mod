@@ -4,7 +4,6 @@ import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.trm.TextInfo;
 import com.lx862.jcm.mod.trm.TextRenderingManager;
-import net.minecraft.client.MinecraftClient;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.WorldHelper;
@@ -64,10 +63,8 @@ public class RVPIDSPreset extends PIDSPresetBase {
     }
 
     private void arrivalsDrawTable(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int height, int rowAmount, int textColor) {
-        TextRenderer textRenderer = new TextRenderer(MinecraftClient.getInstance().textRenderer);
-
         drawArrivalEntryCallback(rawGraphicsHolder, x, y, rawWidth, height, rowAmount, (graphicsHolder, width) -> {
-            drawArrivalEntry(graphicsHolder, textRenderer, facing, (int)(width / ARRIVAL_TEXT_SCALE), "610", "§eTuen Mun §dFerry Pier", 2, 50000, false, textColor);
+            drawArrivalEntry(graphicsHolder, facing, (int)(width / ARRIVAL_TEXT_SCALE), "610", "§eTuen Mun §dFerry Pier" /*"§e屯門 Tuen Mun"*/, 2, 50000, false, textColor);
         });
     }
     private void arrivalsDrawPlatformIcon(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int height, int rowAmount) {
@@ -78,7 +75,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
         });
     }
 
-    private void drawArrivalEntry(GraphicsHolder graphicsHolder, TextRenderer textRenderer, Direction facing, int width, String lrtNumber, String destination, int car, long arrivalTime, boolean showCar, int textColor) {
+    private void drawArrivalEntry(GraphicsHolder graphicsHolder, Direction facing, int width, String lrtNumber, String destination, int car, long arrivalTime, boolean showCar, int textColor) {
         String leftDestination = lrtNumber + " " +  destination;
         TextInfo ti = new TextInfo(leftDestination).withColor(textColor);
 
@@ -102,7 +99,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
             int platTextWidth = GraphicsHolder.getTextWidth("2");
             graphicsHolder.translate((44 * ARRIVAL_TEXT_SCALE) + 5, 1.75, 0);
             graphicsHolder.scale(0.75F, 0.75F, 0.75F);
-            RenderHelper.scaleToFit(graphicsHolder, platTextWidth, 8, true, textRenderer.getFontHeightMapped());
+            RenderHelper.scaleToFit(graphicsHolder, platTextWidth, 8, true, 9);
             drawPIDSCenteredText(graphicsHolder,facing, "2", 0, 0, ARGB_WHITE);
             graphicsHolder.pop();
         }

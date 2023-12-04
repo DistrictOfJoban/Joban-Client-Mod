@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.minecraft.util.Pair;
+import com.lx862.jcm.mod.data.Pair;
 
 public class McMeta {
     /**

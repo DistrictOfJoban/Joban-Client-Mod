@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.resources.mcmeta;
 
+import com.lx862.jcm.mod.data.Pair;
 import com.lx862.jcm.mod.util.JCMLogger;
-import net.minecraft.util.Pair;
 import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;

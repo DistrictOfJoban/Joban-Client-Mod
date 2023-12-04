@@ -4,8 +4,8 @@ import com.lx862.jcm.mod.block.entity.StationNameStandingBlockEntity;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public class StationNameStandingRenderer extends JCMBlockEntityRenderer<StationNameStandingBlockEntity> {
-    public StationNameStandingRenderer(Argument argument) {
-        super(argument);
+    public StationNameStandingRenderer(Argument dispatcher) {
+        super(dispatcher);
     }
 
     @Override

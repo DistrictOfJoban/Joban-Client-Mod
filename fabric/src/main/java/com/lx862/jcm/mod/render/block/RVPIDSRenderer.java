@@ -12,8 +12,8 @@ import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public class RVPIDSRenderer extends JCMBlockEntityRenderer<RVPIDSBlockEntity> {
-    public RVPIDSRenderer(Argument argument) {
-        super(argument);
+    public RVPIDSRenderer(Argument dispatcher) {
+        super(dispatcher);
     }
 
     @Override

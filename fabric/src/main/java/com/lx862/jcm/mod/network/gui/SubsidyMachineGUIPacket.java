@@ -27,8 +27,8 @@ public class SubsidyMachineGUIPacket extends PacketHandler {
     @Override
     public void write(PacketBuffer packetBuffer) {
         packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeInt(pricePerUse);
-        packetBuffer.writeInt(cooldown);
+        packetBuffer.writeVarInt(pricePerUse);
+        packetBuffer.writeVarInt(cooldown);
     }
 
     @Override

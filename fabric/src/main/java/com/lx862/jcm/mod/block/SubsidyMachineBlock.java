@@ -8,7 +8,6 @@ import com.lx862.jcm.mod.network.gui.SubsidyMachineGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.*;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
-import net.minecraft.SharedConstants;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;

@@ -10,8 +10,8 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTimerBlockEntity> {
-    public DepartureTimerRenderer(Argument argument) {
-        super(argument);
+    public DepartureTimerRenderer(Argument dispatcher) {
+        super(dispatcher);
     }
 
     @Override

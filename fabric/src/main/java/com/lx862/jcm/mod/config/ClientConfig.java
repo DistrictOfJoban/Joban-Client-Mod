@@ -44,7 +44,7 @@ public class ClientConfig {
         }
     }
 
-    public static boolean writeFile() {
+    public static void writeFile() {
         final JsonObject jsonConfig = new JsonObject();
         for(ConfigEntry entry : ConfigEntry.values()) {
             String key = entry.getKeyName();
@@ -64,10 +64,8 @@ public class ClientConfig {
 
         try {
             Files.write(CONFIG_PATH, Collections.singleton(new GsonBuilder().setPrettyPrinting().create().toJson(jsonConfig)));
-            return true;
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
     }
 

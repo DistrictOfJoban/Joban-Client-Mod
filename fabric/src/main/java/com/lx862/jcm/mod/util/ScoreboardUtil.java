@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.util;
 
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.ScoreboardHelper;
 import org.mtr.mapping.mapper.TextHelper;
 
 public class ScoreboardUtil {
@@ -8,7 +9,7 @@ public class ScoreboardUtil {
         if(!world.getScoreboard().getObjectiveNames().contains(name)) {
             world.getScoreboard().addObjective(name, criterion, displayName, renderType);
         }
-        return world.getScoreboard().getNullableObjective(name);
+        return ScoreboardHelper.getScoreboardObjective(world.getScoreboard(), name);
     }
 
     public static boolean incrementNonOverflow(ScoreboardPlayerScore score, int amount) {

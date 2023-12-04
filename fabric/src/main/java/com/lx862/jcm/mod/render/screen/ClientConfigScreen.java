@@ -45,6 +45,7 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
     CheckboxWidgetExtension debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
         ConfigEntry.DEBUG_MODE.set(bool);
     });
+
     ButtonWidgetExtension textAtlasButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.entries.widget.open"), (buttonWidget -> {
         MinecraftClient.getInstance().openScreen(new Screen(
                 new TextureTextAtlasScreen().withPreviousScreen(new Screen(this))
@@ -192,12 +193,15 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
 
     @Override
     public void onClose2() {
-        if(!discardConfig) {
-            ClientConfig.writeFile();
-        } else {
-            // Don't save our change to disk, and read it from disk, effectively discarding the config
-            ClientConfig.readFile();
+        if(!closing) {
+            if (!discardConfig) {
+                ClientConfig.writeFile();
+            } else {
+                // Don't save our change to disk, and read it from disk, effectively discarding the config
+                ClientConfig.readFile();
+            }
         }
+
         super.onClose2();
     }
 

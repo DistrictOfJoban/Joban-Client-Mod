@@ -15,13 +15,11 @@ public class TextInfo {
 
     public TextInfo(String content) {
         this.content = content;
-        this.textColor = 0;
         this.widthInfo = new WidthInfo();
     }
 
     public TextInfo(MutableText text) {
         this.content = text.getString();
-        this.textColor = text.getStyle().getColor() == null ? 0 : text.getStyle().getColor().getRgb();
         this.widthInfo = new WidthInfo();
     }
 

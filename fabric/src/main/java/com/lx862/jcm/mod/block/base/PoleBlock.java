@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.block.base;
 
-import com.lx862.jcm.mod.util.BlockUtil;
 import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 

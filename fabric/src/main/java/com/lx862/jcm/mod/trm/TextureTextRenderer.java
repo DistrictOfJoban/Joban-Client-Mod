@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.trm;
 import com.lx862.jcm.mod.data.JCMStats;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.JCMLogger;
+import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
@@ -32,19 +33,21 @@ public class TextureTextRenderer implements RenderHelper {
      */
     private static final int DEFAULT_ATLAS_WIDTH = 1024;
     private static final int DEFAULT_ATLAS_HEIGHT = 1024;
-    private static final int MAX_ATLAS_SIZE = 8192;
+    private static final int MAX_ATLAS_SIZE = RenderSystem.maxSupportedTextureSize();
     private static final ObjectList<TextSlot> textSlots = new ObjectArrayList<>();
     private static NativeImageBackedTexture nativeImageBackedTexture = null;
     private static BufferedImage bufferedImageForTextGen = null;
-    private static int width;
-    private static int height;
-    private static boolean initialized;
-    private static Identifier textAtlas = null;
     public static final int RENDERED_TEXT_SIZE = 10;
     public static final double MARQUEE_SPACING_RATIO = 0.8;
     public static final int FONT_RESOLUTION = 64;
+    private static Identifier textAtlas = null;
+    private static int width;
+    private static int height;
+    private static boolean initialized;
 
     public static void initialize() {
+        if(initialized) throw new IllegalStateException("TextureTextRenderer already initialized!");
+
         initTextureAtlas(DEFAULT_ATLAS_WIDTH, DEFAULT_ATLAS_HEIGHT);
         initialized = true;
     }
@@ -52,9 +55,13 @@ public class TextureTextRenderer implements RenderHelper {
     public static void close() {
         if(initialized) {
             nativeImageBackedTexture.close();
-            bufferedImageForTextGen.createGraphics().dispose();
+            nativeImageBackedTexture = null;
+            bufferedImageForTextGen.flush();
+            bufferedImageForTextGen = null;
             textSlots.clear();
             initialized = false;
+        } else {
+            throw new IllegalStateException("TextureTextRenderer already closed!");
         }
     }
 
@@ -71,6 +78,7 @@ public class TextureTextRenderer implements RenderHelper {
         TextureTextRenderer.width = width;
         TextureTextRenderer.height = height;
         NativeImage nativeImage = new NativeImage(width, height, false);
+        // 0xFF0000FF = Red, just to highlight the background and distinguish it from anything else
         nativeImage.fillRect(0, 0, width, height, 0xFF0000FF);
 
         if(bufferedImageForTextGen != null) {
@@ -81,7 +89,7 @@ public class TextureTextRenderer implements RenderHelper {
         }
 
         nativeImageBackedTexture = new NativeImageBackedTexture(nativeImage);
-        bufferedImageForTextGen = new BufferedImage(width, FONT_RESOLUTION, BufferedImage.TYPE_INT_ARGB);
+        bufferedImageForTextGen = new BufferedImage(width, FONT_RESOLUTION * 2, BufferedImage.TYPE_INT_ARGB);
 
         if(textAtlas != null) {
             MinecraftClient.getInstance().getTextureManager().destroyTexture(textAtlas);
@@ -96,11 +104,11 @@ public class TextureTextRenderer implements RenderHelper {
     }
 
     public static int getAtlasWidth() {
-        return initialized() ? width : -1;
+        return initialized ? width : -1;
     }
 
     public static int getAtlasHeight() {
-        return initialized() ? height : -1;
+        return initialized ? height : -1;
     }
 
     public static void bindTexture(GraphicsHolder graphicsHolder) {
@@ -133,7 +141,7 @@ public class TextureTextRenderer implements RenderHelper {
 
             graphics.drawString(attributedString.getIterator(), 0, offset);
 
-            findSlotAndDraw(bufferedImageForTextGen, graphics, text);
+            drawOnFreeSlot(bufferedImageForTextGen, graphics, text);
 
             // Clear for next use
             graphics.setComposite(AlphaComposite.Clear);
@@ -151,15 +159,15 @@ public class TextureTextRenderer implements RenderHelper {
         attributedString.addAttribute(TextAttribute.FOREGROUND, text.getTextColor());
 
         int currentTextColor = text.getTextColor();
-        // Change font of individual characters so they still get rendered with a fallback font
+
         for(int i = 0; i < filteredString.length(); i++) {
             char currentChar = filteredString.charAt(i);
 
+            // Ensure each character can be displayed, if not we loop through all fonts on system until we find one that we can fall back to
             if(!font.canDisplay(currentChar)) {
+                // Might freeze up the game up to 4-8 seconds on some certain system to get all the fonts, hope it's fine on SSD~
                 for(Font sysFont : GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts()) {
                     if(sysFont.canDisplay(filteredString.charAt(i))) {
-                        // FIXME: Temp Blacklist for local wacky font
-                        if(sysFont.getFontName().startsWith("Casey")) continue;
                         attributedString.addAttribute(TextAttribute.FONT, sysFont.deriveFont(Font.PLAIN, FONT_RESOLUTION), i, i+1);
                         break;
                     }
@@ -177,25 +185,29 @@ public class TextureTextRenderer implements RenderHelper {
         return attributedString;
     }
 
-    private static void findSlotAndDraw(BufferedImage bufferedImage, Graphics2D graphics, TextInfo text) {
+    private static void drawOnFreeSlot(BufferedImage bufferedImage, Graphics2D graphics, TextInfo text) {
         ensureInitialized();
 
         boolean allUsedUp = textSlots.stream().noneMatch(TextSlot::unused);
-        List<TextSlot> availableSlots = textSlots.stream().filter(e -> (allUsedUp ? e.canReuse() : e.unused())).sorted().collect(Collectors.toList());
+        List<TextSlot> availableSlots = textSlots.stream().filter(e -> (allUsedUp ? e.reusable() : e.unused())).sorted().collect(Collectors.toList());
         if(availableSlots.isEmpty()) {
             // We have absolutely no space left (Not even any reusable), probably a good idea to resize to a bigger image
             if(height + 1024 <= MAX_ATLAS_SIZE) {
                 JCMLogger.debug("[TextureTextRenderer] No space left to draw text, resizing to a bigger atlas!");
                 initTextureAtlas(width, Math.min(height + 1024, MAX_ATLAS_SIZE));
+            } else {
+                JCMLogger.debug("[TextureTextRenderer] No space left to draw text, cannot resize beyond " + MAX_ATLAS_SIZE + "!");
             }
             return;
         }
 
         TextSlot firstAvailableSlot = availableSlots.get(0);
-        int textWidth = (int)getTextBound(text, graphics.getTransform()).getWidth();
+        Rectangle2D textBound = getTextBound(text, graphics.getTransform());
+        int textWidth = (int)Math.ceil(textBound.getWidth());
+        int textHeight = (int)Math.ceil(textBound.getHeight());
         if(text.isForScrollingText()) textWidth = width;
 
-        firstAvailableSlot.setContent(text, textWidth);
+        firstAvailableSlot.setContent(text, textWidth, FONT_RESOLUTION);
         drawToNativeImage(bufferedImage, firstAvailableSlot.getStartX(), firstAvailableSlot.getStartY(), firstAvailableSlot.getPixelWidth(), FONT_RESOLUTION);
     }
 
@@ -221,7 +233,7 @@ public class TextureTextRenderer implements RenderHelper {
         int a = (rgb >> 24) & 255;
         int r = (rgb >> 16) & 255;
         int g = (rgb >> 8) & 255;
-        int b = (rgb >> 0) & 255;
+        int b = (rgb) & 255;
         return a << 24 | b << 16 | g << 8 | r;
     }
 
@@ -255,7 +267,7 @@ public class TextureTextRenderer implements RenderHelper {
 
         textSlot.updateLastAccessTime();
         float startY = textSlot.getStartY();
-        float onePart = (float) FONT_RESOLUTION / height;
+        float onePart = (float) textSlot.getHeight() / height;
 
         float u1 = 0;
         float u2 = (float)textSlot.getPixelWidth() / width;

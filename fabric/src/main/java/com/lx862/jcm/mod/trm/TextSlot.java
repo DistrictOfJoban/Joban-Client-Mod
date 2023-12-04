@@ -5,20 +5,28 @@ import org.jetbrains.annotations.NotNull;
 public class TextSlot implements Comparable<TextSlot> {
     private static final long EXPIRE_TIME = 500;
     private final int startX;
-    private final int startY;
+    private TextInfo text = null;
+    private int startY;
     private long lastAccessTime = System.currentTimeMillis();
     private int width;
-    private TextInfo text = null;
+    private int height = 64;
 
     public TextSlot(int startX, int startY) {
         this.startX = startX;
         this.startY = startY;
     }
+
+    /**
+     * @return Whether this TextSlot is empty and does not have any text associated with it
+     */
     public boolean unused() {
         return text == null;
     }
 
-    public boolean canReuse() {
+    /**
+     * @return Whether this TextSlot has expired and can be reassigned with another text (EXPIRE_TIME).
+     */
+    public boolean reusable() {
         return System.currentTimeMillis() - lastAccessTime > EXPIRE_TIME;
     }
 
@@ -46,6 +54,10 @@ public class TextSlot implements Comparable<TextSlot> {
         return text.getWidthInfo().getMaxWidth();
     }
 
+    public int getHeight() {
+        return height;
+    }
+
     public double getActualPhysicalWidth() {
         return ((double)width / TextureTextRenderer.FONT_RESOLUTION) * TextureTextRenderer.RENDERED_TEXT_SIZE;
     }
@@ -59,10 +71,13 @@ public class TextSlot implements Comparable<TextSlot> {
         return needBoundText ? Math.min(text.getWidthInfo().getMaxWidth(), getActualPhysicalWidth()) : getActualPhysicalWidth();
     }
 
-    public void setContent(TextInfo text, int textWidth) {
+    public void setContent(TextInfo text, int textWidth, int textHeight) {
         this.text = text;
         this.lastAccessTime = System.currentTimeMillis();
         this.width = textWidth;
+        this.height = textHeight;
+
+        startY = startY - TextureTextRenderer.FONT_RESOLUTION + height;
     }
 
     public boolean isHoldingText(TextInfo text) {

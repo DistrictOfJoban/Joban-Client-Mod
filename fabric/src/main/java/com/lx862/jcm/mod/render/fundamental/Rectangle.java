@@ -17,7 +17,7 @@ public class Rectangle {
     public boolean equals(Object obj) {
         if(obj instanceof Rectangle) {
             Rectangle rect = (Rectangle) obj;
-            return super.equals(obj) && rect.x == x && rect.y == y && rect.width == width && rect.height == height;
+            return super.equals(obj) || (rect.x == x && rect.y == y && rect.width == width && rect.height == height);
         } else {
             return super.equals(obj);
         }

@@ -33,7 +33,7 @@ public class WaterMachineBlock extends Vertical2Block {
     }
 
     private static void fillBottleForPlayer(PlayerEntity player, Hand hand) {
-        ItemStack newWaterBottle = new ItemStack(new net.minecraft.item.ItemStack(Items.getPotionMapped().data));
+        ItemStack newWaterBottle = new ItemStack(ItemConvertible.cast(Items.getPotionMapped()));
         PotionUtil.setPotion(newWaterBottle.data, Potions.WATER);
 
         offerOrDrop(player, hand, newWaterBottle);
@@ -41,7 +41,7 @@ public class WaterMachineBlock extends Vertical2Block {
     }
 
     private static void fillBucketForPlayer(PlayerEntity player, Hand hand) {
-        ItemStack newWaterBucket = new ItemStack(new net.minecraft.item.ItemStack(Items.getWaterBucketMapped().data));
+        ItemStack newWaterBucket = new ItemStack(ItemConvertible.cast(Items.getWaterBucketMapped()));
         offerOrDrop(player, hand, newWaterBucket);
         playSplashSoundToPlayer(player);
     }
@@ -53,6 +53,7 @@ public class WaterMachineBlock extends Vertical2Block {
         if(playerHolding.isEmpty()) {
             player.setStackInHand(hand, stack);
         } else {
+            // TODO: Deprecated
             player.giveItemStack(stack);
         }
     }

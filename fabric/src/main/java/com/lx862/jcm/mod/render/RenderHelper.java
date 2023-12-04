@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render;
 
+import com.lx862.jcm.mod.data.Pair;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
-import net.minecraft.util.Pair;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
@@ -17,7 +17,7 @@ public interface RenderHelper {
     }
 
     static void drawCenteredText(GraphicsHolder graphicsHolder, MutableText text, int x, int y, int textColor) {
-        int w = GraphicsHolder.getTextWidth(text.asOrderedText());
+        int w = GraphicsHolder.getTextWidth(text);
         graphicsHolder.drawText(text, x - (w / 2), y, textColor, false, MAX_RENDER_LIGHT);
     }
 

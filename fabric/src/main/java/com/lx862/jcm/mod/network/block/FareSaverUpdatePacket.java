@@ -22,7 +22,7 @@ public class FareSaverUpdatePacket extends PacketHandler {
     @Override
     public void write(PacketBuffer packetBuffer) {
         packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeInt(discount);
+        packetBuffer.writeVarInt(discount);
     }
 
     @Override

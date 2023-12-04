@@ -4,8 +4,8 @@ import com.lx862.jcm.mod.block.entity.KCRStationNameSignBlockEntity;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public class KCRStationNameSignRenderer extends JCMBlockEntityRenderer<KCRStationNameSignBlockEntity> {
-    public KCRStationNameSignRenderer(Argument argument) {
-        super(argument);
+    public KCRStationNameSignRenderer(Argument dispatcher) {
+        super(dispatcher);
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.render.screen.widget;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import net.minecraft.client.MinecraftClient;
 import org.jetbrains.annotations.Nullable;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.TextRenderer;
@@ -54,27 +53,26 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         super.render(graphicsHolder, mouseX, mouseY, tickDelta);
-        TextRenderer textRenderer = new TextRenderer(MinecraftClient.getInstance().textRenderer);
 
         if(prefix != null) {
-            drawPrefix(graphicsHolder, textRenderer);
+            drawPrefix(graphicsHolder);
         }
 
-        drawUpDownButton(graphicsHolder, textRenderer);
+        drawUpDownButton(graphicsHolder);
     }
 
-    private void drawPrefix(GraphicsHolder graphicsHolder, TextRenderer textRenderer) {
+    private void drawPrefix(GraphicsHolder graphicsHolder) {
         int prefixWidth = GraphicsHolder.getTextWidth(prefix);
         int prefixX = getX2() - prefixWidth;
-        int prefixY = getY2() + (getHeight2() / 2) - (textRenderer.getFontHeightMapped() / 2);
+        int prefixY = getY2() + (getHeight2() / 2) - (9 / 2);
 
         graphicsHolder.drawText(prefix, prefixX, prefixY, 0xFFFFFFFF, true, MAX_RENDER_LIGHT);
     }
 
-    private void drawUpDownButton(GraphicsHolder graphicsHolder, TextRenderer textRenderer) {
+    private void drawUpDownButton(GraphicsHolder graphicsHolder) {
         MutableText upArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.increment");
         MutableText dnArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.decrement");
-        int fontHeight = textRenderer.getFontHeightMapped();
+        int fontHeight = 9;
         int startY = (height - (fontHeight * 2));
         int upWidth = GraphicsHolder.getTextWidth(upArrow);
         int dnWidth = GraphicsHolder.getTextWidth(dnArrow);
@@ -94,10 +92,9 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
 
     @Override
     public boolean mouseClicked2(double mouseX, double mouseY, int button) {
-        TextRenderer textRenderer = new TextRenderer(MinecraftClient.getInstance().textRenderer);
         MutableText upArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.increment");
         MutableText dnArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.decrement");
-        int fontHeight = textRenderer.getFontHeightMapped();
+        int fontHeight = 9;
         int startY = getY2() + (height - (fontHeight * 2)) / 2;
         int upWidth = GraphicsHolder.getTextWidth(upArrow.getString());
         int dnWidth = GraphicsHolder.getTextWidth(dnArrow.getString());

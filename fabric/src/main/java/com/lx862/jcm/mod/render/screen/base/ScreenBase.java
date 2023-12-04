@@ -21,5 +21,4 @@ public abstract class ScreenBase extends ScreenExtension {
     public void onClose2() {
         MinecraftClient.getInstance().openScreen(previousScreen);
     }
-
 }

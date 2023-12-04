@@ -22,12 +22,16 @@ public class ClipStack {
     }
 
     public static void pop() {
+        if(stacks.isEmpty()) {
+            throw new IllegalStateException("No more clip stack to be popped!");
+        }
+
         if(stacks.size() > 1) {
             stacks.remove(stacks.size() - 1);
             Rectangle remainingLast = stacks.get(stacks.size() - 1);
             enableClip(remainingLast.x, remainingLast.y, remainingLast.width, remainingLast.height);
         } else {
-            stacks.remove(stacks.size() - 1);
+            stacks.remove(0);
             disableClip();
         }
     }

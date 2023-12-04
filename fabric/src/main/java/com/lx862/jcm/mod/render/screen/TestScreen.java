@@ -68,7 +68,7 @@ public class TestScreen extends BasicScreenBase implements GuiHelper {
         double halfWidth = width / 2.0;
 
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
-        drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 0, width * animationProgress, 8, 0xFFDF6277);
+        drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72, width * animationProgress, 8, 0xFFDF6277);
         drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 8, width * animationProgress, 8, 0xFFFB9168);
         drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 16, width * animationProgress, 8, 0xFFF3DB6C);
         drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 24, width * animationProgress, 8, 0xFF7AB392);

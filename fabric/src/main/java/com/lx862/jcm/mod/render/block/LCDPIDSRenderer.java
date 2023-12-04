@@ -12,8 +12,8 @@ import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public class LCDPIDSRenderer extends JCMBlockEntityRenderer<LCDPIDSBlockEntity> {
-    public LCDPIDSRenderer(Argument argument) {
-        super(argument);
+    public LCDPIDSRenderer(Argument dispatcher) {
+        super(dispatcher);
     }
 
     @Override

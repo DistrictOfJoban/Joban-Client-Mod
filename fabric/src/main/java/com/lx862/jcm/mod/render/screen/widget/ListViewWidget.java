@@ -133,11 +133,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
             boolean topLeftVisible = inRectangle(entry.widget.getX(), entry.widget.getY(), getX2(), getY2(), getWidth2(), getHeight2());
             boolean topRightVisible = inRectangle(entry.widget.getX() + entry.widget.getWidth(), entry.widget.getY() + entry.widget.getHeight(), getX2(), getY2(), getWidth2(), getHeight2());
 
-            if(!topLeftVisible || !topRightVisible) {
-                entry.widget.setVisible(false);
-            } else {
-                entry.widget.setVisible(true);
-            }
+            entry.widget.setVisible(topLeftVisible && topRightVisible);
 
             // We have to draw our widget (Right side) again after rendering the highlight so it doesn't get covered.
             entry.widget.render(graphicsHolder, mouseX, mouseY, tickDelta);

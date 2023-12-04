@@ -23,7 +23,6 @@ body:
                 1.
                 2.
                 3.
-                etc.
         validations:
             required: true
     -   type: textarea

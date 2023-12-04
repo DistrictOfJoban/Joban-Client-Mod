@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.block.entity;
 
 import com.lx862.jcm.mod.registry.BlockEntities;
+import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 
 public class FareSaverBlockEntity extends JCMBlockEntityBase {
@@ -23,8 +24,8 @@ public class FareSaverBlockEntity extends JCMBlockEntityBase {
 
     public void setBlockData(int discount) {
         for(int i = 1; i < 3; i++) {
-            BlockEntity topBE = getWorld2().getBlockEntity(getPos2().offset(Axis.Y, i));
-            BlockEntity bottomBE = getWorld2().getBlockEntity(getPos2().offset(Axis.Y, -i));
+            BlockEntity topBE = BlockUtil.getBlockEntityOrNull(getWorld2(), getPos2().offset(Axis.Y, i));
+            BlockEntity bottomBE = BlockUtil.getBlockEntityOrNull(getWorld2(), getPos2().offset(Axis.Y, -i));
 
             if(topBE != null && topBE.data instanceof FareSaverBlockEntity) {
                 ((FareSaverBlockEntity)topBE.data).setData(discount);

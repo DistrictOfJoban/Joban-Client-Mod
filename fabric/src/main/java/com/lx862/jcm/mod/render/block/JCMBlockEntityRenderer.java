@@ -4,10 +4,9 @@ import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
-import net.minecraft.util.crash.CrashReport;
+import org.jetbrains.annotations.NotNull;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
@@ -15,12 +14,12 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 
 public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> extends BlockEntityRenderer<T> implements RenderHelper {
 
-    public JCMBlockEntityRenderer(Argument argument) {
-        super(argument);
+    public JCMBlockEntityRenderer(Argument dispatcher) {
+        super(dispatcher);
     }
 
     @Override
-    public void render(T blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
+    public void render(@NotNull T blockEntity, float tickDelta, @NotNull GraphicsHolder graphicsHolder, int light, int i1) {
         try {
             if(ConfigEntry.DISABLE_RENDERING.getBool() || blockEntity.getWorld2() == null) return;
             if(blockEntity.getWorld2().getBlockState(blockEntity.getPos2()).isAir()) return;
@@ -28,10 +27,13 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
             renderCurated(blockEntity, tickDelta, graphicsHolder, light, i1);
         } catch (Exception e) {
             e.printStackTrace();
-            CrashReport crashReport = new CrashReport("Exception caught in JCM Block Entity Rendering", e);
-            MinecraftClient.getInstance().addDetailsToCrashReport(crashReport);
-            MinecraftClient.getInstance().cleanUpAfterCrash();
-            MinecraftClient.getInstance().printCrashReport(crashReport);
+            System.exit(-1);
+//            CrashReport crashReport = new CrashReport("Exception caught in JCM Block Entity Rendering", e);
+//
+//            MinecraftClient.getInstance().addDetailsToCrashReport(crashReport);
+//            MinecraftClient.getInstance().cleanUpAfterCrash();
+//            MinecraftClient.getInstance().printCrashReport(crashReport);
+//            MinecraftClient.getInstance().close();
         }
     }
 
