@@ -82,7 +82,6 @@ public class OperatorButtonBlock extends WallAttachedBlock {
     }
 
     private void updateNearbyBlock(World world, BlockPos pos, Direction blockFacing) {
-        // TODO does this work?
         world.updateNeighbors(pos.offset(blockFacing), new Block(this));
     }
 }
