@@ -8,10 +8,10 @@ body:
             label: Suggestion Type
             description: What is the category you are trying to suggest?
             options:
-                - "Blocks"
-                - "Items"
-                - "Block Behavior"
-                - "Item Behavior"
+                - "Block"
+                - "Item"
+                - "Entity"
+                - "Block/Item/Entity Functionality"
                 - "GUI Screen"
                 - "PIDS Preset"
                 - "Documentation"
@@ -22,23 +22,25 @@ body:
     -   type: textarea
         attributes:
             label: Suggestion
-            description: What is the suggestion?
+            description: A brief description of your suggestions.
         validations:
             required: true
     -   type: textarea
         attributes:
             label: Assets
-            description: >
-                If you are suggesting the addition of content in this mod and have a pre-made assets (e.g. Textures/Model) ready to be used, please fill in.
+            description: |
+                If you are suggesting the addition of content in this mod, and you have a pre-made assets (e.g. Textures/Model) ready to be used, please fill in.
                 Please make sure the assets is permissively licensed and it's license allows the addition in our mod
         validations:
             required: false
     -   type: textarea
         attributes:
             label: Implementation Details/References
-            description: If you have any ideas as to how you want your suggestions to be implemented, please fill in.
+            description: If you have any ideas as to how you want your suggestions to be implemented (Text or Screenshot), you may fill it in.
         validations:
             required: false
     -   type: markdown
         attributes:
-            value: "Thanks for your suggestion! Note that depending on the situations and code-complexity, your suggestion may not always be implemented as-is, further discussion may be made on this issue."
+            value: |
+                Thanks for your suggestion!
+                Note that depending on the situations and code-complexity, your suggestion may not always be implemented as-is, further discussion may be made on this issue.

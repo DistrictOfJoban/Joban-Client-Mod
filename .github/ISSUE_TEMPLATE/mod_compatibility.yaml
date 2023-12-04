@@ -82,7 +82,7 @@ body:
             required: false
     -   type: markdown
         attributes:
-            value: >
-                Thanks for reporting! Note that we may request extra information in this issue whenever necessary.
-                You may also consider reporting the issue to the other mod's developer linking to this issue.
+            value: |
+                Thanks for reporting! Note that we may request extra information in this issue whenever necessary.  
+                You may also consider reporting the issue to the other mod's developer linking to this issue.  
                 Please however do not go blame either sides of mod developers, we are all just passionate people trying to make their dream come true, and due to the varying codebases it may require some cooperation on both sides for this to be resolved.
