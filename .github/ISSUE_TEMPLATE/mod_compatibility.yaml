@@ -68,7 +68,7 @@ body:
             placeholder: Windows 11
         validations:
             required: true
-    -   type: input
+    -   type: textarea
         attributes:
             label: Crash Report or Log
             description: If the game has crashed, you can upload the crash report and game logs here (Either with external services like Pastebin, or just drag and drop your file into this text box)
