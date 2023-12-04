@@ -1,0 +1,88 @@
+name: Mod Compatibility
+description: Crash/Bugs that only exist with another mod installed
+title: "[Mod compatibility] "
+labels: [ "mod compatibility" ]
+body:
+    -   type: input
+        attributes:
+            label: Mod
+            description: What is the other mod's name (Or their respective modrinth/curseforge/github page) that would cause problem with JCM installed?
+        validations:
+            required: true
+    -   type: textarea
+        attributes:
+            label: Describe the Bug
+            description: A clear and concise description of what would happen when the other mod is installed.
+        validations:
+            required: true
+    -   type: textarea
+        attributes:
+            label: Reproduce
+            description: Please tell us the steps needed in order to recreate your bug.
+            value: |
+                1.
+                2.
+                3.
+                etc.
+        validations:
+            required: true
+    -   type: textarea
+        attributes:
+            label: Expected Result
+            description: Instead of encountering the bug, what are you expecting instead?
+        validations:
+            required: true
+    -   type: dropdown
+        attributes:
+            label: Modloader
+            description: Which modloader were you using?
+            options:
+                - "Fabric"
+                - "Quilt"
+                - "Minecraft Forge"
+                - "NeoForge"
+        validations:
+            required: true
+    -   type: dropdown
+        attributes:
+            label: Minecraft Version
+            description: The version of Minecraft you were using when encountering this bug
+            options:
+                - "1.20.3"
+                - "1.19.4"
+                - "1.18.2"
+                - "1.17.1"
+                - "1.16.5"
+        validations:
+            required: true
+    -   type: input
+        attributes:
+            label: JCM Version
+            description: Please enter the version of JCM you were using when encountering this bug (e.g. 2.0.0)
+        validations:
+            required: true
+    -   type: input
+        attributes:
+            label: Operating System
+            description: The operating system name & version you were using when encountering this bug (e.g. Windows 11, macOS Sonoma/macOS 14, Debian 12)
+            placeholder: Windows 11
+        validations:
+            required: true
+    -   type: input
+        attributes:
+            label: Crash Report or Log
+            description: If the game has crashed, you can upload the crash report and game logs here (Either with external services like Pastebin, or just drag and drop your file into this text box)
+        validations:
+            required: false
+    -   type: textarea
+        attributes:
+            label: Extra Informations
+            description: If you have noticed any other details that may suggest the cause this, please fill it here.
+        validations:
+            required: false
+    -   type: markdown
+        attributes:
+            value: >
+                Thanks for reporting! Note that we may request extra information in this issue whenever necessary.
+                You may also consider reporting the issue to the other mod's developer linking to this issue.
+                Please however do not go blame either sides of mod developers, we are all just passionate people trying to make their dream come true, and due to the varying codebases it may require some cooperation on both sides for this to be resolved.

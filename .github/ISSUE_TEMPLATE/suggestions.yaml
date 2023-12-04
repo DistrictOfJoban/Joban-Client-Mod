@@ -1,0 +1,44 @@
+name: Suggestions
+description: Help improve this mod by providing ideas and the possibilities of new content!
+title: "[Suggestions] "
+labels: [ "suggestions" ]
+body:
+    -   type: dropdown
+        attributes:
+            label: Suggestion Type
+            description: What is the category you are trying to suggest?
+            options:
+                - "Blocks"
+                - "Items"
+                - "Block Behavior"
+                - "Item Behavior"
+                - "GUI Screen"
+                - "PIDS Preset"
+                - "Documentation"
+                - "Translations"
+                - "Others"
+        validations:
+            required: true
+    -   type: textarea
+        attributes:
+            label: Suggestion
+            description: What is the suggestion?
+        validations:
+            required: true
+    -   type: textarea
+        attributes:
+            label: Assets
+            description: >
+                If you are suggesting the addition of content in this mod and have a pre-made assets (e.g. Textures/Model) ready to be used, please fill in.
+                Please make sure the assets is permissively licensed and it's license allows the addition in our mod
+        validations:
+            required: false
+    -   type: textarea
+        attributes:
+            label: Implementation Details/References
+            description: If you have any ideas as to how you want your suggestions to be implemented, please fill in.
+        validations:
+            required: false
+    -   type: markdown
+        attributes:
+            value: "Thanks for your suggestion! Note that depending on the situations and code-complexity, your suggestion may not always be implemented as-is, further discussion may be made on this issue."
