@@ -57,10 +57,11 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
     }
 
     private static int addMTRBalanceToPlayer(World world, PlayerEntity player, int amount) {
-        ScoreboardPlayerScore mtrBalanceScore = ScoreboardUtil.getPlayerMTRBalanceScore(world, player);
-
-        ScoreboardUtil.incrementNonOverflow(mtrBalanceScore, amount);
-        return mtrBalanceScore.getScore();
+        return 0;
+//        int mtrBalanceScore = ScoreboardUtil.getPlayerMTRBalanceScore(world, player);
+//
+//        ScoreboardUtil.incrementNonOverflow(world.getScoreboard(), mtrBalanceScore, amount);
+//        return mtrBalanceScore.getScore();
     }
 
     private static boolean cooldownExpired(PlayerEntity player, int cooldown) {

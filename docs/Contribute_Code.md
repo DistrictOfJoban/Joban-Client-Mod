@@ -2,7 +2,7 @@
 **Note: Work In progress, many things are probably subject to change**
 
 ## Project Structure
-Due to our rather complex requirements of having to support Fabric/Forge 1.16.5 - 1.20.3, we uses the Minecraft-Mappings project to facilitate building lots of variants with a single codebase.
+Due to our rather complex requirements of having to support Fabric/Forge 1.16.5 - 1.20.4, we use the Minecraft-Mappings project to facilitate building lots of variants with a single codebase.
 
 The primary development happens on Fabric, as such almost all the assets and codes are located in the `fabric` folder.
 The main mod's code are located in `fabric/src/main/java/com/lx862/jcm/mod`, these files will be compiled by both fabric and forge.
@@ -18,7 +18,7 @@ The very basic idea is that **you don't use Minecraft's code**, instead use all 
 **Minecraft Mappings** will generate artifacts as a jar for each version and modloader, they all have the same classes/method, and only the underlying implementation is changed to adapt to different Minecraft versions, as such nothing needs to be changed when compiling to each Minecraft version.
 
 Note that not all method and classes can be mapped, for example one method could exist in 1.18.2 but not 1.17.1.  
-As such, method that are guarenteed to exist across all version will be annotated with `@MappedMethod`, whereas other method that may not exist across all versions and modloaders will be annotated with `@Deprecated` (In which your IDE should give you a warning), don't use anything that's marked as deprecated as they may fail to compile acoss all versions and platform.
+As such, method that are guaranteed to exist across all version will be annotated with `@MappedMethod`, whereas other method that may not exist across all versions and modloaders will be annotated with `@Deprecated` (In which your IDE should give you a warning), don't use anything that's marked as deprecated as they may fail to compile acoss all versions and platform.
 
 Also when overriding method on classes provided by **Minecraft Mappings**, you should be overriding and calling methods named like `methodName2` or `methodName3`, these are methods provided by **Minecraft Mappings**, whereas `methodName` is for example, the underlying method provided by Minecraft.
 
@@ -26,7 +26,7 @@ Also when overriding method on classes provided by **Minecraft Mappings**, you s
 To be done. TL;DR use the manifold preprocessing, or contribute the code mappings directly to upstream.
 
 ### What about RenderSystem?
-Not all Minecraft's Code are obfuscated, for example some of the code in `com.mojang.blaze3d` including RenderSystem is not obfuscated, a mapping like Yarn or Mojmap is not needed and there's a much less chance that the method name will differ across modloaders due to them using different mappings.
+Not all Minecraft's code are obfuscated, for example some of the code in `com.mojang.blaze3d` including RenderSystem is not obfuscated, a mapping like Yarn or Mojmap is not needed and there's a much less chance that the method name will differ across modloaders due to them using different mappings.
 
 If you really find yourself not being able to compile across all versions and modloaders when using code that's not provided by Minecraft Mappings, again follow the steps above.
 
