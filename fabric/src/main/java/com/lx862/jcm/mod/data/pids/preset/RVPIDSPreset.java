@@ -81,10 +81,10 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
     private void drawArrivalEntry(GraphicsHolder graphicsHolder, Direction facing, int width, String lrtNumber, String destination, int car, long arrivalTime, int textColor, boolean showCar, boolean hidePlatform) {
         String leftDestination = lrtNumber + " " +  destination;
-        TextInfo ti = new TextInfo(leftDestination).withColor(textColor);
+        TextInfo widthTextInfo = new TextInfo(leftDestination).withColor(textColor).withFont(getFont());
 
-        int destinationWidth = TextRenderingManager.getTextWidth(ti);
-        float destinationMaxWidth = true ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
+        int destinationWidth = TextRenderingManager.getTextWidth(widthTextInfo);
+        float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
 
         graphicsHolder.push();
         if(destinationWidth > destinationMaxWidth) {
@@ -140,7 +140,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
     @Override
     public String getFont() {
-        return "jsblock:deptimer";
+        return "mtr:mtr";
     }
 
     @Override

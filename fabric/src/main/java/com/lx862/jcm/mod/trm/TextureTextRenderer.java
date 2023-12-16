@@ -12,6 +12,7 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
 import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
@@ -78,8 +79,8 @@ public class TextureTextRenderer implements RenderHelper {
         TextureTextRenderer.width = width;
         TextureTextRenderer.height = height;
         NativeImage nativeImage = new NativeImage(width, height, false);
-        // 0xFF0000FF = Red, just to highlight the background and distinguish it from anything else
-        nativeImage.fillRect(0, 0, width, height, 0xFF0000FF);
+        // Red to highlight the background and easily distinguish it from anything else
+        nativeImage.fillRect(0, 0, width, height, ARGB_RED);
 
         if(bufferedImageForTextGen != null) {
             bufferedImageForTextGen.getGraphics().dispose();
@@ -120,14 +121,15 @@ public class TextureTextRenderer implements RenderHelper {
         ensureInitialized();
 
         if(getTextSlot(text) == null) {
+            Font font = text.getAwtFont(FONT_RESOLUTION);
             Graphics2D graphics = bufferedImageForTextGen.createGraphics();
             graphics.setComposite(AlphaComposite.SrcOver);
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            graphics.setFont(text.getFont(FONT_RESOLUTION));
+            graphics.setFont(font);
 
             AffineTransform affineTransform = new AffineTransform();
-            AttributedString attributedString = getFormattedString(text, text.getFont(FONT_RESOLUTION));
+            AttributedString attributedString = getFormattedString(text, text.getAwtFont(FONT_RESOLUTION));
             Rectangle2D fullTextBound = getTextBound(attributedString);
 
             if(text.isForScrollingText()) {
@@ -137,9 +139,11 @@ public class TextureTextRenderer implements RenderHelper {
             }
 
             graphics.setTransform(affineTransform);
-            int offset = graphics.getFontMetrics().getMaxAscent();
 
-            graphics.drawString(attributedString.getIterator(), 0, offset);
+            GlyphVector gv = font.createGlyphVector(graphics.getFontRenderContext(), "a!1b");
+            Rectangle2D bound = gv.getOutline().getBounds();
+
+            graphics.drawString(attributedString.getIterator(), 0, (int)bound.getHeight());
 
             drawOnFreeSlot(bufferedImageForTextGen, graphics, text);
 
@@ -308,7 +312,7 @@ public class TextureTextRenderer implements RenderHelper {
     }
 
     public static Rectangle2D getTextBound(TextInfo textInfo, AffineTransform affineTransform) {
-        AttributedString attributedString = getFormattedString(textInfo, textInfo.getFont(FONT_RESOLUTION));
+        AttributedString attributedString = getFormattedString(textInfo, textInfo.getAwtFont(FONT_RESOLUTION));
         return getTextBound(attributedString, affineTransform);
     }
 
@@ -322,12 +326,18 @@ public class TextureTextRenderer implements RenderHelper {
         return new Rectangle((int)textLayout.getBounds().getX(), (int)textLayout.getBounds().getY(), (int)(textLayout.getAdvance() * affineTransform.getScaleX()), (int)(textLayout.getBounds().getHeight() * affineTransform.getScaleY()));
     }
 
+    /**
+     * Obtain the width of the corresponding TextInfo.
+     * @param textInfo The textInfo with the same configuration as drawn (Where the text content, color, forScrollingText and font must match)
+     * @return The in-game width of the TextInfo, 0 if the corresponding TextInfo is not a drawn text on the Texture Atlas.
+     */
     public static int getPhysicalWidth(TextInfo textInfo) {
         TextSlot textSlot = getTextSlot(textInfo);
         if(textSlot != null) {
             return (int)textSlot.getPhysicalWidth();
+        } else {
+            return 0;
         }
-        return 0;
     }
 
     public static Identifier getAtlasIdentifier() {

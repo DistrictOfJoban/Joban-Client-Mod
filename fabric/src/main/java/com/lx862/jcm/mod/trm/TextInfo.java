@@ -85,7 +85,7 @@ public class TextInfo {
      * @param fontSize The font size of the font
      * @return An awt Font with the corresponding font size
      */
-    public Font getFont(int fontSize) {
+    public Font getAwtFont(int fontSize) {
         Font preloadedFont = FontManager.getFont(fontId);
         if(preloadedFont != null) {
             return preloadedFont.deriveFont(Font.PLAIN, fontSize);
@@ -98,6 +98,6 @@ public class TextInfo {
     public boolean equals(Object o) {
         if(!(o instanceof TextInfo)) return false;
         TextInfo other = ((TextInfo) o);
-        return other.content.equals(content) && other.textColor == textColor && this.forScrollingText == other.forScrollingText;
+        return other.content.equals(content) && other.textColor == textColor && this.forScrollingText == other.forScrollingText && this.fontId.equals(other.fontId);
     }
 }
