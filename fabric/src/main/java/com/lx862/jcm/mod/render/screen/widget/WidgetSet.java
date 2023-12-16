@@ -11,17 +11,17 @@ import java.util.List;
  * Holds a set of widget within a defined area.
  * Able to tile the widgets horizontally and add new rows like a grid/table.
  */
-public class ButtonSetsWidget extends ClickableWidgetExtension implements RenderHelper {
+public class WidgetSet extends ClickableWidgetExtension implements RenderHelper {
     public int widgetXMargin;
     private final List<List<MappedWidget>> widgetRows = new ArrayList<>();
     private final int maxWidgetHeight;
 
-    public ButtonSetsWidget(int maxWidgetHeight, int widgetXMargin) {
+    public WidgetSet(int maxWidgetHeight, int widgetXMargin) {
         super(0, 0, 0, 0);
         this.maxWidgetHeight = maxWidgetHeight;
         this.widgetXMargin = widgetXMargin;
     }
-    public ButtonSetsWidget(int maxWidgetHeight) {
+    public WidgetSet(int maxWidgetHeight) {
         this(maxWidgetHeight, 10);
     }
 

@@ -30,11 +30,11 @@ public class SubsidyMachineScreen extends BlockConfigScreenBase {
 
     @Override
     public void addConfigEntries() {
-        addChild(new ClickableWidget(priceTextField));
-        addChild(new ClickableWidget(cooldownTextField));
-
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "subsidy_machine.price"), new MappedWidget(priceTextField));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "subsidy_machine.cooldown"), new MappedWidget(cooldownTextField));
+
+        addChild(new ClickableWidget(priceTextField));
+        addChild(new ClickableWidget(cooldownTextField));
     }
 
     @Override

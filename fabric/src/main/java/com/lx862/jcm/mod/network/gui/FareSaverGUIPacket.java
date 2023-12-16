@@ -13,7 +13,7 @@ public class FareSaverGUIPacket extends PacketHandler {
 
     public FareSaverGUIPacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
-        this.discount = packetBuffer.readInt();
+        this.discount = packetBuffer.readVarInt();
     }
 
     public FareSaverGUIPacket(BlockPos blockPos, int discount) {

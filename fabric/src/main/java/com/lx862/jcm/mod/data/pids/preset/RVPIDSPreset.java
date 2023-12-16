@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.jcm.mod.block.entity.RVPIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.trm.TextInfo;
 import com.lx862.jcm.mod.trm.TextRenderingManager;
@@ -17,12 +18,13 @@ public class RVPIDSPreset extends PIDSPresetBase {
     private static final Identifier ICON_WEATHER_RAINY = new Identifier("jsblock:textures/block/pids/weather_rainy.png");
     private static final Identifier ICON_WEATHER_THUNDER = new Identifier("jsblock:textures/block/pids/weather_thunder.png");
     public RVPIDSPreset() {
-        super("rv_pids");
+        super("rv_pids", "Hong Kong Railway Vision PIDS", true);
     }
 
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, float tickDelta, int x, int y, int width, int height, int color, int light) {
         int contentWidth = width - (PIDS_MARGIN * 2);
         int rowAmount = be.getRowAmount();
+        boolean hidePlatform = (be instanceof RVPIDSBlockEntity) ? ((RVPIDSBlockEntity)be).getHidePlatformNumber() : false;
 
         // Draw Textures
         drawBackground(graphicsHolder, width, height, facing);
@@ -31,13 +33,15 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
         graphicsHolder.translate(0, 0, -0.5);
         titleDrawWeatherIcon(graphicsHolder, world, facing, PIDS_MARGIN);
-        arrivalsDrawPlatformIcon(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, height, rowAmount);
+        if(!hidePlatform) {
+            arrivalsDrawPlatformIcon(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, height, rowAmount);
+        }
 
         // Text
         graphicsHolder.translate(0, 0, -0.5);
         TextRenderingManager.bind(graphicsHolder);
         titleDrawClock(graphicsHolder, facing, world, contentWidth - 19, 2, ARGB_WHITE);
-        arrivalsDrawTable(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, height, rowAmount, ARGB_BLACK);
+        arrivalsDrawTable(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, height, rowAmount, ARGB_BLACK, hidePlatform);
     }
 
     protected void drawBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
@@ -62,9 +66,9 @@ public class RVPIDSPreset extends PIDSPresetBase {
         graphicsHolder.pop();
     }
 
-    private void arrivalsDrawTable(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int height, int rowAmount, int textColor) {
+    private void arrivalsDrawTable(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int height, int rowAmount, int textColor, boolean hidePlatform) {
         drawArrivalEntryCallback(rawGraphicsHolder, x, y, rawWidth, height, rowAmount, (graphicsHolder, width) -> {
-            drawArrivalEntry(graphicsHolder, facing, (int)(width / ARRIVAL_TEXT_SCALE), "610", "§eTuen Mun §dFerry Pier" /*"§e屯門 Tuen Mun"*/, 2, 50000, false, textColor);
+            drawArrivalEntry(graphicsHolder, facing, (int)(width / ARRIVAL_TEXT_SCALE), "610", "§eTuen Mun §dFerry Pier" /*"§e屯門 Tuen Mun"*/, 2, 50000, textColor, false, hidePlatform);
         });
     }
     private void arrivalsDrawPlatformIcon(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int height, int rowAmount) {
@@ -75,7 +79,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
         });
     }
 
-    private void drawArrivalEntry(GraphicsHolder graphicsHolder, Direction facing, int width, String lrtNumber, String destination, int car, long arrivalTime, boolean showCar, int textColor) {
+    private void drawArrivalEntry(GraphicsHolder graphicsHolder, Direction facing, int width, String lrtNumber, String destination, int car, long arrivalTime, int textColor, boolean showCar, boolean hidePlatform) {
         String leftDestination = lrtNumber + " " +  destination;
         TextInfo ti = new TextInfo(leftDestination).withColor(textColor);
 
@@ -94,7 +98,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
         graphicsHolder.pop();
 
         // Platform Text
-        if(true) {
+        if(!hidePlatform) {
             graphicsHolder.push();
             int platTextWidth = GraphicsHolder.getTextWidth("2");
             graphicsHolder.translate((44 * ARRIVAL_TEXT_SCALE) + 5, 1.75, 0);
@@ -137,5 +141,10 @@ public class RVPIDSPreset extends PIDSPresetBase {
     @Override
     public String getFont() {
         return "jsblock:deptimer";
+    }
+
+    @Override
+    public Identifier getPreviewImage() {
+        return TEXTURE_BACKGROUND;
     }
 }

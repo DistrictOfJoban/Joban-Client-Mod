@@ -14,8 +14,8 @@ public class SubsidyMachineGUIPacket extends PacketHandler {
 
     public SubsidyMachineGUIPacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
-        this.pricePerUse = packetBuffer.readInt();
-        this.cooldown = packetBuffer.readInt();
+        this.pricePerUse = packetBuffer.readVarInt();
+        this.cooldown = packetBuffer.readVarInt();
     }
 
     public SubsidyMachineGUIPacket(BlockPos blockPos, int pricePerUse, int cooldown) {

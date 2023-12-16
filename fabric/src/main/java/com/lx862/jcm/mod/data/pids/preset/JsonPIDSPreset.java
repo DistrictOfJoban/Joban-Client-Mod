@@ -26,7 +26,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private static final int PIDS_MARGIN = 8;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
     public JsonPIDSPreset(String id, @Nullable String name, @Nullable Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean showClock, boolean showWeather, int textColor) {
-        super(id, name);
+        super(id, name, false);
         this.background = background;
         this.showClock = showClock;
         this.showWeather = showWeather;
@@ -75,6 +75,11 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     @Override
     public String getFont() {
         return fontId;
+    }
+
+    @Override
+    public Identifier getPreviewImage() {
+        return background;
     }
 
     @Override

@@ -9,7 +9,7 @@ public class MappedWidget {
     private final Object widget;
     public MappedWidget(Object widget) {
         if(!(widget instanceof MappedWidget || widget instanceof ButtonWidgetExtension || widget instanceof TextFieldWidgetExtension ||
-                widget instanceof CheckboxWidgetExtension || widget instanceof SliderWidgetExtension)) {
+                widget instanceof CheckboxWidgetExtension || widget instanceof SliderWidgetExtension || widget instanceof ClickableWidgetExtension)) {
             throw new IllegalArgumentException("Widget is not an instance of ButtonWidgetExtension, TextFieldWidgetExtension, CheckboxWidgetExtension or SliderWidgetExtension!");
         }
 
@@ -28,6 +28,9 @@ public class MappedWidget {
         }
         if(widget instanceof SliderWidgetExtension) {
             return ((SliderWidgetExtension) widget).getX2();
+        }
+        if(widget instanceof ClickableWidgetExtension) {
+            return ((ClickableWidgetExtension) widget).getX2();
         }
         if(widget instanceof MappedWidget) {
             return ((MappedWidget) widget).getX();
@@ -48,6 +51,9 @@ public class MappedWidget {
         if(widget instanceof SliderWidgetExtension) {
             return ((SliderWidgetExtension) widget).getY2();
         }
+        if(widget instanceof ClickableWidgetExtension) {
+            return ((ClickableWidgetExtension) widget).getY2();
+        }
         if(widget instanceof MappedWidget) {
             return ((MappedWidget) widget).getY();
         }
@@ -65,7 +71,10 @@ public class MappedWidget {
             return ((CheckboxWidgetExtension) widget).getWidth2();
         }
         if(widget instanceof SliderWidgetExtension) {
-            return ((SliderWidgetExtension) widget).getHeight2();
+            return ((SliderWidgetExtension) widget).getWidth2();
+        }
+        if(widget instanceof ClickableWidgetExtension) {
+            return ((ClickableWidgetExtension) widget).getWidth2();
         }
         if(widget instanceof MappedWidget) {
             return ((MappedWidget) widget).getWidth();
@@ -86,6 +95,9 @@ public class MappedWidget {
         if(widget instanceof SliderWidgetExtension) {
             return ((SliderWidgetExtension) widget).getHeight2();
         }
+        if(widget instanceof ClickableWidgetExtension) {
+            return ((ClickableWidgetExtension) widget).getHeight2();
+        }
         if(widget instanceof MappedWidget) {
             return ((MappedWidget) widget).getHeight();
         }
@@ -105,6 +117,9 @@ public class MappedWidget {
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setWidth2(width);
         }
+        if(widget instanceof ClickableWidgetExtension) {
+            ((ClickableWidgetExtension) widget).setWidth2(width);
+        }
         if(widget instanceof MappedWidget) {
             ((MappedWidget) widget).setWidth(width);
         }
@@ -122,6 +137,12 @@ public class MappedWidget {
         }
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setX2(newX);
+        }
+        if(widget instanceof HorizontalWidgetSet) {
+            ((HorizontalWidgetSet) widget).setAllX(newX);
+        }
+        if(widget instanceof ClickableWidgetExtension) {
+            ((ClickableWidgetExtension) widget).setX2(newX);
         }
         if(widget instanceof MappedWidget) {
             ((MappedWidget) widget).setX(newX);
@@ -141,6 +162,12 @@ public class MappedWidget {
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setY2(newY);
         }
+        if(widget instanceof HorizontalWidgetSet) {
+            ((HorizontalWidgetSet) widget).setAllY(newY);
+        }
+        if(widget instanceof ClickableWidgetExtension) {
+            ((ClickableWidgetExtension) widget).setY2(newY);
+        }
         if(widget instanceof MappedWidget) {
             ((MappedWidget) widget).setY(newY);
         }
@@ -159,6 +186,9 @@ public class MappedWidget {
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
         }
+        if(widget instanceof ClickableWidgetExtension) {
+            ((ClickableWidgetExtension) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
+        }
         if(widget instanceof MappedWidget) {
             ((MappedWidget) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
         }
@@ -176,6 +206,9 @@ public class MappedWidget {
         }
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setVisibleMapped(value);
+        }
+        if(widget instanceof ClickableWidgetExtension) {
+            ((ClickableWidgetExtension) widget).setVisibleMapped(value);
         }
         if(widget instanceof MappedWidget) {
             ((MappedWidget) widget).setVisible(value);

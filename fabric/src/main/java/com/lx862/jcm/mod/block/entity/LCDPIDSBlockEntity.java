@@ -10,6 +10,11 @@ public class LCDPIDSBlockEntity extends PIDSBlockEntity {
     }
 
     @Override
+    public String getDefaultPresetId() {
+        return "rv_pids";
+    }
+
+    @Override
     public int getRowAmount() {
         return 4;
     }

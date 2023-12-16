@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render.screen.base;
 
 import com.lx862.jcm.mod.render.GuiHelper;
-import com.lx862.jcm.mod.render.screen.widget.ButtonSetsWidget;
+import com.lx862.jcm.mod.render.screen.widget.WidgetSet;
 import com.lx862.jcm.mod.render.screen.widget.ListViewWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -16,7 +16,7 @@ import org.mtr.mapping.mapper.ButtonWidgetExtension;
 public abstract class BlockConfigScreenBase extends BasicScreenBase implements GuiHelper {
     protected final BlockPos blockPos;
     protected final ListViewWidget listViewWidget;
-    protected final ButtonSetsWidget bottomEntryWidget;
+    protected final WidgetSet bottomEntryWidget;
     private final ButtonWidgetExtension saveButton;
     private final ButtonWidgetExtension discardButton;
     private boolean discardConfig = false;
@@ -33,8 +33,8 @@ public abstract class BlockConfigScreenBase extends BasicScreenBase implements G
             onClose2();
         });
 
-        this.listViewWidget = new ListViewWidget(22);
-        this.bottomEntryWidget = new ButtonSetsWidget(20);
+        this.listViewWidget = new ListViewWidget();
+        this.bottomEntryWidget = new WidgetSet(20);
     }
 
     @Override
@@ -49,11 +49,12 @@ public abstract class BlockConfigScreenBase extends BasicScreenBase implements G
         listViewWidget.reset();
         bottomEntryWidget.reset();
 
+        listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
         addConfigEntries();
         addBottomRowButtons();
         addChild(new ClickableWidget(listViewWidget));
         addChild(new ClickableWidget(bottomEntryWidget));
-        listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
+        listViewWidget.positionWidgets();
         bottomEntryWidget.setXYSize(startX, startY + listViewHeight + BOTTOM_ROW_MARGIN, contentWidth, bottomEntryHeight);
     }
 

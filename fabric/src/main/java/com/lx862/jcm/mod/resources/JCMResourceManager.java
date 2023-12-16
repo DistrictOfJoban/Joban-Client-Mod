@@ -32,7 +32,7 @@ public class JCMResourceManager {
                 JsonObject jsonObject = new JsonParser().parse(str).getAsJsonObject();
                 jsonObject.get("pids_images").getAsJsonArray().forEach(e -> {
                     JsonPIDSPreset parsedPreset = JsonPIDSPreset.parse(e.getAsJsonObject());
-                    PIDSManager.customPresetList.put(parsedPreset.getId(), parsedPreset);
+                    PIDSManager.presetList.put(parsedPreset.getId(), parsedPreset);
                 });
             } catch (IOException e) {
                 e.printStackTrace();

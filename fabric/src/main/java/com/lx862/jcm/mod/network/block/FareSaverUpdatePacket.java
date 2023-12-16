@@ -11,7 +11,7 @@ public class FareSaverUpdatePacket extends PacketHandler {
 
     public FareSaverUpdatePacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
-        this.discount = packetBuffer.readInt();
+        this.discount = packetBuffer.readVarInt();
     }
 
     public FareSaverUpdatePacket(BlockPos blockPos, int discount) {

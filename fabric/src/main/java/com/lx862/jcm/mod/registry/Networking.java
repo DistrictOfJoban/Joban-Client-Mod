@@ -3,9 +3,11 @@ package com.lx862.jcm.mod.registry;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.network.block.ButterflyLightUpdatePacket;
 import com.lx862.jcm.mod.network.block.FareSaverUpdatePacket;
+import com.lx862.jcm.mod.network.block.RVPIDSUpdatePacket;
 import com.lx862.jcm.mod.network.block.SubsidyMachineUpdatePacket;
 import com.lx862.jcm.mod.network.gui.ButterflyLightGUIPacket;
 import com.lx862.jcm.mod.network.gui.FareSaverGUIPacket;
+import com.lx862.jcm.mod.network.gui.RVPIDSGUIPacket;
 import com.lx862.jcm.mod.network.gui.SubsidyMachineGUIPacket;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.Identifier;
@@ -30,11 +32,13 @@ public class Networking {
         registerPacket(ButterflyLightUpdatePacket.class, ButterflyLightUpdatePacket::new);
         registerPacket(FareSaverUpdatePacket.class, FareSaverUpdatePacket::new);
         registerPacket(SubsidyMachineUpdatePacket.class, SubsidyMachineUpdatePacket::new);
+        registerPacket(RVPIDSUpdatePacket.class, RVPIDSUpdatePacket::new);
 
         // GUI Screen
         registerPacket(ButterflyLightGUIPacket.class, ButterflyLightGUIPacket::new);
         registerPacket(FareSaverGUIPacket.class, FareSaverGUIPacket::new);
         registerPacket(SubsidyMachineGUIPacket.class, SubsidyMachineGUIPacket::new);
+        registerPacket(RVPIDSGUIPacket.class, RVPIDSGUIPacket::new);
     }
 
     public static void registerClient() {

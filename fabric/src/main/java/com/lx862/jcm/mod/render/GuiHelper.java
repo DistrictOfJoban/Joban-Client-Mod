@@ -1,6 +1,8 @@
 package com.lx862.jcm.mod.render;
 
+import com.lx862.jcm.mod.data.Pair;
 import com.lx862.jcm.mod.render.fundamental.ClipStack;
+import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -13,7 +15,8 @@ public interface GuiHelper {
     int BOTTOM_ROW_MARGIN = 6;
 
     default void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height) {
-        drawTexture(guiDrawing, identifier, x, y, width, height, 0, 0, 1, 1);
+        Pair<Float, Float> uv = McMetaManager.getUV(identifier);
+        drawTexture(guiDrawing, identifier, x, y, width, height, 0, uv.getLeft(), 1, uv.getRight());
     }
 
     default void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height, float u1, float v1, float u2, float v2) {

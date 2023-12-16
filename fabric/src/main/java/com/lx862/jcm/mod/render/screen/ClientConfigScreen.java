@@ -5,7 +5,7 @@ import com.lx862.jcm.mod.config.ClientConfig;
 import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.screen.base.BasicScreenBase;
-import com.lx862.jcm.mod.render.screen.widget.ButtonSetsWidget;
+import com.lx862.jcm.mod.render.screen.widget.WidgetSet;
 import com.lx862.jcm.mod.render.screen.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.screen.widget.MappedWidget;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -25,7 +25,7 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/gui/config_screen/bg.png");
     private static final Identifier TEXTURE_STAR = new Identifier("jsblock:textures/gui/config_screen/stars.png");
     private static final Identifier TEXTURE_TERRAIN = new Identifier("jsblock:textures/gui/config_screen/terrain.png");
-    private final ButtonSetsWidget bottomRowWidget;
+    private final WidgetSet bottomRowWidget;
     private final ListViewWidget listViewWidget;
     private final boolean welcome = Calendar.getInstance().get(Calendar.MONTH) == Calendar.JUNE || Math.random() > 0.9;
     private boolean discardConfig = false;
@@ -46,15 +46,15 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         ConfigEntry.DEBUG_MODE.set(bool);
     });
 
-    ButtonWidgetExtension textAtlasButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.entries.widget.open"), (buttonWidget -> {
+    ButtonWidgetExtension textAtlasButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.listview.widget.open"), (buttonWidget -> {
         MinecraftClient.getInstance().openScreen(new Screen(
                 new TextureTextAtlasScreen().withPreviousScreen(new Screen(this))
         ));
     }));
     public ClientConfigScreen() {
         super(true);
-        bottomRowWidget = new ButtonSetsWidget(20);
-        listViewWidget = new ListViewWidget(20);
+        bottomRowWidget = new WidgetSet(20);
+        listViewWidget = new ListViewWidget();
     }
 
     @Override
@@ -99,18 +99,18 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         setEntryStateFromClientConfig();
 
         // General
-        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.entries.categories.general"));
+        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.general"));
         listViewWidget.add(ConfigEntry.DISABLE_RENDERING.getTitle(), new MappedWidget(disableRenderingButton));
         listViewWidget.add(ConfigEntry.USE_CUSTOM_FONT.getTitle(), new MappedWidget(useCustomFontButton));
 
         // Experimental
-        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.entries.categories.experimental"));
+        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.experimental"));
         listViewWidget.add(ConfigEntry.NEW_TEXT_RENDERER.getTitle(), new MappedWidget(useNewTextRendererButton));
 
         // Debug
-        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.entries.categories.debug"));
+        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.debug"));
         listViewWidget.add(ConfigEntry.DEBUG_MODE.getTitle(), new MappedWidget(debugModeButton));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.entries.title.open_atlas_screen"), new MappedWidget(textAtlasButton));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.open_atlas_screen"), new MappedWidget(textAtlasButton));
 
         addChild(new ClickableWidget(disableRenderingButton));
         addChild(new ClickableWidget(useCustomFontButton));

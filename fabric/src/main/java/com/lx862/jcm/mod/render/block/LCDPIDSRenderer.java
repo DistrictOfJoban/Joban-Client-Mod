@@ -21,7 +21,7 @@ public class LCDPIDSRenderer extends JCMBlockEntityRenderer<LCDPIDSBlockEntity> 
         World world = blockEntity.getWorld2();
         if(world == null) return;
 
-        PIDSPresetBase pidsPreset = getPreset(blockEntity, "rv_pids");
+        PIDSPresetBase pidsPreset = getPreset(blockEntity);
         if(pidsPreset == null) return;
 
         BlockState state = blockEntity.getWorld2().getBlockState(blockEntity.getPos2());
@@ -37,7 +37,7 @@ public class LCDPIDSRenderer extends JCMBlockEntityRenderer<LCDPIDSBlockEntity> 
         graphicsHolder.pop();
     }
 
-    private PIDSPresetBase getPreset(PIDSBlockEntity blockEntity, String defaultId) {
-        return PIDSManager.getPreset(blockEntity.getPidsPresetId(), PIDSManager.getBuiltInPreset(defaultId));
+    private PIDSPresetBase getPreset(PIDSBlockEntity blockEntity) {
+        return PIDSManager.getPreset(blockEntity.getPresetId(), PIDSManager.getPreset(blockEntity.getDefaultPresetId()));
     }
 }

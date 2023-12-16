@@ -8,7 +8,6 @@ import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public class RVPIDSRenderer extends JCMBlockEntityRenderer<RVPIDSBlockEntity> {
@@ -18,7 +17,7 @@ public class RVPIDSRenderer extends JCMBlockEntityRenderer<RVPIDSBlockEntity> {
 
     @Override
     public void renderCurated(RVPIDSBlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
-        PIDSPresetBase pidsPreset = getPreset(blockEntity, "rv_pids");
+        PIDSPresetBase pidsPreset = getPreset(blockEntity);
         if(pidsPreset == null) return;
 
         BlockState state = blockEntity.getWorld2().getBlockState(blockEntity.getPos2());
@@ -34,7 +33,7 @@ public class RVPIDSRenderer extends JCMBlockEntityRenderer<RVPIDSBlockEntity> {
         graphicsHolder.pop();
     }
 
-    private PIDSPresetBase getPreset(PIDSBlockEntity blockEntity, String defaultId) {
-        return PIDSManager.getPreset(blockEntity.getPidsPresetId(), PIDSManager.getBuiltInPreset(defaultId));
+    private PIDSPresetBase getPreset(PIDSBlockEntity blockEntity) {
+        return PIDSManager.getPreset(blockEntity.getPresetId(), PIDSManager.getPreset(blockEntity.getDefaultPresetId()));
     }
 }

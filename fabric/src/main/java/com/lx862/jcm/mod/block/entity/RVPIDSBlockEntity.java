@@ -24,7 +24,21 @@ public class RVPIDSBlockEntity extends PIDSBlockEntity {
     }
 
     @Override
+    public String getDefaultPresetId() {
+        return "rv_pids";
+    }
+
+    public void setData(String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPresetId) {
+        super.setData(customMessages, rowHidden, pidsPresetId);
+        this.hidePlatformNumber = hidePlatformNumber;
+    }
+
+    @Override
     public int getRowAmount() {
         return 4;
+    }
+
+    public boolean getHidePlatformNumber() {
+        return hidePlatformNumber;
     }
 }
