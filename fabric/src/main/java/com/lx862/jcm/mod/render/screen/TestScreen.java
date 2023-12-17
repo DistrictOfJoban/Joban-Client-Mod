@@ -35,10 +35,10 @@ public class TestScreen extends BasicScreenBase implements GuiHelper {
     public void drawBackground(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         double terrainHeight = (width / 3.75);
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
-        drawTexture(guiDrawing, TEXTURE_BACKGROUND, 0, 0, width, height);
+        GuiHelper.drawTexture(guiDrawing, TEXTURE_BACKGROUND, 0, 0, width, height);
 
         double translateY = height * (1 - animationProgress);
-        drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
+        GuiHelper.drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
         drawPride(graphicsHolder);
         drawSpinningText(graphicsHolder);
     }
@@ -68,12 +68,12 @@ public class TestScreen extends BasicScreenBase implements GuiHelper {
         double halfWidth = width / 2.0;
 
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
-        drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72, width * animationProgress, 8, 0xFFDF6277);
-        drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 8, width * animationProgress, 8, 0xFFFB9168);
-        drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 16, width * animationProgress, 8, 0xFFF3DB6C);
-        drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 24, width * animationProgress, 8, 0xFF7AB392);
-        drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 32, width * animationProgress, 8, 0xFF4B7CBC);
-        drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 40, width * animationProgress, 8, 0xFF6F488C);
+        GuiHelper.drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72, width * animationProgress, 8, 0xFFDF6277);
+        GuiHelper.drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 8, width * animationProgress, 8, 0xFFFB9168);
+        GuiHelper.drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 16, width * animationProgress, 8, 0xFFF3DB6C);
+        GuiHelper.drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 24, width * animationProgress, 8, 0xFF7AB392);
+        GuiHelper.drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 32, width * animationProgress, 8, 0xFF4B7CBC);
+        GuiHelper.drawRectangle(guiDrawing, halfWidth - (halfWidth * animationProgress), 72 + 40, width * animationProgress, 8, 0xFF6F488C);
         graphicsHolder.pop();
     }
 }

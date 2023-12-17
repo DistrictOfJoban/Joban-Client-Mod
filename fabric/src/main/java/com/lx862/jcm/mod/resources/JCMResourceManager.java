@@ -13,8 +13,6 @@ import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 
-import java.io.IOException;
-
 public class JCMResourceManager {
     private static final Identifier CUSTOM_RESOURCE_PATH = new Identifier(Constants.MOD_ID, "joban_custom_resources.json");
     public static void reload() {
@@ -34,7 +32,7 @@ public class JCMResourceManager {
                     JsonPIDSPreset parsedPreset = JsonPIDSPreset.parse(e.getAsJsonObject());
                     PIDSManager.presetList.put(parsedPreset.getId(), parsedPreset);
                 });
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 JCMLogger.warn("Failed to parse JCM PIDS Preset!");
             }

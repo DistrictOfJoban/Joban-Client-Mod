@@ -68,7 +68,7 @@ public class TextureTextAtlasScreen extends BasicScreenBase implements RenderHel
             int startX = (width - (int)finalWidth) / 2;
             int startY = (height - (int)finalHeight) / 2;
 
-            drawTexture(guiDrawing, TextureTextRenderer.getAtlasIdentifier(), startX, startY, (int)finalWidth, (int)finalHeight);
+            GuiHelper.drawTexture(guiDrawing, TextureTextRenderer.getAtlasIdentifier(), startX, startY, (int)finalWidth, (int)finalHeight);
         } else {
             graphicsHolder.push();
             graphicsHolder.translate(width / 2.0, height / 2.0, 0);

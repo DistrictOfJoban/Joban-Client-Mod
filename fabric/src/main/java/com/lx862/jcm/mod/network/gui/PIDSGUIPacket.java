@@ -1,20 +1,20 @@
 package com.lx862.jcm.mod.network.gui;
 
-import com.lx862.jcm.mod.render.screen.RVPIDSScreen;
+import com.lx862.jcm.mod.render.screen.PIDSScreen;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.PacketBuffer;
 import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.registry.PacketHandler;
 
-public class RVPIDSGUIPacket extends PacketHandler {
+public class PIDSGUIPacket extends PacketHandler {
     private final BlockPos blockPos;
     private final String[] customMessages;
     private final boolean[] rowHidden;
     private final boolean hidePlatformNumber;
     private final String presetId;
 
-    public RVPIDSGUIPacket(PacketBuffer packetBuffer) {
+    public PIDSGUIPacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
         int rows = packetBuffer.readVarInt();
         this.customMessages = new String[rows];
@@ -27,11 +27,11 @@ public class RVPIDSGUIPacket extends PacketHandler {
             this.rowHidden[i] = packetBuffer.readBoolean();
         }
 
-        this.presetId = packetBuffer.readString();
         this.hidePlatformNumber = packetBuffer.readBoolean();
+        this.presetId = packetBuffer.readString();
     }
 
-    public RVPIDSGUIPacket(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId) {
+    public PIDSGUIPacket(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId) {
         this.blockPos = blockPos;
         this.customMessages = customMessages;
         this.rowHidden = rowHidden;
@@ -51,12 +51,12 @@ public class RVPIDSGUIPacket extends PacketHandler {
             packetBuffer.writeBoolean(hidePlatform);
         }
 
-        packetBuffer.writeString(presetId);
         packetBuffer.writeBoolean(hidePlatformNumber);
+        packetBuffer.writeString(presetId);
     }
 
     @Override
     public void runClientQueued() {
-        MinecraftClient.getInstance().openScreen(new Screen(new RVPIDSScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId)));
+        MinecraftClient.getInstance().openScreen(new Screen(new PIDSScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId)));
     }
 }

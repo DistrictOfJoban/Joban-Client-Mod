@@ -131,6 +131,8 @@
   "gui.jsblock.looper.sound_vol": "Sound Volume (Multiplied by 100, Default is 100)",
   "gui.jsblock.mismatched_versions": "Please update the Joban Client Mod and try again.",
   "gui.jsblock.pids.listview.title.hide_platform_number": "Hide Platform Number",
+  "gui.jsblock.pids.listview.title.pids_preset": "PIDS Preset",
+  "gui.jsblock.pids.listview.widget.custom_message": "Custom messages",
   "gui.jsblock.pids.listview.widget.row_hidden": "Hide Arrivals",
   "gui.jsblock.pids.listview.widget.choose_preset": "Choose",
   "gui.jsblock.pids_preset.title": "PIDS Preset",

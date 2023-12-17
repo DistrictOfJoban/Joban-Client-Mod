@@ -6,10 +6,11 @@ import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;
 
 public class PIDSUpdatePacket extends PacketHandler {
-    protected final BlockPos blockPos;
-    protected final String[] customMessages;
-    protected final boolean[] rowHidden;
-    protected final String presetId;
+    private final BlockPos blockPos;
+    private final String[] customMessages;
+    private final boolean[] rowHidden;
+    private final boolean hidePlatformNumber;
+    private final String presetId;
 
     public PIDSUpdatePacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
@@ -23,14 +24,16 @@ public class PIDSUpdatePacket extends PacketHandler {
         for(int i = 0; i < rows; i++) {
             this.rowHidden[i] = packetBuffer.readBoolean();
         }
+        this.hidePlatformNumber = packetBuffer.readBoolean();
         this.presetId = packetBuffer.readString();
     }
 
-    public PIDSUpdatePacket(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, String pidsPreset) {
+    public PIDSUpdatePacket(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPreset) {
         this.blockPos = blockPos;
         this.customMessages = customMessages;
         this.rowHidden = rowHidden;
         this.presetId = pidsPreset;
+        this.hidePlatformNumber = hidePlatformNumber;
     }
 
     @Override
@@ -45,6 +48,7 @@ public class PIDSUpdatePacket extends PacketHandler {
             packetBuffer.writeBoolean(hidePlatform);
         }
 
+        packetBuffer.writeBoolean(hidePlatformNumber);
         packetBuffer.writeString(presetId);
     }
 
@@ -54,7 +58,7 @@ public class PIDSUpdatePacket extends PacketHandler {
         BlockEntity be = BlockUtil.getBlockEntityOrNull(world, blockPos);
 
         if(be != null && be.data instanceof PIDSBlockEntity) {
-            ((PIDSBlockEntity)be.data).setData(customMessages, rowHidden, presetId);
+            ((PIDSBlockEntity)be.data).setData(customMessages, rowHidden, hidePlatformNumber, presetId);
         }
     }
 }

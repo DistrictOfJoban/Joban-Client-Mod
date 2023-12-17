@@ -35,7 +35,7 @@ public class ListEntry implements GuiHelper {
         this.drawIconCallback = new DrawIconCallback() {
             @Override
             public void accept(GuiDrawing guiDrawing, int startX, int startY, int width, int height) {
-                drawTexture(guiDrawing, textureId, startX, startY, width, height);
+                GuiHelper.drawTexture(guiDrawing, textureId, startX, startY, width, height);
             }
         };
         return this;

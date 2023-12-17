@@ -49,7 +49,9 @@ public abstract class PIDSPresetBase implements RenderHelper {
     }
 
     public abstract String getFont();
-    public abstract Identifier getPreviewImage();
+    public abstract Identifier getBackground();
+    public abstract int getPreviewTextColor();
+    public abstract boolean isRowHidden(int row);
 
     public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, float tickDelta, int x, int y, int width, int height, int light, int overlay);
 

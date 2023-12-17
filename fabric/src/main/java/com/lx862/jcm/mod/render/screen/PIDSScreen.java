@@ -1,9 +1,11 @@
 package com.lx862.jcm.mod.render.screen;
 
-import com.lx862.jcm.mod.network.block.RVPIDSUpdatePacket;
+import com.lx862.jcm.mod.data.pids.PIDSManager;
+import com.lx862.jcm.mod.network.block.PIDSUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.screen.base.BlockConfigScreenBase;
 import com.lx862.jcm.mod.render.screen.widget.HorizontalWidgetSet;
+import com.lx862.jcm.mod.render.screen.widget.ListEntry;
 import com.lx862.jcm.mod.render.screen.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -13,20 +15,20 @@ import org.mtr.mapping.mapper.CheckboxWidgetExtension;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
-public class RVPIDSScreen extends BlockConfigScreenBase {
+public class PIDSScreen extends BlockConfigScreenBase {
     private final TextFieldWidgetExtension[] customMessagesWidgets;
     private final CheckboxWidgetExtension[] rowHiddenWidgets;
     private final CheckboxWidgetExtension hidePlatformNumber;
     private final ButtonWidgetExtension choosePresetButton;
     private String presetId;
-    public RVPIDSScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId) {
+    public PIDSScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId) {
         super(blockPos);
         this.customMessagesWidgets = new TextFieldWidgetExtension[customMessages.length];
         this.rowHiddenWidgets = new CheckboxWidgetExtension[rowHidden.length];
 
         for(int i = 0; i < customMessages.length; i++) {
             String customMessage = customMessages[i];
-            this.customMessagesWidgets[i] = new TextFieldWidgetExtension(0, 0, 120, 20, "", 100, TextCase.DEFAULT, null, "Custom messages...");
+            this.customMessagesWidgets[i] = new TextFieldWidgetExtension(0, 0, 120, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.custom_message").getString());
             this.customMessagesWidgets[i].setText2(customMessage);
         }
 
@@ -63,8 +65,8 @@ public class RVPIDSScreen extends BlockConfigScreenBase {
             addChild(new ClickableWidget(this.rowHiddenWidgets[i]));
 
             int w = listViewWidget.getWidth2();
-            this.customMessagesWidgets[i].setWidth2(w - 100);
             this.rowHiddenWidgets[i].setWidth2(95);
+            this.customMessagesWidgets[i].setWidth2(w - this.rowHiddenWidgets[i].getWidth2() - 10);
 
             HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
             widgetSet.addWidget(new MappedWidget(this.customMessagesWidgets[i]));
@@ -78,7 +80,14 @@ public class RVPIDSScreen extends BlockConfigScreenBase {
         addChild(new ClickableWidget(choosePresetButton));
 
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.title.hide_platform_number"), new MappedWidget(hidePlatformNumber));
-        listViewWidget.add(TextUtil.literal("PIDS Preset (" + presetId + ")"), new MappedWidget(choosePresetButton));
+
+        ListEntry presetEntry = new ListEntry(TextUtil.translatable(TextCategory.GUI, "pids.listview.title.pids_preset"), new MappedWidget(choosePresetButton), false, 26);
+        if(PIDSManager.getPreset(presetId) != null) {
+            presetEntry.setIconCallback((guiDrawing, startX, startY, width, height) -> {
+                PIDSPresetScreen.drawPIDSPreview(PIDSManager.getPreset(presetId), guiDrawing, startX, startY, width, height, true);
+            });
+        }
+        listViewWidget.add(presetEntry);
     }
 
     @Override
@@ -94,6 +103,6 @@ public class RVPIDSScreen extends BlockConfigScreenBase {
             rowHidden[i] = this.rowHiddenWidgets[i].isChecked2();
         }
 
-        Networking.sendPacketToServer(new RVPIDSUpdatePacket(blockPos, customMessages, rowHidden, hidePlatformNumber.isChecked2(), presetId));
+        Networking.sendPacketToServer(new PIDSUpdatePacket(blockPos, customMessages, rowHidden, hidePlatformNumber.isChecked2(), presetId));
     }
 }

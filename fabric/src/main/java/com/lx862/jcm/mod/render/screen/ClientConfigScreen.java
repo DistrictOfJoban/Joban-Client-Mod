@@ -165,11 +165,11 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         float starUVSize = (float) (starSize / 384F);
         double translateY = height * (1 - animationProgress);
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
-        drawTexture(guiDrawing, TEXTURE_BACKGROUND, 0, 0, width, height);
-        drawTexture(guiDrawing, TEXTURE_STAR, 0, translateY * 0.2, starSize, starSize, 0, 0, starUVSize, starUVSize);
+        GuiHelper.drawTexture(guiDrawing, TEXTURE_BACKGROUND, 0, 0, width, height);
+        GuiHelper.drawTexture(guiDrawing, TEXTURE_STAR, 0, translateY * 0.2, starSize, starSize, 0, 0, starUVSize, starUVSize);
 
         if(welcome) drawPride(graphicsHolder);
-        drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
+        GuiHelper.drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
     }
 
     private void drawPride(GraphicsHolder graphicsHolder) {
@@ -182,12 +182,12 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
 
         // TODO: where my matrices :(
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
-        drawRectangle(guiDrawing, 0, startY, width * prideAnimationProgress, h, 0xFFDF6277);
-        drawRectangle(guiDrawing, 0, startY + h, width * prideAnimationProgress, h, 0xFFFB9168);
-        drawRectangle(guiDrawing, 0, startY + h*2, width * prideAnimationProgress, h, 0xFFF3DB6C);
-        drawRectangle(guiDrawing, 0, startY + h*3, width * prideAnimationProgress, h, 0xFF7AB392);
-        drawRectangle(guiDrawing, 0, startY + h*4, width * prideAnimationProgress, h, 0xFF4B7CBC);
-        drawRectangle(guiDrawing, 0, startY + h*5, width * prideAnimationProgress, h, 0xFF6F488C);
+        GuiHelper.drawRectangle(guiDrawing, 0, startY, width * prideAnimationProgress, h, 0xFFDF6277);
+        GuiHelper.drawRectangle(guiDrawing, 0, startY + h, width * prideAnimationProgress, h, 0xFFFB9168);
+        GuiHelper.drawRectangle(guiDrawing, 0, startY + h*2, width * prideAnimationProgress, h, 0xFFF3DB6C);
+        GuiHelper.drawRectangle(guiDrawing, 0, startY + h*3, width * prideAnimationProgress, h, 0xFF7AB392);
+        GuiHelper.drawRectangle(guiDrawing, 0, startY + h*4, width * prideAnimationProgress, h, 0xFF4B7CBC);
+        GuiHelper.drawRectangle(guiDrawing, 0, startY + h*5, width * prideAnimationProgress, h, 0xFF6F488C);
         graphicsHolder.pop();
     }
 

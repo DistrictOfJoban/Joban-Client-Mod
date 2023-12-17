@@ -2,7 +2,7 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.Horizontal2MirroredBlock;
 import com.lx862.jcm.mod.block.entity.RVPIDSBlockEntity;
-import com.lx862.jcm.mod.network.gui.RVPIDSGUIPacket;
+import com.lx862.jcm.mod.network.gui.PIDSGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
@@ -35,7 +35,7 @@ public class RVPIDSBlock extends Horizontal2MirroredBlock implements BlockWithEn
 
         // TODO: Temporary item, replace with Driver Key after adding MTR as dependencies
         if (player.isHolding(Items.getGrassBlockMapped())) {
-            Networking.sendPacketToClient(player, new RVPIDSGUIPacket(pos, thisEntity.getCustomMessages(), thisEntity.getHidePlatforms(), thisEntity.getHidePlatformNumber(), thisEntity.getPresetId()));
+            Networking.sendPacketToClient(player, new PIDSGUIPacket(pos, thisEntity.getCustomMessages(), thisEntity.getHidePlatforms(), thisEntity.getHidePlatformNumber(), thisEntity.getPresetId()));
         }
     }
 

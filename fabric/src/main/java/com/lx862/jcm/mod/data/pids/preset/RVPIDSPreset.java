@@ -144,7 +144,17 @@ public class RVPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public Identifier getPreviewImage() {
+    public Identifier getBackground() {
         return TEXTURE_BACKGROUND;
+    }
+
+    @Override
+    public int getPreviewTextColor() {
+        return ARGB_BLACK;
+    }
+
+    @Override
+    public boolean isRowHidden(int row) {
+        return false;
     }
 }

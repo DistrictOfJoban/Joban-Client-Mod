@@ -8,6 +8,7 @@ import org.mtr.mapping.holder.CompoundTag;
 public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
     private final String[] customMessages;
     private final boolean[] rowHidden;
+    private boolean hidePlatformNumber;
     private String pidsPresetId;
     public PIDSBlockEntity(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState) {
         super(blockEntityType, blockPos, blockState);
@@ -22,9 +23,11 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
         for(int i = 0; i < getRowAmount(); i++) {
             this.customMessages[i] = compoundTag.getString("message" + i);
             this.rowHidden[i] = compoundTag.getBoolean("hide_arrival" + i);
-            this.pidsPresetId = compoundTag.getString("preset_id");
-            if(this.pidsPresetId.isEmpty()) this.pidsPresetId = getDefaultPresetId();
         }
+
+        this.hidePlatformNumber = compoundTag.getBoolean("hide_platform_number");
+        this.pidsPresetId = compoundTag.getString("preset_id");
+        if(this.pidsPresetId.isEmpty()) this.pidsPresetId = getDefaultPresetId();
     }
 
     @Override
@@ -36,6 +39,8 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
             compoundTag.putString(("message" + i), customMessage);
             compoundTag.putBoolean(("hide_arrival" + i), rowHidden);
         }
+
+        compoundTag.putBoolean("hide_platform_number", hidePlatformNumber);
         compoundTag.putString("preset_id", this.pidsPresetId);
     }
 
@@ -47,11 +52,16 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
         return this.rowHidden;
     }
 
-    public void setData(String[] customMessages, boolean[] rowHidden, String pidsPresetId) {
+    public void setData(String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPresetId) {
         System.arraycopy(customMessages, 0, this.customMessages, 0, customMessages.length);
         System.arraycopy(rowHidden, 0, this.rowHidden, 0, rowHidden.length);
+        this.hidePlatformNumber = hidePlatformNumber;
         this.pidsPresetId = pidsPresetId;
         this.markDirty2();
+    }
+
+    public boolean getHidePlatformNumber() {
+        return hidePlatformNumber;
     }
 
     public String getPresetId() {

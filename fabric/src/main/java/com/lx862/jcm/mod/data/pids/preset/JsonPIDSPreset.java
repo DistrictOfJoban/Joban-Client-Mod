@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
@@ -22,17 +23,17 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private final boolean showWeather;
     private final int textColor;
     private final TextOverflowMode textOverflowMode;
-    private boolean[] rowVisibilityOverride;
+    private final boolean[] rowHidden;
     private static final int PIDS_MARGIN = 8;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
-    public JsonPIDSPreset(String id, @Nullable String name, @Nullable Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean showClock, boolean showWeather, int textColor) {
+    public JsonPIDSPreset(String id, @Nullable String name, @Nullable Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, int textColor) {
         super(id, name, false);
         this.background = background;
         this.showClock = showClock;
         this.showWeather = showWeather;
         this.textColor = textColor;
-        // TODO: kcr_sign is temp
-        this.fontId = fontId == null ? "jsblock:kcr_sign" : fontId;
+        this.fontId = fontId == null ? "mtr:mtr" : fontId;
+        this.rowHidden = rowHidden;
         this.textOverflowMode = textOverflowMode;
     }
 
@@ -40,13 +41,15 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         String id = jsonObject.get("id").getAsString();
         boolean showWeather = jsonObject.has("showWeather") && jsonObject.get("showWeather").getAsBoolean();
         boolean showClock = jsonObject.has("showWeather") && jsonObject.get("showWeather").getAsBoolean();
-        int textColor = 0;
+        boolean[] rowHidden;
+
+        int textColor = ARGB_BLACK;
         String name = id;
         String font = null;
         Identifier background = null;
         TextOverflowMode textOverflowMode = TextOverflowMode.STRETCH;
         if(jsonObject.has("color")) {
-            // TODO: Implement custom text color
+            textColor = (int)Long.parseLong("FF" + jsonObject.get("color").getAsString(), 16);
         }
         if(jsonObject.has("name")) {
             name = jsonObject.get("name").getAsString();
@@ -57,6 +60,15 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         }
         if(jsonObject.has("textOverflowMode")) {
             textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
+        }
+        if(jsonObject.has("hideRow")) {
+            JsonArray arr = jsonObject.getAsJsonArray("hideRow");
+            rowHidden = new boolean[arr.size()];
+            for(int i = 0; i < arr.size(); i++) {
+                rowHidden[i] = arr.get(i).getAsBoolean();
+            }
+        } else {
+            rowHidden = new boolean[]{};
         }
         if(jsonObject.has("background")) {
             Identifier backgroundId = new Identifier(jsonObject.get("background").getAsString());
@@ -69,7 +81,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
             background = backgroundId;
         }
-        return new JsonPIDSPreset(id, name, background, font, textOverflowMode, showClock, showWeather, textColor);
+        return new JsonPIDSPreset(id, name, background, font, textOverflowMode, rowHidden, showClock, showWeather, textColor);
     }
 
     @Override
@@ -78,8 +90,18 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public Identifier getPreviewImage() {
+    public Identifier getBackground() {
         return background;
+    }
+
+    @Override
+    public int getPreviewTextColor() {
+        return textColor;
+    }
+
+    @Override
+    public boolean isRowHidden(int row) {
+        return rowHidden.length - 1 < row ? false : rowHidden[row];
     }
 
     @Override

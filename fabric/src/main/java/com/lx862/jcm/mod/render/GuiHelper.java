@@ -14,18 +14,18 @@ public interface GuiHelper {
     int MAX_CONTENT_WIDTH = 400;
     int BOTTOM_ROW_MARGIN = 6;
 
-    default void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height) {
+    static void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height) {
         Pair<Float, Float> uv = McMetaManager.getUV(identifier);
         drawTexture(guiDrawing, identifier, x, y, width, height, 0, uv.getLeft(), 1, uv.getRight());
     }
 
-    default void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height, float u1, float v1, float u2, float v2) {
+    static void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height, float u1, float v1, float u2, float v2) {
         guiDrawing.beginDrawingTexture(identifier);
         guiDrawing.drawTexture(x, y, x + width, y + height, u1, v1, u2, v2);
         guiDrawing.finishDrawingTexture();
     }
 
-    default void drawRectangle(GuiDrawing guiDrawing, double x, double y, double width, double height, int color) {
+    static void drawRectangle(GuiDrawing guiDrawing, double x, double y, double width, double height, int color) {
         guiDrawing.beginDrawingRectangle();
         guiDrawing.drawRectangle(x, y, x + width, y + height, color);
         guiDrawing.finishDrawingRectangle();
