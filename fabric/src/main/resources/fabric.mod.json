@@ -33,6 +33,7 @@
 	"depends": {
 		"fabricloader": ">=0.14.18",
 		"minecraft": "~${minecraft_version}",
+		"mtr": "*",
 		"fabric": "*"
 	}
 }

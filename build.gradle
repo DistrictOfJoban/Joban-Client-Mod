@@ -1,35 +1,35 @@
 plugins {
-	id "com.github.johnrengelman.shadow" version "+" apply false
+//	id "com.github.johnrengelman.shadow" version "+" apply false
 }
 
 subprojects {
 	apply plugin: "java"
-	apply plugin: "com.github.johnrengelman.shadow"
+//	apply plugin: "com.github.johnrengelman.shadow"
 
 	group project.maven_group
 	version "${rootProject.properties.mod_version}+${rootProject.properties.minecraft_version}"
 
 	configurations {
-		shadowImplementation
-		implementation.extendsFrom shadowImplementation
+//		shadowImplementation
+//		implementation.extendsFrom shadowImplementation
 	}
 
 	dependencies {
 		annotationProcessor 'systems.manifold:manifold-preprocessor:+'
 		implementation 'com.google.code.findbugs:jsr305:+'
-		shadowImplementation "org.mtr:Minecraft-Mappings-common:0.0.1"
+		implementation "org.mtr:Minecraft-Mappings-common:0.0.1"
 	}
 
 	repositories {
 		flatDir { dirs "../libs" }
 	}
-
-	shadowJar {
-		minimize()
-		configurations = [project.configurations.shadowImplementation]
-		enableRelocation = true
-		relocationPrefix = "com.lx862.jcm.libraries"
-	}
+//
+//	shadowJar {
+//		minimize()
+//		configurations = [project.configurations.shadowImplementation]
+//		enableRelocation = false
+//		relocationPrefix = "com.lx862.jcm.lib"
+//	}
 
 	/* Manifold support */
 	tasks.withType(JavaCompile).forEach {

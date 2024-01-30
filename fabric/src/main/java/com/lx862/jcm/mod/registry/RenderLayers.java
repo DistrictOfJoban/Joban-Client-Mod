@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.registry;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.registry.BlockRegistryObject;
-import org.mtr.mapping.registry.RegistryClient;
 
 public final class RenderLayers {
     public static void registerClient() {
@@ -40,7 +39,7 @@ public final class RenderLayers {
 
     private static void registerRenderLayers(RenderLayer renderLayer, BlockRegistryObject... blocks) {
         for (BlockRegistryObject blockRegistryObject : blocks) {
-            RegistryClient.registerBlockRenderType(renderLayer, blockRegistryObject);
+            RegistryHelperClient.registerBlockRenderType(renderLayer, blockRegistryObject);
         }
     }
 }
