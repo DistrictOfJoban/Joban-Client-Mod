@@ -1,6 +1,6 @@
 package com.lx862.jcm.mixin.compat;
 
-import com.lx862.jcm.mod.util.Utils;
+import com.lx862.jcm.mod.util.JCMUtil;
 import net.minecraft.util.Identifier;
 #if MC_VERSION < "11904"
 import net.minecraft.util.registry.DefaultedRegistry;
@@ -27,6 +27,6 @@ public class SimpleDefaultedRegistryMixin {
     @ModifyVariable(at = @At("HEAD"), method = "get(Lnet/minecraft/util/Identifier;)Ljava/lang/Object;", ordinal = 0, argsOnly = true)
     Identifier dataFixerRegistry(@Nullable Identifier id) {
         if(id == null) return id;
-        return Utils.getMigrationId(new org.mtr.mapping.holder.Identifier(id)).data;
+        return JCMUtil.getMigrationId(new org.mtr.mapping.holder.Identifier(id)).data;
     }
 }

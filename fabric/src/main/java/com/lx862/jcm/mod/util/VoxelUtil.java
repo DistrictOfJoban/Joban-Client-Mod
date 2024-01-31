@@ -9,6 +9,7 @@ import org.mtr.mapping.holder.VoxelShapes;
  * Provides utilities method for obtaining a VoxelShape
  */
 public class VoxelUtil {
+    /** Obtain a Rectangular Voxel Shape in 16 unit (Whereas vanilla is in meters) */
     public static VoxelShape getShape16(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
         return VoxelShapes.cuboid(new Box(minX / 16, minY / 16, minZ / 16, maxX / 16, maxY / 16, maxZ / 16));
     }

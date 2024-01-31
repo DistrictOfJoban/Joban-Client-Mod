@@ -32,7 +32,7 @@ public class KCREmergencyStopSign extends WallAttachedBlock {
 
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(Utils.playerHoldingBrush(player)) {
+        if(JCMUtil.playerHoldingBrush(player)) {
             world.setBlockState(pos, state.cycle(new Property<>(POINT_TO_LEFT.data)));
             player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "kcr_emg_stop_sign.success")), true);
         }

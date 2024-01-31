@@ -2,10 +2,7 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
-import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.TextCategory;
-import com.lx862.jcm.mod.util.TextUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import com.lx862.jcm.mod.util.*;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
@@ -29,8 +26,7 @@ public class OperatorButtonBlock extends WallAttachedBlock {
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         super.onUse2(state, world, pos, player, hand, hit);
-        // TODO: Temporary item, replace with Driver Key after adding MTR as dependencies
-        if (player.isHolding(Items.getGrassBlockMapped())) {
+        if (JCMUtil.playerHoldingDriverKey(player)) {
             return ActionResult.SUCCESS;
         } else {
             player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "operator_button.fail").formatted(TextFormatting.RED)), true);
@@ -40,8 +36,7 @@ public class OperatorButtonBlock extends WallAttachedBlock {
 
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        // TODO: Temporary item, replace with Driver Key after adding MTR as dependencies
-        if (player.isHolding(Items.getGrassBlockMapped())) {
+        if (JCMUtil.playerHoldingDriverKey(player)) {
             setPowered(world, state, pos, true);
             scheduleBlockTick(world, pos, new Block(this), poweredDuration);
         }

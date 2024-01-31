@@ -2,16 +2,18 @@ package com.lx862.jcm.mod.util;
 
 import com.lx862.jcm.mod.Constants;
 import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.Items;
 import org.mtr.mapping.holder.PlayerEntity;
 
-public class Utils {
+public class JCMUtil {
     /**
      * Whether the player is holding an MTR Brush / An item used for configuring blocks
      */
     public static boolean playerHoldingBrush(PlayerEntity player) {
-        // TODO: Temporary, will replace with Brush after adding MTR as dependencies
-        return player.isHolding(Items.getGrassBlockMapped());
+        return player.isHolding(org.mtr.mod.Items.BRUSH.get());
+    }
+
+    public static boolean playerHoldingDriverKey(PlayerEntity player) {
+        return player.isHolding(org.mtr.mod.Items.DRIVER_KEY.get());
     }
 
     /**

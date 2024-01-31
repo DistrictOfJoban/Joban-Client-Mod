@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.block.entity.RVPIDSBlockEntity;
 import com.lx862.jcm.mod.network.gui.PIDSGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.util.JCMUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
@@ -33,8 +34,7 @@ public class RVPIDSBlock extends Horizontal2MirroredBlock implements BlockWithEn
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         RVPIDSBlockEntity thisEntity = (RVPIDSBlockEntity) world.getBlockEntity(pos).data;
 
-        // TODO: Temporary item, replace with Driver Key after adding MTR as dependencies
-        if (player.isHolding(Items.getGrassBlockMapped())) {
+        if (JCMUtil.playerHoldingBrush(player)) {
             Networking.sendPacketToClient(player, new PIDSGUIPacket(pos, thisEntity.getCustomMessages(), thisEntity.getHidePlatforms(), thisEntity.getHidePlatformNumber(), thisEntity.getPresetId()));
         }
     }

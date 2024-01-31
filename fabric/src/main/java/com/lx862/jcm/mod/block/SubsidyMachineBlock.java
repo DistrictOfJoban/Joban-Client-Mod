@@ -35,7 +35,7 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         SubsidyMachineBlockEntity thisEntity = (SubsidyMachineBlockEntity)world.getBlockEntity(pos).data;
 
-        if (Utils.playerHoldingBrush(player)) {
+        if (JCMUtil.playerHoldingBrush(player)) {
             Networking.sendPacketToClient(player, new SubsidyMachineGUIPacket(pos, thisEntity.getSubsidyAmount(), thisEntity.getCooldown()));
             return;
         }

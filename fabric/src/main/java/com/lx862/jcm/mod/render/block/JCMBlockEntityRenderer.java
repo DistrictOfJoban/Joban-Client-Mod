@@ -4,16 +4,17 @@ import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.util.JCMLogger;
 import org.jetbrains.annotations.NotNull;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
+import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> extends BlockEntityRenderer<T> implements RenderHelper {
-
     public JCMBlockEntityRenderer(Argument dispatcher) {
         super(dispatcher);
     }
@@ -26,14 +27,13 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
 
             renderCurated(blockEntity, tickDelta, graphicsHolder, light, i1);
         } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(-1);
-//            CrashReport crashReport = new CrashReport("Exception caught in JCM Block Entity Rendering", e);
-//
-//            MinecraftClient.getInstance().addDetailsToCrashReport(crashReport);
-//            MinecraftClient.getInstance().cleanUpAfterCrash();
-//            MinecraftClient.getInstance().printCrashReport(crashReport);
-//            MinecraftClient.getInstance().close();
+            JCMLogger.error("An exception occurred while rendering Block Entity:", e);
+            JCMLogger.error("This is a bug, please report to the developers of Joban Client Mod!");
+
+            if(ConfigEntry.DEBUG_MODE.getBool()) {
+                JCMLogger.fatal("Exception while rendering block entity, stopping game as Debug Mode is enabled!");
+                MinecraftClient.getInstance().stop();
+            }
         }
     }
 

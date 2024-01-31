@@ -6,7 +6,7 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.network.gui.ButterflyLightGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.Utils;
+import com.lx862.jcm.mod.util.JCMUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
@@ -38,7 +38,7 @@ public class ButterflyLightBlock extends DirectionalBlock implements BlockWithEn
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         ButterflyLightBlockEntity thisEntity = (ButterflyLightBlockEntity)world.getBlockEntity(pos).data;
 
-        if(Utils.playerHoldingBrush(player)) {
+        if(JCMUtil.playerHoldingBrush(player)) {
             Networking.sendPacketToClient(player, new ButterflyLightGUIPacket(pos, thisEntity.getSecondsToBlink()));
         }
     }

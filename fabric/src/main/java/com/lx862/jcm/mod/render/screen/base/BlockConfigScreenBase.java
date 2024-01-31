@@ -5,10 +5,13 @@ import com.lx862.jcm.mod.render.screen.widget.WidgetSet;
 import com.lx862.jcm.mod.render.screen.widget.ListViewWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
+import org.mtr.core.data.Station;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.ClickableWidget;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
+import org.mtr.mod.InitClient;
+import org.mtr.mod.data.IGui;
 
 /**
  * GUI Screen for configuring block settings, you should extend this class for your own block config screen
@@ -71,11 +74,20 @@ public abstract class BlockConfigScreenBase extends BasicScreenBase implements G
 
     @Override
     public MutableText getScreenSubtitle() {
-        return TextUtil.translatable(TextCategory.GUI,
-                "block_config.subtitle_near",
-                blockPos.getX(), blockPos.getY(), blockPos.getZ(),
-                "車站 Station" //TODO: Get real data
-        );
+        Station atStation = InitClient.findStation(blockPos);
+
+        if(atStation != null) {
+            return TextUtil.translatable(TextCategory.GUI,
+                    "block_config.subtitle_with_station",
+                    blockPos.getX(), blockPos.getY(), blockPos.getZ(),
+                    IGui.formatStationName(atStation.getName())
+            );
+        } else {
+            return TextUtil.translatable(TextCategory.GUI,
+                    "block_config.subtitle",
+                    blockPos.getX(), blockPos.getY(), blockPos.getZ()
+            );
+        }
     }
 
     @Override
