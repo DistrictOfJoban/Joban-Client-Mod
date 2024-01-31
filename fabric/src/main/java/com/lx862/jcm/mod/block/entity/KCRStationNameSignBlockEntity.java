@@ -6,7 +6,7 @@ import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 
 public class KCRStationNameSignBlockEntity extends BlockEntityExtension {
-    public KCRStationNameSignBlockEntity(BlockPos blockPos, BlockState blockState) {
-        super(BlockEntities.KCR_STATION_NAME_SIGN.get(), blockPos, blockState);
+    public KCRStationNameSignBlockEntity(BlockPos blockPos, BlockState blockState, boolean stationColored) {
+        super(stationColored ? BlockEntities.KCR_STATION_NAME_SIGN_STATION_COLOR.get() : BlockEntities.KCR_STATION_NAME_SIGN.get(), blockPos, blockState);
     }
 }

@@ -13,8 +13,10 @@ import java.util.List;
 
 public class KCRStationNameSignBlock extends VerticallyAttachedDirectionalBlock implements BlockWithEntity {
     public static final BooleanProperty EXIT_ON_LEFT = BlockProperties.EXIT_ON_LEFT;
-    public KCRStationNameSignBlock(BlockSettings settings) {
+    private final boolean stationColored;
+    public KCRStationNameSignBlock(BlockSettings settings, boolean stationColored) {
         super(settings, true, false);
+        this.stationColored = stationColored;
     }
 
     @Override
@@ -24,7 +26,7 @@ public class KCRStationNameSignBlock extends VerticallyAttachedDirectionalBlock 
 
     @Override
     public BlockEntityExtension createBlockEntity(BlockPos blockPos, BlockState blockState) {
-        return new KCRStationNameSignBlockEntity(blockPos, blockState);
+        return new KCRStationNameSignBlockEntity(blockPos, blockState, stationColored);
     }
 
     @Override
