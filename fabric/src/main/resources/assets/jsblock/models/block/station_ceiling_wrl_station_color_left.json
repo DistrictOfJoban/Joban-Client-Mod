@@ -1,0 +1,37 @@
+{
+	"textures": {
+		"0": "jsblock:block/station_ceiling_wrl_uncolored",
+		"1": "mtr:block/metal",
+		"particle": "jsblock:block/station_ceiling_wrl_uncolored"
+	},
+	"elements": [
+		{
+			"name": "Main",
+			"from": [0.5, 8, 1],
+			"to": [16, 9, 15],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8.25, 8.5, 7]},
+			"faces": {
+				"north": {"uv": [0, 14.6727, 7.8605, 15.4276], "texture": "#0", "tintindex": 0},
+				"east": {"uv": [7.9687, 14.6815, 16, 15.4051], "texture": "#0", "tintindex": 0},
+				"south": {"uv": [0, 14.6727, 7.9067, 15.3963], "texture": "#0", "tintindex": 0},
+				"west": {"uv": [0, 14.6693, 8, 15.4242], "texture": "#0", "tintindex": 0},
+				"up": {"uv": [0, 6.5, 8, 14.5], "rotation": 180, "texture": "#0", "tintindex": 0},
+				"down": {"uv": [8.68816, 0.18787, 16, 14.84146], "rotation": 180, "texture": "#0", "tintindex": 0}
+			}
+		},
+		{
+			"name": "Pole",
+			"from": [5.5, 9, 7.5],
+			"to": [6.5, 16, 8.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8.25, 8.5, 7]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"east": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"west": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"up": {"uv": [0, 0, 16, 16], "rotation": 180, "texture": "#1", "cullface": "up"},
+				"down": {"uv": [0, 0, 0, 0], "rotation": 180, "texture": "#1"}
+			}
+		}
+	]
+}

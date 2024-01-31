@@ -59,7 +59,7 @@
   "block.jsblock.signal_light_inverted_2": "信号灯 (反转，蓝-绿)",
   "block.jsblock.sound_looper": "声音循环器",
   "block.jsblock.station_ceiling_wrl": "天花板 (2009年)",
-  "block.jsblock.station_ceiling_wrl_station_colored": "天花板 (2009年, 车站颜色)",
+  "block.jsblock.station_ceiling_wrl_station_color": "天花板 (2009年, 车站颜色)",
   "block.jsblock.station_ceiling_wrl_pole": "天花板 (柱)",
   "block.jsblock.station_name_standing": "站名 (立柱)",
   "block.jsblock.subsidy_machine": "补贴领取站",

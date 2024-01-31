@@ -59,7 +59,7 @@
   "block.jsblock.signal_light_inverted_2": "信號燈 (反轉，藍-綠)",
   "block.jsblock.sound_looper": "聲音循環器",
   "block.jsblock.station_ceiling_wrl": "天花板 (2009年)",
-  "block.jsblock.station_ceiling_wrl_station_colored": "天花板 (2009年, 車站顏色)",
+  "block.jsblock.station_ceiling_wrl_station_color": "天花板 (2009年, 車站顏色)",
   "block.jsblock.station_ceiling_wrl_pole": "天花板 (柱)",
   "block.jsblock.station_name_standing": "站名 (立柱)",
   "block.jsblock.subsidy_machine": "補貼領取站",

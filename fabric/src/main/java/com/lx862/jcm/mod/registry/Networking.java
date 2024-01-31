@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.registry;
 
-import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.network.block.ButterflyLightUpdatePacket;
 import com.lx862.jcm.mod.network.block.FareSaverUpdatePacket;
 import com.lx862.jcm.mod.network.block.PIDSUpdatePacket;
@@ -54,7 +53,7 @@ public class Networking {
             JCMLogger.warn("Non-registered packets is sent: " + data.getClass().getName());
             JCMLogger.warn("Consider registering in method: mod/registry/Networking.register()");
         }
-        JCMClient.REGISTRY_CLIENT.sendPacketToServer(data);
+        RegistryHelperClient.REGISTRY_CLIENT.sendPacketToServer(data);
     }
 
     public static <T extends PacketHandler> void sendPacketToClient(PlayerEntity player, T data) {

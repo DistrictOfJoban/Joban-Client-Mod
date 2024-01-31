@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.block.*;
 import com.lx862.jcm.mod.util.JCMLogger;
+import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.BlockHelper;
 import org.mtr.mapping.registry.BlockRegistryObject;
 
@@ -23,6 +24,7 @@ public final class Blocks {
     public static final BlockRegistryObject FIRE_ALARM = RegistryHelper.registerBlockItem("fire_alarm", new FireAlarmWall(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject FARE_SAVER = RegistryHelper.registerBlockItem("faresaver", new FareSaverBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN = RegistryHelper.registerBlockItem("kcr_name_sign", new KCRStationNameSignBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject KCR_STATION_NAME_SIGN_STATION_COLOR = RegistryHelper.registerBlockItem("kcr_name_sign_station_color", new KCRStationNameSignBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject LIGHT_LANTERN = RegistryHelper.registerBlockItem("light_lantern", new LightLanternBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject MTR_STAIRS = RegistryHelper.registerBlockItem("mtr_stairs", new MTRStairsBlock(BlockHelper.createBlockSettings(false).strength(4.0f).data), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject OPERATOR_BUTTON = RegistryHelper.registerBlockItem("operator_button", new OperatorButtonBlock(BlockHelper.createBlockSettings(false, state -> 5).nonOpaque(), 40), ItemGroups.JCM_MAIN);
@@ -31,6 +33,8 @@ public final class Blocks {
     public static final BlockRegistryObject STATION_NAME_STANDING = RegistryHelper.registerBlockItem("station_name_standing", new StationNameStandingBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject STATION_CEILING_WRL = RegistryHelper.registerBlockItem("station_ceiling_wrl", new StationCeilingWRL2Block(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
     public static final BlockRegistryObject STATION_CEILING_WRL_SINGLE = RegistryHelper.registerBlockItem("station_ceiling_wrl_single", new StationCeilingWRLBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
+    public static final BlockRegistryObject STATION_CEILING_WRL_STATION_COLOR = RegistryHelper.registerBlockItem("station_ceiling_wrl_station_color", new StationCeilingWRL2Block(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
+    public static final BlockRegistryObject STATION_CEILING_WRL_SINGLE_STATION_COLOR = RegistryHelper.registerBlockItem("station_ceiling_wrl_single_station_color", new StationCeilingWRLBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
     public static final BlockRegistryObject STATION_CEILING_WRL_POLE = RegistryHelper.registerBlockItem("station_ceiling_wrl_pole", new StationCeilingWRL2Pole(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
     public static final BlockRegistryObject STATION_CEILING_WRL_POLE_SINGLE = RegistryHelper.registerBlockItem("station_ceiling_wrl_single_pole", new StationCeilingWRLPole(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
     public static final BlockRegistryObject THALES_TICKET_BARRIER_BARE = RegistryHelper.registerBlockItem("thales_ticket_barrier_bare", new ThalesTicketBarrierBareBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
@@ -59,7 +63,47 @@ public final class Blocks {
     public static final BlockRegistryObject WATER_MACHINE = RegistryHelper.registerBlockItem("water_machine", new WaterMachineBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
 
     public static void register() {
-        // We just load the class and it will be registered, nothing else
         JCMLogger.debug("Registering blocks...");
+        // Calling this method should cause the static class to be loaded, in turn registering the content.
+    }
+
+    public static void registerClient() {
+        /* Define Render Layer (Texture transparency etc.) */
+        RegistryHelperClient.registerBlockRenderType(RenderLayer.getCutout(),
+                Blocks.BUFFER_STOP,
+                Blocks.BUTTERFLY_LIGHT,
+                Blocks.CIRCLE_WALL_1,
+                Blocks.CIRCLE_WALL_2,
+                Blocks.CIRCLE_WALL_3,
+                Blocks.CIRCLE_WALL_4,
+                Blocks.CIRCLE_WALL_5,
+                Blocks.CIRCLE_WALL_6,
+                Blocks.FIRE_ALARM,
+                Blocks.FARE_SAVER,
+                Blocks.KCR_STATION_NAME_SIGN,
+                Blocks.KCR_STATION_NAME_SIGN_STATION_COLOR,
+                Blocks.KCR_EMG_STOP_SIGN,
+                Blocks.MTR_ENQUIRY_MACHINE,
+                Blocks.RV_ENQUIRY_MACHINE,
+                Blocks.SUBSIDY_MACHINE,
+                Blocks.SPOT_LAMP,
+                Blocks.HELPLINE_1,
+                Blocks.HELPLINE_2,
+                Blocks.HELPLINE_STANDING,
+                Blocks.HELPLINE_STANDING_EAL,
+                Blocks.SIL_EMG_STOP_BUTTON,
+                Blocks.STATION_NAME_STANDING,
+                Blocks.TML_EMG_STOP_BUTTON,
+                Blocks.MTR_TRESPASS_SIGN,
+                Blocks.WATER_MACHINE
+        );
+
+        /* Station Colored Blocks */
+        RegistryHelperClient.registerStationColoredBlock(
+                KCR_STATION_NAME_SIGN_STATION_COLOR,
+                STATION_NAME_STANDING,
+                STATION_CEILING_WRL_STATION_COLOR,
+                STATION_CEILING_WRL_SINGLE_STATION_COLOR
+        );
     }
 }
