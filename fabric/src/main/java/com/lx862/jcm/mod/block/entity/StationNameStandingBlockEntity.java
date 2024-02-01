@@ -8,8 +8,5 @@ import org.mtr.mod.block.BlockStationNameTallBase;
 public class StationNameStandingBlockEntity extends BlockStationNameTallBase.BlockEntityTallBase {
     public StationNameStandingBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(BlockEntities.STATION_NAME_STANDING.get(), blockPos, blockState, 0.07F, false);
-        #if
-        #elif
-        #endif
     }
 }
