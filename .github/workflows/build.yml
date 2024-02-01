@@ -40,3 +40,4 @@ jobs:
         with:
           name: Artifacts
           path: build/
+          merge-multiple: true
