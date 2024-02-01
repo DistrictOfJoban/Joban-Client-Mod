@@ -22,14 +22,15 @@ As such, method that are guaranteed to exist across all version will be annotate
 When overriding method on classes provided by **Minecraft Mappings**, you should be overriding and calling methods made by Minecraft-Mappings (Sometimes named like `methodName2` or `methodName3`), these are methods provided by **Minecraft Mappings**, whereas `methodName` is usually the underlying method provided by Minecraft.
 
 **Minecraft Mappings** also provide helper classes (For example the Vanilla Registry) on components with radical changes between versions.
+
+### There's no mapping for RenderSystem but I want to use it
+For RenderSystem you can just use the class provided by Minecraft directly. Not all Minecraft's code are obfuscated, for example some of the code in `com.mojang.blaze3d` including RenderSystem is not obfuscated, a mapping like Yarn or Mojmap is not needed and there's a much less chance that the method name will differ across mod-loaders due to them using different mappings.  
+If you really find yourself not being able to compile across all versions and mod-loaders when using code that's not provided by Minecraft Mappings, you can follow the section below.
+
 ### What if Minecraft Mappings doesn't contain the code I want
 In general there are 2 options:
 1. Contribute to [Minecraft-Mappings](https://github.com/Minecraft-Transit-Railway/Minecraft-Mappings) by following the instruction there.
-2. A backup solution is using manifold preprocessing to conditionally apply code (To be continued....)
-
-### What about RenderSystem?
-Not all Minecraft's code are obfuscated, for example some of the code in `com.mojang.blaze3d` including RenderSystem is not obfuscated, a mapping like Yarn or Mojmap is not needed and there's a much less chance that the method name will differ across mod-loaders due to them using different mappings.  
-If you really find yourself not being able to compile across all versions and mod-loaders when using code that's not provided by Minecraft Mappings, you can follow the section above.
+2. Use the manifold preprocessor to compile different code conditionally depending on the build configuration, see [Manifold Preprocessor](Manifold_Preprocessor.md) for more information.
 
 ## Code Guidelines
 ### Naming Convention

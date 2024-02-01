@@ -8,6 +8,7 @@ public class Events {
         // Start Tick Event for counting tick
         org.mtr.mapping.registry.EventRegistry.registerStartServerTick(() -> {
             JCMStats.incrementGameTick();
+            // TODO: Does this work on client in multiplayer?
             McMetaManager.tick();
         });
     }
