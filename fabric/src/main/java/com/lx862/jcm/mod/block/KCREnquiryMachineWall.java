@@ -24,6 +24,6 @@ public class KCREnquiryMachineWall extends WallAttachedBlock implements EnquiryM
 
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        tapEnquiryMachine(world, player);
+        enquiry(world, player);
     }
 }

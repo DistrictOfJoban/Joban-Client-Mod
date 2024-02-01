@@ -5,7 +5,7 @@ import org.mtr.mapping.holder.*;
 
 /**
  * Cheap way for a horizontal multi block, with 2 same block facing each other.
- * @deprecated Only retained for backward compatibility reason, please use Horizontal2Block from now on.
+ * @deprecated Only retained for backward compatibility reason, please use Horizontal2Block for all future blocks.
  */
 public abstract class Horizontal2MirroredBlock extends DirectionalBlock {
     public Horizontal2MirroredBlock(BlockSettings settings) {
