@@ -14,6 +14,7 @@ public class VoxelUtil {
         return VoxelShapes.cuboid(new Box(minX / 16, minY / 16, minZ / 16, maxX / 16, maxY / 16, maxZ / 16));
     }
 
+    /** Obtain a Rectangular Voxel Shape in 16 unit, which are rotated following the Direction parameter. (Values are north by default) */
     public static VoxelShape getDirectionalShape16(Direction direction, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
         switch (direction) {
             case NORTH:

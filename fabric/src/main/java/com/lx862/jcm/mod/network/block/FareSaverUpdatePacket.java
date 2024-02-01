@@ -11,7 +11,7 @@ public class FareSaverUpdatePacket extends PacketHandler {
 
     public FareSaverUpdatePacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
-        this.discount = packetBuffer.readVarInt();
+        this.discount = packetBuffer.readInt();
     }
 
     public FareSaverUpdatePacket(BlockPos blockPos, int discount) {
@@ -22,7 +22,7 @@ public class FareSaverUpdatePacket extends PacketHandler {
     @Override
     public void write(PacketBuffer packetBuffer) {
         packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeVarInt(discount);
+        packetBuffer.writeInt(discount);
     }
 
     @Override

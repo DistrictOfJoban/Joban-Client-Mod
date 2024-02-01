@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.render.screen.base;
+package com.lx862.jcm.mod.render.gui.screen.base;
 
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.Screen;

@@ -13,13 +13,10 @@ public class ExitSignEven extends VerticallyAttachedDirectional2Block {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        switch(BlockUtil.getProperty(state, PART)) {
-            case 0:
-                return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 8, 9, 7.9, 16, 16, 8.1);
-            case 1:
-                return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 9, 7.9, 8, 16, 8.1);
-            default:
-                return VoxelShapes.empty();
+        if(BlockUtil.getProperty(state, IS_LEFT)) {
+            return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 8, 9, 7.9, 16, 16, 8.1);
+        } else {
+            return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 9, 7.9, 8, 16, 8.1);
         }
     }
 }

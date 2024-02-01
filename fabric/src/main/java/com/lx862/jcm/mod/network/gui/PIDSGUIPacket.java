@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.network.gui;
 
-import com.lx862.jcm.mod.render.screen.PIDSScreen;
+import com.lx862.jcm.mod.render.gui.screen.PIDSScreen;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.PacketBuffer;
@@ -16,7 +16,7 @@ public class PIDSGUIPacket extends PacketHandler {
 
     public PIDSGUIPacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
-        int rows = packetBuffer.readVarInt();
+        int rows = packetBuffer.readInt();
         this.customMessages = new String[rows];
         this.rowHidden = new boolean[rows];
 
@@ -42,7 +42,7 @@ public class PIDSGUIPacket extends PacketHandler {
     @Override
     public void write(PacketBuffer packetBuffer) {
         packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeVarInt(customMessages.length);
+        packetBuffer.writeInt(customMessages.length);
 
         for(String customMessage : customMessages) {
             packetBuffer.writeString(customMessage == null ? "" : customMessage);

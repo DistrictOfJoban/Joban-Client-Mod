@@ -14,7 +14,7 @@ public class PIDSUpdatePacket extends PacketHandler {
 
     public PIDSUpdatePacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
-        int rows = packetBuffer.readVarInt();
+        int rows = packetBuffer.readInt();
         this.customMessages = new String[rows];
         this.rowHidden = new boolean[rows];
 
@@ -39,7 +39,7 @@ public class PIDSUpdatePacket extends PacketHandler {
     @Override
     public void write(PacketBuffer packetBuffer) {
         packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeVarInt(customMessages.length);
+        packetBuffer.writeInt(customMessages.length);
 
         for(String customMessage : customMessages) {
             packetBuffer.writeString(customMessage);

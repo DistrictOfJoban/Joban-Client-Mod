@@ -13,15 +13,14 @@ public class StationCeilingWRL2Block extends VerticallyAttachedDirectional2Block
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        switch (BlockUtil.getProperty(state, PART)) {
-            case 0:
-                VoxelShape ceiling = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0.5, 8, 1, 16, 9, 15);
-                VoxelShape pole = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 5.5, 9, 7.5, 6.5, 16, 8.5);
-                return VoxelShapes.union(ceiling, pole);
-            default:
-                VoxelShape ceilingR = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 8, 1, 15.5, 9, 15);
-                VoxelShape poleR = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 10.5, 9, 7.5, 11.5, 16, 8.5);
-                return VoxelShapes.union(ceilingR, poleR);
+        if(BlockUtil.getProperty(state, IS_LEFT)) {
+            VoxelShape ceiling = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0.5, 8, 1, 16, 9, 15);
+            VoxelShape pole = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 5.5, 9, 7.5, 6.5, 16, 8.5);
+            return VoxelShapes.union(ceiling, pole);
+        } else {
+            VoxelShape ceilingR = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 8, 1, 15.5, 9, 15);
+            VoxelShape poleR = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 10.5, 9, 7.5, 11.5, 16, 8.5);
+            return VoxelShapes.union(ceilingR, poleR);
         }
     }
 

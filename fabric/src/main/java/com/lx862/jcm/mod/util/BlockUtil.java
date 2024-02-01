@@ -36,11 +36,15 @@ public class BlockUtil {
         return canSurvive;
     }
 
+    public static boolean sameBlock(Block instance, WorldAccess world, BlockPos pos) {
+        BlockState bs = world.getBlockState(pos);
+        return bs.isOf(instance);
+    }
+
     public static boolean isReplacable(World world, BlockPos startPos, Direction direction, ItemPlacementContext ctx, int distance) {
         for (int i = 0; i < distance; i++) {
             BlockPos posUp = startPos.offset(direction, i);
             BlockState blockState = world.getBlockState(posUp);
-            /* FIXME: This returns true? */
             if (!blockState.canReplace(ctx)) {
                 return false;
             }
@@ -58,6 +62,11 @@ public class BlockUtil {
 
     public static int getProperty(BlockState state, IntegerProperty property) {
         return getProperty(state, new Property<>(property.data));
+    }
+
+    public static <T extends Comparable<T>> BlockState withProperty(BlockState state, Property<T> property, T value) {
+        if(state == null) return null;
+        return state.with(property, value);
     }
 
     static <T extends Comparable<T>> T getProperty(BlockState state, Property<T> property) {

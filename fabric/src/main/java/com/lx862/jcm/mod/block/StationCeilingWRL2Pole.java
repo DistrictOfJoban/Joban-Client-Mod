@@ -10,7 +10,7 @@ import org.mtr.mapping.tool.HolderBase;
 import java.util.List;
 
 public class StationCeilingWRL2Pole extends PoleBlock {
-    public static final IntegerProperty PART = BlockProperties.HORIZONTAL_PART;
+    public static final BooleanProperty PART = BlockProperties.HORIZONTAL_PART_LEFT;
 
     public StationCeilingWRL2Pole(BlockSettings settings) {
         super(settings);
@@ -18,13 +18,10 @@ public class StationCeilingWRL2Pole extends PoleBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        switch (BlockUtil.getProperty(state, PART)) {
-            case 0:
-                return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 5.5, 0, 7.5, 6.5, 16, 8.5);
-            case 1:
-                return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 10.5, 0, 7.5, 11.5, 16, 8.5);
-            default:
-                return VoxelShapes.empty();
+        if(BlockUtil.getProperty(state, PART)) {
+            return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 5.5, 0, 7.5, 6.5, 16, 8.5);
+        } else {
+            return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 10.5, 0, 7.5, 11.5, 16, 8.5);
         }
     }
 

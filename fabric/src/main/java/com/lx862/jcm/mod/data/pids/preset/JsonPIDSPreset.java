@@ -6,7 +6,7 @@ import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.render.TextOverflowMode;
-import com.lx862.jcm.mod.trm.FontManager;
+import com.lx862.jcm.mod.render.text.FontManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;

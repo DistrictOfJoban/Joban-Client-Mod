@@ -1,13 +1,13 @@
-package com.lx862.jcm.mod.render.screen;
+package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.screen.base.BasicScreenBase;
-import com.lx862.jcm.mod.render.screen.widget.ListEntry;
-import com.lx862.jcm.mod.render.screen.widget.ListViewWidget;
-import com.lx862.jcm.mod.render.screen.widget.MappedWidget;
+import com.lx862.jcm.mod.render.gui.screen.base.BasicScreenBase;
+import com.lx862.jcm.mod.render.gui.widget.ListItem;
+import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
+import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.ClickableWidget;
@@ -78,12 +78,12 @@ public class PIDSPresetScreen extends BasicScreenBase implements RenderHelper, G
         }
 
         addChild(new ClickableWidget(we));
-        ListEntry listEntry = new ListEntry(TextUtil.literal(preset.getName()), new MappedWidget(we), false, 26);
+        ListItem listItem = new ListItem(TextUtil.literal(preset.getName()), new MappedWidget(we), false, 26);
 
-        listEntry.setIconCallback((guiDrawing, startX, startY, width, height) -> {
+        listItem.setIconCallback((guiDrawing, startX, startY, width, height) -> {
             drawPIDSPreview(preset, guiDrawing, startX, startY, width, height, false);
         });
-        listViewWidget.add(listEntry);
+        listViewWidget.add(listItem);
     }
 
     public static void drawPIDSPreview(PIDSPresetBase preset, GuiDrawing guiDrawing, int startX, int startY, int width, int height, boolean backgroundOnly) {

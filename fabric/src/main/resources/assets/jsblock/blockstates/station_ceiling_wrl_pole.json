@@ -1,20 +1,20 @@
 {
 	"variants": {
-		"facing=north,is_slab=false,part=0": { "model": "jsblock:block/station_ceiling_wrl_pole_left" },
-		"facing=east,is_slab=false,part=0": { "model": "jsblock:block/station_ceiling_wrl_pole_left", "y": 90 },
-		"facing=south,is_slab=false,part=0": { "model": "jsblock:block/station_ceiling_wrl_pole_left", "y": 180 },
-		"facing=west,is_slab=false,part=0": { "model": "jsblock:block/station_ceiling_wrl_pole_left", "y": 270 },
-		"facing=north,is_slab=true,part=0": { "model": "jsblock:block/station_ceiling_wrl_pole_left_extended" },
-		"facing=east,is_slab=true,part=0": { "model": "jsblock:block/station_ceiling_wrl_pole_left_extended", "y": 90 },
-		"facing=south,is_slab=true,part=0": { "model": "jsblock:block/station_ceiling_wrl_pole_left_extended", "y": 180 },
-		"facing=west,is_slab=true,part=0": { "model": "jsblock:block/station_ceiling_wrl_pole_left_extended", "y": 270 },
-		"facing=north,is_slab=false,part=1": { "model": "jsblock:block/station_ceiling_wrl_pole_right" },
-		"facing=east,is_slab=false,part=1": { "model": "jsblock:block/station_ceiling_wrl_pole_right", "y": 90 },
-		"facing=south,is_slab=false,part=1": { "model": "jsblock:block/station_ceiling_wrl_pole_right", "y": 180 },
-		"facing=west,is_slab=false,part=1": { "model": "jsblock:block/station_ceiling_wrl_pole_right", "y": 270 },
-		"facing=north,is_slab=true,part=1": { "model": "jsblock:block/station_ceiling_wrl_pole_right_extended" },
-		"facing=east,is_slab=true,part=1": { "model": "jsblock:block/station_ceiling_wrl_pole_right_extended", "y": 90 },
-		"facing=south,is_slab=true,part=1": { "model": "jsblock:block/station_ceiling_wrl_pole_right_extended", "y": 180 },
-		"facing=west,is_slab=true,part=1": { "model": "jsblock:block/station_ceiling_wrl_pole_right_extended", "y": 270 }
+		"facing=north,is_slab=false,left=true": { "model": "jsblock:block/station_ceiling_wrl_pole_left" },
+		"facing=east,is_slab=false,left=true": { "model": "jsblock:block/station_ceiling_wrl_pole_left", "y": 90 },
+		"facing=south,is_slab=false,left=true": { "model": "jsblock:block/station_ceiling_wrl_pole_left", "y": 180 },
+		"facing=west,is_slab=false,left=true": { "model": "jsblock:block/station_ceiling_wrl_pole_left", "y": 270 },
+		"facing=north,is_slab=true,left=true": { "model": "jsblock:block/station_ceiling_wrl_pole_left_extended" },
+		"facing=east,is_slab=true,left=true": { "model": "jsblock:block/station_ceiling_wrl_pole_left_extended", "y": 90 },
+		"facing=south,is_slab=true,left=true": { "model": "jsblock:block/station_ceiling_wrl_pole_left_extended", "y": 180 },
+		"facing=west,is_slab=true,left=true": { "model": "jsblock:block/station_ceiling_wrl_pole_left_extended", "y": 270 },
+		"facing=north,is_slab=false,left=false": { "model": "jsblock:block/station_ceiling_wrl_pole_right" },
+		"facing=east,is_slab=false,left=false": { "model": "jsblock:block/station_ceiling_wrl_pole_right", "y": 90 },
+		"facing=south,is_slab=false,left=false": { "model": "jsblock:block/station_ceiling_wrl_pole_right", "y": 180 },
+		"facing=west,is_slab=false,left=false": { "model": "jsblock:block/station_ceiling_wrl_pole_right", "y": 270 },
+		"facing=north,is_slab=true,left=false": { "model": "jsblock:block/station_ceiling_wrl_pole_right_extended" },
+		"facing=east,is_slab=true,left=false": { "model": "jsblock:block/station_ceiling_wrl_pole_right_extended", "y": 90 },
+		"facing=south,is_slab=true,left=false": { "model": "jsblock:block/station_ceiling_wrl_pole_right_extended", "y": 180 },
+		"facing=west,is_slab=true,left=false": { "model": "jsblock:block/station_ceiling_wrl_pole_right_extended", "y": 270 }
 	}
 }

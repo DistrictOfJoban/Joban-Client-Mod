@@ -1,8 +1,8 @@
-package com.lx862.jcm.mod.render.screen.base;
+package com.lx862.jcm.mod.render.gui.screen.base;
 
 import com.lx862.jcm.mod.render.GuiHelper;
-import com.lx862.jcm.mod.render.screen.widget.WidgetSet;
-import com.lx862.jcm.mod.render.screen.widget.ListViewWidget;
+import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
+import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.core.data.Station;

@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.trm;
+package com.lx862.jcm.mod.render.text;
 
 import com.google.common.base.Charsets;
 import com.google.gson.JsonObject;

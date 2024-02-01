@@ -9,7 +9,6 @@ public abstract class WallAttachedBlock extends DirectionalBlock {
     }
 
     public boolean canPlace(BlockState state, World world, BlockPos pos) {
-        if(state == null) return false;
         Direction facing = BlockUtil.getProperty(state, FACING);
         return isAttached(pos, world, getOffsetDirection(facing));
     }

@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.data.BlockProperties;
+import com.lx862.jcm.mod.util.BlockUtil;
 import net.minecraft.block.enums.SlabType;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
@@ -23,7 +24,7 @@ public abstract class SlabExtendableBlock extends DirectionalBlock {
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        return super.getPlacementState2(ctx) == null ? null : super.getPlacementState2(ctx).with(new Property<>(IS_SLAB.data), shouldExtendForSlab(WorldAccess.cast(ctx.getWorld()), ctx.getBlockPos()));
+        return BlockUtil.withProperty(super.getPlacementState2(ctx), new Property<>(IS_SLAB.data), shouldExtendForSlab(WorldAccess.cast(ctx.getWorld()), ctx.getBlockPos()));
     }
 
     @Override

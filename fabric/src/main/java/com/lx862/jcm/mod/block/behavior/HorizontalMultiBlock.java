@@ -11,15 +11,24 @@ public interface HorizontalMultiBlock {
         return BlockUtil.isReplacable(ctx.getWorld(), ctx.getBlockPos(), BlockUtil.getProperty(state, FACING).rotateYClockwise(), ctx, width);
     }
 
-    static void placeBlock(World world, BlockPos pos, BlockState state, Property<Integer> partProperty, Direction directionToPlace, int length) {
-        for (int i = 0; i < length; i++) {
-            if (i == 0) continue;
-            world.setBlockState(pos.offset(directionToPlace, i), state.with(partProperty, i));
-        }
+    static void placeBlock(World world, BlockPos pos, BlockState state, BooleanProperty isLeft, Direction directionToPlace, int length) {
+        world.setBlockState(pos.offset(directionToPlace), state.with(new Property<>(isLeft.data), false));
     }
 
-    static boolean blockNotValid(BlockPos pos, BlockState state, WorldAccess world, Property<Integer> partProperty, int totalWidthHeight) {
-        int thisPart = state.get(partProperty);
-        return BlockUtil.canSurvive(state.getBlock(), world, pos, BlockUtil.getProperty(state, FACING).rotateYClockwise(), thisPart, totalWidthHeight);
+    static boolean blockIsValid(BlockPos pos, BlockState state, WorldAccess world, boolean checkLeft, boolean checkRight) {
+        boolean sameBlock = false;
+        Direction dir = BlockUtil.getProperty(state, FACING);
+
+        if(checkLeft) {
+            BlockState bs = world.getBlockState(pos.offset(dir.rotateYCounterclockwise()));
+            sameBlock = bs.isOf(state.getBlock());
+        }
+
+        if(checkRight && !sameBlock) {
+            BlockState bs = world.getBlockState(pos.offset(dir.rotateYClockwise()));
+            sameBlock = bs.isOf(state.getBlock());
+        }
+
+        return sameBlock;
     }
 }

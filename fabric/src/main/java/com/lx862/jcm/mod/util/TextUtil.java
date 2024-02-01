@@ -20,6 +20,7 @@ public class TextUtil {
         return TextHelper.translatable(id, variables);
     }
 
+    /** Set a custom font style to MutableText, this respects the {@link ConfigEntry#USE_CUSTOM_FONT} config. */
     public static MutableText withFont(MutableText text, Identifier fontId) {
         if(ConfigEntry.USE_CUSTOM_FONT.getBool()) {
             return TextHelper.setStyle(text, Style.getEmptyMapped().withFont(fontId));

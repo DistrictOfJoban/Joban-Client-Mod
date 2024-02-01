@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.trm;
+package com.lx862.jcm.mod.render.text;
 
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 

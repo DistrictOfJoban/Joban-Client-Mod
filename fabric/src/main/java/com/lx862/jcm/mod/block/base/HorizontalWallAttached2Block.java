@@ -10,6 +10,7 @@ public abstract class HorizontalWallAttached2Block extends Horizontal2Block impl
     }
 
     public boolean canPlace(BlockState blockState, ItemPlacementContext ctx) {
+        if(blockState == null) return false;
         boolean firstBlockCanAttach = WallAttachedBlock.isAttached(ctx.getBlockPos(), ctx.getWorld(), BlockUtil.getProperty(blockState, FACING));
         boolean secondBlockCanAttach = WallAttachedBlock.isAttached(ctx.getBlockPos().offset(BlockUtil.getProperty(blockState, FACING).rotateYClockwise()), ctx.getWorld(), BlockUtil.getProperty(blockState, FACING));
 
@@ -23,7 +24,8 @@ public abstract class HorizontalWallAttached2Block extends Horizontal2Block impl
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if(!HorizontalMultiBlock.blockNotValid(pos, state, world, new Property<>(PART.data), width) || !WallAttachedBlock.isAttached(pos, world, BlockUtil.getProperty(state, FACING))) {
+        boolean isLeft = BlockUtil.getProperty(state, IS_LEFT);
+        if(!HorizontalMultiBlock.blockIsValid(pos, state, world, !isLeft, isLeft) || !WallAttachedBlock.isAttached(pos, world, BlockUtil.getProperty(state, FACING))) {
             return Blocks.getAirMapped().getDefaultState();
         }
 

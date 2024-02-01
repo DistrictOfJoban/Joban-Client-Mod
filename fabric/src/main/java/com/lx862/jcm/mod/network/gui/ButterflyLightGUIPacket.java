@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.network.gui;
 
-import com.lx862.jcm.mod.render.screen.ButterflyLightScreen;
+import com.lx862.jcm.mod.render.gui.screen.ButterflyLightScreen;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.PacketBuffer;
@@ -24,7 +24,7 @@ public class ButterflyLightGUIPacket extends PacketHandler {
     @Override
     public void write(PacketBuffer packetBuffer) {
         packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeVarInt(secondsToBlink);
+        packetBuffer.writeInt(secondsToBlink);
     }
 
     @Override

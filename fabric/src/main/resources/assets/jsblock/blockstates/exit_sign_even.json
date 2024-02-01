@@ -1,12 +1,12 @@
 {
   "variants": {
-    "facing=north,part=0": { "model": "jsblock:block/exit_sign_left" },
-    "facing=east,part=0": { "model": "jsblock:block/exit_sign_left", "y": 90 },
-    "facing=south,part=0": { "model": "jsblock:block/exit_sign_left", "y": 180 },
-    "facing=west,part=0": { "model": "jsblock:block/exit_sign_left", "y": 270 },
-    "facing=north,part=1": { "model": "jsblock:block/exit_sign_right" },
-    "facing=east,part=1": { "model": "jsblock:block/exit_sign_right", "y": 90 },
-    "facing=south,part=1": { "model": "jsblock:block/exit_sign_right", "y": 180 },
-    "facing=west,part=1": { "model": "jsblock:block/exit_sign_right", "y": 270 }
+    "facing=north,left=true": { "model": "jsblock:block/exit_sign_left" },
+    "facing=east,left=true": { "model": "jsblock:block/exit_sign_left", "y": 90 },
+    "facing=south,left=true": { "model": "jsblock:block/exit_sign_left", "y": 180 },
+    "facing=west,left=true": { "model": "jsblock:block/exit_sign_left", "y": 270 },
+    "facing=north,left=false": { "model": "jsblock:block/exit_sign_right" },
+    "facing=east,left=false": { "model": "jsblock:block/exit_sign_right", "y": 90 },
+    "facing=south,left=false": { "model": "jsblock:block/exit_sign_right", "y": 180 },
+    "facing=west,left=false": { "model": "jsblock:block/exit_sign_right", "y": 270 }
   }
 }

@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.render.screen.widget;
+package com.lx862.jcm.mod.render.gui.widget;
 
 import org.mtr.mapping.mapper.*;
 

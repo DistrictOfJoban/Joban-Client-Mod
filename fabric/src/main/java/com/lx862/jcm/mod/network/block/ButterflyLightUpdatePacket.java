@@ -23,7 +23,7 @@ public class ButterflyLightUpdatePacket extends PacketHandler {
     @Override
     public void write(PacketBuffer packetBuffer) {
         packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeVarInt(secondsToBlink);
+        packetBuffer.writeInt(secondsToBlink);
     }
 
     @Override

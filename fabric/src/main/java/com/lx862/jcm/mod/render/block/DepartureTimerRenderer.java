@@ -2,8 +2,8 @@ package com.lx862.jcm.mod.render.block;
 
 import com.lx862.jcm.mod.block.entity.DepartureTimerBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
-import com.lx862.jcm.mod.trm.TextInfo;
-import com.lx862.jcm.mod.trm.TextRenderingManager;
+import com.lx862.jcm.mod.render.text.TextInfo;
+import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;

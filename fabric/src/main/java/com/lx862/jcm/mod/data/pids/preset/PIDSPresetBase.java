@@ -2,8 +2,8 @@ package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.trm.TextInfo;
-import com.lx862.jcm.mod.trm.TextRenderingManager;
+import com.lx862.jcm.mod.render.text.TextInfo;
+import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;

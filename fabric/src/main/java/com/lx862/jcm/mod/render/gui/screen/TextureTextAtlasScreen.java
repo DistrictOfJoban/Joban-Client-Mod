@@ -1,9 +1,9 @@
-package com.lx862.jcm.mod.render.screen;
+package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.screen.base.BasicScreenBase;
-import com.lx862.jcm.mod.trm.TextureTextRenderer;
+import com.lx862.jcm.mod.render.gui.screen.base.BasicScreenBase;
+import com.lx862.jcm.mod.render.text.TextureTextRenderer;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.ClickableWidget;

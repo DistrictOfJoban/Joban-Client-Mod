@@ -13,13 +13,10 @@ public class KCRTrespassSignageBlock extends HorizontalWallAttached2Block {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        switch (BlockUtil.getProperty(state, PART)) {
-            case 0:
-                return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 4, 2, 0, 16, 14, 0.1);
-            case 1:
-                return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 2, 0, 12, 14, 0.1);
-            default:
-                return VoxelShapes.empty();
+        if(BlockUtil.getProperty(state, IS_LEFT)) {
+            return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 4, 2, 0, 16, 14, 0.1);
+        } else {
+            return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 2, 0, 12, 14, 0.1);
         }
     }
 }

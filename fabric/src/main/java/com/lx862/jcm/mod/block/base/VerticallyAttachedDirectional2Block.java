@@ -11,7 +11,7 @@ import java.util.List;
 
 public abstract class VerticallyAttachedDirectional2Block extends VerticallyAttachedDirectionalBlock implements HorizontalMultiBlock {
     public static final int width = 2;
-    public static final IntegerProperty PART = BlockProperties.HORIZONTAL_PART;
+    public static final BooleanProperty IS_LEFT = BlockProperties.HORIZONTAL_PART_LEFT;
 
     public VerticallyAttachedDirectional2Block(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom) {
         super(settings, canAttachTop, canAttachBottom);
@@ -29,12 +29,14 @@ public abstract class VerticallyAttachedDirectional2Block extends VerticallyAtta
     }
 
     public void onPlaced2(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-        HorizontalMultiBlock.placeBlock(world, pos, state, new Property<>(PART.data), Direction.convert(state.get(new Property<>(FACING.data)).rotateYClockwise()), width);
+        HorizontalMultiBlock.placeBlock(world, pos, state, IS_LEFT, Direction.convert(state.get(new Property<>(FACING.data)).rotateYClockwise()), width);
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if (!HorizontalMultiBlock.blockNotValid(pos, state, world, new Property<>(PART.data), width)) {
+        boolean isLeft = BlockUtil.getProperty(state, IS_LEFT);
+
+        if(!HorizontalMultiBlock.blockIsValid(pos, state, world, !isLeft, isLeft)) {
             return Blocks.getAirMapped().getDefaultState();
         }
 
@@ -44,6 +46,6 @@ public abstract class VerticallyAttachedDirectional2Block extends VerticallyAtta
     @Override
     public void addBlockProperties(List<HolderBase<?>> properties) {
         super.addBlockProperties(properties);
-        properties.add(PART);
+        properties.add(IS_LEFT);
     }
 }

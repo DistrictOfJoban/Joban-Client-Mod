@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.network.gui;
 
-import com.lx862.jcm.mod.render.screen.SubsidyMachineScreen;
+import com.lx862.jcm.mod.render.gui.screen.SubsidyMachineScreen;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.PacketBuffer;
@@ -14,8 +14,8 @@ public class SubsidyMachineGUIPacket extends PacketHandler {
 
     public SubsidyMachineGUIPacket(PacketBuffer packetBuffer) {
         this.blockPos = packetBuffer.readBlockPos();
-        this.pricePerUse = packetBuffer.readVarInt();
-        this.cooldown = packetBuffer.readVarInt();
+        this.pricePerUse = packetBuffer.readInt();
+        this.cooldown = packetBuffer.readInt();
     }
 
     public SubsidyMachineGUIPacket(BlockPos blockPos, int pricePerUse, int cooldown) {
@@ -27,8 +27,8 @@ public class SubsidyMachineGUIPacket extends PacketHandler {
     @Override
     public void write(PacketBuffer packetBuffer) {
         packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeVarInt(pricePerUse);
-        packetBuffer.writeVarInt(cooldown);
+        packetBuffer.writeInt(pricePerUse);
+        packetBuffer.writeInt(cooldown);
     }
 
     @Override

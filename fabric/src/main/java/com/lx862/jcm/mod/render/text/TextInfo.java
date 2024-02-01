@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.trm;
+package com.lx862.jcm.mod.render.text;
 
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
