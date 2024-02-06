@@ -27,7 +27,6 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
     private static final Identifier TEXTURE_TERRAIN = new Identifier("jsblock:textures/gui/config_screen/terrain.png");
     private final WidgetSet bottomRowWidget;
     private final ListViewWidget listViewWidget;
-    private final boolean welcome = Calendar.getInstance().get(Calendar.MONTH) == Calendar.JUNE || Math.random() > 0.9;
     private boolean discardConfig = false;
 
     CheckboxWidgetExtension disableRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
@@ -167,8 +166,6 @@ public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
         GuiHelper.drawTexture(guiDrawing, TEXTURE_BACKGROUND, 0, 0, width, height);
         GuiHelper.drawTexture(guiDrawing, TEXTURE_STAR, 0, translateY * 0.2, starSize, starSize, 0, 0, starUVSize, starUVSize);
-
-        if(welcome) drawPride(graphicsHolder);
         GuiHelper.drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
     }
 

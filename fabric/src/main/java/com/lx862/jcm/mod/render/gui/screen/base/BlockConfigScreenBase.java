@@ -44,7 +44,7 @@ public abstract class BlockConfigScreenBase extends BasicScreenBase implements G
     protected void init2() {
         super.init2();
         int contentWidth = (int)Math.min((width * 0.75), MAX_CONTENT_WIDTH);
-        int listViewHeight = (int)((height - 60) * 0.75);
+        int listViewHeight = (int)((height - 60) * 0.76);
         int startX = (width - contentWidth) / 2;
         int startY = TEXT_PADDING * 5;
         int bottomEntryHeight = (height - startY - listViewHeight - (BOTTOM_ROW_MARGIN * 2));

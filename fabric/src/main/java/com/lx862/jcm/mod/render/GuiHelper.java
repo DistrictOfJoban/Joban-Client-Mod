@@ -13,6 +13,7 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 public interface GuiHelper {
     int MAX_CONTENT_WIDTH = 400;
     int BOTTOM_ROW_MARGIN = 6;
+    int MAX_BUTTON_WIDTH = 375;
 
     static void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height) {
         Pair<Float, Float> uv = McMetaManager.getUV(identifier);
@@ -56,5 +57,14 @@ public interface GuiHelper {
         } else {
             graphicsHolder.drawText(text, textX, textY, color, shadow, MAX_RENDER_LIGHT);
         }
+    }
+
+    /**
+     * This clamps the inputted button width to {@link GuiHelper#MAX_BUTTON_WIDTH } to prevent button texture glitch on 1.16 if the button is too wide
+     * @param width The desired button width
+     * @return The clamped button width
+     */
+    static int getButtonWidth(double width) {
+        return (int)Math.min(MAX_BUTTON_WIDTH, width);
     }
 }

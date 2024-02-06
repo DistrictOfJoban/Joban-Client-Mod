@@ -47,6 +47,14 @@ tasks.withType(JavaCompile).configureEach {
     it.options.release = 8
 }
 
+configurations.configureEach {
+    // Force use our version of mod-loader even if dependency requires a lower mod-loader so the game can launch
+    // May cause problems, but they're usually backward compatible
+    resolutionStrategy {
+        force("net.fabricmc:fabric-loader:$project.fabric_loader_version")
+    }
+}
+
 java {
     // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     // if it is present.

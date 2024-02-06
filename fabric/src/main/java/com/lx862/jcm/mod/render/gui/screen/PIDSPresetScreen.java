@@ -35,7 +35,7 @@ public class PIDSPresetScreen extends BasicScreenBase implements RenderHelper, G
     protected void init2() {
         super.init2();
         int contentWidth = (int)Math.min((width * 0.75), MAX_CONTENT_WIDTH);
-        int listViewHeight = (int)((height - 60) * 0.75);
+        int listViewHeight = (int)((height - 60) * 0.76);
         int startX = (width - contentWidth) / 2;
         int startY = TEXT_PADDING * 5;
 
@@ -61,9 +61,11 @@ public class PIDSPresetScreen extends BasicScreenBase implements RenderHelper, G
             addPreset(preset);
         }
 
-        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.category.custom"));
-        for(PIDSPresetBase preset : PIDSManager.getCustomPresets()) {
-            addPreset(preset);
+        if(!PIDSManager.getCustomPresets().isEmpty()) {
+            listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.category.custom"));
+            for(PIDSPresetBase preset : PIDSManager.getCustomPresets()) {
+                addPreset(preset);
+            }
         }
     }
 

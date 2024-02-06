@@ -9,7 +9,8 @@ import java.util.List;
 
 /**
  * Holds a set of widget within a defined area.
- * Able to tile the widgets horizontally.
+ * Able to tile the widgets horizontally.<br>
+ * Unlike {@link WidgetSet}, this widget does not automatically distribute the widget evenly and you can control the width of each element.
  */
 public class HorizontalWidgetSet extends ClickableWidgetExtension implements RenderHelper {
     public int widgetXMargin;
@@ -77,7 +78,9 @@ public class HorizontalWidgetSet extends ClickableWidgetExtension implements Ren
         for (MappedWidget widget : widgets) {
             widget.setX(getX2() + accX);
             widget.setY(getY2());
-            accX += widget.getWidth() + widgetXMargin;
+            int clampedWidth = Math.min(width - accX, widget.getWidth());
+            widget.setWidth(clampedWidth);
+            accX += clampedWidth + widgetXMargin;
         }
     }
 }

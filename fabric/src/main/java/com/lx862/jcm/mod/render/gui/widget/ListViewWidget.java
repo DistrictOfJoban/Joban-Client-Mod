@@ -112,7 +112,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
     }
 
     private int getScrollbarWidth() {
-        return (getMaxScrollPosition() > getHeight2()) ? SCROLLBAR_WIDTH : 0;
+        return getMaxScrollPosition() > getHeight2() ? SCROLLBAR_WIDTH : 0;
     }
 
     public void positionWidgets() {

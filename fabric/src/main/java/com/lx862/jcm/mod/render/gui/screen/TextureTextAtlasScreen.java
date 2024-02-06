@@ -30,10 +30,13 @@ public class TextureTextAtlasScreen extends BasicScreenBase implements RenderHel
     @Override
     protected void init2() {
         super.init2();
+        // 1.16 button texture will glitch out if the button is too wide, we need a clamp
+        int btnWidth = GuiHelper.getButtonWidth(width * 0.6);
+
         ButtonWidgetExtension btn = new ButtonWidgetExtension(
-                (int)(width - (width * 0.6)) / 2,
+                (width - btnWidth) / 2,
                 height - 30,
-                (int)(width * 0.6),
+                btnWidth,
                 20,
                 TextUtil.translatable("gui.done"),
                 (b) -> onClose2()

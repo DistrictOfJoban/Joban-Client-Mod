@@ -66,12 +66,12 @@ public class PIDSScreen extends BlockConfigScreenBase {
 
             int w = listViewWidget.getWidth2();
             this.rowHiddenWidgets[i].setWidth2(95);
-            this.customMessagesWidgets[i].setWidth2(w - this.rowHiddenWidgets[i].getWidth2() - 10);
+            this.customMessagesWidgets[i].setWidth2(w - this.rowHiddenWidgets[i].getWidth2() - 12);
 
             HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
             widgetSet.addWidget(new MappedWidget(this.customMessagesWidgets[i]));
             widgetSet.addWidget(new MappedWidget(this.rowHiddenWidgets[i]));
-            widgetSet.setXYSize(0, 0, 0, 20);
+            widgetSet.setXYSize(listViewWidget.getX2(), 20, listViewWidget.getWidth2(), 20);
 
             listViewWidget.add(null, new MappedWidget(widgetSet));
         }

@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.render.gui.widget;
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.ClickableWidgetExtension;
+import org.mtr.mapping.mapper.GraphicsHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +55,11 @@ public class WidgetSet extends ClickableWidgetExtension implements RenderHelper 
 
     public void reset() {
         this.widgetRows.clear();
+    }
+
+    @Override
+    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
+        // By default it renders some sort of button, but this is just a dummy widget for positioning, so just override and do nothing
     }
 
     private void positionWidgets() {
