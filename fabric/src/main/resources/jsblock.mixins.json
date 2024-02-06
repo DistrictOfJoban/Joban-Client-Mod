@@ -3,7 +3,8 @@
   "package": "com.lx862.jcm.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "compat.SimpleDefaultedRegistryMixin"
+    "compat.SimpleDefaultedRegistryMixin",
+    "modded.mtr.MixinTicketSystem"
   ],
   "injectors": {
     "defaultRequire": 1
