@@ -8,41 +8,36 @@ public abstract class WallAttachedBlock extends DirectionalBlock {
         super(settings);
     }
 
-    public boolean canPlace(BlockState state, World world, BlockPos pos) {
-        Direction facing = BlockUtil.getProperty(state, FACING);
-        return isAttached(pos, world, getOffsetDirection(facing));
-    }
-
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        if (super.getPlacementState2(ctx) == null) return null;
-        if(!canPlace(super.getPlacementState2(ctx), ctx.getWorld(), ctx.getBlockPos())) return null;
+        BlockState superState = super.getPlacementState2(ctx);
+        if (superState == null) return null;
 
-        return super.getPlacementState2(ctx).with(new Property<>(FACING.data), Direction.fromHorizontal(ctx.getSide().getHorizontal()).getOpposite().data);
+        Direction facing = BlockUtil.getProperty(superState, FACING);
+        boolean isAttached = isAttached(ctx.getBlockPos(), World.cast(ctx.getWorld()), getWallDirection(facing));
+        if(!isAttached) return null;
+
+        return superState.with(new Property<>(FACING.data), Direction.fromHorizontal(ctx.getSide().getHorizontal()).getOpposite().data);
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         Direction facing = BlockUtil.getProperty(state, FACING);
-        if (!isAttached(pos, world, getOffsetDirection(facing))) {
+        if (!isAttached(pos, World.cast(world), getWallDirection(facing))) {
             return Blocks.getAirMapped().getDefaultState();
         }
 
         return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos);
     }
 
-    public static boolean isAttached(BlockPos pos, World world, Direction offsetDirection) {
-        BlockPos attachedBlockPos = pos.offset(offsetDirection);
-        BlockState attachedBlock = world.getBlockState(attachedBlockPos);
+    public static boolean isAttached(BlockPos pos, World world, Direction wallDirection) {
+        BlockPos wallBlockPos = pos.offset(wallDirection);
+        BlockState wallBlock = world.getBlockState(wallBlockPos);
 
-        return BlockUtil.blockConsideredSolid(attachedBlock);
+        return BlockUtil.blockConsideredSolid(wallBlock);
     }
 
-    public static boolean isAttached(BlockPos pos, WorldAccess world, Direction offsetDirection) {
-        return isAttached(pos, World.cast(world), offsetDirection);
-    }
-
-    public Direction getOffsetDirection(Direction defaultDirection) {
+    public Direction getWallDirection(Direction defaultDirection) {
         return defaultDirection;
     }
 }

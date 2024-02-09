@@ -3,12 +3,12 @@ package com.lx862.jcm.mod.render.gui.screen.base;
 import com.lx862.jcm.mod.Constants;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public abstract class AnimatableScreenBase extends ScreenBase {
+public abstract class AnimatedScreen extends ScreenBase {
     protected double linearAnimationProgress = 0;
     protected double animationProgress;
     protected boolean closing = false;
     private final boolean shouldAnimate;
-    public AnimatableScreenBase(boolean animatable) {
+    public AnimatedScreen(boolean animatable) {
         super();
         this.shouldAnimate = animatable;
         this.animationProgress = animatable ? 0 : 1;

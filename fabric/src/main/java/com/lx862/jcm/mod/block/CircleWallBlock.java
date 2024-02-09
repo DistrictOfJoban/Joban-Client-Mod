@@ -16,7 +16,7 @@ public class CircleWallBlock extends DirectionalBlock {
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
         BlockState superState = super.getPlacementState2(ctx);
 
-        if(ctx.getPlayer() != null && autoPlace(ctx.getWorld(), ctx.getBlockPos(), superState, ctx.getPlayerFacing())) {
+        if(superState != null && ctx.getPlayer() != null && autoPlace(ctx.getWorld(), ctx.getBlockPos(), superState, ctx.getPlayerFacing())) {
             ctx.getPlayer().swingHand(ctx.getHand(), !ctx.getWorld().isClient());
             return null;
         } else {

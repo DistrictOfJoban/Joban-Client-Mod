@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.render.gui.screen;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.network.block.PIDSUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreenBase;
+import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreen;
 import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
 import com.lx862.jcm.mod.render.gui.widget.ListItem;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
@@ -15,7 +15,7 @@ import org.mtr.mapping.mapper.CheckboxWidgetExtension;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
-public class PIDSScreen extends BlockConfigScreenBase {
+public class PIDSScreen extends BlockConfigScreen {
     private final TextFieldWidgetExtension[] customMessagesWidgets;
     private final CheckboxWidgetExtension[] rowHiddenWidgets;
     private final CheckboxWidgetExtension hidePlatformNumber;

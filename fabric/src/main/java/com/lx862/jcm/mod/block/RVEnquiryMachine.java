@@ -1,12 +1,12 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.Vertical2Block;
-import com.lx862.jcm.mod.block.behavior.EnquiryMachine;
+import com.lx862.jcm.mod.block.behavior.EnquiryMachineBehavior;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class RVEnquiryMachine extends Vertical2Block implements EnquiryMachine {
+public class RVEnquiryMachine extends Vertical2Block implements EnquiryMachineBehavior {
     public RVEnquiryMachine(BlockSettings settings) {
         super(settings);
     }

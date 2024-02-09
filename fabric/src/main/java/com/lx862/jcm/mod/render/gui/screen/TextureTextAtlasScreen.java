@@ -2,7 +2,7 @@ package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.gui.screen.base.BasicScreenBase;
+import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.render.text.TextureTextRenderer;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -12,7 +12,7 @@ import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
-public class TextureTextAtlasScreen extends BasicScreenBase implements RenderHelper, GuiHelper {
+public class TextureTextAtlasScreen extends TitledScreen implements RenderHelper, GuiHelper {
     public TextureTextAtlasScreen() {
         super(true);
     }

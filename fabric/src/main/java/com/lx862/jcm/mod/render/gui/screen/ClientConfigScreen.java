@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.config.ClientConfig;
 import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.render.GuiHelper;
-import com.lx862.jcm.mod.render.gui.screen.base.BasicScreenBase;
+import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
 import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
@@ -19,9 +19,8 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Calendar;
 
-public class ClientConfigScreen extends BasicScreenBase implements GuiHelper {
+public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/gui/config_screen/bg.png");
     private static final Identifier TEXTURE_STAR = new Identifier("jsblock:textures/gui/config_screen/stars.png");
     private static final Identifier TEXTURE_TERRAIN = new Identifier("jsblock:textures/gui/config_screen/terrain.png");

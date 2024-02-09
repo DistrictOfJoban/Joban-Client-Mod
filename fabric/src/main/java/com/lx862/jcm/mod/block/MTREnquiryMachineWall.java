@@ -1,12 +1,12 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
-import com.lx862.jcm.mod.block.behavior.EnquiryMachine;
+import com.lx862.jcm.mod.block.behavior.EnquiryMachineBehavior;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class MTREnquiryMachineWall extends WallAttachedBlock implements EnquiryMachine {
+public class MTREnquiryMachineWall extends WallAttachedBlock implements EnquiryMachineBehavior {
     public MTREnquiryMachineWall(BlockSettings settings) {
         super(settings);
     }

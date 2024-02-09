@@ -25,7 +25,7 @@ public abstract class HorizontalWallAttached2Block extends Horizontal2Block impl
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         boolean isLeft = BlockUtil.getProperty(state, IS_LEFT);
-        if(!HorizontalMultiBlock.blockIsValid(pos, state, world, !isLeft, isLeft) || !WallAttachedBlock.isAttached(pos, world, BlockUtil.getProperty(state, FACING))) {
+        if(!HorizontalMultiBlock.blockIsValid(pos, state, world, !isLeft, isLeft) || !WallAttachedBlock.isAttached(pos, World.cast(world), BlockUtil.getProperty(state, FACING))) {
             return Blocks.getAirMapped().getDefaultState();
         }
 

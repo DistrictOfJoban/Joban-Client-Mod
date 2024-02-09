@@ -1,14 +1,14 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.render.GuiHelper;
-import com.lx862.jcm.mod.render.gui.screen.base.BasicScreenBase;
+import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
-public class TestScreen extends BasicScreenBase implements GuiHelper {
+public class TestScreen extends TitledScreen implements GuiHelper {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/gui/config_screen/bg.png");
     private static final Identifier TEXTURE_TERRAIN = new Identifier("jsblock:textures/gui/config_screen/terrain.png");
 

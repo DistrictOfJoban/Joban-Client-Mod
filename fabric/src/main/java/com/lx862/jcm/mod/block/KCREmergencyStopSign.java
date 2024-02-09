@@ -45,7 +45,7 @@ public class KCREmergencyStopSign extends WallAttachedBlock {
     }
 
     @Override
-    public Direction getOffsetDirection(Direction defaultDirection) {
+    public Direction getWallDirection(Direction defaultDirection) {
         return defaultDirection.rotateYCounterclockwise();
     }
 }

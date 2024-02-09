@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.gui.screen.base.BasicScreenBase;
+import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.render.gui.widget.ListItem;
 import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
@@ -19,7 +19,7 @@ import org.mtr.mapping.mapper.GuiDrawing;
 
 import java.util.function.Consumer;
 
-public class PIDSPresetScreen extends BasicScreenBase implements RenderHelper, GuiHelper {
+public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiHelper {
     private static final Identifier PIDS_PREVIEW_BASE = new Identifier("jsblock:textures/gui/pids_preview.png");
     private final ListViewWidget listViewWidget;
     private final Consumer<String> callback;

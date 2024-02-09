@@ -5,11 +5,11 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public abstract class BasicScreenBase extends AnimatableScreenBase {
+public abstract class TitledScreen extends AnimatedScreen {
     public static final int TEXT_PADDING = 10;
     public static final int TITLE_SCALE = 2;
     protected double elapsed = 0;
-    public BasicScreenBase(boolean animatable) {
+    public TitledScreen(boolean animatable) {
         super(animatable);
     }
 

@@ -22,6 +22,9 @@ public abstract class DirectionalBlock extends WaterloggableBlock {
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        return super.getPlacementState2(ctx) == null ? null : super.getPlacementState2(ctx).with(new Property<>(FACING.data), ctx.getPlayerFacing().data);
+        BlockState superState = super.getPlacementState2(ctx);
+        if(superState == null) return null;
+        
+        return superState.with(new Property<>(FACING.data), ctx.getPlayerFacing().data);
     }
 }

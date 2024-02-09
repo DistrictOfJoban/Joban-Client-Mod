@@ -16,14 +16,14 @@ import org.mtr.mod.data.IGui;
 /**
  * GUI Screen for configuring block settings, you should extend this class for your own block config screen
  */
-public abstract class BlockConfigScreenBase extends BasicScreenBase implements GuiHelper {
+public abstract class BlockConfigScreen extends TitledScreen implements GuiHelper {
     protected final BlockPos blockPos;
     protected final ListViewWidget listViewWidget;
     protected final WidgetSet bottomEntryWidget;
     private final ButtonWidgetExtension saveButton;
     private final ButtonWidgetExtension discardButton;
     private boolean discardConfig = false;
-    public BlockConfigScreenBase(BlockPos blockPos) {
+    public BlockConfigScreen(BlockPos blockPos) {
         super(false);
         this.blockPos = blockPos;
 

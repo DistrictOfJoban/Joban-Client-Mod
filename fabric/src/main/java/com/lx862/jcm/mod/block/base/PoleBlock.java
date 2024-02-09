@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.block.base;
 
-import net.minecraft.world.WorldView;
 import org.mtr.mapping.holder.*;
 
 public abstract class PoleBlock extends SlabExtendableBlock {
@@ -8,11 +7,8 @@ public abstract class PoleBlock extends SlabExtendableBlock {
         super(settings);
     }
 
-    @Override
-    public boolean canPlaceAt2(BlockState state, WorldView world, BlockPos pos) {
-        Block blockBelow = new Block(world.getBlockState(pos.down().data).getBlock());
-
-        return (blockBelow.data instanceof PoleBlock) || blockIsAllowed(blockBelow);
+    public boolean canPlace(Block block) {
+        return (block.data instanceof PoleBlock) || blockIsAllowed(block);
     }
 
     @Override
@@ -21,7 +17,7 @@ public abstract class PoleBlock extends SlabExtendableBlock {
         if(superState == null) return null;
 
         BlockState blockBelow = ctx.getWorld().getBlockState(ctx.getBlockPos().down());
-        if (blockIsAllowed(blockBelow.getBlock())) {
+        if (this.canPlace(blockBelow.getBlock()) && blockIsAllowed(blockBelow.getBlock())) {
             return superState;
         } else {
             return null;

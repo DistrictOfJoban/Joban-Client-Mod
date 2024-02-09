@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.util;
 import org.mtr.mapping.holder.*;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 
 /**
  * Contains utilities method for block checking/manipulation
@@ -10,6 +11,7 @@ import javax.annotation.Nullable;
 public class BlockUtil {
 
     public static boolean blockConsideredSolid(BlockState state) {
+        /* TODO: blockState.isSideSolidFullSquare, to be mapped */
         return !state.isAir();
     }
 
@@ -34,11 +36,6 @@ public class BlockUtil {
             }
         }
         return canSurvive;
-    }
-
-    public static boolean sameBlock(Block instance, WorldAccess world, BlockPos pos) {
-        BlockState bs = world.getBlockState(pos);
-        return bs.isOf(instance);
     }
 
     public static boolean isReplacable(World world, BlockPos startPos, Direction direction, ItemPlacementContext ctx, int distance) {
@@ -70,7 +67,7 @@ public class BlockUtil {
     }
 
     static <T extends Comparable<T>> T getProperty(BlockState state, Property<T> property) {
-        return state.get(property);
+        return state.contains(property) ? state.get(property) : new ArrayList<>(property.getValues()).get(0);
     }
 
     /**

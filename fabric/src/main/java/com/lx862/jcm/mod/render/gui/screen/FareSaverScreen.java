@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
-import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreenBase;
+import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreen;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.render.gui.widget.NumericTextField;
 import com.lx862.jcm.mod.network.block.FareSaverUpdatePacket;
@@ -11,7 +11,7 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.ClickableWidget;
 import org.mtr.mapping.holder.MutableText;
 
-public class FareSaverScreen extends BlockConfigScreenBase {
+public class FareSaverScreen extends BlockConfigScreen {
     private final NumericTextField discountTextField;
     public FareSaverScreen(BlockPos blockPos, int discount) {
         super(blockPos);
