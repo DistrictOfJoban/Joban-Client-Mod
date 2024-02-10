@@ -6,16 +6,18 @@ import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.PacketBuffer;
 import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.registry.PacketHandler;
+import org.mtr.mapping.tool.PacketBufferReceiver;
+import org.mtr.mapping.tool.PacketBufferSender;
 
 public class SubsidyMachineGUIPacket extends PacketHandler {
     private final BlockPos blockPos;
     private final int pricePerUse;
     private final int cooldown;
 
-    public SubsidyMachineGUIPacket(PacketBuffer packetBuffer) {
-        this.blockPos = packetBuffer.readBlockPos();
-        this.pricePerUse = packetBuffer.readInt();
-        this.cooldown = packetBuffer.readInt();
+    public SubsidyMachineGUIPacket(PacketBufferReceiver packetBufferReceiver) {
+        this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
+        this.pricePerUse = packetBufferReceiver.readInt();
+        this.cooldown = packetBufferReceiver.readInt();
     }
 
     public SubsidyMachineGUIPacket(BlockPos blockPos, int pricePerUse, int cooldown) {
@@ -25,14 +27,14 @@ public class SubsidyMachineGUIPacket extends PacketHandler {
     }
 
     @Override
-    public void write(PacketBuffer packetBuffer) {
-        packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeInt(pricePerUse);
-        packetBuffer.writeInt(cooldown);
+    public void write(PacketBufferSender packetBufferSender) {
+        packetBufferSender.writeLong(blockPos.asLong());
+        packetBufferSender.writeInt(pricePerUse);
+        packetBufferSender.writeInt(cooldown);
     }
 
     @Override
-    public void runClientQueued() {
+    public void runClient() {
         MinecraftClient.getInstance().openScreen(new Screen(new SubsidyMachineScreen(blockPos, pricePerUse, cooldown)));
     }
 }

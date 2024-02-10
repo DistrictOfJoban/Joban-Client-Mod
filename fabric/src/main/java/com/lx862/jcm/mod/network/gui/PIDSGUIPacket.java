@@ -6,6 +6,8 @@ import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.PacketBuffer;
 import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.registry.PacketHandler;
+import org.mtr.mapping.tool.PacketBufferReceiver;
+import org.mtr.mapping.tool.PacketBufferSender;
 
 public class PIDSGUIPacket extends PacketHandler {
     private final BlockPos blockPos;
@@ -14,21 +16,21 @@ public class PIDSGUIPacket extends PacketHandler {
     private final boolean hidePlatformNumber;
     private final String presetId;
 
-    public PIDSGUIPacket(PacketBuffer packetBuffer) {
-        this.blockPos = packetBuffer.readBlockPos();
-        int rows = packetBuffer.readInt();
+    public PIDSGUIPacket(PacketBufferReceiver packetBufferReceiver) {
+        this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
+        int rows = packetBufferReceiver.readInt();
         this.customMessages = new String[rows];
         this.rowHidden = new boolean[rows];
 
         for(int i = 0; i < rows; i++) {
-            this.customMessages[i] = packetBuffer.readString();
+            this.customMessages[i] = packetBufferReceiver.readString();
         }
         for(int i = 0; i < rows; i++) {
-            this.rowHidden[i] = packetBuffer.readBoolean();
+            this.rowHidden[i] = packetBufferReceiver.readBoolean();
         }
 
-        this.hidePlatformNumber = packetBuffer.readBoolean();
-        this.presetId = packetBuffer.readString();
+        this.hidePlatformNumber = packetBufferReceiver.readBoolean();
+        this.presetId = packetBufferReceiver.readString();
     }
 
     public PIDSGUIPacket(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId) {
@@ -40,23 +42,23 @@ public class PIDSGUIPacket extends PacketHandler {
     }
 
     @Override
-    public void write(PacketBuffer packetBuffer) {
-        packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeInt(customMessages.length);
+    public void write(PacketBufferSender packetBufferSender) {
+        packetBufferSender.writeLong(blockPos.asLong());
+        packetBufferSender.writeInt(customMessages.length);
 
         for(String customMessage : customMessages) {
-            packetBuffer.writeString(customMessage == null ? "" : customMessage);
+            packetBufferSender.writeString(customMessage == null ? "" : customMessage);
         }
         for(boolean hidePlatform : rowHidden) {
-            packetBuffer.writeBoolean(hidePlatform);
+            packetBufferSender.writeBoolean(hidePlatform);
         }
 
-        packetBuffer.writeBoolean(hidePlatformNumber);
-        packetBuffer.writeString(presetId);
+        packetBufferSender.writeBoolean(hidePlatformNumber);
+        packetBufferSender.writeString(presetId);
     }
 
     @Override
-    public void runClientQueued() {
+    public void runClient() {
         MinecraftClient.getInstance().openScreen(new Screen(new PIDSScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId)));
     }
 }

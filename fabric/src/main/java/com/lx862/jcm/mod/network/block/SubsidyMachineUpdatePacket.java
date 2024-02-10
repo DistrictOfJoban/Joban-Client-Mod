@@ -4,16 +4,18 @@ import com.lx862.jcm.mod.block.entity.SubsidyMachineBlockEntity;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;
+import org.mtr.mapping.tool.PacketBufferReceiver;
+import org.mtr.mapping.tool.PacketBufferSender;
 
 public class SubsidyMachineUpdatePacket extends PacketHandler {
     private final BlockPos blockPos;
     private final int pricePerUse;
     private final int cooldown;
 
-    public SubsidyMachineUpdatePacket(PacketBuffer packetBuffer) {
-        this.blockPos = packetBuffer.readBlockPos();
-        this.pricePerUse = packetBuffer.readInt();
-        this.cooldown = packetBuffer.readInt();
+    public SubsidyMachineUpdatePacket(PacketBufferReceiver packetBufferReceiver) {
+        this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
+        this.pricePerUse = packetBufferReceiver.readInt();
+        this.cooldown = packetBufferReceiver.readInt();
     }
 
     public SubsidyMachineUpdatePacket(BlockPos blockPos, int pricePerUse, int cooldown) {
@@ -23,14 +25,14 @@ public class SubsidyMachineUpdatePacket extends PacketHandler {
     }
 
     @Override
-    public void write(PacketBuffer packetBuffer) {
-        packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeInt(pricePerUse);
-        packetBuffer.writeInt(cooldown);
+    public void write(PacketBufferSender packetBufferSender) {
+        packetBufferSender.writeLong(blockPos.asLong());
+        packetBufferSender.writeInt(pricePerUse);
+        packetBufferSender.writeInt(cooldown);
     }
 
     @Override
-    public void runServerQueued(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
+    public void runServer(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
         World world = serverPlayerEntity.getEntityWorld();
         BlockEntity be = BlockUtil.getBlockEntityOrNull(world, blockPos);
 

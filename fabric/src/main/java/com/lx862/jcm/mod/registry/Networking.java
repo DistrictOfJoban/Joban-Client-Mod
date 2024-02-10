@@ -13,6 +13,7 @@ import org.mtr.mapping.holder.PacketBuffer;
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.ServerPlayerEntity;
 import org.mtr.mapping.registry.PacketHandler;
+import org.mtr.mapping.tool.PacketBufferReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,7 @@ public class Networking {
         RegistryHelperClient.setupPacketClient();
     }
 
-    private static <T extends PacketHandler> void registerPacket(Class<T> classObject, Function<PacketBuffer, T> getInstance) {
+    private static <T extends PacketHandler> void registerPacket(Class<T> classObject, Function<PacketBufferReceiver, T> getInstance) {
         // Keep track of the registered packets, so we can warn if we try to send a non-registered packet
         // I believe Minecraft Mapping itself already keeps track of the registered packets, it just doesn't warn
         registeredPackets.add(classObject.getName());

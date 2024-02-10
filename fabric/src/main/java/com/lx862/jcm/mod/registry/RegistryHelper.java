@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.Constants;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.registry.*;
+import org.mtr.mapping.tool.PacketBufferReceiver;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -45,7 +46,7 @@ public class RegistryHelper {
         REGISTRY.setupPackets(new Identifier(Constants.MOD_ID, "packet"));
     }
 
-    public static <T extends PacketHandler> void registerPacket(Class<T> classObject, Function<PacketBuffer, T> getInstance) {
+    public static <T extends PacketHandler> void registerPacket(Class<T> classObject, Function<PacketBufferReceiver, T> getInstance) {
         REGISTRY.registerPacket(classObject, getInstance);
     }
 

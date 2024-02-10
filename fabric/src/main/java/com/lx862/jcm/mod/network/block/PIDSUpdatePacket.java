@@ -4,6 +4,8 @@ import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;
+import org.mtr.mapping.tool.PacketBufferReceiver;
+import org.mtr.mapping.tool.PacketBufferSender;
 
 public class PIDSUpdatePacket extends PacketHandler {
     private final BlockPos blockPos;
@@ -12,20 +14,20 @@ public class PIDSUpdatePacket extends PacketHandler {
     private final boolean hidePlatformNumber;
     private final String presetId;
 
-    public PIDSUpdatePacket(PacketBuffer packetBuffer) {
-        this.blockPos = packetBuffer.readBlockPos();
-        int rows = packetBuffer.readInt();
+    public PIDSUpdatePacket(PacketBufferReceiver packetBufferReceiver) {
+        this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
+        int rows = packetBufferReceiver.readInt();
         this.customMessages = new String[rows];
         this.rowHidden = new boolean[rows];
 
         for(int i = 0; i < rows; i++) {
-            this.customMessages[i] = packetBuffer.readString();
+            this.customMessages[i] = packetBufferReceiver.readString();
         }
         for(int i = 0; i < rows; i++) {
-            this.rowHidden[i] = packetBuffer.readBoolean();
+            this.rowHidden[i] = packetBufferReceiver.readBoolean();
         }
-        this.hidePlatformNumber = packetBuffer.readBoolean();
-        this.presetId = packetBuffer.readString();
+        this.hidePlatformNumber = packetBufferReceiver.readBoolean();
+        this.presetId = packetBufferReceiver.readString();
     }
 
     public PIDSUpdatePacket(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPreset) {
@@ -37,23 +39,23 @@ public class PIDSUpdatePacket extends PacketHandler {
     }
 
     @Override
-    public void write(PacketBuffer packetBuffer) {
-        packetBuffer.writeBlockPos(blockPos);
-        packetBuffer.writeInt(customMessages.length);
+    public void write(PacketBufferSender packetBufferSender) {
+        packetBufferSender.writeLong(blockPos.asLong());
+        packetBufferSender.writeInt(customMessages.length);
 
         for(String customMessage : customMessages) {
-            packetBuffer.writeString(customMessage);
+            packetBufferSender.writeString(customMessage);
         }
         for(boolean hidePlatform : rowHidden) {
-            packetBuffer.writeBoolean(hidePlatform);
+            packetBufferSender.writeBoolean(hidePlatform);
         }
 
-        packetBuffer.writeBoolean(hidePlatformNumber);
-        packetBuffer.writeString(presetId);
+        packetBufferSender.writeBoolean(hidePlatformNumber);
+        packetBufferSender.writeString(presetId);
     }
 
     @Override
-    public void runServerQueued(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
+    public void runServer(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
         World world = serverPlayerEntity.getEntityWorld();
         BlockEntity be = BlockUtil.getBlockEntityOrNull(world, blockPos);
 
