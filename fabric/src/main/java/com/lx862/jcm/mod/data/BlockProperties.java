@@ -10,7 +10,7 @@ import org.mtr.mapping.holder.IntegerProperty;
  */
 public class BlockProperties {
     public static final DirectionProperty FACING = new DirectionProperty(Properties.HORIZONTAL_FACING);
-    public static final BooleanProperty HORIZONTAL_PART_LEFT = BooleanProperty.of("left");
+    public static final BooleanProperty HORIZONTAL_IS_LEFT = BooleanProperty.of("left");
     public static final IntegerProperty VERTICAL_PART_2 = IntegerProperty.of("part", 0, 1);
     public static final IntegerProperty VERTICAL_PART_3 = IntegerProperty.of("part", 0, 2);
     public static final BooleanProperty POWERED = BooleanProperty.of("powered");

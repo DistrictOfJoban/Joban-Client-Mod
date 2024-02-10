@@ -1,34 +1,50 @@
 package com.lx862.jcm.mod.block.base;
 
-import com.lx862.jcm.mod.block.behavior.HorizontalMultiBlock;
+import com.lx862.jcm.mod.block.behavior.HorizontalDoubleBlockBehavior;
+import com.lx862.jcm.mod.block.behavior.WallAttachedBlockBehavior;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.tool.HolderBase;
 
-public abstract class HorizontalWallAttached2Block extends Horizontal2Block implements HorizontalMultiBlock {
+import java.util.List;
+
+public abstract class HorizontalWallAttached2Block extends DirectionalBlock implements HorizontalDoubleBlockBehavior {
     public HorizontalWallAttached2Block(BlockSettings settings) {
         super(settings);
     }
 
-    public boolean canPlace(BlockState blockState, ItemPlacementContext ctx) {
-        if(blockState == null) return false;
-        boolean firstBlockCanAttach = WallAttachedBlock.isAttached(ctx.getBlockPos(), ctx.getWorld(), BlockUtil.getProperty(blockState, FACING));
-        boolean secondBlockCanAttach = WallAttachedBlock.isAttached(ctx.getBlockPos().offset(BlockUtil.getProperty(blockState, FACING).rotateYClockwise()), ctx.getWorld(), BlockUtil.getProperty(blockState, FACING));
+    @Override
+    public BlockState getPlacementState2(ItemPlacementContext ctx) {
+        BlockState superState = super.getPlacementState2(ctx);
+        if(superState == null) return null;
 
-        return firstBlockCanAttach && secondBlockCanAttach && HorizontalMultiBlock.canBePlaced(blockState, ctx, width);
+        boolean firstBlockAttachable = WallAttachedBlockBehavior.canBePlaced(ctx.getBlockPos(), ctx.getWorld(), BlockUtil.getProperty(superState, FACING));
+        boolean secondBlockAttachable = WallAttachedBlockBehavior.canBePlaced(ctx.getBlockPos().offset(BlockUtil.getProperty(superState, FACING).rotateYClockwise()), ctx.getWorld(), BlockUtil.getProperty(superState, FACING));
+
+        return firstBlockAttachable && secondBlockAttachable && HorizontalDoubleBlockBehavior.canBePlaced(ctx) ? super.getPlacementState2(ctx) : null;
     }
 
     @Override
-    public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        return canPlace(super.getPlacementState2(ctx), ctx) ? super.getPlacementState2(ctx) : null;
+    public void onPlaced2(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
+        HorizontalDoubleBlockBehavior.onPlaced(world, state, pos);
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         boolean isLeft = BlockUtil.getProperty(state, IS_LEFT);
-        if(!HorizontalMultiBlock.blockIsValid(pos, state, world, !isLeft, isLeft) || !WallAttachedBlock.isAttached(pos, World.cast(world), BlockUtil.getProperty(state, FACING))) {
+
+        boolean blockAttachable = WallAttachedBlockBehavior.canBePlaced(pos, World.cast(world), BlockUtil.getProperty(state, FACING));
+
+        if(!HorizontalDoubleBlockBehavior.blockIsValid(pos, state, world, isLeft) || !blockAttachable) {
             return Blocks.getAirMapped().getDefaultState();
         }
 
         return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos);
+    }
+
+    @Override
+    public void addBlockProperties(List<HolderBase<?>> properties) {
+        super.addBlockProperties(properties);
+        HorizontalDoubleBlockBehavior.addProperties(properties);
     }
 }

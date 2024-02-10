@@ -18,8 +18,7 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
     }
 
     @Override
-    public void renderCurated(FareSaverBlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
-        BlockState state = blockEntity.getWorld2().getBlockState(blockEntity.getPos2());
+    public void renderCurated(FareSaverBlockEntity blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
         Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
         int part = BlockUtil.getProperty(state, BlockProperties.VERTICAL_PART_3);
         if(part != 2) return;

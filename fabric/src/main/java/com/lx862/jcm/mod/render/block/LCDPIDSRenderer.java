@@ -6,6 +6,7 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.util.BlockUtil;
+import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
@@ -17,14 +18,10 @@ public class LCDPIDSRenderer extends JCMBlockEntityRenderer<LCDPIDSBlockEntity> 
     }
 
     @Override
-    public void renderCurated(LCDPIDSBlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
-        World world = blockEntity.getWorld2();
-        if(world == null) return;
-
+    public void renderCurated(LCDPIDSBlockEntity blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
         PIDSPresetBase pidsPreset = getPreset(blockEntity);
         if(pidsPreset == null) return;
 
-        BlockState state = blockEntity.getWorld2().getBlockState(blockEntity.getPos2());
         Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
         
         graphicsHolder.push();
@@ -33,7 +30,7 @@ public class LCDPIDSRenderer extends JCMBlockEntityRenderer<LCDPIDSBlockEntity> 
         graphicsHolder.rotateZDegrees(180);
         graphicsHolder.translate(-20, -14.5, -14.5);
 
-        pidsPreset.render(blockEntity, graphicsHolder, blockEntity.getWorld2(), facing, tickDelta, 0, 0, 153, 84, 0xFFFFFFFF, MAX_RENDER_LIGHT);
+        pidsPreset.render(blockEntity, graphicsHolder, world, facing, tickDelta, 0, 0, 153, 84, 0xFFFFFFFF, MAX_RENDER_LIGHT);
         graphicsHolder.pop();
     }
 

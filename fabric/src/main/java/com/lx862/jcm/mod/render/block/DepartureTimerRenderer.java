@@ -26,12 +26,7 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
     }
 
     @Override
-    public void renderCurated(DepartureTimerBlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1) {
-        World world = blockEntity.getWorld2();
-        if(world == null) return;
-
-        BlockPos pos = blockEntity.getPos2();
-        BlockState state = world.getBlockState(blockEntity.getPos2());
+    public void renderCurated(DepartureTimerBlockEntity blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
         Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
 
         graphicsHolder.push();

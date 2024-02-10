@@ -6,10 +6,7 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.jetbrains.annotations.NotNull;
-import org.mtr.mapping.holder.BlockState;
-import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.MinecraftClient;
-import org.mtr.mapping.holder.World;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -24,8 +21,12 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
         try {
             if(ConfigEntry.DISABLE_RENDERING.getBool() || blockEntity.getWorld2() == null) return;
             if(blockEntity.getWorld2().getBlockState(blockEntity.getPos2()).isAir()) return;
+            BlockPos pos = blockEntity.getPos2();
+            World world = blockEntity.getWorld2();
+            if(world == null) return;
+            BlockState state = world.getBlockState(pos);
 
-            renderCurated(blockEntity, tickDelta, graphicsHolder, light, i1);
+            renderCurated(blockEntity, graphicsHolder, world, state, pos, tickDelta, light, i1);
         } catch (Exception e) {
             JCMLogger.error("An exception occurred while rendering Block Entity:", e);
             JCMLogger.error("This is a bug, please report to the developers of Joban Client Mod!");
@@ -40,7 +41,7 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
     /**
      * Same as the default block entity render method, but only called in safe condition and when rendering are not disabled
      */
-    public abstract void renderCurated(T blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int i1);
+    public abstract void renderCurated(T blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1);
 
     public void scaleCentered(GraphicsHolder graphicsHolder, float x, float y, float z) {
         graphicsHolder.translate(0.5, 0.5, 0.5);

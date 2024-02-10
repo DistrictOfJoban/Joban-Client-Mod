@@ -22,14 +22,7 @@ public class StaticSignalLightRenderer<T extends BlockEntityExtension> extends J
         }
 
         @Override
-        public final void renderCurated(T entity, float tickDelta, GraphicsHolder graphicsHolder, int light, int overlay) {
-            final World world = entity.getWorld2();
-            if (world == null) {
-                return;
-            }
-
-            final BlockPos pos = entity.getPos2();
-            final BlockState state = world.getBlockState(pos);
+        public final void renderCurated(T entity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int overlay) {
             final Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
             if (RenderTrains.shouldNotRender(pos, null)) {
                 return;

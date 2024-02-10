@@ -10,7 +10,7 @@ import org.mtr.mapping.tool.HolderBase;
 import java.util.List;
 
 public class StationCeilingWRL2Pole extends PoleBlock {
-    public static final BooleanProperty PART = BlockProperties.HORIZONTAL_PART_LEFT;
+    public static final BooleanProperty PART = BlockProperties.HORIZONTAL_IS_LEFT;
 
     public StationCeilingWRL2Pole(BlockSettings settings) {
         super(settings);
