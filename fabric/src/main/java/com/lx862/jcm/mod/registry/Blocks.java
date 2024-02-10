@@ -47,6 +47,7 @@ public final class Blocks {
     public static final BlockRegistryObject KCR_TRESPASS_SIGN = RegistryHelper.registerBlockItem("kcr_trespass_sign", new KCRTrespassSignageBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject MTR_ENQUIRY_MACHINE = RegistryHelper.registerBlockItem("mtr_enquiry_machine", new MTREnquiryMachine(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject MTR_ENQUIRY_MACHINE_WALL = RegistryHelper.registerBlockItem("mtr_enquiry_machine_wall", new MTREnquiryMachineWall(BlockHelper.createBlockSettings(false, state -> 4).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject PIDS_1A = RegistryHelper.registerBlockItem("pids_1a", new PIDS1ABlock(), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject LCD_PIDS = RegistryHelper.registerBlockItem("pids_lcd", new LCDPIDSBlock(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject RV_PIDS = RegistryHelper.registerBlockItem("pids_rv", new RVPIDSBlock(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject RV_PIDS_POLE = RegistryHelper.registerBlockItem("rv_pids_pole", new RVPIDSPole(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
