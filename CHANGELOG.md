@@ -2,7 +2,6 @@
 ## 2.0.0 (TBA)
 
 ### Changes
-- All blocks are now waterloggable
 - Various blocks will now automatically cull non-visible faces, improving performance and visibility in spectator
 - Water Machine now also allows you to fill an empty bucket with water
 - Refurbished GUI Screen:

@@ -7,7 +7,7 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public abstract class VerticallyAttachedBlock extends WaterloggableBlock {
+public abstract class VerticallyAttachedBlock extends JCMBlock {
     public static final BooleanProperty TOP = BlockProperties.TOP;
     protected final boolean canAttachTop;
     protected final boolean canAttachBottom;

@@ -6,7 +6,7 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public abstract class DirectionalBlock extends WaterloggableBlock {
+public abstract class DirectionalBlock extends JCMBlock {
     public static final DirectionProperty FACING = BlockProperties.FACING;
 
     public DirectionalBlock(BlockSettings settings) {

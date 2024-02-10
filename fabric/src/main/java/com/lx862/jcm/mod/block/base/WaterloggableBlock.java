@@ -6,6 +6,11 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
+/**
+ * A waterlogged block
+ * Cannot find ways to migrate non-waterlogged block yet, so this is not in use.
+ * (WATERLOGGED is a BooleanProperty, by default Minecraft will use the first value as it's default value, and somehow "true" comes first)
+ */
 public abstract class WaterloggableBlock extends JCMBlock implements WaterloggableBehavior {
     public WaterloggableBlock(BlockSettings settings) {
         super(settings);
@@ -14,6 +19,7 @@ public abstract class WaterloggableBlock extends JCMBlock implements Waterloggab
 
     @Override
     public void addBlockProperties(List<HolderBase<?>> properties) {
+        super.addBlockProperties(properties);
         properties.add(WATERLOGGED);
     }
 
