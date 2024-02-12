@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.block;
 
-import com.lx862.jcm.mod.block.base.StaticSignalLightBlock;
 import com.lx862.jcm.mod.block.entity.StaticSignalLightBlockEntity;
 import org.mtr.mapping.holder.*;
 

@@ -19,11 +19,10 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
     @Override
     public void render(@NotNull T blockEntity, float tickDelta, @NotNull GraphicsHolder graphicsHolder, int light, int i1) {
         try {
-            if(ConfigEntry.DISABLE_RENDERING.getBool() || blockEntity.getWorld2() == null) return;
-            if(blockEntity.getWorld2().getBlockState(blockEntity.getPos2()).isAir()) return;
-            BlockPos pos = blockEntity.getPos2();
             World world = blockEntity.getWorld2();
-            if(world == null) return;
+            BlockPos pos = blockEntity.getPos2();
+            if(ConfigEntry.DISABLE_RENDERING.getBool() || world == null) return;
+            if(world.getBlockState(pos).isAir()) return;
             BlockState state = world.getBlockState(pos);
 
             renderCurated(blockEntity, graphicsHolder, world, state, pos, tickDelta, light, i1);

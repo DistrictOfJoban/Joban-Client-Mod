@@ -1,16 +1,17 @@
 package com.lx862.jcm.mod.registry;
 
-import com.lx862.jcm.mod.block.PIDS1ABlock;
 import com.lx862.jcm.mod.block.entity.*;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.registry.BlockEntityTypeRegistryObject;
 
 public final class BlockEntities {
     public static final BlockEntityTypeRegistryObject<FareSaverBlockEntity> FARE_SAVER = RegistryHelper.registerBlockEntity("faresaver_1", FareSaverBlockEntity::new, Blocks.FARE_SAVER);
-    public static final BlockEntityTypeRegistryObject<StaticSignalLightBlockEntity> SIGNAL_LIGHT_RED_BELOW = RegistryHelper.registerBlockEntity("signal_light_red_1", (blockPos, blockState) -> new StaticSignalLightBlockEntity(StaticSignalLightBlockEntity.SignalType.RED_BELOW, blockPos, blockState), Blocks.SIGNAL_LIGHT_RED_BELOW);
-    public static final BlockEntityTypeRegistryObject<StaticSignalLightBlockEntity> SIGNAL_LIGHT_RED_TOP = RegistryHelper.registerBlockEntity("signal_light_red_2", (blockPos, blockState) -> new StaticSignalLightBlockEntity(StaticSignalLightBlockEntity.SignalType.RED_TOP, blockPos, blockState), Blocks.SIGNAL_LIGHT_RED_TOP);
-    public static final BlockEntityTypeRegistryObject<StaticSignalLightBlockEntity> SIGNAL_LIGHT_BLUE = RegistryHelper.registerBlockEntity("signal_light_blue", (blockPos, blockState) -> new StaticSignalLightBlockEntity(StaticSignalLightBlockEntity.SignalType.BLUE, blockPos, blockState), Blocks.SIGNAL_LIGHT_BLUE);
-    public static final BlockEntityTypeRegistryObject<StaticSignalLightBlockEntity> SIGNAL_LIGHT_GREEN = RegistryHelper.registerBlockEntity("signal_light_green", (blockPos, blockState) -> new StaticSignalLightBlockEntity(StaticSignalLightBlockEntity.SignalType.GREEN, blockPos, blockState), Blocks.SIGNAL_LIGHT_GREEN);
+    public static final BlockEntityTypeRegistryObject<SignalBlockInvertedEntityRedAbove> SIGNAL_LIGHT_INVERTED_RED_ABOVE = RegistryHelper.registerBlockEntity("signal_light_inverted_1", SignalBlockInvertedEntityRedAbove::new, Blocks.SIGNAL_LIGHT_INVERTED_RED_ABOVE);
+    public static final BlockEntityTypeRegistryObject<SignalBlockInvertedEntityRedAbove> SIGNAL_LIGHT_INVERTED_RED_BELOW = RegistryHelper.registerBlockEntity("signal_light_inverted_2", SignalBlockInvertedEntityRedAbove::new, Blocks.SIGNAL_LIGHT_INVERTED_RED_BOTTOM);
+    public static final BlockEntityTypeRegistryObject<StaticSignalLightBlockEntity> SIGNAL_LIGHT_RED_BELOW = RegistryHelper.registerBlockEntity("signal_light_red_1", (blockPos, blockState) -> new StaticSignalLightBlockEntity(StaticSignalLightBlockEntity.SignalType.RED_BELOW, blockPos, blockState), Blocks.STATIC_SIGNAL_LIGHT_RED_BELOW);
+    public static final BlockEntityTypeRegistryObject<StaticSignalLightBlockEntity> SIGNAL_LIGHT_RED_TOP = RegistryHelper.registerBlockEntity("signal_light_red_2", (blockPos, blockState) -> new StaticSignalLightBlockEntity(StaticSignalLightBlockEntity.SignalType.RED_TOP, blockPos, blockState), Blocks.STATIC_SIGNAL_LIGHT_RED_TOP);
+    public static final BlockEntityTypeRegistryObject<StaticSignalLightBlockEntity> SIGNAL_LIGHT_BLUE = RegistryHelper.registerBlockEntity("signal_light_blue", (blockPos, blockState) -> new StaticSignalLightBlockEntity(StaticSignalLightBlockEntity.SignalType.BLUE, blockPos, blockState), Blocks.STATIC_SIGNAL_LIGHT_BLUE);
+    public static final BlockEntityTypeRegistryObject<StaticSignalLightBlockEntity> SIGNAL_LIGHT_GREEN = RegistryHelper.registerBlockEntity("signal_light_green", (blockPos, blockState) -> new StaticSignalLightBlockEntity(StaticSignalLightBlockEntity.SignalType.GREEN, blockPos, blockState), Blocks.STATIC_SIGNAL_LIGHT_GREEN);
     public static final BlockEntityTypeRegistryObject<SubsidyMachineBlockEntity> SUBSIDY_MACHINE = RegistryHelper.registerBlockEntity("subsidy_machine", SubsidyMachineBlockEntity::new, Blocks.SUBSIDY_MACHINE);
     public static final BlockEntityTypeRegistryObject<ButterflyLightBlockEntity> BUTTERFLY_LIGHT = RegistryHelper.registerBlockEntity("butterfly_light", ButterflyLightBlockEntity::new, Blocks.BUTTERFLY_LIGHT);
     public static final BlockEntityTypeRegistryObject<DepartureTimerBlockEntity> DEPARTURE_TIMER = RegistryHelper.registerBlockEntity("departure_timer", DepartureTimerBlockEntity::new, Blocks.DEPARTURE_TIMER);
