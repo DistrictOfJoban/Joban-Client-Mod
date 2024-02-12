@@ -26,14 +26,18 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
         MutableText discountText = TextUtil.translatable(TextCategory.BLOCK, "faresaver.currency", blockEntity.getDiscount());
 
         graphicsHolder.push();
-        scaleCentered(graphicsHolder, 0.011F, 0.011F, 0.011F);
+        graphicsHolder.translate(0.5, 0.5, 0.5);
+        graphicsHolder.scale(0.011F, 0.011F, 0.011F);
         rotateToBlockDirection(graphicsHolder, blockEntity);
         graphicsHolder.rotateZDegrees(180);
         graphicsHolder.rotateZDegrees(TEXT_TILT_ANGLE);
-        graphicsHolder.translate(0, 13, -6);
+
+        graphicsHolder.translate(6, 14, -9.15);
+
         RenderHelper.scaleToFit(graphicsHolder, GraphicsHolder.getTextWidth(discountText), 12, true, 9);
         TextRenderingManager.bind(graphicsHolder);
-        TextRenderingManager.draw(graphicsHolder, new TextInfo(discountText).withFont("mtr:mtr").withColor(ARGB_WHITE), facing, 0, 0);
+        TextRenderingManager.draw(graphicsHolder, new TextInfo(discountText).withFont("mtr:mtr").withColor(ARGB_WHITE).withCentered(), facing, 0, 0);
+
         graphicsHolder.pop();
     }
 }

@@ -78,6 +78,14 @@ public class BlockUtil {
         return world.getBlockEntity(pos);
     }
 
+    /**
+     * Get block state in world, but will return null if chunk is not loaded (And will not attempt to load the chunk).
+     */
+    public static @Nullable BlockState getBlockState(World world, BlockPos pos) {
+        if(!world.isChunkLoaded(getChunkCoords(pos.getX()), getChunkCoords(pos.getX()))) return null;
+        return world.getBlockState(pos);
+    }
+
     private static int getChunkCoords(int pos) {
         return pos >> 4;
     }

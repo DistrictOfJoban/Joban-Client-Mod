@@ -14,7 +14,8 @@ public class KCRStationNameSignRenderer extends JCMBlockEntityRenderer<KCRStatio
     @Override
     public void renderCurated(KCRStationNameSignBlockEntity blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
         graphicsHolder.push();
-        scaleCentered(graphicsHolder, 0.018F, 0.018F, 0.018F);
+        graphicsHolder.translate(0.5, 0.5, 0.5);
+        graphicsHolder.scale(0.018F, 0.018F, 0.018F);
         rotateToBlockDirection(graphicsHolder, blockEntity);
         // TODO: Render with IDrawing
         graphicsHolder.pop();

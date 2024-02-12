@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.block.behavior.VerticalMultiBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
+import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
@@ -38,5 +39,20 @@ public abstract class Vertical3Block extends DirectionalBlock implements Vertica
     public void addBlockProperties(List<HolderBase<?>> properties) {
         super.addBlockProperties(properties);
         properties.add(PART);
+    }
+
+    @Override
+    protected BlockEntity[] getBlockEntity(BlockState state, World world, BlockPos pos) {
+        BlockPos above = pos.up();
+        BlockPos below = pos.down();
+        // HACK: To be replaced after PART state get replaced
+        BlockPos above2 = above.up();
+        BlockPos below2 = below.down();
+        return new BlockEntity[]{
+                BlockUtil.getBlockEntityOrNull(world, below2),
+                BlockUtil.getBlockEntityOrNull(world, below),
+                BlockUtil.getBlockEntityOrNull(world, pos),
+                BlockUtil.getBlockEntityOrNull(world, above),
+                BlockUtil.getBlockEntityOrNull(world, above2)};
     }
 }

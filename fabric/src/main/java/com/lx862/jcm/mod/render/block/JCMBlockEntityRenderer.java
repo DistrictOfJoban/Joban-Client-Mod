@@ -41,13 +41,6 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
      * Same as the default block entity render method, but only called in safe condition and when rendering are not disabled
      */
     public abstract void renderCurated(T blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1);
-
-    public void scaleCentered(GraphicsHolder graphicsHolder, float x, float y, float z) {
-        graphicsHolder.translate(0.5, 0.5, 0.5);
-        graphicsHolder.scale(x, y, z);
-        graphicsHolder.translate(-0.5, -0.5, -0.5);
-    }
-
     public void rotateToBlockDirection(GraphicsHolder graphicsHolder, T blockEntity) {
         World world = blockEntity.getWorld2();
         if(world != null) {

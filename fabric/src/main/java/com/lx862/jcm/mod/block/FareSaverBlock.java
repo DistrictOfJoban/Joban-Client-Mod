@@ -20,7 +20,7 @@ public class FareSaverBlock extends Vertical3Block implements BlockWithEntity {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 3, 0, 6, 13, 16, 9);
+        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 3, 0, 6.5, 13, 16, 9.5);
     }
 
     @Override

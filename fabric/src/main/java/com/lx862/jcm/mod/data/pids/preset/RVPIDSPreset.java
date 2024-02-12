@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.block.entity.RVPIDSBlockEntity;
+import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.TextInfo;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
@@ -24,12 +24,15 @@ public class RVPIDSPreset extends PIDSPresetBase {
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, float tickDelta, int x, int y, int width, int height, int color, int light) {
         int contentWidth = width - (PIDS_MARGIN * 2);
         int rowAmount = be.getRowAmount();
-        boolean hidePlatform = (be instanceof RVPIDSBlockEntity) ? ((RVPIDSBlockEntity)be).getHidePlatformNumber() : false;
+        boolean hidePlatform = be.getHidePlatformNumber();
 
         // Draw Textures
         drawBackground(graphicsHolder, width, height, facing);
-        //TextureTextRenderer.stressTest(5);
-        drawTestBackground(graphicsHolder, width, height, facing);
+
+        if(ConfigEntry.DEBUG_MODE.getBool()) {
+            //TextureTextRenderer.stressTest(5);
+            drawTestBackground(graphicsHolder, width, height, facing);
+        }
 
         graphicsHolder.translate(0, 0, -0.5);
         titleDrawWeatherIcon(graphicsHolder, world, facing, PIDS_MARGIN);

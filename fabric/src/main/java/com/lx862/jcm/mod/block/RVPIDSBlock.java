@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.block;
 
-import com.lx862.jcm.mod.block.base.Horizontal2MirroredBlock;
 import com.lx862.jcm.mod.block.entity.RVPIDSBlockEntity;
 import com.lx862.jcm.mod.network.gui.PIDSGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
@@ -9,9 +8,8 @@ import com.lx862.jcm.mod.util.JCMUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
-import org.mtr.mapping.mapper.BlockWithEntity;
 
-public class RVPIDSBlock extends Horizontal2MirroredBlock implements BlockWithEntity {
+public class RVPIDSBlock extends JCMPIDSBlock {
 
     public RVPIDSBlock(BlockSettings settings) {
         super(settings);

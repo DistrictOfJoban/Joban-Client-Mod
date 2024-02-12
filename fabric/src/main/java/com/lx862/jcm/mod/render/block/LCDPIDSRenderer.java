@@ -25,10 +25,11 @@ public class LCDPIDSRenderer extends JCMBlockEntityRenderer<LCDPIDSBlockEntity> 
         Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
         
         graphicsHolder.push();
-        scaleCentered(graphicsHolder, 0.009F, 0.009F, 0.009F);
+        graphicsHolder.translate(0.5, 0.5, 0.5);
+        graphicsHolder.scale(0.009F, 0.009F, 0.009F);
         graphicsHolder.rotateYDegrees(90 - facing.asRotation());
         graphicsHolder.rotateZDegrees(180);
-        graphicsHolder.translate(-20, -14.5, -14.5);
+        graphicsHolder.translate(-20, -14, -14.25);
 
         pidsPreset.render(blockEntity, graphicsHolder, world, facing, tickDelta, 0, 0, 153, 84, 0xFFFFFFFF, MAX_RENDER_LIGHT);
         graphicsHolder.pop();

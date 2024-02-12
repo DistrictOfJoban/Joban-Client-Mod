@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.network.block;
 
+import com.lx862.jcm.mod.block.base.JCMBlock;
 import com.lx862.jcm.mod.block.entity.ButterflyLightBlockEntity;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
@@ -24,11 +25,14 @@ public class ButterflyLightUpdatePacket extends PacketHandler {
     @Override
     public void runServer(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
         World world = serverPlayerEntity.getEntityWorld();
-        BlockEntity be = BlockUtil.getBlockEntityOrNull(world, blockPos);
+        BlockState state = BlockUtil.getBlockState(world, blockPos);
+        if(state == null || !(state.getBlock().data instanceof JCMBlock)) return;
 
-        if(be != null && be.data instanceof ButterflyLightBlockEntity) {
-            ((ButterflyLightBlockEntity)be.data).setData(secondsToBlink);
-        }
+        ((JCMBlock)state.getBlock().data).forEachBlockEntity(state, world, blockPos, be -> {
+            if(be.data instanceof ButterflyLightBlockEntity) {
+                ((ButterflyLightBlockEntity)be.data).setData(secondsToBlink);
+            }
+        });
     }
 
     @Override

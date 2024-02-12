@@ -1,6 +1,11 @@
 package com.lx862.jcm.mod.network.block;
 
+import com.lx862.jcm.mod.block.JCMPIDSBlock;
+import com.lx862.jcm.mod.block.RVPIDSBlock;
+import com.lx862.jcm.mod.block.base.Horizontal2MirroredBlock;
+import com.lx862.jcm.mod.block.base.JCMBlock;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;
@@ -57,10 +62,14 @@ public class PIDSUpdatePacket extends PacketHandler {
     @Override
     public void runServer(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
         World world = serverPlayerEntity.getEntityWorld();
-        BlockEntity be = BlockUtil.getBlockEntityOrNull(world, blockPos);
+        BlockState state = BlockUtil.getBlockState(world, blockPos);
 
-        if(be != null && be.data instanceof PIDSBlockEntity) {
-            ((PIDSBlockEntity)be.data).setData(customMessages, rowHidden, hidePlatformNumber, presetId);
-        }
+        if(state == null || !(state.getBlock().data instanceof JCMBlock)) return;
+
+        ((JCMBlock)state.getBlock().data).forEachBlockEntity(state, world, blockPos, be -> {
+            if(be.data instanceof PIDSBlockEntity) {
+                ((PIDSBlockEntity)be.data).setData(customMessages, rowHidden, hidePlatformNumber, presetId);
+            }
+        });
     }
 }

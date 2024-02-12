@@ -1,15 +1,12 @@
 package com.lx862.jcm.mod.block;
 
-import com.lx862.jcm.mod.block.base.Horizontal2MirroredBlock;
 import com.lx862.jcm.mod.block.entity.LCDPIDSBlockEntity;
-import com.lx862.jcm.mod.block.entity.RVPIDSBlockEntity;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
-import org.mtr.mapping.mapper.BlockWithEntity;
 
-public class LCDPIDSBlock extends Horizontal2MirroredBlock implements BlockWithEntity {
+public class LCDPIDSBlock extends JCMPIDSBlock {
 
     public LCDPIDSBlock(BlockSettings settings) {
         super(settings);

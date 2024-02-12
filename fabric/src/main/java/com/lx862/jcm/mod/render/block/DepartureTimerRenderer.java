@@ -30,7 +30,8 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
         Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
 
         graphicsHolder.push();
-        scaleCentered(graphicsHolder, 0.018F, 0.018F, 0.018F);
+        graphicsHolder.translate(0.5, 0.5, 0.5);
+        graphicsHolder.scale(0.018F, 0.018F, 0.018F);
         rotateToBlockDirection(graphicsHolder, blockEntity);
         graphicsHolder.rotateZDegrees(180);
         graphicsHolder.translate(-12.5, -2, -4.1);

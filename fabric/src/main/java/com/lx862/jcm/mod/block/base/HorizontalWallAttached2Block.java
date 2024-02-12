@@ -43,6 +43,13 @@ public abstract class HorizontalWallAttached2Block extends DirectionalBlock impl
     }
 
     @Override
+    protected BlockEntity[] getBlockEntity(BlockState state, World world, BlockPos pos) {
+        Direction facing = BlockUtil.getProperty(state, FACING);
+        BlockPos otherPos = pos.offset(facing);
+        return new BlockEntity[]{ BlockUtil.getBlockEntityOrNull(world, pos), BlockUtil.getBlockEntityOrNull(world, otherPos) };
+    }
+
+    @Override
     public void addBlockProperties(List<HolderBase<?>> properties) {
         super.addBlockProperties(properties);
         HorizontalDoubleBlockBehavior.addProperties(properties);
