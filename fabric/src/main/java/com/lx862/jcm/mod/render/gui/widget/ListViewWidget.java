@@ -1,20 +1,18 @@
 package com.lx862.jcm.mod.render.gui.widget;
 
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.render.fundamental.ClipStack;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.render.gui.ScrollViewWidget;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListViewWidget extends ClickableWidgetExtension implements RenderHelper, GuiHelper {
-    public static final int SCROLLBAR_WIDTH = 6;
+public class ListViewWidget extends ScrollViewWidget implements RenderHelper, GuiHelper {
     public static final int ENTRY_PADDING = 5;
     private final List<ListItem> entryList = new ArrayList<>();
-    private double currentScroll = 0;
     private float elapsed;
     public ListViewWidget() {
         super(0, 0, 0, 0);
@@ -25,7 +23,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
         setY2(y);
         setWidth2(width);
         setHeightMapped(height);
-        if(getMaxScrollPosition() <= getHeight2()) {
+        if(getContentHeight() <= getHeight2()) {
             currentScroll = 0;
         }
         positionWidgets(currentScroll);
@@ -49,13 +47,16 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
 
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
+        GuiHelper.drawRectangle(new GuiDrawing(graphicsHolder), getX2(), getY2(), width, height, 0x4F4C4C4C);
+        super.render(graphicsHolder, mouseX, mouseY, tickDelta);
+    }
+
+    @Override
+    public void renderContent(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
         elapsed += (tickDelta / Constants.MC_TICK_PER_SECOND);
-        ClipStack.push(getX2(), getY2(), getWidth2(), getHeight2());
 
         // Background
-        GuiHelper.drawRectangle(guiDrawing, getX2(), getY2(), width, height, 0x4F4C4C4C);
-
         int incY = 0;
         for(int i = 0; i < entryList.size(); i++) {
             ListItem listItem = entryList.get(i);
@@ -68,51 +69,24 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
                 widgetVisible = topLeftVisible && bottomRightVisible;
             }
 
-            listItem.draw(graphicsHolder, guiDrawing, entryX, entryY, width - getScrollbarWidth(), height, mouseX, mouseY, widgetVisible, elapsed, tickDelta);
+            listItem.draw(graphicsHolder, guiDrawing, entryX, entryY, width - getScrollbarOffset(), height, mouseX, mouseY, widgetVisible, elapsed, tickDelta);
             incY += listItem.height;
         }
-        drawScrollbar(guiDrawing);
-        ClipStack.pop();
     }
 
     @Override
-    public boolean mouseScrolled3(double mouseX, double mouseY, double amount) {
-        amount *= 15;
-        double scrollableArea = Math.max(0, getMaxScrollPosition() - getHeight2());
-        if(amount > 0) {
-            currentScroll = Math.max(0, currentScroll - amount);
-        } else {
-            currentScroll = Math.min(scrollableArea, currentScroll - amount);
-        }
-        positionWidgets(currentScroll);
-        return true;
+    public void setScroll(double newScroll) {
+        super.setScroll(newScroll);
+        positionWidgets();
     }
 
-    private void drawScrollbar(GuiDrawing guiDrawing) {
-        int fullHeight = getMaxScrollPosition();
-        int visible = getHeight2();
-
-        if(visible >= fullHeight) return;
-        double scrollbarHeight = ((double)visible / fullHeight) * visible;
-        double yOffset = (currentScroll / (fullHeight - visible)) * (visible - scrollbarHeight);
-        int scrollBarWidth = getScrollbarWidth();
-        GuiHelper.drawRectangle(guiDrawing, getX2() + getWidth2() - scrollBarWidth, getY2() + yOffset, scrollBarWidth, scrollbarHeight, 0xFFC0C0C0);
-
-        // Border
-        GuiHelper.drawRectangle(guiDrawing, getX2() + getWidth2() - 1, getY2() + yOffset, 1, scrollbarHeight, 0xFF808080);
-        GuiHelper.drawRectangle(guiDrawing, getX2() + getWidth2() - scrollBarWidth, getY2() + yOffset + scrollbarHeight - 1, scrollBarWidth, 1, 0xFF808080);
-    }
-
-    private int getMaxScrollPosition() {
+    @Override
+    protected int getContentHeight() {
         int entryHeight = 0;
         for(ListItem entry : entryList) {
             entryHeight += entry.height;
         }
         return entryHeight;
-    }
-
-    private int getScrollbarWidth() {
-        return getMaxScrollPosition() > getHeight2() ? SCROLLBAR_WIDTH : 0;
     }
 
     public void positionWidgets() {
@@ -129,7 +103,7 @@ public class ListViewWidget extends ClickableWidgetExtension implements RenderHe
             ListItem listItem = entryList.get(i);
             if(!listItem.isCategory) {
                 int entryY = startY + incY;
-                int x = (startX + width - getScrollbarWidth()) - (listItem.widget.getWidth()) - (ENTRY_PADDING);
+                int x = (startX + width - getScrollbarOffset()) - (listItem.widget.getWidth()) - (ENTRY_PADDING);
                 int y = (int)(-scroll + entryY) + ((listItem.height - listItem.widget.getHeight()) / 2);
 
                 listItem.widget.setX(x);

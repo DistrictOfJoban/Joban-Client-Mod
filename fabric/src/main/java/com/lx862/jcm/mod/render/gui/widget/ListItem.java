@@ -81,6 +81,7 @@ public class ListItem implements RenderHelper, GuiHelper {
 
         if(widget != null) {
             widget.setVisible(widgetVisible);
+
             // We have to draw our widget (Right side) again after rendering the highlight so it doesn't get covered.
             widget.render(graphicsHolder, mouseX, mouseY, tickDelta);
         }

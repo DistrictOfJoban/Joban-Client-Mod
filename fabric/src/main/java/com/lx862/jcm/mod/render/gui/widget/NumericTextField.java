@@ -82,6 +82,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
 
     @Override
     public boolean mouseScrolled3(double mouseX, double mouseY, double amount) {
+        if(!visible || !isFocused2()) return false;
         if(amount > 0) {
             increment();
         } else {
