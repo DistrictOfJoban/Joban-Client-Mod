@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.data.pids.preset;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextInfo;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import org.mtr.mapping.holder.*;
@@ -29,19 +30,24 @@ public class RVPIDSPreset extends PIDSPresetBase {
         // Draw Textures
         drawBackground(graphicsHolder, width, height, facing);
 
+        // Debug View Texture
         if(ConfigEntry.DEBUG_MODE.getBool() && ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
             //TextureTextRenderer.stressTest(5);
-            drawTestBackground(graphicsHolder, width, height, facing);
+            drawAtlasBackground(graphicsHolder, width, height, facing);
         }
-
         graphicsHolder.translate(0, 0, -0.5);
-        titleDrawWeatherIcon(graphicsHolder, world, facing, PIDS_MARGIN);
+        graphicsHolder.translate(PIDS_MARGIN, 0, 0);
+
+        // Weather icon
+        drawWeatherIcon(graphicsHolder, world, facing, 0);
 
         // Text
         graphicsHolder.translate(0, 0, -0.5);
         TextRenderingManager.bind(graphicsHolder);
-        titleDrawClock(graphicsHolder, facing, world, contentWidth - 19, 2, ARGB_WHITE);
-        arrivalsDrawTable(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, height, rowAmount, ARGB_BLACK, hidePlatform);
+        drawClock(graphicsHolder, facing, world, contentWidth, 2, ARGB_WHITE);
+
+        int headerHeight = 11;
+        drawArrivals(graphicsHolder, facing, 0, 15, contentWidth, height - headerHeight, rowAmount, ARGB_BLACK, hidePlatform);
     }
 
     protected void drawBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
@@ -49,26 +55,10 @@ public class RVPIDSPreset extends PIDSPresetBase {
         RenderHelper.drawTexture(graphicsHolder, TEXTURE_BACKGROUND, 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
-    private void drawTestBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
-        TextRenderingManager.bind(graphicsHolder);
-        RenderHelper.drawTexture(graphicsHolder,0, height, 0, width, width, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
-    }
 
-    private void drawArrivalEntryCallback(GraphicsHolder graphicsHolder, int x, int y, int width, int height, int rowAmount, DrawRowCallback drawRowCallback) {
-        graphicsHolder.push();
-        graphicsHolder.translate(x, y, 0);
-        graphicsHolder.scale(ARRIVAL_TEXT_SCALE, ARRIVAL_TEXT_SCALE, ARRIVAL_TEXT_SCALE);
-
-        for(int i = 0; i < rowAmount; i++) {
-            drawRowCallback.accept(graphicsHolder, width);
-            graphicsHolder.translate(0, ((height - 11) / 7.25) * ARRIVAL_TEXT_SCALE, 0);
-        }
-        graphicsHolder.pop();
-    }
-
-    private void arrivalsDrawTable(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int height, int rowAmount, int textColor, boolean hidePlatform) {
+    private void drawArrivals(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int height, int rowAmount, int textColor, boolean hidePlatform) {
         drawArrivalEntryCallback(rawGraphicsHolder, x, y, rawWidth, height, rowAmount, (graphicsHolder, width) -> {
-            drawArrivalEntry(graphicsHolder, facing, (int)(width / ARRIVAL_TEXT_SCALE), "610", /*"§eTuen Mun §dFerry Pier"*/ "§e屯門 Tuen Mun", 2, 50000, textColor, false, hidePlatform);
+            drawArrivalEntry(graphicsHolder, facing, (int)(width / ARRIVAL_TEXT_SCALE), "610", "§eTuen Mun §dFerry Pier" /*"§e屯門 Tuen Mun"*/, 2, 50000, textColor, false, hidePlatform);
         });
     }
 
@@ -82,12 +72,11 @@ public class RVPIDSPreset extends PIDSPresetBase {
         graphicsHolder.push();
         if(destinationWidth > destinationMaxWidth) {
             RenderHelper.scaleToFit(graphicsHolder, destinationWidth, destinationMaxWidth - 2, false);
-            drawPIDSText(graphicsHolder, facing, leftDestination, 0, 0, textColor);
             // TODO: Make marquee an option in custom PIDS Preset
             //drawPIDSScrollingText(graphicsHolder, facing, leftDestination, 0, 0, textColor, (int)destinationMaxWidth - 2);
-        } else {
-            drawPIDSText(graphicsHolder, facing, leftDestination, 0, 0, textColor);
         }
+
+        drawPIDSText(graphicsHolder, TextAlignment.LEFT, facing, leftDestination, 0, 0, textColor);
         graphicsHolder.pop();
 
         // Platform Text
@@ -102,7 +91,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
             graphicsHolder.translate((44 * ARRIVAL_TEXT_SCALE) + 5, 1.75, 0);
             graphicsHolder.scale(0.75F, 0.75F, 0.75F);
             RenderHelper.scaleToFit(graphicsHolder, platTextWidth, 8, true, 9);
-            drawPIDSCenteredText(graphicsHolder,facing, "2", 0, 0, ARGB_WHITE);
+            drawPIDSText(graphicsHolder, TextAlignment.CENTER, facing, "2", 0, 0, ARGB_WHITE);
             graphicsHolder.pop();
         }
 
@@ -112,12 +101,19 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
     private void drawArrivalEntryETA(GraphicsHolder graphicsHolder, Direction facing, int width, int car, boolean showCar, long arrivalTime, int textColor) {
         String etaString = "14 min";
-
-        int etaCarWidth = GraphicsHolder.getTextWidth(etaString);
-        drawPIDSText(graphicsHolder, facing, etaString, width - etaCarWidth, 0, textColor);
+        drawPIDSText(graphicsHolder, TextAlignment.RIGHT, facing, etaString, width, 0, textColor);
     }
 
-    private void titleDrawWeatherIcon(GraphicsHolder graphicsHolder, World world, Direction facing, float x) {
+    private void drawClock(GraphicsHolder graphicsHolder, Direction facing, World world, int x, int y, int textColor) {
+        long timeNow = WorldHelper.getTimeOfDay(world) + 6000;
+        long hours = timeNow / 1000;
+        long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
+        String timeString = String.format("%02d:%02d", hours % 24, minutes % 60);
+        drawPIDSText(graphicsHolder, TextAlignment.RIGHT, facing, timeString, x, y, textColor);
+    }
+
+
+    private void drawWeatherIcon(GraphicsHolder graphicsHolder, World world, Direction facing, float x) {
         if(world.isRaining()) {
             graphicsHolder.createVertexConsumer(RenderLayer.getText(ICON_WEATHER_RAINY));
         } else if(world.isThundering()) {
@@ -128,12 +124,16 @@ public class RVPIDSPreset extends PIDSPresetBase {
         RenderHelper.drawTexture(graphicsHolder, x, 0, 0, 11, 11, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
-    private void titleDrawClock(GraphicsHolder graphicsHolder, Direction facing, World world, int x, int y, int textColor) {
-        long timeNow = WorldHelper.getTimeOfDay(world) + 6000;
-        long hours = timeNow / 1000;
-        long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
-        String timeString = String.format("%02d:%02d", hours % 24, minutes % 60);
-        drawPIDSText(graphicsHolder, facing, timeString,  x, y, textColor);
+    private void drawArrivalEntryCallback(GraphicsHolder graphicsHolder, int x, int y, int width, int height, int rowAmount, DrawRowCallback drawRowCallback) {
+        graphicsHolder.push();
+        graphicsHolder.translate(x, y, 0);
+        graphicsHolder.scale(ARRIVAL_TEXT_SCALE, ARRIVAL_TEXT_SCALE, ARRIVAL_TEXT_SCALE);
+
+        for(int i = 0; i < rowAmount; i++) {
+            drawRowCallback.accept(graphicsHolder, width);
+            graphicsHolder.translate(0, (height / 7.25) * ARRIVAL_TEXT_SCALE, 0);
+        }
+        graphicsHolder.pop();
     }
 
     @Override

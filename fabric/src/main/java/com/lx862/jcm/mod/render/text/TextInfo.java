@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.render.text.font.FontSet;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
+import org.mtr.mapping.holder.TextFormatting;
 
 import java.awt.*;
 
@@ -12,9 +13,9 @@ public class TextInfo {
     private final String content;
     private final WidthInfo widthInfo;
     private Identifier fontId;
+    private TextAlignment textAlignment = TextAlignment.LEFT;
     private int textColor;
     private boolean forScrollingText = false;
-    private boolean centered = false;
 
     public TextInfo(String content) {
         this.content = content;
@@ -38,8 +39,8 @@ public class TextInfo {
         return widthInfo;
     }
 
-    public boolean isCentered() {
-        return centered;
+    public TextAlignment getTextAlignment() {
+        return textAlignment;
     }
 
     public boolean isForScrollingText() {
@@ -51,13 +52,20 @@ public class TextInfo {
         return this;
     }
 
+    public TextInfo withColor(TextFormatting formatting) {
+        if(formatting.getColorValue() != null) {
+            this.textColor = formatting.getColorValue();
+        }
+        return this;
+    }
+
     public TextInfo withColor(int color) {
         this.textColor = color;
         return this;
     }
 
-    public TextInfo withCentered() {
-        this.centered = true;
+    public TextInfo withTextAlignment(TextAlignment textAlignment) {
+        this.textAlignment = textAlignment;
         return this;
     }
 

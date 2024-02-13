@@ -15,9 +15,10 @@ public class VanillaTextRenderer implements RenderHelper {
     }
 
     private static void drawInternal(GraphicsHolder graphicsHolder, TextInfo text, int x, int y) {
-        int finalX = text.isCentered() ? x - (GraphicsHolder.getTextWidth(text.getContent()) / 2) : x;
+        int textWidth = GraphicsHolder.getTextWidth(text.toMutableText());
+        double finalX = text.getTextAlignment().getX(x, textWidth);
         MutableText finalText = text.toMutableText();
-        graphicsHolder.drawText(finalText, finalX, y, text.getTextColor(), false, MAX_RENDER_LIGHT);
+        graphicsHolder.drawText(finalText, (int)finalX, y, text.getTextColor(), false, MAX_RENDER_LIGHT);
     }
 
     public static void drawScrollingText(GraphicsHolder graphicsHolder, String text, int maxW, int x, int y, int textColor) {

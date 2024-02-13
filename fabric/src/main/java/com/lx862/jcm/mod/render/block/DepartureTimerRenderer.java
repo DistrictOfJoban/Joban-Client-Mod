@@ -35,25 +35,22 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
         rotateToBlockDirection(graphicsHolder, blockEntity);
         graphicsHolder.rotateZDegrees(180);
         graphicsHolder.translate(-12.5, -2, -4.1);
-//
-//        List<Platform> closestPlatforms = new ArrayList<>();
-//        InitClient.findClosePlatform(pos, 5, closestPlatforms::add);
-//        Platform closestPlatform = !closestPlatforms.isEmpty() ? closestPlatforms.get(0) : null;
-//        if (closestPlatform == null) return;
-//
-//        ArrivalsResponse arrivals = ClientData.getInstance().requestArrivals(pos.asLong(), LongImmutableList.of(closestPlatform.getId()), 1, 0, true);
-//        ArrivalResponse firstArrival = arrivals.getArrivals().isEmpty() ? null : arrivals.getArrivals().get(0);
-//        if (firstArrival == null) return;
-//
-//        boolean arrived = firstArrival.getArrival() <= System.currentTimeMillis();
-//        long dwellLeft = firstArrival.getDeparture() - System.currentTimeMillis();
-//        if (!arrived) return;
-//
-//        long seconds = dwellLeft / 1000;
-//        long mins = seconds / 60;
 
-        long seconds = 45;
-        long mins = 1;
+        List<Platform> closestPlatforms = new ArrayList<>();
+        InitClient.findClosePlatform(pos, 5, closestPlatforms::add);
+        Platform closestPlatform = !closestPlatforms.isEmpty() ? closestPlatforms.get(0) : null;
+        if (closestPlatform == null) return;
+
+        ArrivalsResponse arrivals = ClientData.getInstance().requestArrivals(pos.asLong(), LongImmutableList.of(closestPlatform.getId()), 1, 0, true);
+        ArrivalResponse firstArrival = arrivals.getArrivals().isEmpty() ? null : arrivals.getArrivals().get(0);
+        if (firstArrival == null) return;
+
+        boolean arrived = firstArrival.getArrival() <= System.currentTimeMillis();
+        long dwellLeft = firstArrival.getDeparture() - System.currentTimeMillis();
+        if (!arrived) return;
+
+        long seconds = dwellLeft / 1000;
+        long mins = seconds / 60;
 
         TextRenderingManager.bind(graphicsHolder);
         // % 10 as min should be single digit only

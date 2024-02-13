@@ -36,10 +36,6 @@ public class TextRenderingManager implements RenderHelper {
         draw(graphicsHolder, text.withMaxWidth(textWidth).withScrollingText(), facing, x, y);
     }
 
-    public static void drawCentered(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y) {
-        drawInternal(graphicsHolder, text.withCentered(), facing, x, y);
-    }
-
     public static void draw(GraphicsHolder graphicsHolder, MutableText text, Direction facing, int x, int y) {
         draw(graphicsHolder, new TextInfo(text), facing, x, y);
     }

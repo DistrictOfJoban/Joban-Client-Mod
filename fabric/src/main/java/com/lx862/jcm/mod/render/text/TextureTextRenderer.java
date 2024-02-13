@@ -250,7 +250,7 @@ public class TextureTextRenderer implements RenderHelper {
         }
 
         if(textSlot != null) {
-            float finalX = text.isCentered() ? x - (float)(textSlot.getPhysicalWidth() / 2F) : x;
+            float finalX = (float)text.getTextAlignment().getX(x, textSlot.getPhysicalWidth());
             drawToWorld(graphicsHolder, textSlot, facing, finalX, y);
         }
     }

@@ -19,12 +19,12 @@ import javax.annotation.Nullable;
 public class JsonPIDSPreset extends PIDSPresetBase {
     private final Identifier background;
     private final String fontId;
+    private final TextOverflowMode textOverflowMode;
     private final boolean showClock;
     private final boolean showWeather;
     private final int textColor;
-    private final TextOverflowMode textOverflowMode;
     private final boolean[] rowHidden;
-    private static final int PIDS_MARGIN = 8;
+    private static final int PIDS_MARGIN = 7;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
     public JsonPIDSPreset(String id, @Nullable String name, @Nullable Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, int textColor) {
         super(id, name, false);
