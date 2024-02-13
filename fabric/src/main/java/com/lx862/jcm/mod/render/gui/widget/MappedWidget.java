@@ -17,6 +17,9 @@ public class MappedWidget {
     }
 
     public int getX() {
+        if(widget instanceof HorizontalWidgetSet) {
+            return ((HorizontalWidgetSet) widget).getX2();
+        }
         if(widget instanceof ButtonWidgetExtension) {
             return ((ButtonWidgetExtension) widget).getX2();
         }
@@ -39,6 +42,9 @@ public class MappedWidget {
     }
 
     public int getY() {
+        if(widget instanceof HorizontalWidgetSet) {
+            return ((HorizontalWidgetSet) widget).getY2();
+        }
         if(widget instanceof ButtonWidgetExtension) {
             return ((ButtonWidgetExtension) widget).getY2();
         }
@@ -126,6 +132,9 @@ public class MappedWidget {
     }
 
     public void setX(int newX) {
+        if(widget instanceof HorizontalWidgetSet) {
+            ((HorizontalWidgetSet) widget).setAllX(newX);
+        }
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension) widget).setX2(newX);
         }
@@ -138,9 +147,6 @@ public class MappedWidget {
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setX2(newX);
         }
-        if(widget instanceof HorizontalWidgetSet) {
-            ((HorizontalWidgetSet) widget).setAllX(newX);
-        }
         if(widget instanceof ClickableWidgetExtension) {
             ((ClickableWidgetExtension) widget).setX2(newX);
         }
@@ -150,6 +156,9 @@ public class MappedWidget {
     }
 
     public void setY(int newY) {
+        if(widget instanceof HorizontalWidgetSet) {
+            ((HorizontalWidgetSet) widget).setAllY(newY);
+        }
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension) widget).setY2(newY);
         }
@@ -161,9 +170,6 @@ public class MappedWidget {
         }
         if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setY2(newY);
-        }
-        if(widget instanceof HorizontalWidgetSet) {
-            ((HorizontalWidgetSet) widget).setAllY(newY);
         }
         if(widget instanceof ClickableWidgetExtension) {
             ((ClickableWidgetExtension) widget).setY2(newY);

@@ -1,18 +1,17 @@
-package com.lx862.jcm.mod.render.gui;
+package com.lx862.jcm.mod.render.gui.widget;
 
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.fundamental.ClipStack;
-import com.lx862.jcm.mod.render.fundamental.Rectangle;
 import org.lwjgl.glfw.GLFW;
 import org.mtr.mapping.mapper.ClickableWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
-public abstract class ScrollViewWidget extends ClickableWidgetExtension {
+public abstract class AbstractScrollViewWidget extends ClickableWidgetExtension {
     public static final int SCROLLBAR_WIDTH = 6;
     protected double currentScroll = 0;
     private boolean scrollbarDragging = false;
-    public ScrollViewWidget(int x, int y, int width, int height) {
+    public AbstractScrollViewWidget(int x, int y, int width, int height) {
         super(x, y, width, height);
     }
 

@@ -49,6 +49,18 @@ public class ClipStack {
         RenderSystem.enableScissor((int)(x * scale), (int)(windowHeight - (y + height) * scale), (int)(width * scale), (int)(height * scale));
     }
 
+    /**
+     * Ensure the clip is applied appropriately, yes this is a hack.
+     */
+    public static void ensureStateCorrect() {
+        if(stacks.isEmpty()) {
+            disableClip();
+        } else {
+            Rectangle latestStacks = stacks.get(stacks.size()-1);
+            enableClip(latestStacks.x, latestStacks.y, latestStacks.width, latestStacks.height);
+        }
+    }
+
     private static void disableClip() {
         RenderSystem.disableScissor();
     }

@@ -24,6 +24,9 @@ public class HorizontalWidgetSet extends ClickableWidgetExtension implements Ren
         this(5);
     }
 
+    /**
+     * Set the X, Y, Width and Height of the widget. This is required to be called as the default width is 0
+     */
     public void setXYSize(int x, int y, int width, int height) {
         setX2(x);
         setY2(y);
@@ -36,15 +39,15 @@ public class HorizontalWidgetSet extends ClickableWidgetExtension implements Ren
         widgets.add(widget);
     }
 
-    public void reset() {
-        this.widgets.clear();
-    }
-
     @Override
     public int getWidth2() {
         int total = 0;
         for(MappedWidget mappedWidget : widgets) {
             total += mappedWidget.getWidth();
+            total += widgetXMargin;
+        }
+        if(total > 1) {
+            total -= widgetXMargin;
         }
         return total;
     }
@@ -56,20 +59,22 @@ public class HorizontalWidgetSet extends ClickableWidgetExtension implements Ren
         }
     }
 
-    public void setAllX(int newX) {
-        int incX = 0;
-        for(MappedWidget mappedWidget : widgets) {
-            mappedWidget.setX(newX + incX);
-            incX += mappedWidget.getWidth() + widgetXMargin;
+    @Override
+    public void setVisibleMapped(boolean visible) {
+        for(MappedWidget widget : widgets) {
+            widget.setVisible(visible);
         }
+        super.setVisibleMapped(visible);
+    }
+
+    public void setAllX(int newX) {
         super.setX2(newX);
+        positionWidgets();
     }
 
     public void setAllY(int newY) {
-        for(MappedWidget mappedWidget : widgets) {
-            mappedWidget.setY(newY);
-        }
         super.setY2(newY);
+        positionWidgets();
     }
 
     private void positionWidgets() {

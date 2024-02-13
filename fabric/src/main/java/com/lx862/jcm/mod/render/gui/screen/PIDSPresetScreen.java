@@ -5,7 +5,8 @@ import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
-import com.lx862.jcm.mod.render.gui.widget.ListItem;
+import com.lx862.jcm.mod.render.gui.widget.ContentItem;
+import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
 import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
@@ -16,11 +17,14 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.Text;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GuiDrawing;
+import org.mtr.mapping.mapper.TextFieldWidgetExtension;
+import org.mtr.mapping.tool.TextCase;
 
 import java.util.function.Consumer;
 
 public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiHelper {
     private static final Identifier PIDS_PREVIEW_BASE = new Identifier("jsblock:textures/gui/pids_preview.png");
+    private final TextFieldWidgetExtension searchBox;
     private final ListViewWidget listViewWidget;
     private final Consumer<String> callback;
     private final String selectedPreset;
@@ -28,6 +32,8 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         super(false);
         this.callback = callback;
         this.listViewWidget = new ListViewWidget();
+        // TODO: Suggestion -> "Search Here"?
+        this.searchBox = new TextFieldWidgetExtension(0, 0, 0, 22, 60, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "config.search").getString());
         this.selectedPreset = selectedPreset;
     }
 
@@ -37,12 +43,21 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         int contentWidth = (int)Math.min((width * 0.75), MAX_CONTENT_WIDTH);
         int listViewHeight = (int)((height - 60) * 0.76);
         int startX = (width - contentWidth) / 2;
-        int startY = TEXT_PADDING * 5;
+        int searchStartY = TEXT_PADDING * 5;
+        int startY = searchStartY + (TEXT_PADDING * 3);
 
         listViewWidget.reset();
         addConfigEntries();
+        searchBox.setX2(startX);
+        searchBox.setY2(searchStartY);
+        searchBox.setWidth2(contentWidth);
+        searchBox.setChangedListener2(string -> {
+            listViewWidget.setSearchTerm(string);
+        });
+
         listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
         addChild(new ClickableWidget(listViewWidget));
+        addChild(new ClickableWidget(searchBox));
     }
 
     @Override
@@ -70,22 +85,34 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
     }
 
     private void addPreset(PIDSPresetBase preset) {
-        ButtonWidgetExtension we = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.choose"), (btn) -> {
+        ButtonWidgetExtension selectBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.choose"), (btn) -> {
+            choose(preset.getId());
+        });
+
+        ButtonWidgetExtension editBtn = new ButtonWidgetExtension(0, 0, 40, 20, TextUtil.literal("Edit"), (btn) -> {
             choose(preset.getId());
         });
 
         if(preset.getId().equals(selectedPreset)) {
-            we.setMessage2(Text.cast(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.selected")));
-            we.active = false;
+            editBtn.setMessage2(Text.cast(TextUtil.literal("Edit")));
+            selectBtn.setMessage2(Text.cast(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.selected")));
+            selectBtn.active = false;
         }
 
-        addChild(new ClickableWidget(we));
-        ListItem listItem = new ListItem(TextUtil.literal(preset.getName()), new MappedWidget(we), false, 26);
+        HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
+        widgetSet.addWidget(new MappedWidget(editBtn));
+        widgetSet.addWidget(new MappedWidget(selectBtn));
+        widgetSet.setXYSize(0, 0, 100, 20);
 
-        listItem.setIconCallback((guiDrawing, startX, startY, width, height) -> {
+        addChild(new ClickableWidget(selectBtn));
+        addChild(new ClickableWidget(editBtn));
+        addChild(new ClickableWidget(widgetSet));
+        ContentItem contentItem = new ContentItem(TextUtil.literal(preset.getName()), new MappedWidget(widgetSet), 26);
+
+        contentItem.setIconCallback((guiDrawing, startX, startY, width, height) -> {
             drawPIDSPreview(preset, guiDrawing, startX, startY, width, height, false);
         });
-        listViewWidget.add(listItem);
+        listViewWidget.add(contentItem);
     }
 
     public static void drawPIDSPreview(PIDSPresetBase preset, GuiDrawing guiDrawing, int startX, int startY, int width, int height, boolean backgroundOnly) {

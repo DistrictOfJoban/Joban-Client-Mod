@@ -3,17 +3,19 @@ package com.lx862.jcm.mod.render.gui.widget;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.gui.ScrollViewWidget;
+import com.lx862.jcm.mod.render.fundamental.ClipStack;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListViewWidget extends ScrollViewWidget implements RenderHelper, GuiHelper {
+public class ListViewWidget extends AbstractScrollViewWidget implements RenderHelper, GuiHelper {
     public static final int ENTRY_PADDING = 5;
-    private final List<ListItem> entryList = new ArrayList<>();
+    private final List<AbstractListItem> displayedEntryList = new ArrayList<>();
+    private final List<AbstractListItem> entryList = new ArrayList<>();
     private float elapsed;
+    private String searchTerm = "";
     public ListViewWidget() {
         super(0, 0, 0, 0);
     }
@@ -23,26 +25,49 @@ public class ListViewWidget extends ScrollViewWidget implements RenderHelper, Gu
         setY2(y);
         setWidth2(width);
         setHeightMapped(height);
-        if(getContentHeight() <= getHeight2()) {
-            currentScroll = 0;
-        }
+        setScroll(currentScroll);
         positionWidgets(currentScroll);
+        refreshDisplayedList();
     }
 
     public void add(MutableText text, MappedWidget widget) {
-        add(new ListItem(text, widget));
+        add(new ContentItem(text, widget));
     }
 
-    public void add(ListItem listItem) {
+    public void add(AbstractListItem listItem) {
         entryList.add(listItem);
+        refreshDisplayedList();
     }
 
     public void addCategory(MutableText text) {
-        entryList.add(new ListItem(text, null, true));
+        entryList.add(new CategoryItem(text));
+        refreshDisplayedList();
     }
 
     public void reset() {
         this.entryList.clear();
+        refreshDisplayedList();
+    }
+
+    public void setSearchTerm(String searchTerm) {
+        this.searchTerm = searchTerm;
+        refreshDisplayedList();
+    }
+
+    private void refreshDisplayedList() {
+        displayedEntryList.clear();
+        entryList.forEach(e -> {
+            if(e.matchQuery(searchTerm)) {
+                e.shown();
+                displayedEntryList.add(e);
+            } else {
+                e.hidden();
+            }
+        });
+        positionWidgets();
+
+        // Update scrolling so that it will rubber-band back if scrolled area are beyond viewport
+        setScroll(currentScroll);
     }
 
     @Override
@@ -58,14 +83,17 @@ public class ListViewWidget extends ScrollViewWidget implements RenderHelper, Gu
 
         // Background
         int incY = 0;
-        for(int i = 0; i < entryList.size(); i++) {
-            ListItem listItem = entryList.get(i);
+        for(int i = 0; i < displayedEntryList.size(); i++) {
+            ClipStack.ensureStateCorrect();
+            AbstractListItem listItem = displayedEntryList.get(i);
             int entryX = getX2();
             int entryY = getY2() + incY - (int)currentScroll;
             boolean widgetVisible = false;
-            if(listItem.widget != null) {
-                boolean topLeftVisible = inRectangle(listItem.widget.getX(), listItem.widget.getY(), getX2(), getY2(), getWidth2(), getHeight2());
-                boolean bottomRightVisible = inRectangle(listItem.widget.getX() + listItem.widget.getWidth(), listItem.widget.getY() + listItem.widget.getHeight(), getX2(), getY2(), getWidth2(), getHeight2());
+
+            if(listItem instanceof ContentItem) {
+                ContentItem ci = (ContentItem) listItem;
+                boolean topLeftVisible = inRectangle(ci.widget.getX(), ci.widget.getY(), getX2(), getY2(), getWidth2(), getHeight2());
+                boolean bottomRightVisible = inRectangle(ci.widget.getX() + ci.widget.getWidth(), ci.widget.getY() + ci.widget.getHeight(), getX2(), getY2(), getWidth2(), getHeight2());
                 widgetVisible = topLeftVisible && bottomRightVisible;
             }
 
@@ -83,7 +111,7 @@ public class ListViewWidget extends ScrollViewWidget implements RenderHelper, Gu
     @Override
     protected int getContentHeight() {
         int entryHeight = 0;
-        for(ListItem entry : entryList) {
+        for(AbstractListItem entry : displayedEntryList) {
             entryHeight += entry.height;
         }
         return entryHeight;
@@ -98,18 +126,11 @@ public class ListViewWidget extends ScrollViewWidget implements RenderHelper, Gu
         int startY = getY2();
 
         int incY = 0;
-
-        for(int i = 0; i < entryList.size(); i++) {
-            ListItem listItem = entryList.get(i);
-            if(!listItem.isCategory) {
-                int entryY = startY + incY;
-                int x = (startX + width - getScrollbarOffset()) - (listItem.widget.getWidth()) - (ENTRY_PADDING);
-                int y = (int)(-scroll + entryY) + ((listItem.height - listItem.widget.getHeight()) / 2);
-
-                listItem.widget.setX(x);
-                listItem.widget.setY(y);
-            }
-
+        for(int i = 0; i < displayedEntryList.size(); i++) {
+            AbstractListItem listItem = displayedEntryList.get(i);
+            int entryY = startY + incY;
+            int x = (startX + width - getScrollbarOffset()) - ENTRY_PADDING;
+            listItem.positionChanged(x, (int)-scroll + entryY);
             incY += listItem.height;
         }
     }

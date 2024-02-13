@@ -103,6 +103,7 @@
   "gui.jsblock.config.reset": "Reset config",
   "gui.jsblock.config.crash_log": "View latest crash log",
   "gui.jsblock.config.latest_log": "View latest.log",
+  "gui.jsblock.config.search": "Search Here...",
   "gui.jsblock.config.listview.category.general": "General",
   "gui.jsblock.config.listview.category.experimental": "Experimental",
   "gui.jsblock.config.listview.category.debug": "Debug",

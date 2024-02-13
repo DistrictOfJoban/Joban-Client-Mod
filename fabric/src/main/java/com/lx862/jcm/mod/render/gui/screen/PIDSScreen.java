@@ -4,8 +4,8 @@ import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.network.block.PIDSUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreen;
+import com.lx862.jcm.mod.render.gui.widget.ContentItem;
 import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
-import com.lx862.jcm.mod.render.gui.widget.ListItem;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -66,7 +66,7 @@ public class PIDSScreen extends BlockConfigScreen {
 
             int w = listViewWidget.getWidth2();
             this.rowHiddenWidgets[i].setWidth2(95);
-            this.customMessagesWidgets[i].setWidth2(w - this.rowHiddenWidgets[i].getWidth2() - 12);
+            this.customMessagesWidgets[i].setWidth2(w - this.rowHiddenWidgets[i].getWidth2() - 16);
 
             HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
             widgetSet.addWidget(new MappedWidget(this.customMessagesWidgets[i]));
@@ -81,7 +81,7 @@ public class PIDSScreen extends BlockConfigScreen {
 
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.title.hide_platform_number"), new MappedWidget(hidePlatformNumber));
 
-        ListItem presetEntry = new ListItem(TextUtil.translatable(TextCategory.GUI, "pids.listview.title.pids_preset"), new MappedWidget(choosePresetButton), false, 26);
+        ContentItem presetEntry = new ContentItem(TextUtil.translatable(TextCategory.GUI, "pids.listview.title.pids_preset"), new MappedWidget(choosePresetButton), 26);
         if(PIDSManager.getPreset(presetId) != null) {
             presetEntry.setIconCallback((guiDrawing, startX, startY, width, height) -> {
                 PIDSPresetScreen.drawPIDSPreview(PIDSManager.getPreset(presetId), guiDrawing, startX, startY, width, height, true);
