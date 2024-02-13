@@ -3,7 +3,7 @@
 		"2": "jsblock:block/thales_ticket_barrier_screen",
 		"3": "jsblock:block/thales_ticket_barrier_color",
 		"particle": "jsblock:block/thales_ticket_barrier_entrance",
-		"tex": "jsblock:block/thales_ticket_barrier_1_entrance",
+		"tex": "jsblock:block/thales_ticket_barrier_entrance",
 		"barrier": "jsblock:block/thales_ticket_barrier_door"
 	},
 	"elements": [

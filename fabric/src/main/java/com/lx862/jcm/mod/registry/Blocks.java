@@ -37,6 +37,8 @@ public final class Blocks {
     public static final BlockRegistryObject STATION_CEILING_WRL_SINGLE_STATION_COLOR = RegistryHelper.registerBlockItem("station_ceiling_wrl_single_station_color", new StationCeilingWRLBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
     public static final BlockRegistryObject STATION_CEILING_WRL_POLE = RegistryHelper.registerBlockItem("station_ceiling_wrl_pole", new StationCeilingWRL2Pole(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
     public static final BlockRegistryObject STATION_CEILING_WRL_POLE_SINGLE = RegistryHelper.registerBlockItem("station_ceiling_wrl_single_pole", new StationCeilingWRLPole(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
+    public static final BlockRegistryObject THALES_TICKET_BARRIER_ENTRANCE = RegistryHelper.registerBlockItem("thales_ticket_barrier_entrance", new ThalesTicketBarrier(true), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject THALES_TICKET_BARRIER_EXIT = RegistryHelper.registerBlockItem("thales_ticket_barrier_exit", new ThalesTicketBarrier(false), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject THALES_TICKET_BARRIER_BARE = RegistryHelper.registerBlockItem("thales_ticket_barrier_bare", new ThalesTicketBarrierBareBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject HELPLINE_1 = RegistryHelper.registerBlockItem("helpline_1", new WallAttachedHelpLineBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject HELPLINE_2 = RegistryHelper.registerBlockItem("helpline_2", new WallAttachedHelpLineBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
@@ -101,8 +103,14 @@ public final class Blocks {
                 Blocks.SIL_EMG_STOP_BUTTON,
                 Blocks.STATION_NAME_STANDING,
                 Blocks.TML_EMG_STOP_BUTTON,
+                Blocks.THALES_TICKET_BARRIER_ENTRANCE,
+                Blocks.THALES_TICKET_BARRIER_EXIT,
                 Blocks.MTR_TRESPASS_SIGN,
                 Blocks.WATER_MACHINE
+        );
+
+        RegistryHelperClient.registerBlockRenderType(RenderLayer.getTranslucent(),
+                Blocks.THALES_TICKET_BARRIER_BARE
         );
 
         /* Station Colored Blocks */

@@ -1,48 +1,48 @@
 {
 	"variants": {
 		"facing=north,open=closed": {
-			"model": "jsblock:block/ticket_barrier_exit_1_closed"
+			"model": "jsblock:block/thales_ticket_barrier_exit_closed"
 		},
 		"facing=east,open=closed": {
-			"model": "jsblock:block/ticket_barrier_exit_1_closed",
+			"model": "jsblock:block/thales_ticket_barrier_exit_closed",
 			"y": 90
 		},
 		"facing=south,open=closed": {
-			"model": "jsblock:block/ticket_barrier_exit_1_closed",
+			"model": "jsblock:block/thales_ticket_barrier_exit_closed",
 			"y": 180
 		},
 		"facing=west,open=closed": {
-			"model": "jsblock:block/ticket_barrier_exit_1_closed",
+			"model": "jsblock:block/thales_ticket_barrier_exit_closed",
 			"y": 270
 		},
 		"facing=north,open=open": {
-			"model": "jsblock:block/ticket_barrier_exit_1_open"
+			"model": "jsblock:block/thales_ticket_barrier_exit_open"
 		},
 		"facing=east,open=open": {
-			"model": "jsblock:block/ticket_barrier_exit_1_open",
+			"model": "jsblock:block/thales_ticket_barrier_exit_open",
 			"y": 90
 		},
 		"facing=south,open=open": {
-			"model": "jsblock:block/ticket_barrier_exit_1_open",
+			"model": "jsblock:block/thales_ticket_barrier_exit_open",
 			"y": 180
 		},
 		"facing=west,open=open": {
-			"model": "jsblock:block/ticket_barrier_exit_1_open",
+			"model": "jsblock:block/thales_ticket_barrier_exit_open",
 			"y": 270
 		},
 		"facing=north,open=open_concessionary": {
-			"model": "jsblock:block/ticket_barrier_exit_1_open"
+			"model": "jsblock:block/thales_ticket_barrier_exit_open"
 		},
 		"facing=east,open=open_concessionary": {
-			"model": "jsblock:block/ticket_barrier_exit_1_open",
+			"model": "jsblock:block/thales_ticket_barrier_exit_open",
 			"y": 90
 		},
 		"facing=south,open=open_concessionary": {
-			"model": "jsblock:block/ticket_barrier_exit_1_open",
+			"model": "jsblock:block/thales_ticket_barrier_exit_open",
 			"y": 180
 		},
 		"facing=west,open=open_concessionary": {
-			"model": "jsblock:block/ticket_barrier_exit_1_open",
+			"model": "jsblock:block/thales_ticket_barrier_exit_open",
 			"y": 270
 		}
 	}
