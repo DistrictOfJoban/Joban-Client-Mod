@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.render.text;
 
+import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 
@@ -92,6 +93,14 @@ public class TextInfo {
         } else {
             return new Font("Roboto", Font.PLAIN, fontSize);
         }
+    }
+
+    public MutableText toMutableText() {
+        MutableText text = TextUtil.literal(content);
+        if(fontId != null) {
+            text = TextUtil.withFont(text, fontId);
+        }
+        return text;
     }
 
     @Override

@@ -16,11 +16,7 @@ public class VanillaTextRenderer implements RenderHelper {
 
     private static void drawInternal(GraphicsHolder graphicsHolder, TextInfo text, int x, int y) {
         int finalX = text.isCentered() ? x - (GraphicsHolder.getTextWidth(text.getContent()) / 2) : x;
-        MutableText finalText = TextUtil.literal(text.getContent());
-        // TODO: Obtain mutable text from TextInfo
-        if(text.getFontId() != null) {
-            finalText = TextUtil.withFont(finalText, text.getFontId());
-        }
+        MutableText finalText = text.toMutableText();
         graphicsHolder.drawText(finalText, finalX, y, text.getTextColor(), false, MAX_RENDER_LIGHT);
     }
 
@@ -72,6 +68,6 @@ public class VanillaTextRenderer implements RenderHelper {
     }
 
     public static int getTextWidth(TextInfo text) {
-        return GraphicsHolder.getTextWidth(text.getContent());
+        return GraphicsHolder.getTextWidth(text.toMutableText());
     }
 }
