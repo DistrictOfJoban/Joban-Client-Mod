@@ -49,6 +49,7 @@ public class TextureTextRenderer implements RenderHelper {
     public static void initialize() {
         if(initialized) throw new IllegalStateException("TextureTextRenderer already initialized!");
 
+        JCMLogger.info("Initializing TextureTextRenderer");
         initTextureAtlas(DEFAULT_ATLAS_WIDTH, DEFAULT_ATLAS_HEIGHT);
         initialized = true;
     }

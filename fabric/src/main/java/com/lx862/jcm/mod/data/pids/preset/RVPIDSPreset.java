@@ -10,7 +10,7 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.WorldHelper;
 
 public class RVPIDSPreset extends PIDSPresetBase {
-    private static final int PIDS_MARGIN = 8;
+    private static final int PIDS_MARGIN = 7;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
     private static final Identifier TEXTURE_PLATFORM_CIRCLE = new Identifier("jsblock:textures/block/pids/plat_circle.png");
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/block/pids/rv_default.png");
@@ -29,16 +29,13 @@ public class RVPIDSPreset extends PIDSPresetBase {
         // Draw Textures
         drawBackground(graphicsHolder, width, height, facing);
 
-        if(ConfigEntry.DEBUG_MODE.getBool()) {
+        if(ConfigEntry.DEBUG_MODE.getBool() && ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
             //TextureTextRenderer.stressTest(5);
             drawTestBackground(graphicsHolder, width, height, facing);
         }
 
         graphicsHolder.translate(0, 0, -0.5);
         titleDrawWeatherIcon(graphicsHolder, world, facing, PIDS_MARGIN);
-        if(!hidePlatform) {
-            arrivalsDrawPlatformIcon(graphicsHolder, facing, PIDS_MARGIN, 15, contentWidth, height, rowAmount);
-        }
 
         // Text
         graphicsHolder.translate(0, 0, -0.5);
@@ -74,13 +71,6 @@ public class RVPIDSPreset extends PIDSPresetBase {
             drawArrivalEntry(graphicsHolder, facing, (int)(width / ARRIVAL_TEXT_SCALE), "610", "§eTuen Mun §dFerry Pier" /*"§e屯門 Tuen Mun"*/, 2, 50000, textColor, false, hidePlatform);
         });
     }
-    private void arrivalsDrawPlatformIcon(GraphicsHolder rawGraphicsHolder, Direction facing, int x, int y, int rawWidth, int height, int rowAmount) {
-        rawGraphicsHolder.createVertexConsumer(RenderLayer.getText(TEXTURE_PLATFORM_CIRCLE));
-
-        drawArrivalEntryCallback(rawGraphicsHolder, x, y, rawWidth, height, rowAmount, (graphicsHolder, width) -> {
-            RenderHelper.drawTexture(graphicsHolder, 44 * ARRIVAL_TEXT_SCALE, 0, 0, 9, 9, facing, ARGB_BLACK, MAX_RENDER_LIGHT);
-        });
-    }
 
     private void drawArrivalEntry(GraphicsHolder graphicsHolder, Direction facing, int width, String lrtNumber, String destination, int car, long arrivalTime, int textColor, boolean showCar, boolean hidePlatform) {
         String leftDestination = lrtNumber + " " +  destination;
@@ -103,6 +93,11 @@ public class RVPIDSPreset extends PIDSPresetBase {
         // Platform Text
         if(!hidePlatform) {
             graphicsHolder.push();
+
+            graphicsHolder.createVertexConsumer(RenderLayer.getText(TEXTURE_PLATFORM_CIRCLE));
+            RenderHelper.drawTexture(graphicsHolder, 44 * ARRIVAL_TEXT_SCALE, 0, 0.3F, 9, 9, facing, ARGB_BLACK, MAX_RENDER_LIGHT);
+            TextRenderingManager.bind(graphicsHolder);
+
             int platTextWidth = GraphicsHolder.getTextWidth("2");
             graphicsHolder.translate((44 * ARRIVAL_TEXT_SCALE) + 5, 1.75, 0);
             graphicsHolder.scale(0.75F, 0.75F, 0.75F);
