@@ -1,5 +1,7 @@
 package com.lx862.jcm.mod.render.text;
 
+import com.lx862.jcm.mod.render.text.font.FontManager;
+import com.lx862.jcm.mod.render.text.font.FontSet;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
@@ -69,29 +71,22 @@ public class TextInfo {
         return this;
     }
 
-    /**
-     * Get the vanilla font identifier
-     */
-    public Identifier getFontId() {
-        return fontId;
-    }
-
     public TextInfo withFont(String font) {
         this.fontId = new Identifier(font);
         return this;
     }
 
     /**
-     * Get an awt Font, looked up from {@link FontManager}
+     * Get a Font Set, looked up from {@link FontManager}
      * @param fontSize The font size of the font
-     * @return An awt Font with the corresponding font size
+     * @return An FontSet with the corresponding font size
      */
-    public Font getAwtFont(int fontSize) {
-        Font preloadedFont = FontManager.getFont(fontId);
+    public FontSet getFontSet(int fontSize) {
+        FontSet preloadedFont = FontManager.getFontSet(fontId);
         if(preloadedFont != null) {
-            return preloadedFont.deriveFont(Font.PLAIN, fontSize);
+            return preloadedFont.deriveFonts(Font.PLAIN, fontSize);
         } else {
-            return new Font("Roboto", Font.PLAIN, fontSize);
+            return new FontSet(new Font("Roboto", Font.PLAIN, fontSize));
         }
     }
 

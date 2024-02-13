@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.render.text;
+package com.lx862.jcm.mod.render.text.font;
 
 import com.google.common.base.Charsets;
 import com.google.gson.JsonObject;
@@ -8,12 +8,10 @@ import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 
-import java.awt.*;
-import java.io.InputStream;
 import java.util.HashMap;
 
 public class FontManager {
-    public static final HashMap<Identifier, Font> fontList = new HashMap<>();
+    public static final HashMap<Identifier, FontSet> fontList = new HashMap<>();
 
     public static void initialize() {
         fontList.clear();
@@ -21,12 +19,6 @@ public class FontManager {
         JCMLogger.debug("[FontManager] Loading default fonts");
         loadVanillaFont("jsblock:deptimer");
         loadVanillaFont("mtr:mtr");
-    }
-
-    private static void loadFontFile(Identifier id, Identifier path) {
-        ResourceManagerHelper.readResource(path, inputStream -> {
-            putFont(id, inputStream);
-        });
     }
 
     public static void loadVanillaFont(String jsonPath) {
@@ -38,12 +30,7 @@ public class FontManager {
         ResourceManagerHelper.readResource(new Identifier(namespace, path), inputStream -> {
             try {
                 JsonObject jsonObject = new JsonParser().parse(IOUtils.toString(inputStream, Charsets.UTF_8)).getAsJsonObject();
-                JsonObject firstFont = jsonObject.getAsJsonArray("providers").get(0).getAsJsonObject();
-                String fontFile = firstFont.get("file").getAsString();
-                Identifier fontFileId = new Identifier(fontFile);
-                String fontFilePath = "font/" + fontFileId.getPath();
-
-                loadFontFile(fontId, new Identifier(fontFileId.getNamespace(), fontFilePath));
+                fontList.put(fontId, new FontSet(jsonObject));
             } catch (Exception e) {
                 e.printStackTrace();
                 JCMLogger.warn("Failed to read vanilla font json: {}", path);
@@ -51,17 +38,7 @@ public class FontManager {
         });
     }
 
-    private static void putFont(Identifier id, InputStream inputStream) {
-        try {
-            Font createdFont = Font.createFont(Font.TRUETYPE_FONT, inputStream);
-            fontList.put(id, createdFont);
-        } catch (Exception e) {
-            e.printStackTrace();
-            JCMLogger.warn("Failed to load font: {}", id);
-        }
-    }
-
-    public static Font getFont(Identifier path) {
+    public static FontSet getFontSet(Identifier path) {
         return fontList.get(path);
     }
 }

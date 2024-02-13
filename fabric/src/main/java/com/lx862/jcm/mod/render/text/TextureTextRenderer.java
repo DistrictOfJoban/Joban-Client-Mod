@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.render.text;
 
 import com.lx862.jcm.mod.data.JCMStats;
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.render.text.font.FontSet;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
@@ -122,15 +123,15 @@ public class TextureTextRenderer implements RenderHelper {
         ensureInitialized();
 
         if(getTextSlot(text) == null) {
-            Font font = text.getAwtFont(FONT_RESOLUTION);
+            FontSet fontSet = text.getFontSet(FONT_RESOLUTION);
             Graphics2D graphics = bufferedImageForTextGen.createGraphics();
             graphics.setComposite(AlphaComposite.SrcOver);
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            graphics.setFont(font);
+//            graphics.setFont(fontSet);
 
             AffineTransform affineTransform = new AffineTransform();
-            AttributedString attributedString = getFormattedString(text, text.getAwtFont(FONT_RESOLUTION));
+            AttributedString attributedString = getFormattedString(text, text.getFontSet(FONT_RESOLUTION));
             Rectangle2D fullTextBound = getTextBound(attributedString);
 
             if(text.isForScrollingText()) {
@@ -141,11 +142,10 @@ public class TextureTextRenderer implements RenderHelper {
 
             graphics.setTransform(affineTransform);
 
-            GlyphVector gv = font.createGlyphVector(graphics.getFontRenderContext(), "a!1b");
+            GlyphVector gv = fontSet.getTallestGlyphVector(attributedString.getIterator(), graphics.getFontRenderContext());
             Rectangle2D bound = gv.getOutline().getBounds();
 
             graphics.drawString(attributedString.getIterator(), 0, (int)bound.getHeight());
-
             drawOnFreeSlot(bufferedImageForTextGen, graphics, text);
 
             // Clear for next use
@@ -155,30 +155,18 @@ public class TextureTextRenderer implements RenderHelper {
         }
     }
 
-    private static AttributedString getFormattedString(TextInfo text, Font font) {
+    private static AttributedString getFormattedString(TextInfo text, FontSet fontSet) {
         String filteredString = MCTextHelper.removeColorCode(text.getContent());
         Int2IntArrayMap mcColorCodeMap = MCTextHelper.getColorCodeMap(text);
 
         AttributedString attributedString = new AttributedString(filteredString);
-        attributedString.addAttribute(TextAttribute.FONT, font);
+        attributedString.addAttribute(TextAttribute.FONT, fontSet.getPrimaryFont());
         attributedString.addAttribute(TextAttribute.FOREGROUND, text.getTextColor());
 
         int currentTextColor = text.getTextColor();
+        attributedString = fontSet.getAttributedString(filteredString, attributedString, FONT_RESOLUTION);
 
         for(int i = 0; i < filteredString.length(); i++) {
-            char currentChar = filteredString.charAt(i);
-
-            // Ensure each character can be displayed, if not we loop through all fonts on system until we find one that we can fall back to
-            if(!font.canDisplay(currentChar)) {
-                // Might freeze up the game up to 4-8 seconds on some certain system to get all the fonts, hope it's fine on SSD~
-                for(Font sysFont : GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts()) {
-                    if(sysFont.canDisplay(filteredString.charAt(i))) {
-                        attributedString.addAttribute(TextAttribute.FONT, sysFont.deriveFont(Font.PLAIN, FONT_RESOLUTION), i, i+1);
-                        break;
-                    }
-                }
-            }
-
             if(mcColorCodeMap.containsKey(i)) {
                 currentTextColor = mcColorCodeMap.get(i);
             }
@@ -313,7 +301,7 @@ public class TextureTextRenderer implements RenderHelper {
     }
 
     public static Rectangle2D getTextBound(TextInfo textInfo, AffineTransform affineTransform) {
-        AttributedString attributedString = getFormattedString(textInfo, textInfo.getAwtFont(FONT_RESOLUTION));
+        AttributedString attributedString = getFormattedString(textInfo, textInfo.getFontSet(FONT_RESOLUTION));
         return getTextBound(attributedString, affineTransform);
     }
 
