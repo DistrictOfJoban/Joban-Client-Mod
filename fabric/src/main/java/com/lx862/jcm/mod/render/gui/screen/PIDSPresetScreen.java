@@ -32,8 +32,7 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         super(false);
         this.callback = callback;
         this.listViewWidget = new ListViewWidget();
-        // TODO: Suggestion -> "Search Here"?
-        this.searchBox = new TextFieldWidgetExtension(0, 0, 0, 22, 60, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "config.search").getString());
+        this.searchBox = new TextFieldWidgetExtension(0, 0, 0, 22, 60, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "widget.search").getString());
         this.selectedPreset = selectedPreset;
     }
 
@@ -89,14 +88,18 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
             choose(preset.getId());
         });
 
-        ButtonWidgetExtension editBtn = new ButtonWidgetExtension(0, 0, 40, 20, TextUtil.literal("Edit"), (btn) -> {
-            choose(preset.getId());
+        ButtonWidgetExtension editBtn = new ButtonWidgetExtension(0, 0, 40, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.edit"), (btn) -> {
+            // TODO: Launch screen to edit PIDS preset
         });
 
         if(preset.getId().equals(selectedPreset)) {
-            editBtn.setMessage2(Text.cast(TextUtil.literal("Edit")));
             selectBtn.setMessage2(Text.cast(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.selected")));
             selectBtn.active = false;
+        }
+
+        if(preset.builtin) {
+            // Can't edit built-in preset
+            editBtn.active = false;
         }
 
         HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();

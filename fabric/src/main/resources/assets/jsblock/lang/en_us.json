@@ -103,7 +103,6 @@
   "gui.jsblock.config.reset": "Reset config",
   "gui.jsblock.config.crash_log": "View latest crash log",
   "gui.jsblock.config.latest_log": "View latest.log",
-  "gui.jsblock.config.search": "Search Here...",
   "gui.jsblock.config.listview.category.general": "General",
   "gui.jsblock.config.listview.category.experimental": "Experimental",
   "gui.jsblock.config.listview.category.debug": "Debug",
@@ -139,6 +138,7 @@
   "gui.jsblock.pids_preset.subtitle": "Selected > %s",
   "gui.jsblock.pids_preset.listview.category.builtin": "Built-in Preset",
   "gui.jsblock.pids_preset.listview.category.custom": "Custom Preset",
+  "gui.jsblock.pids_preset.listview.widget.edit": "Edit",
   "gui.jsblock.pids_preset.listview.widget.choose": "Choose",
   "gui.jsblock.pids_preset.listview.widget.selected": "Selected",
   "gui.jsblock.subsidy_machine.currency": "$",
@@ -151,6 +151,7 @@
 
   "gui.jsblock.widget.button.true": "Yes",
   "gui.jsblock.widget.button.false": "no",
+  "gui.jsblock.widget.search": "Search Here...",
   "gui.jsblock.widget.numeric_text_field.increment": "▲",
   "gui.jsblock.widget.numeric_text_field.decrement": "▼"
 }

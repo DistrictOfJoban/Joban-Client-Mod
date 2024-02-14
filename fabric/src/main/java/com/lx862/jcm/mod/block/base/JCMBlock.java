@@ -39,7 +39,6 @@ public abstract class JCMBlock extends BlockExtension {
      * There are no guarantee the BlockEntity type is the one you would like, make sure to do type checking!
      */
     public void forEachBlockEntity(BlockState state, World world, BlockPos pos, Consumer<BlockEntity> callback) {
-        System.out.println("Foreach");
         for(BlockEntity be : getBlockEntity(state, world, pos)) {
             if(be == null) continue;
             callback.accept(be);

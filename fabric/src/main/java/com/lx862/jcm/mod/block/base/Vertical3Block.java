@@ -48,7 +48,6 @@ public abstract class Vertical3Block extends DirectionalBlock implements Vertica
         // HACK: To be replaced after PART state get replaced
         BlockPos above2 = above.up();
         BlockPos below2 = below.down();
-        System.out.println("Hello");
         return new BlockEntity[]{
                 BlockUtil.getBlockEntityOrNull(world, below2),
                 BlockUtil.getBlockEntityOrNull(world, below),
