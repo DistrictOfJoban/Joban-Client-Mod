@@ -13,10 +13,10 @@ public class MTREnquiryMachine extends Vertical2Block implements EnquiryMachineB
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        switch(BlockUtil.getProperty(state, PART)) {
-            case 0:
+        switch(BlockUtil.getProperty(state, new Property<>(HALF.data))) {
+            case LOWER:
                 return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 4, 0, 4.5, 12, 15, 11.5);
-            case 1:
+            case UPPER:
                 VoxelShape vx1 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 4, 0, 4.5, 12, 5.6, 11.5);
                 VoxelShape vx2 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 4, 5.6569, 5.85, 12, 10.1519, 5.95);
                 return VoxelShapes.union(vx1, vx2);

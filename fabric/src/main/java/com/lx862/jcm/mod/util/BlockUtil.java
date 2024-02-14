@@ -66,7 +66,7 @@ public class BlockUtil {
         return state.with(property, value);
     }
 
-    static <T extends Comparable<T>> T getProperty(BlockState state, Property<T> property) {
+    public static <T extends Comparable<T>> T getProperty(BlockState state, Property<T> property) {
         return state.contains(property) ? state.get(property) : new ArrayList<>(property.getValues()).get(0);
     }
 

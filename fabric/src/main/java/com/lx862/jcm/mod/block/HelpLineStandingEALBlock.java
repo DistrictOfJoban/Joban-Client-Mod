@@ -12,10 +12,10 @@ public class HelpLineStandingEALBlock extends Vertical2Block {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        switch (BlockUtil.getProperty(state, PART)) {
-            case 0:
+        switch (BlockUtil.getProperty(state, new Property<>(HALF.data))) {
+            case LOWER:
                 return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 0, 5.5, 16, 16, 10.5);
-            case 1:
+            case UPPER:
                 return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 0, 5.5, 16, 24, 10.5);
             default:
                 return VoxelShapes.empty();

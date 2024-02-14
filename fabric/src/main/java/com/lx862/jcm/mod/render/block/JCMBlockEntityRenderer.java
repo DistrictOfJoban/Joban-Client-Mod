@@ -29,11 +29,7 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
         } catch (Exception e) {
             JCMLogger.error("An exception occurred while rendering Block Entity:", e);
             JCMLogger.error("This is a bug, please report to the developers of Joban Client Mod!");
-
-            if(ConfigEntry.DEBUG_MODE.getBool()) {
-                JCMLogger.fatal("Exception while rendering block entity, stopping game as Debug Mode is enabled!");
-                MinecraftClient.getInstance().stop();
-            }
+            throw new Error("An exception occurred while rendering Block Entity, see above.");
         }
     }
 

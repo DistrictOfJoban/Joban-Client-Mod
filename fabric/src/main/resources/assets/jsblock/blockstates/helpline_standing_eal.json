@@ -1,12 +1,12 @@
 {
   "variants": {
-    "facing=north,part=0": { "model": "jsblock:block/helpline_standing_eal_lower" },
-    "facing=east,part=0": { "model": "jsblock:block/helpline_standing_eal_lower", "y": 90 },
-    "facing=south,part=0": { "model": "jsblock:block/helpline_standing_eal_lower", "y": 180 },
-    "facing=west,part=0": { "model": "jsblock:block/helpline_standing_eal_lower", "y": 270 },
-    "facing=north,part=1": { "model": "jsblock:block/helpline_standing_eal_upper" },
-    "facing=east,part=1": { "model": "jsblock:block/helpline_standing_eal_upper", "y": 90 },
-    "facing=south,part=1": { "model": "jsblock:block/helpline_standing_eal_upper", "y": 180 },
-    "facing=west,part=1": { "model": "jsblock:block/helpline_standing_eal_upper", "y": 270 }
+    "facing=north,half=lower": { "model": "jsblock:block/helpline_standing_eal_lower" },
+    "facing=east,half=lower": { "model": "jsblock:block/helpline_standing_eal_lower", "y": 90 },
+    "facing=south,half=lower": { "model": "jsblock:block/helpline_standing_eal_lower", "y": 180 },
+    "facing=west,half=lower": { "model": "jsblock:block/helpline_standing_eal_lower", "y": 270 },
+    "facing=north,half=upper": { "model": "jsblock:block/helpline_standing_eal_upper" },
+    "facing=east,half=upper": { "model": "jsblock:block/helpline_standing_eal_upper", "y": 90 },
+    "facing=south,half=upper": { "model": "jsblock:block/helpline_standing_eal_upper", "y": 180 },
+    "facing=west,half=upper": { "model": "jsblock:block/helpline_standing_eal_upper", "y": 270 }
   }
 }

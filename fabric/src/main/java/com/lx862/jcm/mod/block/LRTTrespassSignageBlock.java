@@ -13,10 +13,10 @@ public class LRTTrespassSignageBlock extends Vertical2Block {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        switch (BlockUtil.getProperty(state, PART)) {
-            case 0:
+        switch (BlockUtil.getProperty(state, new Property<>(HALF.data))) {
+            case LOWER:
                 return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 7.5, 0, 7, 8.5, 16, 8);
-            case 1:
+            case UPPER:
                 VoxelShape vx1R = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 7.5, 0, 7, 8.5, 11, 8);
                 VoxelShape vx2R = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 5.5, 2, 7, 10.5, 10, 8);
                 return VoxelShapes.union(vx1R, vx2R);

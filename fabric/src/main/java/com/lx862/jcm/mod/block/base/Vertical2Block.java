@@ -1,33 +1,33 @@
 package com.lx862.jcm.mod.block.base;
 
-import com.lx862.jcm.mod.block.behavior.VerticalMultiBlock;
-import com.lx862.jcm.mod.data.BlockProperties;
+import com.lx862.jcm.mod.block.behavior.VerticalDoubleBlock;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
-public abstract class Vertical2Block extends DirectionalBlock implements VerticalMultiBlock {
-    private static final int height = 2;
-    public static final IntegerProperty PART = BlockProperties.VERTICAL_PART_2;
+public abstract class Vertical2Block extends DirectionalBlock implements VerticalDoubleBlock {
 
     public Vertical2Block(BlockSettings settings) {
         super(settings);
     }
     @Override
     public void onPlaced2(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-        VerticalMultiBlock.placeBlock(world, pos, state, new Property<>(PART.data), height);
+        VerticalDoubleBlock.placeBlock(world, pos, state);
     }
 
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
-        return VerticalMultiBlock.canBePlaced(ctx.getWorld(), ctx.getBlockPos(), ctx, height) ? super.getPlacementState2(ctx) : null;
+        BlockState superState = super.getPlacementState2(ctx);
+        if(superState == null) return null;
+        return VerticalDoubleBlock.canBePlaced(ctx.getWorld(), ctx.getBlockPos(), ctx) ? superState.with(new Property<>(HALF.data), IBlock.DoubleBlockHalf.LOWER) : null;
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if(VerticalMultiBlock.blockNotValid(world, pos, state, new Property<>(PART.data), height)) {
+        if(VerticalDoubleBlock.blockNotValid(new Block(this), world, pos, state)) {
             return Blocks.getAirMapped().getDefaultState();
         }
 
@@ -44,6 +44,6 @@ public abstract class Vertical2Block extends DirectionalBlock implements Vertica
     @Override
     public void addBlockProperties(List<HolderBase<?>> properties) {
         super.addBlockProperties(properties);
-        properties.add(PART);
+        properties.add(HALF);
     }
 }

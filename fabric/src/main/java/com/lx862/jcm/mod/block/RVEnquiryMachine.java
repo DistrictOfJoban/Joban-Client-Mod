@@ -13,10 +13,10 @@ public class RVEnquiryMachine extends Vertical2Block implements EnquiryMachineBe
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        switch(BlockUtil.getProperty(state, PART)) {
-            case 0:
+        switch(BlockUtil.getProperty(state, new Property<>(HALF.data))) {
+            case LOWER:
                 return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 3, 0, 2, 13, 16, 14);
-            case 1:
+            case UPPER:
                 return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 3, 0, 2, 13, 12, 14);
             default:
                 return VoxelShapes.empty();
