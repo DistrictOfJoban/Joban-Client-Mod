@@ -12,9 +12,7 @@ public class JCMClient {
     public static void initializeClient() {
         ClientConfig.readFile();
         RegistryHelperClient.register();
-
-        // TODO: Proper Resource Loading
-        EventRegistryClient.registerClientJoin(JCMResourceManager::reload);
+        EventRegistryClient.registerResourceReloadEvent(JCMResourceManager::reload);
     }
 
     public static ScreenAbstractMapping getClientConfigScreen(Screen previousScreen) {

@@ -17,8 +17,10 @@ public class TextRenderingManager implements RenderHelper {
      * Nothing will be performed if fallback mode is enabled / using {@link VanillaTextRenderer}
      */
     public static void initialize() {
-        if(ConfigEntry.NEW_TEXT_RENDERER.getBool() && !TextureTextRenderer.initialized()) {
+        if(ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
             TextureTextRenderer.initialize();
+        } else if(TextureTextRenderer.initialized()) {
+            TextureTextRenderer.close();
         }
     }
 
