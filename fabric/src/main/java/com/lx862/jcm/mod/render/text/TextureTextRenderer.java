@@ -123,15 +123,14 @@ public class TextureTextRenderer implements RenderHelper {
         ensureInitialized();
 
         if(getTextSlot(text) == null) {
-            FontSet fontSet = text.getFontSet(FONT_RESOLUTION);
+            FontSet fontSet = text.getFontSet();
             Graphics2D graphics = bufferedImageForTextGen.createGraphics();
             graphics.setComposite(AlphaComposite.SrcOver);
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-//            graphics.setFont(fontSet);
 
             AffineTransform affineTransform = new AffineTransform();
-            AttributedString attributedString = getFormattedString(text, text.getFontSet(FONT_RESOLUTION));
+            AttributedString attributedString = getFormattedString(text, fontSet);
             Rectangle2D fullTextBound = getTextBound(attributedString);
 
             if(text.isForScrollingText()) {
@@ -142,7 +141,7 @@ public class TextureTextRenderer implements RenderHelper {
 
             graphics.setTransform(affineTransform);
 
-            GlyphVector gv = fontSet.getTallestGlyphVector(attributedString.getIterator(), graphics.getFontRenderContext());
+            GlyphVector gv = fontSet.getTallestGlyphVector(attributedString.getIterator(), graphics.getFontRenderContext(), FONT_RESOLUTION);
             Rectangle2D bound = gv.getOutline().getBounds();
 
             graphics.drawString(attributedString.getIterator(), 0, (int)bound.getHeight());
@@ -160,7 +159,7 @@ public class TextureTextRenderer implements RenderHelper {
         Int2IntArrayMap mcColorCodeMap = MCTextHelper.getColorCodeMap(text);
 
         AttributedString attributedString = new AttributedString(filteredString);
-        attributedString.addAttribute(TextAttribute.FONT, fontSet.getPrimaryFont());
+        attributedString.addAttribute(TextAttribute.FONT, fontSet.getPrimaryFont(FONT_RESOLUTION));
         attributedString.addAttribute(TextAttribute.FOREGROUND, text.getTextColor());
 
         int currentTextColor = text.getTextColor();
@@ -301,7 +300,7 @@ public class TextureTextRenderer implements RenderHelper {
     }
 
     public static Rectangle2D getTextBound(TextInfo textInfo, AffineTransform affineTransform) {
-        AttributedString attributedString = getFormattedString(textInfo, textInfo.getFontSet(FONT_RESOLUTION));
+        AttributedString attributedString = getFormattedString(textInfo, textInfo.getFontSet());
         return getTextBound(attributedString, affineTransform);
     }
 

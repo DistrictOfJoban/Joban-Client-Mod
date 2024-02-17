@@ -86,15 +86,13 @@ public class TextInfo {
 
     /**
      * Get a Font Set, looked up from {@link FontManager}
-     * @param fontSize The font size of the font
-     * @return An FontSet with the corresponding font size
      */
-    public FontSet getFontSet(int fontSize) {
+    public FontSet getFontSet() {
         FontSet preloadedFont = FontManager.getFontSet(fontId);
         if(preloadedFont != null) {
-            return preloadedFont.deriveFonts(Font.PLAIN, fontSize);
+            return preloadedFont;
         } else {
-            return new FontSet(new Font("Roboto", Font.PLAIN, fontSize));
+            return new FontSet(Font.getFont(Font.SANS_SERIF));
         }
     }
 

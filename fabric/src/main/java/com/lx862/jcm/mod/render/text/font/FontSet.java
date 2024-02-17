@@ -71,21 +71,12 @@ public class FontSet {
         return attributedString;
     }
 
-    public FontSet deriveFonts(int style, int size) {
-        int i = 0;
-        for(Font font : new ArrayList<>(fontList)) {
-            fontList.set(i, font.deriveFont(style, size));
-            i++;
-        }
-        return this;
-    }
-
     /**
      * Get the glyph vector object of the font with the tallest glyph
      * @param iterator Obtained from AttributedString.getIterator()
      * @param frc Font Rendering Context
      */
-    public GlyphVector getTallestGlyphVector(AttributedCharacterIterator iterator, FontRenderContext frc) {
+    public GlyphVector getTallestGlyphVector(AttributedCharacterIterator iterator, FontRenderContext frc, int fontSize) {
         Font largestFont = null;
         GlyphVector largestGv = null;
         double largestHeight = 0;
@@ -93,7 +84,7 @@ public class FontSet {
         while(iterator.getIndex() < iterator.getEndIndex()) {
             Font font = (Font)iterator.getAttribute(TextAttribute.FONT);
             if(font != largestFont) {
-                GlyphVector gv = font.createGlyphVector(frc, "a!1b");
+                GlyphVector gv = font.deriveFont(Font.PLAIN, fontSize).createGlyphVector(frc, "a!1b");
                 Rectangle2D bound = gv.getOutline().getBounds();
                 double height = bound.getHeight();
                 if(height > largestHeight) {
@@ -109,7 +100,7 @@ public class FontSet {
         return largestGv;
     }
 
-    public Font getPrimaryFont() {
-        return fontList.get(0);
+    public Font getPrimaryFont(int fontSize) {
+        return fontList.get(0).deriveFont(fontSize);
     }
 }

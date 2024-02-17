@@ -11,10 +11,10 @@ import org.mtr.mapping.mapper.ResourceManagerHelper;
 import java.util.HashMap;
 
 public class FontManager {
-    public static final HashMap<Identifier, FontSet> fontList = new HashMap<>();
+    public static final HashMap<Identifier, FontSet> fonts = new HashMap<>();
 
     public static void initialize() {
-        fontList.clear();
+        fonts.clear();
 
         JCMLogger.debug("[FontManager] Loading default fonts");
         loadVanillaFont("jsblock:deptimer");
@@ -23,14 +23,14 @@ public class FontManager {
 
     public static void loadVanillaFont(String jsonPath) {
         Identifier fontId = new Identifier(jsonPath);
-        if(fontList.containsKey(fontId)) return;
+        if(fonts.containsKey(fontId)) return;
         String namespace = fontId.getNamespace();
         String path = "font/" + fontId.getPath() + ".json";
 
         ResourceManagerHelper.readResource(new Identifier(namespace, path), inputStream -> {
             try {
                 JsonObject jsonObject = new JsonParser().parse(IOUtils.toString(inputStream, Charsets.UTF_8)).getAsJsonObject();
-                fontList.put(fontId, new FontSet(jsonObject));
+                fonts.put(fontId, new FontSet(jsonObject));
             } catch (Exception e) {
                 e.printStackTrace();
                 JCMLogger.warn("Failed to read vanilla font json: {}", path);
@@ -39,6 +39,6 @@ public class FontManager {
     }
 
     public static FontSet getFontSet(Identifier path) {
-        return fontList.get(path);
+        return fonts.get(path);
     }
 }
