@@ -8,6 +8,7 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.TextFormatting;
 
 import java.awt.*;
+import java.text.AttributedString;
 
 public class TextInfo {
     private final String content;
@@ -69,8 +70,8 @@ public class TextInfo {
         return this;
     }
 
-    public TextInfo withTargetWidth(int targetWidth) {
-        this.widthInfo.setTargetWidth(targetWidth);
+    public TextInfo withFixedWidth(int targetWidth) {
+        this.widthInfo.setFixedWidth(targetWidth);
         return this;
     }
 

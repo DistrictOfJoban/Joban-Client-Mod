@@ -8,6 +8,7 @@ import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.font.FontManager;
 import com.lx862.jcm.mod.util.JCMLogger;
+import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.RenderLayer;
@@ -105,7 +106,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, float tickDelta, int x, int y, int width, int height, int light, int overlay) {
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         int contentWidth = width - (PIDS_MARGIN * 2);
         int rowAmount = be.getRowAmount();
 

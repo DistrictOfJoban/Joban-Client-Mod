@@ -58,17 +58,15 @@ public class TextSlot implements Comparable<TextSlot> {
         return height;
     }
 
-    public double getActualPhysicalWidth() {
-        return ((double)width / TextureTextRenderer.FONT_RESOLUTION) * TextureTextRenderer.RENDERED_TEXT_SIZE;
+    /**
+     * getPhysicalWidth but clamped.
+     */
+    public double getRenderedWidth() {
+        return text.getWidthInfo().clampWidth(getPhysicalWidth());
     }
 
     public double getPhysicalWidth() {
-        if(text.getWidthInfo().getTargetWidth() != -1) {
-            return text.getWidthInfo().getTargetWidth();
-        }
-
-        boolean needBoundText = text != null && text.isForScrollingText();
-        return needBoundText ? Math.min(text.getWidthInfo().getMaxWidth(), getActualPhysicalWidth()) : getActualPhysicalWidth();
+        return ((double)width / TextureTextRenderer.FONT_RESOLUTION) * TextureTextRenderer.RENDERED_TEXT_SIZE;
     }
 
     public void setContent(TextInfo text, int textWidth, int textHeight) {

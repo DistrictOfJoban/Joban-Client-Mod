@@ -1,10 +1,10 @@
 package com.lx862.jcm.mod.render.text;
 
 public class WidthInfo {
-    private float targetWidth = -1;
+    private float fixedWidth = -1;
     private float maxWidth = -1;
-    public void setTargetWidth(float targetWidth) {
-        this.targetWidth = targetWidth;
+    public void setFixedWidth(float targetWidth) {
+        this.fixedWidth = targetWidth;
     }
 
     public void setMaxWidth(float maxWidth) {
@@ -12,10 +12,16 @@ public class WidthInfo {
     }
 
     public float getTargetWidth() {
-        return targetWidth;
+        return fixedWidth;
     }
 
     public float getMaxWidth() {
         return maxWidth;
+    }
+
+    public double clampWidth(double desiredWidth) {
+        if(fixedWidth != -1) return fixedWidth;
+        if(maxWidth == -1) return desiredWidth;
+        return Math.min(maxWidth, desiredWidth);
     }
 }

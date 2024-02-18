@@ -33,15 +33,18 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
         graphicsHolder.rotateZDegrees(180);
         graphicsHolder.rotateZDegrees(TEXT_TILT_ANGLE);
 
-        graphicsHolder.translate(6, 14, -9.15);
+        graphicsHolder.translate(5.8, 14, -9.15);
 
-        RenderHelper.scaleToFit(graphicsHolder, GraphicsHolder.getTextWidth(discountText), 12, true, 9);
         TextRenderingManager.bind(graphicsHolder);
+
+        graphicsHolder.push();
         TextInfo textInfo = new TextInfo(discountText)
                 .withFont("mtr:mtr")
                 .withColor(ARGB_WHITE)
                 .withTextAlignment(TextAlignment.CENTER);
+        RenderHelper.scaleToFit(graphicsHolder, TextRenderingManager.getTextWidth(textInfo), 12, true, 10);
         TextRenderingManager.draw(graphicsHolder, textInfo, facing, 0, 0);
+        graphicsHolder.pop();
 
         graphicsHolder.pop();
     }

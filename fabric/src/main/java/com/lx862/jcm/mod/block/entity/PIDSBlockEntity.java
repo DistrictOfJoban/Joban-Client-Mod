@@ -63,7 +63,7 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
         return platformIds;
     }
 
-    public boolean[] getHidePlatforms() {
+    public boolean[] getRowHidden() {
         return this.rowHidden;
     }
 

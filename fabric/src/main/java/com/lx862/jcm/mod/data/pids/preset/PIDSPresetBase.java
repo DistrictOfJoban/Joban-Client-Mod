@@ -1,12 +1,15 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.jcm.mod.data.JCMStats;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextInfo;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
+import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
+import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
@@ -38,7 +41,11 @@ public abstract class PIDSPresetBase implements RenderHelper {
     }
 
     protected void drawPIDSText(GraphicsHolder graphicsHolder, TextAlignment textAlignment, Direction facing, String text, int x, int y, int textColor) {
-        TextRenderingManager.draw(graphicsHolder, new TextInfo(text).withColor(textColor).withFont(getFont()).withTextAlignment(textAlignment), facing, x, y);
+        drawPIDSText(graphicsHolder, textAlignment, facing, new TextInfo(text), x, y, textColor);
+    }
+
+    protected void drawPIDSText(GraphicsHolder graphicsHolder, TextAlignment textAlignment, Direction facing, TextInfo text, int x, int y, int textColor) {
+        TextRenderingManager.draw(graphicsHolder, text.withColor(textColor).withFont(getFont()).withTextAlignment(textAlignment), facing, x, y);
     }
 
     protected void drawPIDSScrollingText(GraphicsHolder graphicsHolder, Direction facing, String text, int x, int y, int textColor, float textWidth) {
@@ -55,10 +62,16 @@ public abstract class PIDSPresetBase implements RenderHelper {
     public abstract int getPreviewTextColor();
     public abstract boolean isRowHidden(int row);
 
-    public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, float tickDelta, int x, int y, int width, int height, int light, int overlay);
+    public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height);
 
     @FunctionalInterface
     public interface DrawRowCallback extends RenderHelper {
-        void accept(GraphicsHolder graphicsHolder, int width);
+        void accept(GraphicsHolder graphicsHolder, int order, int width);
+    }
+
+    protected String cycleString(String mtrString) {
+        String[] split = mtrString.split("\\|");
+        if(split.length == 0) return "";
+        return split[(JCMStats.getGameTick() / (20 * 4)) % split.length];
     }
 }

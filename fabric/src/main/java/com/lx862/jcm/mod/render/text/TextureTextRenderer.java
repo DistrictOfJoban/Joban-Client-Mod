@@ -248,7 +248,7 @@ public class TextureTextRenderer implements RenderHelper {
         }
 
         if(textSlot != null) {
-            float finalX = (float)text.getTextAlignment().getX(x, textSlot.getPhysicalWidth());
+            float finalX = (float)text.getTextAlignment().getX(x, textSlot.getRenderedWidth());
             drawToWorld(graphicsHolder, textSlot, facing, finalX, y);
         }
     }
@@ -266,14 +266,14 @@ public class TextureTextRenderer implements RenderHelper {
         float v2 = v1 + onePart;
 
         if(textSlot.getText().isForScrollingText()) {
-            float ratio = textSlot.getMaxWidth() / (float)textSlot.getActualPhysicalWidth();
+            float ratio = textSlot.getMaxWidth() / (float)textSlot.getPhysicalWidth();
             u2 = u2 * ratio;
 
             u1 += (JCMStats.getGameTick() % 100) / 100F;
             u2 += (JCMStats.getGameTick() % 100) / 100F;
         }
 
-        RenderHelper.drawTexture(graphicsHolder, x, y - 0.75F, 0, (int)textSlot.getPhysicalWidth(), RENDERED_TEXT_SIZE, u1, v1, u2, v2, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+        RenderHelper.drawTexture(graphicsHolder, x, y - 0.75F, 0, (int)textSlot.getRenderedWidth(), RENDERED_TEXT_SIZE, u1, v1, u2, v2, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
     public static void stressTest(int updateFrequency) {
@@ -298,6 +298,10 @@ public class TextureTextRenderer implements RenderHelper {
         }
     }
 
+    public static Rectangle2D getTextBound(TextInfo textInfo) {
+        return getTextBound(textInfo, new AffineTransform());
+    }
+
     public static Rectangle2D getTextBound(TextInfo textInfo, AffineTransform affineTransform) {
         AttributedString attributedString = getFormattedString(textInfo, textInfo.getFontSet());
         return getTextBound(attributedString, affineTransform);
@@ -316,15 +320,12 @@ public class TextureTextRenderer implements RenderHelper {
     /**
      * Obtain the width of the corresponding TextInfo.
      * @param textInfo The textInfo with the same configuration as drawn (Where the text content, color, forScrollingText and font must match)
-     * @return The in-game width of the TextInfo, 0 if the corresponding TextInfo is not a drawn text on the Texture Atlas.
+     * @return The in-game width of the TextInfo.
      */
     public static int getPhysicalWidth(TextInfo textInfo) {
-        TextSlot textSlot = getTextSlot(textInfo);
-        if(textSlot != null) {
-            return (int)textSlot.getPhysicalWidth();
-        } else {
-            return 0;
-        }
+        double pixelWidth = getTextBound(textInfo).getWidth();
+        double physicalWidth = (pixelWidth / TextureTextRenderer.FONT_RESOLUTION) * TextureTextRenderer.RENDERED_TEXT_SIZE;
+        return (int)textInfo.getWidthInfo().clampWidth(physicalWidth);
     }
 
     public static Identifier getAtlasIdentifier() {
