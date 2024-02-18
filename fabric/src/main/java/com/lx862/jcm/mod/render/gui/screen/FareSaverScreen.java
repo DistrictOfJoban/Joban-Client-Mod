@@ -15,7 +15,7 @@ public class FareSaverScreen extends BlockConfigScreen {
     private final NumericTextField discountTextField;
     public FareSaverScreen(BlockPos blockPos, int discount) {
         super(blockPos);
-        this.discountTextField = new NumericTextField(0, 0, 60, 20, 0, 100000, 2, TextUtil.translatable(TextCategory.GUI, "faresaver.currency"));
+        this.discountTextField = new NumericTextField(0, 0, 60, 20, 0, 1000000, 2, TextUtil.translatable(TextCategory.GUI, "faresaver.currency"));
         this.discountTextField.setValue(discount);
     }
 
