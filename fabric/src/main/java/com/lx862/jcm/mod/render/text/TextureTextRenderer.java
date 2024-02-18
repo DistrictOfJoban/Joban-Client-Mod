@@ -237,7 +237,7 @@ public class TextureTextRenderer implements RenderHelper {
         return null;
     }
 
-    public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, int x, int y) {
+    public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, double x, double y) {
         ensureInitialized();
 
         TextSlot textSlot = getTextSlot(text);
@@ -249,7 +249,7 @@ public class TextureTextRenderer implements RenderHelper {
 
         if(textSlot != null) {
             float finalX = (float)text.getTextAlignment().getX(x, textSlot.getRenderedWidth());
-            drawToWorld(graphicsHolder, textSlot, facing, finalX, y);
+            drawToWorld(graphicsHolder, textSlot, facing, finalX, (float)y);
         }
     }
 

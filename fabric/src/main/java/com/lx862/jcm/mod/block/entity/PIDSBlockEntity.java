@@ -75,7 +75,7 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
         this.markDirty2();
     }
 
-    public boolean getHidePlatformNumber() {
+    public boolean platformNumberHidden() {
         return hidePlatformNumber;
     }
 

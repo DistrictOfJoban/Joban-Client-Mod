@@ -33,7 +33,7 @@ public class RVPIDSBlock extends JCMPIDSBlock {
         RVPIDSBlockEntity thisEntity = (RVPIDSBlockEntity) world.getBlockEntity(pos).data;
 
         if (JCMUtil.playerHoldingBrush(player)) {
-            Networking.sendPacketToClient(player, new PIDSGUIPacket(pos, thisEntity.getCustomMessages(), thisEntity.getRowHidden(), thisEntity.getHidePlatformNumber(), thisEntity.getPresetId()));
+            Networking.sendPacketToClient(player, new PIDSGUIPacket(pos, thisEntity.getCustomMessages(), thisEntity.getRowHidden(), thisEntity.platformNumberHidden(), thisEntity.getPresetId()));
         }
     }
 
