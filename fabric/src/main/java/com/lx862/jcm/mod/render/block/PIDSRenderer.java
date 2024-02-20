@@ -43,7 +43,7 @@ public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEn
             platforms = new LongImmutableList(closestPlatforms);
         }
 
-        ArrivalsResponse arrivals = MinecraftClientData.getInstance().requestArrivals(pos.asLong(), platforms, 1, 0, true);
+        ArrivalsResponse arrivals = MinecraftClientData.getInstance().requestArrivals(pos.asLong(), platforms, blockEntity.getRowAmount(), 0, true);
 
         graphicsHolder.push();
         graphicsHolder.translate(0.5, 0.5, 0.5);

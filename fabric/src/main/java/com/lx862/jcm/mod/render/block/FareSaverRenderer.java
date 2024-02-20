@@ -42,7 +42,7 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
                 .withFont("mtr:mtr")
                 .withColor(ARGB_WHITE)
                 .withTextAlignment(TextAlignment.CENTER);
-        RenderHelper.scaleToFit(graphicsHolder, TextRenderingManager.getTextWidth(textInfo), 12, true, 10);
+        RenderHelper.scaleToFit(graphicsHolder, TextRenderingManager.getTextWidth(textInfo), 12, true, 12);
         TextRenderingManager.draw(graphicsHolder, textInfo, facing, 0, 0);
         graphicsHolder.pop();
 

@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.render.text;
 
-import com.lx862.jcm.mod.data.JCMStats;
+import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.MutableText;
@@ -24,7 +24,7 @@ public class VanillaTextRenderer implements RenderHelper {
     public static void drawScrollingText(GraphicsHolder graphicsHolder, String text, int maxW, double x, double y, int textColor) {
         String str = text;
         int scrollSpeed = str.length() * 6;
-        int fullTick = (JCMStats.getGameTick() % (int)(scrollSpeed * 1.5));
+        int fullTick = (JCMServerStats.getGameTick() % (int)(scrollSpeed * 1.5));
         int halfTick = scrollSpeed / 2;
         boolean opening = fullTick < halfTick;
         int tick = opening ? fullTick : fullTick - halfTick;

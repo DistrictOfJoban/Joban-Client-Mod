@@ -31,6 +31,7 @@ public class RegistryHelperClient {
     }
 
     public static void register() {
+        Events.registerClient();
         Blocks.registerClient();
         BlockEntityRenderers.registerClient();
         Networking.registerClient();

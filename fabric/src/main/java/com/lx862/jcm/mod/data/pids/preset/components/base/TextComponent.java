@@ -1,5 +1,7 @@
 package com.lx862.jcm.mod.data.pids.preset.components.base;
 
+import com.lx862.jcm.mod.data.JCMClientStats;
+import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
@@ -9,6 +11,7 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public abstract class TextComponent extends DrawCall {
+    public static final int SWITCH_LANG_DURATION = 60;
     protected final String font;
     protected final int textColor;
     protected final double scale;
@@ -36,5 +39,11 @@ public abstract class TextComponent extends DrawCall {
         RenderHelper.scaleToFit(graphicsHolder, TextRenderingManager.getTextWidth(finalText), width, textOverflowMode == TextOverflowMode.SCALE, 12);
         TextRenderingManager.draw(graphicsHolder, finalText, facing, 0, 0);
         graphicsHolder.pop();
+    }
+
+    protected String cycleString(String mtrString) {
+        String[] split = mtrString.split("\\|");
+        if(split.length == 0) return "";
+        return split[((int)JCMClientStats.getGameTick() / SWITCH_LANG_DURATION) % split.length];
     }
 }

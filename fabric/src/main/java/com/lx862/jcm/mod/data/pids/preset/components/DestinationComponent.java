@@ -21,16 +21,15 @@ public class DestinationComponent extends TextComponent {
     @Override
     public void render(GraphicsHolder graphicsHolder, World world, Direction facing) {
         String routeNo = arrival.getRouteNumber().isEmpty() ? "" : arrival.getRouteNumber() + " ";
-        String leftDestination = routeNo + arrival.getDestination();
-        TextInfo destinationText = new TextInfo(leftDestination).withColor(textColor).withFont(font);
+        String destinationString = cycleString(routeNo + arrival.getDestination());
+        TextInfo destinationText = new TextInfo(destinationString).withColor(textColor).withFont(font);
 
         int destinationWidth = TextRenderingManager.getTextWidth(destinationText);
 
         graphicsHolder.push();
         if(destinationWidth > width) {
-            RenderHelper.scaleToFit(graphicsHolder, destinationWidth, width, false);
             // TODO: Make marquee an option in custom PIDS Preset
-            //drawPIDSScrollingText(graphicsHolder, facing, leftDestination, 0, 0, textColor, (int)destinationMaxWidth - 2);
+            //drawPIDSScrollingText(graphicsHolder, facing, destinationString, 0, 0, textColor, (int)destinationMaxWidth - 2);
         }
 
         drawText(graphicsHolder, TextAlignment.LEFT, facing, destinationText, TextOverflowMode.STRETCH);

@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.render.text;
 
-import com.lx862.jcm.mod.data.JCMStats;
+import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.font.FontSet;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -39,7 +39,7 @@ public class TextureTextRenderer implements RenderHelper {
     private static final ObjectList<TextSlot> textSlots = new ObjectArrayList<>();
     private static NativeImageBackedTexture nativeImageBackedTexture = null;
     private static BufferedImage bufferedImageForTextGen = null;
-    public static final int RENDERED_TEXT_SIZE = 10;
+    public static final int RENDERED_TEXT_SIZE = 9;
     public static final double MARQUEE_SPACING_RATIO = 0.8;
     public static final int FONT_RESOLUTION = 64;
     private static Identifier textAtlas = null;
@@ -269,24 +269,24 @@ public class TextureTextRenderer implements RenderHelper {
             float ratio = textSlot.getMaxWidth() / (float)textSlot.getPhysicalWidth();
             u2 = u2 * ratio;
 
-            u1 += (JCMStats.getGameTick() % 100) / 100F;
-            u2 += (JCMStats.getGameTick() % 100) / 100F;
+            u1 += (JCMServerStats.getGameTick() % 100) / 100F;
+            u2 += (JCMServerStats.getGameTick() % 100) / 100F;
         }
 
         RenderHelper.drawTexture(graphicsHolder, x, y - 0.75F, 0, (int)textSlot.getRenderedWidth(), RENDERED_TEXT_SIZE, u1, v1, u2, v2, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
     public static void stressTest(int updateFrequency) {
-        if(JCMStats.getGameTick() % updateFrequency == 0) {
+        if(JCMServerStats.getGameTick() % updateFrequency == 0) {
             String[] strArr = new String[]{
-                    "Nyaaaa", "610 Tuen Mun Ferry Pier", "The quick brown fox", "Hello World",
-                    "Minecraft!", "meow meow", "Jumps Over the",
-                    "lazy dog", "November", "December", "3 min", "Fuka",
-                    "Drayton", "Joban Client Mod", "Minecraft Transit Railway", "Text Renderer",
+                    "Central", "610 Tuen Mun Ferry Pier", "Admiralty", "Kennedy Town",
+                    "Minecraft!", "$050302", "33:44",
+                    "October", "November", "December", "3 min", "^_^",
+                    "Fabric modloader", "Joban Client Mod", "Minecraft Transit Railway 3", "Text Renderer",
                     "Block Entity", "SIGKILL", "Lorem ipsum",
-                    "Drayton1", "Joban Client Mod1", "Minecraft Transit Railway1", "Text Renderer1",
-                    "Block Entity!", "SIGKILL!", "Lorem ipsum!",
-                    "lazy dog?", "November?", "December?", "3 min?", "Fuka?",};
+                    "Minceraft", "JCM", "Minecraft Transit Railway 4", "Text Rendering",
+                    "Block Entity Renderer", "main", "Fish.",
+                    "The quick brown fox jumps over the lazy dog", "woem!", "git", "Stress Test In Progress", "[07L]",};
             double colorRand = Math.random();
             String text = strArr[(int)(Math.random() * strArr.length)];
 
@@ -311,6 +311,10 @@ public class TextureTextRenderer implements RenderHelper {
         return getTextBound(attributedString, new AffineTransform());
     }
 
+    /**
+     * Obtain a rectangular region of a string in pixel
+     * @return The rectangular bound of the string provided
+     */
     public static Rectangle2D getTextBound(AttributedString attributedString, AffineTransform affineTransform) {
         FontRenderContext fontRenderContext = new FontRenderContext(affineTransform, true, true);
         TextLayout textLayout = new TextLayout(attributedString.getIterator(), fontRenderContext);
@@ -323,8 +327,9 @@ public class TextureTextRenderer implements RenderHelper {
      * @return The in-game width of the TextInfo.
      */
     public static int getPhysicalWidth(TextInfo textInfo) {
-        double pixelWidth = getTextBound(textInfo).getWidth();
+        double pixelWidth = Math.min(DEFAULT_ATLAS_WIDTH, getTextBound(textInfo).getWidth());
         double physicalWidth = (pixelWidth / TextureTextRenderer.FONT_RESOLUTION) * TextureTextRenderer.RENDERED_TEXT_SIZE;
+
         return (int)textInfo.getWidthInfo().clampWidth(physicalWidth);
     }
 

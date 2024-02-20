@@ -81,15 +81,15 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
             if(!rowHidden[i]) {
                 ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
-                float destinationMaxWidth = !hidePlatform ? (65 * ARRIVAL_TEXT_SCALE) : (75 * ARRIVAL_TEXT_SCALE);
+                float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
                 drawCalls.add(new DestinationComponent(arrival, getFont(), textColor, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
 
                 if(!hidePlatform) {
-                    drawCalls.add(new PlatformComponent(arrival, getFont(), RenderHelper.ARGB_WHITE, 65 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
-                    drawCalls.add(new PlatformCircleComponent(arrival, TEXTURE_PLATFORM_CIRCLE, 65 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
+                    drawCalls.add(new PlatformComponent(arrival, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
+                    drawCalls.add(new PlatformCircleComponent(arrival, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
                 }
 
-                drawCalls.add(new ETAComponent(arrival, getFont(), textColor, width, rowY, 100, 20, ARRIVAL_TEXT_SCALE));
+                drawCalls.add(new ETAComponent(arrival, getFont(), textColor, width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
                 arrivalIndex++;
             }
 
