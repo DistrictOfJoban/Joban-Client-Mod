@@ -1,6 +1,6 @@
-package com.lx862.jcm.mod.data.pids.preset.drawcalls;
+package com.lx862.jcm.mod.data.pids.preset.components;
 
-import com.lx862.jcm.mod.data.pids.preset.drawcalls.base.TextDrawCall;
+import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextInfo;
@@ -11,10 +11,10 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public class ETADrawCall extends TextDrawCall {
+public class ETAComponent extends TextComponent {
     // TODO: (Maybe next version) Add absolute time?
     private final ArrivalResponse arrival;
-    public ETADrawCall(ArrivalResponse arrival, String font, int textColor, double x, double y, double width, double height, double scale) {
+    public ETAComponent(ArrivalResponse arrival, String font, int textColor, double x, double y, double width, double height, double scale) {
         super(font, textColor, x, y, width, height, scale);
         this.arrival = arrival;
     }

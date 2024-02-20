@@ -36,7 +36,9 @@ public class ButterflyLightBlock extends DirectionalBlock implements BlockWithEn
 
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        ButterflyLightBlockEntity thisEntity = (ButterflyLightBlockEntity)world.getBlockEntity(pos).data;
+        BlockEntity be = world.getBlockEntity(pos);
+        if(be == null) return;
+        ButterflyLightBlockEntity thisEntity = (ButterflyLightBlockEntity)be.data;
 
         if(JCMUtil.playerHoldingBrush(player)) {
             Networking.sendPacketToClient(player, new ButterflyLightGUIPacket(pos, thisEntity.getSecondsToBlink()));

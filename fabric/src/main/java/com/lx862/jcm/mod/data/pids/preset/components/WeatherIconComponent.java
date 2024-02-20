@@ -1,16 +1,16 @@
-package com.lx862.jcm.mod.data.pids.preset.drawcalls;
+package com.lx862.jcm.mod.data.pids.preset.components;
 
-import com.lx862.jcm.mod.data.pids.preset.drawcalls.base.TextureDrawCall;
+import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public class WeatherIconDrawCall extends TextureDrawCall {
+public class WeatherIconComponent extends TextureComponent {
     private final Identifier iconSunny;
     private final Identifier iconThunder;
     private final Identifier iconRainy;
-    public WeatherIconDrawCall(Identifier iconSunny, Identifier iconRainy, Identifier iconThunder, double x, double y, double width, double height) {
+    public WeatherIconComponent(Identifier iconSunny, Identifier iconRainy, Identifier iconThunder, double x, double y, double width, double height) {
         super(null, x, y, width, height);
         this.iconSunny = iconSunny;
         this.iconRainy = iconRainy;

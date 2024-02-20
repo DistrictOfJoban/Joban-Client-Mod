@@ -7,7 +7,7 @@
 			"size": 12,
 			"oversample": 6.0
 		},
-{
+		{
 			"type": "ttf",
 			"file": "mtr:noto-serif-cjk-tc-semibold.ttf",
 			"shift": [ 0, 0.5 ],

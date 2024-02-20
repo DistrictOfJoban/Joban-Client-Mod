@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.pids.preset.drawcalls.base;
+package com.lx862.jcm.mod.data.pids.preset.components.base;
 
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Direction;

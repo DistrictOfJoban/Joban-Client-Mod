@@ -2,11 +2,11 @@ package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.config.ConfigEntry;
-import com.lx862.jcm.mod.data.pids.preset.drawcalls.*;
-import com.lx862.jcm.mod.data.pids.preset.drawcalls.base.TextDrawCall;
-import com.lx862.jcm.mod.data.pids.preset.drawcalls.base.TextureDrawCall;
+import com.lx862.jcm.mod.data.pids.preset.components.*;
+import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
+import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.data.pids.preset.drawcalls.base.DrawCall;
+import com.lx862.jcm.mod.data.pids.preset.components.base.DrawCall;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
@@ -47,28 +47,28 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
         graphicsHolder.translate(startX, 0, -0.5);
 
-        List<DrawCall> drawCalls = new ArrayList<>();
-        drawCalls.add(new ClockDrawCall(getFont(), ARGB_WHITE, contentWidth, 2, contentWidth, 10));
-        drawCalls.add(new WeatherIconDrawCall(ICON_WEATHER_SUNNY, ICON_WEATHER_RAINY, ICON_WEATHER_THUNDER, 0, 0, 11, 11));
+        List<DrawCall> components = new ArrayList<>();
+        components.add(new ClockComponent(getFont(), ARGB_WHITE, contentWidth, 2, contentWidth, 10));
+        components.add(new WeatherIconComponent(ICON_WEATHER_SUNNY, ICON_WEATHER_RAINY, ICON_WEATHER_THUNDER, 0, 0, 11, 11));
 
-        drawArrivals(arrivals, rowHidden, 0, 15, contentWidth, contentHeight, be.getRowAmount(), ARGB_BLACK, be.platformNumberHidden(), drawCalls);
+        drawArrivals(arrivals, rowHidden, 0, 15, contentWidth, contentHeight, be.getRowAmount(), ARGB_BLACK, be.platformNumberHidden(), components);
 
-        List<DrawCall> textureDrawCall = drawCalls.stream().filter(e -> e instanceof TextureDrawCall).collect(Collectors.toList());
-        List<DrawCall> textDrawCall = drawCalls.stream().filter(e -> e instanceof TextDrawCall).collect(Collectors.toList());
+        List<DrawCall> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
+        List<DrawCall> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
 
         // Texture
-        for(DrawCall drawCall : textureDrawCall) {
+        for(DrawCall component : textureComponents) {
             graphicsHolder.push();
-            drawCall.render(graphicsHolder, world, facing);
+            component.render(graphicsHolder, world, facing);
             graphicsHolder.pop();
         }
 
         // Text
         graphicsHolder.translate(0, 0, -0.5);
         TextRenderingManager.bind(graphicsHolder);
-        for(DrawCall drawCall : textDrawCall) {
+        for(DrawCall component : textComponents) {
             graphicsHolder.push();
-            drawCall.render(graphicsHolder, world, facing);
+            component.render(graphicsHolder, world, facing);
             graphicsHolder.pop();
         }
     }
@@ -82,14 +82,14 @@ public class RVPIDSPreset extends PIDSPresetBase {
             if(!rowHidden[i]) {
                 ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
                 float destinationMaxWidth = !hidePlatform ? (65 * ARRIVAL_TEXT_SCALE) : (75 * ARRIVAL_TEXT_SCALE);
-                drawCalls.add(new DestinationDrawCall(arrival, getFont(), textColor, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+                drawCalls.add(new DestinationComponent(arrival, getFont(), textColor, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
 
                 if(!hidePlatform) {
-                    drawCalls.add(new PlatformDrawCall(arrival, getFont(), RenderHelper.ARGB_WHITE, 65 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
-                    drawCalls.add(new PlatformCircleDrawCall(arrival, TEXTURE_PLATFORM_CIRCLE, 65 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
+                    drawCalls.add(new PlatformComponent(arrival, getFont(), RenderHelper.ARGB_WHITE, 65 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
+                    drawCalls.add(new PlatformCircleComponent(arrival, TEXTURE_PLATFORM_CIRCLE, 65 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
                 }
 
-                drawCalls.add(new ETADrawCall(arrival, getFont(), textColor, width, rowY, 100, 20, ARRIVAL_TEXT_SCALE));
+                drawCalls.add(new ETAComponent(arrival, getFont(), textColor, width, rowY, 100, 20, ARRIVAL_TEXT_SCALE));
                 arrivalIndex++;
             }
 

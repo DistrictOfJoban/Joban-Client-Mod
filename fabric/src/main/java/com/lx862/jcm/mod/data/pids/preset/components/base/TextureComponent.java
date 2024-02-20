@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.pids.preset.drawcalls.base;
+package com.lx862.jcm.mod.data.pids.preset.components.base;
 
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Direction;
@@ -7,9 +7,9 @@ import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-public class TextureDrawCall extends DrawCall {
+public class TextureComponent extends DrawCall {
     protected final Identifier texture;
-    public TextureDrawCall(Identifier texture, double x, double y, double width, double height) {
+    public TextureComponent(Identifier texture, double x, double y, double width, double height) {
         super(x, y, width, height);
         this.texture = texture;
     }

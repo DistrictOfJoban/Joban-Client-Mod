@@ -18,6 +18,7 @@ public class FontManager {
 
         JCMLogger.debug("[FontManager] Loading default fonts");
         loadVanillaFont("jsblock:deptimer");
+        loadVanillaFont("jsblock:pids_lcd");
         loadVanillaFont("mtr:mtr");
     }
 

@@ -1,6 +1,6 @@
-package com.lx862.jcm.mod.data.pids.preset.drawcalls;
+package com.lx862.jcm.mod.data.pids.preset.components;
 
-import com.lx862.jcm.mod.data.pids.preset.drawcalls.base.TextDrawCall;
+import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import org.mtr.mapping.holder.Direction;
@@ -8,9 +8,9 @@ import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.WorldHelper;
 
-public class ClockDrawCall extends TextDrawCall {
+public class ClockComponent extends TextComponent {
     // TODO: (Maybe next version) Add 12/24h toggle
-    public ClockDrawCall(String font, int textColor, double x, double y, double width, double height) {
+    public ClockComponent(String font, int textColor, double x, double y, double width, double height) {
         super(font, textColor, x, y, width, height);
     }
 
