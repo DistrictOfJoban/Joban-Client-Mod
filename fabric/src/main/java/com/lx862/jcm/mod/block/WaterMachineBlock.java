@@ -6,6 +6,7 @@ import com.lx862.jcm.mod.util.VoxelUtil;
 import net.minecraft.potion.PotionUtil;
 import net.minecraft.potion.Potions;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.PlayerHelper;
 
 public class WaterMachineBlock extends Vertical2Block {
     public WaterMachineBlock(BlockSettings settings) {
@@ -53,8 +54,7 @@ public class WaterMachineBlock extends Vertical2Block {
         if(playerHolding.isEmpty()) {
             player.setStackInHand(hand, stack);
         } else {
-            // TODO: Deprecated
-            player.giveItemStack(stack);
+            PlayerHelper.getPlayerInventory(player).insertStack(stack);
         }
     }
 
