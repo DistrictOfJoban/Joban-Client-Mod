@@ -22,12 +22,14 @@ Joban Client Mod is an addon mod for the **Minecraft Transit Railway 4.0**, addi
 This is an experimental rewrite of the Joban Client Mod from scratch.  
 It is currently not production ready yet and contains many changes (Including block ids) from Joban Client Mod v1 series which may not be migrated properly to v2.  
 
-Prebuilt jar of the mod can be found in the [action tab](https://github.com/DistrictOfJoban/JCM-Rewrite/actions).  
+Prebuilt jar of the mod can be found in the [action tab](https://github.com/DistrictOfJoban/Joban-Client-Mod/actions).  
 Use with caution!
 
+**Note: Network packet on Minecraft <= 1.19.4 in Dev Environment may fail with refCnt 0, develop in 1.20.4 for now.**
+
 ## Links
-- [Website](https://www.joban.tk/JCM/)
-- [Wiki](https://www.joban.tk/wiki/JCM:Joban_Client_Mod)
+- [Website](https://www.joban.org/JCM/)
+- [Wiki](https://www.joban.org/wiki/JCM:Joban_Client_Mod)
 
 ## License
 This project is licensed under the MIT License.
