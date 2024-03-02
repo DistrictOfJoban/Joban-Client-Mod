@@ -11,7 +11,6 @@ public class Events {
         // Start Tick Event for counting tick
         org.mtr.mapping.registry.EventRegistry.registerStartServerTick(() -> {
             JCMServerStats.incrementGameTick();
-
         });
     }
 
