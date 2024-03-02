@@ -7,6 +7,7 @@ import org.mtr.mod.render.RenderPIDS;
 public final class BlockEntityRenderers {
     public static void registerClient() {
         JCMLogger.debug("Registering Block Entity Renderer...");
+        RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.BUTTERFLY_LIGHT, ButterflyLightRenderer::new);
         RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.DEPARTURE_TIMER, DepartureTimerRenderer::new);
         RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.FARE_SAVER, FareSaverRenderer::new);
         RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.KCR_STATION_NAME_SIGN, KCRStationNameSignRenderer::new);

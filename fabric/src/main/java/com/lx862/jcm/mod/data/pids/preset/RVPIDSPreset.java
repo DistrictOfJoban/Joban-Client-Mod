@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
+import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.data.pids.preset.components.*;
@@ -21,11 +22,11 @@ public class RVPIDSPreset extends PIDSPresetBase {
     private static final int HEADER_HEIGHT = 11;
     private static final int PIDS_MARGIN = 7;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
-    private static final Identifier TEXTURE_PLATFORM_CIRCLE = new Identifier("jsblock:textures/block/pids/plat_circle.png");
-    private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/block/pids/rv_default.png");
-    private static final Identifier ICON_WEATHER_SUNNY = new Identifier("jsblock:textures/block/pids/weather_sunny.png");
-    private static final Identifier ICON_WEATHER_RAINY = new Identifier("jsblock:textures/block/pids/weather_rainy.png");
-    private static final Identifier ICON_WEATHER_THUNDER = new Identifier("jsblock:textures/block/pids/weather_thunder.png");
+    private static final Identifier TEXTURE_PLATFORM_CIRCLE = Constants.id("textures/block/pids/plat_circle.png");
+    private static final Identifier TEXTURE_BACKGROUND = Constants.id("textures/block/pids/rv_default.png");
+    private static final Identifier ICON_WEATHER_SUNNY = Constants.id("textures/block/pids/weather_sunny.png");
+    private static final Identifier ICON_WEATHER_RAINY = Constants.id("textures/block/pids/weather_rainy.png");
+    private static final Identifier ICON_WEATHER_THUNDER = Constants.id("textures/block/pids/weather_thunder.png");
     public RVPIDSPreset() {
         super("rv_pids", "Hong Kong Railway Vision PIDS", true);
     }

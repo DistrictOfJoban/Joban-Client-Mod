@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.DirectionalBlock;
 import com.lx862.jcm.mod.block.entity.ButterflyLightBlockEntity;
-import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.network.gui.ButterflyLightGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
@@ -11,16 +10,11 @@ import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
-import org.mtr.mapping.tool.HolderBase;
-
-import java.util.List;
 
 public class ButterflyLightBlock extends DirectionalBlock implements BlockWithEntity {
-    public static final BooleanProperty LIT = BlockProperties.LIT;
 
     public ButterflyLightBlock(BlockSettings settings) {
         super(settings);
-        setDefaultState2(getDefaultState2().with(new Property<>(LIT.data), false));
     }
 
     @Override
@@ -41,14 +35,8 @@ public class ButterflyLightBlock extends DirectionalBlock implements BlockWithEn
         ButterflyLightBlockEntity thisEntity = (ButterflyLightBlockEntity)be.data;
 
         if(JCMUtil.playerHoldingBrush(player)) {
-            Networking.sendPacketToClient(player, new ButterflyLightGUIPacket(pos, thisEntity.getSecondsToBlink()));
+            Networking.sendPacketToClient(player, new ButterflyLightGUIPacket(pos, thisEntity.getStartBlinkingSeconds()));
         }
-    }
-
-    @Override
-    public void addBlockProperties(List<HolderBase<?>> properties) {
-        super.addBlockProperties(properties);
-        properties.add(LIT);
     }
 
     @Override

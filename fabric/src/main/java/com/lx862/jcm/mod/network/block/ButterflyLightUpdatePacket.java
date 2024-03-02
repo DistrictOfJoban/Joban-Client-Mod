@@ -10,16 +10,16 @@ import org.mtr.mapping.tool.PacketBufferSender;
 
 public class ButterflyLightUpdatePacket extends PacketHandler {
     private final BlockPos blockPos;
-    private final int secondsToBlink;
+    private final int startBlinkingSeconds;
 
     public ButterflyLightUpdatePacket(PacketBufferReceiver packetBufferReceiver) {
         this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
-        this.secondsToBlink = packetBufferReceiver.readInt();
+        this.startBlinkingSeconds = packetBufferReceiver.readInt();
     }
 
-    public ButterflyLightUpdatePacket(BlockPos blockPos, int secondsToBlink) {
+    public ButterflyLightUpdatePacket(BlockPos blockPos, int startBlinkingSeconds) {
         this.blockPos = blockPos;
-        this.secondsToBlink = secondsToBlink;
+        this.startBlinkingSeconds = startBlinkingSeconds;
     }
 
     @Override
@@ -30,7 +30,7 @@ public class ButterflyLightUpdatePacket extends PacketHandler {
 
         ((JCMBlock)state.getBlock().data).forEachBlockEntity(state, world, blockPos, be -> {
             if(be.data instanceof ButterflyLightBlockEntity) {
-                ((ButterflyLightBlockEntity)be.data).setData(secondsToBlink);
+                ((ButterflyLightBlockEntity)be.data).setData(startBlinkingSeconds);
             }
         });
     }
@@ -38,6 +38,6 @@ public class ButterflyLightUpdatePacket extends PacketHandler {
     @Override
     public void write(PacketBufferSender packetBufferSender) {
         packetBufferSender.writeLong(blockPos.asLong());
-        packetBufferSender.writeInt(secondsToBlink);
+        packetBufferSender.writeInt(startBlinkingSeconds);
     }
 }

@@ -12,11 +12,11 @@ import org.mtr.mapping.holder.ClickableWidget;
 import org.mtr.mapping.holder.MutableText;
 
 public class ButterflyLightScreen extends BlockConfigScreen {
-    private final NumericTextField secondsToBlinkTextField;
-    public ButterflyLightScreen(BlockPos blockPos, int discount) {
+    private final NumericTextField startBlinkingSecondsTextField;
+    public ButterflyLightScreen(BlockPos blockPos, int startBlinkingSeconds) {
         super(blockPos);
-        this.secondsToBlinkTextField = new NumericTextField(0, 0, 60, 20, 0, 100000, 10, TextUtil.translatable(TextCategory.GUI, "faresaver.currency"));
-        this.secondsToBlinkTextField.setValue(discount);
+        this.startBlinkingSecondsTextField = new NumericTextField(0, 0, 60, 20, 0, 100000, 10);
+        this.startBlinkingSecondsTextField.setValue(startBlinkingSeconds);
     }
 
     @Override
@@ -26,12 +26,12 @@ public class ButterflyLightScreen extends BlockConfigScreen {
 
     @Override
     public void addConfigEntries() {
-        addChild(new ClickableWidget(secondsToBlinkTextField));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "butterfly_light.countdown"), new MappedWidget(secondsToBlinkTextField));
+        addChild(new ClickableWidget(startBlinkingSecondsTextField));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "butterfly_light.countdown"), new MappedWidget(startBlinkingSecondsTextField));
     }
 
     @Override
     public void onSave() {
-        Networking.sendPacketToServer(new ButterflyLightUpdatePacket(blockPos, (int)secondsToBlinkTextField.getValue()));
+        Networking.sendPacketToServer(new ButterflyLightUpdatePacket(blockPos, (int) startBlinkingSecondsTextField.getValue()));
     }
 }

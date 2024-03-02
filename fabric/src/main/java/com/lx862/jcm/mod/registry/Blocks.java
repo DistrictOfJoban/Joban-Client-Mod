@@ -7,7 +7,7 @@ import org.mtr.mapping.mapper.BlockHelper;
 import org.mtr.mapping.registry.BlockRegistryObject;
 
 public final class Blocks {
-    public static final BlockRegistryObject BUTTERFLY_LIGHT = RegistryHelper.registerBlockItem("butterfly_light", new ButterflyLightBlock(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject BUTTERFLY_LIGHT = RegistryHelper.registerBlockItem("butterfly_light", new ButterflyLightBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject BUFFER_STOP = RegistryHelper.registerBlockItem("buffer_stop", new BufferStopBlock(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject CIRCLE_WALL_1 = RegistryHelper.registerBlockItem("circle_wall_1", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject CIRCLE_WALL_2 = RegistryHelper.registerBlockItem("circle_wall_2", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f)), ItemGroups.JCM_MAIN);

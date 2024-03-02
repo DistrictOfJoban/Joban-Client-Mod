@@ -19,7 +19,6 @@ public class BlockProperties {
     public static final BooleanProperty IS_SLAB = BooleanProperty.of("is_slab");
     public static final BooleanProperty TOP = BooleanProperty.of("top");
     public static final BooleanProperty EXIT_ON_LEFT = BooleanProperty.of("exit_on_left");
-    public static final BooleanProperty LIT = BooleanProperty.of("lit");
     public static final BooleanProperty POINT_TO_LEFT = BooleanProperty.of("right");
     public static final IntegerProperty BARRIER_FENCE_TYPE = IntegerProperty.of("type", 0, 10);
     public static final BooleanProperty BARRIER_FLIPPED = BooleanProperty.of("flipped");
