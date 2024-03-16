@@ -22,19 +22,20 @@ public class FontManager {
         loadVanillaFont("mtr:mtr");
     }
 
-    public static void loadVanillaFont(String jsonPath) {
-        Identifier fontId = new Identifier(jsonPath);
-        if(fonts.containsKey(fontId)) return;
+    public static void loadVanillaFont(String fontIdStr) {
+        Identifier fontId = new Identifier(fontIdStr);
         String namespace = fontId.getNamespace();
-        String path = "font/" + fontId.getPath() + ".json";
+        String jsonPath = "font/" + fontId.getPath() + ".json";
 
-        ResourceManagerHelper.readResource(new Identifier(namespace, path), inputStream -> {
+        if(fonts.containsKey(fontId)) return;
+        ResourceManagerHelper.readResource(new Identifier(namespace, jsonPath), inputStream -> {
             try {
                 JsonObject jsonObject = new JsonParser().parse(IOUtils.toString(inputStream, Charsets.UTF_8)).getAsJsonObject();
+                JCMLogger.debug("[FontManager] Loading font {}:{} from {}:{}", namespace, fontId.getPath(), namespace, jsonPath);
                 fonts.put(fontId, new FontSet(jsonObject));
             } catch (Exception e) {
                 e.printStackTrace();
-                JCMLogger.warn("Failed to read vanilla font json: {}", path);
+                JCMLogger.warn("Failed to read vanilla font json: {}", jsonPath);
             }
         });
     }

@@ -22,6 +22,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
     private static final int HEADER_HEIGHT = 11;
     private static final int PIDS_MARGIN = 7;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
+    private static final int TEXT_COLOR = ARGB_BLACK;
     private static final Identifier TEXTURE_PLATFORM_CIRCLE = Constants.id("textures/block/pids/plat_circle.png");
     private static final Identifier TEXTURE_BACKGROUND = Constants.id("textures/block/pids/rv_default.png");
     private static final Identifier ICON_WEATHER_SUNNY = Constants.id("textures/block/pids/weather_sunny.png");
@@ -37,8 +38,8 @@ public class RVPIDSPreset extends PIDSPresetBase {
         int contentHeight = height - HEADER_HEIGHT;
 
         // Draw Background
-        graphicsHolder.createVertexConsumer(RenderLayer.getText(TEXTURE_BACKGROUND));
-        RenderHelper.drawTexture(graphicsHolder, TEXTURE_BACKGROUND, 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+        graphicsHolder.createVertexConsumer(RenderLayer.getText(getBackground()));
+        RenderHelper.drawTexture(graphicsHolder, getBackground(), 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
 
         // Debug View Texture
         if(ConfigEntry.DEBUG_MODE.getBool() && ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
@@ -52,7 +53,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
         components.add(new ClockComponent(getFont(), ARGB_WHITE, contentWidth, 2, contentWidth, 10));
         components.add(new WeatherIconComponent(ICON_WEATHER_SUNNY, ICON_WEATHER_RAINY, ICON_WEATHER_THUNDER, 0, 0, 11, 11));
 
-        drawArrivals(arrivals, rowHidden, 0, 15, contentWidth, contentHeight, be.getRowAmount(), ARGB_BLACK, be.platformNumberHidden(), components);
+        drawArrivals(arrivals, rowHidden, 0, 15, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden(), components);
 
         List<DrawCall> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<DrawCall> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
@@ -74,7 +75,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
         }
     }
 
-    private void drawArrivals(ArrivalsResponse arrivals, boolean[] rowHidden, int x, int y, int width, int height, int rows, int textColor, boolean hidePlatform, List<DrawCall> drawCalls) {
+    private void drawArrivals(ArrivalsResponse arrivals, boolean[] rowHidden, int x, int y, int width, int height, int rows, boolean hidePlatform, List<DrawCall> drawCalls) {
         int arrivalIndex = 0;
         double rowY = y;
         for(int i = 0; i < rows; i++) {
@@ -83,14 +84,14 @@ public class RVPIDSPreset extends PIDSPresetBase {
             if(!rowHidden[i]) {
                 ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
                 float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                drawCalls.add(new DestinationComponent(arrival, getFont(), textColor, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+                drawCalls.add(new DestinationComponent(arrival, getFont(), TEXT_COLOR, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
 
                 if(!hidePlatform) {
                     drawCalls.add(new PlatformComponent(arrival, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
                     drawCalls.add(new PlatformCircleComponent(arrival, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
                 }
 
-                drawCalls.add(new ETAComponent(arrival, getFont(), textColor, width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                drawCalls.add(new ETAComponent(arrival, getFont(), TEXT_COLOR, width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
                 arrivalIndex++;
             }
 

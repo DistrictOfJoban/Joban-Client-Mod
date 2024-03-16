@@ -158,7 +158,8 @@ public class TextureTextRenderer implements RenderHelper {
         Int2IntArrayMap mcColorCodeMap = MCTextHelper.getColorCodeMap(text);
 
         AttributedString attributedString = new AttributedString(filteredString);
-        attributedString.addAttribute(TextAttribute.FONT, fontSet.getPrimaryFont(FONT_RESOLUTION));
+        Font primaryFont = fontSet.getPrimaryFont(FONT_RESOLUTION);
+        attributedString.addAttribute(TextAttribute.FONT, primaryFont);
         attributedString.addAttribute(TextAttribute.FOREGROUND, text.getTextColor());
 
         int currentTextColor = text.getTextColor();

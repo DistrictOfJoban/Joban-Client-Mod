@@ -22,10 +22,10 @@ public class ETAComponent extends TextComponent {
     @Override
     public void render(GraphicsHolder graphicsHolder, World world, Direction facing) {
         long remTime = arrival.getArrival() - System.currentTimeMillis();
-        long remSec = remTime / 1000L;
+        int remSec = (int)(remTime / 1000L);
 
-        if((int)remSec > 0) {
-            MutableText etaText = remSec > 60 ? TextUtil.translatable("gui.mtr.arrival_min", remSec / 60) : TextUtil.translatable("gui.mtr.arrival_sec", remSec % 60);
+        if(remSec > 0) {
+            MutableText etaText = remSec >= 60 ? TextUtil.translatable("gui.mtr.arrival_min", remSec / 60) : TextUtil.translatable("gui.mtr.arrival_sec", remSec % 60);
             drawText(graphicsHolder, TextAlignment.RIGHT, facing, new TextInfo(etaText), TextOverflowMode.STRETCH);
         }
     }

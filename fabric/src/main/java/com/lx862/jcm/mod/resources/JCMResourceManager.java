@@ -15,13 +15,13 @@ import org.mtr.mapping.mapper.ResourceManagerHelper;
 public class JCMResourceManager {
     private static final Identifier CUSTOM_RESOURCE_PATH = new Identifier(Constants.MOD_ID, "joban_custom_resources.json");
     public static void reload() {
-        reloadResources();
-        TextRenderingManager.initialize();
         FontManager.initialize();
+        TextRenderingManager.initialize();
+        reloadResources();
     }
 
     private static void reloadResources() {
-        ResourceManagerHelper.readResource(CUSTOM_RESOURCE_PATH, (inputStream -> {
+        ResourceManagerHelper.readAllResources(CUSTOM_RESOURCE_PATH, (inputStream -> {
             try {
                 String str = IOUtils.toString(inputStream, Charsets.UTF_8);
                 JsonObject jsonObject = new JsonParser().parse(str).getAsJsonObject();
