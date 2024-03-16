@@ -12,7 +12,7 @@ public class PIDS1ABlockEntity extends BlockPIDSHorizontalBase.BlockEntityHorizo
     }
 
     @Override
-    public String defaultFormat(int i) {
-        return "@0-60L@$#FF9900$%destination*%@60-100R@%RAH*%:%RA0m*%:%RA0s*%";
+    public boolean showArrivalNumber() {
+        return false;
     }
 }

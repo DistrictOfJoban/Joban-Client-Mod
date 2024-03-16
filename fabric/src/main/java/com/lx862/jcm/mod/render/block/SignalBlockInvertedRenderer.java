@@ -21,6 +21,6 @@ public class SignalBlockInvertedRenderer<T extends BlockEntityExtension> extends
         if (ConfigEntry.DISABLE_RENDERING.getBool()) return;
 
         float y = (occupiedAspect > 0) == redOnTop ? 0.4375F : 0.0625F;
-        IDrawing.drawTexture(graphicsHolder, -0.125F, y, -0.19375F, 0.125F, y + 0.25F, -0.19375F, facing.getOpposite(), occupiedAspect > 0 ? proceedColor : 0xFFFF0000, MAX_LIGHT_GLOWING);
+        IDrawing.drawTexture(graphicsHolder, -0.125F, y, -0.19375F, 0.125F, y + 0.25F, -0.19375F, facing.getOpposite(), occupiedAspect > 0 ? proceedColor : 0xFFFF0000, GraphicsHolder.getDefaultLight());
     }
 }
