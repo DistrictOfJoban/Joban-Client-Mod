@@ -30,7 +30,7 @@
   "block.jsblock.exit_sign_even": "Cartello di uscita (Orientazione:numero paro)",
   "block.jsblock.faresaver": "Salvaprezzo",
   "block.jsblock.faresaver.currency": "$%d",
-  "block.jsblock.fire_alarm": "Allarme Incendio (RIMUOVERE AL PRIMO UTILIZZO)",
+  "block.jsblock.fire_alarm": "Allarme Incendio",
   "block.jsblock.kcr_name_sign": "Cartello con il nome stazione (Stile KCR)",
   "block.jsblock.kcr_name_sign_station_color": "Cartello con il nome stazione (Stile KCR) (Colore Stazione)",
   "block.jsblock.kcr_emg_stop_sign": "Cartello Freno di emergenza KCR",
@@ -144,11 +144,6 @@
   "gui.jsblock.subsidy_machine.currency": "$",
   "gui.jsblock.subsidy_machine.price": "Quantità di ricarica",
   "gui.jsblock.subsidy_machine.cooldown": "Intervallo (Secondi)",
-
-  "gui.jsblock.mismatched_protocol_update": "Versione Mod Joban Client Incompatibile!\nSei in versione JCM v%s, per poter entrare nel server, devi aggiornare la mod a v%s.",
-  "gui.jsblock.mismatched_protocol_downgrade": "Versione Mod Joban Client Incompatibile!\nSei in versione JCM v%s,per poter entrare nel server, devi usare la versione v%s.",
-  "gui.jsblock.legacy_no_protocol": "Versione Mod Joban Client Incompatibile!\nContatta il proprietario del server ad aggiornare a v%s, oppure usa la versione v%s della mod.",
-
   "gui.jsblock.widget.button.true": "Sì",
   "gui.jsblock.widget.button.false": "no",
   "gui.jsblock.widget.search": "Cerca qui...",

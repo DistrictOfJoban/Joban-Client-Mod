@@ -23,8 +23,7 @@ public final class Blocks {
     public static final BlockRegistryObject DEPARTURE_TIMER = RegistryHelper.registerBlockItem("departure_timer", new DepartureTimerBlock(BlockHelper.createBlockSettings(false, state -> 4).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject EXIT_SIGN_ODD = RegistryHelper.registerBlockItem("exit_sign_odd", new ExitSignOdd(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject EXIT_SIGN_EVEN = RegistryHelper.registerBlockItem("exit_sign_even", new ExitSignEven(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
-    // TODO: WIP block for next release
-    // public static final BlockRegistryObject FIRE_ALARM = RegistryHelper.registerBlockItem("fire_alarm", new FireAlarmWall(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject FIRE_ALARM = RegistryHelper.registerBlockItem("fire_alarm", new FireAlarmWall(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject FARE_SAVER = RegistryHelper.registerBlockItem("faresaver", new FareSaverBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN = RegistryHelper.registerBlockItem("kcr_name_sign", new KCRStationNameSignBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque(), false), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN_STATION_COLOR = RegistryHelper.registerBlockItem("kcr_name_sign_station_color", new KCRStationNameSignBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque(), true), ItemGroups.JCM_MAIN);
@@ -36,14 +35,11 @@ public final class Blocks {
     public static final BlockRegistryObject SUBSIDY_MACHINE = RegistryHelper.registerBlockItem("subsidy_machine", new SubsidyMachineBlock(BlockHelper.createBlockSettings(false).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject STATION_NAME_STANDING = RegistryHelper.registerBlockItem("station_name_standing", new StationNameStandingBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject STATION_CEILING_WRL = RegistryHelper.registerBlockItem("station_ceiling_wrl", new StationCeilingWRL2Block(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
-    // TODO: WIP block for next release
-    // public static final BlockRegistryObject STATION_CEILING_WRL_SINGLE = RegistryHelper.registerBlockItem("station_ceiling_wrl_single", new StationCeilingWRLBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
+     public static final BlockRegistryObject STATION_CEILING_WRL_SINGLE = RegistryHelper.registerBlockItem("station_ceiling_wrl_single", new StationCeilingWRLBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
     public static final BlockRegistryObject STATION_CEILING_WRL_STATION_COLOR = RegistryHelper.registerBlockItem("station_ceiling_wrl_station_color", new StationCeilingWRL2Block(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
-    // TODO: WIP block for next release
-    // public static final BlockRegistryObject STATION_CEILING_WRL_SINGLE_STATION_COLOR = RegistryHelper.registerBlockItem("station_ceiling_wrl_single_station_color", new StationCeilingWRLBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
+    public static final BlockRegistryObject STATION_CEILING_WRL_SINGLE_STATION_COLOR = RegistryHelper.registerBlockItem("station_ceiling_wrl_single_station_color", new StationCeilingWRLBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
     public static final BlockRegistryObject STATION_CEILING_WRL_POLE = RegistryHelper.registerBlockItem("station_ceiling_wrl_pole", new StationCeilingWRL2Pole(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
-    // TODO: WIP block for next release
-    // public static final BlockRegistryObject STATION_CEILING_WRL_POLE_SINGLE = RegistryHelper.registerBlockItem("station_ceiling_wrl_single_pole", new StationCeilingWRLPole(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
+     public static final BlockRegistryObject STATION_CEILING_WRL_POLE_SINGLE = RegistryHelper.registerBlockItem("station_ceiling_wrl_single_pole", new StationCeilingWRLPole(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_CEILING);
     public static final BlockRegistryObject THALES_TICKET_BARRIER_ENTRANCE = RegistryHelper.registerBlockItem("thales_ticket_barrier_entrance", new ThalesTicketBarrier(true), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject THALES_TICKET_BARRIER_EXIT = RegistryHelper.registerBlockItem("thales_ticket_barrier_exit", new ThalesTicketBarrier(false), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject THALES_TICKET_BARRIER_BARE = RegistryHelper.registerBlockItem("thales_ticket_barrier_bare", new ThalesTicketBarrierBareBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
@@ -94,8 +90,7 @@ public final class Blocks {
                 Blocks.CIRCLE_WALL_4,
                 Blocks.CIRCLE_WALL_5,
                 Blocks.CIRCLE_WALL_6,
-                // TODO: WIP block for next release
-                //Blocks.FIRE_ALARM,
+                Blocks.FIRE_ALARM,
                 Blocks.FARE_SAVER,
                 Blocks.KCR_STATION_NAME_SIGN,
                 Blocks.KCR_STATION_NAME_SIGN_STATION_COLOR,
@@ -125,9 +120,8 @@ public final class Blocks {
         RegistryHelperClient.registerStationColoredBlock(
                 KCR_STATION_NAME_SIGN_STATION_COLOR,
                 STATION_NAME_STANDING,
-                STATION_CEILING_WRL_STATION_COLOR
-                // TODO: WIP block for next release
-                //STATION_CEILING_WRL_SINGLE_STATION_COLOR
+                STATION_CEILING_WRL_STATION_COLOR,
+                STATION_CEILING_WRL_SINGLE_STATION_COLOR
         );
     }
 }

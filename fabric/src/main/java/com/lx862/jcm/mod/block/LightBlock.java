@@ -8,7 +8,6 @@ import org.mtr.mapping.tool.HolderBase;
 import java.util.List;
 
 public class LightBlock extends JCMBlock {
-
     public static final IntegerProperty LIGHT_LEVEL = BlockProperties.LIGHT_LEVEL;
 
     public LightBlock(BlockSettings settings) {
