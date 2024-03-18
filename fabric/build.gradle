@@ -25,7 +25,6 @@ dependencies {
     minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
     mappings "net.fabricmc:yarn:${yarn_version}:v2"
     modImplementation "org.mtr:MTR-fabric-${rootProject.minecraft_version}:${rootProject.mtr_version}"
-//    shadowImplementation ("org.mtr:Minecraft-Mappings-fabric-${rootProject.minecraft_version}:0.0.1-dev")
     modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
     modApi "com.terraformersmc:modmenu:${mod_menu_version}"
@@ -70,12 +69,6 @@ jar {
         rename { "${it}_${base.archivesName.get()}"}
     }
 }
-
-//remapJar {
-//    dependsOn(shadowJar)
-//    mustRunAfter(shadowJar)
-//    inputFile = file(archivePath)
-//}
 
 tasks.register('moveBuildFile', Copy) {
     from "${project.projectDir}/build/libs/${base.archivesName.get()}-${version}.jar"

@@ -1,6 +1,8 @@
 package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.block.*;
+import com.lx862.jcm.mod.data.BlockProperties;
+import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.BlockHelper;
@@ -26,6 +28,7 @@ public final class Blocks {
     public static final BlockRegistryObject FARE_SAVER = RegistryHelper.registerBlockItem("faresaver", new FareSaverBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN = RegistryHelper.registerBlockItem("kcr_name_sign", new KCRStationNameSignBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque(), false), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN_STATION_COLOR = RegistryHelper.registerBlockItem("kcr_name_sign_station_color", new KCRStationNameSignBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque(), true), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject LIGHT_BLOCK = RegistryHelper.registerBlockItem("light_block", new LightBlock(BlockHelper.createBlockSettings(false, state -> BlockUtil.getProperty(state, BlockProperties.LIGHT_LEVEL)).strength(1.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject LIGHT_LANTERN = RegistryHelper.registerBlockItem("light_lantern", new LightLanternBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject MTR_STAIRS = RegistryHelper.registerBlockItem("mtr_stairs", new MTRStairsBlock(BlockHelper.createBlockSettings(false).strength(4.0f)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject OPERATOR_BUTTON = RegistryHelper.registerBlockItem("operator_button", new OperatorButtonBlock(BlockHelper.createBlockSettings(false, state -> 5).nonOpaque(), 40), ItemGroups.JCM_MAIN);

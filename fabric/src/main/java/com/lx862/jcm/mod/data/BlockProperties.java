@@ -15,6 +15,7 @@ public class BlockProperties {
     public static final BooleanProperty HORIZONTAL_IS_LEFT = BooleanProperty.of("left");
     public static final EnumProperty<IBlock.DoubleBlockHalf> VERTICAL_2 = IBlock.HALF;
     public static final IntegerProperty VERTICAL_PART_3 = IntegerProperty.of("part", 0, 2);
+    public static final IntegerProperty LIGHT_LEVEL = IntegerProperty.of("level", 0, 15);
     public static final BooleanProperty POWERED = BooleanProperty.of("powered");
     public static final BooleanProperty IS_SLAB = BooleanProperty.of("is_slab");
     public static final BooleanProperty TOP = BooleanProperty.of("top");
