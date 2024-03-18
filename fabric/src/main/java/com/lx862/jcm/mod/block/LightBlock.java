@@ -2,6 +2,9 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.JCMBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
+import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.util.TextCategory;
+import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
@@ -52,7 +55,10 @@ public class LightBlock extends JCMBlock {
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if(player.isHolding(this.asItem2())) {
-            world.setBlockState(pos, state.cycle(new Property<>(LIGHT_LEVEL.data)));
+            BlockState newState = state.cycle(new Property<>(LIGHT_LEVEL.data));
+            world.setBlockState(pos, newState);
+
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "light_block.success", BlockUtil.getProperty(newState, new Property<>(LIGHT_LEVEL.data)))), true);
         }
     }
 
