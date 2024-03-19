@@ -46,4 +46,8 @@ public abstract class TextComponent extends DrawCall {
         if(split.length == 0) return "";
         return split[((int)JCMClientStats.getGameTick() / SWITCH_LANG_DURATION) % split.length];
     }
+
+    protected String cycleString(String... string) {
+        return string[((int)JCMClientStats.getGameTick() / SWITCH_LANG_DURATION) % string.length];
+    }
 }

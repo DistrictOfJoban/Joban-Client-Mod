@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.pids.preset.components;
 
+import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
@@ -23,10 +24,16 @@ public class ETAComponent extends TextComponent {
     public void render(GraphicsHolder graphicsHolder, World world, Direction facing) {
         long remTime = arrival.getArrival() - System.currentTimeMillis();
         int remSec = (int)(remTime / 1000L);
+        if(remSec <= 0) return;
 
-        if(remSec > 0) {
-            MutableText etaText = remSec >= 60 ? TextUtil.translatable("gui.mtr.arrival_min", remSec / 60) : TextUtil.translatable("gui.mtr.arrival_sec", remSec % 60);
-            drawText(graphicsHolder, TextAlignment.RIGHT, facing, new TextInfo(etaText), TextOverflowMode.STRETCH);
+        final MutableText etaText;
+
+        if(remSec >= 60) {
+            etaText = TextUtil.translatable(cycleString("gui.mtr.arrival_min_cjk", "gui.mtr.arrival_min"), remSec / 60);
+        } else {
+            etaText = TextUtil.translatable(cycleString("gui.mtr.arrival_sec_cjk", "gui.mtr.arrival_sec"), remSec % 60);
         }
+
+        drawText(graphicsHolder, TextAlignment.RIGHT, facing, new TextInfo(etaText), TextOverflowMode.STRETCH);
     }
 }
