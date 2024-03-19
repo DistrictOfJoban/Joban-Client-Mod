@@ -97,7 +97,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
 
     @Override
     public int getPreviewTextColor() {
-        return ARGB_BLACK;
+        return TEXT_COLOR;
     }
 
     @Override

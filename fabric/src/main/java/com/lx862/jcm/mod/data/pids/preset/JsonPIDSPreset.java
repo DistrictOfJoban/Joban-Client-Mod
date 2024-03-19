@@ -29,21 +29,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class JsonPIDSPreset extends PIDSPresetBase {
+    private static final int PIDS_MARGIN = 7;
+    private static final float ARRIVAL_TEXT_SCALE = 1.35F;
+    private static final int HEADER_HEIGHT = 9;
+    private static final Identifier ICON_WEATHER_SUNNY = Constants.id("textures/block/pids/weather_sunny.png");
+    private static final Identifier ICON_WEATHER_RAINY = Constants.id("textures/block/pids/weather_rainy.png");
+    private static final Identifier ICON_WEATHER_THUNDER = Constants.id("textures/block/pids/weather_thunder.png");
+    private static final Identifier TEXTURE_PLATFORM_CIRCLE = Constants.id("textures/block/pids/plat_circle.png");
     private final Identifier background;
     private final String fontId;
     private final TextOverflowMode textOverflowMode;
     private final boolean showClock;
     private final boolean showWeather;
+    private final boolean topPadding;
     private final int textColor;
     private final boolean[] rowHidden;
-    private static final int PIDS_MARGIN = 7;
-    private static final float ARRIVAL_TEXT_SCALE = 1.35F;
-    private static final int HEADER_HEIGHT = 11;
-    private static final Identifier ICON_WEATHER_SUNNY = Constants.id("textures/block/pids/weather_sunny.png");
-    private static final Identifier ICON_WEATHER_RAINY = Constants.id("textures/block/pids/weather_rainy.png");
-    private static final Identifier ICON_WEATHER_THUNDER = Constants.id("textures/block/pids/weather_thunder.png");
-    private static final Identifier TEXTURE_PLATFORM_CIRCLE = Constants.id("textures/block/pids/plat_circle.png");
-    public JsonPIDSPreset(String id, @Nullable String name, @Nullable Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, int textColor) {
+
+    public JsonPIDSPreset(String id, @Nullable String name, @Nullable Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, int textColor) {
         super(id, name, false);
         this.background = background;
         this.showClock = showClock;
@@ -51,6 +53,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         this.textColor = textColor;
         this.fontId = fontId == null ? "mtr:mtr" : fontId;
         this.rowHidden = rowHidden;
+        this.topPadding = topPadding;
         this.textOverflowMode = textOverflowMode;
     }
 
@@ -58,6 +61,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         String id = jsonObject.get("id").getAsString();
         boolean showWeather = jsonObject.has("showWeather") && jsonObject.get("showWeather").getAsBoolean();
         boolean showClock = jsonObject.has("showClock") && jsonObject.get("showClock").getAsBoolean();
+        boolean topPadding = !jsonObject.has("topPadding") ? true : jsonObject.get("topPadding").getAsBoolean();
         boolean[] rowHidden;
 
         int textColor = ARGB_BLACK;
@@ -98,7 +102,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
             background = backgroundId;
         }
-        return new JsonPIDSPreset(id, name, background, font, textOverflowMode, rowHidden, showClock, showWeather, textColor);
+        return new JsonPIDSPreset(id, name, background, font, textOverflowMode, rowHidden, showClock, showWeather, topPadding, textColor);
     }
 
     @Override
@@ -123,9 +127,10 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
+        int headerHeight = topPadding ? HEADER_HEIGHT : 0;
         int startX = PIDS_MARGIN;
         int contentWidth = width - (PIDS_MARGIN * 2);
-        int contentHeight = height - HEADER_HEIGHT;
+        int contentHeight = height - headerHeight - 3;
 
         // Draw Background
         graphicsHolder.createVertexConsumer(RenderLayer.getText(getBackground()));
@@ -147,7 +152,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
             components.add(new WeatherIconComponent(ICON_WEATHER_SUNNY, ICON_WEATHER_RAINY, ICON_WEATHER_THUNDER, 0, 0, 11, 11));
         }
 
-        drawArrivals(arrivals, rowHidden, 0, 15, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden(), components);
+        drawArrivals(arrivals, rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden(), components);
 
         List<DrawCall> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<DrawCall> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());

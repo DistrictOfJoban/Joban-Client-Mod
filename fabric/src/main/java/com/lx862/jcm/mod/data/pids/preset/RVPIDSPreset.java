@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class RVPIDSPreset extends PIDSPresetBase {
-    private static final int HEADER_HEIGHT = 11;
+    private static final int HEADER_HEIGHT = 9;
     private static final int PIDS_MARGIN = 7;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
     private static final int TEXT_COLOR = ARGB_BLACK;
@@ -35,7 +35,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         int startX = PIDS_MARGIN;
         int contentWidth = width - (PIDS_MARGIN * 2);
-        int contentHeight = height - HEADER_HEIGHT;
+        int contentHeight = height - HEADER_HEIGHT - 3;
 
         // Draw Background
         graphicsHolder.createVertexConsumer(RenderLayer.getText(getBackground()));
@@ -53,7 +53,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
         components.add(new ClockComponent(getFont(), ARGB_WHITE, contentWidth, 2, contentWidth, 10));
         components.add(new WeatherIconComponent(ICON_WEATHER_SUNNY, ICON_WEATHER_RAINY, ICON_WEATHER_THUNDER, 0, 0, 11, 11));
 
-        drawArrivals(arrivals, rowHidden, 0, 15, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden(), components);
+        drawArrivals(arrivals, rowHidden, 0, HEADER_HEIGHT + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden(), components);
 
         List<DrawCall> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<DrawCall> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
