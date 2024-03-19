@@ -20,10 +20,10 @@ public class WeatherIconComponent extends TextureComponent {
     @Override
     public void render(GraphicsHolder graphicsHolder, World world, Direction facing) {
         Identifier textureId;
-        if(world.isRaining()) {
-            textureId = iconRainy;
-        } else if(world.isThundering()) {
+        if(world.isThundering()) {
             textureId = iconThunder;
+        } else if(world.isRaining()) {
+            textureId = iconRainy;
         } else {
             textureId = iconSunny;
         }

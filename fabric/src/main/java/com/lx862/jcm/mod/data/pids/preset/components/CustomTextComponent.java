@@ -21,6 +21,6 @@ public class CustomTextComponent extends TextComponent {
 
     @Override
     public void render(GraphicsHolder graphicsHolder, World world, Direction facing) {
-        drawText(graphicsHolder, textAlignment, facing, new TextInfo(text), textOverflowMode);
+        drawText(graphicsHolder, textAlignment, facing, new TextInfo(cycleString(text)), textOverflowMode);
     }
 }

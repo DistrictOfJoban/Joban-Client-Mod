@@ -8,6 +8,8 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.DrawCall;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.render.TextOverflowMode;
+import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
@@ -43,9 +45,8 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         }
 
         graphicsHolder.translate(startX, 0, -0.5);
-
         List<DrawCall> components = new ArrayList<>();
-        drawArrivals(arrivals, rowHidden, 0, 6, contentWidth, height - 2, be.getRowAmount(), be.platformNumberHidden(), components);
+        drawArrivals(arrivals, be.getCustomMessages(), rowHidden, 0, 6, contentWidth, height - 2, be.getRowAmount(), be.platformNumberHidden(), components);
 
         List<DrawCall> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<DrawCall> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
@@ -67,18 +68,22 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         }
     }
 
-    private void drawArrivals(ArrivalsResponse arrivals, boolean[] rowHidden, int x, int y, int width, int height, int rows, boolean hidePlatform, List<DrawCall> drawCalls) {
+    private void drawArrivals(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int width, int height, int rows, boolean hidePlatform, List<DrawCall> drawCalls) {
         int arrivalIndex = 0;
         double rowY = y;
         for(int i = 0; i < rows; i++) {
             if(arrivalIndex >= arrivals.getArrivals().size()) return;
 
-            if(!rowHidden[i]) {
-                ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
-                float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                drawCalls.add(new DestinationComponent(arrival, getFont(), TEXT_COLOR, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
-                drawCalls.add(new ETAComponent(arrival, getFont(), TEXT_COLOR, width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
-                arrivalIndex++;
+            if(!customMessages[i].isEmpty()) {
+                drawCalls.add(new CustomTextComponent(getFont(), TEXT_COLOR, TextAlignment.LEFT, customMessages[i], TextOverflowMode.STRETCH, x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
+            } else {
+                if(!rowHidden[i]) {
+                    ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
+                    float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
+                    drawCalls.add(new DestinationComponent(arrival, getFont(), TEXT_COLOR, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+                    drawCalls.add(new ETAComponent(arrival, getFont(), TEXT_COLOR, width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                    arrivalIndex++;
+                }
             }
 
             rowY += (height / 5.25) * ARRIVAL_TEXT_SCALE;
