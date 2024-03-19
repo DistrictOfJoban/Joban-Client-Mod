@@ -24,18 +24,18 @@ public class RegistryHelper {
         return registerBlockItem(id, new Block(block), itemGroup);
     }
 
-    public static BlockRegistryObject registerBlock(String id, Block block) {
+    public static BlockRegistryObject registerBlock(String id, net.minecraft.block.Block block) {
         // Registry.register(Registries.BLOCK, new Identifier(Constants.MOD_ID, id), block);
-        return REGISTRY.registerBlock(new Identifier(Constants.MOD_ID, id), () -> block);
+        return REGISTRY.registerBlock(new Identifier(Constants.MOD_ID, id), () -> new Block(block));
     }
 
-    public static ItemRegistryObject registerItem(String id, Item item, CreativeModeTabHolder itemGroup) {
+    public static ItemRegistryObject registerItem(String id, Function<ItemSettings, org.mtr.mapping.holder.Item> callback, CreativeModeTabHolder itemGroup) {
         /* Registry.register(Registries.ITEM, new Identifier(Constants.MOD_ID, id), item);
         if(itemGroup != null) {
             ItemGroupRegistry.addItem(item, itemGroup);
         }
         */
-        return REGISTRY.registerItem(new Identifier(Constants.MOD_ID, id), (itemSettings) -> item, itemGroup);
+        return REGISTRY.registerItem(new Identifier(Constants.MOD_ID, id), callback, itemGroup);
     }
 
     public static <T extends BlockEntityExtension> BlockEntityTypeRegistryObject<T> registerBlockEntity(String id, BiFunction<BlockPos, BlockState, T> constructor, BlockRegistryObject associatedBlock) {

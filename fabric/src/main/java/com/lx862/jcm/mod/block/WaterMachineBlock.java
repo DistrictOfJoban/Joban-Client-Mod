@@ -3,8 +3,6 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.Vertical2Block;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
-import net.minecraft.potion.PotionUtil;
-import net.minecraft.potion.Potions;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.PlayerHelper;
 
@@ -35,8 +33,7 @@ public class WaterMachineBlock extends Vertical2Block {
 
     private static void fillBottleForPlayer(PlayerEntity player, Hand hand) {
         ItemStack newWaterBottle = new ItemStack(ItemConvertible.cast(Items.getPotionMapped()));
-        PotionUtil.setPotion(newWaterBottle.data, Potions.WATER);
-
+        newWaterBottle.getOrCreateTag().putString("Potion", "water");
         offerOrDrop(player, hand, newWaterBottle);
         playSplashSoundToPlayer(player);
     }

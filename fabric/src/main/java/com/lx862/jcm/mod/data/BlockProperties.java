@@ -1,17 +1,17 @@
 package com.lx862.jcm.mod.data;
 
-import net.minecraft.state.property.Properties;
 import org.mtr.mapping.holder.BooleanProperty;
 import org.mtr.mapping.holder.DirectionProperty;
 import org.mtr.mapping.holder.EnumProperty;
 import org.mtr.mapping.holder.IntegerProperty;
+import org.mtr.mapping.mapper.DirectionHelper;
 import org.mtr.mod.block.IBlock;
 
 /**
  * Stores all block properties JCM uses. Block classes from JCM should reference the block properties in here
  */
 public class BlockProperties {
-    public static final DirectionProperty FACING = new DirectionProperty(Properties.HORIZONTAL_FACING);
+    public static final DirectionProperty FACING = DirectionHelper.FACING;
     public static final BooleanProperty HORIZONTAL_IS_LEFT = BooleanProperty.of("left");
     public static final EnumProperty<IBlock.DoubleBlockHalf> VERTICAL_2 = IBlock.HALF;
     public static final IntegerProperty VERTICAL_PART_3 = IntegerProperty.of("part", 0, 2);

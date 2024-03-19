@@ -2,8 +2,8 @@ package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
-import net.minecraft.block.enums.SlabType;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.SlabBlockExtension;
 import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
@@ -35,8 +35,8 @@ public abstract class SlabExtendableBlock extends DirectionalBlock {
     public static boolean shouldExtendForSlab(WorldAccess world, BlockPos pos) {
         BlockState blockTop = world.getBlockState(pos.up());
 
-        if (blockTop.getBlock().data instanceof net.minecraft.block.SlabBlock) {
-            return blockTop.get(new Property<>(net.minecraft.block.SlabBlock.TYPE)) == SlabType.TOP;
+        if (blockTop.getBlock().data instanceof SlabBlockExtension) {
+            return SlabBlockExtension.getType(blockTop) == SlabType.TOP;
         } else {
             return false;
         }

@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.block.*;
+import com.lx862.jcm.mod.block.APGGlassEndDRL;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -9,6 +10,9 @@ import org.mtr.mapping.mapper.BlockHelper;
 import org.mtr.mapping.registry.BlockRegistryObject;
 
 public final class Blocks {
+    public static final BlockRegistryObject APG_DOOR_DRL = RegistryHelper.registerBlock("apg_door_drl", new APGDoorDRL());
+    public static final BlockRegistryObject APG_GLASS_DRL = RegistryHelper.registerBlock("apg_glass_drl", new APGGlassDRL());
+    public static final BlockRegistryObject APG_GLASS_END_DRL = RegistryHelper.registerBlock("apg_glass_end_drl", new APGGlassEndDRL());
     public static final BlockRegistryObject BUTTERFLY_LIGHT = RegistryHelper.registerBlockItem("butterfly_light", new ButterflyLightBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject BUFFER_STOP = RegistryHelper.registerBlockItem("buffer_stop", new BufferStopBlock(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque()), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject CIRCLE_WALL_1 = RegistryHelper.registerBlockItem("circle_wall_1", new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f)), ItemGroups.JCM_MAIN);
@@ -82,34 +86,37 @@ public final class Blocks {
     public static void registerClient() {
         /* Define Render Layer (Texture transparency etc.) */
         RegistryHelperClient.registerBlockRenderType(RenderLayer.getCutout(),
-                Blocks.BUFFER_STOP,
-                Blocks.BUTTERFLY_LIGHT,
-                Blocks.CIRCLE_WALL_1,
-                Blocks.CIRCLE_WALL_2,
-                Blocks.CIRCLE_WALL_3,
-                Blocks.CIRCLE_WALL_4,
-                Blocks.CIRCLE_WALL_5,
-                Blocks.CIRCLE_WALL_6,
-                Blocks.FIRE_ALARM,
-                Blocks.FARE_SAVER,
-                Blocks.KCR_STATION_NAME_SIGN,
-                Blocks.KCR_STATION_NAME_SIGN_STATION_COLOR,
-                Blocks.KCR_EMG_STOP_SIGN,
-                Blocks.MTR_ENQUIRY_MACHINE,
-                Blocks.RV_ENQUIRY_MACHINE,
-                Blocks.SUBSIDY_MACHINE,
-                Blocks.SPOT_LAMP,
-                Blocks.HELPLINE_1,
-                Blocks.HELPLINE_2,
-                Blocks.HELPLINE_STANDING,
-                Blocks.HELPLINE_STANDING_EAL,
-                Blocks.SIL_EMG_STOP_BUTTON,
-                Blocks.STATION_NAME_STANDING,
-                Blocks.TML_EMG_STOP_BUTTON,
-                Blocks.THALES_TICKET_BARRIER_ENTRANCE,
-                Blocks.THALES_TICKET_BARRIER_EXIT,
-                Blocks.MTR_TRESPASS_SIGN,
-                Blocks.WATER_MACHINE
+                APG_DOOR_DRL,
+                APG_GLASS_DRL,
+                APG_GLASS_END_DRL,
+                BUFFER_STOP,
+                BUTTERFLY_LIGHT,
+                CIRCLE_WALL_1,
+                CIRCLE_WALL_2,
+                CIRCLE_WALL_3,
+                CIRCLE_WALL_4,
+                CIRCLE_WALL_5,
+                CIRCLE_WALL_6,
+                FIRE_ALARM,
+                FARE_SAVER,
+                KCR_STATION_NAME_SIGN,
+                KCR_STATION_NAME_SIGN_STATION_COLOR,
+                KCR_EMG_STOP_SIGN,
+                MTR_ENQUIRY_MACHINE,
+                RV_ENQUIRY_MACHINE,
+                SUBSIDY_MACHINE,
+                SPOT_LAMP,
+                HELPLINE_2,
+                HELPLINE_1,
+                HELPLINE_STANDING,
+                HELPLINE_STANDING_EAL,
+                SIL_EMG_STOP_BUTTON,
+                STATION_NAME_STANDING,
+                TML_EMG_STOP_BUTTON,
+                THALES_TICKET_BARRIER_ENTRANCE,
+                THALES_TICKET_BARRIER_EXIT,
+                MTR_TRESPASS_SIGN,
+                WATER_MACHINE
         );
 
         RegistryHelperClient.registerBlockRenderType(RenderLayer.getTranslucent(),
