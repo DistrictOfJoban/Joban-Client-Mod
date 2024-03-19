@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ButterflyLightRenderer extends JCMBlockEntityRenderer<ButterflyLightBlockEntity> {
-    private static final Identifier BUTTERFLY_LIGHT_TEXTURE = Constants.id("textures/block/butterfly_light_dotmatrix.png");
+    private static final Identifier BUTTERFLY_LIGHT_TEXTURE = new Identifier(Constants.MOD_ID, "textures/block/butterfly_light_dotmatrix.png");
     public ButterflyLightRenderer(Argument dispatcher) {
         super(dispatcher);
     }

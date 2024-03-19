@@ -32,10 +32,10 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private static final int PIDS_MARGIN = 7;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
     private static final int HEADER_HEIGHT = 9;
-    private static final Identifier ICON_WEATHER_SUNNY = Constants.id("textures/block/pids/weather_sunny.png");
-    private static final Identifier ICON_WEATHER_RAINY = Constants.id("textures/block/pids/weather_rainy.png");
-    private static final Identifier ICON_WEATHER_THUNDER = Constants.id("textures/block/pids/weather_thunder.png");
-    private static final Identifier TEXTURE_PLATFORM_CIRCLE = Constants.id("textures/block/pids/plat_circle.png");
+    private static final Identifier ICON_WEATHER_SUNNY = new Identifier(Constants.MOD_ID, "textures/block/pids/weather_sunny.png");
+    private static final Identifier ICON_WEATHER_RAINY = new Identifier(Constants.MOD_ID, "textures/block/pids/weather_rainy.png");
+    private static final Identifier ICON_WEATHER_THUNDER = new Identifier(Constants.MOD_ID, "textures/block/pids/weather_thunder.png");
+    private static final Identifier TEXTURE_PLATFORM_CIRCLE = new Identifier(Constants.MOD_ID, "textures/block/pids/plat_circle.png");
     private final Identifier background;
     private final String fontId;
     private final TextOverflowMode textOverflowMode;

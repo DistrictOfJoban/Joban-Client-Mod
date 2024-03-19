@@ -97,7 +97,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
 
     @Override
     public Identifier getBackground() {
-        return Constants.id("textures/block/pids/black.png");
+        return new Identifier(Constants.MOD_ID, "textures/block/pids/black.png");
     }
 
     @Override
