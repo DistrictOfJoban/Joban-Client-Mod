@@ -15,7 +15,6 @@ public class RVPIDSPole extends PoleBlock {
         return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 7.5, 0, 8.5, 8.5, 16, 9.5);
     }
 
-
     @Override
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
         BlockState superState = super.getPlacementState2(ctx);

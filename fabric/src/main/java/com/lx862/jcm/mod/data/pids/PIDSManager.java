@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.data.pids;
 
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
+import com.lx862.jcm.mod.data.pids.preset.LCDPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.data.pids.preset.RVPIDSPreset;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -49,6 +50,7 @@ public class PIDSManager {
 
     static {
         presetList.put("rv_pids", new RVPIDSPreset());
+        presetList.put("lcd_pids", new LCDPIDSPreset());
     }
 
     private static void clearAll() {

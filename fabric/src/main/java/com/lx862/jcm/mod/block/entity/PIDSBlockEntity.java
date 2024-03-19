@@ -37,7 +37,6 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
 
         this.hidePlatformNumber = compoundTag.getBoolean("hide_platform_number");
         this.pidsPresetId = compoundTag.getString("preset_id");
-        if(this.pidsPresetId.isEmpty()) this.pidsPresetId = getDefaultPresetId();
     }
 
     @Override
@@ -80,7 +79,7 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
     }
 
     public String getPresetId() {
-        return pidsPresetId;
+        return pidsPresetId.isEmpty() ? getDefaultPresetId() : pidsPresetId;
     }
 
     public abstract String getDefaultPresetId();

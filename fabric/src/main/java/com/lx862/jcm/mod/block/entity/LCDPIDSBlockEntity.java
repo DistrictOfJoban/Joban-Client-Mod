@@ -11,7 +11,7 @@ public class LCDPIDSBlockEntity extends PIDSBlockEntity {
 
     @Override
     public String getDefaultPresetId() {
-        return "rv_pids";
+        return "lcd_pids";
     }
 
     @Override
