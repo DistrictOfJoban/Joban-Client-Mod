@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 public class LCDPIDSPreset extends PIDSPresetBase {
     private static final int PIDS_MARGIN = 5;
     private static final float ARRIVAL_TEXT_SCALE = 1.3F;
-    private static final int TEXT_COLOR = 0xFFEADD9A;
     public LCDPIDSPreset() {
         super("lcd_pids", "Hong Kong LCD PIDS", true);
     }
@@ -75,13 +74,13 @@ public class LCDPIDSPreset extends PIDSPresetBase {
             if(arrivalIndex >= arrivals.getArrivals().size()) return;
 
             if(!customMessages[i].isEmpty()) {
-                drawCalls.add(new CustomTextComponent(getFont(), TEXT_COLOR, TextAlignment.LEFT, customMessages[i], TextOverflowMode.STRETCH, x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
+                drawCalls.add(new CustomTextComponent(getFont(), getTextColor(), TextAlignment.LEFT, customMessages[i], TextOverflowMode.STRETCH, x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
             } else {
                 if(!rowHidden[i]) {
                     ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    drawCalls.add(new DestinationComponent(arrival, getFont(), TEXT_COLOR, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
-                    drawCalls.add(new ETAComponent(arrival, getFont(), TEXT_COLOR, width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                    drawCalls.add(new DestinationComponent(arrival, getFont(), getTextColor(), x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+                    drawCalls.add(new ETAComponent(arrival, getFont(), getTextColor(), width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
                     arrivalIndex++;
                 }
             }
@@ -101,8 +100,8 @@ public class LCDPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public int getPreviewTextColor() {
-        return TEXT_COLOR;
+    public int getTextColor() {
+        return 0xFFEADD9A;
     }
 
     @Override

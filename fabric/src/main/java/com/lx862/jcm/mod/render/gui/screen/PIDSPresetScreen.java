@@ -133,9 +133,9 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
             for(int i = 0; i < 4; i++) {
                 if(preset.isRowHidden(i)) continue;
                 double curY = startY + offset + ((i+1) * perRow);
-                GuiHelper.drawRectangle(guiDrawing, startX+1.5, curY, width * 0.55, rowHeight, preset.getPreviewTextColor());
-                GuiHelper.drawRectangle(guiDrawing, startX + (width * 0.65), curY, rowHeight, rowHeight, preset.getPreviewTextColor());
-                GuiHelper.drawRectangle(guiDrawing, startX + (width * 0.75), curY, (width * 0.2)-0.5, rowHeight, preset.getPreviewTextColor());
+                GuiHelper.drawRectangle(guiDrawing, startX+1.5, curY, width * 0.55, rowHeight, preset.getTextColor());
+                GuiHelper.drawRectangle(guiDrawing, startX + (width * 0.65), curY, rowHeight, rowHeight, preset.getTextColor());
+                GuiHelper.drawRectangle(guiDrawing, startX + (width * 0.75), curY, (width * 0.2)-0.5, rowHeight, preset.getTextColor());
             }
         }
     }

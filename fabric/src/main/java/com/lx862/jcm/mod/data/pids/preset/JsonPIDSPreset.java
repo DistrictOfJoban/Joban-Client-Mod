@@ -10,6 +10,7 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.DrawCall;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.render.TextOverflowMode;
@@ -116,7 +117,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public int getPreviewTextColor() {
+    public int getTextColor() {
         return textColor;
     }
 
@@ -152,7 +153,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
             components.add(new WeatherIconComponent(ICON_WEATHER_SUNNY, ICON_WEATHER_RAINY, ICON_WEATHER_THUNDER, 0, 0, 11, 11));
         }
 
-        drawArrivals(arrivals, rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden(), components);
+        drawArrivals(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden(), components);
 
         List<DrawCall> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<DrawCall> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
@@ -174,24 +175,28 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         }
     }
 
-    private void drawArrivals(ArrivalsResponse arrivals, boolean[] rowHidden, int x, int y, int width, int height, int rows, boolean hidePlatform, List<DrawCall> drawCalls) {
+    private void drawArrivals(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int width, int height, int rows, boolean hidePlatform, List<DrawCall> drawCalls) {
         int arrivalIndex = 0;
         double rowY = y;
         for(int i = 0; i < rows; i++) {
             if(arrivalIndex >= arrivals.getArrivals().size()) return;
 
-            if(!rowHidden[i]) {
-                ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
-                float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                drawCalls.add(new DestinationComponent(arrival, getFont(), textColor, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+            if(!customMessages[i].isEmpty()) {
+                drawCalls.add(new CustomTextComponent(getFont(), getTextColor(), TextAlignment.LEFT, customMessages[i], TextOverflowMode.STRETCH, x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
+            } else {
+                if (!rowHidden[i]) {
+                    ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
+                    float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
+                    drawCalls.add(new DestinationComponent(arrival, getFont(), textColor, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
 
-                if(!hidePlatform) {
-                    drawCalls.add(new PlatformComponent(arrival, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
-                    drawCalls.add(new PlatformCircleComponent(arrival, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
+                    if (!hidePlatform) {
+                        drawCalls.add(new PlatformComponent(arrival, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
+                        drawCalls.add(new PlatformCircleComponent(arrival, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
+                    }
+
+                    drawCalls.add(new ETAComponent(arrival, getFont(), textColor, width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                    arrivalIndex++;
                 }
-
-                drawCalls.add(new ETAComponent(arrival, getFont(), textColor, width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
-                arrivalIndex++;
             }
 
             rowY += (height / 5.25) * ARRIVAL_TEXT_SCALE;

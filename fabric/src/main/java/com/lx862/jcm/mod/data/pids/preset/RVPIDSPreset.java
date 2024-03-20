@@ -24,7 +24,6 @@ public class RVPIDSPreset extends PIDSPresetBase {
     private static final int HEADER_HEIGHT = 9;
     private static final int PIDS_MARGIN = 7;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
-    private static final int TEXT_COLOR = ARGB_BLACK;
     private static final Identifier TEXTURE_PLATFORM_CIRCLE = new Identifier(Constants.MOD_ID, "textures/block/pids/plat_circle.png");
     private static final Identifier TEXTURE_BACKGROUND = new Identifier(Constants.MOD_ID, "textures/block/pids/rv_default.png");
     private static final Identifier ICON_WEATHER_SUNNY = new Identifier(Constants.MOD_ID, "textures/block/pids/weather_sunny.png");
@@ -84,19 +83,19 @@ public class RVPIDSPreset extends PIDSPresetBase {
             if(arrivalIndex >= arrivals.getArrivals().size()) return;
 
             if(!customMessages[i].isEmpty()) {
-                drawCalls.add(new CustomTextComponent(getFont(), TEXT_COLOR, TextAlignment.LEFT, customMessages[i], TextOverflowMode.STRETCH, x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
+                drawCalls.add(new CustomTextComponent(getFont(), getTextColor(), TextAlignment.LEFT, customMessages[i], TextOverflowMode.STRETCH, x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
             } else {
                 if(!rowHidden[i]) {
                     ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    drawCalls.add(new DestinationComponent(arrival, getFont(), TEXT_COLOR, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+                    drawCalls.add(new DestinationComponent(arrival, getFont(), getTextColor(), x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
 
                     if(!hidePlatform) {
                         drawCalls.add(new PlatformComponent(arrival, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
                         drawCalls.add(new PlatformCircleComponent(arrival, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
                     }
 
-                    drawCalls.add(new ETAComponent(arrival, getFont(), TEXT_COLOR, width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                    drawCalls.add(new ETAComponent(arrival, getFont(), getTextColor(), width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
                     arrivalIndex++;
                 }
             }
@@ -116,7 +115,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public int getPreviewTextColor() {
+    public int getTextColor() {
         return ARGB_BLACK;
     }
 
