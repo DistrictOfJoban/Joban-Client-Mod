@@ -1,11 +1,8 @@
 package com.lx862.jcm.mod.network.block;
 
-import com.lx862.jcm.mod.block.JCMPIDSBlock;
-import com.lx862.jcm.mod.block.RVPIDSBlock;
-import com.lx862.jcm.mod.block.base.Horizontal2MirroredBlock;
 import com.lx862.jcm.mod.block.base.JCMBlock;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.data.BlockProperties;
+import com.lx862.jcm.mod.network.JCMPacketHandlerHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
 import org.mtr.mapping.holder.*;
@@ -23,22 +20,14 @@ public class PIDSUpdatePacket extends PacketHandler {
 
     public PIDSUpdatePacket(PacketBufferReceiver packetBufferReceiver) {
         this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
-        int filteredPlatformSize = packetBufferReceiver.readInt();
         int rows = packetBufferReceiver.readInt();
         this.customMessages = new String[rows];
         this.rowHidden = new boolean[rows];
         this.filteredPlatforms = new LongAVLTreeSet();
 
-        for(int i = 0; i < rows; i++) {
-            this.customMessages[i] = packetBufferReceiver.readString();
-        }
-        for(int i = 0; i < rows; i++) {
-            this.rowHidden[i] = packetBufferReceiver.readBoolean();
-        }
-
-        for(int i = 0; i < filteredPlatformSize; i++) {
-            filteredPlatforms.add(packetBufferReceiver.readLong());
-        }
+        JCMPacketHandlerHelper.readArray(packetBufferReceiver, i -> this.customMessages[i] = packetBufferReceiver.readString());
+        JCMPacketHandlerHelper.readArray(packetBufferReceiver, i -> this.rowHidden[i] = packetBufferReceiver.readBoolean());
+        JCMPacketHandlerHelper.readArray(packetBufferReceiver, i -> filteredPlatforms.add(packetBufferReceiver.readLong()));
 
         this.hidePlatformNumber = packetBufferReceiver.readBoolean();
         this.presetId = packetBufferReceiver.readString();
@@ -56,19 +45,10 @@ public class PIDSUpdatePacket extends PacketHandler {
     @Override
     public void write(PacketBufferSender packetBufferSender) {
         packetBufferSender.writeLong(blockPos.asLong());
-        packetBufferSender.writeInt(filteredPlatforms.size());
         packetBufferSender.writeInt(customMessages.length);
-
-        for(String customMessage : customMessages) {
-            packetBufferSender.writeString(customMessage);
-        }
-        for(boolean hidePlatform : rowHidden) {
-            packetBufferSender.writeBoolean(hidePlatform);
-        }
-        for(long platform : filteredPlatforms) {
-            packetBufferSender.writeLong(platform);
-        }
-
+        JCMPacketHandlerHelper.writeArray(packetBufferSender, customMessages, i -> packetBufferSender.writeString(customMessages[i]));
+        JCMPacketHandlerHelper.writeArray(packetBufferSender, rowHidden, i -> packetBufferSender.writeBoolean(rowHidden[i]));
+        JCMPacketHandlerHelper.writeArray(packetBufferSender, filteredPlatforms, packetBufferSender::writeLong);
         packetBufferSender.writeBoolean(hidePlatformNumber);
         packetBufferSender.writeString(presetId);
     }

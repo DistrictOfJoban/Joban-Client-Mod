@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.network.gui;
 
+import com.lx862.jcm.mod.network.JCMPacketHandlerHelper;
 import com.lx862.jcm.mod.render.gui.screen.PIDSScreen;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;
@@ -21,14 +22,8 @@ public class PIDSGUIPacket extends PacketHandler {
         int rows = packetBufferReceiver.readInt();
         this.customMessages = new String[rows];
         this.rowHidden = new boolean[rows];
-
-        for(int i = 0; i < rows; i++) {
-            this.customMessages[i] = packetBufferReceiver.readString();
-        }
-        for(int i = 0; i < rows; i++) {
-            this.rowHidden[i] = packetBufferReceiver.readBoolean();
-        }
-
+        JCMPacketHandlerHelper.readArray(packetBufferReceiver, i -> this.customMessages[i] = packetBufferReceiver.readString());
+        JCMPacketHandlerHelper.readArray(packetBufferReceiver, i -> this.rowHidden[i] = packetBufferReceiver.readBoolean());
         this.hidePlatformNumber = packetBufferReceiver.readBoolean();
         this.presetId = packetBufferReceiver.readString();
     }
@@ -45,14 +40,11 @@ public class PIDSGUIPacket extends PacketHandler {
     public void write(PacketBufferSender packetBufferSender) {
         packetBufferSender.writeLong(blockPos.asLong());
         packetBufferSender.writeInt(customMessages.length);
-
-        for(String customMessage : customMessages) {
-            packetBufferSender.writeString(customMessage == null ? "" : customMessage);
-        }
-        for(boolean hidePlatform : rowHidden) {
-            packetBufferSender.writeBoolean(hidePlatform);
-        }
-
+        JCMPacketHandlerHelper.writeArray(packetBufferSender, customMessages, i -> {
+            String str = customMessages[i] == null ? "" : customMessages[i];
+            packetBufferSender.writeString(str);
+        });
+        JCMPacketHandlerHelper.writeArray(packetBufferSender, rowHidden, i -> packetBufferSender.writeBoolean(rowHidden[i]));
         packetBufferSender.writeBoolean(hidePlatformNumber);
         packetBufferSender.writeString(presetId);
     }
