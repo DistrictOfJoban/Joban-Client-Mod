@@ -1,15 +1,11 @@
 package com.lx862.jcm.mod.registry;
 
-import com.lx862.jcm.mod.network.block.ButterflyLightUpdatePacket;
-import com.lx862.jcm.mod.network.block.FareSaverUpdatePacket;
-import com.lx862.jcm.mod.network.block.PIDSUpdatePacket;
-import com.lx862.jcm.mod.network.block.SubsidyMachineUpdatePacket;
+import com.lx862.jcm.mod.network.block.*;
 import com.lx862.jcm.mod.network.gui.ButterflyLightGUIPacket;
 import com.lx862.jcm.mod.network.gui.FareSaverGUIPacket;
 import com.lx862.jcm.mod.network.gui.PIDSGUIPacket;
 import com.lx862.jcm.mod.network.gui.SubsidyMachineGUIPacket;
 import com.lx862.jcm.mod.util.JCMLogger;
-import org.mtr.mapping.holder.PacketBuffer;
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.ServerPlayerEntity;
 import org.mtr.mapping.registry.PacketHandler;
@@ -28,8 +24,9 @@ public class Networking {
         // Block Entity Update
         registerPacket(ButterflyLightUpdatePacket.class, ButterflyLightUpdatePacket::new);
         registerPacket(FareSaverUpdatePacket.class, FareSaverUpdatePacket::new);
-        registerPacket(SubsidyMachineUpdatePacket.class, SubsidyMachineUpdatePacket::new);
         registerPacket(PIDSUpdatePacket.class, PIDSUpdatePacket::new);
+        registerPacket(SoundLooperUpdatePacket.class, SoundLooperUpdatePacket::new);
+        registerPacket(SubsidyMachineUpdatePacket.class, SubsidyMachineUpdatePacket::new);
 
         // GUI Screen
         registerPacket(ButterflyLightGUIPacket.class, ButterflyLightGUIPacket::new);
