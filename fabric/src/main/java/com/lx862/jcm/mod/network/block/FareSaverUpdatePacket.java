@@ -11,21 +11,25 @@ import org.mtr.mapping.tool.PacketBufferSender;
 
 public class FareSaverUpdatePacket extends PacketHandler {
     private final BlockPos blockPos;
+    private final String currency;
     private final int discount;
 
     public FareSaverUpdatePacket(PacketBufferReceiver packetBufferReceiver) {
         this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
+        this.currency = packetBufferReceiver.readString();
         this.discount = packetBufferReceiver.readInt();
     }
 
-    public FareSaverUpdatePacket(BlockPos blockPos, int discount) {
+    public FareSaverUpdatePacket(BlockPos blockPos, String currency, int discount) {
         this.blockPos = blockPos;
+        this.currency = currency;
         this.discount = discount;
     }
 
     @Override
     public void write(PacketBufferSender packetBufferSender) {
         packetBufferSender.writeLong(blockPos.asLong());
+        packetBufferSender.writeString(currency);
         packetBufferSender.writeInt(discount);
     }
 
@@ -37,7 +41,7 @@ public class FareSaverUpdatePacket extends PacketHandler {
 
         ((JCMBlock)state.getBlock().data).forEachBlockEntity(state, world, blockPos, be -> {
             if(be.data instanceof FareSaverBlockEntity) {
-                ((FareSaverBlockEntity)be.data).setData(discount);
+                ((FareSaverBlockEntity)be.data).setData(currency, discount);
             }
         });
     }

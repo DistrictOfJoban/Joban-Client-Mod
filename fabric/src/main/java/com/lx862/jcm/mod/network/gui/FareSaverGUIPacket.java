@@ -11,26 +11,30 @@ import org.mtr.mapping.tool.PacketBufferSender;
 
 public class FareSaverGUIPacket extends PacketHandler {
     private final BlockPos blockPos;
+    private final String currency;
     private final int discount;
 
     public FareSaverGUIPacket(PacketBufferReceiver packetBufferReceiver) {
         this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
+        this.currency = packetBufferReceiver.readString();
         this.discount = packetBufferReceiver.readInt();
     }
 
-    public FareSaverGUIPacket(BlockPos blockPos, int discount) {
+    public FareSaverGUIPacket(BlockPos blockPos, String currency, int discount) {
         this.blockPos = blockPos;
+        this.currency = currency;
         this.discount = discount;
     }
 
     @Override
     public void write(PacketBufferSender packetBufferSender) {
         packetBufferSender.writeLong(blockPos.asLong());
+        packetBufferSender.writeString(currency);
         packetBufferSender.writeInt(discount);
     }
 
     @Override
     public void runClient() {
-        MinecraftClient.getInstance().openScreen(new Screen(new FareSaverScreen(blockPos, discount)));
+        MinecraftClient.getInstance().openScreen(new Screen(new FareSaverScreen(blockPos, currency, discount)));
     }
 }

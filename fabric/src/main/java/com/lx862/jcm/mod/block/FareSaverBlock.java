@@ -32,11 +32,11 @@ public class FareSaverBlock extends Vertical3Block implements BlockWithEntity {
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         UUID playerUuid = player.getUuid();
-        FareSaverBlockEntity thisEntity = (FareSaverBlockEntity)world.getBlockEntity(pos).data;
-        int discount = thisEntity.getDiscount();
+        FareSaverBlockEntity be = (FareSaverBlockEntity)world.getBlockEntity(pos).data;
+        int discount = be.getDiscount();
 
         if (JCMUtil.playerHoldingBrush(player)) {
-            Networking.sendPacketToClient(player, new FareSaverGUIPacket(pos, discount));
+            Networking.sendPacketToClient(player, new FareSaverGUIPacket(pos, be.getCurrency(), discount));
             return;
         }
 
