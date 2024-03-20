@@ -16,6 +16,7 @@ import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.font.FontManager;
 import com.lx862.jcm.mod.util.JCMLogger;
+import org.jetbrains.annotations.NotNull;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.Direction;
@@ -112,7 +113,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public Identifier getBackground() {
+    public @NotNull Identifier getBackground() {
         return background;
     }
 

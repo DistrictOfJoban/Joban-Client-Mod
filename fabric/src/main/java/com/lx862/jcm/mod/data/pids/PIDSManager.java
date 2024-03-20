@@ -1,12 +1,11 @@
 package com.lx862.jcm.mod.data.pids;
 
 import com.google.gson.JsonObject;
-import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
-import com.lx862.jcm.mod.data.pids.preset.LCDPIDSPreset;
-import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
-import com.lx862.jcm.mod.data.pids.preset.RVPIDSPreset;
+import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.data.pids.preset.*;
 import com.lx862.jcm.mod.util.JCMLogger;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import org.mtr.mapping.holder.Identifier;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,6 +49,9 @@ public class PIDSManager {
 
     static {
         presetList.put("rv_pids", new RVPIDSPreset());
+        presetList.put("door_cls_psd", new RVPIDSVariantsPreset("door_cls_psd", "RV PIDS (Door Closing PSD)", new Identifier(Constants.MOD_ID, "textures/block/pids/rv_door_cls_psd.png")));
+        presetList.put("door_cls_apg", new RVPIDSVariantsPreset("door_cls_apg", "RV PIDS (Door Closing APG)", new Identifier(Constants.MOD_ID, "textures/block/pids/rv_door_cls_apg.png")));
+        presetList.put("door_cls_train", new RVPIDSVariantsPreset("door_cls_train", "RV PIDS (Door Closing)", new Identifier(Constants.MOD_ID, "textures/block/pids/rv_door_cls_train.png")));
         presetList.put("lcd_pids", new LCDPIDSPreset());
     }
 

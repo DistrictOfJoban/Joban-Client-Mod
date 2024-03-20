@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextInfo;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
+import org.jetbrains.annotations.NotNull;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
@@ -56,7 +57,7 @@ public abstract class PIDSPresetBase implements RenderHelper {
     }
 
     public abstract String getFont();
-    public abstract Identifier getBackground();
+    public abstract @NotNull Identifier getBackground();
     public abstract int getTextColor();
     public abstract boolean isRowHidden(int row);
 

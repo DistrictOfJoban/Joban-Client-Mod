@@ -97,18 +97,18 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
             selectBtn.active = false;
         }
 
-        if(preset.builtin) {
-            // Can't edit built-in preset
-            editBtn.active = false;
-        }
+//        if(preset.builtin) {
+//            // Can't edit built-in preset
+//            editBtn.active = false;
+//        }
 
         HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
-        widgetSet.addWidget(new MappedWidget(editBtn));
+        if(!preset.builtin) widgetSet.addWidget(new MappedWidget(editBtn));
         widgetSet.addWidget(new MappedWidget(selectBtn));
         widgetSet.setXYSize(0, 0, 100, 20);
 
         addChild(new ClickableWidget(selectBtn));
-        addChild(new ClickableWidget(editBtn));
+        if(!preset.builtin) addChild(new ClickableWidget(editBtn));
         addChild(new ClickableWidget(widgetSet));
         ContentItem contentItem = new ContentItem(TextUtil.literal(preset.getName()), new MappedWidget(widgetSet), 26);
 
@@ -123,9 +123,9 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
 
         // Background
         GuiHelper.drawTexture(guiDrawing, PIDS_PREVIEW_BASE, startX, startY, width, height);
-        if(preset.getBackground() != null) {
-            GuiHelper.drawTexture(guiDrawing, preset.getBackground(), startX+0.5, startY+offset+0.5, width-1, height-offset-4);
-        }
+        if(preset == null) return;
+
+        GuiHelper.drawTexture(guiDrawing, preset.getBackground(), startX+0.5, startY+offset+0.5, width-1, height-offset-4);
 
         if(!backgroundOnly) {
             double perRow = height / 8.5;

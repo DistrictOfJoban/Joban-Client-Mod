@@ -44,7 +44,7 @@ public abstract class BlockConfigScreen extends TitledScreen implements GuiHelpe
     protected void init2() {
         super.init2();
         int contentWidth = (int)Math.min((width * 0.75), MAX_CONTENT_WIDTH);
-        int listViewHeight = (int)((height - 60) * 0.76);
+        int listViewHeight = Math.max(160, (int)((height - 60) * 0.75));
         int startX = (width - contentWidth) / 2;
         int startY = TEXT_PADDING * 5;
         int bottomEntryHeight = (height - startY - listViewHeight - (BOTTOM_ROW_MARGIN * 2));

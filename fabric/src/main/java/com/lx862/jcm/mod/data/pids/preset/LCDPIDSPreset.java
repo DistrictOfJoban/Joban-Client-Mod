@@ -11,6 +11,7 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
+import org.jetbrains.annotations.NotNull;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.Direction;
@@ -95,7 +96,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public Identifier getBackground() {
+    public @NotNull Identifier getBackground() {
         return new Identifier(Constants.MOD_ID, "textures/block/pids/black.png");
     }
 

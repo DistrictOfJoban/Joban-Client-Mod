@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.block.entity;
 
-import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
+import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
 import org.mtr.mapping.holder.BlockEntityType;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
@@ -66,11 +66,13 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
         return this.rowHidden;
     }
 
-    public void setData(String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPresetId) {
+    public void setData(String[] customMessages, LongAVLTreeSet filteredPlatforms, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPresetId) {
         System.arraycopy(customMessages, 0, this.customMessages, 0, customMessages.length);
         System.arraycopy(rowHidden, 0, this.rowHidden, 0, rowHidden.length);
         this.hidePlatformNumber = hidePlatformNumber;
         this.pidsPresetId = pidsPresetId;
+        this.platformIds.clear();
+        this.platformIds.addAll(filteredPlatforms);
         this.markDirty2();
     }
 

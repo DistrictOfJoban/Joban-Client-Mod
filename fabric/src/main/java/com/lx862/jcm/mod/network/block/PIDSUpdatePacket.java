@@ -7,6 +7,7 @@ import com.lx862.jcm.mod.block.base.JCMBlock;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
+import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;
@@ -14,6 +15,7 @@ import org.mtr.mapping.tool.PacketBufferSender;
 
 public class PIDSUpdatePacket extends PacketHandler {
     private final BlockPos blockPos;
+    private final LongAVLTreeSet filteredPlatforms;
     private final String[] customMessages;
     private final boolean[] rowHidden;
     private final boolean hidePlatformNumber;
@@ -21,9 +23,11 @@ public class PIDSUpdatePacket extends PacketHandler {
 
     public PIDSUpdatePacket(PacketBufferReceiver packetBufferReceiver) {
         this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
+        int filteredPlatformSize = packetBufferReceiver.readInt();
         int rows = packetBufferReceiver.readInt();
         this.customMessages = new String[rows];
         this.rowHidden = new boolean[rows];
+        this.filteredPlatforms = new LongAVLTreeSet();
 
         for(int i = 0; i < rows; i++) {
             this.customMessages[i] = packetBufferReceiver.readString();
@@ -31,21 +35,28 @@ public class PIDSUpdatePacket extends PacketHandler {
         for(int i = 0; i < rows; i++) {
             this.rowHidden[i] = packetBufferReceiver.readBoolean();
         }
+
+        for(int i = 0; i < filteredPlatformSize; i++) {
+            filteredPlatforms.add(packetBufferReceiver.readLong());
+        }
+
         this.hidePlatformNumber = packetBufferReceiver.readBoolean();
         this.presetId = packetBufferReceiver.readString();
     }
 
-    public PIDSUpdatePacket(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPreset) {
+    public PIDSUpdatePacket(BlockPos blockPos, LongAVLTreeSet filteredPlatforms, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPreset) {
         this.blockPos = blockPos;
         this.customMessages = customMessages;
         this.rowHidden = rowHidden;
         this.presetId = pidsPreset;
         this.hidePlatformNumber = hidePlatformNumber;
+        this.filteredPlatforms = filteredPlatforms;
     }
 
     @Override
     public void write(PacketBufferSender packetBufferSender) {
         packetBufferSender.writeLong(blockPos.asLong());
+        packetBufferSender.writeInt(filteredPlatforms.size());
         packetBufferSender.writeInt(customMessages.length);
 
         for(String customMessage : customMessages) {
@@ -53,6 +64,9 @@ public class PIDSUpdatePacket extends PacketHandler {
         }
         for(boolean hidePlatform : rowHidden) {
             packetBufferSender.writeBoolean(hidePlatform);
+        }
+        for(long platform : filteredPlatforms) {
+            packetBufferSender.writeLong(platform);
         }
 
         packetBufferSender.writeBoolean(hidePlatformNumber);
@@ -68,7 +82,7 @@ public class PIDSUpdatePacket extends PacketHandler {
 
         ((JCMBlock)state.getBlock().data).forEachBlockEntity(state, world, blockPos, be -> {
             if(be.data instanceof PIDSBlockEntity) {
-                ((PIDSBlockEntity)be.data).setData(customMessages, rowHidden, hidePlatformNumber, presetId);
+                ((PIDSBlockEntity)be.data).setData(customMessages, filteredPlatforms, rowHidden, hidePlatformNumber, presetId);
             }
         });
     }

@@ -11,6 +11,7 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.DrawCall;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
+import org.jetbrains.annotations.NotNull;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.*;
@@ -31,6 +32,10 @@ public class RVPIDSPreset extends PIDSPresetBase {
     private static final Identifier ICON_WEATHER_THUNDER = new Identifier(Constants.MOD_ID, "textures/block/pids/weather_thunder.png");
     public RVPIDSPreset() {
         super("rv_pids", "Hong Kong Railway Vision PIDS", true);
+    }
+
+    protected RVPIDSPreset(String id, String name) {
+        super(id, name, true);
     }
 
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
@@ -80,12 +85,10 @@ public class RVPIDSPreset extends PIDSPresetBase {
         int arrivalIndex = 0;
         double rowY = y;
         for(int i = 0; i < rows; i++) {
-            if(arrivalIndex >= arrivals.getArrivals().size()) return;
-
-            if(!customMessages[i].isEmpty()) {
+            if(customMessages[i] != null && !customMessages[i].isEmpty()) {
                 drawCalls.add(new CustomTextComponent(getFont(), getTextColor(), TextAlignment.LEFT, customMessages[i], TextOverflowMode.STRETCH, x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
             } else {
-                if(!rowHidden[i]) {
+                if(!rowHidden[i] && arrivalIndex < arrivals.getArrivals().size()) {
                     ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
                     drawCalls.add(new DestinationComponent(arrival, getFont(), getTextColor(), x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
@@ -110,7 +113,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public Identifier getBackground() {
+    public @NotNull Identifier getBackground() {
         return TEXTURE_BACKGROUND;
     }
 
