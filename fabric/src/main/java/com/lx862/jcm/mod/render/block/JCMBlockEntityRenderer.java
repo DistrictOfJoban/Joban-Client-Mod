@@ -5,11 +5,12 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
-import org.jetbrains.annotations.NotNull;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
 import org.mtr.mapping.mapper.GraphicsHolder;
+
+import javax.annotation.Nonnull;
 
 public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> extends BlockEntityRenderer<T> implements RenderHelper {
     public JCMBlockEntityRenderer(Argument dispatcher) {
@@ -17,7 +18,7 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
     }
 
     @Override
-    public void render(@NotNull T blockEntity, float tickDelta, @NotNull GraphicsHolder graphicsHolder, int light, int i1) {
+    public void render(@Nonnull T blockEntity, float tickDelta, @Nonnull GraphicsHolder graphicsHolder, int light, int i1) {
         try {
             World world = blockEntity.getWorld2();
             BlockPos pos = blockEntity.getPos2();

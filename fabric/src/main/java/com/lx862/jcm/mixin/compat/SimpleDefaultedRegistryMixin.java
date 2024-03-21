@@ -7,10 +7,11 @@ import net.minecraft.util.registry.DefaultedRegistry;
 #else
 import net.minecraft.registry.SimpleDefaultedRegistry;
 #endif
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+
+import javax.annotation.Nullable;
 
 /**
  * Block renamed in JCM 2.0.0, unfortunately there's no easy way to migrate ids.

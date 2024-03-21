@@ -11,12 +11,12 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.DrawCall;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
-import org.jetbrains.annotations.NotNull;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -113,7 +113,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public @NotNull Identifier getBackground() {
+    public @Nonnull Identifier getBackground() {
         return TEXTURE_BACKGROUND;
     }
 

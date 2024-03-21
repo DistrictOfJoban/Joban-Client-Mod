@@ -1,7 +1,8 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
-import org.jetbrains.annotations.NotNull;
 import org.mtr.mapping.holder.Identifier;
+
+import javax.annotation.Nonnull;
 
 /**
  * Variations of RV PIDS Preset (Such as Door Closing PSD/APG)
@@ -14,7 +15,7 @@ public class RVPIDSVariantsPreset extends RVPIDSPreset {
     }
 
     @Override
-    public @NotNull Identifier getBackground() {
+    public @Nonnull Identifier getBackground() {
         return background;
     }
 

@@ -16,7 +16,6 @@ import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.font.FontManager;
 import com.lx862.jcm.mod.util.JCMLogger;
-import org.jetbrains.annotations.NotNull;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.Direction;
@@ -25,6 +24,7 @@ import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -113,7 +113,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public @NotNull Identifier getBackground() {
+    public @Nonnull Identifier getBackground() {
         return background;
     }
 

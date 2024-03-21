@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.render.text;
 
-import org.jetbrains.annotations.NotNull;
+import javax.annotation.Nonnull;
 
 public class TextSlot implements Comparable<TextSlot> {
     private static final long EXPIRE_TIME = 500;
@@ -84,7 +84,7 @@ public class TextSlot implements Comparable<TextSlot> {
     }
 
     @Override
-    public int compareTo(@NotNull TextSlot o) {
+    public int compareTo(@Nonnull TextSlot o) {
         return (int)(this.lastAccessTime - o.lastAccessTime);
     }
 }

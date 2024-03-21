@@ -3,11 +3,12 @@ package com.lx862.jcm.mod.render.gui.widget;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import org.jetbrains.annotations.Nullable;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
+
+import javax.annotation.Nonnull;
 
 /**
  * Text Field Widget that is specifically designed for entering number only
@@ -18,7 +19,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
     private final String prefix;
     private final long defaultValue;
 
-    public NumericTextField(int x, int y, int width, int height, long min, long max, long defaultValue, @Nullable String prefix) {
+    public NumericTextField(int x, int y, int width, int height, long min, long max, long defaultValue, @Nonnull String prefix) {
         super(x, y, width, height, 16, TextCase.LOWER, null, String.valueOf(defaultValue));
         this.min = min;
         this.max = max;
