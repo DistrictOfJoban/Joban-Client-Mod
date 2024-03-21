@@ -3,7 +3,7 @@
 	"id": "jsblock",
 	"version": "${version}",
 	"name": "Joban Client Mod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Addon for Minecraft Transit Railway 4, providing more railway facilities.",
 	"authors": [
 		"LX86",
 		"AozoraSky",
