@@ -1,10 +1,7 @@
 package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.network.block.*;
-import com.lx862.jcm.mod.network.gui.ButterflyLightGUIPacket;
-import com.lx862.jcm.mod.network.gui.FareSaverGUIPacket;
-import com.lx862.jcm.mod.network.gui.PIDSGUIPacket;
-import com.lx862.jcm.mod.network.gui.SubsidyMachineGUIPacket;
+import com.lx862.jcm.mod.network.gui.*;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.ServerPlayerEntity;
@@ -31,8 +28,9 @@ public class Networking {
         // GUI Screen
         registerPacket(ButterflyLightGUIPacket.class, ButterflyLightGUIPacket::new);
         registerPacket(FareSaverGUIPacket.class, FareSaverGUIPacket::new);
-        registerPacket(SubsidyMachineGUIPacket.class, SubsidyMachineGUIPacket::new);
         registerPacket(PIDSGUIPacket.class, PIDSGUIPacket::new);
+        registerPacket(SoundLooperGUIPacket.class, SoundLooperGUIPacket::new);
+        registerPacket(SubsidyMachineGUIPacket.class, SubsidyMachineGUIPacket::new);
     }
 
     public static void registerClient() {

@@ -38,8 +38,8 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
     @Override
     public boolean charTyped2(char chr, int modifiers) {
         try {
-            int val = Integer.parseInt(getText2() + chr);
-
+            String newString = new StringBuilder(getText2()).insert(getCursor2(), chr).toString();
+            int val = Integer.parseInt(newString);
             if(val < min || val > max) {
                 return false;
             }
@@ -61,7 +61,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         drawUpDownButton(graphicsHolder);
     }
 
-    private void drawPrefix(GraphicsHolder graphicsHolder) {
+    protected void drawPrefix(GraphicsHolder graphicsHolder) {
         int prefixWidth = GraphicsHolder.getTextWidth(prefix);
         int prefixX = getX2() - prefixWidth;
         int prefixY = getY2() + (getHeight2() / 2) - (9 / 2);
@@ -69,7 +69,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         graphicsHolder.drawText(prefix, prefixX, prefixY, 0xFFFFFFFF, true, MAX_RENDER_LIGHT);
     }
 
-    private void drawUpDownButton(GraphicsHolder graphicsHolder) {
+    protected void drawUpDownButton(GraphicsHolder graphicsHolder) {
         MutableText upArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.increment");
         MutableText dnArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.decrement");
         int fontHeight = 9;

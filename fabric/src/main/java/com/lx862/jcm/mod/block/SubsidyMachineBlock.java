@@ -33,19 +33,21 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
 
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        SubsidyMachineBlockEntity thisEntity = (SubsidyMachineBlockEntity)world.getBlockEntity(pos).data;
+        BlockEntity be = BlockUtil.getBlockEntityOrNull(world, pos);
+        if(be == null) return;
 
+        SubsidyMachineBlockEntity sbe = (SubsidyMachineBlockEntity)be.data;
         if (JCMUtil.playerHoldingBrush(player)) {
-            Networking.sendPacketToClient(player, new SubsidyMachineGUIPacket(pos, thisEntity.getSubsidyAmount(), thisEntity.getCooldown()));
+            Networking.sendPacketToClient(player, new SubsidyMachineGUIPacket(pos, sbe.getSubsidyAmount(), sbe.getCooldown()));
             return;
         }
 
-        if(cooldownExpired(player, thisEntity.getCooldown())) {
+        if(cooldownExpired(player, sbe.getCooldown())) {
             updateCooldown(player);
-            int finalBalance = addMTRBalanceToPlayer(world, player, thisEntity.getSubsidyAmount());
-            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "subsidy_machine.success", thisEntity.getSubsidyAmount(), finalBalance)), true);
+            int finalBalance = addMTRBalanceToPlayer(world, player, sbe.getSubsidyAmount());
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "subsidy_machine.success", sbe.getSubsidyAmount(), finalBalance)), true);
         } else {
-            int remainingSec = Math.round(thisEntity.getCooldown() - getCooldown(player));
+            int remainingSec = Math.round(sbe.getCooldown() - getCooldown(player));
             player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "subsidy_machine.fail", remainingSec).formatted(TextFormatting.RED)), true);
         }
     }
@@ -57,6 +59,7 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
     }
 
     private static int addMTRBalanceToPlayer(World world, PlayerEntity player, int amount) {
+        // TODO:
         return 0;
 //        int mtrBalanceScore = ScoreboardUtil.getPlayerMTRBalanceScore(world, player);
 //

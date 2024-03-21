@@ -1,14 +1,12 @@
-package com.lx862.jcm.mod.network.block;
+package com.lx862.jcm.mod.network.gui;
 
-import com.lx862.jcm.mod.block.base.JCMBlock;
-import com.lx862.jcm.mod.block.entity.SoundLooperBlockEntity;
-import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.render.gui.screen.SoundLooperScreen;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
 
-public class SoundLooperUpdatePacket extends PacketHandler {
+public class SoundLooperGUIPacket extends PacketHandler {
     private final BlockPos blockPos;
     private final BlockPos corner1;
     private final BlockPos corner2;
@@ -19,7 +17,7 @@ public class SoundLooperUpdatePacket extends PacketHandler {
     private final boolean needRedstone;
     private final boolean limitRange;
 
-    public SoundLooperUpdatePacket(PacketBufferReceiver packetBufferReceiver) {
+    public SoundLooperGUIPacket(PacketBufferReceiver packetBufferReceiver) {
         this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
         this.corner1 = BlockPos.fromLong(packetBufferReceiver.readLong());
         this.corner2 = BlockPos.fromLong(packetBufferReceiver.readLong());
@@ -31,7 +29,7 @@ public class SoundLooperUpdatePacket extends PacketHandler {
         this.limitRange = packetBufferReceiver.readBoolean();
     }
 
-    public SoundLooperUpdatePacket(BlockPos blockPos, BlockPos corner1, BlockPos corner2, String soundId, int soundCategory, int interval, float soundVolume, boolean needRedstone, boolean limitRange) {
+    public SoundLooperGUIPacket(BlockPos blockPos, BlockPos corner1, BlockPos corner2, String soundId, int soundCategory, int interval, float soundVolume, boolean needRedstone, boolean limitRange) {
         this.blockPos = blockPos;
         this.corner1 = corner1;
         this.corner2 = corner2;
@@ -44,16 +42,8 @@ public class SoundLooperUpdatePacket extends PacketHandler {
     }
 
     @Override
-    public void runServer(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
-        World world = serverPlayerEntity.getEntityWorld();
-        BlockState state = BlockUtil.getBlockState(world, blockPos);
-        if(state == null || !(state.getBlock().data instanceof JCMBlock)) return;
-
-        ((JCMBlock)state.getBlock().data).forEachBlockEntity(state, world, blockPos, be -> {
-            if(be.data instanceof SoundLooperBlockEntity) {
-                ((SoundLooperBlockEntity)be.data).setData(soundId, soundCategory, interval, soundVolume, needRedstone, limitRange, corner1, corner2);
-            }
-        });
+    public void runClient() {
+        MinecraftClient.getInstance().openScreen(new Screen(new SoundLooperScreen(blockPos, corner1, corner2, soundId, soundCategory, soundVolume, interval, needRedstone, limitRange)));
     }
 
     @Override

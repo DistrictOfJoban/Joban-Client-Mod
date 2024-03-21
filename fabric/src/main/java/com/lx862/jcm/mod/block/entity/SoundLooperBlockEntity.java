@@ -5,16 +5,15 @@ import com.lx862.jcm.mod.registry.BlockEntities;
 import org.mtr.mapping.holder.*;
 
 public class SoundLooperBlockEntity extends JCMBlockEntityBase {
+    public static final SoundCategory[] SOURCE_LIST = {SoundCategory.MASTER, SoundCategory.MUSIC, SoundCategory.WEATHER, SoundCategory.AMBIENT, SoundCategory.PLAYERS, SoundCategory.BLOCKS, SoundCategory.VOICE};
     private String soundID = "";
-    private BlockPos pos1 = new BlockPos(0, 0, 0);
-    private BlockPos pos2 = new BlockPos(0, 0, 0);
+    private BlockPos corner1 = new BlockPos(0, 0, 0);
+    private BlockPos corner2 = new BlockPos(0, 0, 0);
     private int repeatTick = 20;
     private float volume = 1;
     private int soundCategory = 0;
     private boolean needRedstone = false;
     private boolean limitRange = false;
-    private static final SoundCategory[] SOURCE_LIST = {SoundCategory.MASTER, SoundCategory.MUSIC, SoundCategory.WEATHER, SoundCategory.AMBIENT, SoundCategory.PLAYERS, SoundCategory.BLOCKS, SoundCategory.VOICE};
-
     public SoundLooperBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(BlockEntities.SOUND_LOOPER.get(), blockPos, blockState);
     }
@@ -28,8 +27,8 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
         this.volume = compoundTag.getFloat("volume");
         this.needRedstone = compoundTag.getBoolean("need_redstone");
         this.limitRange = compoundTag.getBoolean("limit_range");
-        this.pos1 = BlockPos.fromLong(compoundTag.getLong("pos_1"));
-        this.pos2 = BlockPos.fromLong(compoundTag.getLong("pos_2"));
+        this.corner1 = BlockPos.fromLong(compoundTag.getLong("pos_1"));
+        this.corner2 = BlockPos.fromLong(compoundTag.getLong("pos_2"));
     }
 
     @Override
@@ -41,8 +40,8 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
         compoundTag.putFloat("volume", volume);
         compoundTag.putBoolean("need_redstone", needRedstone);
         compoundTag.putBoolean("limit_range", limitRange);
-        compoundTag.putLong("pos_1", pos1.asLong());
-        compoundTag.putLong("pos_2", pos2.asLong());
+        compoundTag.putLong("pos_1", corner1.asLong());
+        compoundTag.putLong("pos_2", corner2.asLong());
     }
 
     @Override
@@ -54,7 +53,7 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
                 world.getPlayers().forEach(player -> {
                     Identifier identifier = null;
                     try {
-                         identifier = new Identifier(soundID);
+                        identifier = new Identifier(soundID);
                     } catch (Exception ignored) {
                     }
 
@@ -69,18 +68,6 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
         }
     }
 
-    public void setData(String soundId, int soundCategory, int interval, float volume, boolean needRedstone, boolean limitRange, BlockPos pos1, BlockPos pos2) {
-        this.soundID = soundId;
-        this.repeatTick = interval;
-        this.soundCategory = soundCategory;
-        this.volume = volume;
-        this.needRedstone = needRedstone;
-        this.pos1 = pos1;
-        this.pos2 = pos2;
-        this.limitRange = limitRange;
-        markDirty2();
-    }
-
     public String getSoundId() {
         return soundID == null ? "" : soundID;
     }
@@ -90,29 +77,41 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
     }
 
     public int getSoundCategory() {
-        if (soundCategory > SOURCE_LIST.length) {
+        if (soundCategory > SoundLooperBlockEntity.SOURCE_LIST.length) {
             soundCategory = 0;
         }
         return soundCategory;
     }
 
-    public float getVolume() {
+    public float getSoundVolume() {
         return volume;
+    }
+
+    public boolean rangeLimited() {
+        return limitRange;
     }
 
     public boolean needRedstone() {
         return needRedstone;
     }
 
-    public boolean getLimitRange() {
-        return limitRange;
+    public BlockPos getCorner1() {
+        return corner1;
     }
 
-    public BlockPos getPos1() {
-        return pos1;
+    public BlockPos getCorner2() { // This used to be called getPos2, which happens to override MC Mappings method, causing the world to be null. Ended up spending an hour debugging it, horrifying.
+        return corner2;
     }
 
-    public BlockPos getPos2() {
-        return pos2;
+    public void setData(String soundId, int soundCategory, int interval, float volume, boolean needRedstone, boolean limitRange, BlockPos corner1, BlockPos corner2) {
+        this.soundID = soundId;
+        this.repeatTick = interval;
+        this.soundCategory = soundCategory;
+        this.volume = volume;
+        this.needRedstone = needRedstone;
+        this.corner1 = corner1;
+        this.corner2 = corner2;
+        this.limitRange = limitRange;
+        this.markDirty2();
     }
 }

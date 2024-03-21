@@ -132,8 +132,8 @@ public class MappedWidget {
     }
 
     public void setX(int newX) {
-        if(widget instanceof HorizontalWidgetSet) {
-            ((HorizontalWidgetSet) widget).setAllX(newX);
+        if(widget instanceof MultiWidgetContainer) {
+            ((MultiWidgetContainer) widget).setAllX(newX);
         }
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension) widget).setX2(newX);
@@ -156,8 +156,8 @@ public class MappedWidget {
     }
 
     public void setY(int newY) {
-        if(widget instanceof HorizontalWidgetSet) {
-            ((HorizontalWidgetSet) widget).setAllY(newY);
+        if(widget instanceof MultiWidgetContainer) {
+            ((MultiWidgetContainer) widget).setAllY(newY);
         }
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension) widget).setY2(newY);
@@ -218,6 +218,27 @@ public class MappedWidget {
         }
         if(widget instanceof MappedWidget) {
             ((MappedWidget) widget).setVisible(value);
+        }
+    }
+
+    public void setAlpha(float alpha) {
+        if(widget instanceof ButtonWidgetExtension) {
+            ((ButtonWidgetExtension) widget).setAlpha2(alpha);
+        }
+        if(widget instanceof TextFieldWidgetExtension) {
+            ((TextFieldWidgetExtension) widget).setAlpha2(alpha);
+        }
+        if(widget instanceof CheckboxWidgetExtension) {
+            ((CheckboxWidgetExtension) widget).setAlpha2(alpha);
+        }
+        if(widget instanceof SliderWidgetExtension) {
+            ((SliderWidgetExtension) widget).setAlpha2(alpha);
+        }
+        if(widget instanceof ClickableWidgetExtension) {
+            ((ClickableWidgetExtension) widget).setAlpha2(alpha);
+        }
+        if(widget instanceof MappedWidget) {
+            ((MappedWidget) widget).setAlpha(alpha);
         }
     }
 }
