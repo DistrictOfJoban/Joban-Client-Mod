@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
+import org.mtr.mod.data.TicketSystem;
 
 import java.util.UUID;
 
@@ -52,19 +53,14 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
         }
     }
 
-
     @Override
     public BlockEntityExtension createBlockEntity(BlockPos blockPos, BlockState blockState) {
         return new SubsidyMachineBlockEntity(blockPos, blockState);
     }
 
     private static int addMTRBalanceToPlayer(World world, PlayerEntity player, int amount) {
-        // TODO:
-        return 0;
-//        int mtrBalanceScore = ScoreboardUtil.getPlayerMTRBalanceScore(world, player);
-//
-//        ScoreboardUtil.incrementNonOverflow(world.getScoreboard(), mtrBalanceScore, amount);
-//        return mtrBalanceScore.getScore();
+        TicketSystem.addBalance(world, player, amount);
+        return TicketSystem.getBalance(world, player);
     }
 
     private static boolean cooldownExpired(PlayerEntity player, int cooldown) {
