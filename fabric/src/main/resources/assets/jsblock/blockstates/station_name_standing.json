@@ -3,7 +3,7 @@
     {
       "when": {
         "facing": "north",
-        "part": "0"
+        "third": "lower"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_bottom"
@@ -12,7 +12,7 @@
     {
       "when": {
         "facing": "east",
-        "part": "0"
+        "third": "lower"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_bottom",
@@ -22,7 +22,7 @@
     {
       "when": {
         "facing": "south",
-        "part": "0"
+        "third": "lower"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_bottom",
@@ -32,7 +32,7 @@
     {
       "when": {
         "facing": "west",
-        "part": "0"
+        "third": "lower"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_bottom",
@@ -42,7 +42,7 @@
     {
       "when": {
         "facing": "north",
-        "part": "1"
+        "third": "middle"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_middle"
@@ -51,7 +51,7 @@
     {
       "when": {
         "facing": "east",
-        "part": "1"
+        "third": "middle"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_middle",
@@ -61,7 +61,7 @@
     {
       "when": {
         "facing": "south",
-        "part": "1"
+        "third": "middle"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_middle",
@@ -71,7 +71,7 @@
     {
       "when": {
         "facing": "west",
-        "part": "1"
+        "third": "middle"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_middle",
@@ -81,7 +81,7 @@
     {
       "when": {
         "facing": "north",
-        "part": "2"
+        "third": "upper"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_top"
@@ -90,7 +90,7 @@
     {
       "when": {
         "facing": "east",
-        "part": "2"
+        "third": "upper"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_top",
@@ -100,7 +100,7 @@
     {
       "when": {
         "facing": "south",
-        "part": "2"
+        "third": "upper"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_top",
@@ -110,7 +110,7 @@
     {
       "when": {
         "facing": "west",
-        "part": "2"
+        "third": "upper"
       },
       "apply": {
         "model": "jsblock:block/station_name_standing_top",

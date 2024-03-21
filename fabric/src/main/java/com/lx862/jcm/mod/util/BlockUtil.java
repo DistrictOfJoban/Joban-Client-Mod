@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.util;
 
 import org.mtr.mapping.holder.*;
+import org.mtr.mod.block.IBlock;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -61,13 +62,13 @@ public class BlockUtil {
         return getProperty(state, new Property<>(property.data));
     }
 
+    public static <T extends Comparable<T>> T getProperty(BlockState state, Property<T> property) {
+        return state.contains(property) ? state.get(property) : new ArrayList<>(property.getValues()).get(0);
+    }
+
     public static <T extends Comparable<T>> BlockState withProperty(BlockState state, Property<T> property, T value) {
         if(state == null) return null;
         return state.with(property, value);
-    }
-
-    public static <T extends Comparable<T>> T getProperty(BlockState state, Property<T> property) {
-        return state.contains(property) ? state.get(property) : new ArrayList<>(property.getValues()).get(0);
     }
 
     /**

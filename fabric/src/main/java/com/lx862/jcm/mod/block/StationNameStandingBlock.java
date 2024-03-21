@@ -15,15 +15,14 @@ public class StationNameStandingBlock extends Vertical3Block implements BlockWit
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        switch (BlockUtil.getProperty(state, PART)) {
-            case 0:
+        switch (BlockUtil.getProperty(state, new Property<>(THIRD.data))) {
+            case LOWER:
                 VoxelShape vx1 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 1, 0, 0, 2, 16, 1);
                 VoxelShape vx2 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 14, 0, 0, 15, 16, 1);
-
                 return VoxelShapes.union(vx1, vx2);
-            case 1:
+            case MIDDLE:
                 return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 1, 0, 0, 15, 16, 1);
-            case 2:
+            case UPPER:
                 return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 1, 0, 0, 15, 6, 1);
             default:
                 return VoxelShapes.empty();

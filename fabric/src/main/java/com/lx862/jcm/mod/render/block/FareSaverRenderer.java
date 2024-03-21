@@ -11,6 +11,7 @@ import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.block.IBlock;
 
 public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEntity> {
     public static final int TEXT_TILT_ANGLE = -10;
@@ -21,8 +22,7 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
     @Override
     public void renderCurated(FareSaverBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
         Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
-        int part = BlockUtil.getProperty(state, BlockProperties.VERTICAL_PART_3);
-        if(part != 2) return;
+        if(BlockUtil.getProperty(state, new Property<>(BlockProperties.VERTICAL_PART_3.data)) != IBlock.EnumThird.UPPER) return;
 
         MutableText discountText = TextUtil.literal(be.getCurrency() + be.getDiscount());
 
