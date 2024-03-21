@@ -20,13 +20,9 @@ public class RegistryHelper {
         return REGISTRY.registerBlockWithBlockItem(new Identifier(Constants.MOD_ID, id), () -> block, itemGroup);
     }
 
-    public static BlockRegistryObject registerBlockItem(String id, net.minecraft.block.Block block, CreativeModeTabHolder itemGroup) {
-        return registerBlockItem(id, new Block(block), itemGroup);
-    }
-
-    public static BlockRegistryObject registerBlock(String id, net.minecraft.block.Block block) {
+    public static BlockRegistryObject registerBlock(String id, Block block) {
         // Registry.register(Registries.BLOCK, new Identifier(Constants.MOD_ID, id), block);
-        return REGISTRY.registerBlock(new Identifier(Constants.MOD_ID, id), () -> new Block(block));
+        return REGISTRY.registerBlock(new Identifier(Constants.MOD_ID, id), () -> block);
     }
 
     public static ItemRegistryObject registerItem(String id, Function<ItemSettings, org.mtr.mapping.holder.Item> callback, CreativeModeTabHolder itemGroup) {

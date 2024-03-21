@@ -51,7 +51,7 @@ public abstract class TitledScreen extends AnimatedScreen {
     }
 
     private void drawTitle(GraphicsHolder graphicsHolder) {
-        int titleHeight = (textRenderer.fontHeight * TITLE_SCALE);
+        int titleHeight = (RenderHelper.lineHeight * TITLE_SCALE);
         MutableText titleText = getScreenTitle();
         graphicsHolder.push();
         graphicsHolder.translate(width / 2.0, TEXT_PADDING, 0);
@@ -63,7 +63,7 @@ public abstract class TitledScreen extends AnimatedScreen {
     }
 
     private void drawSubtitle(GraphicsHolder graphicsHolder) {
-        double titleHeight = (textRenderer.fontHeight * TITLE_SCALE);
+        double titleHeight = (RenderHelper.lineHeight * TITLE_SCALE);
         MutableText subtitleText = getScreenSubtitle();
         graphicsHolder.push();
         graphicsHolder.translate(width / 2.0, titleHeight * animationProgress, 0);

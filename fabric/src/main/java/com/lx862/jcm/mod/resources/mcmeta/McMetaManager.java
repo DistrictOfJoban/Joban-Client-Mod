@@ -54,7 +54,7 @@ public class McMetaManager {
     }
 
     /**
-     * The most vital method, it returns the start & end V for use when rendering with UV, so only 1 part of the image will be shown
+     * The most vital method, it returns the start and end V for use when rendering with UV, so only 1 part of the image will be shown
      * @param id Identifier of the texture
      * @return The starting and the end V, default to 0.0 and 1.0 (Full Texture) if the texture is not a mcmeta animation loaded to this manager
      */

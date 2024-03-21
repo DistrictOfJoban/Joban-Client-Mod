@@ -5,7 +5,6 @@ import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.jetbrains.annotations.Nullable;
 import org.mtr.mapping.holder.MutableText;
-import org.mtr.mapping.holder.TextRenderer;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
@@ -111,7 +110,7 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         return super.mouseClicked2(mouseX, mouseY, button);
     }
 
-    public long getValue() {
+    public long getNumber() {
         try {
             return Integer.parseInt(getText2());
         } catch (Exception e) {

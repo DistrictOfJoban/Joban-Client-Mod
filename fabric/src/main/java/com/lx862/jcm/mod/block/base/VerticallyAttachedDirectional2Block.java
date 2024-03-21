@@ -29,7 +29,7 @@ public abstract class VerticallyAttachedDirectional2Block extends VerticallyAtta
     }
 
     public void onPlaced2(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-        HorizontalDoubleBlockBehavior.placeBlock(world, pos, state, IS_LEFT, Direction.convert(state.get(new Property<>(FACING.data)).rotateYClockwise()), width);
+        HorizontalDoubleBlockBehavior.placeBlock(world, pos, state, IS_LEFT, Direction.convert(state.get(new Property<>(FACING.data))).rotateYClockwise(), width);
     }
 
     @Override

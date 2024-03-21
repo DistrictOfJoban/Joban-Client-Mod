@@ -1,0 +1,32 @@
+modLoader = "javafml"
+loaderVersion = "[36,)"
+license = "MIT"
+
+[[mods]]
+modId = "jsblock"
+version = "${mod_version}"
+displayName = "Joban Client Mod"
+authors = "LX86"
+description = "Addon for Minecraft Transit Railway 4, providing more railway facilities."
+logoFile = "icon.png"
+
+[[dependencies.jsblock]]
+modId = "forge"
+mandatory = true
+versionRange = "[36,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.jsblock]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[${minecraft_version}]"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.jsblock]]
+modId = "mtr"
+mandatory = true
+versionRange = "1.0"
+ordering = "AFTER"
+side = "BOTH"

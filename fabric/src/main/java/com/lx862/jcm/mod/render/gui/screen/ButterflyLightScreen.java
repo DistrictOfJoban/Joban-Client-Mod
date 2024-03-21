@@ -32,6 +32,6 @@ public class ButterflyLightScreen extends BlockConfigScreen {
 
     @Override
     public void onSave() {
-        Networking.sendPacketToServer(new ButterflyLightUpdatePacket(blockPos, (int) startBlinkingSecondsTextField.getValue()));
+        Networking.sendPacketToServer(new ButterflyLightUpdatePacket(blockPos, (int) startBlinkingSecondsTextField.getNumber()));
     }
 }

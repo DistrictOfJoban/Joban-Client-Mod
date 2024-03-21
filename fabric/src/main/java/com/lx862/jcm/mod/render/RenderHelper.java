@@ -12,6 +12,7 @@ public interface RenderHelper {
     int ARGB_BLACK = 0xFF000000;
     int ARGB_WHITE = 0xFFFFFFFF;
     int ARGB_RED = 0xFF0000FF;
+    int lineHeight = 9;
 
     static void drawText(GraphicsHolder graphicsHolder, MutableText text, int x, int y, int textColor) {
         graphicsHolder.drawText(text, x, y, textColor, false, MAX_RENDER_LIGHT);

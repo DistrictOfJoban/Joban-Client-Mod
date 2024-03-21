@@ -65,7 +65,7 @@ public class CoordTextField extends TextFieldWidgetExtension implements RenderHe
         return super.mouseScrolled3(mouseX, mouseY, amount);
     }
 
-    public int getValue() {
+    public int getNumber() {
         try {
             return Integer.parseInt(getText2());
         } catch (Exception e) {

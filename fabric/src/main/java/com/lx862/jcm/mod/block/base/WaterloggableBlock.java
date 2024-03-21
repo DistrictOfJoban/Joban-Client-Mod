@@ -1,16 +1,18 @@
-package com.lx862.jcm.mod.block.base;
+/*package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.block.behavior.WaterloggableBehavior;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
-
+*/
 /**
  * A waterlogged block
  * Cannot find ways to migrate non-waterlogged block yet, so this is not in use.
  * (WATERLOGGED is a BooleanProperty, by default Minecraft will use the first value as it's default value, and somehow "true" comes first)
  */
+
+/*
 public abstract class WaterloggableBlock extends JCMBlock implements WaterloggableBehavior {
     public WaterloggableBlock(BlockSettings settings) {
         super(settings);
@@ -39,3 +41,4 @@ public abstract class WaterloggableBlock extends JCMBlock implements Waterloggab
         return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos);
     }
 }
+*/

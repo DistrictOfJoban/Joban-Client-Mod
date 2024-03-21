@@ -90,7 +90,7 @@ public class SoundLooperScreen extends BlockConfigScreen {
 
     @Override
     public void onSave() {
-        Networking.sendPacketToServer(new SoundLooperUpdatePacket(blockPos, corner1Widget.getBlockPos(), corner2Widget.getBlockPos(), soundIdTextField.getText2(), soundCategory, (int)repeatTickTextField.getValue(), soundVolumeTextField.getValue() / 100f, needRedstonePowerCheckbox.isChecked2(), limitSoundRangeCheckbox.isChecked2()));
+        Networking.sendPacketToServer(new SoundLooperUpdatePacket(blockPos, corner1Widget.getBlockPos(), corner2Widget.getBlockPos(), soundIdTextField.getText2(), soundCategory, (int)repeatTickTextField.getNumber(), soundVolumeTextField.getNumber() / 100f, needRedstonePowerCheckbox.isChecked2(), limitSoundRangeCheckbox.isChecked2()));
     }
 
     private void setSoundCategory(int category) {

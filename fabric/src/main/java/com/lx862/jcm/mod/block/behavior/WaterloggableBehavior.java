@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.block.behavior;
+/*package com.lx862.jcm.mod.block.behavior;
 
 import com.lx862.jcm.mod.util.BlockUtil;
 import net.minecraft.block.Waterloggable;
@@ -31,3 +31,4 @@ public interface WaterloggableBehavior extends Waterloggable {
         return state.with(new Property<>(WATERLOGGED.data), world.getFluidState(pos).getFluid() == Fluids.WATER);
     }
 }
+*/

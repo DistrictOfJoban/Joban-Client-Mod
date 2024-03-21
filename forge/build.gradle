@@ -1,0 +1,92 @@
+plugins {
+    id "net.minecraftforge.gradle" version "+"
+    id "org.spongepowered.mixin" version "+"
+}
+
+minecraft {
+    mappings channel: "official", version: rootProject.minecraft_version
+    runs {
+        configureEach {
+            property "forge.logging.markers", "REGISTRIES"
+            property "forge.logging.console.level", "debug"
+        }
+        client {}
+        server { args "--nogui" }
+    }
+}
+
+sourceSets.main.resources { srcDir "src/generated/resources" }
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${rootProject.minecraft_version}-${project.properties["forge_version_$rootProject.minecraft_version"]}"
+    annotationProcessor "org.spongepowered:mixin:+:processor"
+    implementation fg.deobf("org.mtr:MTR-forge-${rootProject.minecraft_version}:${rootProject.mtr_version}")
+}
+
+mixin {
+    add sourceSets.main, "jsblock.refmap.json"
+    config "jsblock.mixins.json"
+    debug.verbose = true
+    debug.export = true
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version: minecraft_version, mod_version: mod_version,
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+javadoc.enabled = false // Our manifold syntax screwed up the javadoc task :)
+
+tasks.register("setupFiles") {
+//    copy {
+//        outputs.upToDateWhen { false }
+//        from "src/main/mods.template.toml"
+//        into "src/main/resources/META-INF"
+//        filter(ReplaceTokens, tokens: ["minecraft": minecraftVersion, "version": minecraftVersion + "-" + version])
+//        rename "(.+).template.toml", "\$1.toml"
+//    }
+
+    delete fileTree("src/main/java/com/lx862/jcm/mod")
+    delete fileTree("src/main/resources/assets")
+    delete fileTree("src/main/resources/data")
+
+    copy {
+        outputs.upToDateWhen { false }
+        from "../fabric/src/main/java/com/lx862/jcm/mod"
+        into "src/main/java/com/lx862/jcm/mod"
+    }
+
+    copy {
+        outputs.upToDateWhen { false }
+        from "../fabric/src/main/resources/assets"
+        into "src/main/resources/assets"
+    }
+
+    copy {
+        outputs.upToDateWhen { false }
+        from "../fabric/src/main/resources/data"
+        into "src/main/resources/data"
+    }
+}
+
+build {
+    finalizedBy moveBuildFile
+}
+
+artifacts {
+    archives jar
+}

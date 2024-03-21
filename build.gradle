@@ -1,35 +1,23 @@
-plugins {
-//	id "com.github.johnrengelman.shadow" version "+" apply false
-}
-
 subprojects {
 	apply plugin: "java"
-//	apply plugin: "com.github.johnrengelman.shadow"
 
 	group project.maven_group
 	version "${rootProject.properties.mod_version}+${rootProject.properties.minecraft_version}"
 
-	configurations {
-//		shadowImplementation
-//		implementation.extendsFrom shadowImplementation
+	base {
+		archivesName = "${rootProject.archives_base_name}-${project.properties.loader_name}"
 	}
 
 	dependencies {
 		annotationProcessor 'systems.manifold:manifold-preprocessor:+'
 		implementation 'com.google.code.findbugs:jsr305:+'
-		implementation "org.mtr:Minecraft-Mappings-common:0.0.1"
 	}
 
 	repositories {
+		mavenCentral()
 		flatDir { dirs "../libs" }
+		maven { url "https://jitpack.io" }
 	}
-//
-//	shadowJar {
-//		minimize()
-//		configurations = [project.configurations.shadowImplementation]
-//		enableRelocation = false
-//		relocationPrefix = "com.lx862.jcm.lib"
-//	}
 
 	/* Manifold support */
 	tasks.withType(JavaCompile).forEach {
@@ -44,5 +32,10 @@ subprojects {
 				"-AMC_VERSION=$manifold_mc_version",
 				"-ALOADER=$project.properties.loader_name"
 		]
+	}
+
+	tasks.register('moveBuildFile', Copy) {
+		from "${project.projectDir}/build/libs/${base.archivesName.get()}-${version}.jar"
+		into "${rootProject.projectDir}/build"
 	}
 }

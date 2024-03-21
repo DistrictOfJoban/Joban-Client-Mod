@@ -83,7 +83,7 @@ public class BlockPosWidget extends ClickableWidgetExtension implements MultiWid
     }
 
     public BlockPos getBlockPos() {
-        return new BlockPos(posXTextField.getValue(), posYTextField.getValue(), posZTextField.getValue());
+        return new BlockPos(posXTextField.getNumber(), posYTextField.getNumber(), posZTextField.getNumber());
     }
 
     private void setPosition(String str) {

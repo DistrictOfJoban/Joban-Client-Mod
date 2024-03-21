@@ -24,6 +24,8 @@ jobs:
         run: chmod +x ./gradlew
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+      - name: Setup Forge files
+        run: ./gradlew forge:setupFiles -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Build with Gradle
         run: ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Upload Artifacts to GitHub
