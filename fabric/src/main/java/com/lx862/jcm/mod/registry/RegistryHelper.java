@@ -8,21 +8,23 @@ import org.mtr.mapping.tool.PacketBufferReceiver;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class RegistryHelper {
+
     public static final Registry REGISTRY = new Registry();
 
-    public static BlockRegistryObject registerBlockItem(String id, Block block, CreativeModeTabHolder itemGroup) {
+    public static BlockRegistryObject registerBlockItem(String id, Supplier<Block> supplier, CreativeModeTabHolder itemGroup) {
         /* Fabric Routine:
             registerBlock(id, block);
             registerItem(id, new BlockItem(Item.Settings()), itemGroup)
         */
-        return REGISTRY.registerBlockWithBlockItem(new Identifier(Constants.MOD_ID, id), () -> block, itemGroup);
+        return REGISTRY.registerBlockWithBlockItem(new Identifier(Constants.MOD_ID, id), supplier, itemGroup);
     }
 
-    public static BlockRegistryObject registerBlock(String id, Block block) {
+    public static BlockRegistryObject registerBlock(String id, Supplier<Block> supplier) {
         // Registry.register(Registries.BLOCK, new Identifier(Constants.MOD_ID, id), block);
-        return REGISTRY.registerBlock(new Identifier(Constants.MOD_ID, id), () -> block);
+        return REGISTRY.registerBlock(new Identifier(Constants.MOD_ID, id), supplier);
     }
 
     public static ItemRegistryObject registerItem(String id, Function<ItemSettings, org.mtr.mapping.holder.Item> callback, CreativeModeTabHolder itemGroup) {

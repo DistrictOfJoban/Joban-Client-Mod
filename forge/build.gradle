@@ -35,7 +35,6 @@ java {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
     withSourcesJar()
-    withJavadocJar()
 }
 
 tasks.named('processResources', ProcessResources).configure {
@@ -48,8 +47,6 @@ tasks.named('processResources', ProcessResources).configure {
         expand replaceProperties + [project: project]
     }
 }
-
-javadoc.enabled = false // Our manifold syntax screwed up the javadoc task :)
 
 tasks.register("setupFiles") {
 //    copy {
