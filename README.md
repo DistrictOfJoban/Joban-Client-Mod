@@ -25,8 +25,6 @@ It is currently not production ready yet and contains many changes (Including bl
 Prebuilt jar of the mod can be found in the [action tab](https://github.com/DistrictOfJoban/Joban-Client-Mod/actions).  
 Use with caution!
 
-**Note: Network packet on Minecraft <= 1.19.4 in Dev Environment may fail with refCnt 0, develop in 1.20.4 for now.**
-
 ## Links
 - [Website](https://www.joban.org/JCM/)
 - [Wiki](https://www.joban.org/wiki/JCM:Joban_Client_Mod)
