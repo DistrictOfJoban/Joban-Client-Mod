@@ -39,7 +39,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 8
+    it.options.release = java_version
 }
 
 configurations.configureEach {
