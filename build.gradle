@@ -26,7 +26,7 @@ subprojects {
 	def manifold_mc_version = "$mc_major$mc_main$mc_minor"
 
 	ext { // Expose to subproject
-		java_version = mc_main == 16 ? 8 : mc_main == 17 ? 16 : 17;
+		java_version = mc_main == "16" ? 8 : mc_main == "17" ? 16 : 17;
 	}
 
 	/* Manifold support */
