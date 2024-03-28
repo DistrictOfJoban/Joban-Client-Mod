@@ -9,8 +9,8 @@ public interface VerticallyAttachedBlock {
     static boolean canPlace(boolean canAttachTop, boolean canAttachBottom, BlockPos pos, ItemPlacementContext ctx) {
         World world = ctx.getWorld();
 
-        boolean blockAboveSolid = BlockUtil.blockConsideredSolid(world.getBlockState(pos.up()));
-        boolean blockBelowSolid = BlockUtil.blockConsideredSolid(world.getBlockState(pos.down()));
+        boolean blockAboveSolid = !world.getBlockState(pos.up()).isAir();
+        boolean blockBelowSolid = !world.getBlockState(pos.down()).isAir();
 
         if (!blockAboveSolid && !blockBelowSolid) return false;
         if (!canAttachTop && !blockBelowSolid) return false;

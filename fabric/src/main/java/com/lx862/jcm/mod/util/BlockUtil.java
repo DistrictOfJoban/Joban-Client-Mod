@@ -10,12 +10,6 @@ import java.util.ArrayList;
  * Contains utilities method for block checking/manipulation
  */
 public class BlockUtil {
-
-    public static boolean blockConsideredSolid(BlockState state) {
-        /* TODO: blockState.isSideSolidFullSquare, to be mapped */
-        return !state.isAir();
-    }
-
     public static boolean canSurvive(Block instance, WorldAccess world, BlockPos pos, Direction facing, int part, int totalWidthHeight) {
         boolean checkLeftOrBottom = part != 0;
         boolean checkRightOrTop = part != totalWidthHeight - 1;

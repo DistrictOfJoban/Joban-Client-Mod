@@ -15,7 +15,7 @@ public abstract class WallAttachedBlock extends DirectionalBlock implements Wall
         if (superState == null) return null;
 
         Direction facing = BlockUtil.getProperty(superState, FACING);
-        boolean isAttached = WallAttachedBlockBehavior.canBePlaced(ctx.getBlockPos(), World.cast(ctx.getWorld()), getWallDirection(facing));
+        boolean isAttached = WallAttachedBlockBehavior.canBePlaced(ctx.getBlockPos(), World.cast(ctx.getWorld()), Direction.fromHorizontal(ctx.getSide().getHorizontal()).getOpposite());
         if(!isAttached) return null;
 
         return superState.with(new Property<>(FACING.data), Direction.fromHorizontal(ctx.getSide().getHorizontal()).getOpposite().data);

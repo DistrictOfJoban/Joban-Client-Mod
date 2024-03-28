@@ -72,7 +72,7 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
                     final SoundCategory category = SOURCE_LIST[soundCategory];
                     SoundEvent soundEvent = AbstractSoundInstanceExtension.createSoundEvent(identifier);
                     player.playSound(soundEvent, category, volume, 1);
-//                    // TODO: Test does this actually work
+//                    // TODO: Fade the volume
                 });
             } else {
                 // TODO: Implement limit range
