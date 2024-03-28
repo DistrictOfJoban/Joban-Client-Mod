@@ -26,14 +26,16 @@ public class APGDoorDRL extends BlockPSDAPGDoorBase implements BlockWithEntity {
         return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0.0, 0.0, 0.0, 16.0, height, 4.0);
     }
 
-//    @Override
-//    public VoxelShape getCollisionShape2(BlockState state, BlockView blockView, BlockPos pos, ShapeContext shapeContext) {
-//        final org.mtr.mapping.holder.BlockEntity blockEntity = blockView.getBlockEntity(pos);
-//        final World world = blockEntity == null ? null : blockEntity.getWorld();
-//        if(world == null || !world.isClient()) return VoxelShapes.empty();
-//        if(((BlockEntityBase) blockEntity.data).getDoorValue())
-//
-//        int height = BlockUtil.getProperty(state, new Property<>(HALF.data)) == DoubleBlockHalf.UPPER ? 9 : 16;
-//        return VoxelUtil.getDirectionalShape16( BlockUtil.getProperty(state, FACING), 0.0, 0.0, 0.0, 16.0, height, 4.0);
-//    }
+    @Override
+    public VoxelShape getCollisionShape2(BlockState state, BlockView blockView, BlockPos pos, ShapeContext shapeContext) {
+        final BlockEntity blockEntity = blockView.getBlockEntity(pos);
+        final World world = blockEntity == null ? null : blockEntity.getWorld();
+        if(world == null || !world.isClient()) return VoxelShapes.empty();
+
+        if(((BlockEntityBase) blockEntity.data).getDoorValue() == 0.0) {
+            int height = BlockUtil.getProperty(state, new Property<>(HALF.data)) == DoubleBlockHalf.UPPER ? 9 : 16;
+            return VoxelUtil.getDirectionalShape16( BlockUtil.getProperty(state, FACING), 0.0, 0.0, 0.0, 16.0, height, 4.0);
+        }
+        return VoxelShapes.empty();
+    }
 }

@@ -32,7 +32,7 @@ mixin {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(java_version))
     }
     withSourcesJar()
 }
@@ -49,14 +49,6 @@ tasks.named('processResources', ProcessResources).configure {
 }
 
 tasks.register("setupFiles") {
-//    copy {
-//        outputs.upToDateWhen { false }
-//        from "src/main/mods.template.toml"
-//        into "src/main/resources/META-INF"
-//        filter(ReplaceTokens, tokens: ["minecraft": minecraftVersion, "version": minecraftVersion + "-" + version])
-//        rename "(.+).template.toml", "\$1.toml"
-//    }
-
     delete fileTree("src/main/java/com/lx862/jcm/mod")
     delete fileTree("src/main/resources/assets")
     delete fileTree("src/main/resources/data")

@@ -63,7 +63,7 @@ public class ClientConfig {
         }
 
         try {
-            CONFIG_PATH.toFile().mkdirs();
+            CONFIG_PATH.getParent().toFile().mkdirs();
             Files.write(CONFIG_PATH, Collections.singleton(new GsonBuilder().setPrettyPrinting().create().toJson(jsonConfig)));
         } catch (Exception e) {
             e.printStackTrace();
