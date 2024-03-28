@@ -3,6 +3,8 @@ package com.lx862.jcm.mod.block.entity;
 import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.registry.BlockEntities;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.AbstractSoundInstanceExtension;
+import org.mtr.mapping.mapper.MinecraftServerHelper;
 
 public class SoundLooperBlockEntity extends JCMBlockEntityBase {
     public static final SoundCategory[] SOURCE_LIST = {SoundCategory.MASTER, SoundCategory.MUSIC, SoundCategory.WEATHER, SoundCategory.AMBIENT, SoundCategory.PLAYERS, SoundCategory.BLOCKS, SoundCategory.VOICE};
@@ -59,20 +61,21 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
             if(needRedstone && !emittingRedstonePower) return;
 
             if(!limitRange) {
-//                world.getPlayers().forEach(player -> {
-//                    Identifier identifier = null;
-//                    try {
-//                        identifier = new Identifier(soundID);
-//                    } catch (Exception ignored) {
-//                    }
-//
-//                    if(identifier == null) return;
-//                    final SoundCategory category = SOURCE_LIST[soundCategory];
-//                    final long seed = world.getRandom().nextLong();
-//                    // TODO: Implement the rest, need SoundEvent.of
-//                });
-            } else {
+                MinecraftServerHelper.iteratePlayers(ServerWorld.cast(world), (player) -> {
+                    Identifier identifier = null;
+                    try {
+                        identifier = new Identifier(soundID);
+                    } catch (Exception ignored) {
+                    }
 
+                    if(identifier == null) return;
+                    final SoundCategory category = SOURCE_LIST[soundCategory];
+                    SoundEvent soundEvent = AbstractSoundInstanceExtension.createSoundEvent(identifier);
+                    player.playSound(soundEvent, category, volume, 1);
+//                    // TODO: Test does this actually work
+                });
+            } else {
+                // TODO: Implement limit range
             }
         }
     }
