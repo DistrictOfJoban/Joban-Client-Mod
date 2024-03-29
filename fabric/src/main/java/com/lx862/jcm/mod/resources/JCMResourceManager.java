@@ -28,7 +28,6 @@ public class JCMResourceManager {
                 JsonObject jsonObject = new JsonParser().parse(str).getAsJsonObject();
 
                 PIDSManager.reload(jsonObject);
-                VisualEditorScreen.RL();
             } catch (Exception e) {
                 e.printStackTrace();
                 JCMLogger.error("Failed to parse custom resource file!");

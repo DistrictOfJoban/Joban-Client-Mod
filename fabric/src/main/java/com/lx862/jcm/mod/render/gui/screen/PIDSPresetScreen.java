@@ -12,12 +12,7 @@ import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 
-import com.lx862.jcm.mod.render.gui.screen.VisualEditorScreen;
-
-import org.mtr.mapping.holder.ClickableWidget;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.MutableText;
-import org.mtr.mapping.holder.Text;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
@@ -92,9 +87,9 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         });
 
         ButtonWidgetExtension editBtn = new ButtonWidgetExtension(0, 0, 40, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.edit"), (btn) -> {
-            VisualEditorScreen ve = new VisualEditorScreen(client, preset.getId(), this);
-            ve.init(this.client, this.width, this.height);
-            this.client.setScreen(ve);
+            MinecraftClient.getInstance().openScreen(
+                new Screen(new VisualEditorScreen(preset.getId()).withPreviousScreen(new Screen(this)))
+            );
         });
 
         if(preset.getId().equals(selectedPreset)) {
