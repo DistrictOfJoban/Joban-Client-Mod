@@ -39,12 +39,13 @@ public class VisualEditorScreen extends ScreenBase {
 
     public VisualEditorScreen(String selectedPresetId) {
         super();
-        initializeCategories();
-        loadJSON();
-        updateCurrentIdIndex();
 
         this.resourcePackFolder = new File(org.mtr.mapping.holder.MinecraftClient.getInstance().getRunDirectoryMapped(), "resourcepacks");
         this.selectedPresetId = selectedPresetId;
+
+        initializeCategories();
+        loadJSON();
+        updateCurrentIdIndex();
 
         this.backgroundTextField = new TextFieldWidgetExtension(20, 0, 200, 20, Integer.MAX_VALUE, TextCase.DEFAULT, null, null);
         this.idTextField = new TextFieldWidgetExtension(20, this.height / 6 + 20, 200, 20, Integer.MAX_VALUE, TextCase.DEFAULT, null, null);
