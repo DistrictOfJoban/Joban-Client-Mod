@@ -38,14 +38,14 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private static final Identifier ICON_WEATHER_RAINY = new Identifier(Constants.MOD_ID, "textures/block/pids/weather_rainy.png");
     private static final Identifier ICON_WEATHER_THUNDER = new Identifier(Constants.MOD_ID, "textures/block/pids/weather_thunder.png");
     private static final Identifier TEXTURE_PLATFORM_CIRCLE = new Identifier(Constants.MOD_ID, "textures/block/pids/plat_circle.png");
-    private final Identifier background;
-    private final String fontId;
+    protected Identifier background;
+    protected String fontId;
     private final TextOverflowMode textOverflowMode;
-    private final boolean showClock;
-    private final boolean showWeather;
-    private final boolean topPadding;
-    private final int textColor;
-    private final boolean[] rowHidden;
+    protected boolean showClock;
+    protected boolean showWeather;
+    protected boolean topPadding;
+    protected int textColor;
+    protected boolean[] rowHidden;
 
     public JsonPIDSPreset(String id, @Nullable String name, @Nullable Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, int textColor) {
         super(id, name, false);
@@ -72,7 +72,11 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         Identifier background = null;
         TextOverflowMode textOverflowMode = TextOverflowMode.STRETCH;
         if(jsonObject.has("color")) {
-            textColor = (int)Long.parseLong("FF" + jsonObject.get("color").getAsString(), 16);
+            String textColorString = jsonObject.get("color").getAsString();
+            if(textColorString.length() < 8) {
+                textColorString = "FF" + textColorString;
+            }
+            textColor = (int)Long.parseLong(textColorString, 16);
         }
         if(jsonObject.has("name")) {
             name = jsonObject.get("name").getAsString();
@@ -125,6 +129,22 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     @Override
     public boolean isRowHidden(int row) {
         return rowHidden.length - 1 < row ? false : rowHidden[row];
+    }
+
+    public boolean getShowWeather() {
+        return showWeather;
+    }
+
+    public boolean getShowClock() {
+        return showClock;
+    }
+
+    public boolean getTopPadding() {
+        return topPadding;
+    }
+
+    public MutableJsonPIDSPreset toMutable() {
+        return new MutableJsonPIDSPreset(getId(), getName(), background, fontId, textOverflowMode, rowHidden, showClock, showWeather, topPadding, textColor);
     }
 
     @Override

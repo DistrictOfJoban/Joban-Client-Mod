@@ -15,8 +15,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public abstract class PIDSPresetBase implements RenderHelper {
-    private final String id;
-    private final String name;
+    protected final String id;
+    protected final String name;
     public final boolean builtin;
     public PIDSPresetBase(String id, @Nullable String name, boolean builtin) {
         this.id = id;
