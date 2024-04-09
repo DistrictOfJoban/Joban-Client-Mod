@@ -28,7 +28,7 @@ subprojects {
 	ext { // Expose to subproject
 		java_version = mc_main == "16" ? 8 : mc_main == "17" ? 16 : 17;
 		lg_unicode = (mc_main as int) <= 19 ? rootProject.properties.legacy_unicode_font : ""
-		door_blockstate = (mc_main as int) <= 19 ? rootProject.properties.mc_door_118 : rootProject.properties.mc_door_120
+		door_blockstate = (mc_main as int) <= 18 ? rootProject.properties.mc_door_118 : rootProject.properties.mc_door_119
 	}
 
 	/* Manifold support */
