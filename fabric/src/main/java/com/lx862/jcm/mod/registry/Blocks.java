@@ -14,6 +14,7 @@ public final class Blocks {
     public static final BlockRegistryObject APG_DOOR_DRL = RegistryHelper.registerBlock("apg_door_drl", () -> new Block(new APGDoorDRL()));
     public static final BlockRegistryObject APG_GLASS_DRL = RegistryHelper.registerBlock("apg_glass_drl", () -> new Block(new APGGlassDRL()));
     public static final BlockRegistryObject APG_GLASS_END_DRL = RegistryHelper.registerBlock("apg_glass_end_drl", () -> new Block(new APGGlassEndDRL()));
+    public static final BlockRegistryObject AUTO_IRON_DOOR_BLOCK = RegistryHelper.registerBlockItem("auto_iron_door", () -> new Block(new AutoIronDoorBlock((blockSettings) -> blockSettings.strength(4.0f).nonOpaque())), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject BUTTERFLY_LIGHT = RegistryHelper.registerBlockItem("butterfly_light", () -> new Block(new ButterflyLightBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject BUFFER_STOP = RegistryHelper.registerBlockItem("buffer_stop", () -> new Block(new BufferStopBlock(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque())), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject CIRCLE_WALL_1 = RegistryHelper.registerBlockItem("circle_wall_1", () -> new Block(new CircleWallBlock(BlockHelper.createBlockSettings(false).strength(4.0f))), ItemGroups.JCM_MAIN);
@@ -91,6 +92,7 @@ public final class Blocks {
                 APG_DOOR_DRL,
                 APG_GLASS_DRL,
                 APG_GLASS_END_DRL,
+                AUTO_IRON_DOOR_BLOCK,
                 BUFFER_STOP,
                 BUTTERFLY_LIGHT,
                 CIRCLE_WALL_1,
