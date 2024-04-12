@@ -20,6 +20,7 @@ public class AutoIronDoorBlockEntity extends JCMBlockEntityBase {
         World world = getWorld2();
 
         if(world != null && !world.isClient() && JCMServerStats.getGameTick() % 5 == 0) {
+            BlockPos pos = getPos2();
             BlockState state = BlockUtil.getBlockState(world, getPos2());
             if(state == null) return;
             Box box = new Box(pos.getX() - DETECT_RADIUS, pos.getY() - DETECT_RADIUS, pos.getZ() - DETECT_RADIUS, pos.getX() + DETECT_RADIUS, pos.getY() + DETECT_RADIUS, pos.getZ() + DETECT_RADIUS);
