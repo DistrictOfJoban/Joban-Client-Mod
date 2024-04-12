@@ -11,7 +11,7 @@ import org.mtr.mapping.mapper.WorldHelper;
 public class ClockComponent extends TextComponent {
     // TODO: (Maybe next version) Add 12/24h toggle
     public ClockComponent(String font, int textColor, double x, double y, double width, double height) {
-        super(font, textColor, x, y, width, height);
+        super(font, TextOverflowMode.STRETCH, textColor, x, y, width, height);
     }
 
     @Override
@@ -20,6 +20,6 @@ public class ClockComponent extends TextComponent {
         long hours = timeNow / 1000;
         long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
         String timeString = String.format("%02d:%02d", hours % 24, minutes % 60);
-        drawText(graphicsHolder, TextAlignment.RIGHT, facing, timeString, TextOverflowMode.STRETCH);
+        drawText(graphicsHolder, TextAlignment.RIGHT, facing, timeString);
     }
 }

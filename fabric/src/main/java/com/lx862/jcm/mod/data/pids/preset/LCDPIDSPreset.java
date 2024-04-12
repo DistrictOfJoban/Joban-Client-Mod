@@ -75,13 +75,13 @@ public class LCDPIDSPreset extends PIDSPresetBase {
             if(arrivalIndex >= arrivals.getArrivals().size()) return;
 
             if(!customMessages[i].isEmpty()) {
-                drawCalls.add(new CustomTextComponent(getFont(), getTextColor(), TextAlignment.LEFT, customMessages[i], TextOverflowMode.STRETCH, x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
+                drawCalls.add(new CustomTextComponent(getFont(), TextOverflowMode.STRETCH, TextAlignment.LEFT, getTextColor(), customMessages[i], x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
             } else {
                 if(!rowHidden[i]) {
                     ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    drawCalls.add(new DestinationComponent(arrival, getFont(), getTextColor(), x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
-                    drawCalls.add(new ETAComponent(arrival, getFont(), getTextColor(), width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                    drawCalls.add(new DestinationComponent(arrivals, TextOverflowMode.STRETCH, arrivalIndex, getFont(), getTextColor(), x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+                    drawCalls.add(new ETAComponent(arrivals, arrivalIndex, getFont(), getTextColor(), width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
                     arrivalIndex++;
                 }
             }

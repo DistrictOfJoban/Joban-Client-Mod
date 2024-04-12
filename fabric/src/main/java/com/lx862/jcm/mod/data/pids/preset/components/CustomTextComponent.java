@@ -10,17 +10,15 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 
 public class CustomTextComponent extends TextComponent {
     private final TextAlignment textAlignment;
-    private final TextOverflowMode textOverflowMode;
     private final String text;
-    public CustomTextComponent(String font, int textColor, TextAlignment textAlignment, String text, TextOverflowMode textOverflowMode, double x, double y, double width, double height, double scale) {
-        super(font, textColor, x, y, width, height, scale);
+    public CustomTextComponent(String font, TextOverflowMode textOverflowMode, TextAlignment textAlignment, int textColor, String text, double x, double y, double width, double height, double scale) {
+        super(font, textOverflowMode, textColor, x, y, width, height, scale);
         this.textAlignment = textAlignment;
         this.text = text;
-        this.textOverflowMode = textOverflowMode;
     }
 
     @Override
     public void render(GraphicsHolder graphicsHolder, World world, Direction facing) {
-        drawText(graphicsHolder, textAlignment, facing, new TextInfo(cycleString(text)), textOverflowMode);
+        drawText(graphicsHolder, textAlignment, facing, new TextInfo(cycleString(text)));
     }
 }

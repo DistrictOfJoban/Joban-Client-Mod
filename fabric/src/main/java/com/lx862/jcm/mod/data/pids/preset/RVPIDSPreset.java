@@ -86,19 +86,18 @@ public class RVPIDSPreset extends PIDSPresetBase {
         double rowY = y;
         for(int i = 0; i < rows; i++) {
             if(customMessages[i] != null && !customMessages[i].isEmpty()) {
-                drawCalls.add(new CustomTextComponent(getFont(), getTextColor(), TextAlignment.LEFT, customMessages[i], TextOverflowMode.STRETCH, x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
+                drawCalls.add(new CustomTextComponent(getFont(), TextOverflowMode.STRETCH, TextAlignment.LEFT, getTextColor(), customMessages[i], x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
             } else {
                 if(!rowHidden[i] && arrivalIndex < arrivals.getArrivals().size()) {
-                    ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    drawCalls.add(new DestinationComponent(arrival, getFont(), getTextColor(), x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+                    drawCalls.add(new DestinationComponent(arrivals, TextOverflowMode.STRETCH, arrivalIndex, getFont(), getTextColor(), x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
 
                     if(!hidePlatform) {
-                        drawCalls.add(new PlatformComponent(arrival, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
-                        drawCalls.add(new PlatformCircleComponent(arrival, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
+                        drawCalls.add(new PlatformComponent(arrivals, arrivalIndex, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
+                        drawCalls.add(new PlatformCircleComponent(arrivals, arrivalIndex, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
                     }
 
-                    drawCalls.add(new ETAComponent(arrival, getFont(), getTextColor(), width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                    drawCalls.add(new ETAComponent(arrivals, arrivalIndex, getFont(), getTextColor(), width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
                     arrivalIndex++;
                 }
             }
