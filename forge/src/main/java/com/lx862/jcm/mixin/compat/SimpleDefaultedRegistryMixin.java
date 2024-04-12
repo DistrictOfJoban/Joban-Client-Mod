@@ -2,7 +2,7 @@ package com.lx862.jcm.mixin.compat;
 
 import com.lx862.jcm.mod.util.JCMUtil;
 #if MC_VERSION == "11605"
-import net.minecraft.util.registry.DefaultedRegistry
+import net.minecraft.util.registry.DefaultedRegistry;
 #elif MC_VERSION < "11904"
 import net.minecraft.core.DefaultedRegistry;
 #else
