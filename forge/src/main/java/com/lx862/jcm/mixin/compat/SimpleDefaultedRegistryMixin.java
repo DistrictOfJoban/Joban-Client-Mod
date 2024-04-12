@@ -35,7 +35,11 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(DefaultedMappedRegistry.class)
 #endif
 public class SimpleDefaultedRegistryMixin {
-    @ModifyVariable(at = @At("HEAD"), method = "get(Lnet/minecraft/resources/ResourceLocation;)Ljava/lang/Object;", ordinal = 0, argsOnly = true)
+    #if MC_VERSION == "11605"
+        @ModifyVariable(at = @At("HEAD"), method = "get(Lnet/minecraft/util/ResourceLocation;)Ljava/lang/Object;", ordinal = 0, argsOnly = true)
+    #else
+        @ModifyVariable(at = @At("HEAD"), method = "get(Lnet/minecraft/resources/ResourceLocation;)Ljava/lang/Object;", ordinal = 0, argsOnly = true)
+    #endif
     ResourceLocation dataFixerRegistry(ResourceLocation id) {
         if(id == null) return null;
         return JCMUtil.getMigrationId(new org.mtr.mapping.holder.Identifier(id)).data;
