@@ -1,13 +1,21 @@
 package com.lx862.jcm.mixin.compat;
 
 import com.lx862.jcm.mod.util.JCMUtil;
-#if MC_VERSION < "11904"
+#if MC_VERSION == "11605"
+import net.minecraft.util.registry.DefaultedRegistry
+#elif MC_VERSION < "11904"
 import net.minecraft.core.DefaultedRegistry;
 #else
 import net.minecraft.core.DefaultedMappedRegistry;
 #endif
+
+#if MC_VERSION == "11605"
+import net.minecraft.util.ResourceLocation;
+#else
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
+#endif
+
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -28,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 #endif
 public class SimpleDefaultedRegistryMixin {
     @ModifyVariable(at = @At("HEAD"), method = "get(Lnet/minecraft/resources/ResourceLocation;)Ljava/lang/Object;", ordinal = 0, argsOnly = true)
-    ResourceLocation dataFixerRegistry(@Nullable ResourceLocation id) {
+    ResourceLocation dataFixerRegistry(ResourceLocation id) {
         if(id == null) return null;
         return JCMUtil.getMigrationId(new org.mtr.mapping.holder.Identifier(id)).data;
     }
