@@ -47,7 +47,6 @@ public final class Blocks {
             if (isLit) return 15;
             else return 0;
         }).nonOpaque())), ItemGroups.JCM_MAIN);
-
     public static final BlockRegistryObject SUBSIDY_MACHINE = RegistryHelper.registerBlockItem("subsidy_machine", () -> new Block(new SubsidyMachineBlock(BlockHelper.createBlockSettings(false).nonOpaque())), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject SOUND_LOOPER = RegistryHelper.registerBlockItem("sound_looper", () -> new Block(new SoundLooperBlock(BlockHelper.createBlockSettings(false))), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject STATION_NAME_STANDING = RegistryHelper.registerBlockItem("station_name_standing", () -> new Block(new StationNameStandingBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.JCM_MAIN);
