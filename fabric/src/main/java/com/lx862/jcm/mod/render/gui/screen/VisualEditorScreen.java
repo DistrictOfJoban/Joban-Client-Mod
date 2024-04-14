@@ -11,6 +11,7 @@ import com.lx862.jcm.mod.render.gui.screen.base.ScreenBase;
 import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.resources.JCMResourceManager;
 
+import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 /*import net.minecraft.resource.ResourcePackManager;*/
@@ -59,11 +60,11 @@ public class VisualEditorScreen extends TitledScreen {
         this.colorTextField = new TextFieldWidgetExtension(20, 0, 200, 20, Integer.MAX_VALUE, TextCase.DEFAULT, null, null);
         this.colorTextField.setText2(Integer.toHexString(ourPreset.getTextColor()));
 
-        this.showWeatherCheckbox = new CheckboxWidgetExtension(20, 0, 200, 20,  "Show Weather", true, isChecked -> {
+        this.showWeatherCheckbox = new CheckboxWidgetExtension(20, 0, 200, 20,  TextUtil.translatable(TextCategory.GUI, "pids_preset.pids_editor.weather"), true, isChecked -> {
             ourPreset.setShowWeather(isChecked);
         });
 
-        this.showClockCheckbox = new CheckboxWidgetExtension(20, this.height / 6 + 120, 200, 20, "Show Clock", true, isChecked -> {
+        this.showClockCheckbox = new CheckboxWidgetExtension(20, this.height / 6 + 120, 200, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.pids_editor.clock"), true, isChecked -> {
             ourPreset.setShowClock(isChecked);
         });
     }
@@ -91,7 +92,7 @@ public class VisualEditorScreen extends TitledScreen {
 
         addChild(
                 new ClickableWidget(
-                        new ButtonWidgetExtension(this.width / 2 - 100, this.height - 30, 200, 20, "Back", button -> {
+                        new ButtonWidgetExtension(this.width / 2 - 100, this.height - 30, 200, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.pids_editor.back"), button -> {
                             onClose2();
                         })
                 )
@@ -139,7 +140,7 @@ public class VisualEditorScreen extends TitledScreen {
             int x = startX + i * (30 + horizontalGap) - 15;
             int y = this.height - 60;
             final int index = i;
-            hideRowCheckboxes[i] = new CheckboxWidgetExtension(x, y, 20, 20, "Hide Row " + (i + 1), true, isChecked -> {
+            hideRowCheckboxes[i] = new CheckboxWidgetExtension(x, y, 20, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.pids_editor.hiderow", (i+1)), true, isChecked -> {
                 ourPreset.setRowHidden(index, isChecked);
             });
             addChild(new ClickableWidget(hideRowCheckboxes[i]));
@@ -171,12 +172,12 @@ public class VisualEditorScreen extends TitledScreen {
 
     @Override
     public MutableText getScreenTitle() {
-        return TextUtil.literal("PIDS Editor");
+        return TextUtil.translatable(TextCategory.GUI, "pids_preset.pids_editor.title");
     }
 
     @Override
     public MutableText getScreenSubtitle() {
-        return TextUtil.literal("Editing preset: " + presetId);
+        return TextUtil.translatable(TextCategory.GUI, "pids_preset.pids_editor.editingpreset").append(":").append(" ").append(presetId);
     }
 
     @Override
@@ -256,7 +257,7 @@ public class VisualEditorScreen extends TitledScreen {
             context.scale(1.4F, 1.4F, 1.4F);
             for(int i = 0; i < 4; i++) {
                 if (!pidsPreset.isRowHidden(i)) {
-                    context.drawText("Station", 5, (int)(i * 14), textColor, false, GraphicsHolder.getDefaultLight());
+                    context.drawText(TextUtil.translatable(TextCategory.GUI, "pids_preset.pids_editor.station"), 5, (int)(i * 14), textColor, false, GraphicsHolder.getDefaultLight());
                 }
             }
             context.pop();

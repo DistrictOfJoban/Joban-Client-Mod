@@ -151,6 +151,13 @@
 
   "gui.jsblock.pids.listview.title.filtered_platform": "Showing arrivals for %sPlatform %s",
   "gui.jsblock.pids.listview.title.filtered_platform.nearby": "Nearby ",
-  "gui.jsblock.pids.listview.widget.change_platform": "Change..."
+  "gui.jsblock.pids.listview.widget.change_platform": "Change...",
+  "gui.jsblock.pids_preset.pids_editor.title": "PIDS Editor",
+  "gui.jsblock.pids_preset.pids_editor.editingpreset": "Editing preset",
+  "gui.jsblock.pids_preset.pids_editor.weather": "Show Weather",
+  "gui.jsblock.pids_preset.pids_editor.clock": "Show Clock",
+  "gui.jsblock.pids_preset.pids_editor.hiderow": "Hide Row %d",
+  "gui.jsblock.pids_preset.pids_editor.station": "Station",
+  "gui.jsblock.pids_preset.pids_editor.back": "Back"
 }
  
