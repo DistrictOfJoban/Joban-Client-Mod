@@ -16,7 +16,6 @@ import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.font.FontManager;
 import com.lx862.jcm.mod.util.JCMLogger;
-import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
@@ -108,26 +107,6 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public String getFont() {
-        return fontId;
-    }
-
-    @Override
-    public @Nonnull Identifier getBackground() {
-        return background;
-    }
-
-    @Override
-    public int getTextColor() {
-        return textColor;
-    }
-
-    @Override
-    public boolean isRowHidden(int row) {
-        return rowHidden.length - 1 < row ? false : rowHidden[row];
-    }
-
-    @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         int headerHeight = topPadding ? HEADER_HEIGHT : 0;
         int startX = PIDS_MARGIN;
@@ -146,23 +125,14 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
         graphicsHolder.translate(startX, 0, -0.5);
 
-        List<DrawCall> components = new ArrayList<>();
-        if(showClock) {
-            components.add(new ClockComponent(getFont(), ARGB_WHITE, contentWidth, 2, contentWidth, 10));
-        }
-        if(showWeather) {
-            components.add(new WeatherIconComponent(ICON_WEATHER_SUNNY, ICON_WEATHER_RAINY, ICON_WEATHER_THUNDER, 0, 0, 11, 11));
-        }
-
-        drawArrivals(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden(), components);
-
+        List<DrawCall> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
         List<DrawCall> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<DrawCall> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
 
         // Texture
         for(DrawCall component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, world, facing);
+            component.render(graphicsHolder, null, world, facing);
             graphicsHolder.pop();
         }
 
@@ -171,35 +141,66 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(DrawCall component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, world, facing);
+            component.render(graphicsHolder, null, world, facing);
             graphicsHolder.pop();
         }
     }
 
-    private void drawArrivals(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int width, int height, int rows, boolean hidePlatform, List<DrawCall> drawCalls) {
+    @Override
+    public List<DrawCall> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
+        List<DrawCall> components = new ArrayList<>();
+        if(showClock) {
+            components.add(new ClockComponent(getFont(), TextOverflowMode.STRETCH, TextAlignment.RIGHT, ARGB_WHITE, screenWidth, 2, screenWidth, 10));
+        }
+        if(showWeather) {
+            components.add(new WeatherIconComponent(ICON_WEATHER_SUNNY, ICON_WEATHER_RAINY, ICON_WEATHER_THUNDER, 0, 0, 11, 11));
+        }
+
+        /* Arrivals */
         int arrivalIndex = 0;
         double rowY = y;
         for(int i = 0; i < rows; i++) {
-            if(arrivalIndex >= arrivals.getArrivals().size()) return;
+            if(arrivalIndex >= arrivals.getArrivals().size()) continue;
 
             if(!customMessages[i].isEmpty()) {
-                drawCalls.add(new CustomTextComponent(getFont(), textOverflowMode, TextAlignment.LEFT, getTextColor(), customMessages[i], x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
+                components.add(new CustomTextComponent(getFont(), textOverflowMode, TextAlignment.LEFT, getTextColor(), customMessages[i], x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
             } else {
                 if (!rowHidden[i]) {
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    drawCalls.add(new DestinationComponent(arrivals, textOverflowMode, arrivalIndex, getFont(), textColor, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+                    components.add(new DestinationComponent(arrivals, textOverflowMode, TextAlignment.LEFT, arrivalIndex, getFont(), textColor, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
 
                     if (!hidePlatform) {
-                        drawCalls.add(new PlatformComponent(arrivals, arrivalIndex, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
-                        drawCalls.add(new PlatformCircleComponent(arrivals, arrivalIndex, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
+                        components.add(new PlatformComponent(arrivals, arrivalIndex, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
+                        components.add(new PlatformCircleComponent(arrivals, arrivalIndex, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
                     }
 
-                    drawCalls.add(new ETAComponent(arrivals, arrivalIndex, getFont(), textColor, width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                    components.add(new ETAComponent(arrivals, TextOverflowMode.STRETCH, TextAlignment.RIGHT, arrivalIndex, getFont(), textColor, screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
                     arrivalIndex++;
                 }
             }
 
-            rowY += (height / 5.25) * ARRIVAL_TEXT_SCALE;
+            rowY += (screenHeight / 5.25) * ARRIVAL_TEXT_SCALE;
         }
+        return components;
+    }
+
+    @Override
+    public String getFont() {
+        return fontId;
+    }
+
+    @Override
+    public @Nonnull Identifier getBackground() {
+        return background;
+    }
+
+    @Override
+    public int getTextColor() {
+        return textColor;
+    }
+
+    @Override
+    public boolean isRowHidden(int row) {
+        return rowHidden.length - 1 < row ? false : rowHidden[row];
     }
 }

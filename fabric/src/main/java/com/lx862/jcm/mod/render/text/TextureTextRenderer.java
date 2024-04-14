@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.render.text;
 
 import com.lx862.jcm.mod.data.JCMServerStats;
+import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.font.FontSet;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -10,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.GuiDrawing;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
@@ -252,6 +254,45 @@ public class TextureTextRenderer implements RenderHelper {
             float finalX = (float)text.getTextAlignment().getX(x, textSlot.getRenderedWidth());
             drawToWorld(graphicsHolder, textSlot, facing, finalX, (float)y);
         }
+    }
+
+    public static void draw(GuiDrawing guiDrawing, TextInfo text, double x, double y) {
+        ensureInitialized();
+
+        TextSlot textSlot = getTextSlot(text);
+
+        if(textSlot == null) {
+            addText(text);
+            textSlot = getTextSlot(text);
+        }
+
+        if(textSlot != null) {
+            float finalX = (float)text.getTextAlignment().getX(x, textSlot.getRenderedWidth());
+            draw(guiDrawing, textSlot, finalX, (float)y);
+        }
+    }
+
+    private static void draw(GuiDrawing guiDrawing, TextSlot textSlot, float x, float y) {
+        ensureInitialized();
+
+        textSlot.updateLastAccessTime();
+        float startY = textSlot.getStartY();
+        float onePart = (float) textSlot.getHeight() / height;
+
+        float u1 = 0;
+        float u2 = (float)textSlot.getPixelWidth() / width;
+        float v1 = startY / height;
+        float v2 = v1 + onePart;
+
+        if(textSlot.getText().isForScrollingText()) {
+            float ratio = textSlot.getMaxWidth() / (float)textSlot.getPhysicalWidth();
+            u2 = u2 * ratio;
+
+            u1 += (JCMServerStats.getGameTick() % 100) / 100F;
+            u2 += (JCMServerStats.getGameTick() % 100) / 100F;
+        }
+
+        GuiHelper.drawTexture(guiDrawing, getAtlasIdentifier(), x, y, (int)textSlot.getRenderedWidth(), RENDERED_TEXT_SIZE, u1, v1, u2, v2);
     }
 
     private static void drawToWorld(GraphicsHolder graphicsHolder, TextSlot textSlot, Direction facing, float x, float y) {

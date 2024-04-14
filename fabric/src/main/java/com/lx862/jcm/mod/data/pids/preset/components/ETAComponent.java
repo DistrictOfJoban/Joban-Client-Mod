@@ -11,19 +11,20 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.GuiDrawing;
 
 public class ETAComponent extends TextComponent {
     // TODO: (Maybe next version) Add absolute time?
     private final ArrivalsResponse arrivals;
     private final int arrivalIndex;
-    public ETAComponent(ArrivalsResponse arrivals, int arrivalIndex, String font, int textColor, double x, double y, double width, double height, double scale) {
-        super(font, TextOverflowMode.STRETCH, textColor, x, y, width, height, scale);
+    public ETAComponent(ArrivalsResponse arrivals, TextOverflowMode textOverflowMode, TextAlignment textAlignment, int arrivalIndex, String font, int textColor, double x, double y, double width, double height, double scale) {
+        super(font, textOverflowMode, textAlignment, textColor, x, y, width, height, scale);
         this.arrivals = arrivals;
         this.arrivalIndex = arrivalIndex;
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, World world, Direction facing) {
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing) {
         if(arrivalIndex >= arrivals.getArrivals().size()) return;
         ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
         long remTime = arrival.getArrival() - System.currentTimeMillis();
@@ -38,6 +39,6 @@ public class ETAComponent extends TextComponent {
             etaText = TextUtil.translatable(cycleString("gui.mtr.arrival_sec_cjk", "gui.mtr.arrival_sec"), remSec % 60);
         }
 
-        drawText(graphicsHolder, TextAlignment.RIGHT, facing, new TextInfo(etaText));
+        drawText(graphicsHolder, guiDrawing, facing, new TextInfo(etaText));
     }
 }

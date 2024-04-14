@@ -7,6 +7,7 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.GuiDrawing;
 
 public class PlatformCircleComponent extends TextureComponent {
     private final ArrivalsResponse arrivals;
@@ -18,9 +19,9 @@ public class PlatformCircleComponent extends TextureComponent {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, World world, Direction facing) {
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing) {
         if(arrivalIndex >= arrivals.getArrivals().size()) return;
         ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
-        drawTexture(graphicsHolder, facing, texture, 0, 0, width, height, arrival.getRouteColor() + ARGB_BLACK);
+        drawTexture(graphicsHolder, guiDrawing, facing, texture, 0, 0, width, height, arrival.getRouteColor() + ARGB_BLACK);
     }
 }

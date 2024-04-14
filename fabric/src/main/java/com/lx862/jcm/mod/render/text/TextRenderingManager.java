@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.GuiDrawing;
 
 /**
  * <h2>Text Rendering Manager</h2>
@@ -38,15 +39,15 @@ public class TextRenderingManager implements RenderHelper {
         draw(graphicsHolder, text.withMaxWidth(textWidth).withScrollingText(), facing, x, y);
     }
 
-    public static void draw(GraphicsHolder graphicsHolder, MutableText text, Direction facing, double x, double y) {
-        draw(graphicsHolder, new TextInfo(text), facing, x, y);
+    public static void draw(GuiDrawing guiDrawing, TextInfo text, double x, double y) {
+        drawInternal(null, guiDrawing, text, null, x, y);
     }
 
     public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, double x, double y) {
-        drawInternal(graphicsHolder, text, facing, x, y);
+        drawInternal(graphicsHolder, null, text, facing, x, y);
     }
 
-    private static void drawInternal(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, double x, double y) {
+    private static void drawInternal(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, TextInfo text, Direction facing, double x, double y) {
         if(!ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
             if(text.isForScrollingText()) {
                 VanillaTextRenderer.drawScrollingText(graphicsHolder, text.getContent(), (int)text.getWidthInfo().getMaxWidth(), x, y, text.getTextColor());
@@ -54,7 +55,11 @@ public class TextRenderingManager implements RenderHelper {
                 VanillaTextRenderer.draw(graphicsHolder, text, x, y);
             }
         } else {
-            TextureTextRenderer.draw(graphicsHolder, text, facing, x, y);
+            if(guiDrawing != null) {
+                TextureTextRenderer.draw(guiDrawing, text, x, y);
+            } else {
+                TextureTextRenderer.draw(graphicsHolder, text, facing, x, y);
+            }
         }
     }
 

@@ -5,6 +5,7 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.GuiDrawing;
 
 public class WeatherIconComponent extends TextureComponent {
     private final Identifier iconSunny;
@@ -18,7 +19,7 @@ public class WeatherIconComponent extends TextureComponent {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, World world, Direction facing) {
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing) {
         Identifier textureId;
         if(world.isThundering()) {
             textureId = iconThunder;
@@ -27,6 +28,6 @@ public class WeatherIconComponent extends TextureComponent {
         } else {
             textureId = iconSunny;
         }
-        drawTexture(graphicsHolder, facing, textureId, 0, 0, width, height, ARGB_WHITE);
+        drawTexture(graphicsHolder, guiDrawing, facing, textureId, 0, 0, width, height, ARGB_WHITE);
     }
 }
