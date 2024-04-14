@@ -25,7 +25,7 @@ public abstract class TitledScreen extends AnimatedScreen {
         drawSubtitle(graphicsHolder);
 
         // TODO: Remove this on release
-        graphicsHolder.drawText(TextUtil.literal("Beta release").formatted(TextFormatting.YELLOW), width - GraphicsHolder.getTextWidth("Beta release") - 6, 6, 0xFFFFFFFF, true, GraphicsHolder.getDefaultLight());
+        graphicsHolder.drawText(TextUtil.literal("JCM Beta Release").formatted(TextFormatting.YELLOW), width - GraphicsHolder.getTextWidth("Beta release") - 6, 6, 0xFFFFFFFF, true, GraphicsHolder.getDefaultLight());
         graphicsHolder.drawText(TextUtil.literal("Report issues here!").formatted(TextFormatting.UNDERLINE), width - GraphicsHolder.getTextWidth("Report issues here!") - 6, 18, 0xFFFFFFFF, true, GraphicsHolder.getDefaultLight());
         elapsed += tickDelta / Constants.MC_TICK_PER_SECOND;
         super.render(graphicsHolder, mouseX, mouseY, tickDelta);
