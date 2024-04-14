@@ -207,4 +207,20 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     public boolean isRowHidden(int row) {
         return rowHidden.length - 1 < row ? false : rowHidden[row];
     }
+
+    public boolean getShowWeather() {
+        return showWeather;
+    }
+
+    public boolean getShowClock() {
+        return showClock;
+    }
+
+    public boolean getTopPadding() {
+        return topPadding;
+    }
+
+    public MutableJsonPIDSPreset toMutable() {
+        return new MutableJsonPIDSPreset(getId(), getName(), background, fontId, textOverflowMode, rowHidden, showClock, showWeather, topPadding, textColor);
+    }
 }
