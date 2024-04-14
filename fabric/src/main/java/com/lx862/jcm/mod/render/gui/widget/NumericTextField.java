@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.render.gui.widget;
 
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.MutableText;
@@ -37,17 +38,23 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
 
     @Override
     public boolean charTyped2(char chr, int modifiers) {
+        String prevValue = getText2();
+        boolean bl = super.charTyped2(chr, modifiers);
+
         try {
-            String newString = new StringBuilder(getText2()).insert(getCursor2(), chr).toString();
+            String newString = getText2();
             int val = Integer.parseInt(newString);
             if(val < min || val > max) {
+                JCMLogger.debug("NumericTextField: Value too large or small");
+                setText2(prevValue);
                 return false;
             }
         } catch (Exception e) {
+            setText2(prevValue);
             return false;
         }
 
-        return super.charTyped2(chr, modifiers);
+        return bl;
     }
 
     @Override
