@@ -149,8 +149,8 @@
   "gui.jsblock.widget.numeric_text_field.increment": "▲",
   "gui.jsblock.widget.numeric_text_field.decrement": "▼",
 
-  "gui.jsblock.pids.listview.title.filtered_platform": "Showing arrivals for %sPlatform %s",
-  "gui.jsblock.pids.listview.title.filtered_platform.nearby": "Nearby ",
-  "gui.jsblock.pids.listview.widget.change_platform": "Change..."
+  "gui.jsblock.pids.listview.title.filtered_platform": "Mostrando arrivi del %sPlatform %s",
+  "gui.jsblock.pids.listview.title.filtered_platform.nearby": "Vicino ",
+  "gui.jsblock.pids.listview.widget.change_platform": "Cambia..."
 }
  
