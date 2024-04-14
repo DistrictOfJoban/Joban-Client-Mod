@@ -37,7 +37,12 @@ public final class Blocks {
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN = RegistryHelper.registerBlockItem("kcr_name_sign", () -> new Block(new KCRStationNameSignBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque(), false)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN_STATION_COLOR = RegistryHelper.registerBlockItem("kcr_name_sign_station_color", () -> new Block(new KCRStationNameSignBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque(), true)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject LIGHT_BLOCK = RegistryHelper.registerBlockItem("light_block", () -> new Block(new LightBlock(BlockHelper.createBlockSettings(false, state -> BlockUtil.getProperty(state, BlockProperties.LIGHT_LEVEL)).strength(1.0f).nonOpaque())), ItemGroups.JCM_MAIN);
-    public static final BlockRegistryObject LIGHT_LANTERN = RegistryHelper.registerBlockItem("light_lantern", () -> new Block(new LightLanternBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque())), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject LIGHT_LANTERN = RegistryHelper.registerBlockItem("light_lantern", () -> new Block(new LightLanternBlock(BlockHelper.createBlockSettings(false, state -> {
+        boolean isLit = BlockUtil.getProperty(state, LIT);
+
+        if (isLit) return 15;
+        else return 0;
+    }).strength(4.0f).nonOpaque())), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject MTR_STAIRS = RegistryHelper.registerBlockItem("mtr_stairs", () -> new Block(new MTRStairsBlock(BlockHelper.createBlockSettings(false).strength(4.0f))), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject OPERATOR_BUTTON = RegistryHelper.registerBlockItem("operator_button", () -> new Block(new OperatorButtonBlock(BlockHelper.createBlockSettings(false, state -> 5).nonOpaque(), 40)), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject SPOT_LAMP = RegistryHelper.registerBlockItem("spot_lamp", () ->
