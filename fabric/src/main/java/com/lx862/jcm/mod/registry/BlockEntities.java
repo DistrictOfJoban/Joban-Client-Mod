@@ -6,6 +6,7 @@ import org.mtr.mapping.registry.BlockEntityTypeRegistryObject;
 
 public final class BlockEntities {
     public static final BlockEntityTypeRegistryObject<APGDoorDRLBlockEntity> APG_DOOR_DRL = RegistryHelper.registerBlockEntity("apg_door_1", APGDoorDRLBlockEntity::new, Blocks.APG_DOOR_DRL);
+    public static final BlockEntityTypeRegistryObject<AutoIronDoorBlockEntity> AUTO_IRON_DOOR = RegistryHelper.registerBlockEntity("auto_iron_door", AutoIronDoorBlockEntity::new, Blocks.AUTO_IRON_DOOR);
     public static final BlockEntityTypeRegistryObject<APGGlassDRLBlockEntity> APG_GLASS_DRL = RegistryHelper.registerBlockEntity("apg_glass_1", APGGlassDRLBlockEntity::new, Blocks.APG_GLASS_DRL);
     public static final BlockEntityTypeRegistryObject<FareSaverBlockEntity> FARE_SAVER = RegistryHelper.registerBlockEntity("faresaver_1", FareSaverBlockEntity::new, Blocks.FARE_SAVER);
     public static final BlockEntityTypeRegistryObject<SignalBlockInvertedEntityRedAbove> SIGNAL_LIGHT_INVERTED_RED_ABOVE = RegistryHelper.registerBlockEntity("signal_light_inverted_1", SignalBlockInvertedEntityRedAbove::new, Blocks.SIGNAL_LIGHT_INVERTED_RED_ABOVE);

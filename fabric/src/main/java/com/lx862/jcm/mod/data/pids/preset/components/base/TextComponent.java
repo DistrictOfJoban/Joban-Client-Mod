@@ -9,35 +9,51 @@ import com.lx862.jcm.mod.render.text.TextInfo;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.GuiDrawing;
 
 public abstract class TextComponent extends DrawCall {
     public static final int SWITCH_LANG_DURATION = 60;
+    protected final TextOverflowMode textOverflowMode;
+    protected final TextAlignment textAlignment;
     protected final String font;
     protected final int textColor;
     protected final double scale;
 
-    public TextComponent(String font, int textColor, double x, double y, double width, double height, double scale) {
+    public TextComponent(String font, TextOverflowMode textOverflowMode, TextAlignment textAlignment, int textColor, double x, double y, double width, double height, double scale) {
         super(x, y, width, height);
         this.font = font;
         this.textColor = textColor;
         this.scale = scale;
+        this.textAlignment = textAlignment;
+        this.textOverflowMode = textOverflowMode;
     }
 
-    public TextComponent(String font, int textColor, double x, double y, double width, double height) {
-        this(font, textColor, x, y, width, height, 1);
+    public TextComponent(String font, TextOverflowMode textOverflowMode, TextAlignment textAlignment, int textColor, double x, double y, double width, double height) {
+        this(font, textOverflowMode, textAlignment, textColor, x, y, width, height, 1);
     }
 
-    protected void drawText(GraphicsHolder graphicsHolder, TextAlignment textAlignment, Direction facing, String text, TextOverflowMode textOverflowMode) {
-        drawText(graphicsHolder, textAlignment, facing, new TextInfo(text), textOverflowMode);
+    protected void drawText(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, String text) {
+        drawText(graphicsHolder, guiDrawing, facing, new TextInfo(cycleString(text)));
     }
 
-    protected void drawText(GraphicsHolder graphicsHolder, TextAlignment textAlignment, Direction facing, TextInfo text, TextOverflowMode textOverflowMode) {
+    protected void drawText(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, TextInfo text) {
         TextInfo finalText = text.withColor(textColor).withFont(font).withTextAlignment(textAlignment);
         graphicsHolder.push();
         graphicsHolder.translate(x, y, 0);
         graphicsHolder.scale((float)scale, (float)scale, (float)scale);
-        RenderHelper.scaleToFit(graphicsHolder, TextRenderingManager.getTextWidth(finalText), width, textOverflowMode == TextOverflowMode.SCALE, 12);
-        TextRenderingManager.draw(graphicsHolder, finalText, facing, 0, 0);
+        double textWidth = TextRenderingManager.getTextWidth(finalText);
+        if(textOverflowMode == TextOverflowMode.MARQUEE && textWidth > width) {
+            finalText = finalText.withScrollingText();
+        } else {
+            RenderHelper.scaleToFit(graphicsHolder, textWidth, width, textOverflowMode == TextOverflowMode.SCALE, 14);
+        }
+
+        if(guiDrawing != null) {
+            TextRenderingManager.draw(guiDrawing, finalText, 0, 0);
+        } else {
+            TextRenderingManager.draw(graphicsHolder, finalText, facing, 0, 0);
+        }
+
         graphicsHolder.pop();
     }
 

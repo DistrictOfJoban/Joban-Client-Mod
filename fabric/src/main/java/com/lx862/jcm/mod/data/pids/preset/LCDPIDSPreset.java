@@ -11,7 +11,6 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
-import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
@@ -45,16 +44,15 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         }
 
         graphicsHolder.translate(startX, 0, -0.5);
-        List<DrawCall> components = new ArrayList<>();
-        drawArrivals(arrivals, be.getCustomMessages(), rowHidden, 0, 6, contentWidth, height - 2, be.getRowAmount(), be.platformNumberHidden(), components);
 
+        List<DrawCall> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, 6, contentWidth, height - 2, be.getRowAmount(), be.platformNumberHidden());
         List<DrawCall> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<DrawCall> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
 
         // Texture
         for(DrawCall component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, world, facing);
+            component.render(graphicsHolder, null, world, facing);
             graphicsHolder.pop();
         }
 
@@ -63,31 +61,35 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(DrawCall component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, world, facing);
+            component.render(graphicsHolder, null, world, facing);
             graphicsHolder.pop();
         }
     }
 
-    private void drawArrivals(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int width, int height, int rows, boolean hidePlatform, List<DrawCall> drawCalls) {
+    @Override
+    public List<DrawCall> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
+        List<DrawCall> components = new ArrayList<>();
+
+        /* Arrivals */
         int arrivalIndex = 0;
         double rowY = y;
         for(int i = 0; i < rows; i++) {
-            if(arrivalIndex >= arrivals.getArrivals().size()) return;
+            if(arrivalIndex >= arrivals.getArrivals().size()) continue;
 
             if(!customMessages[i].isEmpty()) {
-                drawCalls.add(new CustomTextComponent(getFont(), getTextColor(), TextAlignment.LEFT, customMessages[i], TextOverflowMode.STRETCH, x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
+                components.add(new CustomTextComponent(getFont(), TextOverflowMode.STRETCH, TextAlignment.LEFT, getTextColor(), customMessages[i], x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
             } else {
                 if(!rowHidden[i]) {
-                    ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    drawCalls.add(new DestinationComponent(arrival, getFont(), getTextColor(), x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
-                    drawCalls.add(new ETAComponent(arrival, getFont(), getTextColor(), width, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                    components.add(new DestinationComponent(arrivals, TextOverflowMode.STRETCH, TextAlignment.LEFT, arrivalIndex, getFont(), getTextColor(), x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+                    components.add(new ETAComponent(arrivals, TextOverflowMode.STRETCH, TextAlignment.RIGHT, arrivalIndex, getFont(), getTextColor(), screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
                     arrivalIndex++;
                 }
             }
 
-            rowY += (height / 5.25) * ARRIVAL_TEXT_SCALE;
+            rowY += (screenHeight / 5.25) * ARRIVAL_TEXT_SCALE;
         }
+        return components;
     }
 
     @Override

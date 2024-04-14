@@ -60,22 +60,33 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
             boolean emittingRedstonePower = bl1 || bl2 || bl3 || bl4 || bl5 || bl6;
             if(needRedstone && !emittingRedstonePower) return;
 
-            if(!limitRange) {
-                MinecraftServerHelper.iteratePlayers(ServerWorld.cast(world), (player) -> {
-                    Identifier identifier = null;
-                    try {
-                        identifier = new Identifier(soundID);
-                    } catch (Exception ignored) {
-                    }
+            final SoundCategory category = SOURCE_LIST[soundCategory];
+            Identifier identifier = null;
+            try {
+                identifier = new Identifier(soundID);
+            } catch (Exception ignored) {
+            }
+            if(identifier == null) return;
+            SoundEvent soundEvent = AbstractSoundInstanceExtension.createSoundEvent(identifier);
 
-                    if(identifier == null) return;
-                    final SoundCategory category = SOURCE_LIST[soundCategory];
-                    SoundEvent soundEvent = AbstractSoundInstanceExtension.createSoundEvent(identifier);
-                    player.playSound(soundEvent, category, volume, 1);
-//                    // TODO: Fade the volume
-                });
+            if(!limitRange) {
+                world.playSound((PlayerEntity) null, getPos2(), soundEvent, category, volume, 1);
             } else {
-                // TODO: Implement limit range
+                BlockPos corner1 = getCorner1();
+                BlockPos corner2 = getCorner2();
+                Box limitedRange = new Box(corner1.getX(), corner1.getY(), corner1.getZ(), corner2.getX(), corner2.getY(), corner2.getZ());
+
+                // JCM Legacy sends a sound packet to selected player with the position, and let the client calculate the volume
+                // This seems to not be mapped, so we have to calculate the volume on our own?
+                MinecraftServerHelper.iteratePlayers(ServerWorld.cast(world), (player) -> {
+                    if(limitedRange.contains(player.getPos())) {
+                        float dist = getPos2().getManhattanDistance(new Vector3i((int)player.getPos().getXMapped(), (int)player.getPos().getYMapped(),(int)player.getPos().getZMapped()));
+                        float fadeToZeroDist = 16 * volume;
+
+                        float calculatedVolume = (1 - (Math.max(0.001f, dist / fadeToZeroDist))) * volume;
+                        player.playSound(soundEvent, category, calculatedVolume, 1);
+                    }
+                });
             }
         }
     }

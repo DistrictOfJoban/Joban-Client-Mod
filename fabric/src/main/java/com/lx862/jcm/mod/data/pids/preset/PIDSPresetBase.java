@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.jcm.mod.data.pids.preset.components.base.DrawCall;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextInfo;
@@ -13,6 +14,7 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 
 public abstract class PIDSPresetBase implements RenderHelper {
     protected final String id;
@@ -39,23 +41,12 @@ public abstract class PIDSPresetBase implements RenderHelper {
         return name;
     }
 
-    protected void drawPIDSText(GraphicsHolder graphicsHolder, TextAlignment textAlignment, Direction facing, String text, int x, int y, int textColor) {
-        drawPIDSText(graphicsHolder, textAlignment, facing, new TextInfo(text), x, y, textColor);
-    }
-
-    protected void drawPIDSText(GraphicsHolder graphicsHolder, TextAlignment textAlignment, Direction facing, TextInfo text, int x, int y, int textColor) {
-        TextRenderingManager.draw(graphicsHolder, text.withColor(textColor).withFont(getFont()).withTextAlignment(textAlignment), facing, x, y);
-    }
-
-    protected void drawPIDSScrollingText(GraphicsHolder graphicsHolder, Direction facing, String text, int x, int y, int textColor, float textWidth) {
-        TextRenderingManager.drawScrollingText(graphicsHolder, new TextInfo(text).withColor(textColor), facing, x, y, textWidth);
-    }
-
     public void drawAtlasBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
         TextRenderingManager.bind(graphicsHolder);
         RenderHelper.drawTexture(graphicsHolder,0, height, 0, width, width, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
+    public abstract List<DrawCall> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform);
     public abstract String getFont();
     public abstract @Nonnull Identifier getBackground();
     public abstract int getTextColor();

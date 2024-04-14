@@ -6,6 +6,6 @@
 			"shift": [ -0.6, 1.0 ],
 			"size": 10.7,
 			"oversample": 7.0
-		}
+		}${legacy_unicode}
 	]
 }

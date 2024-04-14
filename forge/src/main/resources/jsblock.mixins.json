@@ -1,5 +1,6 @@
 {
-  "required": false,
+  "required": true,
+  "minVersion": "0.8",
   "package": "com.lx862.jcm.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
@@ -7,6 +8,7 @@
     "modded.mtr.MixinTicketSystem"
   ],
   "injectors": {
-    "defaultRequire": 0
-  }
+    "defaultRequire": 1
+  },
+  "refmap": "jsblock.refmap.json"
 }

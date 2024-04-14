@@ -3,6 +3,7 @@
 
 ### Changes
 - Various blocks will now automatically cull non-visible faces, improving performance and visibility in spectator
+- Modifying Light Block Level now shows in the action bar for the modified light level
 - Water Machine now also allows you to fill an empty bucket with water
 - Refurbished GUI Screen:
 - - Now shows the block name you are editing, it's location and the nearest station
