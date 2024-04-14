@@ -23,10 +23,15 @@ subprojects {
 	def mc_major = mc_ver.split("\\.")[0]
 	def mc_main = mc_ver.split("\\.")[1]
 	def mc_minor = mc_ver.split("\\.").size() > 2 ? (mc_ver.split("\\.")[2] as String).padLeft(2, '0') : 0
-	def manifold_mc_version = "$mc_major$mc_main$mc_minor"
+	def merged_mc_version = "$mc_major$mc_main$mc_minor"
 
 	ext { // Expose to subproject
-		java_version = mc_main == "16" ? 8 : mc_main == "17" ? 16 : 17;
+		java_version =
+				(merged_mc_version as int) <= 11605 ? 8 :
+				(merged_mc_version as int) <= 11701 ? 16 :
+				(merged_mc_version as int) <= 12004 ? 17 :
+				21
+
 		lg_unicode = (mc_main as int) <= 19 ? rootProject.properties.legacy_unicode_font : ""
 		door_blockstate = (mc_main as int) <= 18 ? rootProject.properties.mc_door_118 : rootProject.properties.mc_door_119
 	}
@@ -35,7 +40,7 @@ subprojects {
 	tasks.withType(JavaCompile).forEach {
 		it.options.compilerArgs += [
 				"-Xplugin:Manifold",
-				"-AMC_VERSION=$manifold_mc_version",
+				"-AMC_VERSION=$merged_mc_version",
 				"-ALOADER=$project.properties.loader_name"
 		]
 	}

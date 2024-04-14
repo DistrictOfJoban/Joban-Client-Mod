@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.render.gui.widget;
 
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
@@ -21,37 +22,37 @@ public class CoordTextField extends TextFieldWidgetExtension implements RenderHe
 
     @Override
     public boolean charTyped2(char chr, int modifiers) {
+        String prevValue = getText2();
+        boolean bl = super.charTyped2(chr, modifiers);
         try {
             String newString = new StringBuilder(getText2()).insert(getCursor2(), chr).toString().trim();
 
             // Position
             String[] strSplit = newString.split("\\s+");
             if(strSplit.length > 1) {
-                boolean notPosition = false;
                 for (String s : strSplit) {
+                    if(s.trim().isEmpty()) continue;
                     try {
                         Integer.parseInt(s.trim());
                     } catch (Exception e) {
-                        notPosition = true;
-                        break;
+                        return bl;
                     }
-                }
-
-                if(!notPosition) {
-                    return super.charTyped2(chr, modifiers);
                 }
             }
 
             // Number
             int val = Integer.parseInt(newString);
             if(val < min || val > max) {
+                JCMLogger.debug("NumericTextField: Value too large or small");
+                setText2(prevValue);
                 return false;
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
 
-        return super.charTyped2(chr, modifiers);
+        return bl;
     }
 
     @Override
