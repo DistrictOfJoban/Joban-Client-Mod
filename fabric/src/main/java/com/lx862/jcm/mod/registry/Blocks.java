@@ -10,6 +10,8 @@ import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.BlockHelper;
 import org.mtr.mapping.registry.BlockRegistryObject;
 
+import static com.lx862.jcm.mod.block.SpotLampBlock.LIT;
+
 public final class Blocks {
     public static final BlockRegistryObject APG_DOOR_DRL = RegistryHelper.registerBlock("apg_door_drl", () -> new Block(new APGDoorDRL()));
     public static final BlockRegistryObject APG_GLASS_DRL = RegistryHelper.registerBlock("apg_glass_drl", () -> new Block(new APGGlassDRL()));
@@ -42,7 +44,14 @@ public final class Blocks {
     }).strength(4.0f).nonOpaque())), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject MTR_STAIRS = RegistryHelper.registerBlockItem("mtr_stairs", () -> new Block(new MTRStairsBlock(BlockHelper.createBlockSettings(false).strength(4.0f))), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject OPERATOR_BUTTON = RegistryHelper.registerBlockItem("operator_button", () -> new Block(new OperatorButtonBlock(BlockHelper.createBlockSettings(false, state -> 5).nonOpaque(), 40)), ItemGroups.JCM_MAIN);
-    public static final BlockRegistryObject SPOT_LAMP = RegistryHelper.registerBlockItem("spot_lamp", () -> new Block(new SpotLampBlock(BlockHelper.createBlockSettings(false, state -> 15).nonOpaque())), ItemGroups.JCM_MAIN);
+    public static final BlockRegistryObject SPOT_LAMP = RegistryHelper.registerBlockItem("spot_lamp", () ->
+        new Block(new SpotLampBlock(BlockHelper.createBlockSettings(false, state -> {
+            boolean isLit = BlockUtil.getProperty(state, LIT);
+
+            if (isLit) return 15;
+            else return 0;
+        }).nonOpaque())), ItemGroups.JCM_MAIN);
+
     public static final BlockRegistryObject SUBSIDY_MACHINE = RegistryHelper.registerBlockItem("subsidy_machine", () -> new Block(new SubsidyMachineBlock(BlockHelper.createBlockSettings(false).nonOpaque())), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject SOUND_LOOPER = RegistryHelper.registerBlockItem("sound_looper", () -> new Block(new SoundLooperBlock(BlockHelper.createBlockSettings(false))), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject STATION_NAME_STANDING = RegistryHelper.registerBlockItem("station_name_standing", () -> new Block(new StationNameStandingBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.JCM_MAIN);
