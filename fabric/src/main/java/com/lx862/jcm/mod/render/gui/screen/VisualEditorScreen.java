@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.MutableJsonPIDSPreset;
+import com.lx862.jcm.mod.data.pids.preset.components.ClockComponent;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.ScreenBase;
 import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
@@ -13,10 +14,7 @@ import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.util.TextUtil;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 /*import net.minecraft.resource.ResourcePackManager;*/
-import org.mtr.mapping.holder.ClickableWidget;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.MinecraftClient;
-import org.mtr.mapping.holder.MutableText;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.*;
 import org.mtr.mapping.tool.TextCase;
 
@@ -42,6 +40,8 @@ public class VisualEditorScreen extends TitledScreen {
     private final Object2ObjectOpenHashMap<String, String> presetIdToResourcePack = new Object2ObjectOpenHashMap<>();
     private final List<JsonPIDSPreset> presets;
     private MutableJsonPIDSPreset ourPreset;
+
+    private ClientWorld world;
     public VisualEditorScreen(String presetId) {
         super(false);
         this.resourcePackFolder = new File(org.mtr.mapping.holder.MinecraftClient.getInstance().getRunDirectoryMapped(), "resourcepacks");
@@ -71,6 +71,9 @@ public class VisualEditorScreen extends TitledScreen {
     @Override
     protected void init2() {
         super.init2();
+
+        world = MinecraftClient.getInstance().getWorldMapped();
+
         // for full pids gui
         // this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> {
         // currentCategoryIndex = (currentCategoryIndex - 1 + categories.size()) %
@@ -202,6 +205,7 @@ public class VisualEditorScreen extends TitledScreen {
 
     private void renderPIDSPreview(GraphicsHolder context, JsonPIDSPreset pidsPreset) {
         Identifier backgroundId = pidsPreset.getBackground();
+        Identifier frameTexture = new Identifier(Constants.MOD_ID, "textures/editor/frame.png");
         int textColor = pidsPreset.getTextColor();
 
         GuiDrawing guiDrawing = new GuiDrawing(context);
@@ -211,25 +215,36 @@ public class VisualEditorScreen extends TitledScreen {
 
         int baseWidth = 427;
         double scaleFactor = (double)getWidthMapped() / baseWidth;
+        double frameScaleFactor = 1.2;
         double scaledWidth = previewWidth * scaleFactor;
         double scaledHeight = previewHeight * scaleFactor;
 
         int startX = (getWidthMapped() / 2) + 30;
         int startY = (getHeightMapped() / 4);
 
-        context.drawCenteredText("Preview", (int)(startX + (scaledWidth / 2)), startY - 10, 0xFFFFFF);
+        int frameX = startX - (int)(((previewWidth * 0.932 * scaleFactor * frameScaleFactor) - (previewWidth * scaleFactor)) / 2);
+        int frameY = startY - (int)((previewHeight * scaleFactor * frameScaleFactor - previewHeight * scaleFactor) / 2);
+
+        context.drawCenteredText("Preview", (int)(startX + (scaledWidth / 2)), startY - 20, 0xFFFFFF);
 
         context.push();
         context.translate((getWidthMapped() / 2.0) + 30, startY, 0);
         context.scale((float)scaleFactor, (float)scaleFactor, (float)scaleFactor);
+
+        GuiHelper.drawTexture(guiDrawing, frameTexture, frameX, frameY, (int)(previewWidth * 0.932 * scaleFactor * frameScaleFactor), (int)(previewHeight * scaleFactor * frameScaleFactor));
         // drawTexture unaffected by matrices scale, probably bug in mappings
         GuiHelper.drawTexture(guiDrawing, backgroundId, startX, startY, previewWidth * scaleFactor, previewHeight * scaleFactor);
         if (pidsPreset.getShowWeather()) {
             GuiHelper.drawTexture(guiDrawing, new Identifier(Constants.MOD_ID, "textures/block/pids/weather_sunny.png"), startX + 7, startY, 11 * scaleFactor, 11 * scaleFactor);
         }
 
-        if (pidsPreset.getShowClock()) {
-            GuiHelper.drawTexture(guiDrawing, new Identifier(Constants.MOD_ID, "textures/ve/clock.png"), startX, startY, scaledWidth, scaledHeight);
+        if (pidsPreset.getShowClock() && world != null) {
+            long timeNow = WorldHelper.getTimeOfDay(world) + 6000;
+            long hours = timeNow / 1000;
+            long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
+            String timeString = String.format("%02d:%02d", hours % 24, minutes % 60);
+
+            context.drawText(timeString, 130, 5, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
         }
 
         {
