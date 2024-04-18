@@ -140,6 +140,16 @@
   "gui.jsblock.pids_preset.listview.widget.edit": "Modifica",
   "gui.jsblock.pids_preset.listview.widget.choose": "Seleziona",
   "gui.jsblock.pids_preset.listview.widget.selected": "Selezionato",
+  "gui.jsblock.pids.listview.title.filtered_platform": "Mostrando arrivi del %sPlatform %s",
+  "gui.jsblock.pids.listview.title.filtered_platform.nearby": "Vicino ",
+  "gui.jsblock.pids.listview.widget.change_platform": "Cambia...",
+  "gui.jsblock.pids_preset.pids_editor.title": "Editor PIDS",
+  "gui.jsblock.pids_preset.pids_editor.editingpreset": "Modificando preimpostazione",
+  "gui.jsblock.pids_preset.pids_editor.weather": "Mostra meteo",
+  "gui.jsblock.pids_preset.pids_editor.clock": "Mostra orologio",
+  "gui.jsblock.pids_preset.pids_editor.hiderow": "Nascondi riga %d",
+  "gui.jsblock.pids_preset.pids_editor.station": "Stazione",
+  "gui.jsblock.pids_preset.pids_editor.back": "Indietro",
   "gui.jsblock.subsidy_machine.currency": "$",
   "gui.jsblock.subsidy_machine.price": "Quantità di ricarica",
   "gui.jsblock.subsidy_machine.cooldown": "Intervallo (Secondi)",
@@ -147,17 +157,6 @@
   "gui.jsblock.widget.button.false": "no",
   "gui.jsblock.widget.search": "Cerca qui...",
   "gui.jsblock.widget.numeric_text_field.increment": "▲",
-  "gui.jsblock.widget.numeric_text_field.decrement": "▼",
-
-  "gui.jsblock.pids.listview.title.filtered_platform": "Mostrando arrivi del %sPlatform %s",
-  "gui.jsblock.pids.listview.title.filtered_platform.nearby": "Vicino ",
-  "gui.jsblock.pids.listview.widget.change_platform": "Cambia...",
-  "gui.jsblock.pids_preset.pids_editor.title": "PIDS Editor",
-  "gui.jsblock.pids_preset.pids_editor.editingpreset": "Editing preset",
-  "gui.jsblock.pids_preset.pids_editor.weather": "Show Weather",
-  "gui.jsblock.pids_preset.pids_editor.clock": "Show Clock",
-  "gui.jsblock.pids_preset.pids_editor.hiderow": "Hide Row %d",
-  "gui.jsblock.pids_preset.pids_editor.station": "Station",
-  "gui.jsblock.pids_preset.pids_editor.back": "Back"
+  "gui.jsblock.widget.numeric_text_field.decrement": "▼"
 }
  
