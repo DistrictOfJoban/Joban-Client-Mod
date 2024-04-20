@@ -21,12 +21,13 @@ public class JCMResourceManager {
     }
 
     private static void reloadResources() {
+        PIDSManager.reset();
+
         ResourceManagerHelper.readAllResources(CUSTOM_RESOURCE_PATH, (inputStream -> {
             try {
                 String str = IOUtils.toString(inputStream, Charsets.UTF_8);
                 JsonObject jsonObject = new JsonParser().parse(str).getAsJsonObject();
-
-                PIDSManager.reload(jsonObject);
+                PIDSManager.loadJson(jsonObject);
             } catch (Exception e) {
                 e.printStackTrace();
                 JCMLogger.error("Failed to parse custom resource file!");

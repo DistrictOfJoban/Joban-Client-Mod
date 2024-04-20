@@ -13,9 +13,7 @@ import java.util.stream.Collectors;
 public class PIDSManager {
     public static final Object2ObjectArrayMap<String, PIDSPresetBase> presetList = new Object2ObjectArrayMap<>();
 
-    public static void reload(JsonObject customResourceJson) {
-        clearAll();
-
+    public static void loadJson(JsonObject customResourceJson) {
         customResourceJson.get("pids_images").getAsJsonArray().forEach(e -> {
             try {
                 JsonPIDSPreset parsedPreset = JsonPIDSPreset.parse(e.getAsJsonObject());
@@ -55,7 +53,7 @@ public class PIDSManager {
         presetList.put("lcd_pids", new LCDPIDSPreset());
     }
 
-    private static void clearAll() {
+    public static void reset() {
         presetList.entrySet().stream().filter(e -> !e.getValue().builtin).collect(Collectors.toList()).clear();
     }
 }
