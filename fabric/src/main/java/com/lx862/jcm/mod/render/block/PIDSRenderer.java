@@ -14,7 +14,7 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.InitClient;
-import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.mod.data.ArrivalsCache;
 
 public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEntityRenderer<T> {
     public PIDSRenderer(Argument dispatcher) {
@@ -43,7 +43,7 @@ public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEn
             platforms = new LongImmutableList(closestPlatforms);
         }
 
-        ArrivalsResponse arrivals = MinecraftClientData.getInstance().requestArrivals(pos.asLong(), platforms, blockEntity.getRowAmount(), 0, true);
+        ArrivalsResponse arrivals = ArrivalsCache.INSTANCE.requestArrivals(pos.asLong(), platforms, blockEntity.getRowAmount(), 0, true);
 
         graphicsHolder.push();
         graphicsHolder.translate(0.5, 0.5, 0.5);

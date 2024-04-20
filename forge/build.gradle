@@ -20,7 +20,7 @@ sourceSets.main.resources { srcDir "src/generated/resources" }
 dependencies {
     minecraft "net.minecraftforge:forge:${rootProject.minecraft_version}-${project.properties["forge_version_$rootProject.minecraft_version"]}"
     annotationProcessor "org.spongepowered:mixin:+:processor"
-    implementation fg.deobf("org.mtr:MTR-forge-${rootProject.minecraft_version}:${rootProject.mtr_version}")
+    implementation fg.deobf("org.mtr:MTR-forge:${rootProject.mtr_version}+${rootProject.minecraft_version}")
 }
 
 mixin {
