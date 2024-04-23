@@ -43,7 +43,7 @@ public class SoundLooperGUIPacket extends PacketHandler {
 
     @Override
     public void runClient() {
-        MinecraftClient.getInstance().openScreen(new Screen(new SoundLooperScreen(blockPos, corner1, corner2, soundId, soundCategory, soundVolume, interval, needRedstone, limitRange)));
+        ClientHelper.openSoundLooperGUIScreen(blockPos, corner1, corner2, soundId, soundCategory, soundVolume, interval, needRedstone, limitRange);
     }
 
     @Override

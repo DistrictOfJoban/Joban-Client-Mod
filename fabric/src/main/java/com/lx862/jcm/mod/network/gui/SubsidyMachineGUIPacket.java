@@ -35,6 +35,6 @@ public class SubsidyMachineGUIPacket extends PacketHandler {
 
     @Override
     public void runClient() {
-        MinecraftClient.getInstance().openScreen(new Screen(new SubsidyMachineScreen(blockPos, pricePerUse, cooldown)));
+        ClientHelper.openSubsidyMachineGUIScreen(blockPos, pricePerUse, cooldown);
     }
 }

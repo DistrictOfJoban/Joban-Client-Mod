@@ -51,6 +51,6 @@ public class PIDSGUIPacket extends PacketHandler {
 
     @Override
     public void runClient() {
-        MinecraftClient.getInstance().openScreen(new Screen(new PIDSScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId)));
+        ClientHelper.openPIDSGUIScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId);
     }
 }

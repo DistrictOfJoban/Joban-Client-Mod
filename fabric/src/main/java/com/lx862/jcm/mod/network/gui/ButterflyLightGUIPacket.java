@@ -30,6 +30,6 @@ public class ButterflyLightGUIPacket extends PacketHandler {
 
     @Override
     public void runClient() {
-        MinecraftClient.getInstance().openScreen(new Screen(new ButterflyLightScreen(blockPos, secondsToBlink)));
+        ClientHelper.openButterflyLightScreen(blockPos, secondsToBlink);
     }
 }
