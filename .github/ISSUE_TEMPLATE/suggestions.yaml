@@ -15,7 +15,6 @@ body:
                 - "GUI Screen"
                 - "PIDS Preset"
                 - "Documentation"
-                - "Translations"
                 - "Others"
         validations:
             required: true

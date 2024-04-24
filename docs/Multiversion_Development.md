@@ -1,18 +1,7 @@
-# Code
-**Note: Work In progress, many things are probably subject to change**
+# Introduction to Multiversion Development
 
-## Project Structure
-Due to our rather complex requirements of having to support Fabric/Forge 1.16.5 - 1.20.*, we use the Minecraft-Mappings project to facilitate building lots of variants with a single codebase.
-
-The primary development happens on Fabric, as such almost all the assets and codes are located in the `fabric` folder.
-The main mod's code are located in `fabric/src/main/java/com/lx862/jcm/mod`, these files will be compiled by both fabric and forge.
-The assets are located in `fabric/src/main/resources/assets/jsblock`, these files are also used by both fabric and forge.
-Anything other than that is mod-loader specific.
-
-When compiling Forge builds, the common code part (`fabric/src/main/java/com/lx862/jcm/mod`) will be copied over from the fabric folder to the forge folder for compilation.
-
-## Introduction to Minecraft Mappings
-**Minecraft Mappings** is a project that allows cross version (1.16.5+) and mod-loader compatibility with 1 single codebase.  
+## The Minecraft-Mappings Project
+**Minecraft Mappings** is a project made for the MTR Mod that allows cross version (1.16.5+) and mod-loader compatibility with 1 single codebase.  
 The basic idea is that *you don't use Minecraft's code*, instead use all the wrapper classes/method provided by **Minecraft Mappings**. (Which *usually* has the same name as Yarn mapping, under the `org.mtr.mapping` package)
 
 **Minecraft Mappings** are generated as a jar for each Minecraft version and mod-loader, where they all have the same classes/method, and only the underlying implementation is changed to adapt to different Minecraft versions, as such nothing needs to be changed when compiling to each Minecraft version.
@@ -30,11 +19,41 @@ If you really find yourself not being able to compile across all versions and mo
 ### What if Minecraft Mappings doesn't contain the code I want
 In general there are 2 options:
 1. Contribute to [Minecraft-Mappings](https://github.com/Minecraft-Transit-Railway/Minecraft-Mappings) by following the instruction there.
-2. Use the manifold preprocessor to compile different code conditionally depending on the build configuration, see [Manifold Preprocessor](Manifold_Preprocessor.md) for more information.
+2. Use the manifold preprocessor to compile different code conditionally depending on the build configuration (Easy way out :P), see below for more information.
 
-## Code Guidelines
-### Naming Convention
-Use Java naming convention (TLDR: InterfaceName, ClassName, fieldName, methodName)
+## Manifold Preprocessor
+This is a java preprocessor that is integrated to the Joban Client Mod projects for multi-target builds.
 
-### Exception handling
-If you do not have any plan to handle the exception appropriately (Other than logging), you should just not try/catch and let the parent class handle the exception.
+### Usage
+To conditionally run a code, you can use the `#if` and `#endif` block:
+```
+    #if MC_VERSION == "11904"
+        System.out.println("Now running on 1.19.4");
+    #elif MC_VERSION == "11802"
+        System.out.println("Now running on 1.18.2");
+    #else
+        System.out.println("Not running on 1.19.4 nor 1.18.2"); 
+    #endif
+```
+
+You can also compare the minecraft version:
+```
+    #if MC_VERSION > "11904"
+        System.out.println("Running on 1.19.4 or above (e.g. 1.20)");
+    #else
+        System.out.println("Running below 1.19.4"); 
+    #endif
+```
+
+If you have the [Manifold Plugin](https://plugins.jetbrains.com/plugin/10057-manifold) installed for IntelliJ, the code inside the `#if` and `#elif` block would have a distinct gray background, and there will not be any syntax highlighting.
+
+Available variable as follows:
+
+| Variable Name | Description                                                                        | Example |
+|---------------|------------------------------------------------------------------------------------|---------|
+| MC_VERSION    | The Minecraft version this build is for, in the format MAJOR(1)MINOR(2)PATCH(2)    | 11902   |
+| LOADER        | The modloader this build is for, possible values are `fabric`, `forge`, `neoforge` | fabric  |
+
+The preprocessing should target the main development configuration (Fabric, Latest MC Version).
+
+To avoid misleading IDE syntax error caused by code from other versions, the code for the main development configuration (Fabric, latest MC version) should be placed in the `#else` block.
