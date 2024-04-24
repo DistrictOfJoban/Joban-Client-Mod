@@ -18,7 +18,7 @@ public class ETAComponent extends TextComponent {
     private final ArrivalsResponse arrivals;
     private final int arrivalIndex;
     public ETAComponent(ArrivalsResponse arrivals, TextOverflowMode textOverflowMode, TextAlignment textAlignment, int arrivalIndex, String font, int textColor, double x, double y, double width, double height, double scale) {
-        super(font, textOverflowMode, textAlignment, textColor, x, y, width, height, scale);
+        super(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale);
         this.arrivals = arrivals;
         this.arrivalIndex = arrivalIndex;
     }

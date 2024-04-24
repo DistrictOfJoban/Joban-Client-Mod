@@ -1,5 +1,8 @@
 package com.lx862.jcm.mod.data.pids.preset.components;
 
+import com.google.gson.JsonObject;
+import com.lx862.jcm.mod.data.KVPair;
+import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
@@ -10,9 +13,19 @@ import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mapping.mapper.WorldHelper;
 
 public class ClockComponent extends TextComponent {
-    // TODO: (Maybe next version) Add 12/24h toggle
-    public ClockComponent(String font, TextOverflowMode textOverflowMode, TextAlignment textAlignment, int textColor, double x, double y, double width, double height) {
-        super(font, textOverflowMode, textAlignment, textColor, x, y, width, height);
+    private final boolean use24h;
+    private final boolean showHour;
+    private final boolean showMin;
+    private final boolean showAMPM;
+
+    public ClockComponent(double x, double y, double width, double height,
+                          String font, TextAlignment textAlignment, TextOverflowMode textOverflowMode, int textColor, double scale,
+                          KVPair additionalParam) {
+        super(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale);
+        this.use24h = additionalParam.get("use24h", true);
+        this.showHour = additionalParam.get("showHour", true);
+        this.showMin = additionalParam.get("showMin", true);
+        this.showAMPM = additionalParam.get("showAMPM", false);
     }
 
     @Override
@@ -20,7 +33,25 @@ public class ClockComponent extends TextComponent {
         long timeNow = WorldHelper.getTimeOfDay(world) + 6000;
         long hours = timeNow / 1000;
         long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
-        String timeString = String.format("%02d:%02d", hours % 24, minutes % 60);
-        drawText(graphicsHolder, guiDrawing, facing, timeString);
+        String str = "";
+        if(showHour) {
+            if(use24h) str += String.format("%02d", hours % 24);
+            else str += hours % 12;
+        }
+        if(showHour && showMin) str += (":");
+        if(showMin) str += String.format("%02d", minutes % 60);
+        if(showMin && showAMPM) str += (" ");
+        if(showAMPM) str += ((hours % 24 >= 12) ? "PM" : "AM");
+        drawText(graphicsHolder, guiDrawing, facing, str);
+    }
+
+    public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {
+        TextAlignment textAlignment = TextAlignment.valueOf(jsonObject.get("textAlignment").getAsString());
+        TextOverflowMode textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
+        String font = jsonObject.get("font").getAsString();
+        int textColor = jsonObject.get("color").getAsInt();
+
+        double scale = jsonObject.get("scale").getAsDouble();
+        return new ClockComponent(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale, new KVPair(jsonObject));
     }
 }

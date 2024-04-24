@@ -9,7 +9,7 @@ import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
-public class TextureComponent extends DrawCall {
+public class TextureComponent extends PIDSComponent {
     protected final Identifier texture;
     public TextureComponent(Identifier texture, double x, double y, double width, double height) {
         super(x, y, width, height);

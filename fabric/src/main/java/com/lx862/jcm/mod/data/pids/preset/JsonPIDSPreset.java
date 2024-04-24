@@ -5,8 +5,9 @@ import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.config.ConfigEntry;
+import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.components.*;
-import com.lx862.jcm.mod.data.pids.preset.components.base.DrawCall;
+import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
@@ -125,12 +126,12 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
         graphicsHolder.translate(startX, 0, -0.5);
 
-        List<DrawCall> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
-        List<DrawCall> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
-        List<DrawCall> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
+        List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
+        List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
+        List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
 
         // Texture
-        for(DrawCall component : textureComponents) {
+        for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
             component.render(graphicsHolder, null, world, facing);
             graphicsHolder.pop();
@@ -139,7 +140,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         // Text
         graphicsHolder.translate(0, 0, -0.5);
         TextRenderingManager.bind(graphicsHolder);
-        for(DrawCall component : textComponents) {
+        for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
             component.render(graphicsHolder, null, world, facing);
             graphicsHolder.pop();
@@ -147,10 +148,10 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public List<DrawCall> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
-        List<DrawCall> components = new ArrayList<>();
+    public List<PIDSComponent> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
+        List<PIDSComponent> components = new ArrayList<>();
         if(showClock) {
-            components.add(new ClockComponent(getFont(), TextOverflowMode.STRETCH, TextAlignment.RIGHT, ARGB_WHITE, screenWidth, 2, screenWidth, 10));
+            components.add(new ClockComponent(screenWidth, 2, screenWidth, 10, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, ARGB_WHITE, 1, new KVPair()));
         }
         if(showWeather) {
             components.add(new WeatherIconComponent(ICON_WEATHER_SUNNY, ICON_WEATHER_RAINY, ICON_WEATHER_THUNDER, 0, 0, 11, 11));
@@ -163,7 +164,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
             if(arrivalIndex >= arrivals.getArrivals().size()) continue;
 
             if(!customMessages[i].isEmpty()) {
-                components.add(new CustomTextComponent(getFont(), textOverflowMode, TextAlignment.LEFT, getTextColor(), customMessages[i], x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
+                components.add(new CustomTextComponent(x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, getFont(), TextAlignment.LEFT, textOverflowMode, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("text", customMessages[i])));
             } else {
                 if (!rowHidden[i]) {
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);

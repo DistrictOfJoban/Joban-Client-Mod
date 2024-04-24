@@ -1,17 +1,19 @@
 package com.lx862.jcm.mod.data.pids.preset.components.base;
 
 import com.lx862.jcm.mod.data.JCMClientStats;
-import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextInfo;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
+import org.mtr.core.serializer.JsonReader;
+import org.mtr.core.serializer.ReaderBase;
+import org.mtr.libraries.com.google.gson.JsonObject;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
-public abstract class TextComponent extends DrawCall {
+public abstract class TextComponent extends PIDSComponent {
     public static final int SWITCH_LANG_DURATION = 60;
     protected final TextOverflowMode textOverflowMode;
     protected final TextAlignment textAlignment;
@@ -19,17 +21,13 @@ public abstract class TextComponent extends DrawCall {
     protected final int textColor;
     protected final double scale;
 
-    public TextComponent(String font, TextOverflowMode textOverflowMode, TextAlignment textAlignment, int textColor, double x, double y, double width, double height, double scale) {
+    public TextComponent(double x, double y, double width, double height, String font, TextAlignment textAlignment, TextOverflowMode textOverflowMode, int textColor, double scale) {
         super(x, y, width, height);
         this.font = font;
-        this.textColor = textColor;
-        this.scale = scale;
         this.textAlignment = textAlignment;
         this.textOverflowMode = textOverflowMode;
-    }
-
-    public TextComponent(String font, TextOverflowMode textOverflowMode, TextAlignment textAlignment, int textColor, double x, double y, double width, double height) {
-        this(font, textOverflowMode, textAlignment, textColor, x, y, width, height, 1);
+        this.scale = scale;
+        this.textColor = textColor;
     }
 
     protected void drawText(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, String text) {

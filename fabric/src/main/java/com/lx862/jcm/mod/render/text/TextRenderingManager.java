@@ -48,6 +48,8 @@ public class TextRenderingManager implements RenderHelper {
     }
 
     private static void drawInternal(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, TextInfo text, Direction facing, double x, double y) {
+        if(text.getContent().isEmpty()) return; // No need for any operation as nothing is going to get rendered anyway
+
         if(!ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
             if(text.isForScrollingText()) {
                 VanillaTextRenderer.drawScrollingText(graphicsHolder, text.getContent(), (int)text.getWidthInfo().getMaxWidth(), x, y, text.getTextColor());

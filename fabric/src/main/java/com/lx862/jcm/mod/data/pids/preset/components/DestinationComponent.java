@@ -13,8 +13,9 @@ import org.mtr.mapping.mapper.GuiDrawing;
 public class DestinationComponent extends TextComponent {
     private final ArrivalsResponse arrivals;
     private final int arrivalIndex;
+    // TODO: Move arrivals to "context" param in render method
     public DestinationComponent(ArrivalsResponse arrivals, TextOverflowMode textOverflowMode, TextAlignment textAlignment, int arrivalIndex, String font, int textColor, double x, double y, double width, double height, double scale) {
-        super(font, textOverflowMode, textAlignment, textColor, x, y, width, height, scale);
+        super(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale);
         this.arrivals = arrivals;
         this.arrivalIndex = arrivalIndex;
     }
