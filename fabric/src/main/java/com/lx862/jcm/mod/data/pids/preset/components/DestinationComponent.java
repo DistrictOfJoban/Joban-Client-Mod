@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.data.pids.preset.components;
 
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.data.KVPair;
+import com.lx862.jcm.mod.data.pids.preset.PIDSContext;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
@@ -23,8 +24,8 @@ public class DestinationComponent extends TextComponent {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing, KVPair context) {
-        ArrivalsResponse arrivals = context.get("arrivals", null);
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
+        ArrivalsResponse arrivals = context.arrivals;
         if(arrivalIndex >= arrivals.getArrivals().size()) return;
 
         ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);

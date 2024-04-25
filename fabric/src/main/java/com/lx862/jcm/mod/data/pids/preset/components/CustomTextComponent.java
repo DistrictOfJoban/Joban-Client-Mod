@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.data.pids.preset.components;
 
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.data.KVPair;
+import com.lx862.jcm.mod.data.pids.preset.PIDSContext;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
@@ -19,7 +20,7 @@ public class CustomTextComponent extends TextComponent {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing, KVPair context) {
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
         drawText(graphicsHolder, guiDrawing, facing, text);
     }
 

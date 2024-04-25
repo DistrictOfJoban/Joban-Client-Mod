@@ -51,7 +51,7 @@ public interface GuiHelper {
         if(textWidth > maxW) {
             double slideProgress = ((Math.sin(elapsed / 4)) / 2) + 0.5;
             graphicsHolder.translate(-slideProgress * (textWidth - maxW), 0, 0);
-            ClipStack.push(startX, 0, maxW, 1000);
+            ClipStack.add(startX, 0, maxW, 500);
             graphicsHolder.drawText(text, textX, textY, color, shadow, MAX_RENDER_LIGHT);
             ClipStack.pop();
         } else {

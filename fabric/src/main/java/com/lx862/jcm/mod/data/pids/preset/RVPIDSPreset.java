@@ -25,8 +25,8 @@ public class RVPIDSPreset extends PIDSPresetBase {
     private static final int HEADER_HEIGHT = 9;
     private static final int PIDS_MARGIN = 7;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
-    private static final Identifier TEXTURE_PLATFORM_CIRCLE = new Identifier(Constants.MOD_ID, "textures/block/pids/plat_circle.png");
-    private static final Identifier TEXTURE_BACKGROUND = new Identifier(Constants.MOD_ID, "textures/block/pids/rv_default.png");
+    private static final String TEXTURE_PLATFORM_CIRCLE = Constants.MOD_ID + ":textures/block/pids/plat_circle.png";
+    private static final String TEXTURE_BACKGROUND = Constants.MOD_ID + ":textures/block/pids/rv_default.png";
     private static final String ICON_WEATHER_SUNNY = Constants.MOD_ID + ":textures/block/pids/weather_sunny.png";
     private static final String ICON_WEATHER_RAINY = Constants.MOD_ID + ":textures/block/pids/weather_rainy.png";
     private static final String ICON_WEATHER_THUNDER = Constants.MOD_ID + ":textures/block/pids/weather_thunder.png";
@@ -40,13 +40,8 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
-        int startX = PIDS_MARGIN;
-        int contentWidth = width - (PIDS_MARGIN * 2);
-        int contentHeight = height - HEADER_HEIGHT - 3;
-
         // Draw Background
         graphicsHolder.createVertexConsumer(RenderLayer.getText(getBackground()));
-        RenderHelper.drawTexture(graphicsHolder, getBackground(), 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
 
         // Debug View Texture
         if(ConfigEntry.DEBUG_MODE.getBool() && ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
@@ -54,62 +49,70 @@ public class RVPIDSPreset extends PIDSPresetBase {
             drawAtlasBackground(graphicsHolder, width, height, facing);
         }
 
-        graphicsHolder.translate(startX, 0, -0.5);
+        graphicsHolder.translate(0, 0, -0.5);
 
-        List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, HEADER_HEIGHT + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
+        List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, 0, width, height, be.getRowAmount(), be.platformNumberHidden());
         List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
-        KVPair context = new KVPair().with("arrivals", arrivals);
 
         // Texture
+        graphicsHolder.push();
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, world, facing, context);
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
             graphicsHolder.pop();
+            graphicsHolder.translate(0, 0, -0.003);
         }
+        graphicsHolder.pop();
 
         // Text
         graphicsHolder.translate(0, 0, -0.5);
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, world, facing, context);
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
             graphicsHolder.pop();
         }
     }
 
     @Override
     public List<PIDSComponent> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
+        int startX = x + PIDS_MARGIN;
+        int startY = y + (screenHeight / 9);
+        int contentWidth = screenWidth - PIDS_MARGIN;
+        int contentHeight = screenHeight - HEADER_HEIGHT - 3;
+
         List<PIDSComponent> components = new ArrayList<>();
-        components.add(new ClockComponent(screenWidth, 2, screenHeight, 10, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, ARGB_WHITE, 1, new KVPair()));
-        components.add(new WeatherIconComponent(0, 0, 11, 11,
+        components.add(new CustomTextureComponent(0, 0, screenWidth, screenHeight, new KVPair().with("textureId", getBackground().getNamespace() + ":" + getBackground().getPath())));
+        components.add(new ClockComponent(contentWidth, 2, contentWidth, 10, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, ARGB_WHITE, 1, new KVPair()));
+        components.add(new WeatherIconComponent(startX, 0, 11, 11,
                 new KVPair().with("weatherIconSunny", ICON_WEATHER_SUNNY)
                 .with("weatherIconRainy", ICON_WEATHER_RAINY)
                 .with("weatherIconThunder", ICON_WEATHER_THUNDER)));
 
         /* Arrivals */
         int arrivalIndex = 0;
-        double rowY = y;
+        double rowY = startY + 6;
         for(int i = 0; i < rows; i++) {
             if(customMessages[i] != null && !customMessages[i].isEmpty()) {
-                components.add(new CustomTextComponent(x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("text", customMessages[i])));
+                components.add(new CustomTextComponent(startX, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("text", customMessages[i])));
             } else {
                 if(!rowHidden[i] && arrivalIndex < arrivals.getArrivals().size()) {
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    components.add(new DestinationComponent(x, rowY, destinationMaxWidth, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("arrivalIndex", arrivalIndex)));
+                    components.add(new DestinationComponent(startX, rowY, destinationMaxWidth, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("arrivalIndex", arrivalIndex)));
 
                     if(!hidePlatform) {
-                        components.add(new PlatformComponent(arrivals, arrivalIndex, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
-                        components.add(new PlatformCircleComponent(arrivals, arrivalIndex, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
+                        components.add(new PlatformComponent(arrivals, arrivalIndex, getFont(), RenderHelper.ARGB_WHITE, startX + (64 * ARRIVAL_TEXT_SCALE), rowY, 9, 9));
+                        components.add(new PlatformCircleComponent(startX + (64 * ARRIVAL_TEXT_SCALE), rowY, 11, 11, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
                     }
 
-                    components.add(new ETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE,
+                    components.add(new ETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE,
                             new KVPair().with("arrivalIndex", arrivalIndex)));
                     arrivalIndex++;
                 }
             }
 
-            rowY += (screenHeight / 5.25) * ARRIVAL_TEXT_SCALE;
+            rowY += (contentHeight / 5.25) * ARRIVAL_TEXT_SCALE;
         }
 
         return components;
@@ -122,7 +125,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
     @Override
     public @Nonnull Identifier getBackground() {
-        return TEXTURE_BACKGROUND;
+        return new Identifier(TEXTURE_BACKGROUND);
     }
 
     @Override

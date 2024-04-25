@@ -68,14 +68,13 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         graphicsHolder.translate(0, 0, -0.5);
 
-        KVPair context = new KVPair().with("arrivals", arrivals);
         List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
 
         // Texture
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, world, facing, context);
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
             graphicsHolder.pop();
         }
 
@@ -84,7 +83,7 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, world, facing, context);
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
             graphicsHolder.pop();
         }
     }

@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.data.pids.preset.components;
 
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.data.KVPair;
+import com.lx862.jcm.mod.data.pids.preset.PIDSContext;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
@@ -29,8 +30,8 @@ public class ClockComponent extends TextComponent {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing, KVPair context) {
-        long timeNow = WorldHelper.getTimeOfDay(world) + 6000;
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
+        long timeNow = WorldHelper.getTimeOfDay(context.world) + 6000;
         long hours = timeNow / 1000;
         long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
         String str = "";

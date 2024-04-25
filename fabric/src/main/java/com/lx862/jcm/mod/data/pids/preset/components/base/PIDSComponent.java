@@ -2,10 +2,8 @@ package com.lx862.jcm.mod.data.pids.preset.components.base;
 
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.data.KVPair;
-import com.lx862.jcm.mod.data.pids.preset.components.ClockComponent;
-import com.lx862.jcm.mod.data.pids.preset.components.CustomTextComponent;
-import com.lx862.jcm.mod.data.pids.preset.components.DestinationComponent;
-import com.lx862.jcm.mod.data.pids.preset.components.ETAComponent;
+import com.lx862.jcm.mod.data.pids.preset.PIDSContext;
+import com.lx862.jcm.mod.data.pids.preset.components.*;
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
@@ -29,10 +27,9 @@ public abstract class PIDSComponent implements RenderHelper {
      * Called to render the component
      * @param graphicsHolder The provided graphicsHolder
      * @param guiDrawing guiDrawing, this may be null if not rendered in a 2D context (e.g. GUI Screen)
-     * @param world The corresponding world
      * @param facing The direction where the component should be rendered, null if in a 2D context.
      */
-    public abstract void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing, KVPair context);
+    public abstract void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context);
 
     public static PIDSComponent parse(JsonObject jsonObject) {
         String name = jsonObject.get("component").getAsString();
@@ -51,10 +48,12 @@ public abstract class PIDSComponent implements RenderHelper {
 }
 
 enum ComponentList {
-    CUSTOM_TEXT("customText", CustomTextComponent::parseComponent),
+    ARRIVAL_DESTINATION("arrival_destination", DestinationComponent::parseComponent),
+    ARRIVAL_ETA("arrival_eta", ETAComponent::parseComponent),
+    CUSTOM_TEXT("custom_text", CustomTextComponent::parseComponent),
+    CUSTOM_TEXTURE("custom_texture", CustomTextureComponent::parseComponent),
     CLOCK("clock", ClockComponent::parseComponent),
-    ARRIVAL_DESTINATION("arrivalDestination", DestinationComponent::parseComponent),
-    ARRIVAL_ETA("arrivalETA", ETAComponent::parseComponent);
+    WEATHER_ICON("weather_icon", WeatherIconComponent::parseComponent);
 
     public final String name;
     public final ComponentParser componentParser;

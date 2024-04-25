@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.pids.preset.components.base;
 
+import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.TextOverflowMode;
@@ -47,7 +48,11 @@ public abstract class TextComponent extends PIDSComponent {
         }
 
         if(guiDrawing != null) {
-            TextRenderingManager.draw(guiDrawing, finalText, 0, 0);
+            if(ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+                TextRenderingManager.draw(graphicsHolder, guiDrawing, finalText, x, y); //HACK: GuiDrawing does not obey graphicsholder.translate
+            } else {
+                TextRenderingManager.draw(graphicsHolder, guiDrawing, finalText, 0, 0);
+            }
         } else {
             TextRenderingManager.draw(graphicsHolder, finalText, facing, 0, 0);
         }

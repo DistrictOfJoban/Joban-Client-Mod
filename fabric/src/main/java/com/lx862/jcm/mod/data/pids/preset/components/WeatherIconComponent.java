@@ -1,7 +1,9 @@
 package com.lx862.jcm.mod.data.pids.preset.components;
 
-import com.lx862.jcm.mod.Constants;
+import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.data.KVPair;
+import com.lx862.jcm.mod.data.pids.preset.PIDSContext;
+import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
@@ -14,18 +16,18 @@ public class WeatherIconComponent extends TextureComponent {
     private final Identifier iconThunder;
     private final Identifier iconRainy;
     public WeatherIconComponent(double x, double y, double width, double height, KVPair additionalParam) {
-        super(null, x, y, width, height);
-        this.iconSunny = new Identifier(additionalParam.get("weatherIconSunny", (String)null));
-        this.iconRainy = new Identifier(additionalParam.get("weatherIconRainy", (String)null));
-        this.iconThunder = new Identifier(additionalParam.get("weatherIconThunder", (String)null));
+        super(x, y, width, height, additionalParam);
+        this.iconSunny = additionalParam.getIdentifier("weatherIconSunny");
+        this.iconRainy = additionalParam.getIdentifier("weatherIconRainy");
+        this.iconThunder = additionalParam.getIdentifier("weatherIconThunder");
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing, KVPair context) {
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
         Identifier textureId;
-        if(world.isThundering()) {
+        if(context.world.isThundering()) {
             textureId = iconThunder;
-        } else if(world.isRaining()) {
+        } else if(context.world.isRaining()) {
             textureId = iconRainy;
         } else {
             textureId = iconSunny;
@@ -34,5 +36,9 @@ public class WeatherIconComponent extends TextureComponent {
         if(textureId != null) {
             drawTexture(graphicsHolder, guiDrawing, facing, textureId, 0, 0, width, height, ARGB_WHITE);
         }
+    }
+
+    public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {
+        return new WeatherIconComponent(x, y, width, height, new KVPair(jsonObject));
     }
 }
