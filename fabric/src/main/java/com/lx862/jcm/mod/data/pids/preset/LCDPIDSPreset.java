@@ -49,11 +49,12 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, 6, contentWidth, height - 2, be.getRowAmount(), be.platformNumberHidden());
         List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
+        KVPair context = new KVPair().with("arrivals", arrivals);
 
         // Texture
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, world, facing);
+            component.render(graphicsHolder, null, world, facing, context);
             graphicsHolder.pop();
         }
 
@@ -62,7 +63,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, world, facing);
+            component.render(graphicsHolder, null, world, facing, context);
             graphicsHolder.pop();
         }
     }
@@ -82,8 +83,9 @@ public class LCDPIDSPreset extends PIDSPresetBase {
             } else {
                 if(!rowHidden[i]) {
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    components.add(new DestinationComponent(arrivals, TextOverflowMode.STRETCH, TextAlignment.LEFT, arrivalIndex, getFont(), getTextColor(), x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
-                    components.add(new ETAComponent(arrivals, TextOverflowMode.STRETCH, TextAlignment.RIGHT, arrivalIndex, getFont(), getTextColor(), screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                    components.add(new DestinationComponent(x, rowY, destinationMaxWidth, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("arrivalIndex", arrivalIndex)));
+                    components.add(new ETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE,
+                            new KVPair().with("arrivalIndex", arrivalIndex)));
                     arrivalIndex++;
                 }
             }

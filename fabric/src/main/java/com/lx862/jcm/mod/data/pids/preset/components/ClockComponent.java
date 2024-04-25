@@ -29,7 +29,7 @@ public class ClockComponent extends TextComponent {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing) {
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing, KVPair context) {
         long timeNow = WorldHelper.getTimeOfDay(world) + 6000;
         long hours = timeNow / 1000;
         long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
@@ -50,7 +50,6 @@ public class ClockComponent extends TextComponent {
         TextOverflowMode textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
         String font = jsonObject.get("font").getAsString();
         int textColor = jsonObject.get("color").getAsInt();
-
         double scale = jsonObject.get("scale").getAsDouble();
         return new ClockComponent(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale, new KVPair(jsonObject));
     }

@@ -19,17 +19,16 @@ public class CustomTextComponent extends TextComponent {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing) {
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing, KVPair context) {
         drawText(graphicsHolder, guiDrawing, facing, text);
     }
 
     public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {
         TextAlignment textAlignment = TextAlignment.valueOf(jsonObject.get("textAlignment").getAsString());
         TextOverflowMode textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
-        String text = jsonObject.get("text").getAsString();
         String font = jsonObject.get("font").getAsString();
         int textColor = jsonObject.get("color").getAsInt();
         double scale = jsonObject.get("scale").getAsDouble();
-        return new CustomTextComponent(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale, new KVPair().with("text", text));
+        return new CustomTextComponent(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale, new KVPair(jsonObject));
     }
 }

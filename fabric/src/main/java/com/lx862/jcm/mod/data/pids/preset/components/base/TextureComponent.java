@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.pids.preset.components.base;
 
+import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Direction;
@@ -17,7 +18,7 @@ public class TextureComponent extends PIDSComponent {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing) {
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing, KVPair context) {
         if(texture != null) {
             drawTexture(graphicsHolder, guiDrawing, facing, texture, 0, 0, width, height, ARGB_WHITE);
         }

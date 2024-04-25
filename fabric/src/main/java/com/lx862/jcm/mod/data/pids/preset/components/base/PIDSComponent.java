@@ -1,8 +1,11 @@
 package com.lx862.jcm.mod.data.pids.preset.components.base;
 
 import com.google.gson.JsonObject;
+import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.components.ClockComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.CustomTextComponent;
+import com.lx862.jcm.mod.data.pids.preset.components.DestinationComponent;
+import com.lx862.jcm.mod.data.pids.preset.components.ETAComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
@@ -29,7 +32,7 @@ public abstract class PIDSComponent implements RenderHelper {
      * @param world The corresponding world
      * @param facing The direction where the component should be rendered, null if in a 2D context.
      */
-    public abstract void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing);
+    public abstract void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing, KVPair context);
 
     public static PIDSComponent parse(JsonObject jsonObject) {
         String name = jsonObject.get("component").getAsString();
@@ -49,7 +52,9 @@ public abstract class PIDSComponent implements RenderHelper {
 
 enum ComponentList {
     CUSTOM_TEXT("customText", CustomTextComponent::parseComponent),
-    CLOCK("clock", ClockComponent::parseComponent);
+    CLOCK("clock", ClockComponent::parseComponent),
+    ARRIVAL_DESTINATION("arrivalDestination", DestinationComponent::parseComponent),
+    ARRIVAL_ETA("arrivalETA", ETAComponent::parseComponent);
 
     public final String name;
     public final ComponentParser componentParser;

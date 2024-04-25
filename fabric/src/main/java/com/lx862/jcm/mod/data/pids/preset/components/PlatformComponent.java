@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.pids.preset.components;
 
+import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
@@ -20,7 +21,7 @@ public class PlatformComponent extends TextComponent {
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing) {
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing, KVPair context) {
         if(arrivalIndex >= arrivals.getArrivals().size()) return;
         ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
         graphicsHolder.translate(width / 1.6, 2, 0);

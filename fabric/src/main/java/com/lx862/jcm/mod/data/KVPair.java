@@ -22,6 +22,9 @@ public class KVPair {
             }
             if(jsonPrimitive.isNumber()) {
                 val = jsonPrimitive.getAsDouble();
+                if((double)val % 1 == 0) {
+                    val = jsonPrimitive.getAsInt();
+                }
             }
             if(jsonPrimitive.isString()) {
                 val = jsonPrimitive.getAsString();
