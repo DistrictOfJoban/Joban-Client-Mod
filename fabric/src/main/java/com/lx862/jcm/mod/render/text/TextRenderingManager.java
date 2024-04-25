@@ -39,8 +39,8 @@ public class TextRenderingManager implements RenderHelper {
         draw(graphicsHolder, text.withMaxWidth(textWidth).withScrollingText(), facing, x, y);
     }
 
-    public static void draw(GuiDrawing guiDrawing, TextInfo text, double x, double y) {
-        drawInternal(null, guiDrawing, text, null, x, y);
+    public static void draw(GraphicsHolder graphicsHolder,GuiDrawing guiDrawing, TextInfo text, double x, double y) {
+        drawInternal(graphicsHolder, guiDrawing, text, null, x, y);
     }
 
     public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, double x, double y) {
@@ -48,6 +48,8 @@ public class TextRenderingManager implements RenderHelper {
     }
 
     private static void drawInternal(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, TextInfo text, Direction facing, double x, double y) {
+        if(text.getContent().isEmpty()) return; // No need for any operation as nothing is going to get rendered anyway
+
         if(!ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
             if(text.isForScrollingText()) {
                 VanillaTextRenderer.drawScrollingText(graphicsHolder, text.getContent(), (int)text.getWidthInfo().getMaxWidth(), x, y, text.getTextColor());

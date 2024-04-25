@@ -5,8 +5,9 @@ import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.config.ConfigEntry;
+import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.components.*;
-import com.lx862.jcm.mod.data.pids.preset.components.base.DrawCall;
+import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
@@ -33,9 +34,9 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private static final int PIDS_MARGIN = 7;
     private static final float ARRIVAL_TEXT_SCALE = 1.35F;
     private static final int HEADER_HEIGHT = 9;
-    private static final Identifier ICON_WEATHER_SUNNY = new Identifier(Constants.MOD_ID, "textures/block/pids/weather_sunny.png");
-    private static final Identifier ICON_WEATHER_RAINY = new Identifier(Constants.MOD_ID, "textures/block/pids/weather_rainy.png");
-    private static final Identifier ICON_WEATHER_THUNDER = new Identifier(Constants.MOD_ID, "textures/block/pids/weather_thunder.png");
+    private static final String ICON_WEATHER_SUNNY = Constants.MOD_ID + ":textures/block/pids/weather_sunny.png";
+    private static final String ICON_WEATHER_RAINY = Constants.MOD_ID + ":textures/block/pids/weather_rainy.png";
+    private static final String ICON_WEATHER_THUNDER = Constants.MOD_ID + ":textures/block/pids/weather_thunder.png";
     private static final Identifier TEXTURE_PLATFORM_CIRCLE = new Identifier(Constants.MOD_ID, "textures/block/pids/plat_circle.png");
     protected Identifier background;
     protected String fontId;
@@ -129,35 +130,40 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
         graphicsHolder.translate(startX, 0, -0.5);
 
-        List<DrawCall> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
-        List<DrawCall> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
-        List<DrawCall> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
+        List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
+        List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
+        List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
 
         // Texture
-        for(DrawCall component : textureComponents) {
+        for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, world, facing);
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
             graphicsHolder.pop();
         }
 
         // Text
         graphicsHolder.translate(0, 0, -0.5);
         TextRenderingManager.bind(graphicsHolder);
-        for(DrawCall component : textComponents) {
+        for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, world, facing);
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
             graphicsHolder.pop();
         }
     }
 
     @Override
-    public List<DrawCall> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
-        List<DrawCall> components = new ArrayList<>();
+    public List<PIDSComponent> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
+        List<PIDSComponent> components = new ArrayList<>();
+
         if(showClock) {
-            components.add(new ClockComponent(getFont(), TextOverflowMode.STRETCH, TextAlignment.RIGHT, ARGB_WHITE, screenWidth, 2, screenWidth, 10));
+            components.add(new ClockComponent(screenWidth, 2, screenWidth, 10, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, ARGB_WHITE, 1, new KVPair()));
         }
+
         if(showWeather) {
-            components.add(new WeatherIconComponent(ICON_WEATHER_SUNNY, ICON_WEATHER_RAINY, ICON_WEATHER_THUNDER, 0, 0, 11, 11));
+            components.add(new WeatherIconComponent(0, 0, 11, 11, new KVPair()
+                    .with("weatherIconSunny", ICON_WEATHER_SUNNY)
+                    .with("weatherIconRainy", ICON_WEATHER_RAINY)
+                    .with("weatherIconThunder", ICON_WEATHER_THUNDER)));
         }
 
         /* Arrivals */
@@ -167,18 +173,19 @@ public class JsonPIDSPreset extends PIDSPresetBase {
             if(arrivalIndex >= arrivals.getArrivals().size()) continue;
 
             if(!customMessages[i].isEmpty()) {
-                components.add(new CustomTextComponent(getFont(), textOverflowMode, TextAlignment.LEFT, getTextColor(), customMessages[i], x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, ARRIVAL_TEXT_SCALE));
+                components.add(new CustomTextComponent(x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, getFont(), TextAlignment.LEFT, textOverflowMode, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("text", customMessages[i])));
             } else {
                 if (!rowHidden[i]) {
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    components.add(new DestinationComponent(arrivals, textOverflowMode, TextAlignment.LEFT, arrivalIndex, getFont(), textColor, x, rowY, destinationMaxWidth, 10, ARRIVAL_TEXT_SCALE));
+                    components.add(new DestinationComponent(x, rowY, destinationMaxWidth, 10, getFont(), TextAlignment.LEFT, textOverflowMode, textColor, ARRIVAL_TEXT_SCALE, new KVPair().with("arrivalIndex", arrivalIndex)));
 
                     if (!hidePlatform) {
                         components.add(new PlatformComponent(arrivals, arrivalIndex, getFont(), RenderHelper.ARGB_WHITE, 64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9));
-                        components.add(new PlatformCircleComponent(arrivals, arrivalIndex, TEXTURE_PLATFORM_CIRCLE, 64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11));
+                        components.add(new PlatformCircleComponent(64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex) ));
                     }
 
-                    components.add(new ETAComponent(arrivals, TextOverflowMode.STRETCH, TextAlignment.RIGHT, arrivalIndex, getFont(), textColor, screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, ARRIVAL_TEXT_SCALE));
+                    components.add(new ETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, textColor, ARRIVAL_TEXT_SCALE,
+                            new KVPair().with("arrivalIndex", arrivalIndex)));
                     arrivalIndex++;
                 }
             }

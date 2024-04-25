@@ -35,6 +35,6 @@ public class FareSaverGUIPacket extends PacketHandler {
 
     @Override
     public void runClient() {
-        MinecraftClient.getInstance().openScreen(new Screen(new FareSaverScreen(blockPos, currency, discount)));
+        ClientHelper.openFareSaverGUIScreen(blockPos, currency, discount);
     }
 }

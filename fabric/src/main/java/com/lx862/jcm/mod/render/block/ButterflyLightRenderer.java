@@ -13,7 +13,7 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.InitClient;
-import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.mod.data.ArrivalsCache;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ public class ButterflyLightRenderer extends JCMBlockEntityRenderer<ButterflyLigh
         Platform closestPlatform = !closestPlatforms.isEmpty() ? closestPlatforms.get(0) : null;
         if (closestPlatform == null) return;
 
-        ArrivalsResponse arrivals = MinecraftClientData.getInstance().requestArrivals(pos.asLong(), LongImmutableList.of(closestPlatform.getId()), 1, 0, true);
+        ArrivalsResponse arrivals = ArrivalsCache.INSTANCE.requestArrivals(pos.asLong(), LongImmutableList.of(closestPlatform.getId()), 1, 0, true);
         ArrivalResponse firstArrival = arrivals.getArrivals().isEmpty() ? null : arrivals.getArrivals().get(0);
         if (firstArrival == null) return;
 

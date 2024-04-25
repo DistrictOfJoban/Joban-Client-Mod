@@ -13,16 +13,25 @@ import java.util.stream.Collectors;
 public class PIDSManager {
     public static final Object2ObjectArrayMap<String, PIDSPresetBase> presetList = new Object2ObjectArrayMap<>();
 
-    public static void reload(JsonObject customResourceJson) {
-        clearAll();
-
+    public static void loadJson(JsonObject customResourceJson) {
         customResourceJson.get("pids_images").getAsJsonArray().forEach(e -> {
+            String presetName = "Unnamed preset";
+
             try {
-                JsonPIDSPreset parsedPreset = JsonPIDSPreset.parse(e.getAsJsonObject());
-                presetList.put(parsedPreset.getId(), parsedPreset);
+                JsonObject jsonObject = e.getAsJsonObject();
+                presetName = jsonObject.get("id").getAsString();
+                PIDSPresetBase customPreset;
+
+                if(jsonObject.has("file")) {
+                    customPreset = CustomComponentPIDSPreset.parse(jsonObject);
+                } else {
+                    customPreset = JsonPIDSPreset.parse(e.getAsJsonObject());
+                }
+
+                presetList.put(customPreset.getId(), customPreset);
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JCMLogger.error("Failed to parse JCM PIDS Preset!");
+                JCMLogger.error("Failed to parse PIDS Preset \"{}\"!", presetName);
             }
         });
     }
@@ -55,7 +64,7 @@ public class PIDSManager {
         presetList.put("lcd_pids", new LCDPIDSPreset());
     }
 
-    private static void clearAll() {
+    public static void reset() {
         presetList.entrySet().stream().filter(e -> !e.getValue().builtin).collect(Collectors.toList()).clear();
     }
 }

@@ -9,15 +9,15 @@ import org.mtr.mapping.registry.EventRegistryClient;
 public class Events {
     public static void register() {
         // Start Tick Event for counting tick
-        org.mtr.mapping.registry.EventRegistry.registerStartServerTick(() -> {
+        RegistryHelper.REGISTRY.eventRegistry.registerStartServerTick(() -> {
             JCMServerStats.incrementGameTick();
         });
     }
 
     public static void registerClient() {
-        EventRegistryClient.registerResourceReloadEvent(JCMResourceManager::reload);
+        RegistryHelperClient.REGISTRY_CLIENT.eventRegistryClient.registerResourceReloadEvent(JCMResourceManager::reload);
 
-        EventRegistryClient.registerStartClientTick(() -> {
+        RegistryHelperClient.REGISTRY_CLIENT.eventRegistryClient.registerStartClientTick(() -> {
             JCMClientStats.incrementGameTick();
             McMetaManager.tick();
         });

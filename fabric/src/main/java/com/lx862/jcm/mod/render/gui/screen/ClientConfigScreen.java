@@ -49,6 +49,12 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
                 new TextureTextAtlasScreen().withPreviousScreen(new Screen(this))
         ));
     }));
+
+    ButtonWidgetExtension pidsPreviewButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.listview.widget.open"), (buttonWidget -> {
+        MinecraftClient.getInstance().openScreen(new Screen(
+                new PIDSDemoScreen().withPreviousScreen(new Screen(this))
+        ));
+    }));
     public ClientConfigScreen() {
         super(true);
         bottomRowWidget = new WidgetSet(20);
@@ -109,12 +115,16 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.debug"));
         listViewWidget.add(ConfigEntry.DEBUG_MODE.getTitle(), new MappedWidget(debugModeButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.open_atlas_screen"), new MappedWidget(textAtlasButton));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.open_pids_preview"), new MappedWidget(pidsPreviewButton));
 
         addChild(new ClickableWidget(disableRenderingButton));
         addChild(new ClickableWidget(useCustomFontButton));
         addChild(new ClickableWidget(useNewTextRendererButton));
         addChild(new ClickableWidget(debugModeButton));
         addChild(new ClickableWidget(textAtlasButton));
+        addChild(new ClickableWidget(pidsPreviewButton));
+
+        pidsPreviewButton.setActiveMapped(MinecraftClient.getInstance().getWorldMapped() != null);
     }
 
 

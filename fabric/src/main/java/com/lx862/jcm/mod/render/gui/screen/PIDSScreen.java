@@ -114,7 +114,7 @@ public class PIDSScreen extends BlockConfigScreen {
             }
         }
         String platforms = String.join(",", platformList);
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.title.filtered_platform", filteredPlatforms.isEmpty() ? TextUtil.translatable(TextCategory.GUI, "pids.listview.title.filtered_platform.nearby").getString() : "", platforms), new MappedWidget(choosePlatformButton));
+        listViewWidget.add(filteredPlatforms.isEmpty() ? TextUtil.translatable(TextCategory.GUI, "pids.listview.title.filtered_platform.nearby") : TextUtil.translatable(TextCategory.GUI, "pids.listview.title.filtered_platform", platforms), new MappedWidget(choosePlatformButton));
         addChild(new ClickableWidget(choosePlatformButton));
 
         for(int i = 0; i < this.customMessagesWidgets.length; i++) {

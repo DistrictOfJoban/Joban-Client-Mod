@@ -15,7 +15,7 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.InitClient;
-import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.mod.data.ArrivalsCache;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +41,7 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
         Platform closestPlatform = !closestPlatforms.isEmpty() ? closestPlatforms.get(0) : null;
         if (closestPlatform == null) return;
 
-        ArrivalsResponse arrivals = MinecraftClientData.getInstance().requestArrivals(pos.asLong(), LongImmutableList.of(closestPlatform.getId()), 1, 0, true);
+        ArrivalsResponse arrivals = ArrivalsCache.INSTANCE.requestArrivals(pos.asLong(), LongImmutableList.of(closestPlatform.getId()), 1, 0, true);
         ArrivalResponse firstArrival = arrivals.getArrivals().isEmpty() ? null : arrivals.getArrivals().get(0);
         if (firstArrival == null) return;
 

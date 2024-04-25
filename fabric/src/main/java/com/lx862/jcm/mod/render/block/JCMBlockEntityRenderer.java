@@ -28,9 +28,9 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
 
             renderCurated(blockEntity, graphicsHolder, world, state, pos, tickDelta, light, i1);
         } catch (Exception e) {
-            JCMLogger.error("An exception occurred while rendering Block Entity:", e);
+            JCMLogger.error("An exception occurred while rendering Block Entity!");
             JCMLogger.error("This is a bug, please report to the developers of Joban Client Mod!");
-            throw new Error("An exception occurred while rendering Block Entity, see above.");
+            throw new Error("An exception occurred while rendering Block Entity.", e);
         }
     }
 

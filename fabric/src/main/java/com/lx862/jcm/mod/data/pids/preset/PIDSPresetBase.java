@@ -1,10 +1,8 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.data.pids.preset.components.base.DrawCall;
+import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.text.TextAlignment;
-import com.lx862.jcm.mod.render.text.TextInfo;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.mapping.holder.Direction;
@@ -46,7 +44,7 @@ public abstract class PIDSPresetBase implements RenderHelper {
         RenderHelper.drawTexture(graphicsHolder,0, height, 0, width, width, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
-    public abstract List<DrawCall> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform);
+    public abstract List<PIDSComponent> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform);
     public abstract String getFont();
     public abstract @Nonnull Identifier getBackground();
     public abstract int getTextColor();

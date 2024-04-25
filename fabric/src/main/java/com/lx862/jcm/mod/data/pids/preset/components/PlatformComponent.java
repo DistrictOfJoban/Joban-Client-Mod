@@ -1,5 +1,7 @@
 package com.lx862.jcm.mod.data.pids.preset.components;
 
+import com.lx862.jcm.mod.data.KVPair;
+import com.lx862.jcm.mod.data.pids.preset.PIDSContext;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
@@ -14,13 +16,13 @@ public class PlatformComponent extends TextComponent {
     private final ArrivalsResponse arrivals;
     private final int arrivalIndex;
     public PlatformComponent(ArrivalsResponse arrivals, int arrivalIndex, String font, int textColor, double x, double y, double width, double height) {
-        super(font, TextOverflowMode.SCALE, TextAlignment.CENTER, textColor, x, y, width, height, 1);
+        super(x, y, width, height, font, TextAlignment.CENTER, TextOverflowMode.SCALE, textColor, 1);
         this.arrivals = arrivals;
         this.arrivalIndex = arrivalIndex;
     }
 
     @Override
-    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, World world, Direction facing) {
+    public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
         if(arrivalIndex >= arrivals.getArrivals().size()) return;
         ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
         graphicsHolder.translate(width / 1.6, 2, 0);
