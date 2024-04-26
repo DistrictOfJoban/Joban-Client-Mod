@@ -9,7 +9,7 @@ subprojects {
 	}
 
 	dependencies {
-		annotationProcessor 'systems.manifold:manifold-preprocessor:+'
+		annotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.33' // Newer version seems to throw some nameSimplifier error when displaying the compile error message.
 		implementation 'com.google.code.findbugs:jsr305:+'
 	}
 
