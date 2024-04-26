@@ -21,7 +21,7 @@ public class JCMResourceManager {
         reloadResources();
     }
 
-    private static void reloadResources() {
+    public static void reloadResources() {
         PIDSManager.reset();
 
         ResourceManagerHelper.readAllResources(CUSTOM_RESOURCE_PATH, (inputStream -> {
