@@ -4,7 +4,6 @@ import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
-import org.mtr.mapping.registry.EventRegistryClient;
 
 public class Events {
     public static void register() {

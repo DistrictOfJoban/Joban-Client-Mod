@@ -8,7 +8,6 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
-import com.lx862.jcm.mod.render.text.TextInfo;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.core.operation.ArrivalsResponse;

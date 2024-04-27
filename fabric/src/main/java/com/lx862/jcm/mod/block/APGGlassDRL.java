@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.block;
 
-import com.lx862.jcm.mod.block.entity.APGDoorDRLBlockEntity;
 import com.lx862.jcm.mod.block.entity.APGGlassDRLBlockEntity;
 import com.lx862.jcm.mod.registry.Items;
 import com.lx862.jcm.mod.util.BlockUtil;

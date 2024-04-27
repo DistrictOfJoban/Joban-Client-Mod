@@ -2,14 +2,12 @@ package com.lx862.jcm.mod.resources.mcmeta;
 
 import com.lx862.jcm.mod.data.Pair;
 import com.lx862.jcm.mod.util.JCMLogger;
-import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
@@ -26,21 +24,22 @@ public class McMetaManager {
     public static void load(Identifier imagePath) {
         Identifier mcmetaFile = new Identifier(imagePath.getNamespace(), imagePath.getPath() + ".mcmeta");
 
-        ResourceManagerHelper.readResource(mcmetaFile, inputStream -> {
+        String str = ResourceManagerHelper.readResource(mcmetaFile);
+        if(!str.isEmpty()) {
             JCMLogger.info("Loading mcmeta file: " + imagePath.getPath());
 
             try {
-                String str = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
                 McMeta mcMeta = McMeta.parse(str);
 
                 readImage(mcMeta, imagePath, mcMeta1 -> {
                     mcMetaList.put(imagePath, mcMeta1);
                 });
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                JCMLogger.warn("Cannot read mcmeta file {}!", imagePath.toString());
+                JCMLogger.warn("Failed to read mcmeta file {}!", imagePath.toString());
             }
-        });
+
+        }
     }
 
     /**

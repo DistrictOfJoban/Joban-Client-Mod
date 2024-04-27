@@ -5,14 +5,7 @@ import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.PIDSContext;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
-import com.lx862.jcm.mod.render.GuiHelper;
-import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.TextOverflowMode;
-import com.lx862.jcm.mod.render.text.TextAlignment;
 import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.RenderLayer;
-import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 

@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.data.BlockProperties;
-import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 
