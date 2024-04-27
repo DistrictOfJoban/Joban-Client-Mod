@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
+import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
@@ -15,8 +16,8 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public abstract class PIDSPresetBase implements RenderHelper {
-    protected final String id;
-    protected final String name;
+    protected String id;
+    protected String name;
     public final boolean builtin;
     public PIDSPresetBase(String id, @Nullable String name, boolean builtin) {
         this.id = id;
@@ -44,11 +45,17 @@ public abstract class PIDSPresetBase implements RenderHelper {
         RenderHelper.drawTexture(graphicsHolder,0, height, 0, width, width, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
+    public JsonObject toJson() {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("id", id);
+        jsonObject.addProperty("name", name == null ? id : name);
+        return jsonObject;
+    }
+
     public abstract List<PIDSComponent> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform);
     public abstract String getFont();
     public abstract @Nonnull Identifier getBackground();
     public abstract int getTextColor();
     public abstract boolean isRowHidden(int row);
-
     public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height);
 }

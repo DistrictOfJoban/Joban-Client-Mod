@@ -3,8 +3,6 @@ package com.lx862.jcm.mod.render.gui.screen;
 import com.google.gson.*;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
-import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
-import com.lx862.jcm.mod.data.pids.preset.MutableJsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
@@ -14,42 +12,30 @@ import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
 import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.resources.JCMResourceManager;
+import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GuiDrawing;
-import org.mtr.mapping.mapper.TextFieldWidgetExtension;
-import org.mtr.mapping.tool.TextCase;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class EditorSaveScreen extends TitledScreen implements RenderHelper, GuiHelper {
     private static final Identifier PIDS_PREVIEW_BASE = new Identifier("jsblock:textures/gui/pids_preview.png");
     private final File resourcePackFolder;
     private final ListViewWidget listViewWidget;
-    private final String selectedPreset;
-    private Object2ObjectOpenHashMap<String, String> presetIdToResourcePack = new Object2ObjectOpenHashMap<>();
-    private final List<JsonPIDSPreset> presets;
-    private MutableJsonPIDSPreset ourPreset;
-    public EditorSaveScreen(MutableJsonPIDSPreset ourPreset, List<JsonPIDSPreset> presets, Object2ObjectOpenHashMap<String, String> presetIdToResourcePack) {
+    private final PIDSPresetBase oldPreset;
+    private final PIDSPresetBase newPreset;
+    private final String associatedRP;
+    public EditorSaveScreen(PIDSPresetBase oldPreset, PIDSPresetBase newPreset) {
         super(false);
         this.resourcePackFolder = new File(org.mtr.mapping.holder.MinecraftClient.getInstance().getRunDirectoryMapped(), "resourcepacks");
         this.listViewWidget = new ListViewWidget();
-        this.ourPreset = ourPreset;
-        this.selectedPreset = ourPreset.getId();
-        this.presets = presets;
-        this.presetIdToResourcePack = presetIdToResourcePack;
+        this.newPreset = newPreset;
+        this.oldPreset = oldPreset;
+        this.associatedRP = getAssociatedResourcePack(this.oldPreset.getId());
     }
 
     @Override
@@ -62,9 +48,12 @@ public class EditorSaveScreen extends TitledScreen implements RenderHelper, GuiH
 
         listViewWidget.reset();
         addConfigEntries();
-
         listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
         addChild(new ClickableWidget(listViewWidget));
+//
+//        if(associatedRP == null) {
+//            openSaveAsScreen();
+//        }
     }
 
     @Override
@@ -74,26 +63,22 @@ public class EditorSaveScreen extends TitledScreen implements RenderHelper, GuiH
 
     @Override
     public MutableText getScreenSubtitle() {
-        return TextUtil.translatable(TextCategory.GUI, "pids_save.subtitle", selectedPreset);
+        return TextUtil.translatable(TextCategory.GUI, "pids_save.subtitle", newPreset.getId());
     }
 
     public void addConfigEntries() {
-        if(!PIDSManager.getCustomPresets().isEmpty()) {
-            listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.category.save_edits"));
-            addPreset(PIDSManager.getPreset(selectedPreset));
-        }
+        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.category.save_edits"));
+        addResourcePackListing(PIDSManager.getPreset(newPreset.getId()));
     }
 
-    private void addPreset(PIDSPresetBase preset) {
+    private void addResourcePackListing(PIDSPresetBase preset) {
+        if(associatedRP == null) return;
+
         ButtonWidgetExtension saveBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.save"), (btn) -> {
             onClose2();
         });
 
-        ButtonWidgetExtension saveAsBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.saveas"), (btn) -> {
-            MinecraftClient.getInstance().openScreen(
-                    new Screen(new EditorSaveScreenExtended(ourPreset, presets, presetIdToResourcePack).withPreviousScreen(new Screen(this)))
-            );
-        });
+        ButtonWidgetExtension saveAsBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.saveas"), (btn) -> openSaveAsScreen());
 
         HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
         widgetSet.addWidget(new MappedWidget(saveBtn));
@@ -107,7 +92,7 @@ public class EditorSaveScreen extends TitledScreen implements RenderHelper, GuiH
         addChild(new ClickableWidget(saveAsBtn));
         addChild(new ClickableWidget(widgetSet));
         addChild(new ClickableWidget(widgetSet2));
-        ContentItem contentItem = new ContentItem(TextUtil.literal(preset.getName()), new MappedWidget(widgetSet), 26);
+        ContentItem contentItem = new ContentItem(TextUtil.literal(associatedRP), new MappedWidget(widgetSet), 26);
         ContentItem contentItem2 = new ContentItem(TextUtil.translatable(TextCategory.GUI,"pids_preset.listview.widget.title.saveas"), new MappedWidget(widgetSet2), 26);
 
         contentItem.setIconCallback((guiDrawing, startX, startY, width, height) -> {
@@ -115,6 +100,12 @@ public class EditorSaveScreen extends TitledScreen implements RenderHelper, GuiH
         });
         listViewWidget.add(contentItem);
         listViewWidget.add(contentItem2);
+    }
+
+    private void openSaveAsScreen() {
+        MinecraftClient.getInstance().openScreen(
+                new Screen(new EditorSaveScreenExtended(oldPreset, newPreset).withPreviousScreen(new Screen(this)))
+        );
     }
 
     public static void drawPIDSPreview(PIDSPresetBase preset, GuiDrawing guiDrawing, int startX, int startY, int width, int height, boolean backgroundOnly) {
@@ -137,42 +128,39 @@ public class EditorSaveScreen extends TitledScreen implements RenderHelper, GuiH
             }
         }
     }
-    private void saveJSON() {
-        try {
-            String packName = presetIdToResourcePack.get(selectedPreset);
-            List<MutableJsonPIDSPreset> packPresets = presets.stream().filter(e -> presetIdToResourcePack.get(e.getId()).equals(packName)).map(e -> e.toMutable()).collect(Collectors.toList());
-            for(int i = 0; i < packPresets.size(); i++) {
-                MutableJsonPIDSPreset preset = packPresets.get(i);
-                if(preset.getId().equals(selectedPreset)) {
-                    packPresets.set(i, ourPreset);
+
+    private String getAssociatedResourcePack(String targetPresetId) {
+        for(File file : resourcePackFolder.listFiles()) {
+            if(file.isDirectory()) {
+                File jsonFile = resourcePackFolder.toPath().resolve(file.getName()).resolve("assets").resolve(Constants.MOD_ID).resolve("joban_custom_resources.json").toFile();
+                if(jsonFile.exists()) {
+                    JsonArray presetsInRP;
+                    try {
+                        presetsInRP = new JsonParser().parse(new FileReader(jsonFile)).getAsJsonObject().get("pids_images").getAsJsonArray();
+                    } catch (Exception e) {
+                        JCMLogger.debug("Cannot read PIDS Preset from Resource Pack!");
+                        continue;
+                    }
+
+                    for(int i = 0; i < presetsInRP.size(); i++) {
+                        PIDSPresetBase pidsPreset = PIDSManager.parsePreset(presetsInRP.get(i).getAsJsonObject());
+                        if(pidsPreset != null && pidsPreset.getId().equals(oldPreset.getId())) {
+                            return file.getName();
+                        }
+                    }
                 }
             }
-
-            File jsonFile = resourcePackFolder.toPath().resolve(packName).resolve("assets").resolve(Constants.MOD_ID).resolve("joban_custom_resources.json").toFile();
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(jsonFile);
-            JsonObject rootObject = new JsonObject();
-            JsonArray presetArray = new JsonArray();
-            for(MutableJsonPIDSPreset preset : packPresets) {
-                presetArray.add(preset.toJson());
-            }
-            rootObject.add("pids_images", presetArray);
-            gson.toJson(rootObject, writer);
-            writer.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        return null;
     }
 
     @Override
     public void onClose2() {
-        saveJSON();
-        JCMResourceManager.reloadResources();
-        super.onClose2();
-    }
+        if(associatedRP != null) {
+            JCMResourceManager.updatePresetInResourcePack(oldPreset, newPreset, associatedRP);
+            JCMResourceManager.reloadResources();
+        }
 
-    @Override
-    public boolean isPauseScreen2() {
-        return false;
+        super.onClose2();
     }
 }

@@ -1,10 +1,7 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
-import com.google.gson.*;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
-import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
-import com.lx862.jcm.mod.data.pids.preset.MutableJsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
@@ -16,42 +13,30 @@ import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import org.mtr.mapping.holder.*;
+import org.mtr.mapping.holder.ClickableWidget;
+import org.mtr.mapping.holder.Identifier;
+import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class EditorSaveScreenExtended extends TitledScreen implements RenderHelper, GuiHelper {
     private static final Identifier PIDS_PREVIEW_BASE = new Identifier("jsblock:textures/gui/pids_preview.png");
     private final TextFieldWidgetExtension searchBox;
     private final File resourcePackFolder;
     private final ListViewWidget listViewWidget;
-    private String selectedPreset;
-    private Object2ObjectOpenHashMap<String, String> presetIdToResourcePack = new Object2ObjectOpenHashMap<>();
-    private final List<JsonPIDSPreset> presets;
-    private MutableJsonPIDSPreset ourPreset;
-    public EditorSaveScreenExtended(MutableJsonPIDSPreset ourPreset, List<JsonPIDSPreset> presets, Object2ObjectOpenHashMap<String, String> presetIdToResourcePack) {
+    private final PIDSPresetBase newPreset;
+    private final PIDSPresetBase oldPreset;
+    public EditorSaveScreenExtended(PIDSPresetBase oldPreset, PIDSPresetBase newPreset) {
         super(false);
         this.resourcePackFolder = new File(org.mtr.mapping.holder.MinecraftClient.getInstance().getRunDirectoryMapped(), "resourcepacks");
         this.listViewWidget = new ListViewWidget();
         this.searchBox = new TextFieldWidgetExtension(0, 0, 0, 22, 60, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "widget.search").getString());
-        this.ourPreset = ourPreset;
-        this.selectedPreset = ourPreset.getId();
-        this.presets = presets;
-        this.presetIdToResourcePack = presetIdToResourcePack;
+        this.newPreset = newPreset;
+        this.oldPreset = oldPreset;
     }
 
     @Override
@@ -84,7 +69,7 @@ public class EditorSaveScreenExtended extends TitledScreen implements RenderHelp
 
     @Override
     public MutableText getScreenSubtitle() {
-        return TextUtil.translatable(TextCategory.GUI, "pids_save.subtitle", selectedPreset);
+        return TextUtil.translatable(TextCategory.GUI, "pids_save.subtitle", newPreset.getId());
     }
 
     public void addConfigEntries() {
@@ -94,10 +79,10 @@ public class EditorSaveScreenExtended extends TitledScreen implements RenderHelp
             if (resourcePacks != null) {
                 for (File pack : resourcePacks) {
                     if (pack.isDirectory()) {
-                        File jsonFile = new File(pack, "assets/" + Constants.MOD_ID + "/joban_custom_resources.json");
+                        File jsonFile = pack.toPath().resolve("assets").resolve(Constants.MOD_ID).resolve("joban_custom_resources.json").toFile();
                         if (jsonFile.exists()) {
                             String packName = pack.getName();
-                            addPreset(packName);
+                            addResourcePackListing(packName);
                         }
                     }
                 }
@@ -120,9 +105,10 @@ public class EditorSaveScreenExtended extends TitledScreen implements RenderHelp
         }
     }
 
-    private void addPreset(String packName) {
+    private void addResourcePackListing(String packName) {
         ButtonWidgetExtension saveBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.save"), (btn) -> {
-            saveJSON(packName);
+            JCMResourceManager.updatePresetInResourcePack(oldPreset, newPreset, packName);
+            onClose2();
         });
 
         HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
@@ -158,42 +144,9 @@ public class EditorSaveScreenExtended extends TitledScreen implements RenderHelp
         }
     }
 
-    private void saveJSON(String packName) {
-        try {
-            List<MutableJsonPIDSPreset> packPresets = presets.stream().filter(e -> presetIdToResourcePack.get(e.getId()).equals(packName)).map(e -> e.toMutable()).collect(Collectors.toList());
-            for(int i = 0; i < packPresets.size(); i++) {
-                MutableJsonPIDSPreset preset = packPresets.get(i);
-                if(preset.getId().equals(selectedPreset)) {
-                    packPresets.set(i, ourPreset);
-                }
-            }
-
-            File jsonFile = resourcePackFolder.toPath().resolve(packName).resolve("assets").resolve(Constants.MOD_ID).resolve("joban_custom_resources.json").toFile();
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(jsonFile);
-            JsonObject rootObject = new JsonObject();
-            JsonArray presetArray = new JsonArray();
-            for(MutableJsonPIDSPreset preset : packPresets) {
-                presetArray.add(preset.toJson());
-            }
-            rootObject.add("pids_images", presetArray);
-            gson.toJson(rootObject, writer);
-            writer.close();
-
-            onClose2();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void onClose2() {
         JCMResourceManager.reloadResources();
         super.onClose2();
-    }
-
-    @Override
-    public boolean isPauseScreen2() {
-        return false;
     }
 }

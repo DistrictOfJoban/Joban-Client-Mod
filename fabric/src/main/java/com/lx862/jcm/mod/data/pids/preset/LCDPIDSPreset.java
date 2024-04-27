@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
+import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.config.ConfigEntry;
@@ -111,5 +112,10 @@ public class LCDPIDSPreset extends PIDSPresetBase {
     @Override
     public boolean isRowHidden(int row) {
         return false;
+    }
+
+    @Override
+    public JsonObject toJson() {
+        throw new IllegalArgumentException("Built-in LCD PIDS Preset cannot be exported to json");
     }
 }
