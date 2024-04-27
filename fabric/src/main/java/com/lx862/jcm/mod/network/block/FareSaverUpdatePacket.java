@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.network.block;
 
 import com.lx862.jcm.mod.block.base.JCMBlock;
 import com.lx862.jcm.mod.block.entity.FareSaverBlockEntity;
-import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;

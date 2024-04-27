@@ -24,6 +24,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
     modApi "com.terraformersmc:modmenu:${mod_menu_version}"
+    annotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.33' // Delibrate: Newer versions just throws an error *when displaying an compiling error*
 }
 
 processResources {

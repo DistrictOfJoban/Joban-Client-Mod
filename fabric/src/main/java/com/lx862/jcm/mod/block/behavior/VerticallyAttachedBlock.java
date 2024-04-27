@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.block.behavior;
 
-import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.ItemPlacementContext;
 import org.mtr.mapping.holder.World;
