@@ -30,7 +30,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class VisualEditorScreen extends TitledScreen {
-    private final String presetId;
+    private String presetId;
     private final File resourcePackFolder;
     private final CheckboxWidgetExtension[] hideRowCheckboxes = new CheckboxWidgetExtension[4];
     private final TextFieldWidgetExtension idTextField;
@@ -41,13 +41,14 @@ public class VisualEditorScreen extends TitledScreen {
     private final Object2ObjectOpenHashMap<String, String> presetIdToResourcePack = new Object2ObjectOpenHashMap<>();
     private final List<JsonPIDSPreset> presets;
     private MutableJsonPIDSPreset ourPreset;
-
     private ClientWorld world;
-    public VisualEditorScreen(String presetId) {
+    private final Screen previousScreen;
+    public VisualEditorScreen(String presetId, Screen previousScreen) {
         super(false);
         this.resourcePackFolder = new File(org.mtr.mapping.holder.MinecraftClient.getInstance().getRunDirectoryMapped(), "resourcepacks");
         this.presetId = presetId;
         this.presets = new ArrayList<>();
+        this.previousScreen = previousScreen;
 
         loadResourcePacks();
 
@@ -90,14 +91,6 @@ public class VisualEditorScreen extends TitledScreen {
         // .dimensions(this.width - 60, 10, 50, 20)
         // .build());
 
-        addChild(
-                new ClickableWidget(
-                        new ButtonWidgetExtension(this.width / 2 - 100, this.height - 30, 200, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.pids_editor.back"), button -> {
-                            onClose2();
-                        })
-                )
-        );
-
         idTextField.setY2(this.height / 6 + 20);
         addChild(new ClickableWidget(idTextField));
 
@@ -138,7 +131,7 @@ public class VisualEditorScreen extends TitledScreen {
 
         for (int i = 0; i < hideRowCheckboxes.length; i++) {
             int x = startX + i * (30 + horizontalGap) - 15;
-            int y = this.height - 60;
+            int y = this.height - 35;
             final int index = i;
             hideRowCheckboxes[i] = new CheckboxWidgetExtension(x, y, 20, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.pids_editor.hiderow", (i+1)), true, isChecked -> {
                 ourPreset.setRowHidden(index, isChecked);
@@ -187,9 +180,10 @@ public class VisualEditorScreen extends TitledScreen {
 
     @Override
     public void onClose2() {
-        saveJSON();
-        JCMResourceManager.reloadResources();
         super.onClose2();
+        MinecraftClient.getInstance().openScreen(
+                new Screen(new EditorSaveScreen(ourPreset, presets, presetIdToResourcePack).withPreviousScreen(previousScreen))
+        );
     }
 
     private void populateCurrentPresetFields() {
@@ -266,22 +260,6 @@ public class VisualEditorScreen extends TitledScreen {
         context.pop();
     }
 
-    private void renderText(GraphicsHolder context, String leftText, String rightText, int backgroundX, int backgroundY, int scaledWidth, int scaledHeight, int textColor) {
-        int leftX = backgroundX;
-        int rightX = backgroundX + scaledWidth - GraphicsHolder.getTextWidth(leftText);
-        int centerY = backgroundY + (scaledHeight - 9) / 2;
-
-        context.drawText(leftText, leftX, centerY, textColor, true, GraphicsHolder.getDefaultLight());
-        context.drawText(rightText, rightX, centerY, textColor, true, GraphicsHolder.getDefaultLight());
-    }
-
-    private void renderIcon(GraphicsHolder context, Identifier path, int backgroundX, int backgroundY, int scaledWidth, int scaledHeight) {
-        GuiDrawing guiDrawing = new GuiDrawing(context);
-        int iconX = backgroundX;
-        int iconY = backgroundY;
-        GuiHelper.drawTexture(guiDrawing, path, iconX, iconY, scaledWidth, scaledHeight);
-    }
-
     private void loadResourcePacks() {
         presets.clear();
 //        ResourcePackManager resourcePackManager = MinecraftClient.getInstance().getResourcePackManager();
@@ -332,33 +310,6 @@ public class VisualEditorScreen extends TitledScreen {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void saveJSON() {
-        try {
-            String packName = presetIdToResourcePack.get(presetId);
-            List<MutableJsonPIDSPreset> packPresets = presets.stream().filter(e -> presetIdToResourcePack.get(e.getId()).equals(packName)).map(e -> e.toMutable()).collect(Collectors.toList());
-            for(int i = 0; i < packPresets.size(); i++) {
-                MutableJsonPIDSPreset preset = packPresets.get(i);
-                if(preset.getId().equals(presetId)) {
-                    packPresets.set(i, ourPreset);
-                }
-            }
-
-            File jsonFile = resourcePackFolder.toPath().resolve(packName).resolve("assets").resolve(Constants.MOD_ID).resolve("joban_custom_resources.json").toFile();
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(jsonFile);
-            JsonObject rootObject = new JsonObject();
-            JsonArray presetArray = new JsonArray();
-            for(MutableJsonPIDSPreset preset : packPresets) {
-                presetArray.add(preset.toJson());
-            }
-            rootObject.add("pids_images", presetArray);
-            gson.toJson(rootObject, writer);
-            writer.close();
-        } catch (Exception e) {
             e.printStackTrace();
         }
     }

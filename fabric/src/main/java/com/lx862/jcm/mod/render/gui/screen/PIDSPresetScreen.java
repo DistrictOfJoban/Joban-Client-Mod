@@ -88,7 +88,7 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
 
         ButtonWidgetExtension editBtn = new ButtonWidgetExtension(0, 0, 40, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.edit"), (btn) -> {
             MinecraftClient.getInstance().openScreen(
-                new Screen(new VisualEditorScreen(preset.getId()).withPreviousScreen(new Screen(this)))
+                new Screen(new VisualEditorScreen(preset.getId(), new Screen(this)).withPreviousScreen(new Screen(this)))
             );
         });
 
