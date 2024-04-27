@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.render.block;
 
 import com.lx862.jcm.mod.block.entity.APGDoorDRLBlockEntity;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
-import org.mtr.mod.block.BlockPSDAPGDoorBase;
 
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.EntityModelExtension;

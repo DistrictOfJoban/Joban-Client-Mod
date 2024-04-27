@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.network.gui;
 
-import com.lx862.jcm.mod.render.gui.screen.SoundLooperScreen;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;

@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.DirectionalBlock;
-import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.registry.Blocks;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;

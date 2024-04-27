@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.render.text;
 import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
@@ -51,11 +50,7 @@ public class TextRenderingManager implements RenderHelper {
         if(text.getContent().isEmpty()) return; // No need for any operation as nothing is going to get rendered anyway
 
         if(!ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
-            if(text.isForScrollingText()) {
-                VanillaTextRenderer.drawScrollingText(graphicsHolder, text.getContent(), (int)text.getWidthInfo().getMaxWidth(), x, y, text.getTextColor());
-            } else {
-                VanillaTextRenderer.draw(graphicsHolder, text, x, y);
-            }
+            VanillaTextRenderer.draw(graphicsHolder, text, x, y);
         } else {
             if(guiDrawing != null) {
                 TextureTextRenderer.draw(guiDrawing, text, x, y);

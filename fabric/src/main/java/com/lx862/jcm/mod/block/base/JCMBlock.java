@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.jcm.mod.util.JCMUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockExtension;

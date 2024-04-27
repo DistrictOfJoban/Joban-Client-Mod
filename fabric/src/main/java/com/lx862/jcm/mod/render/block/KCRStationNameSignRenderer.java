@@ -5,11 +5,9 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.IDrawingJoban;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.TextUtil;
-import org.mtr.core.data.ClientData;
 import org.mtr.core.data.Station;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mod.Init;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.data.IGui;
 

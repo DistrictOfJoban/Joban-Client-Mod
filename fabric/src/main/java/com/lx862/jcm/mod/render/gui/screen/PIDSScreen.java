@@ -20,7 +20,6 @@ import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.CheckboxWidgetExtension;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
-import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mapping.tool.TextCase;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.client.MinecraftClientData;

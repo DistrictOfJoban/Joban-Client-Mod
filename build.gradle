@@ -9,7 +9,6 @@ subprojects {
 	}
 
 	dependencies {
-		annotationProcessor 'systems.manifold:manifold-preprocessor:+'
 		implementation 'com.google.code.findbugs:jsr305:+'
 	}
 
@@ -38,7 +37,7 @@ subprojects {
 
 	/* Manifold support */
 	tasks.withType(JavaCompile).forEach {
-		it.options.compilerArgs += [
+		it.options.compilerArgs += [ // Dependencies declared in subproject
 				"-Xplugin:Manifold",
 				"-AMC_VERSION=$merged_mc_version",
 				"-ALOADER=$project.properties.loader_name"

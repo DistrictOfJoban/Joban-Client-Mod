@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.util;
 
 import org.mtr.mapping.holder.*;
-import org.mtr.mod.block.IBlock;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

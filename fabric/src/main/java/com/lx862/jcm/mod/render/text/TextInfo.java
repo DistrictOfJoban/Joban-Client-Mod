@@ -8,7 +8,6 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.TextFormatting;
 
 import java.awt.*;
-import java.text.AttributedString;
 
 public class TextInfo {
     private final String content;
@@ -81,7 +80,11 @@ public class TextInfo {
     }
 
     public TextInfo withFont(String font) {
-        this.fontId = new Identifier(font);
+        return withFont(new Identifier(font));
+    }
+
+    public TextInfo withFont(Identifier fontId) {
+        this.fontId = fontId;
         return this;
     }
 
@@ -103,6 +106,13 @@ public class TextInfo {
             text = TextUtil.withFont(text, fontId);
         }
         return text;
+    }
+
+    public TextInfo copy(String newContent) {
+        TextInfo ti = new TextInfo(newContent);
+        ti.withColor(textColor);
+        ti.withFont(fontId);
+        return ti;
     }
 
     @Override

@@ -7,7 +7,6 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
