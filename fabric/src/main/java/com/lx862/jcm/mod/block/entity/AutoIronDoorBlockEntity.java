@@ -6,6 +6,7 @@ import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.AbstractSoundInstanceExtension;
 import org.mtr.mapping.mapper.MinecraftServerHelper;
+import org.mtr.mapping.mapper.SoundHelper;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,7 +32,7 @@ public class AutoIronDoorBlockEntity extends JCMBlockEntityBase {
                     boolean alreadyOpened = BlockUtil.getProperty(state, new Property<>(DoorBlockAbstractMapping.getOpenMapped().data));
 
                     if(!alreadyOpened) {
-                        world.playSound((PlayerEntity) null, getPos2(), AbstractSoundInstanceExtension.createSoundEvent(new Identifier("minecraft:block.iron_door.open")), SoundCategory.BLOCKS, 1, 1);
+                        world.playSound((PlayerEntity) null, getPos2(), SoundHelper.createSoundEvent(new Identifier("minecraft:block.iron_door.open")), SoundCategory.BLOCKS, 1, 1);
                         world.setBlockState(getPos2(), state.with(new Property<>(DoorBlockAbstractMapping.getOpenMapped().data), true));
                     }
                     haveNearbyPlayer.set(true);
@@ -39,7 +40,7 @@ public class AutoIronDoorBlockEntity extends JCMBlockEntityBase {
             });
 
             if(!haveNearbyPlayer.get() && BlockUtil.getProperty(state, new Property<>(DoorBlockAbstractMapping.getOpenMapped().data))) {
-                world.playSound((PlayerEntity) null, getPos2(), AbstractSoundInstanceExtension.createSoundEvent(new Identifier("minecraft:block.iron_door.close")), SoundCategory.BLOCKS, 1, 1);
+                world.playSound((PlayerEntity) null, getPos2(), SoundHelper.createSoundEvent(new Identifier("minecraft:block.iron_door.close")), SoundCategory.BLOCKS, 1, 1);
                 world.setBlockState(getPos2(), state.with(new Property<>(DoorBlockAbstractMapping.getOpenMapped().data), false));
             }
         }
