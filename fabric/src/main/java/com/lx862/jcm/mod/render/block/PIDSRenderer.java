@@ -43,7 +43,7 @@ public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEn
             platforms = new LongImmutableList(closestPlatforms);
         }
 
-        ArrivalsResponse arrivals = ArrivalsCache.INSTANCE.requestArrivals(pos.asLong(), platforms, blockEntity.getRowAmount(), 0, true);
+        ArrivalsResponse arrivals = ArrivalsCache.INSTANCE.requestArrivals(pos.asLong(), platforms, blockEntity.getRowAmount(), 0);
 
         graphicsHolder.push();
         graphicsHolder.translate(0.5, 0.5, 0.5);

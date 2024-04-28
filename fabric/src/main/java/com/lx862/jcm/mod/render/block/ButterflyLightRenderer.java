@@ -34,7 +34,7 @@ public class ButterflyLightRenderer extends JCMBlockEntityRenderer<ButterflyLigh
         Platform closestPlatform = !closestPlatforms.isEmpty() ? closestPlatforms.get(0) : null;
         if (closestPlatform == null) return;
 
-        ArrivalsResponse arrivals = ArrivalsCache.INSTANCE.requestArrivals(pos.asLong(), LongImmutableList.of(closestPlatform.getId()), 1, 0, true);
+        ArrivalsResponse arrivals = ArrivalsCache.INSTANCE.requestArrivals(pos.asLong(), LongImmutableList.of(closestPlatform.getId()), 1, 0);
         ArrivalResponse firstArrival = arrivals.getArrivals().isEmpty() ? null : arrivals.getArrivals().get(0);
         if (firstArrival == null) return;
 

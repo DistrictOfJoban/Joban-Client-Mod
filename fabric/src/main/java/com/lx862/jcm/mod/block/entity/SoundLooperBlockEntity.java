@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.registry.BlockEntities;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.AbstractSoundInstanceExtension;
 import org.mtr.mapping.mapper.MinecraftServerHelper;
+import org.mtr.mapping.mapper.SoundHelper;
 
 public class SoundLooperBlockEntity extends JCMBlockEntityBase {
     public static final SoundCategory[] SOURCE_LIST = {SoundCategory.MASTER, SoundCategory.MUSIC, SoundCategory.WEATHER, SoundCategory.AMBIENT, SoundCategory.PLAYERS, SoundCategory.BLOCKS, SoundCategory.VOICE};
@@ -67,7 +68,7 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
             } catch (Exception ignored) {
             }
             if(identifier == null) return;
-            SoundEvent soundEvent = AbstractSoundInstanceExtension.createSoundEvent(identifier);
+            SoundEvent soundEvent = SoundHelper.createSoundEvent(identifier);
 
             if(!limitRange) {
                 world.playSound((PlayerEntity) null, getPos2(), soundEvent, category, volume, 1);
