@@ -138,7 +138,7 @@ public class VisualEditorScreen extends TitledScreen {
     public void onClose2() {
         super.onClose2();
         MinecraftClient.getInstance().openScreen(
-                new Screen(new EditorSaveScreen(originalPreset, editedPreset).withPreviousScreen(previousScreen))
+                new Screen(new EditorSaveScreen(originalPreset, editedPreset, previousScreen).withPreviousScreen(previousScreen))
         );
     }
 

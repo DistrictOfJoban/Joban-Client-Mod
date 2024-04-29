@@ -29,13 +29,15 @@ public class EditorSaveScreen extends TitledScreen implements RenderHelper, GuiH
     private final PIDSPresetBase oldPreset;
     private final PIDSPresetBase newPreset;
     private final String associatedRP;
-    public EditorSaveScreen(PIDSPresetBase oldPreset, PIDSPresetBase newPreset) {
+    private final Screen previousScreen;
+    public EditorSaveScreen(PIDSPresetBase oldPreset, PIDSPresetBase newPreset, Screen previousScreen) {
         super(false);
         this.resourcePackFolder = new File(org.mtr.mapping.holder.MinecraftClient.getInstance().getRunDirectoryMapped(), "resourcepacks");
         this.listViewWidget = new ListViewWidget();
         this.newPreset = newPreset;
         this.oldPreset = oldPreset;
         this.associatedRP = getAssociatedResourcePack(this.oldPreset.getId());
+        this.previousScreen = previousScreen;
     }
 
     @Override
@@ -104,7 +106,7 @@ public class EditorSaveScreen extends TitledScreen implements RenderHelper, GuiH
 
     private void openSaveAsScreen() {
         MinecraftClient.getInstance().openScreen(
-                new Screen(new EditorSaveScreenExtended(oldPreset, newPreset).withPreviousScreen(new Screen(this)))
+                new Screen(new EditorSaveScreenExtended(oldPreset, newPreset, previousScreen).withPreviousScreen(new Screen(this)))
         );
     }
 

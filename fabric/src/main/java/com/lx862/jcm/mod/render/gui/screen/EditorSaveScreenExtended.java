@@ -13,9 +13,7 @@ import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import org.mtr.mapping.holder.ClickableWidget;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.MutableText;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
@@ -30,13 +28,15 @@ public class EditorSaveScreenExtended extends TitledScreen implements RenderHelp
     private final ListViewWidget listViewWidget;
     private final PIDSPresetBase newPreset;
     private final PIDSPresetBase oldPreset;
-    public EditorSaveScreenExtended(PIDSPresetBase oldPreset, PIDSPresetBase newPreset) {
+    private final Screen previousScreen;
+    public EditorSaveScreenExtended(PIDSPresetBase oldPreset, PIDSPresetBase newPreset, Screen previousScreen) {
         super(false);
         this.resourcePackFolder = new File(org.mtr.mapping.holder.MinecraftClient.getInstance().getRunDirectoryMapped(), "resourcepacks");
         this.listViewWidget = new ListViewWidget();
         this.searchBox = new TextFieldWidgetExtension(0, 0, 0, 22, 60, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "widget.search").getString());
         this.newPreset = newPreset;
         this.oldPreset = oldPreset;
+        this.previousScreen = previousScreen;
     }
 
     @Override
@@ -89,7 +89,7 @@ public class EditorSaveScreenExtended extends TitledScreen implements RenderHelp
             }
 
             ButtonWidgetExtension exportBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.export"), (btn) -> {
-
+                openExportScreen();
             });
 
             HorizontalWidgetSet widgetSet2 = new HorizontalWidgetSet();
@@ -103,6 +103,12 @@ public class EditorSaveScreenExtended extends TitledScreen implements RenderHelp
 
             listViewWidget.add(contentItem2);
         }
+    }
+
+    private void openExportScreen() {
+        MinecraftClient.getInstance().openScreen(
+                new Screen(new ExportScreen(oldPreset, newPreset).withPreviousScreen(previousScreen))
+        );
     }
 
     private void addResourcePackListing(String packName) {
