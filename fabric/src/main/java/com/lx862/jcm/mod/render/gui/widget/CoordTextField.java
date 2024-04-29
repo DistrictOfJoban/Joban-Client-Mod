@@ -57,12 +57,14 @@ public class CoordTextField extends TextFieldWidgetExtension implements RenderHe
 
     @Override
     public boolean mouseScrolled3(double mouseX, double mouseY, double amount) {
-        if(!visible || !isFocused2()) return false;
-        if(amount > 0) {
-            increment();
-        } else {
-            decrement();
+        if(visible && active && isFocused2()) {
+            if(amount > 0) {
+                increment();
+            } else {
+                decrement();
+            }
         }
+
         return super.mouseScrolled3(mouseX, mouseY, amount);
     }
 
