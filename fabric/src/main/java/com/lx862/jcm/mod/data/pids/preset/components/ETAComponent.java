@@ -11,6 +11,7 @@ import com.lx862.jcm.mod.render.text.TextInfo;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -33,10 +34,10 @@ public class ETAComponent extends TextComponent {
 
     @Override
     public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
-        ArrivalsResponse arrivals = context.arrivals;
-        if(arrivalIndex >= arrivals.getArrivals().size()) return;
+        ObjectArrayList<ArrivalResponse> arrivals = context.arrivals;
+        if(arrivalIndex >= arrivals.size()) return;
 
-        ArrivalResponse arrival = arrivals.getArrivals().get(arrivalIndex);
+        ArrivalResponse arrival = arrivals.get(arrivalIndex);
         long arrDepTime = showDeparture ? arrival.getDeparture() : arrival.getArrival();
 
         long remTime = arrDepTime - System.currentTimeMillis();
