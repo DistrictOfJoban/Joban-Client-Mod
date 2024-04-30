@@ -2,9 +2,15 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.Vertical2Block;
 import com.lx862.jcm.mod.block.behavior.EnquiryMachineBehavior;
+import com.lx862.jcm.mod.data.Entry;
+import com.lx862.jcm.mod.network.block.EnquiryUpdateGUIPacket;
+import com.lx862.jcm.mod.registry.Networking;
+import com.lx862.jcm.mod.data.EnquiryLog;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
+
+import java.util.List;
 
 public class RVEnquiryMachine extends Vertical2Block implements EnquiryMachineBehavior {
     public RVEnquiryMachine(BlockSettings settings) {
@@ -32,5 +38,7 @@ public class RVEnquiryMachine extends Vertical2Block implements EnquiryMachineBe
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         enquiry(world, player);
+        List<Entry> entries = EnquiryLog.getEntries(player.getUuidAsString());
+        Networking.sendPacketToClient(player, new EnquiryUpdateGUIPacket(entries));
     }
 }
