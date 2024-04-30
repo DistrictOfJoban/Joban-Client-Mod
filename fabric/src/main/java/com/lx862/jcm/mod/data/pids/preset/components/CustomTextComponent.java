@@ -13,9 +13,9 @@ import org.mtr.mapping.mapper.GuiDrawing;
 
 public class CustomTextComponent extends TextComponent {
     private final String text;
-    public CustomTextComponent(double x, double y, double width, double height, String font, TextAlignment textAlignment, TextOverflowMode textOverflowMode, int textColor, double scale, KVPair param) {
-        super(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale);
-        this.text = param.get("text", "");
+    public CustomTextComponent(double x, double y, double width, double height, KVPair addtionalParam) {
+        super(x, y, width, height, addtionalParam);
+        this.text = addtionalParam.get("text", "");
     }
 
     @Override
@@ -24,11 +24,6 @@ public class CustomTextComponent extends TextComponent {
     }
 
     public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {
-        TextAlignment textAlignment = TextAlignment.valueOf(jsonObject.get("textAlignment").getAsString());
-        TextOverflowMode textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
-        String font = jsonObject.get("font").getAsString();
-        int textColor = jsonObject.get("color").getAsInt();
-        double scale = jsonObject.get("scale").getAsDouble();
-        return new CustomTextComponent(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale, new KVPair(jsonObject));
+        return new CustomTextComponent(x, y, width, height, new KVPair(jsonObject));
     }
 }

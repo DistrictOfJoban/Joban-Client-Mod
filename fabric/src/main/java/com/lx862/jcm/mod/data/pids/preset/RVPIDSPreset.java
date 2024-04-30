@@ -13,7 +13,6 @@ import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import org.mtr.core.operation.ArrivalResponse;
-import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -86,7 +85,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
         List<PIDSComponent> components = new ArrayList<>();
         components.add(new CustomTextureComponent(0, 0, screenWidth, screenHeight, new KVPair().with("textureId", getBackground().getNamespace() + ":" + getBackground().getPath())));
-        components.add(new ClockComponent(contentWidth, 2, contentWidth, 10, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, ARGB_WHITE, 1, new KVPair()));
+        components.add(new ClockComponent(contentWidth, 2, contentWidth, 10, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), ARGB_WHITE, 1)));
         components.add(new WeatherIconComponent(startX, 0, 11, 11,
                 new KVPair().with("weatherIconSunny", ICON_WEATHER_SUNNY)
                 .with("weatherIconRainy", ICON_WEATHER_RAINY)
@@ -97,19 +96,18 @@ public class RVPIDSPreset extends PIDSPresetBase {
         double rowY = startY + 6;
         for(int i = 0; i < rows; i++) {
             if(customMessages[i] != null && !customMessages[i].isEmpty()) {
-                components.add(new CustomTextComponent(startX, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("text", customMessages[i])));
+                components.add(new CustomTextComponent(startX, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
             } else {
                 if(!rowHidden[i] && arrivalIndex < arrivals.size()) {
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    components.add(new DestinationComponent(startX, rowY, destinationMaxWidth, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("arrivalIndex", arrivalIndex)));
+                    components.add(new DestinationComponent(startX, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
 
                     if(!hidePlatform) {
-                        components.add(new PlatformComponent(arrivals, arrivalIndex, getFont(), RenderHelper.ARGB_WHITE, startX + (64 * ARRIVAL_TEXT_SCALE), rowY, 9, 9));
+                        components.add(new PlatformComponent(startX + (64 * ARRIVAL_TEXT_SCALE), rowY, 9, 9, getFont(), RenderHelper.ARGB_WHITE, 1, new KVPair().with("arrivalIndex", arrivalIndex)));
                         components.add(new PlatformCircleComponent(startX + (64 * ARRIVAL_TEXT_SCALE), rowY, 11, 11, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
                     }
 
-                    components.add(new ETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE,
-                            new KVPair().with("arrivalIndex", arrivalIndex)));
+                    components.add(new ETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
                     arrivalIndex++;
                 }
             }

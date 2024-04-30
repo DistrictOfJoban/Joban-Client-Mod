@@ -69,6 +69,7 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
             graphicsHolder.push();
             component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
             graphicsHolder.pop();
+            graphicsHolder.translate(0, 0, -0.001);
         }
 
         // Text

@@ -4,7 +4,10 @@ import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.data.KVPair;
-import com.lx862.jcm.mod.data.pids.preset.components.*;
+import com.lx862.jcm.mod.data.pids.preset.components.CustomTextComponent;
+import com.lx862.jcm.mod.data.pids.preset.components.CustomTextureComponent;
+import com.lx862.jcm.mod.data.pids.preset.components.DestinationComponent;
+import com.lx862.jcm.mod.data.pids.preset.components.ETAComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
@@ -78,13 +81,12 @@ public class LCDPIDSPreset extends PIDSPresetBase {
             if(arrivalIndex >= arrivals.size()) continue;
 
             if(!customMessages[i].isEmpty()) {
-                components.add(new CustomTextComponent(startX, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("text", customMessages[i])));
+                components.add(new CustomTextComponent(startX, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
             } else {
                 if(!rowHidden[i]) {
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    components.add(new DestinationComponent(startX, rowY, destinationMaxWidth, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("arrivalIndex", arrivalIndex)));
-                    components.add(new ETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE,
-                            new KVPair().with("arrivalIndex", arrivalIndex)));
+                    components.add(new DestinationComponent(startX, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
+                    components.add(new ETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
                     arrivalIndex++;
                 }
             }

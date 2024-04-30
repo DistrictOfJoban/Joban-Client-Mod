@@ -7,7 +7,7 @@ import org.mtr.mapping.holder.Screen;
 
 public final class ClientHelper {
 
-	public static void openButterflyLightScreen(BlockPos blockPos, int secondsToBlink) {
+    public static void openButterflyLightScreen(BlockPos blockPos, int secondsToBlink) {
 		MinecraftClient.getInstance().openScreen(new Screen(new ButterflyLightScreen(blockPos, secondsToBlink)));
 	}
 

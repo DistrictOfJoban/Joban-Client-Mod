@@ -4,7 +4,6 @@ import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.PIDSContext;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import org.mtr.core.operation.ArrivalResponse;
-import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
