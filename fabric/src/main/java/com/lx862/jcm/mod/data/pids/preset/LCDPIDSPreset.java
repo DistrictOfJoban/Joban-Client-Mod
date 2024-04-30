@@ -11,7 +11,9 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
+import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
@@ -29,7 +31,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         super("lcd_pids", "Hong Kong LCD PIDS", true);
     }
 
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         // Debug View Texture
         if(ConfigEntry.DEBUG_MODE.getBool() && ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
             //TextureTextRenderer.stressTest(5);
@@ -63,7 +65,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public List<PIDSComponent> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
+    public List<PIDSComponent> getComponents(ObjectArrayList<ArrivalResponse> arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
         int startX = x + PIDS_MARGIN;
         int startY = y + 6;
         int contentWidth = screenWidth - PIDS_MARGIN;
@@ -74,7 +76,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         int arrivalIndex = 0;
         double rowY = startY;
         for(int i = 0; i < rows; i++) {
-            if(arrivalIndex >= arrivals.getArrivals().size()) continue;
+            if(arrivalIndex >= arrivals.size()) continue;
 
             if(!customMessages[i].isEmpty()) {
                 components.add(new CustomTextComponent(startX, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("text", customMessages[i])));

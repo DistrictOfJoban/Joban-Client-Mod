@@ -10,10 +10,12 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.util.TextUtil;
+import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.core.serializer.JsonReader;
 import org.mtr.libraries.com.google.gson.JsonArray;
 import org.mtr.libraries.com.google.gson.JsonObject;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -75,7 +77,7 @@ public class PIDSDemoScreen extends TitledScreen implements RenderHelper, GuiHel
         }
         fakeArrivalsJson.add("arrivals", fakeArrivalsArrayJson);
 
-        ArrivalsResponse fakeArrivals = new ArrivalsResponse(new JsonReader(fakeArrivalsJson));
+        ObjectArrayList<ArrivalResponse> fakeArrivals = new ObjectArrayList<>(new ArrivalsResponse(new JsonReader(fakeArrivalsJson)).getArrivals());
 
         List<PIDSComponent> components = PIDSManager.getPreset("rv_pids").getComponents(fakeArrivals, new String[]{"", "", "", ""}, new boolean[]{false, false, false, false}, 0, 0, 150, 80, 4, false);
         List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());

@@ -56,7 +56,7 @@ public class CoordTextField extends TextFieldWidgetExtension implements RenderHe
     }
 
     @Override
-    public boolean mouseScrolled3(double mouseX, double mouseY, double amount) {
+    public boolean mouseScrolled2(double mouseX, double mouseY, double amount) {
         if(visible && active && isFocused2()) {
             if(amount > 0) {
                 increment();
@@ -65,7 +65,7 @@ public class CoordTextField extends TextFieldWidgetExtension implements RenderHe
             }
         }
 
-        return super.mouseScrolled3(mouseX, mouseY, amount);
+        return super.mouseScrolled2(mouseX, mouseY, amount);
     }
 
     public int getNumber() {

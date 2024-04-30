@@ -9,11 +9,14 @@ import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
+import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.data.ArrivalsCache;
+import org.mtr.mod.data.ArrivalsCacheClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +37,8 @@ public class ButterflyLightRenderer extends JCMBlockEntityRenderer<ButterflyLigh
         Platform closestPlatform = !closestPlatforms.isEmpty() ? closestPlatforms.get(0) : null;
         if (closestPlatform == null) return;
 
-        ArrivalsResponse arrivals = ArrivalsCache.INSTANCE.requestArrivals(pos.asLong(), LongImmutableList.of(closestPlatform.getId()), 1, 0);
-        ArrivalResponse firstArrival = arrivals.getArrivals().isEmpty() ? null : arrivals.getArrivals().get(0);
+        ObjectArrayList<ArrivalResponse> arrivals = ArrivalsCacheClient.INSTANCE.requestArrivals(world, LongArrayList.of(closestPlatform.getId()));
+        ArrivalResponse firstArrival = arrivals.isEmpty() ? null : arrivals.get(0);
         if (firstArrival == null) return;
 
         boolean arrived = firstArrival.getArrival() <= System.currentTimeMillis();

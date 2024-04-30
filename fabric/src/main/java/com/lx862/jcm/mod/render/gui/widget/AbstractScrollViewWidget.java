@@ -51,7 +51,7 @@ public abstract class AbstractScrollViewWidget extends ClickableWidgetExtension 
 
 
     @Override
-    public boolean mouseScrolled3(double mouseX, double mouseY, double amount) {
+    public boolean mouseScrolled2(double mouseX, double mouseY, double amount) {
         amount *= 15;
         double oldScroll = currentScroll;
         setScroll(currentScroll - amount);
