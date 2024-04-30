@@ -360,6 +360,8 @@ public class TextureTextRenderer implements RenderHelper {
      * @return The rectangular bound of the string provided
      */
     public static Rectangle2D getTextBound(AttributedString attributedString, AffineTransform affineTransform) {
+        if(attributedString.getIterator().getBeginIndex() == attributedString.getIterator().getEndIndex()) return new Rectangle();
+
         FontRenderContext fontRenderContext = new FontRenderContext(affineTransform, true, true);
         TextLayout textLayout = new TextLayout(attributedString.getIterator(), fontRenderContext);
         return new Rectangle((int)textLayout.getBounds().getX(), (int)textLayout.getBounds().getY(), (int)(textLayout.getAdvance() * affineTransform.getScaleX()), (int)(textLayout.getBounds().getHeight() * affineTransform.getScaleY()));
