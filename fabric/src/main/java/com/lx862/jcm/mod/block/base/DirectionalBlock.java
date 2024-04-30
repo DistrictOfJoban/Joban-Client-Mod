@@ -24,7 +24,6 @@ public abstract class DirectionalBlock extends JCMBlock {
     public BlockState getPlacementState2(ItemPlacementContext ctx) {
         BlockState superState = super.getPlacementState2(ctx);
         if(superState == null) return null;
-        
-        return superState.with(new Property<>(FACING.data), ctx.getPlayerFacing().data);
+        return superState.with(new Property<>(FACING.data), Direction.fromHorizontal(ctx.getPlayerFacing().getHorizontal()).data);
     }
 }

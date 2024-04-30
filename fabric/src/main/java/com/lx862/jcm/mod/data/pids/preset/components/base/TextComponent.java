@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.data.pids.preset.components.base;
 
 import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.data.JCMClientStats;
+import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
@@ -19,13 +20,22 @@ public abstract class TextComponent extends PIDSComponent {
     protected final int textColor;
     protected final double scale;
 
-    public TextComponent(double x, double y, double width, double height, String font, TextAlignment textAlignment, TextOverflowMode textOverflowMode, int textColor, double scale) {
+    public TextComponent(double x, double y, double width, double height, KVPair additionalParam) {
         super(x, y, width, height);
-        this.font = font;
-        this.textAlignment = textAlignment;
-        this.textOverflowMode = textOverflowMode;
-        this.scale = scale;
-        this.textColor = textColor;
+        this.font = additionalParam.get("font", "");
+        this.textAlignment = TextAlignment.valueOf(additionalParam.get("textAlignment", "LEFT"));
+        this.textOverflowMode = TextOverflowMode.valueOf(additionalParam.get("textOverflowMode", "STRETCH"));
+        this.scale = additionalParam.get("scale", 1.0);
+        this.textColor = additionalParam.get("color", 0);
+    }
+
+    public static KVPair of(TextAlignment textAlignment, TextOverflowMode textOverflowMode, String font, int textColor, double scale) {
+        return new KVPair()
+                .with("textAlignment", textAlignment.name())
+                .with("textOverflowMode", textOverflowMode.name())
+                .with("font", font)
+                .with("color", textColor)
+                .with("scale", scale);
     }
 
     protected void drawText(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, String text) {

@@ -48,9 +48,10 @@ public abstract class PIDSComponent implements RenderHelper {
 enum ComponentList {
     ARRIVAL_DESTINATION("arrival_destination", DestinationComponent::parseComponent),
     ARRIVAL_ETA("arrival_eta", ETAComponent::parseComponent),
+    CLOCK("clock", ClockComponent::parseComponent),
     CUSTOM_TEXT("custom_text", CustomTextComponent::parseComponent),
     CUSTOM_TEXTURE("custom_texture", CustomTextureComponent::parseComponent),
-    CLOCK("clock", ClockComponent::parseComponent),
+    PLATFORM_TEXT("platform_text", PlatformComponent::parseComponent),
     WEATHER_ICON("weather_icon", WeatherIconComponent::parseComponent);
 
     public final String name;

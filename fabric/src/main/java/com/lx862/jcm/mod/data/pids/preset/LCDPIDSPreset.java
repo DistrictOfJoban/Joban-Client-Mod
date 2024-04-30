@@ -5,14 +5,18 @@ import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.data.KVPair;
-import com.lx862.jcm.mod.data.pids.preset.components.*;
+import com.lx862.jcm.mod.data.pids.preset.components.CustomTextComponent;
+import com.lx862.jcm.mod.data.pids.preset.components.CustomTextureComponent;
+import com.lx862.jcm.mod.data.pids.preset.components.DestinationComponent;
+import com.lx862.jcm.mod.data.pids.preset.components.ETAComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
-import org.mtr.core.operation.ArrivalsResponse;
+import org.mtr.core.operation.ArrivalResponse;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
@@ -30,7 +34,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         super("lcd_pids", "Hong Kong LCD PIDS", true);
     }
 
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ArrivalsResponse arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         // Debug View Texture
         if(ConfigEntry.DEBUG_MODE.getBool() && ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
             //TextureTextRenderer.stressTest(5);
@@ -64,7 +68,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public List<PIDSComponent> getComponents(ArrivalsResponse arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
+    public List<PIDSComponent> getComponents(ObjectArrayList<ArrivalResponse> arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
         int startX = x + PIDS_MARGIN;
         int startY = y + 6;
         int contentWidth = screenWidth - PIDS_MARGIN;
@@ -75,16 +79,15 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         int arrivalIndex = 0;
         double rowY = startY;
         for(int i = 0; i < rows; i++) {
-            if(arrivalIndex >= arrivals.getArrivals().size()) continue;
+            if(arrivalIndex >= arrivals.size()) continue;
 
             if(!customMessages[i].isEmpty()) {
-                components.add(new CustomTextComponent(startX, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("text", customMessages[i])));
+                components.add(new CustomTextComponent(startX, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
             } else {
                 if(!rowHidden[i]) {
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    components.add(new DestinationComponent(startX, rowY, destinationMaxWidth, 10, getFont(), TextAlignment.LEFT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE, new KVPair().with("arrivalIndex", arrivalIndex)));
-                    components.add(new ETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, getFont(), TextAlignment.RIGHT, TextOverflowMode.STRETCH, getTextColor(), ARRIVAL_TEXT_SCALE,
-                            new KVPair().with("arrivalIndex", arrivalIndex)));
+                    components.add(new DestinationComponent(startX, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
+                    components.add(new ETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
                     arrivalIndex++;
                 }
             }

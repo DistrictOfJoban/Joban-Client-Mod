@@ -18,10 +18,8 @@ public class ClockComponent extends TextComponent {
     private final boolean showMin;
     private final boolean showAMPM;
 
-    public ClockComponent(double x, double y, double width, double height,
-                          String font, TextAlignment textAlignment, TextOverflowMode textOverflowMode, int textColor, double scale,
-                          KVPair additionalParam) {
-        super(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale);
+    public ClockComponent(double x, double y, double width, double height, KVPair additionalParam) {
+        super(x, y, width, height, additionalParam);
         this.use24h = additionalParam.get("use24h", true);
         this.showHour = additionalParam.get("showHour", true);
         this.showMin = additionalParam.get("showMin", true);
@@ -46,11 +44,6 @@ public class ClockComponent extends TextComponent {
     }
 
     public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {
-        TextAlignment textAlignment = TextAlignment.valueOf(jsonObject.get("textAlignment").getAsString());
-        TextOverflowMode textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
-        String font = jsonObject.get("font").getAsString();
-        int textColor = jsonObject.get("color").getAsInt();
-        double scale = jsonObject.get("scale").getAsDouble();
-        return new ClockComponent(x, y, width, height, font, textAlignment, textOverflowMode, textColor, scale, new KVPair(jsonObject));
+        return new ClockComponent(x, y, width, height, new KVPair(jsonObject));
     }
 }

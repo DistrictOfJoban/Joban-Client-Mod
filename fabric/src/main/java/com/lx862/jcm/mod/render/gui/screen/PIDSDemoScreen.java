@@ -10,10 +10,12 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.util.TextUtil;
+import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.core.serializer.JsonReader;
 import org.mtr.libraries.com.google.gson.JsonArray;
 import org.mtr.libraries.com.google.gson.JsonObject;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -64,6 +66,8 @@ public class PIDSDemoScreen extends TitledScreen implements RenderHelper, GuiHel
     private void drawPIDS(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing) {
         JsonObject fakeArrivalsJson = new JsonObject();
         JsonArray fakeArrivalsArrayJson = new JsonArray();
+        ObjectArrayList<ArrivalResponse> fakeArrivals = new ObjectArrayList<>();
+
         for(int i = 0; i < 4; i++) {
             JsonObject jo = new JsonObject();
             jo.addProperty("destination", "Arrival " + (i+1));
@@ -71,11 +75,8 @@ public class PIDSDemoScreen extends TitledScreen implements RenderHelper, GuiHel
             jo.addProperty("departure", 100 + System.currentTimeMillis() + ((i+1) * 10000));
             jo.addProperty("realtime", true);
             jo.addProperty("platformName", "2");
-            fakeArrivalsArrayJson.add(jo);
+            fakeArrivals.add(new ArrivalResponse(new JsonReader(jo)));
         }
-        fakeArrivalsJson.add("arrivals", fakeArrivalsArrayJson);
-
-        ArrivalsResponse fakeArrivals = new ArrivalsResponse(new JsonReader(fakeArrivalsJson));
 
         List<PIDSComponent> components = PIDSManager.getPreset("rv_pids").getComponents(fakeArrivals, new String[]{"", "", "", ""}, new boolean[]{false, false, false, false}, 0, 0, 150, 80, 4, false);
         List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
