@@ -10,7 +10,6 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
-import org.mtr.mod.data.TicketSystem;
 
 import java.util.List;
 
