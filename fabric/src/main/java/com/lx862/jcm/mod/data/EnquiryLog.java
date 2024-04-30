@@ -40,11 +40,13 @@ public class EnquiryLog {
         JsonObject jsonObject = new JsonObject();
 
         try {
+            List<String> lines;
             if (!Files.exists(LOG_PATH)) {
                 Files.createDirectories(LOG_PATH.getParent());
                 Files.createFile(LOG_PATH);
             } else {
-                String jsonString = Files.readString(LOG_PATH);
+                lines = Files.readAllLines(LOG_PATH);
+                String jsonString = String.join("\n", lines);
                 jsonObject = gson.fromJson(jsonString, JsonObject.class);
             }
 
@@ -62,7 +64,7 @@ public class EnquiryLog {
 
             playerDataArray.add(dataObject);
 
-            Files.writeString(LOG_PATH, gson.toJson(jsonObject));
+            Files.write(LOG_PATH, gson.toJson(jsonObject).getBytes());
         } catch (IOException e) {
             LOGGER.error("Error saving data to JSON file: {}", e.getMessage());
         }
@@ -73,7 +75,8 @@ public class EnquiryLog {
         try {
             if (Files.exists(LOG_PATH)) {
                 Gson gson = new Gson();
-                String jsonString = Files.readString(LOG_PATH);
+                List<String> lines = Files.readAllLines(LOG_PATH);
+                String jsonString = String.join("\n", lines);
                 JsonObject jsonObject = gson.fromJson(jsonString, JsonObject.class);
                 JsonArray playerDataArray = jsonObject.getAsJsonArray(playerName);
                 if (playerDataArray != null) {
@@ -91,23 +94,5 @@ public class EnquiryLog {
             LOGGER.error("Error reading data from JSON file: {}", e.getMessage());
         }
         return entries;
-    }
-
-    public static int getEntryCount(String playerName) {
-        int count = 0;
-        try {
-            if (Files.exists(LOG_PATH)) {
-                Gson gson = new Gson();
-                String jsonString = Files.readString(LOG_PATH);
-                JsonObject jsonObject = gson.fromJson(jsonString, JsonObject.class);
-                JsonArray playerDataArray = jsonObject.getAsJsonArray(playerName);
-                if (playerDataArray != null) {
-                    count = playerDataArray.size();
-                }
-            }
-        } catch (IOException e) {
-            LOGGER.error("Error reading data from JSON file: {}", e.getMessage());
-        }
-        return count;
     }
 }
