@@ -57,7 +57,7 @@ public class CoordTextField extends TextFieldWidgetExtension implements RenderHe
 
     @Override
     public boolean mouseScrolled2(double mouseX, double mouseY, double amount) {
-        if(visible && active && isFocused2()) {
+        if(getVisibleMapped() && getActiveMapped() && isFocused2()) {
             if(amount > 0) {
                 increment();
             } else {

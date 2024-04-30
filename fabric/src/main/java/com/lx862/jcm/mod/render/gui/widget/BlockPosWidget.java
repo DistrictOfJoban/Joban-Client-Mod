@@ -46,6 +46,9 @@ public class BlockPosWidget extends ClickableWidgetExtension implements MultiWid
         this.posXTextField.setEditable2(active);
         this.posYTextField.setEditable2(active);
         this.posZTextField.setEditable2(active);
+        this.posXTextField.setActiveMapped(active);
+        this.posYTextField.setActiveMapped(active);
+        this.posZTextField.setActiveMapped(active);
         super.setActiveMapped(active);
     }
 
