@@ -69,6 +69,16 @@ public class EnquiryScreen extends AnimatedScreen {
 
             graphicsHolder.push();
             graphicsHolder.scale((float)(double)getWidthMapped() / baseWidth, (float)(double)getWidthMapped() / baseWidth, (float)(double)getWidthMapped() / baseWidth);
+
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("Remaining value"), font), startX, 20, 0x000000, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("Octopus"), font), startX + 305, 75, 0x000000, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("processor"), font), startX + 305, 85, 0x000000, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("849009"), font), startX + 305, 95, 0x000000, false, GraphicsHolder.getDefaultLight());
+
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("Octopus last"), font), startX + 305, 115, 0x000000, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("add value by"), font), startX + 305, 125, 0x000000, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("Cash on"), font), startX + 305, 135, 0x000000, false, GraphicsHolder.getDefaultLight());
+
             for (int i = entries.size() - 1; i >= 0 && count < 10; i--) {
                 MutableText renderText = getMutableText(i);
                 graphicsHolder.drawText(TextUtil.withFont(renderText, font), startX, renderY, 0x000000, false, GraphicsHolder.getDefaultLight());
