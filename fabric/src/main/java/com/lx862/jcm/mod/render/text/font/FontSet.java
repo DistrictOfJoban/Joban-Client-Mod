@@ -48,6 +48,7 @@ public class FontSet {
         ResourceManagerHelper.readResource(path, inputStream -> {
             try {
                 Font createdFont = Font.createFont(Font.TRUETYPE_FONT, inputStream);
+                if(createdFont == null) throw new IllegalStateException("Font cannot be null!");
                 callback.accept(createdFont);
             } catch (Exception e) {
                 JCMLogger.warn("Failed to load font from path " + path.getPath());

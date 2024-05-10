@@ -50,7 +50,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         graphicsHolder.push();
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals, tickDelta));
             graphicsHolder.pop();
             graphicsHolder.translate(0, 0, -0.003);
         }
@@ -61,7 +61,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals, tickDelta));
             graphicsHolder.pop();
         }
     }

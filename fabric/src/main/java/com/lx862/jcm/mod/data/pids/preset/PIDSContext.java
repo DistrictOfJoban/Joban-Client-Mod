@@ -8,9 +8,11 @@ import org.mtr.mapping.holder.World;
 public class PIDSContext {
     public final World world;
     public final ObjectArrayList<ArrivalResponse> arrivals;
+    public final double deltaTime;
 
-    public PIDSContext(World world, ObjectArrayList<ArrivalResponse> arrivals) {
+    public PIDSContext(World world, ObjectArrayList<ArrivalResponse> arrivals, double deltaTime) {
         this.world = world;
         this.arrivals = arrivals;
+        this.deltaTime = deltaTime;
     }
 }

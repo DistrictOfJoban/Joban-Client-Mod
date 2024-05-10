@@ -8,11 +8,30 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class PIDSComponent implements RenderHelper {
+    /**
+     * The full list of available components in a PIDS
+     * Other addon developer can add extra components to componentList on mod init
+     */
+    public static final HashMap<String, ComponentParser> componentList = new HashMap<>();
     protected final double x;
     protected final double y;
     protected final double width;
     protected final double height;
+
+    static {
+        componentList.put("arrival_destination", DestinationComponent::parseComponent);
+        componentList.put("arrival_eta", ETAComponent::parseComponent);
+        componentList.put("clock", ClockComponent::parseComponent);
+        componentList.put("cycle", CycleComponent::parseComponent);
+        componentList.put("custom_text", CustomTextComponent::parseComponent);
+        componentList.put("custom_texture", CustomTextureComponent::parseComponent);
+        componentList.put("platform_text", PlatformComponent::parseComponent);
+        componentList.put("weather_icon", WeatherIconComponent::parseComponent);
+    }
 
     public PIDSComponent(double x, double y, double width, double height) {
         this.x = x;
@@ -36,33 +55,14 @@ public abstract class PIDSComponent implements RenderHelper {
         double width = jsonObject.get("width").getAsDouble();
         double height = jsonObject.get("height").getAsDouble();
 
-        for(ComponentList component : ComponentList.values()) {
-            if(component.name.equals(name)) {
-                return component.componentParser.parse(x, y, width, height, jsonObject);
+        for(Map.Entry<String, ComponentParser> entry : componentList.entrySet()) {
+            if(entry.getKey().equals(name)) {
+                return entry.getValue().parse(x, y, width, height, jsonObject);
             }
         }
         return null;
     }
 }
-
-enum ComponentList {
-    ARRIVAL_DESTINATION("arrival_destination", DestinationComponent::parseComponent),
-    ARRIVAL_ETA("arrival_eta", ETAComponent::parseComponent),
-    CLOCK("clock", ClockComponent::parseComponent),
-    CUSTOM_TEXT("custom_text", CustomTextComponent::parseComponent),
-    CUSTOM_TEXTURE("custom_texture", CustomTextureComponent::parseComponent),
-    PLATFORM_TEXT("platform_text", PlatformComponent::parseComponent),
-    WEATHER_ICON("weather_icon", WeatherIconComponent::parseComponent);
-
-    public final String name;
-    public final ComponentParser componentParser;
-
-    ComponentList(String name, ComponentParser parser) {
-        this.name = name;
-        this.componentParser = parser;
-    }
-}
-
 @FunctionalInterface
 interface ComponentParser {
     PIDSComponent parse(double x, double y, double width, double height, JsonObject jsonObject);

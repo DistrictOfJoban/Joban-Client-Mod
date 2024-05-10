@@ -25,8 +25,8 @@ public abstract class TextComponent extends PIDSComponent {
         this.font = additionalParam.get("font", "");
         this.textAlignment = TextAlignment.valueOf(additionalParam.get("textAlignment", "LEFT"));
         this.textOverflowMode = TextOverflowMode.valueOf(additionalParam.get("textOverflowMode", "STRETCH"));
-        this.scale = additionalParam.get("scale", 1.0);
-        this.textColor = additionalParam.get("color", 0);
+        this.scale = (double)additionalParam.get("scale", 1.0);
+        this.textColor = (int)(double)additionalParam.get("color", 0.0);
     }
 
     public static KVPair of(TextAlignment textAlignment, TextOverflowMode textOverflowMode, String font, int textColor, double scale) {

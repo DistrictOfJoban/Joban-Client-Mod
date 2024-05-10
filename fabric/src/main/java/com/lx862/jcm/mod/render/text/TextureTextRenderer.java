@@ -163,7 +163,7 @@ public class TextureTextRenderer implements RenderHelper {
         if(filteredString.isEmpty()) return attributedString;
 
         Font primaryFont = fontSet.getPrimaryFont(FONT_RESOLUTION);
-        attributedString.addAttribute(TextAttribute.FONT, primaryFont);
+        if(primaryFont != null) attributedString.addAttribute(TextAttribute.FONT, primaryFont);
         attributedString.addAttribute(TextAttribute.FOREGROUND, text.getTextColor());
 
         int currentTextColor = text.getTextColor();

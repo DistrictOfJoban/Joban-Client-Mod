@@ -18,19 +18,28 @@ public class KVPair {
         this();
         jsonObject.entrySet().forEach(entry -> {
             Object val = null;
-            JsonPrimitive jsonPrimitive = entry.getValue().getAsJsonPrimitive();
-            if(jsonPrimitive.isBoolean()) {
-                val = jsonPrimitive.getAsBoolean();
-            }
-            if(jsonPrimitive.isNumber()) {
-                val = jsonPrimitive.getAsDouble();
-                if((double)val % 1 == 0) {
-                    val = jsonPrimitive.getAsInt();
+            if(entry.getValue().isJsonPrimitive()) {
+                JsonPrimitive jsonPrimitive = entry.getValue().getAsJsonPrimitive();
+                if(jsonPrimitive.isBoolean()) {
+                    val = jsonPrimitive.getAsBoolean();
+                }
+                if(jsonPrimitive.isNumber()) {
+                    val = jsonPrimitive.getAsDouble();
+//                    if((double)val % 1 == 0) {
+//                        val = jsonPrimitive.getAsInt();
+//                    }
+                }
+                if(jsonPrimitive.isString()) {
+                    val = jsonPrimitive.getAsString();
+                }
+            } else {
+                if(entry.getValue().isJsonArray()) {
+                    val = entry.getValue().getAsJsonArray();
+                } else if(entry.getValue().isJsonObject()) {
+                    val = entry.getValue().getAsJsonObject();
                 }
             }
-            if(jsonPrimitive.isString()) {
-                val = jsonPrimitive.getAsString();
-            }
+
             if(val != null) {
                 with(entry.getKey(), val);
             }

@@ -61,13 +61,13 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         graphicsHolder.translate(0, 0, -0.5);
 
-        List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
+        List<PIDSComponent> normalComponents = components.stream().filter(e -> !(e instanceof TextComponent)).collect(Collectors.toList());
         List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
 
         // Texture
-        for(PIDSComponent component : textureComponents) {
+        for(PIDSComponent component : normalComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals, tickDelta));
             graphicsHolder.pop();
             graphicsHolder.translate(0, 0, -0.001);
         }
@@ -77,7 +77,7 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals, tickDelta));
             graphicsHolder.pop();
         }
     }

@@ -134,7 +134,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         // Texture
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals, tickDelta));
             graphicsHolder.pop();
         }
 
@@ -143,7 +143,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals, tickDelta));
             graphicsHolder.pop();
         }
     }
