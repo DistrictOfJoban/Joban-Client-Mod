@@ -26,7 +26,7 @@ public class McMetaManager {
 
         String str = ResourceManagerHelper.readResource(mcmetaFile);
         if(!str.isEmpty()) {
-            JCMLogger.info("Loading mcmeta file: " + imagePath.getPath());
+            JCMLogger.debug("[McMetaManager] Loading mcmeta file: " + imagePath.getPath());
 
             try {
                 McMeta mcMeta = McMeta.parse(str);
@@ -36,7 +36,7 @@ public class McMetaManager {
                 });
             } catch (Exception e) {
                 e.printStackTrace();
-                JCMLogger.warn("Failed to read mcmeta file {}!", imagePath.toString());
+                JCMLogger.error("[McMetaManager] Failed to read mcmeta file {}!", imagePath.toString());
             }
 
         }
@@ -68,11 +68,11 @@ public class McMetaManager {
                 BufferedImage bufferedImage = ImageIO.read(inputStream);
                 int width = bufferedImage.getWidth();
                 int height = bufferedImage.getHeight();
-                JCMLogger.info("Loaded mcmeta image metadata: {} ({})", imageFile.getPath(), width + "x" + height);
+                JCMLogger.debug("[McMetaManager] Loaded mcmeta image metadata: {} ({})", imageFile.getPath(), width + "x" + height);
                 mcMeta.setVerticalPart((height / width));
                 callback.accept(mcMeta);
             } catch (IOException e) {
-                JCMLogger.warn( "Failed to read mcmeta image file {}!", imageFile.getPath());
+                JCMLogger.error( "[McMetaManager] Failed to read image metadata from {}!", imageFile.getPath());
             }
         }));
     }

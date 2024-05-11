@@ -77,7 +77,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         }
         if(jsonObject.has("fonts")) {
             font = jsonObject.get("fonts").getAsString();
-            FontManager.loadVanillaFont(font);
+//            FontManager.loadVanillaFont(font);
         }
         if(jsonObject.has("textOverflowMode")) {
             textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
