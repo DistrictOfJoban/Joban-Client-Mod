@@ -19,10 +19,7 @@ import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.RenderLayer;
-import org.mtr.mapping.holder.World;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 import javax.annotation.Nonnull;
@@ -109,7 +106,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         int headerHeight = topPadding ? HEADER_HEIGHT : 0;
         int startX = PIDS_MARGIN;
         int contentWidth = width - (PIDS_MARGIN * 2);
@@ -134,7 +131,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         // Texture
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals, tickDelta));
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, pos, arrivals, tickDelta));
             graphicsHolder.pop();
         }
 
@@ -143,7 +140,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals, tickDelta));
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, pos, arrivals, tickDelta));
             graphicsHolder.pop();
         }
     }

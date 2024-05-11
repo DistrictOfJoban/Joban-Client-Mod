@@ -30,6 +30,7 @@ public abstract class PIDSComponent implements RenderHelper {
         componentList.put("custom_text", CustomTextComponent::parseComponent);
         componentList.put("custom_texture", CustomTextureComponent::parseComponent);
         componentList.put("platform_text", PlatformComponent::parseComponent);
+        componentList.put("station_name", StationNameComponent::parseComponent);
         componentList.put("weather_icon", WeatherIconComponent::parseComponent);
     }
 

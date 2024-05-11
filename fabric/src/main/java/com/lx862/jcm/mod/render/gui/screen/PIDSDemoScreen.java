@@ -85,7 +85,7 @@ public class PIDSDemoScreen extends TitledScreen implements RenderHelper, GuiHel
         // Texture
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, guiDrawing, Direction.NORTH, new PIDSContext(World.cast(MinecraftClient.getInstance().getWorldMapped()), fakeArrivals, tickDelta));
+            component.render(graphicsHolder, guiDrawing, Direction.NORTH, new PIDSContext(World.cast(MinecraftClient.getInstance().getWorldMapped()), null, fakeArrivals, tickDelta));
             graphicsHolder.pop();
         }
 
@@ -94,7 +94,7 @@ public class PIDSDemoScreen extends TitledScreen implements RenderHelper, GuiHel
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, guiDrawing, Direction.NORTH, new PIDSContext(World.cast(MinecraftClient.getInstance().getWorldMapped()), fakeArrivals, tickDelta));
+            component.render(graphicsHolder, guiDrawing, Direction.NORTH, new PIDSContext(World.cast(MinecraftClient.getInstance().getWorldMapped()), null, fakeArrivals, tickDelta));
             graphicsHolder.pop();
         }
     }

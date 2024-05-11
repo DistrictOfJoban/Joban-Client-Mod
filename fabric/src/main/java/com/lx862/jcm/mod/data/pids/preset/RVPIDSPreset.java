@@ -40,7 +40,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         // Draw Background
         graphicsHolder.createVertexConsumer(RenderLayer.getText(getBackground()));
 
@@ -60,7 +60,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
         graphicsHolder.push();
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals, tickDelta));
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, pos, arrivals, tickDelta));
             graphicsHolder.pop();
             graphicsHolder.translate(0, 0, -0.003);
         }
@@ -71,7 +71,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals, tickDelta));
+            component.render(graphicsHolder, null, facing, new PIDSContext(world, pos, arrivals, tickDelta));
             graphicsHolder.pop();
         }
     }
