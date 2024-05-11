@@ -4,18 +4,17 @@ import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.TextOverflowMode;
-import com.lx862.jcm.mod.render.text.TextAlignment;
-import com.lx862.jcm.mod.render.text.TextInfo;
-import com.lx862.jcm.mod.render.text.TextRenderingManager;
+import com.lx862.jcm.mod.render.text.*;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
+import org.mtr.mod.data.IGui;
 
 public abstract class TextComponent extends PIDSComponent {
     public static final int SWITCH_LANG_DURATION = 60;
     protected final TextOverflowMode textOverflowMode;
     protected final TextAlignment textAlignment;
+    protected final TextTranslationMode textTranslationMode;
     protected final String font;
     protected final int textColor;
     protected final double scale;
@@ -25,6 +24,7 @@ public abstract class TextComponent extends PIDSComponent {
         this.font = additionalParam.get("font", "");
         this.textAlignment = TextAlignment.valueOf(additionalParam.get("textAlignment", "LEFT"));
         this.textOverflowMode = TextOverflowMode.valueOf(additionalParam.get("textOverflowMode", "STRETCH"));
+        this.textTranslationMode = TextTranslationMode.valueOf(additionalParam.get("textTranslationMode", "CYCLE"));
         this.scale = (double)additionalParam.get("scale", 1.0);
         this.textColor = (int)(double)additionalParam.get("color", 0.0);
     }
@@ -70,10 +70,37 @@ public abstract class TextComponent extends PIDSComponent {
     protected String cycleString(String mtrString) {
         String[] split = mtrString.split("\\|");
         if(split.length == 0) return "";
-        return split[((int)JCMClientStats.getGameTick() / SWITCH_LANG_DURATION) % split.length];
+
+        if(textTranslationMode == TextTranslationMode.CYCLE) {
+            return split[((int)JCMClientStats.getGameTick() / SWITCH_LANG_DURATION) % split.length];
+        }
+
+        if(textTranslationMode == TextTranslationMode.MERGE) {
+            return mtrString.replace("|", " ");
+        }
+
+        if(textTranslationMode == TextTranslationMode.CJK) {
+            for(String str : split) {
+                if(IGui.isCjk(str)) {
+                    return str;
+                }
+            }
+            return "";
+        }
+
+        if(textTranslationMode == TextTranslationMode.NON_CJK) {
+            for(String str : split) {
+                if(!IGui.isCjk(str)) {
+                    return str;
+                }
+            }
+            return "";
+        }
+
+        return mtrString;
     }
 
     protected String cycleString(String... string) {
-        return string[((int)JCMClientStats.getGameTick() / SWITCH_LANG_DURATION) % string.length];
+        return cycleString(String.join("|", string));
     }
 }

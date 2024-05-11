@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.render;
+package com.lx862.jcm.mod.render.text;
 
 /**
  * Define the rendering behavior when a text is beyond the maximum allowed width
