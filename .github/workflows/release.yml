@@ -3,8 +3,8 @@
 # certain platforms or Java versions, and provides a first line of defence
 # against bad commits.
 
-name: build
-on: [pull_request, push]
+name: Release Build
+on: workflow_dispatch
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
       - name: Setup Forge files
         run: ./gradlew forge:setupFiles -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Build with Gradle
-        run: ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Partifact_date=".artifact_${{ github.event.repository.updated_at}}"
+        run: ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Upload Artifacts to GitHub
         uses: actions/upload-artifact@v3
         with:

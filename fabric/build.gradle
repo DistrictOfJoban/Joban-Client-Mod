@@ -28,14 +28,14 @@ dependencies {
 }
 
 processResources {
-    inputs.property "version", version
+    inputs.property "version", version + artifact_date
     inputs.property "minecraft_version", rootProject.minecraft_version
     inputs.property "legacy_unicode", project.lg_unicode
     inputs.property "mc_door_blockstate", project.door_blockstate
 
     filesMatching("fabric.mod.json") {
         expand (
-                "version": version,
+                "version": project.full_mod_version,
                 "minecraft_version": rootProject.minecraft_version
         )
     }

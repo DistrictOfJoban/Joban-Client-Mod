@@ -5,6 +5,7 @@ import com.google.gson.JsonPrimitive;
 import org.mtr.mapping.holder.Identifier;
 
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.HashMap;
 
 public class KVPair {
@@ -53,6 +54,15 @@ public class KVPair {
 
     public <T> T get(String str, T fallback) {
         return (T) map.getOrDefault(str, fallback);
+    }
+
+    public int getColor(String str) {
+        Object obj = map.getOrDefault(str, 0);
+        if(obj instanceof String) {
+            return Color.decode((String)obj).getRGB();
+        } else {
+            return (int)obj;
+        }
     }
 
     /**
