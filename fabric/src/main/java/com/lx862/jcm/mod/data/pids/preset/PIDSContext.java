@@ -10,14 +10,16 @@ import javax.annotation.Nullable;
 
 public class PIDSContext {
     public final World world;
+    public final String[] customMessages;
     public final ObjectArrayList<ArrivalResponse> arrivals;
     public final @Nullable BlockPos pos;
     public final double deltaTime;
 
-    public PIDSContext(World world, BlockPos pos, ObjectArrayList<ArrivalResponse> arrivals, double deltaTime) {
+    public PIDSContext(World world, BlockPos pos, String[] customMessages, ObjectArrayList<ArrivalResponse> arrivals, double deltaTime) {
         this.world = world;
         this.pos = pos;
         this.arrivals = arrivals;
         this.deltaTime = deltaTime;
+        this.customMessages = customMessages;
     }
 }

@@ -81,11 +81,12 @@ public class PIDSDemoScreen extends TitledScreen implements RenderHelper, GuiHel
         List<PIDSComponent> components = PIDSManager.getPreset("rv_pids").getComponents(fakeArrivals, new String[]{"", "", "", ""}, new boolean[]{false, false, false, false}, 0, 0, 150, 80, 4, false);
         List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
+        PIDSContext pidsContext = new PIDSContext(World.cast(MinecraftClient.getInstance().getWorldMapped()), null, new String[]{}, fakeArrivals, tickDelta);
 
         // Texture
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, guiDrawing, Direction.NORTH, new PIDSContext(World.cast(MinecraftClient.getInstance().getWorldMapped()), null, fakeArrivals, tickDelta));
+            component.render(graphicsHolder, guiDrawing, Direction.NORTH, pidsContext);
             graphicsHolder.pop();
         }
 
@@ -94,7 +95,7 @@ public class PIDSDemoScreen extends TitledScreen implements RenderHelper, GuiHel
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, guiDrawing, Direction.NORTH, new PIDSContext(World.cast(MinecraftClient.getInstance().getWorldMapped()), null, fakeArrivals, tickDelta));
+            component.render(graphicsHolder, guiDrawing, Direction.NORTH, pidsContext);
             graphicsHolder.pop();
         }
     }

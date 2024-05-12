@@ -63,11 +63,12 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
 
         List<PIDSComponent> normalComponents = components.stream().filter(e -> !(e instanceof TextComponent)).collect(Collectors.toList());
         List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
+        PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
 
         // Texture
         for(PIDSComponent component : normalComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, pos, arrivals, tickDelta));
+            component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
             graphicsHolder.translate(0, 0, -0.001);
         }
@@ -77,7 +78,7 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, pos, arrivals, tickDelta));
+            component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
         }
     }

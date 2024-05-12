@@ -17,7 +17,7 @@ public class PlatformComponent extends TextComponent {
     private final int arrivalIndex;
     public PlatformComponent(double x, double y, double width, double height, String font, int textColor, double scale, KVPair additionalParam) {
         super(x, y, width, height, TextComponent.of(TextAlignment.CENTER, TextOverflowMode.SCALE, font, textColor, scale));
-        this.arrivalIndex = additionalParam.get("arrivalIndex", 0);
+        this.arrivalIndex = additionalParam.getInt("arrivalIndex", 0);
     }
 
     @Override

@@ -41,6 +41,10 @@ public abstract class PIDSComponent implements RenderHelper {
         this.height = height;
     }
 
+    public boolean canRender(PIDSContext context) {
+        return true;
+    }
+
     /**
      * Called to render the component
      * @param graphicsHolder The provided graphicsHolder

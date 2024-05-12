@@ -23,7 +23,7 @@ public class ETAComponent extends TextComponent {
     private final int arrivalIndex;
     public ETAComponent(double x, double y, double width, double height, KVPair additionalParam) {
         super(x, y, width, height, additionalParam);
-        this.arrivalIndex = (int)additionalParam.get("arrivalIndex", 0);
+        this.arrivalIndex = additionalParam.getInt("arrivalIndex", 0);
         this.showDeparture = additionalParam.get("showDeparture", false);
         this.useAbsoluteTime = additionalParam.get("useAbsTime", false);
     }

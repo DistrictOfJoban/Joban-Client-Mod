@@ -13,7 +13,7 @@ public class PlatformCircleComponent extends TextureComponent {
     private final int arrivalIndex;
     public PlatformCircleComponent(double x, double y, double width, double height, KVPair additionalParam) {
         super(x, y, width, height, additionalParam);
-        this.arrivalIndex = additionalParam.get("arrivalIndex", 0);
+        this.arrivalIndex = additionalParam.getInt("arrivalIndex", 0);
     }
 
     @Override

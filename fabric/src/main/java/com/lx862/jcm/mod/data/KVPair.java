@@ -52,12 +52,29 @@ public class KVPair {
         return this;
     }
 
-    public <T> T get(String str, T fallback) {
-        return (T) map.getOrDefault(str, fallback);
+    public <T> T get(String key, T fallback) {
+        return (T) map.getOrDefault(key, fallback);
     }
 
-    public int getColor(String str) {
-        Object obj = map.getOrDefault(str, 0);
+    public <T> T get(String key) {
+        return (T) map.get(key);
+    }
+
+    public int getInt(String key, int fallback) {
+        Object value = get(key);
+        if(Integer.class.isInstance(value)) {
+            return (Integer)value;
+        } else {
+            return ((Double)value).intValue();
+        }
+    }
+
+    public double getDouble(String key, double fallback) {
+        return (double)get(key, fallback);
+    }
+
+    public int getColor(String key) {
+        Object obj = map.getOrDefault(key, 0);
         if(obj instanceof String) {
             return Color.decode((String)obj).getRGB();
         } else {

@@ -15,11 +15,11 @@ import java.util.List;
 
 public class CycleComponent extends PIDSComponent {
     private List<PIDSComponent> components;
-    private int cycleTime;
-    private int currentModule = 0;
+    private double cycleTime;
+    private int currentComponents = 0;
     public CycleComponent(double x, double y, double width, double height, KVPair additionalParam) {
         super(x, y, width, height);
-        this.cycleTime = (int)(double)additionalParam.get("cycleTime", 1.0);
+        this.cycleTime = additionalParam.getDouble("cycleTime", 1);
         this.components = new ArrayList<>();
         JsonArray array = additionalParam.get("components", new JsonArray());
         for(int i = 0; i < array.size(); i++) {
@@ -29,10 +29,19 @@ public class CycleComponent extends PIDSComponent {
 
     @Override
     public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
-        currentModule = (int)((JCMClientStats.getGameTick() / 20.0) % (cycleTime * components.size())) / cycleTime;
+        if(cycleTime == -1) {
+            for(PIDSComponent component : components) {
+                if(component.canRender(context)) {
+                    component.render(graphicsHolder, guiDrawing, facing, context);
+                    break;
+                }
+            }
+        } else {
+            currentComponents = (int) ((int)((JCMClientStats.getGameTick() / 20.0) % (cycleTime * components.size())) / cycleTime);
 
-        if(!components.isEmpty()) {
-            components.get(currentModule).render(graphicsHolder, guiDrawing, facing, context);
+            if(!components.isEmpty()) {
+                components.get(currentComponents).render(graphicsHolder, guiDrawing, facing, context);
+            }
         }
     }
 

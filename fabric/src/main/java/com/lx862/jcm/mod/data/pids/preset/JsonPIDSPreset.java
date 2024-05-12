@@ -127,11 +127,12 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
         List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
+        PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
 
         // Texture
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, pos, arrivals, tickDelta));
+            component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
         }
 
@@ -140,7 +141,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, pos, arrivals, tickDelta));
+            component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
         }
     }
