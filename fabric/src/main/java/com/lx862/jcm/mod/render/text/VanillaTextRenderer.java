@@ -20,7 +20,6 @@ public class VanillaTextRenderer implements RenderHelper {
         if(text.isForScrollingText()) {
             drawScrollingText(graphicsHolder, text, textWidth, finalX, y);
         } else {
-            // Render as is
             MutableText finalText = text.toMutableText();
             graphicsHolder.drawText(finalText, (int)finalX, (int)y, text.getTextColor(), false, MAX_RENDER_LIGHT);
         }

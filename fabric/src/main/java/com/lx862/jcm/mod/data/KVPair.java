@@ -26,9 +26,6 @@ public class KVPair {
                 }
                 if(jsonPrimitive.isNumber()) {
                     val = jsonPrimitive.getAsDouble();
-//                    if((double)val % 1 == 0) {
-//                        val = jsonPrimitive.getAsInt();
-//                    }
                 }
                 if(jsonPrimitive.isString()) {
                     val = jsonPrimitive.getAsString();
@@ -73,12 +70,14 @@ public class KVPair {
         return (double)get(key, fallback);
     }
 
-    public int getColor(String key) {
-        Object obj = map.getOrDefault(key, 0);
+    public int getColor(String key, int defaultColor) {
+        if(!map.containsKey(key)) return defaultColor;
+
+        Object obj = map.get(key);
         if(obj instanceof String) {
             return Color.decode((String)obj).getRGB();
         } else {
-            return (int)obj;
+            return getInt(key, defaultColor);
         }
     }
 

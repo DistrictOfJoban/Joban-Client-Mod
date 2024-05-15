@@ -26,7 +26,7 @@ public abstract class TextComponent extends PIDSComponent {
         this.textOverflowMode = TextOverflowMode.valueOf(additionalParam.get("textOverflowMode", "STRETCH"));
         this.textTranslationMode = TextTranslationMode.valueOf(additionalParam.get("textTranslationMode", "CYCLE"));
         this.scale = additionalParam.getDouble("scale", 1.0);
-        this.textColor = additionalParam.getInt("color", 0);
+        this.textColor = additionalParam.getColor("color", 0);
     }
 
     public static KVPair of(TextAlignment textAlignment, TextOverflowMode textOverflowMode, String font, int textColor, double scale) {
@@ -43,7 +43,9 @@ public abstract class TextComponent extends PIDSComponent {
     }
 
     protected void drawText(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, TextInfo text) {
-        TextInfo finalText = text.withColor(textColor).withFont(font).withTextAlignment(textAlignment);
+        TextRenderingManager.bind(graphicsHolder);
+
+        TextInfo finalText = text.withColor(textColor + ARGB_BLACK).withFont(font).withTextAlignment(textAlignment);
         graphicsHolder.push();
         graphicsHolder.translate(x, y, 0);
         graphicsHolder.scale((float)scale, (float)scale, (float)scale);

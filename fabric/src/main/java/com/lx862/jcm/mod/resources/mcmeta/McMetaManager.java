@@ -17,11 +17,16 @@ import java.util.function.Consumer;
 public class McMetaManager {
     private static final HashMap<Identifier, McMeta> mcMetaList = new HashMap<>();
 
+    public static void reset() {
+        mcMetaList.clear();
+    }
+
     /**
      * Try to load an animated mcmeta file if it exists, will do nothing otherwise
      * @param imagePath The identifier path that leads to the png file
      */
     public static void load(Identifier imagePath) {
+        if(mcMetaList.containsKey(imagePath)) return;
         Identifier mcmetaFile = new Identifier(imagePath.getNamespace(), imagePath.getPath() + ".mcmeta");
 
         String str = ResourceManagerHelper.readResource(mcmetaFile);
@@ -38,7 +43,6 @@ public class McMetaManager {
                 e.printStackTrace();
                 JCMLogger.error("[McMetaManager] Failed to read mcmeta file {}!", imagePath.toString());
             }
-
         }
     }
 

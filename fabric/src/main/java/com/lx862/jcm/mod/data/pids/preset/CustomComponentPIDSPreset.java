@@ -75,7 +75,6 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
 
         // Text
         graphicsHolder.translate(0, 0, -0.5);
-        TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
             component.render(graphicsHolder, null, facing, pidsContext);

@@ -17,11 +17,11 @@ import org.mtr.mapping.mapper.GuiDrawing;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class ETAComponent extends TextComponent {
+public class ArrivalETAComponent extends TextComponent {
     private final boolean useAbsoluteTime;
     private final boolean showDeparture;
     private final int arrivalIndex;
-    public ETAComponent(double x, double y, double width, double height, KVPair additionalParam) {
+    public ArrivalETAComponent(double x, double y, double width, double height, KVPair additionalParam) {
         super(x, y, width, height, additionalParam);
         this.arrivalIndex = additionalParam.getInt("arrivalIndex", 0);
         this.showDeparture = additionalParam.get("showDeparture", false);
@@ -56,6 +56,6 @@ public class ETAComponent extends TextComponent {
     }
 
     public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {
-        return new ETAComponent(x, y, width, height, new KVPair(jsonObject));
+        return new ArrivalETAComponent(x, y, width, height, new KVPair(jsonObject));
     }
 }

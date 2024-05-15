@@ -11,9 +11,9 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
-public class DestinationComponent extends TextComponent {
+public class ArrivalDestinationComponent extends TextComponent {
     private final int arrivalIndex;
-    public DestinationComponent(double x, double y, double width, double height, KVPair additionalParam) {
+    public ArrivalDestinationComponent(double x, double y, double width, double height, KVPair additionalParam) {
         super(x, y, width, height, additionalParam);
         this.arrivalIndex = additionalParam.getInt("arrivalIndex", 0);
     }
@@ -30,6 +30,6 @@ public class DestinationComponent extends TextComponent {
     }
 
     public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {
-        return new DestinationComponent(x, y, width, height, new KVPair(jsonObject));
+        return new ArrivalDestinationComponent(x, y, width, height, new KVPair(jsonObject));
     }
 }

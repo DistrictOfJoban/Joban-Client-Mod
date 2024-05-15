@@ -31,14 +31,12 @@ public class McMeta {
             McMetaFrame[] customFrameOrder = new McMetaFrame[customFrameOrderArray.size()];
             for(int i = 0; i < customFrameOrderArray.size(); i++) {
                 JsonElement frameData = customFrameOrderArray.get(i);
-                try {
-                    // A json object frame
+                if(frameData.isJsonObject()) {
                     JsonObject frameDataObject = frameData.getAsJsonObject();
                     int order = frameDataObject.get("index").getAsInt();
                     int duration = frameDataObject.has("time") ? frameDataObject.get("time").getAsInt() : mcMeta.defaultFrameTime;
                     customFrameOrder[i] = new McMetaFrame(order, duration);
-                } catch (IllegalStateException e) {
-                    // Just an int specifying the order, use default frame time
+                } else { // Porbably an int specifying the index
                     customFrameOrder[i] = new McMetaFrame(customFrameOrderArray.get(i).getAsInt(), mcMeta.defaultFrameTime);
                 }
             }

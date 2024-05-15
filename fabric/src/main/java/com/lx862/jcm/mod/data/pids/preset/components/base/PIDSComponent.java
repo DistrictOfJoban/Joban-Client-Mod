@@ -23,8 +23,8 @@ public abstract class PIDSComponent implements RenderHelper {
     protected final double height;
 
     static {
-        componentList.put("arrival_destination", DestinationComponent::parseComponent);
-        componentList.put("arrival_eta", ETAComponent::parseComponent);
+        componentList.put("arrival_destination", ArrivalDestinationComponent::parseComponent);
+        componentList.put("arrival_eta", ArrivalETAComponent::parseComponent);
         componentList.put("clock", ClockComponent::parseComponent);
         componentList.put("cycle", CycleComponent::parseComponent);
         componentList.put("custom_text", CustomTextComponent::parseComponent);

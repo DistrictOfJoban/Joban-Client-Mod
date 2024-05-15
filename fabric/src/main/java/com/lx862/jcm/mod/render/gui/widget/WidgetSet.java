@@ -59,7 +59,7 @@ public class WidgetSet extends ClickableWidgetExtension implements RenderHelper 
 
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
-        // By default it renders some sort of button, but this is just a dummy widget for positioning, so just override and do nothing
+        // On some version like 1.16, by default a widget is rendered as a button. But this is just a dummy widget for positioning, so we override the render and do nothing
     }
 
     private void positionWidgets() {

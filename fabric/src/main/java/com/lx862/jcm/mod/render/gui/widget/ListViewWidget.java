@@ -81,7 +81,6 @@ public class ListViewWidget extends AbstractScrollViewWidget implements RenderHe
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
         elapsed += (tickDelta / Constants.MC_TICK_PER_SECOND);
 
-        // Background
         int incY = 0;
         for(int i = 0; i < displayedEntryList.size(); i++) {
             ClipStack.ensureStateCorrect();

@@ -35,7 +35,7 @@ public class FontManager {
                 JCMLogger.debug("[FontManager] Try load TTF font {}:{} from {}:{}", fontId.getNamespace(), fontId.getPath(), path.getNamespace(), path.getPath());
                 fonts.put(fontId, new FontSet(jsonObject));
             } catch (NoTTFFontException e) {
-                JCMLogger.debug("[FontManager] No TTF Font found for font: {} ({})", path.getNamespace() + ":" + path.getPath(), e.getMessage());
+                JCMLogger.debug("[FontManager] No TTF Font found for font: {}", path.getNamespace() + ":" + path.getPath());
             } catch (Exception e) {
                 JCMLogger.error("[FontManager] Failed to read font json: {} ({})", path.getNamespace() + ":" + path.getPath(), e.getMessage());
             }
