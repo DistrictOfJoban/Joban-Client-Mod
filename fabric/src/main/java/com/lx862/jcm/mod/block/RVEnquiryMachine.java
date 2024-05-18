@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.Vertical2Block;
 import com.lx862.jcm.mod.block.behavior.EnquiryMachineBehavior;
 import com.lx862.jcm.mod.data.Entry;
-import com.lx862.jcm.mod.network.block.EnquiryUpdateGUIPacket;
+import com.lx862.jcm.mod.network.block.RVEnquiryUpdateGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.data.EnquiryLog;
 import com.lx862.jcm.mod.util.BlockUtil;
@@ -39,6 +39,6 @@ public class RVEnquiryMachine extends Vertical2Block implements EnquiryMachineBe
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         enquiry(world, player);
         List<Entry> entries = EnquiryLog.getEntries(player.getUuidAsString());
-        Networking.sendPacketToClient(player, new EnquiryUpdateGUIPacket(entries));
+        Networking.sendPacketToClient(player, new RVEnquiryUpdateGUIPacket(entries));
     }
 }

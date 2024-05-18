@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.data.Entry;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.AnimatedScreen;
+import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MinecraftClient;
@@ -14,21 +15,16 @@ import org.mtr.mapping.mapper.GuiDrawing;
 import java.util.List;
 
 public class EnquiryScreen extends AnimatedScreen {
-    private final Identifier putCardScreen;
     private final Identifier balance;
     private final Identifier font;
-    private final Identifier octopuscard;
     private final List<Entry> entries;
-    private boolean showBalance = false;
     private final MinecraftClient client = MinecraftClient.getInstance();
     public EnquiryScreen(boolean animatable, List<Entry> entries) {
         super(animatable);
         this.entries = entries;
 
-        this.putCardScreen = new Identifier(Constants.MOD_ID, "textures/enquiry/card.png");
-        this.balance = new Identifier(Constants.MOD_ID, "textures/enquiry/transactions.png");
+        this.balance = new Identifier(Constants.MOD_ID, "textures/enquiry/transactions_blue.png");
         this.font = new Identifier(Constants.MOD_ID, "font1");
-        this.octopuscard = new Identifier(Constants.MOD_ID, "textures/enquiry/octopus_card.png");
     }
 
     @Override
@@ -44,73 +40,49 @@ public class EnquiryScreen extends AnimatedScreen {
         double scaledWidth = getWidthMapped();
         double scaledHeight = getHeightMapped();
         int startX = 20;
-        int startY = 70;
+        int startY = 60;
 
-        int rectX = (screenWidth - 150) / 2;
-        int rectY = ((screenHeight - 70) / 2) + 65;
-        int rectWidth = 150;
-        int rectHeight = 70;
+        int renderY = startY;
+        int count = 0;
 
-        boolean cursorWithinRectangle = mouseX >= rectX && mouseX <= rectX + rectWidth &&
-                mouseY >= rectY && mouseY <= rectY + rectHeight;
+        graphicsHolder.push();
+        graphicsHolder.scale((float)(double)getWidthMapped() / baseWidth, (float)(double)getWidthMapped() / baseWidth, (float)(double)getWidthMapped() / baseWidth);
 
-        if(cursorWithinRectangle) {
-            showBalance = true;
+        GuiHelper.drawTexture(guiDrawing, balance, (screenWidth - (int) scaledWidth) / 2, (screenHeight - (int) scaledHeight) / 2, (int) scaledWidth, (int) scaledHeight);
+
+        graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.points", "0"), font), startX, startY - 10, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
+
+        for (int i = entries.size() - 1; i >= 0 && count < 10; i--) {
+            MutableText renderText = getMutableText(i);
+            graphicsHolder.drawText(TextUtil.withFont(renderText, font), startX, renderY, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
+            renderY += 10;
+            count++;
         }
 
-        if (!showBalance) {
-            GuiHelper.drawTexture(guiDrawing, putCardScreen, (screenWidth - (int) scaledWidth) / 2, (screenHeight - (int) scaledHeight) / 2, (int) scaledWidth, (int) scaledHeight);
-            GuiHelper.drawTexture(guiDrawing, octopuscard, mouseX, mouseY, 140, 86);
-        } else {
-            GuiHelper.drawTexture(guiDrawing, balance, (screenWidth - (int) scaledWidth) / 2, (screenHeight - (int) scaledHeight) / 2, (int) scaledWidth, (int) scaledHeight);
-
-            int renderY = startY;
-            int count = 0;
-
-            graphicsHolder.push();
-            graphicsHolder.scale((float)(double)getWidthMapped() / baseWidth, (float)(double)getWidthMapped() / baseWidth, (float)(double)getWidthMapped() / baseWidth);
-
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("Remaining value"), font), startX, 20, 0x000000, false, GraphicsHolder.getDefaultLight());
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("Octopus"), font), startX + 305, 75, 0x000000, false, GraphicsHolder.getDefaultLight());
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("processor"), font), startX + 305, 85, 0x000000, false, GraphicsHolder.getDefaultLight());
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("849009"), font), startX + 305, 95, 0x000000, false, GraphicsHolder.getDefaultLight());
-
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("Octopus last"), font), startX + 305, 115, 0x000000, false, GraphicsHolder.getDefaultLight());
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("add value by"), font), startX + 305, 125, 0x000000, false, GraphicsHolder.getDefaultLight());
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("Cash on"), font), startX + 305, 135, 0x000000, false, GraphicsHolder.getDefaultLight());
-
-            for (int i = entries.size() - 1; i >= 0 && count < 10; i--) {
-                MutableText renderText = getMutableText(i);
-                graphicsHolder.drawText(TextUtil.withFont(renderText, font), startX, renderY, 0x000000, false, GraphicsHolder.getDefaultLight());
-                renderY += 10;
-                count++;
+        if (!entries.isEmpty()) {
+            Entry lastEntry = entries.get(entries.size() - 1);
+            if (lastEntry.balance() >= 0) {
+                graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.balance", "$" + String.valueOf(lastEntry.balance())), font), startX, startY - 20, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
+            } else if (lastEntry.balance() < 0) {
+                graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.balance", "-$" + String.valueOf(Math.abs(lastEntry.balance()))), font), startX, startY - 20, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
             }
-
-            if (!entries.isEmpty()) {
-                Entry lastEntry = entries.get(entries.size() - 1);
-                if (lastEntry.balance() >= 0) {
-                    graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("$" + String.valueOf(lastEntry.balance())), font), startX + 270, 20, 0x000000, false, GraphicsHolder.getDefaultLight());
-                } else if (lastEntry.balance() < 0) {
-                    graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("-$" + String.valueOf(Math.abs(lastEntry.balance()))), font), startX + 270, 20, 0x000000, false, GraphicsHolder.getDefaultLight());
-                }
-            }
-
-            String lastDate = "";
-
-            for (Entry entry : entries) {
-                if (entry.fare() > 0) {
-                    lastDate = entry.date();
-                }
-            }
-
-            if (!lastDate.isEmpty()) {
-                String formattedDate = lastDate.substring(0, 10);
-
-                graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal(formattedDate), font), startX + 305, 145, 0x000000, false, GraphicsHolder.getDefaultLight());
-            }
-
-            graphicsHolder.pop();
         }
+
+        String lastDate = "";
+
+        for (Entry entry : entries) {
+            if (entry.fare() > 0) {
+                lastDate = entry.date();
+            }
+        }
+
+        if (!lastDate.isEmpty()) {
+            String formattedDate = lastDate.substring(0, 10);
+
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.add_balance", formattedDate), font), startX, startY + 100, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
+        }
+
+        graphicsHolder.pop();
     }
 
     private MutableText getMutableText(int i) {
