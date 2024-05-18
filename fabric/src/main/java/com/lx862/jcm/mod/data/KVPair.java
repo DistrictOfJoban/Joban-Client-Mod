@@ -5,6 +5,7 @@ import com.google.gson.JsonPrimitive;
 import org.mtr.mapping.holder.Identifier;
 
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.HashMap;
 
 public class KVPair {
@@ -18,19 +19,25 @@ public class KVPair {
         this();
         jsonObject.entrySet().forEach(entry -> {
             Object val = null;
-            JsonPrimitive jsonPrimitive = entry.getValue().getAsJsonPrimitive();
-            if(jsonPrimitive.isBoolean()) {
-                val = jsonPrimitive.getAsBoolean();
-            }
-            if(jsonPrimitive.isNumber()) {
-                val = jsonPrimitive.getAsDouble();
-                if((double)val % 1 == 0) {
-                    val = jsonPrimitive.getAsInt();
+            if(entry.getValue().isJsonPrimitive()) {
+                JsonPrimitive jsonPrimitive = entry.getValue().getAsJsonPrimitive();
+                if(jsonPrimitive.isBoolean()) {
+                    val = jsonPrimitive.getAsBoolean();
+                }
+                if(jsonPrimitive.isNumber()) {
+                    val = jsonPrimitive.getAsDouble();
+                }
+                if(jsonPrimitive.isString()) {
+                    val = jsonPrimitive.getAsString();
+                }
+            } else {
+                if(entry.getValue().isJsonArray()) {
+                    val = entry.getValue().getAsJsonArray();
+                } else if(entry.getValue().isJsonObject()) {
+                    val = entry.getValue().getAsJsonObject();
                 }
             }
-            if(jsonPrimitive.isString()) {
-                val = jsonPrimitive.getAsString();
-            }
+
             if(val != null) {
                 with(entry.getKey(), val);
             }
@@ -42,8 +49,36 @@ public class KVPair {
         return this;
     }
 
-    public <T> T get(String str, T fallback) {
-        return (T) map.getOrDefault(str, fallback);
+    public <T> T get(String key, T fallback) {
+        return (T) map.getOrDefault(key, fallback);
+    }
+
+    public <T> T get(String key) {
+        return (T) map.get(key);
+    }
+
+    public int getInt(String key, int fallback) {
+        Object value = get(key);
+        if(Integer.class.isInstance(value)) {
+            return (Integer)value;
+        } else {
+            return ((Double)value).intValue();
+        }
+    }
+
+    public double getDouble(String key, double fallback) {
+        return (double)get(key, fallback);
+    }
+
+    public int getColor(String key, int defaultColor) {
+        if(!map.containsKey(key)) return defaultColor;
+
+        Object obj = map.get(key);
+        if(obj instanceof String) {
+            return Color.decode((String)obj).getRGB();
+        } else {
+            return getInt(key, defaultColor);
+        }
     }
 
     /**

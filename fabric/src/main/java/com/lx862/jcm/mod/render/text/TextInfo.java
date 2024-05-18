@@ -96,7 +96,7 @@ public class TextInfo {
         if(preloadedFont != null) {
             return preloadedFont;
         } else {
-            return new FontSet(Font.getFont(Font.SANS_SERIF));
+            return new FontSet(new Font(Font.SANS_SERIF, Font.PLAIN, 1));
         }
     }
 

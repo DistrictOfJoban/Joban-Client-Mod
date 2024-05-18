@@ -9,7 +9,7 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
-import com.lx862.jcm.mod.render.TextOverflowMode;
+import com.lx862.jcm.mod.render.text.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import org.mtr.core.operation.ArrivalResponse;
@@ -40,7 +40,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         // Draw Background
         graphicsHolder.createVertexConsumer(RenderLayer.getText(getBackground()));
 
@@ -55,12 +55,13 @@ public class RVPIDSPreset extends PIDSPresetBase {
         List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, 0, width, height, be.getRowAmount(), be.platformNumberHidden());
         List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
+        PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
 
         // Texture
         graphicsHolder.push();
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
             graphicsHolder.translate(0, 0, -0.003);
         }
@@ -71,7 +72,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
         }
     }
@@ -98,16 +99,18 @@ public class RVPIDSPreset extends PIDSPresetBase {
             if(customMessages[i] != null && !customMessages[i].isEmpty()) {
                 components.add(new CustomTextComponent(startX, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
             } else {
-                if(!rowHidden[i] && arrivalIndex < arrivals.size()) {
+                if(arrivalIndex >= arrivals.size()) continue;
+
+                if(!rowHidden[i]) {
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    components.add(new DestinationComponent(startX, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
+                    components.add(new ArrivalDestinationComponent(startX, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
 
                     if(!hidePlatform) {
                         components.add(new PlatformComponent(startX + (64 * ARRIVAL_TEXT_SCALE), rowY, 9, 9, getFont(), RenderHelper.ARGB_WHITE, 1, new KVPair().with("arrivalIndex", arrivalIndex)));
-                        components.add(new PlatformCircleComponent(startX + (64 * ARRIVAL_TEXT_SCALE), rowY, 11, 11, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
+                        components.add(new ArrivalTextureComponent(startX + (64 * ARRIVAL_TEXT_SCALE), rowY, 11, 11, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
                     }
 
-                    components.add(new ETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
+                    components.add(new ArrivalETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
                     arrivalIndex++;
                 }
             }

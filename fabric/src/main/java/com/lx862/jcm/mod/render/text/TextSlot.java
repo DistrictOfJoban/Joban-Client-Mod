@@ -34,7 +34,7 @@ public class TextSlot implements Comparable<TextSlot> {
         return text;
     }
 
-    public void updateLastAccessTime() {
+    public void accessedNow() {
         this.lastAccessTime = System.currentTimeMillis();
     }
 

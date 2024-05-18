@@ -11,18 +11,14 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.TextOverflowMode;
+import com.lx862.jcm.mod.render.text.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
-import com.lx862.jcm.mod.render.text.font.FontManager;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.RenderLayer;
-import org.mtr.mapping.holder.World;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 import javax.annotation.Nonnull;
@@ -80,7 +76,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         }
         if(jsonObject.has("fonts")) {
             font = jsonObject.get("fonts").getAsString();
-            FontManager.loadVanillaFont(font);
+//            FontManager.loadVanillaFont(font);
         }
         if(jsonObject.has("textOverflowMode")) {
             textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
@@ -109,7 +105,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         int headerHeight = topPadding ? HEADER_HEIGHT : 0;
         int startX = PIDS_MARGIN;
         int contentWidth = width - (PIDS_MARGIN * 2);
@@ -130,11 +126,12 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
         List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
         List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
+        PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
 
         // Texture
         for(PIDSComponent component : textureComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
         }
 
@@ -143,7 +140,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
         }
     }
@@ -167,21 +164,21 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         int arrivalIndex = 0;
         double rowY = y;
         for(int i = 0; i < rows; i++) {
-            if(arrivalIndex >= arrivals.size()) continue;
-
-            if(!customMessages[i].isEmpty()) {
+            if(customMessages[i] != null && !customMessages[i].isEmpty()) {
                 components.add(new CustomTextComponent(x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
             } else {
+                if(arrivalIndex >= arrivals.size()) continue;
+
                 if (!rowHidden[i]) {
                     float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    components.add(new DestinationComponent(x, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, getFont(), textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
+                    components.add(new ArrivalDestinationComponent(x, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, getFont(), textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
 
                     if (!hidePlatform) {
                         components.add(new PlatformComponent(64 * ARRIVAL_TEXT_SCALE, rowY, 9, 9, getFont(), RenderHelper.ARGB_WHITE, 1, new KVPair().with("arrivalIndex", arrivalIndex)));
-                        components.add(new PlatformCircleComponent(64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex) ));
+                        components.add(new ArrivalTextureComponent(64 * ARRIVAL_TEXT_SCALE, rowY, 11, 11, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex) ));
                     }
 
-                    components.add(new ETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
+                    components.add(new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
                     arrivalIndex++;
                 }
             }

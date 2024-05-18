@@ -56,7 +56,6 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
         long mins = seconds / 60;
 
         TextRenderingManager.bind(graphicsHolder);
-        // % 10 as min should be single digit only
         TextRenderingManager.draw(graphicsHolder, new TextInfo(String.format("%d:%02d", mins % 10, seconds % 60)).withColor(0xFFEE2233).withFont("jsblock:deptimer"), facing, 0, 0);
         graphicsHolder.pop();
     }

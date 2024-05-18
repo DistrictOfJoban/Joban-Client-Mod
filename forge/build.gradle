@@ -40,7 +40,8 @@ java {
 
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
-            minecraft_version: minecraft_version, mod_version: mod_version,
+            minecraft_version: minecraft_version,
+            mod_version: project.full_mod_version,
     ]
     inputs.properties replaceProperties
     inputs.property "legacy_unicode", project.lg_unicode

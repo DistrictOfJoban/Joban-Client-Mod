@@ -11,8 +11,8 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.core.operation.ArrivalResponse;
-import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
@@ -58,26 +58,26 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         graphicsHolder.translate(0, 0, -0.5);
 
-        List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
+        List<PIDSComponent> normalComponents = components.stream().filter(e -> !(e instanceof TextComponent)).collect(Collectors.toList());
         List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
+        PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
 
         // Texture
-        for(PIDSComponent component : textureComponents) {
+        for(PIDSComponent component : normalComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
             graphicsHolder.translate(0, 0, -0.001);
         }
 
         // Text
         graphicsHolder.translate(0, 0, -0.5);
-        TextRenderingManager.bind(graphicsHolder);
         for(PIDSComponent component : textComponents) {
             graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, new PIDSContext(world, arrivals));
+            component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
         }
     }

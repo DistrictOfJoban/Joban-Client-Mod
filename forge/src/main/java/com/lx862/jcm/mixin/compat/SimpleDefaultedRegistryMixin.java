@@ -27,8 +27,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  * And <a href="https://github.com/orgs/FabricMC/discussions/2361">https://github.com/orgs/FabricMC/discussions/2361</a>
  */
 
-// TODO: Mixin injection failure
-
 #if MC_VERSION < "11904"
     @Mixin(DefaultedRegistry.class)
 #else

@@ -23,6 +23,6 @@ public class RVPIDSRenderer extends PIDSRenderer<RVPIDSBlockEntity> {
         graphicsHolder.rotateYDegrees(90 - facing.asRotation());
         graphicsHolder.rotateZDegrees(180);
         graphicsHolder.translate(-22.5, -17, -14.25);
-        pidsPreset.render(blockEntity, graphicsHolder, world, facing, arrivals, rowHidden, tickDelta, 0, 0, 156, 88);
+        pidsPreset.render(blockEntity, graphicsHolder, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 156, 88);
     }
 }

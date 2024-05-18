@@ -77,8 +77,6 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
                 BlockPos corner2 = getCorner2();
                 Box limitedRange = new Box(corner1.getX(), corner1.getY(), corner1.getZ(), corner2.getX(), corner2.getY(), corner2.getZ());
 
-                // JCM Legacy sends a sound packet to selected player with the position, and let the client calculate the volume
-                // This seems to not be mapped, so we have to calculate the volume on our own?
                 MinecraftServerHelper.iteratePlayers(ServerWorld.cast(world), (player) -> {
                     if(limitedRange.contains(player.getPos())) {
                         float dist = getPos2().getManhattanDistance(new Vector3i((int)player.getPos().getXMapped(), (int)player.getPos().getYMapped(),(int)player.getPos().getZMapped()));

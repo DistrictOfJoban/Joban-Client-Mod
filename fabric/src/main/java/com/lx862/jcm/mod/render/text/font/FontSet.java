@@ -14,7 +14,6 @@ import java.awt.geom.Rectangle2D;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -26,22 +25,32 @@ public class FontSet {
 
     public FontSet(Font... fonts) {
         fontList = new ArrayList<>();
-        fontList.addAll(Arrays.asList(fonts));
+
+        for(int i = 0; i < fonts.length; i++) {
+            fontList.add(fonts[i]);
+        }
     }
 
-    public FontSet(JsonObject vanillaFontJson) {
+    public FontSet(JsonObject vanillaFontJson) throws NoTTFFontException {
         this();
         JsonArray fonts = vanillaFontJson.getAsJsonArray("providers");
-        fonts.forEach(fontElement -> {
-            JsonObject fontJson = fontElement.getAsJsonObject();
+
+        boolean hasTTFFont = false;
+        for(int i = 0; i < fonts.size(); i++) {
+            JsonObject fontJson = fonts.get(i).getAsJsonObject();
             String type = fontJson.get("type").getAsString();
-            if(!type.equals("ttf")) return;
+            if(!type.equals("ttf")) continue;
+            hasTTFFont = true;
 
             String fontFile = fontJson.get("file").getAsString();
             Identifier fontFileId = new Identifier(fontFile);
             String fontFilePath = "font/" + fontFileId.getPath();
             readFontFile(new Identifier(fontFileId.getNamespace(), fontFilePath), fontList::add);
-        });
+        }
+
+        if(!hasTTFFont) {
+            throw new NoTTFFontException();
+        }
     }
 
     private void readFontFile(Identifier path, Consumer<Font> callback) {

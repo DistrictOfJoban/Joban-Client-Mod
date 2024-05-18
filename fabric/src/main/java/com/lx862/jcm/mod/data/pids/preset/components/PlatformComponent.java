@@ -5,7 +5,7 @@ import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.PIDSContext;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
-import com.lx862.jcm.mod.render.TextOverflowMode;
+import com.lx862.jcm.mod.render.text.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.tool.Utilities;
@@ -17,7 +17,7 @@ public class PlatformComponent extends TextComponent {
     private final int arrivalIndex;
     public PlatformComponent(double x, double y, double width, double height, String font, int textColor, double scale, KVPair additionalParam) {
         super(x, y, width, height, TextComponent.of(TextAlignment.CENTER, TextOverflowMode.SCALE, font, textColor, scale));
-        this.arrivalIndex = additionalParam.get("arrivalIndex", 0);
+        this.arrivalIndex = additionalParam.getInt("arrivalIndex", 0);
     }
 
     @Override

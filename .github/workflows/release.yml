@@ -1,0 +1,33 @@
+# Automatically build the project and run any configured tests for every push
+# and submitted pull request. This can help catch issues that only occur on
+# certain platforms or Java versions, and provides a first line of defence
+# against bad commits.
+
+name: Release Build
+on: workflow_dispatch
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        minecraft: [1.16.5, 1.17.1, 1.18.2, 1.19.2, 1.19.4, 1.20.1, 1.20.4]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: Setup Forge files
+        run: ./gradlew forge:setupFiles -Pminecraft_version="${{ matrix.minecraft }}"
+      - name: Build with Gradle
+        run: ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}"
+      - name: Upload Artifacts to GitHub
+        uses: actions/upload-artifact@v3
+        with:
+          name: Artifacts
+          path: build/

@@ -10,10 +10,8 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
 public abstract class TextureComponent extends PIDSComponent {
-    protected final Identifier texture;
     public TextureComponent(double x, double y, double width, double height, KVPair additionalParam) {
         super(x, y, width, height);
-        this.texture = Identifier.tryParse(additionalParam.get("textureId", ""));
     }
 
     protected void drawTexture(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, Identifier identifier, double offsetX, double offsetY, double width, double height, int color) {

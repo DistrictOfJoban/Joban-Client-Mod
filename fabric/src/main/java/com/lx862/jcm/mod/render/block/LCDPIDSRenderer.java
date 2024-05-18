@@ -24,6 +24,6 @@ public class LCDPIDSRenderer extends PIDSRenderer<LCDPIDSBlockEntity> {
         graphicsHolder.rotateZDegrees(180);
         graphicsHolder.translate(-20, -14, -14.25);
 
-        pidsPreset.render(blockEntity, graphicsHolder, world, facing, arrivals, rowHidden, tickDelta, 0, 0, 153, 84);
+        pidsPreset.render(blockEntity, graphicsHolder, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 153, 84);
     }
 }
