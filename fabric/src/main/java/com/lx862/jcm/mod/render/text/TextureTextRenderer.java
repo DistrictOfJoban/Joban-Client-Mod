@@ -95,9 +95,7 @@ public class TextureTextRenderer implements RenderHelper {
         nativeImageBackedTexture = new NativeImageBackedTexture(nativeImage);
         bufferedImageForTextGen = new BufferedImage(width, FONT_RESOLUTION * 2, BufferedImage.TYPE_INT_ARGB);
 
-        if(textAtlas != null) {
-            MinecraftClient.getInstance().getTextureManager().destroyTexture(textAtlas);
-        }
+        if(textAtlas != null) MinecraftClient.getInstance().getTextureManager().destroyTexture(textAtlas);
         textAtlas = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("jcm_atlas_text", nativeImageBackedTexture);
 
         for(int i = 0; i < height / FONT_RESOLUTION; i++) {
@@ -277,7 +275,7 @@ public class TextureTextRenderer implements RenderHelper {
     private static void draw(GuiDrawing guiDrawing, TextSlot textSlot, float x, float y) {
         ensureInitialized();
 
-        textSlot.updateLastAccessTime();
+        textSlot.accessedNow();
         float startY = textSlot.getStartY();
         float onePart = (float) textSlot.getHeight() / height;
 
@@ -300,7 +298,7 @@ public class TextureTextRenderer implements RenderHelper {
     private static void drawToWorld(GraphicsHolder graphicsHolder, TextSlot textSlot, Direction facing, float x, float y) {
         ensureInitialized();
 
-        textSlot.updateLastAccessTime();
+        textSlot.accessedNow();
         float startY = textSlot.getStartY();
         float onePart = (float) textSlot.getHeight() / height;
 

@@ -16,29 +16,36 @@ public class FontManager {
     public static void initialize() {
         fonts.clear();
 
-        JCMLogger.debug("[FontManager] Loading default fonts");
-        loadVanillaFont("jsblock:deptimer");
-        loadVanillaFont("jsblock:pids_lcd");
-        loadVanillaFont("mtr:mtr");
-    }
+        JCMLogger.debug("[FontManager] Loading TTF fonts");
 
-    public static void loadVanillaFont(String fontIdStr) {
-        Identifier fontId = new Identifier(fontIdStr);
-        String namespace = fontId.getNamespace();
-        String jsonPath = "font/" + fontId.getPath() + ".json";
-
-        if(fonts.containsKey(fontId)) return;
-        ResourceManagerHelper.readResource(new Identifier(namespace, jsonPath), inputStream -> {
-            try {
-                JsonObject jsonObject = new JsonParser().parse(IOUtils.toString(inputStream, Charsets.UTF_8)).getAsJsonObject();
-                JCMLogger.debug("[FontManager] Loading font {}:{} from {}:{}", namespace, fontId.getPath(), namespace, jsonPath);
-                fonts.put(fontId, new FontSet(jsonObject));
-            } catch (Exception e) {
-                e.printStackTrace();
-                JCMLogger.warn("Failed to read vanilla font json: {}", jsonPath);
+        ResourceManagerHelper.readDirectory("font", (path, is) -> {
+            if(path.getPath().endsWith(".json")) {
+                loadVanillaFont(path);
             }
         });
     }
+
+    public static void loadVanillaFont(Identifier path) {
+        Identifier fontId = new Identifier(path.getNamespace(), path.getPath().replace("font/", "").replace(".json", ""));
+
+        if(fonts.containsKey(fontId)) return;
+        ResourceManagerHelper.readResource(path, inputStream -> {
+            try {
+                JsonObject jsonObject = new JsonParser().parse(IOUtils.toString(inputStream, Charsets.UTF_8)).getAsJsonObject();
+                JCMLogger.debug("[FontManager] Try load TTF font {}:{} from {}:{}", fontId.getNamespace(), fontId.getPath(), path.getNamespace(), path.getPath());
+                fonts.put(fontId, new FontSet(jsonObject));
+            } catch (NoTTFFontException e) {
+                JCMLogger.debug("[FontManager] No TTF Font found for font: {}", path.getNamespace() + ":" + path.getPath());
+            } catch (Exception e) {
+                JCMLogger.error("[FontManager] Failed to read font json: {} ({})", path.getNamespace() + ":" + path.getPath(), e.getMessage());
+            }
+        });
+    }
+//
+//    public static void loadVanillaFont(String fontIdStr) {
+//        Identifier fontId = new Identifier(fontIdStr);
+//        loadVanillaFont(new Identifier(fontId.getNamespace(), "font/" + fontId.getPath() + ".json"));
+//    }
 
     public static FontSet getFontSet(Identifier path) {
         return fonts.get(path);

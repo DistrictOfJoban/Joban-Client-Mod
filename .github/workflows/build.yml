@@ -25,7 +25,7 @@ jobs:
       - name: Setup Forge files
         run: ./gradlew forge:setupFiles -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Build with Gradle
-        run: ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}"
+        run: ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Partifact_date=".artifact_${{ github.event.repository.updated_at}}"
       - name: Upload Artifacts to GitHub
         uses: actions/upload-artifact@v3
         with:
