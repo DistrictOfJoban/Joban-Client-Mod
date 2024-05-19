@@ -49,31 +49,18 @@ public class RVPIDSPreset extends PIDSPresetBase {
             drawAtlasBackground(graphicsHolder, width, height, facing);
         }
 
-        graphicsHolder.translate(0, 0, -0.5);
-
         List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, 0, width, height, be.getRowAmount(), be.platformNumberHidden());
-        List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
-        List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
         PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
 
         // Texture
         graphicsHolder.push();
-        for(PIDSComponent component : textureComponents) {
+        for(PIDSComponent component : components) {
+            graphicsHolder.translate(0, 0, -0.02);
             graphicsHolder.push();
             component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
-            graphicsHolder.translate(0, 0, -0.003);
         }
         graphicsHolder.pop();
-
-        // Text
-        graphicsHolder.translate(0, 0, -0.5);
-        TextRenderingManager.bind(graphicsHolder);
-        for(PIDSComponent component : textComponents) {
-            graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, pidsContext);
-            graphicsHolder.pop();
-        }
     }
 
     @Override
@@ -105,8 +92,8 @@ public class RVPIDSPreset extends PIDSPresetBase {
                     components.add(new ArrivalDestinationComponent(startX, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
 
                     if(!hidePlatform) {
-                        components.add(new PlatformComponent(startX + (59 * ARRIVAL_TEXT_SCALE), rowY, 8, 8, getFont(), RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
                         components.add(new ArrivalTextureComponent(startX + (59 * ARRIVAL_TEXT_SCALE), rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
+                        components.add(new PlatformComponent(startX + (59 * ARRIVAL_TEXT_SCALE), rowY, 8, 8, getFont(), RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
                     }
 
                     components.add(new ArrivalETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));

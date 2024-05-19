@@ -43,28 +43,17 @@ public class LCDPIDSPreset extends PIDSPresetBase {
         graphicsHolder.translate(0, 0, -0.5);
 
         List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, 0, width, height, be.getRowAmount(), be.platformNumberHidden());
-        List<PIDSComponent> textureComponents = components.stream().filter(e -> e instanceof TextureComponent).collect(Collectors.toList());
-        List<PIDSComponent> textComponents = components.stream().filter(e -> e instanceof TextComponent).collect(Collectors.toList());
         PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
 
         // Texture
         graphicsHolder.push();
-        for(PIDSComponent component : textureComponents) {
+        for(PIDSComponent component : components) {
+            graphicsHolder.translate(0, 0, -0.02);
             graphicsHolder.push();
             component.render(graphicsHolder, null, facing, pidsContext);
             graphicsHolder.pop();
-            graphicsHolder.translate(0, 0, -0.003);
         }
         graphicsHolder.pop();
-
-        // Text
-        graphicsHolder.translate(0, 0, -0.5);
-        TextRenderingManager.bind(graphicsHolder);
-        for(PIDSComponent component : textComponents) {
-            graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, pidsContext);
-            graphicsHolder.pop();
-        }
     }
 
     @Override
