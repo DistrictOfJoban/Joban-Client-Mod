@@ -50,6 +50,40 @@ subprojects {
 		options.encoding = 'UTF-8'
 	}
 
+	// Replace placeholder resources
+	processResources {
+		inputs.property "version", version + artifact_date
+		inputs.property "minecraft_version", rootProject.minecraft_version
+		inputs.property "legacy_unicode", project.lg_unicode
+		inputs.property "mc_door_blockstate", project.door_blockstate
+
+		filesMatching('META-INF/mods.toml') {
+			expand (
+					"minecraft_version": minecraft_version,
+					"mod_version": project.full_mod_version
+			)
+		}
+
+		filesMatching("fabric.mod.json") {
+			expand (
+					"version": project.full_mod_version,
+					"minecraft_version": rootProject.minecraft_version
+			)
+		}
+
+		filesMatching("**/font/*.json") {
+			expand (
+					"legacy_unicode": project.lg_unicode,
+			)
+		}
+
+		filesMatching("**/blockstates/auto_iron_door.json") {
+			expand (
+					"mc_door_blockstate": project.door_blockstate,
+			)
+		}
+	}
+
 	tasks.register('moveBuildFile', Copy) {
 		from "${project.projectDir}/build/libs/${base.archivesName.get()}-${version}.jar"
 		into "${rootProject.projectDir}/build"
