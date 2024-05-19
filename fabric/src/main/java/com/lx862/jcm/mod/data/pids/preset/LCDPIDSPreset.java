@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 public class LCDPIDSPreset extends PIDSPresetBase {
     private static final int PIDS_MARGIN = 5;
-    private static final float ARRIVAL_TEXT_SCALE = 1.3F;
+    private static final float ARRIVAL_TEXT_SCALE = 1.225F;
     public LCDPIDSPreset() {
         super("lcd_pids", "Hong Kong LCD PIDS", true);
     }
@@ -37,7 +37,6 @@ public class LCDPIDSPreset extends PIDSPresetBase {
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
         // Debug View Texture
         if(ConfigEntry.DEBUG_MODE.getBool() && ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
-            //TextureTextRenderer.stressTest(5);
             drawAtlasBackground(graphicsHolder, width, height, facing);
         }
 
@@ -71,7 +70,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
     @Override
     public List<PIDSComponent> getComponents(ObjectArrayList<ArrivalResponse> arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
         int startX = x + PIDS_MARGIN;
-        int startY = y + 6;
+        int startY = y + 5;
         int contentWidth = screenWidth - PIDS_MARGIN;
         List<PIDSComponent> components = new ArrayList<>();
         components.add(new CustomTextureComponent(x, y, screenWidth, screenHeight, new KVPair().with("textureId", getBackground().getNamespace() + ":" + getBackground().getPath())));
@@ -93,7 +92,7 @@ public class LCDPIDSPreset extends PIDSPresetBase {
                 }
             }
 
-            rowY += (screenHeight / 5.25) * ARRIVAL_TEXT_SCALE;
+            rowY += (screenHeight / 5) * ARRIVAL_TEXT_SCALE;
         }
         return components;
     }

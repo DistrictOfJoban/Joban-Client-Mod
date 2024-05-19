@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class RVPIDSPreset extends PIDSPresetBase {
     private static final int HEADER_HEIGHT = 9;
     private static final int PIDS_MARGIN = 7;
-    private static final float ARRIVAL_TEXT_SCALE = 1.35F;
+    private static final float ARRIVAL_TEXT_SCALE = 1.25F;
     private static final String TEXTURE_PLATFORM_CIRCLE = Constants.MOD_ID + ":textures/block/pids/plat_circle.png";
     private static final String TEXTURE_BACKGROUND = Constants.MOD_ID + ":textures/block/pids/rv_default.png";
     private static final String ICON_WEATHER_SUNNY = Constants.MOD_ID + ":textures/block/pids/weather_sunny.png";
@@ -46,7 +46,6 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
         // Debug View Texture
         if(ConfigEntry.DEBUG_MODE.getBool() && ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
-            //TextureTextRenderer.stressTest(5);
             drawAtlasBackground(graphicsHolder, width, height, facing);
         }
 
@@ -86,15 +85,15 @@ public class RVPIDSPreset extends PIDSPresetBase {
 
         List<PIDSComponent> components = new ArrayList<>();
         components.add(new CustomTextureComponent(0, 0, screenWidth, screenHeight, new KVPair().with("textureId", getBackground().getNamespace() + ":" + getBackground().getPath())));
-        components.add(new ClockComponent(contentWidth, 2, contentWidth, 10, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), ARGB_WHITE, 1)));
-        components.add(new WeatherIconComponent(startX, 0, 11, 11,
+        components.add(new ClockComponent(contentWidth, 2, contentWidth, 10, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), ARGB_WHITE, 0.9)));
+        components.add(new WeatherIconComponent(startX, 0, 9, 9,
                 new KVPair().with("weatherIconSunny", ICON_WEATHER_SUNNY)
                 .with("weatherIconRainy", ICON_WEATHER_RAINY)
                 .with("weatherIconThunder", ICON_WEATHER_THUNDER)));
 
         /* Arrivals */
         int arrivalIndex = 0;
-        double rowY = startY + 6;
+        double rowY = startY + (contentHeight / 12);
         for(int i = 0; i < rows; i++) {
             if(customMessages[i] != null && !customMessages[i].isEmpty()) {
                 components.add(new CustomTextComponent(startX, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
@@ -106,8 +105,8 @@ public class RVPIDSPreset extends PIDSPresetBase {
                     components.add(new ArrivalDestinationComponent(startX, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
 
                     if(!hidePlatform) {
-                        components.add(new PlatformComponent(startX + (64 * ARRIVAL_TEXT_SCALE), rowY, 9, 9, getFont(), RenderHelper.ARGB_WHITE, 1, new KVPair().with("arrivalIndex", arrivalIndex)));
-                        components.add(new ArrivalTextureComponent(startX + (64 * ARRIVAL_TEXT_SCALE), rowY, 11, 11, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
+                        components.add(new PlatformComponent(startX + (59 * ARRIVAL_TEXT_SCALE), rowY, 8, 8, getFont(), RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
+                        components.add(new ArrivalTextureComponent(startX + (59 * ARRIVAL_TEXT_SCALE), rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
                     }
 
                     components.add(new ArrivalETAComponent(contentWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
@@ -115,7 +114,7 @@ public class RVPIDSPreset extends PIDSPresetBase {
                 }
             }
 
-            rowY += (contentHeight / 5.25) * ARRIVAL_TEXT_SCALE;
+            rowY += (contentHeight / 4.85) * ARRIVAL_TEXT_SCALE;
         }
 
         return components;

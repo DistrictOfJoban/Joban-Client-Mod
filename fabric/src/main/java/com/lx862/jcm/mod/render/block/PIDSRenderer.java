@@ -50,6 +50,8 @@ public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEn
 
         graphicsHolder.push();
         graphicsHolder.translate(0.5, 0.5, 0.5);
+        graphicsHolder.rotateYDegrees(90 - facing.asRotation());
+        graphicsHolder.rotateZDegrees(180);
         renderPIDS(blockEntity, pidsPreset, graphicsHolder, world, state, pos, facing, arrivals, tickDelta, rowHidden);
         graphicsHolder.pop();
     }
