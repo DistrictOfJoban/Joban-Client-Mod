@@ -104,25 +104,29 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
         // General
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.general"));
-        listViewWidget.add(ConfigEntry.DISABLE_RENDERING.getTitle(), new MappedWidget(disableRenderingButton));
-        listViewWidget.add(ConfigEntry.USE_CUSTOM_FONT.getTitle(), new MappedWidget(useCustomFontButton));
 
-        // Experimental
-        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.experimental"));
-        listViewWidget.add(ConfigEntry.NEW_TEXT_RENDERER.getTitle(), new MappedWidget(useNewTextRendererButton));
+        listViewWidget.add(ConfigEntry.DISABLE_RENDERING.getTitle(), new MappedWidget(disableRenderingButton));
+        addChild(new ClickableWidget(disableRenderingButton));
+
+        listViewWidget.add(ConfigEntry.USE_CUSTOM_FONT.getTitle(), new MappedWidget(useCustomFontButton));
+        addChild(new ClickableWidget(useCustomFontButton));
+
+        /*  New Text Renderer is deprecated, we shouldn't offer player to switch to it anymore if it isn't enabled */
+        if(ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+            listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.experimental"));
+            listViewWidget.add(ConfigEntry.NEW_TEXT_RENDERER.getTitle(), new MappedWidget(useNewTextRendererButton));
+            addChild(new ClickableWidget(useNewTextRendererButton));
+        }
 
         // Debug
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.debug"));
         listViewWidget.add(ConfigEntry.DEBUG_MODE.getTitle(), new MappedWidget(debugModeButton));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.open_atlas_screen"), new MappedWidget(textAtlasButton));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.open_pids_preview"), new MappedWidget(pidsPreviewButton));
-
-        addChild(new ClickableWidget(disableRenderingButton));
-        addChild(new ClickableWidget(useCustomFontButton));
-        addChild(new ClickableWidget(useNewTextRendererButton));
         addChild(new ClickableWidget(debugModeButton));
-        addChild(new ClickableWidget(textAtlasButton));
-        addChild(new ClickableWidget(pidsPreviewButton));
+
+        if(ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+            listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.open_atlas_screen"), new MappedWidget(textAtlasButton));
+            addChild(new ClickableWidget(textAtlasButton));
+        }
 
         pidsPreviewButton.setActiveMapped(MinecraftClient.getInstance().getWorldMapped() != null);
     }

@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.render.text;
 
 import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.render.text.font.FontManager;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
@@ -18,6 +19,7 @@ public class TextRenderingManager implements RenderHelper {
      */
     public static void initialize() {
         if(ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+            FontManager.initialize();
             TextureTextRenderer.initialize();
         } else if(TextureTextRenderer.initialized()) {
             TextureTextRenderer.close();
