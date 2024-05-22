@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.render.text;
 
-import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -18,7 +17,7 @@ public class VanillaTextRenderer implements RenderHelper {
         double finalX = text.getTextAlignment().getX(x, textWidth);
 
         if(text.isForScrollingText()) {
-            drawScrollingText(graphicsHolder, text, textWidth, finalX, y);
+            drawScrollingText(graphicsHolder, text, finalX, y);
         } else {
             MutableText finalText = text.toMutableText();
             graphicsHolder.drawText(finalText, (int)finalX, (int)y, text.getTextColor(), false, MAX_RENDER_LIGHT);
@@ -26,31 +25,7 @@ public class VanillaTextRenderer implements RenderHelper {
     }
 
     // HEAVY WIP
-    public static void drawScrollingText(GraphicsHolder graphicsHolder, TextInfo text, int textWidth, double x, double y) {
-        int maxWidth = (int)text.getWidthInfo().getMaxWidth();
-        int textColor = text.getTextColor();
-        String str = text.getContent();
-
-        int totalScrollDuration = str.length() * 6;
-        int tickNow = (JCMServerStats.getGameTick() % totalScrollDuration);
-        double prg = (double)tickNow / totalScrollDuration; //
-//        double prg = (str.length() * (double)fullTick / scrollSpeed);
-
-        int shiftX = 0;
-        graphicsHolder.push();
-        graphicsHolder.translate(-prg * textWidth, 0, 0);
-        for(int i = 0; i < str.length(); i++) {
-            String s = String.valueOf(str.charAt(i));
-            MutableText mt = text.copy(s).toMutableText();
-            int finalCharX = (int)(x + shiftX);
-
-            if(shiftX - (-prg * textWidth) >= 0) {
-                graphicsHolder.drawText(mt, finalCharX, (int)y, textColor, false, MAX_RENDER_LIGHT);
-            }
-
-            shiftX += GraphicsHolder.getTextWidth(mt);
-        }
-        graphicsHolder.pop();
+    public static void drawScrollingText(GraphicsHolder graphicsHolder, TextInfo text, double x, double y) {
     }
 
     public static int getTextWidth(TextInfo text) {

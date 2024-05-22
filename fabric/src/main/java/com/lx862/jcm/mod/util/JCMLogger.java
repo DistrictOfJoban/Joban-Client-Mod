@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Logger used by JCM that appends a logging prefix in {@value com.lx862.jcm.mod.Constants#LOGGING_PREFIX }
  */
-public class JCMLogger {
+public final class JCMLogger {
     public static final Logger LOGGER = LogManager.getLogger(Constants.MOD_NAME);
 
     public static void info(String s, Object... o) {
