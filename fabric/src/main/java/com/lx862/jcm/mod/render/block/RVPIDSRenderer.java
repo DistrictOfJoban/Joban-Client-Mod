@@ -19,10 +19,8 @@ public class RVPIDSRenderer extends PIDSRenderer<RVPIDSBlockEntity> {
 
     @Override
     public void renderPIDS(PIDSBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
-        graphicsHolder.scale(0.009F, 0.009F, 0.009F);
-        graphicsHolder.rotateYDegrees(90 - facing.asRotation());
-        graphicsHolder.rotateZDegrees(180);
-        graphicsHolder.translate(-22.5, -17, -14.25);
-        pidsPreset.render(blockEntity, graphicsHolder, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 156, 88);
+        graphicsHolder.translate(-0.21, -0.14, -0.128);
+        graphicsHolder.scale(1/96F, 1/96F, 1/96F);
+        pidsPreset.render(blockEntity, graphicsHolder, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 136, 76);
     }
 }
