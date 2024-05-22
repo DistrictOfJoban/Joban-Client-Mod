@@ -19,7 +19,7 @@ public class LCDPIDSRenderer extends PIDSRenderer<LCDPIDSBlockEntity> {
 
     @Override
     public void renderPIDS(PIDSBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
-        graphicsHolder.translate(-0.19, -0.125, -0.125);
+        graphicsHolder.translate(-0.19, -0.125, -0.130);
         graphicsHolder.scale(1/96F, 1/96F, 1/96F);
 
         pidsPreset.render(blockEntity, graphicsHolder, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 133, 72);

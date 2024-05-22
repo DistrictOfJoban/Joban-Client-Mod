@@ -9,11 +9,9 @@ import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.components.*;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
-import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextAlignment;
-import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.core.operation.ArrivalResponse;
@@ -25,11 +23,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class JsonPIDSPreset extends PIDSPresetBase {
     private static final int PIDS_MARGIN = 7;
-    private static final float ARRIVAL_TEXT_SCALE = 1.25F;
+    private static final float ARRIVAL_TEXT_SCALE = 1.225F;
     private static final int HEADER_HEIGHT = 9;
     private static final String ICON_WEATHER_SUNNY = Constants.MOD_ID + ":textures/block/pids/weather_sunny.png";
     private static final String ICON_WEATHER_RAINY = Constants.MOD_ID + ":textures/block/pids/weather_rainy.png";
@@ -41,10 +38,11 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private final boolean showClock;
     private final boolean showWeather;
     private final boolean topPadding;
+    private final boolean hidePlatform;
     private final int textColor;
     private final boolean[] rowHidden;
 
-    public JsonPIDSPreset(String id, @Nullable String name, @Nullable Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, int textColor) {
+    public JsonPIDSPreset(String id, @Nullable String name, @Nullable Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, boolean hidePlatform, int textColor) {
         super(id, name, builtin);
         this.background = background;
         this.showClock = showClock;
@@ -54,6 +52,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         this.rowHidden = rowHidden;
         this.topPadding = topPadding;
         this.textOverflowMode = textOverflowMode;
+        this.hidePlatform = hidePlatform;
     }
 
     public static JsonPIDSPreset parse(JsonObject jsonObject) {
@@ -61,6 +60,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         boolean showWeather = jsonObject.has("showWeather") && jsonObject.get("showWeather").getAsBoolean();
         boolean showClock = jsonObject.has("showClock") && jsonObject.get("showClock").getAsBoolean();
         boolean topPadding = !jsonObject.has("topPadding") ? true : jsonObject.get("topPadding").getAsBoolean();
+        boolean hidePlatform = jsonObject.has("hidePlatform") && jsonObject.get("hidePlatform").getAsBoolean();
         boolean[] rowHidden;
 
         int textColor = ARGB_BLACK;
@@ -69,14 +69,13 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         Identifier background = null;
         TextOverflowMode textOverflowMode = TextOverflowMode.STRETCH;
         if(jsonObject.has("color")) {
-            textColor = (int)Long.parseLong("FF" + jsonObject.get("color").getAsString(), 16);
+            textColor = (int)Long.parseLong(jsonObject.get("color").getAsString(), 16);
         }
         if(jsonObject.has("name")) {
             name = jsonObject.get("name").getAsString();
         }
         if(jsonObject.has("fonts")) {
             font = jsonObject.get("fonts").getAsString();
-//            FontManager.loadVanillaFont(font);
         }
         if(jsonObject.has("textOverflowMode")) {
             textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
@@ -102,7 +101,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
             background = backgroundId;
         }
         boolean builtin = jsonObject.has("builtin") && jsonObject.get("builtin").getAsBoolean();
-        return new JsonPIDSPreset(id, name, background, font, textOverflowMode, rowHidden, showClock, showWeather, topPadding, builtin, textColor);
+        return new JsonPIDSPreset(id, name, background, font, textOverflowMode, rowHidden, showClock, showWeather, topPadding, builtin, hidePlatform, textColor);
     }
 
     @Override
@@ -124,7 +123,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
         graphicsHolder.translate(startX, 0, -0.05);
 
-        List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 6, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
+        List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 4, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
         PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
 
         // Texture
@@ -153,6 +152,8 @@ public class JsonPIDSPreset extends PIDSPresetBase {
                     .with("weatherIconThunder", ICON_WEATHER_THUNDER)));
         }
 
+        boolean platformShown = !hidePlatform && !this.hidePlatform;
+
         /* Arrivals */
         int arrivalIndex = 0;
         double rowY = y;
@@ -163,10 +164,10 @@ public class JsonPIDSPreset extends PIDSPresetBase {
                 if(arrivalIndex >= arrivals.size()) continue;
 
                 if (!rowHidden[i]) {
-                    float destinationMaxWidth = !hidePlatform ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
+                    float destinationMaxWidth = platformShown ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
                     components.add(new ArrivalDestinationComponent(x, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, getFont(), textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
 
-                    if (!hidePlatform) {
+                    if (platformShown) {
                         components.add(new ArrivalTextureComponent(59 * ARRIVAL_TEXT_SCALE, rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
                         components.add(new PlatformComponent(59 * ARRIVAL_TEXT_SCALE, rowY, 8, 8, getFont(), RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
                     }
@@ -176,7 +177,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
                 }
             }
 
-            rowY += (screenHeight / 4.85) * ARRIVAL_TEXT_SCALE;
+            rowY += (screenHeight / 4.7) * ARRIVAL_TEXT_SCALE;
         }
         return components;
     }
@@ -193,7 +194,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
     @Override
     public int getTextColor() {
-        return textColor;
+        return 0xFF000000 | textColor;
     }
 
     @Override

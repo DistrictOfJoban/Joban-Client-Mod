@@ -20,12 +20,12 @@ public class JCMResourceManager {
         FontManager.initialize();
         TextRenderingManager.initialize();
         McMetaManager.reset();
-        reloadResources();
-    }
-
-    private static void reloadResources() {
         PIDSManager.reset();
 
+        parseCustomResources();
+    }
+
+    private static void parseCustomResources() {
         ResourceManagerHelper.readAllResources(CUSTOM_RESOURCE_PATH, (inputStream -> {
             try {
                 String str = IOUtils.toString(inputStream, Charsets.UTF_8);
