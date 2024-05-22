@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.resources.mcmeta;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.data.Pair;
 
 public class McMeta {
@@ -16,9 +15,8 @@ public class McMeta {
     private int currentPart = 0;
     public McMetaFrame[] frames;
 
-    public static McMeta parse(String json) {
+    public static McMeta parse(JsonObject jsonObject) {
         McMeta mcMeta = new McMeta();
-        JsonObject jsonObject =  new JsonParser().parse(json).getAsJsonObject();
         JsonObject animation = jsonObject.getAsJsonObject("animation");
 
         if(animation.has("frametime")) {

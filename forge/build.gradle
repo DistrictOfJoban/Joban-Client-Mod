@@ -38,31 +38,6 @@ java {
     withSourcesJar()
 }
 
-tasks.named('processResources', ProcessResources).configure {
-    var replaceProperties = [
-            minecraft_version: minecraft_version,
-            mod_version: project.full_mod_version,
-    ]
-    inputs.properties replaceProperties
-    inputs.property "legacy_unicode", project.lg_unicode
-
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties + [project: project]
-    }
-
-    filesMatching("**/font/*.json") {
-        expand (
-                "legacy_unicode": project.lg_unicode,
-        )
-    }
-
-    filesMatching("**/blockstates/auto_iron_door.json") {
-        expand (
-                "mc_door_blockstate": project.door_blockstate,
-        )
-    }
-}
-
 tasks.register("setupFiles") {
     delete fileTree("src/main/java/com/lx862/jcm/mod")
     delete fileTree("src/main/resources/assets")

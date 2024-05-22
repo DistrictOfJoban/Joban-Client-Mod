@@ -51,7 +51,7 @@ public abstract class TextComponent extends PIDSComponent {
         graphicsHolder.scale((float)scale, (float)scale, (float)scale);
         double textWidth = TextRenderingManager.getTextWidth(finalText);
         if(textOverflowMode == TextOverflowMode.MARQUEE && textWidth > width) {
-            finalText = finalText.withScrollingText();
+            finalText = finalText.withScrollingText().withMaxWidth((float)width);
         } else {
             RenderHelper.scaleToFit(graphicsHolder, textWidth, width, textOverflowMode == TextOverflowMode.SCALE, 14);
         }

@@ -1,0 +1,65 @@
+{
+  "pids_images": [
+    {
+      "id": "rv_pids",
+      "name": "Hong Kong Railway Vision PIDS",
+      "builtin": true,
+      "background": "jsblock:textures/block/pids/rv_default.png",
+      "color": "000000",
+      "topPadding": true,
+      "showWeather": true,
+      "showClock": true,
+      "fonts": "mtr:mtr",
+      "hideRow": [false, false, false, false]
+    },
+    {
+      "id": "door_cls_psd",
+      "name": "RV PIDS (Door Closing PSD)",
+      "builtin": true,
+      "background": "jsblock:textures/block/pids/rv_door_cls_psd.png",
+      "color": "000000",
+      "topPadding": true,
+      "showWeather": true,
+      "showClock": true,
+      "fonts": "mtr:mtr",
+      "hideRow": [true, true, true, false]
+    },
+    {
+      "id": "door_cls_apg",
+      "name": "RV PIDS (Door Closing APG)",
+      "builtin": true,
+      "background": "jsblock:textures/block/pids/rv_door_cls_apg.png",
+      "color": "000000",
+      "topPadding": true,
+      "showWeather": true,
+      "showClock": true,
+      "fonts": "mtr:mtr",
+      "hideRow": [true, true, true, false]
+    },
+    {
+      "id": "door_cls_train",
+      "name": "RV PIDS (Door Closing)",
+      "builtin": true,
+      "background": "jsblock:textures/block/pids/rv_door_cls_train.png",
+      "color": "000000",
+      "topPadding": true,
+      "showWeather": true,
+      "showClock": true,
+      "fonts": "mtr:mtr",
+      "hideRow": [true, true, true, false]
+    },
+    {
+      "id": "lcd_pids",
+      "name": "Hong Kong LCD PIDS",
+      "builtin": true,
+      "background": "jsblock:textures/block/pids/black.png",
+      "color": "EADD9A",
+      "topPadding": false,
+      "showWeather": false,
+      "showClock": false,
+      "hidePlatform": true,
+      "fonts": "jsblock:pids_lcd",
+      "hideRow": [false, false, false, false]
+    }
+  ]
+}

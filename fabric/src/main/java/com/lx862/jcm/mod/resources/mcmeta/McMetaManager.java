@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.resources.mcmeta;
 
+import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.data.Pair;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.Identifier;
@@ -34,7 +35,7 @@ public class McMetaManager {
             JCMLogger.debug("[McMetaManager] Loading mcmeta file: " + imagePath.getPath());
 
             try {
-                McMeta mcMeta = McMeta.parse(str);
+                McMeta mcMeta = McMeta.parse(new JsonParser().parse(str).getAsJsonObject());
 
                 readImage(mcMeta, imagePath, mcMeta1 -> {
                     mcMetaList.put(imagePath, mcMeta1);
