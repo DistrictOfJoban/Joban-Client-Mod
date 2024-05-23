@@ -8,6 +8,7 @@ import org.mtr.core.data.Station;
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.Text;
 import org.mtr.mapping.holder.World;
+import org.mtr.mod.Init;
 import org.mtr.mod.data.TicketSystem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -55,7 +56,9 @@ public abstract class MixinTicketSystem {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
         String formattedDateTime = exitDateTime.format(formatter);
 
-        EnquiryLog enquiryLog = new EnquiryLog(player.getUuidAsString(), stationName, -fFare, formattedDateTime, TicketSystem.getBalance(world, player));
+        if (!world.isClient()) {
+            EnquiryLog enquiryLog = new EnquiryLog(player, player.getUuidAsString(), stationName, -fFare, formattedDateTime, TicketSystem.getBalance(world, player));
+        }
     }
 
     @Inject(method = "addBalance", at = @At("TAIL"))
@@ -66,6 +69,8 @@ public abstract class MixinTicketSystem {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
         String formattedDateTime = exitDateTime.format(formatter);
 
-        EnquiryLog enquiryLog = new EnquiryLog(player.getUuidAsString(), stationName, amount, formattedDateTime, TicketSystem.getBalance(world, player));
+        if (!world.isClient()) {
+            EnquiryLog enquiryLog = new EnquiryLog(player, player.getUuidAsString(), stationName, amount, formattedDateTime, TicketSystem.getBalance(world, player));
+        }
     }
 }

@@ -9,6 +9,7 @@ import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
+import org.mtr.mod.Init;
 
 import java.util.List;
 
@@ -40,7 +41,7 @@ public class MTREnquiryMachine extends Vertical2Block implements EnquiryMachineB
     @Override
     public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         enquiry(world, player);
-        List<Entry> entries = EnquiryLog.getEntries(player.getUuidAsString());
+        List<Entry> entries = EnquiryLog.getEntries(player, player.getUuidAsString());
         Networking.sendPacketToClient(player, new EnquiryUpdateGUIPacket(entries));
     }
 }
