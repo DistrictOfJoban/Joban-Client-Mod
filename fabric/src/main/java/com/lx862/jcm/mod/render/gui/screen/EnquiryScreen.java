@@ -19,8 +19,9 @@ public class EnquiryScreen extends AnimatedScreen {
     private final Identifier font;
     private final List<Entry> entries;
     private final MinecraftClient client = MinecraftClient.getInstance();
-    public EnquiryScreen(boolean animatable, List<Entry> entries) {
-        super(animatable);
+
+    public EnquiryScreen(List<Entry> entries) {
+        super(false);
         this.entries = entries;
 
         this.balance = new Identifier(Constants.MOD_ID, "textures/enquiry/transactions_blue.png");

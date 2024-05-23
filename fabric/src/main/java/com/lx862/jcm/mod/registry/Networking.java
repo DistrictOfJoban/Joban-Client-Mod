@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.network.block.*;
 import com.lx862.jcm.mod.network.gui.*;
 import com.lx862.jcm.mod.util.JCMLogger;
 
-import com.lx862.jcm.mod.network.block.RVEnquiryUpdateGUIPacket;
+import com.lx862.jcm.mod.network.gui.RVEnquiryUpdateGUIPacket;
 
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.ServerPlayerEntity;

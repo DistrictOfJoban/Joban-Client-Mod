@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.Vertical2Block;
 import com.lx862.jcm.mod.block.behavior.EnquiryMachineBehavior;
 import com.lx862.jcm.mod.data.Entry;
-import com.lx862.jcm.mod.network.block.RVEnquiryUpdateGUIPacket;
+import com.lx862.jcm.mod.network.gui.RVEnquiryUpdateGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.data.EnquiryLog;
 import com.lx862.jcm.mod.util.BlockUtil;

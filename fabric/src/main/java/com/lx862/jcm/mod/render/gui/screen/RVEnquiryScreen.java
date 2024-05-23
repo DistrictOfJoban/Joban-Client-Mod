@@ -22,8 +22,9 @@ public class RVEnquiryScreen extends AnimatedScreen {
     private final List<Entry> entries;
     private boolean showBalance = false;
     private final MinecraftClient client = MinecraftClient.getInstance();
-    public RVEnquiryScreen(boolean animatable, List<Entry> entries) {
-        super(animatable);
+
+    public RVEnquiryScreen(List<Entry> entries) {
+        super(false);
         this.entries = entries;
 
         this.putCardScreen = new Identifier(Constants.MOD_ID, "textures/enquiry/card.png");

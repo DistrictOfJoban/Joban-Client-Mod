@@ -7,6 +7,7 @@ import org.mtr.mod.data.TicketSystem;
 
 public interface EnquiryMachineBehavior {
     default void enquiry(World world, PlayerEntity player) {
+
         world.playSound((PlayerEntity) null, player.getBlockPos(), SoundEvents.TICKET_PROCESSOR_ENTRY.get(), SoundCategory.BLOCKS, 1, 1);
     }
 }

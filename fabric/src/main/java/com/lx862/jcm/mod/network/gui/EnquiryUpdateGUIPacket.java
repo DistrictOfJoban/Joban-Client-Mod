@@ -1,8 +1,6 @@
-package com.lx862.jcm.mod.network.block;
+package com.lx862.jcm.mod.network.gui;
 
 import com.lx862.jcm.mod.data.Entry;
-import com.lx862.jcm.mod.render.gui.screen.RVEnquiryScreen;
-import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
@@ -10,7 +8,7 @@ import org.mtr.mapping.tool.PacketBufferSender;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RVEnquiryUpdateGUIPacket extends PacketHandler {
+public class EnquiryUpdateGUIPacket extends PacketHandler {
 
     private String stationName;
     private long finalFare;
@@ -19,7 +17,7 @@ public class RVEnquiryUpdateGUIPacket extends PacketHandler {
     private final int entryCount;
     private int balance;
 
-    public RVEnquiryUpdateGUIPacket(PacketBufferReceiver packetBufferReceiver) {
+    public EnquiryUpdateGUIPacket(PacketBufferReceiver packetBufferReceiver) {
         this.entryCount = packetBufferReceiver.readInt();
         for (int i = 0; i < entryCount; i++) {
             this.stationName = packetBufferReceiver.readString();
@@ -30,7 +28,7 @@ public class RVEnquiryUpdateGUIPacket extends PacketHandler {
         }
     }
 
-    public RVEnquiryUpdateGUIPacket(List<Entry> entries) {
+    public EnquiryUpdateGUIPacket(List<Entry> entries) {
         this.entries = entries;
         this.entryCount = entries.size();
     }
@@ -48,6 +46,6 @@ public class RVEnquiryUpdateGUIPacket extends PacketHandler {
 
     @Override
     public void runClient() {
-        MinecraftClient.getInstance().openScreen(new Screen(new RVEnquiryScreen(false, entries)));
+        ClientHelper.openEnquiryScreen(entries);
     }
 }
