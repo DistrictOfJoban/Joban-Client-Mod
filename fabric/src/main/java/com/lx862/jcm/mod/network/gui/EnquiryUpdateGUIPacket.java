@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.network.gui;
 
-import com.lx862.jcm.mod.data.Entry;
+import com.lx862.jcm.mod.data.EnquiryScreenType;
+import com.lx862.jcm.mod.data.TransactionEntry;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
@@ -10,42 +11,47 @@ import java.util.List;
 
 public class EnquiryUpdateGUIPacket extends PacketHandler {
 
-    private String stationName;
-    private long finalFare;
-    private String formattedDateTime;
-    private List<Entry> entries = new ArrayList<>();
+    private final EnquiryScreenType type;
+    private final List<TransactionEntry> entries;
     private final int entryCount;
-    private int balance;
+    private final int remainingBalance;
 
     public EnquiryUpdateGUIPacket(PacketBufferReceiver packetBufferReceiver) {
+        this.entries = new ArrayList<>();
+        this.type = EnquiryScreenType.valueOf(packetBufferReceiver.readString());
+        this.remainingBalance = packetBufferReceiver.readInt();
+
         this.entryCount = packetBufferReceiver.readInt();
         for (int i = 0; i < entryCount; i++) {
-            this.stationName = packetBufferReceiver.readString();
-            this.finalFare = packetBufferReceiver.readLong();
-            this.formattedDateTime = packetBufferReceiver.readString();
-            this.balance = packetBufferReceiver.readInt();
-            entries.add(new Entry(stationName, finalFare, formattedDateTime, balance));
+            String source = packetBufferReceiver.readString();
+            long amount = packetBufferReceiver.readLong();
+            long time = packetBufferReceiver.readLong();
+            entries.add(new TransactionEntry(source, amount, time));
         }
     }
 
-    public EnquiryUpdateGUIPacket(List<Entry> entries) {
+    public EnquiryUpdateGUIPacket(EnquiryScreenType type, List<TransactionEntry> entries, int remainingBalance) {
+        this.type = type;
         this.entries = entries;
         this.entryCount = entries.size();
+        this.remainingBalance = remainingBalance;
     }
 
     @Override
     public void write(PacketBufferSender packetBufferSender) {
+        packetBufferSender.writeString(type.toString());
+        packetBufferSender.writeInt(remainingBalance);
         packetBufferSender.writeInt(entries.size());
-        for (Entry entry : entries) {
-            packetBufferSender.writeString(entry.station());
-            packetBufferSender.writeLong(entry.fare());
-            packetBufferSender.writeString(entry.date());
-            packetBufferSender.writeInt(entry.balance());
+
+        for (TransactionEntry transactionEntry : entries) {
+            packetBufferSender.writeString(transactionEntry.source);
+            packetBufferSender.writeDouble(transactionEntry.amount);
+            packetBufferSender.writeLong(transactionEntry.time);
         }
     }
 
     @Override
     public void runClient() {
-        ClientHelper.openEnquiryScreen(entries);
+        ClientHelper.openEnquiryScreen(type, entries, remainingBalance);
     }
 }

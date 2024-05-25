@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.data.Entry;
+import com.lx862.jcm.mod.data.TransactionEntry;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.AnimatedScreen;
 import com.lx862.jcm.mod.util.TextCategory;
@@ -12,33 +12,30 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class RVEnquiryScreen extends AnimatedScreen {
-    private final Identifier putCardScreen;
-    private final Identifier balance;
-    private final Identifier font;
-    private final Identifier octopuscard;
-    private final List<Entry> entries;
+    private static final Identifier putCardScreen = new Identifier(Constants.MOD_ID, "textures/enquiry/card.png");
+    private static final Identifier balance = new Identifier(Constants.MOD_ID, "textures/enquiry/transactions.png");
+    private static final Identifier font  = new Identifier(Constants.MOD_ID, "font1");
+    private static final Identifier octopuscard  = new Identifier(Constants.MOD_ID, "textures/enquiry/octopus_card.png");
+    private final List<TransactionEntry> entries;
     private boolean showBalance = false;
-    private final MinecraftClient client = MinecraftClient.getInstance();
+    private long remainingBalance;
 
-    public RVEnquiryScreen(List<Entry> entries) {
+    public RVEnquiryScreen(List<TransactionEntry> entries, int remainingBalance) {
         super(false);
         this.entries = entries;
-
-        this.putCardScreen = new Identifier(Constants.MOD_ID, "textures/enquiry/card.png");
-        this.balance = new Identifier(Constants.MOD_ID, "textures/enquiry/transactions.png");
-        this.font = new Identifier(Constants.MOD_ID, "font1");
-        this.octopuscard = new Identifier(Constants.MOD_ID, "textures/enquiry/octopus_card.png");
+        this.remainingBalance = remainingBalance;
     }
 
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         super.render(graphicsHolder, mouseX, mouseY, tickDelta);
 
-        int screenWidth = this.client.getWindow().getScaledWidth();
-        int screenHeight = this.client.getWindow().getScaledHeight();
+        int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
+        int screenHeight = MinecraftClient.getInstance().getWindow().getScaledHeight();
 
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
 
@@ -89,25 +86,25 @@ public class RVEnquiryScreen extends AnimatedScreen {
             }
 
             if (!entries.isEmpty()) {
-                Entry lastEntry = entries.get(entries.size() - 1);
-                if (lastEntry.balance() >= 0) {
-                    graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("$" + String.valueOf(lastEntry.balance())), font), startX + 270, 20, 0x000000, false, GraphicsHolder.getDefaultLight());
-                } else if (lastEntry.balance() < 0) {
-                    graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("-$" + String.valueOf(Math.abs(lastEntry.balance()))), font), startX + 270, 20, 0x000000, false, GraphicsHolder.getDefaultLight());
+                TransactionEntry lastTransactionEntry = entries.get(entries.size() - 1);
+                if (remainingBalance >= 0) {
+                    graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("$" + String.valueOf(remainingBalance)), font), startX + 270, 20, 0x000000, false, GraphicsHolder.getDefaultLight());
+                } else if (remainingBalance < 0) {
+                    graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("-$" + String.valueOf(Math.abs(remainingBalance))), font), startX + 270, 20, 0x000000, false, GraphicsHolder.getDefaultLight());
                 }
             }
 
-            String lastDate = "";
+            long lastDate = 0;
 
-            for (Entry entry : entries) {
-                if (entry.fare() > 0) {
-                    lastDate = entry.date();
+            for (TransactionEntry transactionEntry : entries) {
+                if (transactionEntry.amount > 0) {
+                    lastDate = transactionEntry.time;
                 }
             }
 
-            if (!lastDate.isEmpty()) {
-                String formattedDate = lastDate.substring(0, 10);
-
+            if (lastDate != 0) {
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+                String formattedDate = formatter.format(lastDate);
                 graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal(formattedDate), font), startX + 305, 145, 0x000000, false, GraphicsHolder.getDefaultLight());
             }
 
@@ -116,12 +113,12 @@ public class RVEnquiryScreen extends AnimatedScreen {
     }
 
     private MutableText getMutableText(int i) {
-        Entry entry = entries.get(i);
+        TransactionEntry transactionEntry = entries.get(i);
         String renderTextString;
-        if (entry.fare() < 0) {
-            renderTextString = String.format("%s     %s     -$%.2f", entry.date(), entry.station(), Math.abs((double) entry.fare()));
+        if (transactionEntry.amount < 0) {
+            renderTextString = String.format("%s     %s     -$%.2f", transactionEntry.time, transactionEntry.source, Math.abs((double) transactionEntry.amount));
         } else {
-            renderTextString = String.format("%s     %s     +$%.2f", entry.date(), entry.station(), (double) entry.fare());
+            renderTextString = String.format("%s     %s     +$%.2f", transactionEntry.time, transactionEntry.source, (double) transactionEntry.amount);
         }
         MutableText renderText = TextUtil.literal(renderTextString);
         return renderText;

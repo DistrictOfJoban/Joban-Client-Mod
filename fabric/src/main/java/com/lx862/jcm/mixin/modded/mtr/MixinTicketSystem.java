@@ -1,14 +1,14 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.block.FareSaverBlock;
-import com.lx862.jcm.mod.data.EnquiryLog;
+import com.lx862.jcm.mod.data.EnquiryLogManager;
+import com.lx862.jcm.mod.data.TransactionEntry;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.core.data.Station;
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.Text;
 import org.mtr.mapping.holder.World;
-import org.mtr.mod.Init;
 import org.mtr.mod.data.TicketSystem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,9 +17,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Mixin(value = TicketSystem.class, remap = false)
 public abstract class MixinTicketSystem {
@@ -50,27 +47,15 @@ public abstract class MixinTicketSystem {
 
     @Inject(method = "onExit", at = @At("TAIL"))
     private static void afterExit(World world, Station station, PlayerEntity player, boolean remindIfNoRecord, CallbackInfoReturnable<Boolean> cir) {
-        String stationName = station.getName();
-
-        LocalDateTime exitDateTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
-        String formattedDateTime = exitDateTime.format(formatter);
-
         if (!world.isClient()) {
-            EnquiryLog enquiryLog = new EnquiryLog(player, player.getUuidAsString(), stationName, -fFare, formattedDateTime, TicketSystem.getBalance(world, player));
+            EnquiryLogManager.writeLog(player, new TransactionEntry(station.getName(), -fFare, System.currentTimeMillis()));
         }
     }
 
     @Inject(method = "addBalance", at = @At("TAIL"))
     private static void addBalance(World world, PlayerEntity player, int amount, CallbackInfo ci) {
-        String stationName = "Ticket Machine";
-
-        LocalDateTime exitDateTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
-        String formattedDateTime = exitDateTime.format(formatter);
-
         if (!world.isClient()) {
-            EnquiryLog enquiryLog = new EnquiryLog(player, player.getUuidAsString(), stationName, amount, formattedDateTime, TicketSystem.getBalance(world, player));
+            EnquiryLogManager.writeLog(player, new TransactionEntry("Add Value", amount, System.currentTimeMillis()));
         }
     }
 }

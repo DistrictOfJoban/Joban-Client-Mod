@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.network.gui;
 
-import com.lx862.jcm.mod.data.Entry;
+import com.lx862.jcm.mod.data.EnquiryScreenType;
+import com.lx862.jcm.mod.data.TransactionEntry;
 import com.lx862.jcm.mod.render.gui.screen.*;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;
@@ -34,11 +35,12 @@ public final class ClientHelper {
 		MinecraftClient.getInstance().openScreen(new Screen(new SubsidyMachineScreen(blockPos, pricePerUse, cooldown)));
 	}
 
-	public static void openEnquiryScreen(List<Entry> entries) {
-		MinecraftClient.getInstance().openScreen(new Screen(new EnquiryScreen(entries)));
-	}
-
-	public static void openRVEnquiryScreen(List<Entry> entries) {
-		MinecraftClient.getInstance().openScreen(new Screen(new RVEnquiryScreen(entries)));
+	public static void openEnquiryScreen(EnquiryScreenType type, List<TransactionEntry> entries, int remainingBalance) {
+		if(type == EnquiryScreenType.RV) {
+			MinecraftClient.getInstance().openScreen(new Screen(new RVEnquiryScreen(entries, remainingBalance)));
+		}
+		if(type == EnquiryScreenType.CLASSIC) {
+			MinecraftClient.getInstance().openScreen(new Screen(new EnquiryScreen(entries, remainingBalance)));
+		}
 	}
 }

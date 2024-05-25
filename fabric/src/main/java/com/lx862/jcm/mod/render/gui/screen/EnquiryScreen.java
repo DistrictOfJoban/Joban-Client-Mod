@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.data.Entry;
+import com.lx862.jcm.mod.data.TransactionEntry;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.AnimatedScreen;
 import com.lx862.jcm.mod.util.TextCategory;
@@ -15,17 +15,16 @@ import org.mtr.mapping.mapper.GuiDrawing;
 import java.util.List;
 
 public class EnquiryScreen extends AnimatedScreen {
-    private final Identifier balance;
-    private final Identifier font;
-    private final List<Entry> entries;
+    private final static Identifier balance = new Identifier(Constants.MOD_ID, "textures/enquiry/transactions_blue.png");
+    private final static Identifier font  = new Identifier(Constants.MOD_ID, "font1");
+    private final List<TransactionEntry> entries;
     private final MinecraftClient client = MinecraftClient.getInstance();
+    private final int remainingBalance;
 
-    public EnquiryScreen(List<Entry> entries) {
+    public EnquiryScreen(List<TransactionEntry> entries, int remainingBalance) {
         super(false);
         this.entries = entries;
-
-        this.balance = new Identifier(Constants.MOD_ID, "textures/enquiry/transactions_blue.png");
-        this.font = new Identifier(Constants.MOD_ID, "font1");
+        this.remainingBalance = remainingBalance;
     }
 
     @Override
@@ -54,48 +53,46 @@ public class EnquiryScreen extends AnimatedScreen {
         graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.points", "0"), font), startX, startY - 10, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
 
         for (int i = entries.size() - 1; i >= 0 && count < 10; i--) {
-            MutableText renderText = getMutableText(i);
+            MutableText renderText = getEntryText(i);
             graphicsHolder.drawText(TextUtil.withFont(renderText, font), startX, renderY, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
             renderY += 10;
             count++;
         }
 
         if (!entries.isEmpty()) {
-            Entry lastEntry = entries.get(entries.size() - 1);
-            if (lastEntry.balance() >= 0) {
-                graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.balance", "$" + String.valueOf(lastEntry.balance())), font), startX, startY - 20, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
-            } else if (lastEntry.balance() < 0) {
-                graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.balance", "-$" + String.valueOf(Math.abs(lastEntry.balance()))), font), startX, startY - 20, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
+            TransactionEntry lastTransactionEntry = entries.get(entries.size() - 1);
+            if (remainingBalance >= 0) {
+                graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.balance", "$" + String.valueOf(remainingBalance)), font), startX, startY - 20, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
+            } else if (remainingBalance < 0) {
+                graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.balance", "-$" + String.valueOf(Math.abs(remainingBalance))), font), startX, startY - 20, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
             }
         }
 
-        String lastDate = "";
+        long lastTransactionTime = 0;
 
-        for (Entry entry : entries) {
-            if (entry.fare() > 0) {
-                lastDate = entry.date();
+        for (TransactionEntry transactionEntry : entries) {
+            if (transactionEntry.amount > 0 && transactionEntry.time > lastTransactionTime) {
+                lastTransactionTime = transactionEntry.time;
             }
         }
 
-        if (!lastDate.isEmpty()) {
-            String formattedDate = lastDate.substring(0, 10);
-
+        if (lastTransactionTime != 0) {
+            String formattedDate = TransactionEntry.formatter.format(lastTransactionTime);
             graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.add_balance", formattedDate), font), startX, startY + 100, 0xFFFFFF, false, GraphicsHolder.getDefaultLight());
         }
 
         graphicsHolder.pop();
     }
 
-    private MutableText getMutableText(int i) {
-        Entry entry = entries.get(i);
-        String renderTextString;
-        if (entry.fare() < 0) {
-            renderTextString = String.format("%s     %s     -$%.2f", entry.date(), entry.station(), Math.abs((double) entry.fare()));
+    private MutableText getEntryText(int i) {
+        TransactionEntry transactionEntry = entries.get(i);
+        String str;
+        if (transactionEntry.amount < 0) {
+            str = String.format("%s     %s     -$%.2f", transactionEntry.getFormattedDate(), transactionEntry.source, Math.abs((double) transactionEntry.amount));
         } else {
-            renderTextString = String.format("%s     %s     +$%.2f", entry.date(), entry.station(), (double) entry.fare());
+            str = String.format("%s     %s     +$%.2f", transactionEntry.getFormattedDate(), transactionEntry.source, (double) transactionEntry.amount);
         }
-        MutableText renderText = TextUtil.literal(renderTextString);
-        return renderText;
+        return TextUtil.literal(str);
     }
 
     @Override

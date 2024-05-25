@@ -3,9 +3,6 @@ package com.lx862.jcm.mod.registry;
 import com.lx862.jcm.mod.network.block.*;
 import com.lx862.jcm.mod.network.gui.*;
 import com.lx862.jcm.mod.util.JCMLogger;
-
-import com.lx862.jcm.mod.network.gui.RVEnquiryUpdateGUIPacket;
-
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.ServerPlayerEntity;
 import org.mtr.mapping.registry.PacketHandler;
@@ -27,7 +24,6 @@ public class Networking {
         registerPacket(PIDSUpdatePacket.class, PIDSUpdatePacket::new);
         registerPacket(SoundLooperUpdatePacket.class, SoundLooperUpdatePacket::new);
         registerPacket(SubsidyMachineUpdatePacket.class, SubsidyMachineUpdatePacket::new);
-        registerPacket(RVEnquiryUpdateGUIPacket.class, RVEnquiryUpdateGUIPacket::new);
         registerPacket(EnquiryUpdateGUIPacket.class, EnquiryUpdateGUIPacket::new);
 
         // GUI Screen
