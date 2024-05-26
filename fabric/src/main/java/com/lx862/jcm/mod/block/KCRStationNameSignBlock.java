@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.block;
 
-import com.lx862.jcm.mod.block.base.VerticallyAttachedDirectionalBlock;
+import com.lx862.jcm.mod.block.base.CeilingAttachedDirectionalBlock;
 import com.lx862.jcm.mod.block.entity.KCRStationNameSignBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.*;
@@ -11,11 +11,11 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public class KCRStationNameSignBlock extends VerticallyAttachedDirectionalBlock implements BlockWithEntity {
+public class KCRStationNameSignBlock extends CeilingAttachedDirectionalBlock implements BlockWithEntity {
     public static final BooleanProperty EXIT_ON_LEFT = BlockProperties.EXIT_ON_LEFT;
     private final boolean stationColored;
     public KCRStationNameSignBlock(BlockSettings settings, boolean stationColored) {
-        super(settings, true, false);
+        super(settings);
         this.stationColored = stationColored;
     }
 

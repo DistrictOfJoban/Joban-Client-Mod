@@ -15,7 +15,7 @@ public class SpotLampBlock extends VerticallyAttachedBlock {
     public static final BooleanProperty LIT = BlockProperties.POWERED;
 
     public SpotLampBlock(BlockSettings settings) {
-        super(settings, true, true);
+        super(settings);
     }
 
     @Override

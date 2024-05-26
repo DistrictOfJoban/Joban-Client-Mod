@@ -1,14 +1,14 @@
 package com.lx862.jcm.mod.block;
 
-import com.lx862.jcm.mod.block.base.VerticallyAttachedDirectionalBlock;
+import com.lx862.jcm.mod.block.base.CeilingAttachedDirectionalBlock;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 
-public class StationCeilingWRLBlock extends VerticallyAttachedDirectionalBlock {
+public class StationCeilingWRLBlock extends CeilingAttachedDirectionalBlock {
 
     public StationCeilingWRLBlock(BlockSettings settings) {
-        super(settings, true, false);
+        super(settings);
     }
 
     @Override

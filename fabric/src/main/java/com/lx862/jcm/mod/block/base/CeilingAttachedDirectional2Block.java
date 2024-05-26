@@ -9,17 +9,17 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public abstract class VerticallyAttachedDirectional2Block extends VerticallyAttachedDirectionalBlock implements HorizontalDoubleBlockBehavior {
+public abstract class CeilingAttachedDirectional2Block extends CeilingAttachedDirectionalBlock implements HorizontalDoubleBlockBehavior {
     public static final int width = 2;
     public static final BooleanProperty IS_LEFT = BlockProperties.HORIZONTAL_IS_LEFT;
 
-    public VerticallyAttachedDirectional2Block(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom) {
-        super(settings, canAttachTop, canAttachBottom);
+    public CeilingAttachedDirectional2Block(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom) {
+        super(settings);
     }
 
     public boolean canPlace(BlockState state, BlockPos pos, ItemPlacementContext ctx) {
         boolean canPlaceHorizontally = HorizontalDoubleBlockBehavior.canBePlaced(ctx);
-        boolean canPlaceVertically = VerticallyAttachedBlock.canPlace(canAttachTop, canAttachBottom, ctx) && VerticallyAttachedBlock.canPlace(canAttachTop, canAttachBottom, pos.offset(BlockUtil.getProperty(state, FACING).rotateYClockwise()), ctx);
+        boolean canPlaceVertically = VerticallyAttachedBlock.canPlace(true, false, ctx) && VerticallyAttachedBlock.canPlace(true, false, pos.offset(BlockUtil.getProperty(state, FACING).rotateYClockwise()), ctx);
         return canPlaceHorizontally && canPlaceVertically;
     }
 

@@ -6,12 +6,12 @@ import org.mtr.mapping.tool.HolderBase;
 
 import java.util.List;
 
-public abstract class VerticallyAttachedDirectionalBlock extends VerticallyAttachedBlock {
+public abstract class CeilingAttachedDirectionalBlock extends CeilingAttachedBlock {
 
     public static final DirectionProperty FACING = BlockProperties.FACING;
 
-    public VerticallyAttachedDirectionalBlock(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom) {
-        super(settings, canAttachTop, canAttachBottom);
+    public CeilingAttachedDirectionalBlock(BlockSettings settings) {
+        super(settings);
     }
 
     @Override

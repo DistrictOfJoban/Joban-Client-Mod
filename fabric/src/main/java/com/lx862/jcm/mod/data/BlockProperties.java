@@ -18,7 +18,7 @@ public interface BlockProperties {
     public static final IntegerProperty LIGHT_LEVEL = IntegerProperty.of("level", 0, 15);
     public static final BooleanProperty POWERED = BooleanProperty.of("powered");
     public static final BooleanProperty IS_SLAB = BooleanProperty.of("is_slab");
-    public static final BooleanProperty TOP = BooleanProperty.of("top");
+    public static final BooleanProperty TOP = BooleanProperty.of("ceiling");
     public static final BooleanProperty EXIT_ON_LEFT = BooleanProperty.of("exit_on_left");
     public static final BooleanProperty POINT_TO_LEFT = BooleanProperty.of("right");
     public static final IntegerProperty BARRIER_FENCE_TYPE = IntegerProperty.of("type", 0, 10);
