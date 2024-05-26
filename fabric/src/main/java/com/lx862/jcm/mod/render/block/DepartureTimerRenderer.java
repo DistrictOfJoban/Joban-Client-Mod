@@ -49,7 +49,7 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
         if (firstArrival == null) return;
 
         boolean arrived = firstArrival.getArrival() <= System.currentTimeMillis();
-        long dwellLeft = firstArrival.getDeparture() - System.currentTimeMillis();
+        long dwellLeft = Math.abs(firstArrival.getDeparture() - System.currentTimeMillis());
         if (!arrived) return;
 
         long seconds = dwellLeft / 1000;
