@@ -57,6 +57,6 @@ public class PIDSManager {
     }
 
     public static void reset() {
-        presetList.entrySet().stream().filter(e -> !e.getValue().builtin).collect(Collectors.toList()).clear();
+        presetList.entrySet().removeIf(e -> !e.getValue().builtin);
     }
 }
