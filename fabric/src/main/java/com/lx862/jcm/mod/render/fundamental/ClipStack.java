@@ -62,7 +62,7 @@ public class ClipStack {
      */
     private static void enableClip(int x, int y, int width, int height) {
         double scale = MinecraftClient.getInstance().getWindow().getScaleFactor();
-        int windowHeight = MinecraftClient.getInstance().getWindow().getHeight();
+        int windowHeight = MinecraftClient.getInstance().getWindow().getFramebufferHeight();
         RenderSystem.enableScissor((int)(x * scale), (int)(windowHeight - (y + height) * scale), (int)(width * scale), (int)(height * scale));
     }
 
