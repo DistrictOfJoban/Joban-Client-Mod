@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.Block;
+import org.mtr.mapping.holder.Property;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.BlockHelper;
 import org.mtr.mapping.registry.BlockRegistryObject;
@@ -50,7 +51,6 @@ public final class Blocks {
             if (isLit) return 15;
             else return 0;
         }).nonOpaque())), ItemGroups.JCM_MAIN);
-
     public static final BlockRegistryObject SUBSIDY_MACHINE = RegistryHelper.registerBlockItem("subsidy_machine", () -> new Block(new SubsidyMachineBlock(BlockHelper.createBlockSettings(false).nonOpaque())), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject SOUND_LOOPER = RegistryHelper.registerBlockItem("sound_looper", () -> new Block(new SoundLooperBlock(BlockHelper.createBlockSettings(false))), ItemGroups.JCM_MAIN);
     public static final BlockRegistryObject STATION_NAME_STANDING = RegistryHelper.registerBlockItem("station_name_standing", () -> new Block(new StationNameStandingBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.JCM_MAIN);

@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
  * See <a href="https://github.com/Noaaan/MythicMetals/blob/1.20/src/main/java/nourl/mythicmetals/mixin/DefaultedRegistryMixin.java">here</a>
  * And <a href="https://github.com/orgs/FabricMC/discussions/2361">https://github.com/orgs/FabricMC/discussions/2361</a>
  */
+
 #if MC_VERSION < "11904"
     @Mixin(DefaultedRegistry.class)
 #else

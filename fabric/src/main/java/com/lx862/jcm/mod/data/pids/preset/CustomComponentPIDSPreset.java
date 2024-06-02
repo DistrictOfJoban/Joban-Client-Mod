@@ -10,6 +10,7 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.data.pids.preset.components.base.TextureComponent;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.util.JCMLogger;
+import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.BlockPos;
@@ -40,7 +41,10 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
         }
         boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
 
-        String componentFile = ResourceManagerHelper.readResource(new Identifier(rootJsonObject.get("file").getAsString()));
+        Identifier componentFileLocation = Identifier.tryParse(rootJsonObject.get("file").getAsString());
+        if(componentFileLocation == null) return null;
+
+        String componentFile = ResourceManagerHelper.readResource(componentFileLocation);
         JsonArray jsonArray = new JsonParser().parse(componentFile).getAsJsonArray();
 
         CustomComponentPIDSPreset preset = new CustomComponentPIDSPreset(id, name, builtin);
@@ -95,5 +99,12 @@ public class CustomComponentPIDSPreset extends PIDSPresetBase {
     @Override
     public boolean isRowHidden(int row) {
         return false;
+    }
+
+    @Override
+    public JsonObject toJson() {
+        JsonObject jsonObject = super.toJson();
+        jsonObject.addProperty("TODO", "TODO");
+        return jsonObject;
     }
 }

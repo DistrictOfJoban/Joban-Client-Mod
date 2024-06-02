@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
+import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.render.GuiHelper;
@@ -9,29 +10,33 @@ import com.lx862.jcm.mod.render.gui.widget.ContentItem;
 import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
 import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
+import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
-import java.util.function.Consumer;
+import java.io.File;
 
-public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiHelper {
+public class EditorSaveScreenExtended extends TitledScreen implements RenderHelper, GuiHelper {
     private static final Identifier PIDS_PREVIEW_BASE = new Identifier("jsblock:textures/gui/pids_preview.png");
     private final TextFieldWidgetExtension searchBox;
+    private final File resourcePackFolder;
     private final ListViewWidget listViewWidget;
-    private final Consumer<String> callback;
-    private final String selectedPreset;
-    public PIDSPresetScreen(String selectedPreset, Consumer<String> callback) {
+    private final PIDSPresetBase newPreset;
+    private final PIDSPresetBase oldPreset;
+    private final Screen previousScreen;
+    public EditorSaveScreenExtended(PIDSPresetBase oldPreset, PIDSPresetBase newPreset, Screen previousScreen) {
         super(false);
-        this.callback = callback;
+        this.resourcePackFolder = new File(org.mtr.mapping.holder.MinecraftClient.getInstance().getRunDirectoryMapped(), "resourcepacks");
         this.listViewWidget = new ListViewWidget();
         this.searchBox = new TextFieldWidgetExtension(0, 0, 0, 22, 60, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "widget.search").getString());
-        this.selectedPreset = selectedPreset;
+        this.newPreset = newPreset;
+        this.oldPreset = oldPreset;
+        this.previousScreen = previousScreen;
     }
 
     @Override
@@ -59,62 +64,67 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
 
     @Override
     public MutableText getScreenTitle() {
-        return TextUtil.translatable(TextCategory.GUI, "pids_preset.title");
+        return TextUtil.translatable(TextCategory.GUI, "pids_preset.pids_editor.title");
     }
 
     @Override
     public MutableText getScreenSubtitle() {
-        return TextUtil.translatable(TextCategory.GUI, "pids_preset.subtitle", selectedPreset);
+        return TextUtil.translatable(TextCategory.GUI, "pids_save.subtitle", newPreset.getId());
     }
 
     public void addConfigEntries() {
-        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.category.builtin"));
-        for(PIDSPresetBase preset : PIDSManager.getBuiltInPresets()) {
-            addPreset(preset);
-        }
-
         if(!PIDSManager.getCustomPresets().isEmpty()) {
-            listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.category.custom"));
-            for(PIDSPresetBase preset : PIDSManager.getCustomPresets()) {
-                addPreset(preset);
+            listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.category.save_edits"));
+            File[] resourcePacks = resourcePackFolder.listFiles();
+            if (resourcePacks != null) {
+                for (File pack : resourcePacks) {
+                    if (pack.isDirectory()) {
+                        File jsonFile = pack.toPath().resolve("assets").resolve(Constants.MOD_ID).resolve("joban_custom_resources.json").toFile();
+                        if (jsonFile.exists()) {
+                            String packName = pack.getName();
+                            addResourcePackListing(packName);
+                        }
+                    }
+                }
             }
+
+            ButtonWidgetExtension exportBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.export"), (btn) -> {
+                openExportScreen();
+            });
+
+            HorizontalWidgetSet widgetSet2 = new HorizontalWidgetSet();
+            widgetSet2.addWidget(new MappedWidget(exportBtn));
+            widgetSet2.setXYSize(0, 0, 100, 20);
+
+            addChild(new ClickableWidget(exportBtn));
+            addChild(new ClickableWidget(widgetSet2));
+
+            ContentItem contentItem2 = new ContentItem(TextUtil.translatable(TextCategory.GUI,"pids_preset.listview.widget.new"), new MappedWidget(widgetSet2), 26);
+
+            listViewWidget.add(contentItem2);
         }
     }
 
-    private void addPreset(PIDSPresetBase preset) {
-        ButtonWidgetExtension selectBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.choose"), (btn) -> {
-            choose(preset.getId());
+    private void openExportScreen() {
+        MinecraftClient.getInstance().openScreen(
+                new Screen(new ExportScreen(oldPreset, newPreset).withPreviousScreen(previousScreen))
+        );
+    }
+
+    private void addResourcePackListing(String packName) {
+        ButtonWidgetExtension saveBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.save"), (btn) -> {
+            JCMResourceManager.updatePresetInResourcePack(oldPreset, newPreset, packName);
+            onClose2();
         });
-
-        ButtonWidgetExtension editBtn = new ButtonWidgetExtension(0, 0, 40, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.edit"), (btn) -> {
-            MinecraftClient.getInstance().openScreen(
-                new Screen(new VisualEditorScreen(preset.getId(), new Screen(this)).withPreviousScreen(new Screen(this)))
-            );
-        });
-
-        if(preset.getId().equals(selectedPreset)) {
-            selectBtn.setMessage2(Text.cast(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.selected")));
-            selectBtn.active = false;
-        }
-
-        if(preset.builtin) {
-            // Can't edit built-in preset
-            editBtn.active = false;
-        }
 
         HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
-        if(!preset.builtin) widgetSet.addWidget(new MappedWidget(editBtn));
-        widgetSet.addWidget(new MappedWidget(selectBtn));
+        widgetSet.addWidget(new MappedWidget(saveBtn));
         widgetSet.setXYSize(0, 0, 100, 20);
 
-        addChild(new ClickableWidget(selectBtn));
-        if(!preset.builtin) addChild(new ClickableWidget(editBtn));
+        addChild(new ClickableWidget(saveBtn));
         addChild(new ClickableWidget(widgetSet));
-        ContentItem contentItem = new ContentItem(TextUtil.literal(preset.getName()), new MappedWidget(widgetSet), 26);
+        ContentItem contentItem = new ContentItem(TextUtil.literal(packName), new MappedWidget(widgetSet), 26);
 
-        contentItem.setIconCallback((guiDrawing, startX, startY, width, height) -> {
-            drawPIDSPreview(preset, guiDrawing, startX, startY, width, height, false);
-        });
         listViewWidget.add(contentItem);
     }
 
@@ -124,7 +134,7 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         // Background
         GuiHelper.drawTexture(guiDrawing, PIDS_PREVIEW_BASE, startX, startY, width, height);
         if(preset == null) return;
-        
+
         GuiHelper.drawTexture(guiDrawing, preset.getBackground(), startX+0.5, startY+offset+0.5, width-1, height-offset-4);
 
         if(!backgroundOnly) {
@@ -140,13 +150,9 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         }
     }
 
-    private void choose(String id) {
-        callback.accept(id);
-        onClose2();
-    }
-
     @Override
-    public boolean isPauseScreen2() {
-        return false;
+    public void onClose2() {
+        JCMResourceManager.reloadResources();
+        super.onClose2();
     }
 }
