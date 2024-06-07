@@ -44,8 +44,6 @@ public abstract class TitledScreen extends AnimatedScreen {
         return super.mouseClicked2(mouseX, mouseY, button);
     }
 
-    public abstract MutableText getScreenTitle();
-    public abstract MutableText getScreenSubtitle();
     public void drawBackground(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         super.renderBackground(graphicsHolder);
     }
@@ -72,4 +70,7 @@ public abstract class TitledScreen extends AnimatedScreen {
         graphicsHolder.drawCenteredText(subtitleText, 0, 0, 0xFFFFFFFF);
         graphicsHolder.pop();
     }
+
+    public abstract MutableText getScreenTitle();
+    public abstract MutableText getScreenSubtitle();
 }

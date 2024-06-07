@@ -1,7 +1,7 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.block.FareSaverBlock;
-import com.lx862.jcm.mod.data.EnquiryLogManager;
+import com.lx862.jcm.mod.data.TransactionLog;
 import com.lx862.jcm.mod.data.TransactionEntry;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -48,14 +48,14 @@ public abstract class MixinTicketSystem {
     @Inject(method = "onExit", at = @At("TAIL"))
     private static void afterExit(World world, Station station, PlayerEntity player, boolean remindIfNoRecord, CallbackInfoReturnable<Boolean> cir) {
         if (!world.isClient()) {
-            EnquiryLogManager.writeLog(player, new TransactionEntry(station.getName(), -fFare, System.currentTimeMillis()));
+            TransactionLog.writeLog(player, new TransactionEntry(station.getName(), -fFare, System.currentTimeMillis()));
         }
     }
 
     @Inject(method = "addBalance", at = @At("TAIL"))
     private static void addBalance(World world, PlayerEntity player, int amount, CallbackInfo ci) {
         if (!world.isClient()) {
-            EnquiryLogManager.writeLog(player, new TransactionEntry("Add Value", amount, System.currentTimeMillis()));
+            TransactionLog.writeLog(player, new TransactionEntry("Add Value", amount, System.currentTimeMillis()));
         }
     }
 }

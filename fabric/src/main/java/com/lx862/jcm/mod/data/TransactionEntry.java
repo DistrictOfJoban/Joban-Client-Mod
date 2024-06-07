@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import java.text.SimpleDateFormat;
 
 public class TransactionEntry {
-    public static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+    public static final SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
     public final String source;
     public final long time;
     public final long amount;

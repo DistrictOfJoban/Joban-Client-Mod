@@ -13,8 +13,8 @@ import java.util.List;
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.WorldSavePath;
 
-public class EnquiryLogManager {
-    public static final int MAX_ENTRY_LIMIT = 10;
+public class TransactionLog {
+    public static final int MAX_ENTRY_LIMIT = 50;
 
     public static void writeLog(PlayerEntity player, TransactionEntry entry) {
         Path savePath = getSavePath(player);

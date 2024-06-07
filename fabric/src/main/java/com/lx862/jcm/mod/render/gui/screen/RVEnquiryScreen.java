@@ -11,6 +11,7 @@ import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
+import org.mtr.mod.data.IGui;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -69,18 +70,20 @@ public class RVEnquiryScreen extends AnimatedScreen {
             graphicsHolder.push();
             graphicsHolder.scale((float)(double)getWidthMapped() / baseWidth, (float)(double)getWidthMapped() / baseWidth, (float)(double)getWidthMapped() / baseWidth);
 
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.balance"), font), startX, 20, 0x000000, false, GraphicsHolder.getDefaultLight());
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("Octopus"), font), startX + 305, 75, 0x000000, false, GraphicsHolder.getDefaultLight());
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.processor"), font), startX + 305, 85, 0x000000, false, GraphicsHolder.getDefaultLight());
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("849009"), font), startX + 305, 95, 0x000000, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.balance"), font), startX, 20, 0, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("Octopus"), font), startX + 305, 75, 0, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.processor"), font), startX + 305, 85, 0, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal("849009"), font), startX + 305, 95, 0, false, GraphicsHolder.getDefaultLight());
 
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.last.a"), font), startX + 305, 115, 0x000000, false, GraphicsHolder.getDefaultLight());
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.last.b"), font), startX + 305, 125, 0x000000, false, GraphicsHolder.getDefaultLight());
-            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.last.c"), font), startX + 305, 135, 0x000000, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.last.a"), font), startX + 305, 115, 0, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.last.b"), font), startX + 305, 125, 0, false, GraphicsHolder.getDefaultLight());
+            graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.last.c"), font), startX + 305, 135, 0, false, GraphicsHolder.getDefaultLight());
 
-            for (int i = entries.size() - 1; i >= 0 && count < 10; i--) {
-                MutableText renderText = getMutableText(i);
-                graphicsHolder.drawText(TextUtil.withFont(renderText, font), startX, renderY, 0x000000, false, GraphicsHolder.getDefaultLight());
+            for (int i = 0; i < 10; i++) {
+                MutableText renderText = getEntryText(i);
+                if(renderText == null) continue;
+
+                graphicsHolder.drawText(TextUtil.withFont(renderText, font), startX, renderY, 0, false, GraphicsHolder.getDefaultLight());
                 renderY += 10;
                 count++;
             }
@@ -103,7 +106,7 @@ public class RVEnquiryScreen extends AnimatedScreen {
             }
 
             if (lastDate != 0) {
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
                 String formattedDate = formatter.format(lastDate);
                 graphicsHolder.drawText(TextUtil.withFont(TextUtil.literal(formattedDate), font), startX + 305, 145, 0x000000, false, GraphicsHolder.getDefaultLight());
             }
@@ -112,13 +115,14 @@ public class RVEnquiryScreen extends AnimatedScreen {
         }
     }
 
-    private MutableText getMutableText(int i) {
+    private MutableText getEntryText(int i) {
+        if(i >= entries.size()) return null;
         TransactionEntry transactionEntry = entries.get(i);
         String renderTextString;
         if (transactionEntry.amount < 0) {
-            renderTextString = String.format("%s     %s     -$%.2f", transactionEntry.time, transactionEntry.source, Math.abs((double) transactionEntry.amount));
+            renderTextString = String.format("%s     %s     -$%.2f", transactionEntry.getFormattedDate(), IGui.formatStationName(transactionEntry.source), Math.abs((double) transactionEntry.amount));
         } else {
-            renderTextString = String.format("%s     %s     +$%.2f", transactionEntry.time, transactionEntry.source, (double) transactionEntry.amount);
+            renderTextString = String.format("%s     %s     +$%.2f", transactionEntry.getFormattedDate(), IGui.formatStationName(transactionEntry.source), (double) transactionEntry.amount);
         }
         MutableText renderText = TextUtil.literal(renderTextString);
         return renderText;
