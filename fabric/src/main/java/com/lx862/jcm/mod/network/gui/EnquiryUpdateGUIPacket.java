@@ -9,6 +9,7 @@ import org.mtr.mapping.tool.PacketBufferSender;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class EnquiryUpdateGUIPacket extends PacketHandler {
 
@@ -33,7 +34,7 @@ public class EnquiryUpdateGUIPacket extends PacketHandler {
 
     public EnquiryUpdateGUIPacket(EnquiryScreenType type, List<TransactionEntry> entries, int remainingBalance) {
         this.type = type;
-        this.entries = entries.stream().sorted((a, b) -> (int)(b.time - a.time)).toList();
+        this.entries = entries.stream().sorted((a, b) -> (int)(b.time - a.time)).collect(Collectors.toList());
         this.entryCount = entries.size();
         this.remainingBalance = remainingBalance;
     }
