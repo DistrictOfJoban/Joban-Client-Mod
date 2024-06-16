@@ -5,7 +5,7 @@ import org.mtr.mapping.holder.*;
 
 public class StaticSignalLightBlockGreen extends StaticSignalLightBlock {
     public StaticSignalLightBlockGreen(BlockSettings settings) {
-        super(settings);
+        super(settings, 2, 14);
     }
     @Override
     public StaticSignalLightBlockEntity.SignalType getSignalType() {

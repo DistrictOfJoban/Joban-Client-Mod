@@ -46,7 +46,7 @@ public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEn
             platforms = new LongImmutableList(closestPlatforms);
         }
 
-        ObjectArrayList<ArrivalResponse> arrivals = ArrivalsCacheClient.INSTANCE.requestArrivals(world, platforms);
+        ObjectArrayList<ArrivalResponse> arrivals = ArrivalsCacheClient.INSTANCE.requestArrivals(platforms);
 
         graphicsHolder.push();
         graphicsHolder.translate(0.5, 0.5, 0.5);

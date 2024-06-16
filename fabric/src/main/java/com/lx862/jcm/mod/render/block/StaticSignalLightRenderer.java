@@ -5,8 +5,11 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
+import org.mtr.mapping.mapper.DirectionHelper;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.Init;
+import org.mtr.mod.block.BlockSignalBase;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mod.client.IDrawing;
 import org.mtr.mod.render.MoreRenderLayers;
 import org.mtr.mod.render.RenderTrains;
@@ -28,11 +31,13 @@ public class StaticSignalLightRenderer<T extends BlockEntityExtension> extends J
                 return;
             }
 
+            final float angle = facing.asRotation() + (IBlock.getStatePropertySafe(state, BlockSignalBase.IS_22_5).booleanValue ? 22.5F : 0) + (IBlock.getStatePropertySafe(state, BlockSignalBase.IS_45).booleanValue ? 45 : 0);
+
             graphicsHolder.push();
             graphicsHolder.translate(0.5, 0, 0.5);
 
             graphicsHolder.push();
-            graphicsHolder.rotateYDegrees(-facing.asRotation());
+            graphicsHolder.rotateYDegrees(-angle);
             graphicsHolder.createVertexConsumer(MoreRenderLayers.getLight(new Identifier(Init.MOD_ID, "textures/block/white.png"), false));
             drawSignalLight(graphicsHolder, entity, tickDelta, facing);
             graphicsHolder.pop();

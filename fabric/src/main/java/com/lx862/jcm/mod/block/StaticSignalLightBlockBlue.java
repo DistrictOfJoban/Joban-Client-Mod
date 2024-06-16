@@ -5,7 +5,7 @@ import org.mtr.mapping.holder.BlockSettings;
 
 public class StaticSignalLightBlockBlue extends StaticSignalLightBlock {
     public StaticSignalLightBlockBlue(BlockSettings settings) {
-        super(settings);
+        super(settings, 2, 14);
     }
 
     @Override

@@ -44,7 +44,7 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
         Platform closestPlatform = !closestPlatforms.isEmpty() ? closestPlatforms.get(0) : null;
         if (closestPlatform == null) return;
 
-        ObjectArrayList<ArrivalResponse> arrivals = ArrivalsCacheClient.INSTANCE.requestArrivals(world, LongImmutableList.of(closestPlatform.getId()));
+        ObjectArrayList<ArrivalResponse> arrivals = ArrivalsCacheClient.INSTANCE.requestArrivals(LongImmutableList.of(closestPlatform.getId()));
         ArrivalResponse firstArrival = Utilities.getElement(arrivals, 0);
         if (firstArrival == null) return;
 
