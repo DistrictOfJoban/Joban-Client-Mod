@@ -8,7 +8,7 @@ import org.mtr.mapping.holder.*;
 public class StationCeilingWRLBlock extends CeilingAttachedDirectionalBlock {
 
     public StationCeilingWRLBlock(BlockSettings settings) {
-        super(settings);
+        super(settings, false);
     }
 
     @Override
@@ -16,10 +16,5 @@ public class StationCeilingWRLBlock extends CeilingAttachedDirectionalBlock {
         VoxelShape ceiling = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0.5, 8, 1, 15.5, 9, 15);
         VoxelShape pole = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 7.5, 9, 7.5, 8.5, 16, 8.5);
         return VoxelShapes.union(ceiling, pole);
-    }
-
-    @Override
-    protected boolean shouldBreakOnBlockUpdate() {
-        return false;
     }
 }

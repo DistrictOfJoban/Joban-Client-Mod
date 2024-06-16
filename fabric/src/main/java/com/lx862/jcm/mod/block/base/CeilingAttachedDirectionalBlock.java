@@ -10,8 +10,8 @@ public abstract class CeilingAttachedDirectionalBlock extends CeilingAttachedBlo
 
     public static final DirectionProperty FACING = BlockProperties.FACING;
 
-    public CeilingAttachedDirectionalBlock(BlockSettings settings) {
-        super(settings);
+    public CeilingAttachedDirectionalBlock(BlockSettings settings, boolean enforceLogicalPattern) {
+        super(settings, enforceLogicalPattern);
     }
 
     @Override

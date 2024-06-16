@@ -13,14 +13,14 @@ public abstract class CeilingAttachedDirectional2Block extends CeilingAttachedDi
     public static final int width = 2;
     public static final BooleanProperty IS_LEFT = BlockProperties.HORIZONTAL_IS_LEFT;
 
-    public CeilingAttachedDirectional2Block(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom) {
-        super(settings);
+    public CeilingAttachedDirectional2Block(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom, boolean enforceLogicalPattern) {
+        super(settings, enforceLogicalPattern);
     }
 
     public boolean canPlace(BlockState state, BlockPos pos, ItemPlacementContext ctx) {
         boolean canPlaceHorizontally = HorizontalDoubleBlockBehavior.canBePlaced(ctx);
         boolean canPlaceVertically = VerticallyAttachedBlock.canPlace(true, false, ctx) && VerticallyAttachedBlock.canPlace(true, false, pos.offset(BlockUtil.getProperty(state, FACING).rotateYClockwise()), ctx);
-        return canPlaceHorizontally && canPlaceVertically;
+        return canPlaceHorizontally && (this.enforceLogicalPattern && canPlaceVertically);
     }
 
     @Override

@@ -15,7 +15,7 @@ public class KCRStationNameSignBlock extends CeilingAttachedDirectionalBlock imp
     public static final BooleanProperty EXIT_ON_LEFT = BlockProperties.EXIT_ON_LEFT;
     private final boolean stationColored;
     public KCRStationNameSignBlock(BlockSettings settings, boolean stationColored) {
-        super(settings);
+        super(settings, true);
         this.stationColored = stationColored;
     }
 

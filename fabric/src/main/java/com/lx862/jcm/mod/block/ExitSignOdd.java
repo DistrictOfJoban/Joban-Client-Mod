@@ -8,7 +8,7 @@ import org.mtr.mapping.holder.*;
 public class ExitSignOdd extends CeilingAttachedDirectionalBlock {
 
     public ExitSignOdd(BlockSettings settings) {
-        super(settings);
+        super(settings, true);
     }
 
     @Override
