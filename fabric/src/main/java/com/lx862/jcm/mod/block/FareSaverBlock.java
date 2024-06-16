@@ -36,7 +36,7 @@ public class FareSaverBlock extends Vertical3Block implements BlockWithEntity {
         int discount = be.getDiscount();
 
         if (JCMUtil.playerHoldingBrush(player)) {
-            Networking.sendPacketToClient(player, new FareSaverGUIPacket(pos, be.getCurrency(), discount));
+            Networking.sendPacketToClient(player, new FareSaverGUIPacket(pos, be.getPrefix(), discount));
             return;
         }
 

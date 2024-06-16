@@ -94,7 +94,7 @@
   "gui.jsblock.config.reset": "重置設定",
   "gui.jsblock.config.save": "儲存設定",
   "gui.jsblock.config.version": "版本 %s",
-  "gui.jsblock.faresaver.currency": "貨幣",
+  "gui.jsblock.faresaver.prefix": "貨幣",
   "gui.jsblock.faresaver.discount": "優惠",
   "gui.jsblock.pids.listview.title.filtered_platform": "正在顯示 %s號月台的到達班次",
   "gui.jsblock.pids.listview.title.filtered_platform.nearby": "正在顯示最近的月台的到達班次",

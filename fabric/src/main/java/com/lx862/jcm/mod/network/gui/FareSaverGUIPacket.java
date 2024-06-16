@@ -7,30 +7,30 @@ import org.mtr.mapping.tool.PacketBufferSender;
 
 public class FareSaverGUIPacket extends PacketHandler {
     private final BlockPos blockPos;
-    private final String currency;
+    private final String prefix;
     private final int discount;
 
     public FareSaverGUIPacket(PacketBufferReceiver packetBufferReceiver) {
         this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());
-        this.currency = packetBufferReceiver.readString();
+        this.prefix = packetBufferReceiver.readString();
         this.discount = packetBufferReceiver.readInt();
     }
 
-    public FareSaverGUIPacket(BlockPos blockPos, String currency, int discount) {
+    public FareSaverGUIPacket(BlockPos blockPos, String prefix, int discount) {
         this.blockPos = blockPos;
-        this.currency = currency;
+        this.prefix = prefix;
         this.discount = discount;
     }
 
     @Override
     public void write(PacketBufferSender packetBufferSender) {
         packetBufferSender.writeLong(blockPos.asLong());
-        packetBufferSender.writeString(currency);
+        packetBufferSender.writeString(prefix);
         packetBufferSender.writeInt(discount);
     }
 
     @Override
     public void runClient() {
-        ClientHelper.openFareSaverGUIScreen(blockPos, currency, discount);
+        ClientHelper.openFareSaverGUIScreen(blockPos, prefix, discount);
     }
 }

@@ -94,7 +94,7 @@
   "gui.jsblock.config.reset": "Reset config",
   "gui.jsblock.config.save": "Save config",
   "gui.jsblock.config.version": "Version %s",
-  "gui.jsblock.faresaver.currency": "Currency",
+  "gui.jsblock.faresaver.prefix": "Prefix",
   "gui.jsblock.faresaver.discount": "Discount amount",
   "gui.jsblock.pids.listview.title.filtered_platform": "Showing arrivals for Platform %s",
   "gui.jsblock.pids.listview.title.filtered_platform.nearby": "Showing arrivals for nearby Platforms",

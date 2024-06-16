@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.registry.BlockEntities;
 import org.mtr.mapping.holder.*;
 
 public class FareSaverBlockEntity extends JCMBlockEntityBase {
-    private String currency = "$";
+    private String prefix = "$";
     private int discount = 2;
     public FareSaverBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(BlockEntities.FARE_SAVER.get(), blockPos, blockState);
@@ -14,18 +14,18 @@ public class FareSaverBlockEntity extends JCMBlockEntityBase {
     public void readCompoundTag(CompoundTag compoundTag) {
         super.readCompoundTag(compoundTag);
         this.discount = compoundTag.getInt("discount");
-        this.currency = compoundTag.contains("currency") ? compoundTag.getString("currency") : "$";
+        this.prefix = compoundTag.contains("currency") ? compoundTag.getString("currency") : "$";
     }
 
     @Override
     public void writeCompoundTag(CompoundTag compoundTag) {
         super.writeCompoundTag(compoundTag);
         compoundTag.putInt("discount", discount);
-        compoundTag.putString("currency", currency);
+        compoundTag.putString("prefix", prefix);
     }
 
-    public void setData(String currency, int discount) {
-        this.currency = currency;
+    public void setData(String prefix, int discount) {
+        this.prefix = prefix;
         this.discount = discount;
         this.markDirty2();
     }
@@ -34,7 +34,7 @@ public class FareSaverBlockEntity extends JCMBlockEntityBase {
         return discount;
     }
 
-    public String getCurrency() {
-        return currency;
+    public String getPrefix() {
+        return prefix;
     }
 }

@@ -11,8 +11,8 @@ public final class ClientHelper {
 		MinecraftClient.getInstance().openScreen(new Screen(new ButterflyLightScreen(blockPos, secondsToBlink)));
 	}
 
-	public static void openFareSaverGUIScreen(BlockPos blockPos, String currency, int discount) {
-		MinecraftClient.getInstance().openScreen(new Screen(new FareSaverScreen(blockPos, currency, discount)));
+	public static void openFareSaverGUIScreen(BlockPos blockPos, String prefix, int discount) {
+		MinecraftClient.getInstance().openScreen(new Screen(new FareSaverScreen(blockPos, prefix, discount)));
 	}
 
 	public static void openPIDSGUIScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId) {

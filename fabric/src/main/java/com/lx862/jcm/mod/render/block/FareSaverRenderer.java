@@ -23,7 +23,7 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
         Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
         if(BlockUtil.getProperty(state, new Property<>(BlockProperties.VERTICAL_PART_3.data)) != IBlock.EnumThird.UPPER) return;
 
-        MutableText discountText = TextUtil.literal(be.getCurrency() + be.getDiscount());
+        MutableText discountText = TextUtil.literal(be.getPrefix() + be.getDiscount());
 
         graphicsHolder.push();
         graphicsHolder.translate(0.5, 0.5, 0.5);
