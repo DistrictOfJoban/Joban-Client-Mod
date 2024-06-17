@@ -13,8 +13,8 @@ public final class BlockEntityRenderers {
         RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.FARE_SAVER, FareSaverRenderer::new);
         RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.KCR_STATION_NAME_SIGN, KCRStationNameSignRenderer::new);
         RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.KCR_STATION_NAME_SIGN_STATION_COLOR, KCRStationNameSignRenderer::new);
-        RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_INVERTED_RED_ABOVE, (dispatcher) -> new SignalBlockInvertedRenderer<>(dispatcher, 0xFF0000FF, true, true));
-        RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_INVERTED_RED_BELOW, (dispatcher) -> new SignalBlockInvertedRenderer<>(dispatcher, 0xFF00FF00, true, false));
+        RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_INVERTED_RED_ABOVE, (dispatcher) -> new SignalBlockInvertedRenderer<>(dispatcher, 0xFF0000FF, true));
+        RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_INVERTED_RED_BELOW, (dispatcher) -> new SignalBlockInvertedRenderer<>(dispatcher, 0xFF00FF00, false));
         RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_RED_BELOW, (dispatcher) -> new StaticSignalLightRenderer(dispatcher, 0xFFFF0000, false));
         RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_RED_TOP, (dispatcher) -> new StaticSignalLightRenderer(dispatcher, 0xFFFF0000, true));
         RegistryHelperClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_BLUE, (dispatcher) -> new StaticSignalLightRenderer(dispatcher, 0xFF0000FF, true));
