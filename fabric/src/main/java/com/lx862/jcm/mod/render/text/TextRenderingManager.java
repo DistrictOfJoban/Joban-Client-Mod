@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.render.text;
 
-import com.lx862.jcm.mod.config.ConfigEntry;
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.font.FontManager;
 import org.mtr.mapping.holder.Direction;
@@ -18,7 +18,7 @@ public class TextRenderingManager implements RenderHelper {
      * Nothing will be performed if fallback mode is enabled / using {@link VanillaTextRenderer}
      */
     public static void initialize() {
-        if(ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+        if(JCMClient.getConfig().useNewTextRenderer) {
             FontManager.initialize();
             TextureTextRenderer.initialize();
         } else if(TextureTextRenderer.initialized()) {
@@ -31,7 +31,7 @@ public class TextRenderingManager implements RenderHelper {
      * Nothing will be performed if fallback mode is enabled / using {@link VanillaTextRenderer}
      */
     public static void bind(GraphicsHolder graphicsHolder) {
-        if(ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+        if(JCMClient.getConfig().useNewTextRenderer) {
             TextureTextRenderer.bindTexture(graphicsHolder);
         }
     }
@@ -47,7 +47,7 @@ public class TextRenderingManager implements RenderHelper {
     private static void drawInternal(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, TextInfo text, Direction facing, double x, double y) {
         if(text.getContent().isEmpty()) return;
 
-        if(!ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+        if(!JCMClient.getConfig().useNewTextRenderer) {
             VanillaTextRenderer.draw(graphicsHolder, text, x, y);
         } else {
             if(guiDrawing != null) {
@@ -59,7 +59,7 @@ public class TextRenderingManager implements RenderHelper {
     }
 
     public static int getTextWidth(TextInfo text) {
-        if(!ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+        if(!JCMClient.getConfig().useNewTextRenderer) {
             return VanillaTextRenderer.getTextWidth(text);
         } else {
             return TextureTextRenderer.getPhysicalWidth(text);

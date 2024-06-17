@@ -9,11 +9,11 @@ import org.mtr.mod.InitClient;
 
 import java.util.function.Function;
 
-public class RegistryHelperClient {
-    public static final RegistryClient REGISTRY_CLIENT = new RegistryClient(RegistryHelper.REGISTRY);
+public class JCMRegistryClient {
+    public static final RegistryClient REGISTRY_CLIENT = new RegistryClient(JCMRegistry.REGISTRY);
 
     public static void setupPacketClient() {
-        REGISTRY_CLIENT.setupPackets(new Identifier(Constants.MOD_ID, "packet"));
+        REGISTRY_CLIENT.setupPackets(Constants.id("packet"));
     }
 
     public static <T extends BlockEntityTypeRegistryObject<U>, U extends BlockEntityExtension> void registerBlockEntityRenderer(T blockEntityType, Function<BlockEntityRenderer.Argument, BlockEntityRenderer<U>> rendererInstance) {

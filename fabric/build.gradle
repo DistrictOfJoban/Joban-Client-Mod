@@ -3,9 +3,7 @@ plugins {
 }
 
 loom {
-    runConfigs.configureEach {
-        ideConfigGenerated = true
-    }
+    runConfigs.configureEach { ideConfigGenerated = true }
 }
 
 repositories {

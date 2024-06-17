@@ -8,6 +8,7 @@ import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -31,16 +32,10 @@ public class KCRStationNameSignBlock extends CeilingAttachedDirectionalBlock imp
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        super.onUse2(state, world, pos, player, hand, hit);
-        return getBrushActionResult(player);
-    }
-
-    @Override
-    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(JCMUtil.playerHoldingBrush(player)) {
+        return IBlock.checkHoldingBrush(world, player, () -> {
             world.setBlockState(pos, state.cycle(new Property<>(EXIT_ON_LEFT.data)));
             player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "kcr_name_sign.success")), true);
-        }
+        });
     }
 
     @Override

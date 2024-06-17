@@ -22,8 +22,9 @@ public class AutoIronDoorBlockEntity extends JCMBlockEntityBase {
 
         if(world != null && !world.isClient() && JCMServerStats.getGameTick() % 5 == 0) {
             BlockPos pos = getPos2();
-            BlockState state = BlockUtil.getBlockState(world, getPos2());
+            BlockState state = world.getBlockState(pos);
             if(state == null) return;
+
             Box box = new Box(pos.getX() - DETECT_RADIUS, pos.getY() - DETECT_RADIUS, pos.getZ() - DETECT_RADIUS, pos.getX() + DETECT_RADIUS, pos.getY() + DETECT_RADIUS, pos.getZ() + DETECT_RADIUS);
             AtomicBoolean haveNearbyPlayer = new AtomicBoolean(false);
 
@@ -32,8 +33,8 @@ public class AutoIronDoorBlockEntity extends JCMBlockEntityBase {
                     boolean alreadyOpened = BlockUtil.getProperty(state, new Property<>(DoorBlockAbstractMapping.getOpenMapped().data));
 
                     if(!alreadyOpened) {
-                        world.playSound((PlayerEntity) null, getPos2(), SoundHelper.createSoundEvent(new Identifier("minecraft:block.iron_door.open")), SoundCategory.BLOCKS, 1, 1);
-                        world.setBlockState(getPos2(), state.with(new Property<>(DoorBlockAbstractMapping.getOpenMapped().data), true));
+                        world.playSound((PlayerEntity) null, pos, SoundHelper.createSoundEvent(new Identifier("minecraft:block.iron_door.open")), SoundCategory.BLOCKS, 1, 1);
+                        world.setBlockState(pos, state.with(new Property<>(DoorBlockAbstractMapping.getOpenMapped().data), true));
                     }
                     haveNearbyPlayer.set(true);
                 }

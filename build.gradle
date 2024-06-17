@@ -13,7 +13,6 @@ subprojects {
 	}
 
 	repositories {
-		mavenCentral()
 		flatDir { dirs "../libs" }
 		maven { url "https://jitpack.io" }
 	}

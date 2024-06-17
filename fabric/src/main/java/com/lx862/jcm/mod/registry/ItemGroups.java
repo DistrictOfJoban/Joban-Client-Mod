@@ -7,13 +7,13 @@ import org.mtr.mapping.holder.ItemStack;
 import org.mtr.mapping.registry.CreativeModeTabHolder;
 
 public class ItemGroups {
-    public static final CreativeModeTabHolder JCM_MAIN = RegistryHelper.REGISTRY.createCreativeModeTabHolder(
-            new Identifier(Constants.MOD_ID, "main"),
+    public static final CreativeModeTabHolder JCM_MAIN = JCMRegistry.REGISTRY.createCreativeModeTabHolder(
+            Constants.id("main"),
             () -> new ItemStack(new ItemConvertible(Blocks.MTR_STAIRS.get().data))
     );
 
-    public static final CreativeModeTabHolder JCM_CEILING = RegistryHelper.REGISTRY.createCreativeModeTabHolder(
-            new Identifier(Constants.MOD_ID, "ceiling"),
+    public static final CreativeModeTabHolder JCM_CEILING = JCMRegistry.REGISTRY.createCreativeModeTabHolder(
+            Constants.id("ceiling"),
             () -> new ItemStack(new ItemConvertible(Blocks.STATION_CEILING_WRL.get().data))
     );
 }

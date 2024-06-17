@@ -8,21 +8,20 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
-import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.core.tool.Utilities;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.InitClient;
-import org.mtr.mod.data.ArrivalsCache;
 import org.mtr.mod.data.ArrivalsCacheClient;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ButterflyLightRenderer extends JCMBlockEntityRenderer<ButterflyLightBlockEntity> {
-    private static final Identifier BUTTERFLY_LIGHT_TEXTURE = new Identifier(Constants.MOD_ID, "textures/block/butterfly_light_dotmatrix.png");
+    private static final Identifier BUTTERFLY_LIGHT_TEXTURE = Constants.id("textures/block/butterfly_light_dotmatrix.png");
+
     public ButterflyLightRenderer(Argument dispatcher) {
         super(dispatcher);
     }

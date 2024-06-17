@@ -25,33 +25,30 @@ public class FareSaverBlock extends Vertical3Block implements BlockWithEntity {
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        super.onUse2(state, world, pos, player, hand, hit);
-        return ActionResult.SUCCESS;
-    }
+        if(world.isClient()) return ActionResult.SUCCESS;
 
-    @Override
-    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         UUID playerUuid = player.getUuid();
         FareSaverBlockEntity be = (FareSaverBlockEntity)world.getBlockEntity(pos).data;
         int discount = be.getDiscount();
 
         if (JCMUtil.playerHoldingBrush(player)) {
             Networking.sendPacketToClient(player, new FareSaverGUIPacket(pos, be.getPrefix(), discount));
-            return;
+            return ActionResult.SUCCESS;
         }
 
         if(discountList.containsKey(playerUuid)) {
             player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "faresaver.fail", discountList.get(playerUuid))), true);
-            return;
-        }
-
-        discountList.put(playerUuid, discount);
-
-        if(discount > 0) {
-            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "faresaver.success", discount)), true);
         } else {
-            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "faresaver.success.sarcasm", discount)), true);
+            discountList.put(playerUuid, discount);
+
+            if(discount > 0) {
+                player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "faresaver.success", discount)), true);
+            } else {
+                player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "faresaver.success.sarcasm", discount)), true);
+            }
         }
+
+        return ActionResult.SUCCESS;
     }
 
     @Override

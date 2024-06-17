@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.data.pids.preset.components.base;
 
-import com.lx862.jcm.mod.config.ConfigEntry;
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.render.RenderHelper;
@@ -57,7 +57,7 @@ public abstract class TextComponent extends PIDSComponent {
         }
 
         if(guiDrawing != null) {
-            if(ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+            if(JCMClient.getConfig().useNewTextRenderer) {
                 TextRenderingManager.draw(graphicsHolder, guiDrawing, finalText, x, y); //HACK: GuiDrawing does not obey graphicsholder.translate
             } else {
                 TextRenderingManager.draw(graphicsHolder, guiDrawing, finalText, 0, 0);

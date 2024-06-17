@@ -59,11 +59,6 @@ public class BlockUtil {
         return state.contains(property) ? state.get(property) : new ArrayList<>(property.getValues()).get(0);
     }
 
-    public static <T extends Comparable<T>> BlockState withProperty(BlockState state, Property<T> property, T value) {
-        if(state == null) return null;
-        return state.with(property, value);
-    }
-
     /**
      * Get block entity in world, but will return null if chunk is not loaded (And will not attempt to load the chunk).
      */

@@ -43,22 +43,15 @@ public class LightBlock extends JCMBlock {
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        super.onUse2(state, world, pos, player, hand, hit);
+        if(world.isClient()) return ActionResult.SUCCESS;
 
-        if(player.isHolding(this.asItem2())) {
-            return ActionResult.SUCCESS;
-        } else {
-            return ActionResult.FAIL;
-        }
-    }
-
-    @Override
-    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if(player.isHolding(this.asItem2())) {
             BlockState newState = state.cycle(new Property<>(LIGHT_LEVEL.data));
             world.setBlockState(pos, newState);
-
             player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "light_block.success", BlockUtil.getProperty(newState, new Property<>(LIGHT_LEVEL.data)))), true);
+            return ActionResult.SUCCESS;
+        } else {
+            return ActionResult.FAIL;
         }
     }
 

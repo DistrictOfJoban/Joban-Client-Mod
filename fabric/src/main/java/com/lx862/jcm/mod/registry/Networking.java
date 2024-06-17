@@ -16,7 +16,7 @@ public class Networking {
     private static final List<String> registeredPackets = new ArrayList<>();
     public static void register() {
         JCMLogger.debug("Registering network packets...");
-        RegistryHelper.setupPacket();
+        JCMRegistry.setupPacket();
 
         // Block Entity Update
         registerPacket(ButterflyLightUpdatePacket.class, ButterflyLightUpdatePacket::new);
@@ -34,14 +34,14 @@ public class Networking {
     }
 
     public static void registerClient() {
-        RegistryHelperClient.setupPacketClient();
+        JCMRegistryClient.setupPacketClient();
     }
 
     private static <T extends PacketHandler> void registerPacket(Class<T> classObject, Function<PacketBufferReceiver, T> getInstance) {
         // Keep track of the registered packets, so we can warn if we try to send a non-registered packet
         // I believe Minecraft Mapping itself already keeps track of the registered packets, it just doesn't warn
         registeredPackets.add(classObject.getName());
-        RegistryHelper.registerPacket(classObject, getInstance);
+        JCMRegistry.registerPacket(classObject, getInstance);
     }
 
     public static <T extends PacketHandler> void sendPacketToServer(T data) {
@@ -49,7 +49,7 @@ public class Networking {
             JCMLogger.warn("Non-registered packets is sent: " + data.getClass().getName());
             JCMLogger.warn("Consider registering in method: mod/registry/Networking.register()");
         }
-        RegistryHelperClient.REGISTRY_CLIENT.sendPacketToServer(data);
+        JCMRegistryClient.REGISTRY_CLIENT.sendPacketToServer(data);
     }
 
     public static <T extends PacketHandler> void sendPacketToClient(PlayerEntity player, T data) {
@@ -57,6 +57,6 @@ public class Networking {
             JCMLogger.warn("Non-registered packets is sent: " + data.getClass().getName());
             JCMLogger.warn("Consider registering in method: mod/registry/Networking.register()");
         }
-        RegistryHelper.REGISTRY.sendPacketToClient(ServerPlayerEntity.cast(player), data);
+        JCMRegistry.REGISTRY.sendPacketToClient(ServerPlayerEntity.cast(player), data);
     }
 }

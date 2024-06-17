@@ -5,10 +5,9 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
-
-import static com.lx862.jcm.mod.util.JCMUtil.playerHoldingBrush;
 
 public class LightLanternBlock extends DirectionalBlock {
     public static final BooleanProperty LIT = BlockProperties.POWERED;
@@ -24,11 +23,10 @@ public class LightLanternBlock extends DirectionalBlock {
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (!world.isClient() && playerHoldingBrush(player)) {
+        return IBlock.checkHoldingBrush(world, player, () -> {
             BlockState newState = state.cycle(new Property<>(LIT.data));
             world.setBlockState(pos, newState);
-        }
-        return ActionResult.SUCCESS;
+        });
     }
 
     @Override

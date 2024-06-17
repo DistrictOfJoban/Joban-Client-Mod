@@ -13,7 +13,7 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 
 public class JCMResourceManager {
-    private static final Identifier CUSTOM_RESOURCE_PATH = new Identifier(Constants.MOD_ID, "joban_custom_resources.json");
+    private static final Identifier CUSTOM_RESOURCE_PATH = Constants.id("joban_custom_resources.json");
 
     public static void reload() {
         TextRenderingManager.initialize();

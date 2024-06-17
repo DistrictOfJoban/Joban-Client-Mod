@@ -26,7 +26,7 @@ import java.util.List;
 
 public class CustomComponentPIDSPreset extends PIDSPresetBase {
     public final List<PIDSComponent> components;
-    private static final Identifier PLACEHOLDER_BACKGROUND = new Identifier(Constants.MOD_ID, "textures/block/pids/rv_default.png");
+    private static final Identifier PLACEHOLDER_BACKGROUND = Constants.id("textures/block/pids/rv_default.png");
     public CustomComponentPIDSPreset(String id, @Nullable String name, boolean builtin) {
         super(id, name, builtin);
         this.components = new ArrayList<>();

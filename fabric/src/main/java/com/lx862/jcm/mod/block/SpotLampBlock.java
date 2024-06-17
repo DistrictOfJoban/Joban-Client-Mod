@@ -6,6 +6,7 @@ import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -29,11 +30,10 @@ public class SpotLampBlock extends VerticallyAttachedBlock {
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (!world.isClient() && playerHoldingBrush(player)) {
+        return IBlock.checkHoldingBrush(world, player, () -> {
             BlockState newState = state.cycle(new Property<>(LIT.data));
             world.setBlockState(pos, newState);
-        }
-        return ActionResult.SUCCESS;
+        });
     }
 
     @Override

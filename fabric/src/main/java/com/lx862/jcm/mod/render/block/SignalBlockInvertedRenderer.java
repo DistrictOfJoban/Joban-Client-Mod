@@ -1,12 +1,11 @@
 package com.lx862.jcm.mod.render.block;
 
-import com.lx862.jcm.mod.config.ConfigEntry;
+import com.lx862.jcm.mod.JCMClient;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.block.BlockSignalBase;
 import org.mtr.mod.client.IDrawing;
-import org.mtr.mod.render.RenderSignalBase;
 import org.mtr.mod.render.RenderSignalLight2Aspect;
 import org.mtr.mod.render.RenderTrains;
 import org.mtr.mod.render.StoredMatrixTransformations;
@@ -22,7 +21,7 @@ public class SignalBlockInvertedRenderer<T extends BlockSignalBase.BlockEntityBa
 
     @Override
     protected void render(StoredMatrixTransformations t, BlockSignalBase.BlockEntityBase signalBlockEntity, float v, int occupiedAspect, boolean isBackSide) {
-        if (ConfigEntry.DISABLE_RENDERING.getBool()) return;
+        if (JCMClient.getConfig().disableRendering) return;
 
         float y = (occupiedAspect > 0) == redOnTop ? 0.4375F : 0.0625F;
 

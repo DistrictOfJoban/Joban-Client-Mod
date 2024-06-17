@@ -5,11 +5,11 @@ import com.lx862.jcm.mod.block.entity.ButterflyLightBlockEntity;
 import com.lx862.jcm.mod.network.gui.ButterflyLightGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.JCMUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
+import org.mtr.mod.block.IBlock;
 
 public class ButterflyLightBlock extends DirectionalBlock implements BlockWithEntity {
 
@@ -24,19 +24,12 @@ public class ButterflyLightBlock extends DirectionalBlock implements BlockWithEn
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        super.onUse2(state, world, pos, player, hand, hit);
-        return getBrushActionResult(player);
-    }
+        return IBlock.checkHoldingBrush(world, player, () -> {
+            BlockEntity be = world.getBlockEntity(pos);
 
-    @Override
-    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        BlockEntity be = world.getBlockEntity(pos);
-        if(be == null) return;
-        ButterflyLightBlockEntity thisEntity = (ButterflyLightBlockEntity)be.data;
-
-        if(JCMUtil.playerHoldingBrush(player)) {
+            ButterflyLightBlockEntity thisEntity = (ButterflyLightBlockEntity)be.data;
             Networking.sendPacketToClient(player, new ButterflyLightGUIPacket(pos, thisEntity.getStartBlinkingSeconds()));
-        }
+        });
     }
 
     @Override

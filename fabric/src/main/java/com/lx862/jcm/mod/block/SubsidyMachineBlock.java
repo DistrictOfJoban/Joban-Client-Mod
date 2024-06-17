@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.TicketSystem;
 
 import java.util.UUID;
@@ -28,29 +29,23 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        super.onUse2(state, world, pos, player, hand, hit);
-        return ActionResult.SUCCESS;
-    }
-
-    @Override
-    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        BlockEntity be = BlockUtil.getBlockEntityOrNull(world, pos);
-        if(be == null) return;
+        BlockEntity be = world.getBlockEntity(pos);
+        if(be == null) return ActionResult.FAIL;
 
         SubsidyMachineBlockEntity sbe = (SubsidyMachineBlockEntity)be.data;
-        if (JCMUtil.playerHoldingBrush(player)) {
-            Networking.sendPacketToClient(player, new SubsidyMachineGUIPacket(pos, sbe.getSubsidyAmount(), sbe.getCooldown()));
-            return;
-        }
 
-        if(cooldownExpired(player, sbe.getCooldown())) {
-            updateCooldown(player);
-            int finalBalance = addMTRBalanceToPlayer(world, player, sbe.getSubsidyAmount());
-            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "subsidy_machine.success", sbe.getSubsidyAmount(), finalBalance)), true);
-        } else {
-            int remainingSec = Math.round(sbe.getCooldown() - getCooldown(player));
-            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "subsidy_machine.fail", remainingSec).formatted(TextFormatting.RED)), true);
-        }
+        return IBlock.checkHoldingBrush(world, player, () -> {
+            Networking.sendPacketToClient(player, new SubsidyMachineGUIPacket(pos, sbe.getSubsidyAmount(), sbe.getCooldown()));
+        }, () -> {
+            if(cooldownExpired(player, sbe.getCooldown())) {
+                updateCooldown(player);
+                int finalBalance = addMTRBalanceToPlayer(world, player, sbe.getSubsidyAmount());
+                player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "subsidy_machine.success", sbe.getSubsidyAmount(), finalBalance)), true);
+            } else {
+                int remainingSec = Math.round(sbe.getCooldown() - getCooldown(player));
+                player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "subsidy_machine.fail", remainingSec).formatted(TextFormatting.RED)), true);
+            }
+        });
     }
 
     @Override

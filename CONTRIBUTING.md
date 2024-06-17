@@ -15,4 +15,4 @@ The English translation file (The most up-to-date) is located in `fabric/src/mai
 Text does not have to be translated literally, as long as the original meaning are not lost.
 
 ## Project changes
-If there's changes you need to make that involves submitting changes to the main JCM Mod (Such as translation), you can check [Contributing (Project)](./CONTRIBUTING_PROJ.md) for further instructions!
+If there's changes you need to make that involves submitting changes to the main JCM Mod (Such as translation), you can check [Contributing (Project)](docs/CONTRIBUTING_PROJ.md) for further instructions!

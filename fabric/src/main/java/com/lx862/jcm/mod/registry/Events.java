@@ -8,15 +8,15 @@ import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 public class Events {
     public static void register() {
         // Start Tick Event for counting tick
-        RegistryHelper.REGISTRY.eventRegistry.registerStartServerTick(() -> {
+        JCMRegistry.REGISTRY.eventRegistry.registerStartServerTick(() -> {
             JCMServerStats.incrementGameTick();
         });
     }
 
     public static void registerClient() {
-        RegistryHelperClient.REGISTRY_CLIENT.eventRegistryClient.registerResourceReloadEvent(JCMResourceManager::reload);
+        JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerResourceReloadEvent(JCMResourceManager::reload);
 
-        RegistryHelperClient.REGISTRY_CLIENT.eventRegistryClient.registerStartClientTick(() -> {
+        JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerStartClientTick(() -> {
             JCMClientStats.incrementGameTick();
             McMetaManager.tick();
         });

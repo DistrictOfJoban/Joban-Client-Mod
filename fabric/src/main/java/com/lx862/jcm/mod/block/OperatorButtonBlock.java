@@ -5,6 +5,8 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.*;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.Items;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -25,21 +27,14 @@ public class OperatorButtonBlock extends WallAttachedBlock {
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        super.onUse2(state, world, pos, player, hand, hit);
-        if (JCMUtil.playerHoldingDriverKey(player)) {
-            return ActionResult.SUCCESS;
-        } else {
-            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "operator_button.fail").formatted(TextFormatting.RED)), true);
-            return ActionResult.FAIL;
-        }
-    }
+        if(world.isClient()) return ActionResult.SUCCESS;
 
-    @Override
-    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (JCMUtil.playerHoldingDriverKey(player)) {
+        return IBlock.checkHoldingItem(world, player, (item) -> {
             setPowered(world, state, pos, true);
             scheduleBlockTick(world, pos, new Block(this), poweredDuration);
-        }
+        }, () -> {
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "operator_button.fail").formatted(TextFormatting.RED)), true);
+        }, Items.DRIVER_KEY.get());
     }
 
     @Override

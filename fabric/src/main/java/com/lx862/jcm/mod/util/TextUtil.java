@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.util;
 
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.config.ConfigEntry;
+import com.lx862.jcm.mod.JCMClient;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.Style;
@@ -20,9 +20,9 @@ public class TextUtil {
         return TextHelper.translatable(id, variables);
     }
 
-    /** Set a custom font style to MutableText, this respects the {@link ConfigEntry#USE_CUSTOM_FONT} config. */
+    /** Set a custom font style to MutableText, this respects the client config. */
     public static MutableText withFont(MutableText text, Identifier fontId) {
-        if(ConfigEntry.USE_CUSTOM_FONT.getBool()) {
+        if(JCMClient.getConfig().useCustomFont) {
             return TextHelper.setStyle(text, Style.getEmptyMapped().withFont(fontId));
         }  else {
             return text;

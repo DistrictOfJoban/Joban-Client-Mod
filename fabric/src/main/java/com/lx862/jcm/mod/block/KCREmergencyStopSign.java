@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.*;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -26,16 +27,10 @@ public class KCREmergencyStopSign extends WallAttachedBlock {
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        super.onUse2(state, world, pos, player, hand, hit);
-        return getBrushActionResult(player);
-    }
-
-    @Override
-    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(JCMUtil.playerHoldingBrush(player)) {
+        return IBlock.checkHoldingBrush(world, player, () -> {
             world.setBlockState(pos, state.cycle(new Property<>(POINT_TO_LEFT.data)));
             player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "kcr_emg_stop_sign.success")), true);
-        }
+        });
     }
 
     @Override

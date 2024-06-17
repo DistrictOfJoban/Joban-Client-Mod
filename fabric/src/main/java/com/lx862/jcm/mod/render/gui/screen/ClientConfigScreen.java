@@ -1,8 +1,7 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.config.ClientConfig;
-import com.lx862.jcm.mod.config.ConfigEntry;
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
@@ -29,19 +28,19 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private boolean discardConfig = false;
 
     CheckboxWidgetExtension disableRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        ConfigEntry.DISABLE_RENDERING.set(bool);
+        JCMClient.getConfig().disableRendering = bool;
     });
 
     CheckboxWidgetExtension useCustomFontButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        ConfigEntry.USE_CUSTOM_FONT.set(bool);
+        JCMClient.getConfig().useCustomFont = bool;
     });
 
     CheckboxWidgetExtension useNewTextRendererButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        ConfigEntry.NEW_TEXT_RENDERER.set(bool);
+        JCMClient.getConfig().useNewTextRenderer = bool;
     });
 
     CheckboxWidgetExtension debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        ConfigEntry.DEBUG_MODE.set(bool);
+        JCMClient.getConfig().debug = bool;
     });
 
     ButtonWidgetExtension textAtlasButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.listview.widget.open"), (buttonWidget -> {
@@ -93,10 +92,10 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     }
 
     private void setEntryStateFromClientConfig() {
-        disableRenderingButton.setChecked(ConfigEntry.DISABLE_RENDERING.getBool());
-        useCustomFontButton.setChecked(ConfigEntry.USE_CUSTOM_FONT.getBool());
-        useNewTextRendererButton.setChecked(ConfigEntry.NEW_TEXT_RENDERER.getBool());
-        debugModeButton.setChecked(ConfigEntry.DEBUG_MODE.getBool());
+        disableRenderingButton.setChecked(JCMClient.getConfig().disableRendering);
+        useCustomFontButton.setChecked(JCMClient.getConfig().useCustomFont);
+        useNewTextRendererButton.setChecked(JCMClient.getConfig().useNewTextRenderer);
+        debugModeButton.setChecked(JCMClient.getConfig().debug);
     }
 
     private void addConfigEntries() {
@@ -105,25 +104,25 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         // General
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.general"));
 
-        listViewWidget.add(ConfigEntry.DISABLE_RENDERING.getTitle(), new MappedWidget(disableRenderingButton));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_rendering"), new MappedWidget(disableRenderingButton));
         addChild(new ClickableWidget(disableRenderingButton));
 
-        listViewWidget.add(ConfigEntry.USE_CUSTOM_FONT.getTitle(), new MappedWidget(useCustomFontButton));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.custom_font"), new MappedWidget(useCustomFontButton));
         addChild(new ClickableWidget(useCustomFontButton));
 
         /*  New Text Renderer is deprecated, we shouldn't offer player to switch to it anymore if it isn't enabled */
-        if(ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+        if(JCMClient.getConfig().useNewTextRenderer) {
             listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.experimental"));
-            listViewWidget.add(ConfigEntry.NEW_TEXT_RENDERER.getTitle(), new MappedWidget(useNewTextRendererButton));
+            listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.new_text_rendering"), new MappedWidget(useNewTextRendererButton));
             addChild(new ClickableWidget(useNewTextRendererButton));
         }
 
         // Debug
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.debug"));
-        listViewWidget.add(ConfigEntry.DEBUG_MODE.getTitle(), new MappedWidget(debugModeButton));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.debug_mode"), new MappedWidget(debugModeButton));
         addChild(new ClickableWidget(debugModeButton));
 
-        if(ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+        if(JCMClient.getConfig().useNewTextRenderer) {
             listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.open_atlas_screen"), new MappedWidget(textAtlasButton));
             addChild(new ClickableWidget(textAtlasButton));
         }
@@ -151,7 +150,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         });
 
         ButtonWidgetExtension resetButton = new ButtonWidgetExtension(0, 0, 0, 20, TextUtil.translatable(TextCategory.GUI, "config.reset"), (btn) -> {
-            ClientConfig.resetConfig();
+            JCMClient.getConfig().reset();
             setEntryStateFromClientConfig();
         });
 
@@ -205,10 +204,10 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     public void onClose2() {
         if(!closing) {
             if (!discardConfig) {
-                ClientConfig.writeFile();
+                JCMClient.getConfig().write();
             } else {
                 // Don't save our change to disk, and read it from disk, effectively discarding the config
-                ClientConfig.readFile();
+                JCMClient.getConfig().read();
             }
         }
 

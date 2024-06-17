@@ -27,7 +27,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Upload Artifacts to GitHub
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: Artifacts
+          name: JCM for Minecraft ${{ matrix.minecraft }}
           path: build/

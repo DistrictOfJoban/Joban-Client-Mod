@@ -3,8 +3,8 @@ package com.lx862.jcm.mod.data.pids.preset;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.config.ConfigEntry;
 import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.components.*;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
@@ -116,7 +116,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         RenderHelper.drawTexture(graphicsHolder, getBackground(), 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
 
         // Debug View Texture
-        if(ConfigEntry.DEBUG_MODE.getBool() && ConfigEntry.NEW_TEXT_RENDERER.getBool()) {
+        if(JCMClient.getConfig().debug && JCMClient.getConfig().debug) {
             //TextureTextRenderer.stressTest(5);
             drawAtlasBackground(graphicsHolder, width, height, facing);
         }

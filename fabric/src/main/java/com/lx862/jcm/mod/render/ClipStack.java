@@ -1,9 +1,11 @@
-package com.lx862.jcm.mod.render.fundamental;
+package com.lx862.jcm.mod.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import org.mtr.mapping.holder.MinecraftClient;
+
+import java.awt.*;
 
 /**
  * Keep track of applied OpenGL Scissors, this should be the primary way to apply clipping to the GUI.<br>

@@ -12,22 +12,6 @@ public abstract class JCMBlock extends BlockExtension {
         super(settings);
     }
 
-    @Override
-    public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(!world.isClient()) {
-            onServerUse(state, world, pos, player, hand, hit);
-        }
-        return ActionResult.PASS;
-    }
-
-    /**
-     * This method will be called only on the server-side when the onUse method is triggered.
-     * Override this method to implement server-side only right click logic
-     */
-    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-
-    }
-
     protected BlockEntity[] getBlockEntity(BlockState state, World world, BlockPos pos) {
         return new BlockEntity[]{ BlockUtil.getBlockEntityOrNull(world, pos) };
     }
@@ -42,9 +26,5 @@ public abstract class JCMBlock extends BlockExtension {
             if(be == null) continue;
             callback.accept(be);
         }
-    }
-
-    public ActionResult getBrushActionResult(PlayerEntity player) {
-        return JCMUtil.playerHoldingBrush(player) ? ActionResult.SUCCESS : ActionResult.PASS;
     }
 }

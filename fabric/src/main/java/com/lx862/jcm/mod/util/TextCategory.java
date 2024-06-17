@@ -7,7 +7,6 @@ public enum TextCategory {
     ITEM("item"),
     /** In-game overlay, such as the action bar text */
     HUD("hud"),
-
     /** GUI Interfaces, usually element that are displayed in a screen user can interact with. */
     GUI("gui");
 

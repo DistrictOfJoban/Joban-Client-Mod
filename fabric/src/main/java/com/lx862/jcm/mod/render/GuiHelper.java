@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.render;
 
 import com.lx862.jcm.mod.data.Pair;
-import com.lx862.jcm.mod.render.fundamental.ClipStack;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;

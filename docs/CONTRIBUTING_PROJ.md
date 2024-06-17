@@ -10,21 +10,21 @@ Instead, you can make a fork of this JCM Repository, which will create a new clo
 *To be done =w=*
 
 ## Where to start
-- [Introduction to JCM Project Structure](./docs/Project_Structure.md)
+- [Introduction to JCM Project Structure](Project_Structure.md)
 
 ### Code
-- [Multiversion Development](./docs/Multiversion_Development.md)
-- [Code Guidelines](./docs/Code_Guidelines.md)
+- [Multiversion Development](Multiversion_Development.md)
+- [Code Guidelines](Code_Guidelines.md)
 
 ## Submitting your change
 Ok you've done the work, now what?  
 Now, you can submit a **Pull Request**, which is essentially a request for your changes to be in the main JCM Repository.
 
 Usually after you have pushed your change, you can go into your forked repository and GitHub will prompt you to submit a Pull Request.
-![bug-fix has recently pushed 4 minutes ago](./docs/img/pr_1.png)
+![bug-fix has recently pushed 4 minutes ago](img/pr_1.png)
 
 You can click on that, then fill out the title and the description (Again don't stress yourself to write bunch of stuff, if it's a simple bug fix then 1-3 line is usually enough)
-![Add a title and add a description for your pull request](./docs/img/pr_2.png)
+![Add a title and add a description for your pull request](img/pr_2.png)
 
 After that, click on the "Create Pull Request" button, and providing I still maintain the project I'll have a look at it.  
 Feel free to ping if you don't get a response within 7 days.

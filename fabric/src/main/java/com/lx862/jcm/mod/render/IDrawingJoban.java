@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.render;
 
-import com.lx862.jcm.mod.config.ConfigEntry;
+import com.lx862.jcm.mod.JCMClient;
 import org.mtr.libraries.it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
@@ -26,7 +26,7 @@ public interface IDrawingJoban {
     }
 
     static void drawStringWithFont(GraphicsHolder graphicsHolder, String text, Identifier font, IGui.HorizontalAlignment horizontalAlignment, IGui.VerticalAlignment verticalAlignment, IGui.HorizontalAlignment xAlignment, float x, float y, float maxWidth, float maxHeight, float scale, int textColorCjk, int textColor, float fontSizeRatio, boolean shadow, int light, @Nullable DrawingCallback drawingCallback) {
-        final Style style = ConfigEntry.USE_CUSTOM_FONT.getBool() ? Style.getEmptyMapped().withFont(font) : Style.getEmptyMapped();
+        final Style style = JCMClient.getConfig().useCustomFont ? Style.getEmptyMapped().withFont(font) : Style.getEmptyMapped();
 
         while (text.contains("||")) {
             text = text.replace("||", "|");

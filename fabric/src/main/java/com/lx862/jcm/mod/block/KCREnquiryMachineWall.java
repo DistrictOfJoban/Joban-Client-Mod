@@ -18,12 +18,7 @@ public class KCREnquiryMachineWall extends WallAttachedBlock implements EnquiryM
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        super.onUse2(state, world, pos, player, hand, hit);
+        if(!world.isClient()) enquiry(world, player);
         return ActionResult.SUCCESS;
-    }
-
-    @Override
-    public void onServerUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        enquiry(world, player);
     }
 }
