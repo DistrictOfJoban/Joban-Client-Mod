@@ -7,14 +7,15 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.block.BlockSignalBase;
 import org.mtr.mod.client.IDrawing;
 import org.mtr.mod.render.RenderSignalBase;
+import org.mtr.mod.render.RenderSignalLight2Aspect;
 import org.mtr.mod.render.RenderTrains;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
-public class SignalBlockInvertedRenderer<T extends BlockSignalBase.BlockEntityBase> extends RenderSignalBase<T> {
+public class SignalBlockInvertedRenderer<T extends BlockSignalBase.BlockEntityBase> extends RenderSignalLight2Aspect<T> {
     private final int proceedColor;
     private final boolean redOnTop;
-    public SignalBlockInvertedRenderer(Argument dispatcher, int proceedColor, boolean isSingleSided, boolean redOnTop) {
-        super(dispatcher, isSingleSided, 2, 0);
+    public SignalBlockInvertedRenderer(Argument dispatcher, int proceedColor, boolean redOnTop) {
+        super(dispatcher, redOnTop, proceedColor);
         this.proceedColor = proceedColor;
         this.redOnTop = redOnTop;
     }

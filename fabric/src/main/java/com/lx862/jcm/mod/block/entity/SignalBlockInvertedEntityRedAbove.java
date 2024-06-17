@@ -7,6 +7,6 @@ import org.mtr.mod.block.BlockSignalBase;
 
 public class SignalBlockInvertedEntityRedAbove extends BlockSignalBase.BlockEntityBase {
     public SignalBlockInvertedEntityRedAbove(BlockPos blockPos, BlockState blockState) {
-        super(BlockEntities.SIGNAL_LIGHT_INVERTED_RED_ABOVE.get(), blockPos, blockState);
+        super(BlockEntities.SIGNAL_LIGHT_INVERTED_RED_ABOVE.get(), false, blockPos, blockState);
     }
 }
