@@ -3,15 +3,19 @@
 	"id": "jsblock",
 	"version": "${version}",
 	"name": "Joban Client Mod",
-	"description": "Addon for Minecraft Transit Railway 4, providing more railway facilities.",
+	"description": "Railway facilities addon for MTR 4 mod",
 	"authors": [
-		"LX86",
+		"LX86"
+	],
+	"contributors": [
+		"1081MTR",
 		"AozoraSky",
 		"StrikeSNC"
 	],
 	"contact": {
 		"homepage": "https://www.joban.org/jcm",
-		"sources": "https://github.com/DistrictOfJoban/Joban-Client-Mod"
+		"sources": "https://github.com/DistrictOfJoban/Joban-Client-Mod",
+		"issues": "https://github.com/DistrictOfJoban/Joban-Client-Mod/issues"
 	},
 	"license": "MIT",
 	"icon": "assets/jsblock/icon.png",
@@ -35,5 +39,13 @@
 		"minecraft": "~${minecraft_version}",
 		"mtr": ">=4.0.0-beta-7",
 		"fabric": "*"
+	},
+	"custom": {
+		"modmenu": {
+			"links": {
+				"modmenu.discord": "https://joban.org/dc"
+			},
+			"update_checker": true
+		}
 	}
 }
