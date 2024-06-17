@@ -11,9 +11,4 @@ public class ItemGroups {
             Constants.id("main"),
             () -> new ItemStack(new ItemConvertible(Blocks.MTR_STAIRS.get().data))
     );
-
-    public static final CreativeModeTabHolder JCM_CEILING = JCMRegistry.REGISTRY.createCreativeModeTabHolder(
-            Constants.id("ceiling"),
-            () -> new ItemStack(new ItemConvertible(Blocks.STATION_CEILING_WRL.get().data))
-    );
 }
