@@ -20,18 +20,18 @@ public class PIDSManager {
             try {
                 JsonObject jsonObject = e.getAsJsonObject();
                 presetId = jsonObject.get("id").getAsString();
-                PIDSPresetBase customPreset;
+                PIDSPresetBase preset;
 
                 if(jsonObject.has("file")) {
-                    customPreset = CustomComponentPIDSPreset.parse(jsonObject);
+                    preset = CustomComponentPIDSPreset.parse(jsonObject);
                 } else {
-                    customPreset = JsonPIDSPreset.parse(e.getAsJsonObject());
+                    preset = JsonPIDSPreset.parse(e.getAsJsonObject());
                 }
 
-                if(presetList.containsKey(customPreset.getId())) {
-                    JCMLogger.error("Preset \"{}\" already added!", presetId);
+                if(presetList.containsKey(preset.getId()) && !preset.builtin) {
+                    JCMLogger.error("Custom preset \"{}\" already added!", presetId);
                 } else {
-                    presetList.put(customPreset.getId(), customPreset);
+                    presetList.put(preset.getId(), preset);
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
