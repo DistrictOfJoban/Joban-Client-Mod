@@ -5,14 +5,12 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
-import org.mtr.mapping.mapper.DirectionHelper;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.Init;
 import org.mtr.mod.block.BlockSignalBase;
 import org.mtr.mod.block.IBlock;
 import org.mtr.mod.client.IDrawing;
 import org.mtr.mod.render.MoreRenderLayers;
-import org.mtr.mod.render.RenderTrains;
 
 public class StaticSignalLightRenderer<T extends BlockEntityExtension> extends JCMBlockEntityRenderer<T> {
         private final boolean drawOnTop;
@@ -27,10 +25,6 @@ public class StaticSignalLightRenderer<T extends BlockEntityExtension> extends J
         @Override
         public final void renderCurated(T entity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int overlay) {
             final Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
-            if (RenderTrains.shouldNotRender(pos, null)) {
-                return;
-            }
-
             final float angle = facing.asRotation() + (IBlock.getStatePropertySafe(state, BlockSignalBase.IS_22_5).booleanValue ? 22.5F : 0) + (IBlock.getStatePropertySafe(state, BlockSignalBase.IS_45).booleanValue ? 45 : 0);
 
             graphicsHolder.push();
