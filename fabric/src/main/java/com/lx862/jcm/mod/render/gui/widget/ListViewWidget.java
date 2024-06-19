@@ -1,11 +1,12 @@
 package com.lx862.jcm.mod.render.gui.widget;
 
 import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.render.ClipStack;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.ClipStack;
 import org.mtr.mapping.holder.MutableText;
-import org.mtr.mapping.mapper.*;
+import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.GuiDrawing;
 
 import java.util.ArrayList;
 import java.util.List;

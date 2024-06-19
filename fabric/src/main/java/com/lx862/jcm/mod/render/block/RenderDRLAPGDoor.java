@@ -1,16 +1,16 @@
 package com.lx862.jcm.mod.render.block;
 
 import com.lx862.jcm.mod.block.entity.APGDoorDRLBlockEntity;
-import org.mtr.mapping.mapper.BlockEntityRenderer;
-
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.BlockEntityRenderer;
 import org.mtr.mapping.mapper.EntityModelExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.ModelPartExtension;
 import org.mtr.mod.Init;
 import org.mtr.mod.block.*;
 import org.mtr.mod.data.IGui;
-import org.mtr.mod.render.RenderTrains;
+import org.mtr.mod.render.MainRenderer;
+import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
 /**
@@ -54,7 +54,7 @@ public class RenderDRLAPGDoor<T extends APGDoorDRLBlockEntity> extends BlockEnti
                 if (half) {
                     final Block block = world.getBlockState(blockPos.offset(side ? facing.rotateYClockwise() : facing.rotateYCounterclockwise())).getBlock();
                     if (block.data instanceof BlockAPGGlass || block.data instanceof BlockAPGGlassEnd) {
-                        RenderTrains.scheduleRender(new Identifier(String.format("mtr:textures/block/apg_door_light_%s.png", open > 0 ? "on" : "off")), false, open > 0 ? RenderTrains.QueuedRenderLayer.LIGHT_TRANSLUCENT : RenderTrains.QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
+                        MainRenderer.scheduleRender(new Identifier(String.format("mtr:textures/block/apg_door_light_%s.png", open > 0 ? "on" : "off")), false, open > 0 ? QueuedRenderLayer.LIGHT_TRANSLUCENT : QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
                             storedMatrixTransformationsLight.transform(graphicsHolderNew, offset);
                             graphicsHolderNew.translate(side ? -0.515625 : 0.515625, 0, 0);
                             graphicsHolderNew.scale(0.5F, 1, 1);
@@ -70,13 +70,13 @@ public class RenderDRLAPGDoor<T extends APGDoorDRLBlockEntity> extends BlockEnti
 
         switch (type) {
             case 2:
-                RenderTrains.scheduleRender(new Identifier(String.format("jsblock:textures/block/psdapg/drlapg/apg_door_%s_%s.png", half ? "top" : "bottom", side ? "right" : "left")), false, RenderTrains.QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
+                MainRenderer.scheduleRender(new Identifier(String.format("jsblock:textures/block/psdapg/drlapg/apg_door_%s_%s.png", half ? "top" : "bottom", side ? "right" : "left")), false, QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
                     storedMatrixTransformations.transform(graphicsHolderNew, offset);
                     (half ? MODEL_APG_TOP : MODEL_APG_BOTTOM).render(graphicsHolderNew, light, overlay, 1, 1, 1, 1);
                     graphicsHolderNew.pop();
                 });
                 if (half && !unlocked) {
-                    RenderTrains.scheduleRender(new Identifier(Init.MOD_ID, "textures/block/sign/door_not_in_use.png"), false, RenderTrains.QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
+                    MainRenderer.scheduleRender(new Identifier(Init.MOD_ID, "textures/block/sign/door_not_in_use.png"), false, QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
                         storedMatrixTransformations.transform(graphicsHolderNew, offset);
                         MODEL_APG_DOOR_LOCKED.render(graphicsHolderNew, light, overlay, 1, 1, 1, 1);
                         graphicsHolderNew.pop();

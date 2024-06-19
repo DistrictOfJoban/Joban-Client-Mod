@@ -1,10 +1,12 @@
 package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.Constants;
-import org.mtr.mapping.holder.*;
+import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
-import org.mtr.mapping.registry.*;
+import org.mtr.mapping.registry.BlockEntityTypeRegistryObject;
+import org.mtr.mapping.registry.BlockRegistryObject;
+import org.mtr.mapping.registry.RegistryClient;
 import org.mtr.mod.InitClient;
 
 import java.util.function.Function;

@@ -6,8 +6,9 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.block.BlockSignalBase;
 import org.mtr.mod.client.IDrawing;
+import org.mtr.mod.render.MainRenderer;
+import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.render.RenderSignalLight2Aspect;
-import org.mtr.mod.render.RenderTrains;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
 public class SignalBlockInvertedRenderer<T extends BlockSignalBase.BlockEntityBase> extends RenderSignalLight2Aspect<T> {
@@ -25,7 +26,7 @@ public class SignalBlockInvertedRenderer<T extends BlockSignalBase.BlockEntityBa
 
         float y = (occupiedAspect > 0) == redOnTop ? 0.4375F : 0.0625F;
 
-        RenderTrains.scheduleRender(new Identifier("mtr", "textures/block/white.png"), false, RenderTrains.QueuedRenderLayer.LIGHT, (graphicsHolder, offset) -> {
+        MainRenderer.scheduleRender(new Identifier("mtr", "textures/block/white.png"), false, QueuedRenderLayer.LIGHT, (graphicsHolder, offset) -> {
             t.transform(graphicsHolder, offset);
             IDrawing.drawTexture(graphicsHolder, -0.125F, y, -0.19375F, 0.125F, y + 0.25F, -0.19375F, Direction.UP, occupiedAspect > 0 ? proceedColor : 0xFFFF0000, GraphicsHolder.getDefaultLight());
             graphicsHolder.pop();
