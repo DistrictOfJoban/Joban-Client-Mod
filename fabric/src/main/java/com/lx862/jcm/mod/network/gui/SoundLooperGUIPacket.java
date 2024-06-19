@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.network.gui;
 
-import org.mtr.mapping.holder.BlockPos;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;

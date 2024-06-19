@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render.gui.widget;
 
-import com.lx862.jcm.mod.render.ClipStack;
 import com.lx862.jcm.mod.render.GuiHelper;
+import com.lx862.jcm.mod.render.ClipStack;
 import org.lwjgl.glfw.GLFW;
 import org.mtr.mapping.mapper.ClickableWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;

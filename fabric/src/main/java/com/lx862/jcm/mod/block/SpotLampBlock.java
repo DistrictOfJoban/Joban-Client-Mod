@@ -10,6 +10,8 @@ import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
+import static com.lx862.jcm.mod.util.JCMUtil.playerHoldingBrush;
+
 public class SpotLampBlock extends VerticallyAttachedBlock {
     public static final BooleanProperty LIT = BlockProperties.POWERED;
 

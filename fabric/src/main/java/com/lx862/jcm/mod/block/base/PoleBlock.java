@@ -1,9 +1,6 @@
 package com.lx862.jcm.mod.block.base;
 
-import org.mtr.mapping.holder.Block;
-import org.mtr.mapping.holder.BlockSettings;
-import org.mtr.mapping.holder.BlockState;
-import org.mtr.mapping.holder.ItemPlacementContext;
+import org.mtr.mapping.holder.*;
 
 public abstract class PoleBlock extends SlabExtendableBlock {
     public PoleBlock(BlockSettings settings) {

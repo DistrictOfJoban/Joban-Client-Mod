@@ -3,12 +3,8 @@ package com.lx862.jcm.mod.render;
 import com.lx862.jcm.mod.JCMClient;
 import org.mtr.libraries.it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.LightmapTextureManager;
-import org.mtr.mapping.holder.OrderedText;
-import org.mtr.mapping.holder.Style;
-import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mapping.mapper.TextHelper;
+import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.*;
 import org.mtr.mod.data.IGui;
 
 import javax.annotation.Nullable;

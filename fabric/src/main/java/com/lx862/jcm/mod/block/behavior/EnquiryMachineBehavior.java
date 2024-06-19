@@ -1,10 +1,7 @@
 package com.lx862.jcm.mod.block.behavior;
 
 import com.lx862.jcm.mod.util.TextUtil;
-import org.mtr.mapping.holder.PlayerEntity;
-import org.mtr.mapping.holder.SoundCategory;
-import org.mtr.mapping.holder.Text;
-import org.mtr.mapping.holder.World;
+import org.mtr.mapping.holder.*;
 import org.mtr.mod.SoundEvents;
 import org.mtr.mod.data.TicketSystem;
 

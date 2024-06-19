@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.block.entity.LCDPIDSBlockEntity;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import org.mtr.core.operation.ArrivalResponse;
+import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;

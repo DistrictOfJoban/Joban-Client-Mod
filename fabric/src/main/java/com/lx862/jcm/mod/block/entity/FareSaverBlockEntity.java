@@ -1,9 +1,7 @@
 package com.lx862.jcm.mod.block.entity;
 
 import com.lx862.jcm.mod.registry.BlockEntities;
-import org.mtr.mapping.holder.BlockPos;
-import org.mtr.mapping.holder.BlockState;
-import org.mtr.mapping.holder.CompoundTag;
+import org.mtr.mapping.holder.*;
 
 public class FareSaverBlockEntity extends JCMBlockEntityBase {
     private String prefix = "$";

@@ -1,10 +1,7 @@
 package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.Constants;
-import org.mtr.mapping.holder.Block;
-import org.mtr.mapping.holder.BlockPos;
-import org.mtr.mapping.holder.BlockState;
-import org.mtr.mapping.holder.ItemSettings;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.registry.*;
 import org.mtr.mapping.tool.PacketBufferReceiver;

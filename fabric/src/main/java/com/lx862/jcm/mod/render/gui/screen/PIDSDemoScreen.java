@@ -11,6 +11,7 @@ import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.core.operation.ArrivalResponse;
+import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.core.serializer.JsonReader;
 import org.mtr.libraries.com.google.gson.JsonArray;
 import org.mtr.libraries.com.google.gson.JsonObject;

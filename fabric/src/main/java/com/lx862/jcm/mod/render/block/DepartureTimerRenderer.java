@@ -7,6 +7,7 @@ import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
+import org.mtr.core.operation.ArrivalsResponse;
 import org.mtr.core.tool.Utilities;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -16,6 +17,7 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.InitClient;
+import org.mtr.mod.data.ArrivalsCache;
 import org.mtr.mod.data.ArrivalsCacheClient;
 
 import java.util.ArrayList;
