@@ -7,6 +7,7 @@ import org.mtr.mapping.holder.MinecraftClient;
 import java.nio.file.Path;
 
 public class ClientConfig extends Config {
+
     private static final Path CONFIG_PATH = MinecraftClient.getInstance().getRunDirectoryMapped().toPath().resolve("config").resolve("jsblock_client.json");
     public boolean disableRendering;
     public boolean useCustomFont;
