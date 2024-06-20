@@ -1,3 +1,23 @@
+plugins {
+	id "io.github.pacifistmc.forgix" version "1.+"
+}
+
+forgix {
+	group = "com.lx862.jcm"
+	mergedJarName = "${project.archives_base_name}-${project.mod_version}+${project.minecraft_version}.jar"
+	outputDir = "build/"
+
+	fabric {
+		projectName = "fabric"
+		jarLocation = "build/libs/${project.archives_base_name}-fabric-${project.mod_version}+${project.minecraft_version}.jar"
+	}
+
+	forge {
+		projectName = "forge"
+		jarLocation = "build/libs/${project.archives_base_name}-forge-${project.mod_version}+${project.minecraft_version}.jar"
+	}
+}
+
 subprojects {
 	apply plugin: "java"
 
@@ -83,8 +103,6 @@ subprojects {
 		}
 	}
 
-	tasks.register('moveBuildFile', Copy) {
-		from "${project.projectDir}/build/libs/${base.archivesName.get()}-${version}.jar"
-		into "${rootProject.projectDir}/build"
-	}
+	build.finalizedBy(mergeJars)
+	assemble.finalizedBy(mergeJars)
 }

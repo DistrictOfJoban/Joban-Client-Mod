@@ -62,10 +62,6 @@ tasks.register("setupFiles") {
     }
 }
 
-build {
-    finalizedBy moveBuildFile
-}
-
 artifacts {
     archives jar
 }
