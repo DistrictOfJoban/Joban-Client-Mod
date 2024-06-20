@@ -52,7 +52,3 @@ jar {
         rename { "${it}_${base.archivesName.get()}"}
     }
 }
-
-build {
-    finalizedBy moveBuildFile
-}
