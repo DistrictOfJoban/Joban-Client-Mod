@@ -38,7 +38,7 @@ public class FareSaverUpdatePacket extends PacketHandler {
         BlockState state = BlockUtil.getBlockState(world, blockPos);
         if(state == null || !(state.getBlock().data instanceof JCMBlock)) return;
 
-        ((JCMBlock)state.getBlock().data).forEachBlockEntity(state, world, blockPos, be -> {
+        ((JCMBlock)state.getBlock().data).loopStructure(state, world, blockPos, (bs, be) -> {
             if(be.data instanceof FareSaverBlockEntity) {
                 ((FareSaverBlockEntity)be.data).setData(prefix, discount);
             }

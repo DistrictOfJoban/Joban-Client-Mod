@@ -34,9 +34,9 @@ public abstract class Horizontal2MirroredBlock extends DirectionalBlock {
     }
 
     @Override
-    protected BlockEntity[] getBlockEntity(BlockState state, World world, BlockPos pos) {
+    public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
         Direction facing = BlockUtil.getProperty(state, FACING);
         BlockPos otherPos = pos.offset(facing);
-        return new BlockEntity[]{ BlockUtil.getBlockEntityOrNull(world, pos), BlockUtil.getBlockEntityOrNull(world, otherPos) };
+        return new BlockPos[]{ pos, otherPos };
     }
 }

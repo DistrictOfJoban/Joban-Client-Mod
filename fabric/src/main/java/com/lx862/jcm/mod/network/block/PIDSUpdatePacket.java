@@ -60,7 +60,7 @@ public class PIDSUpdatePacket extends PacketHandler {
 
         if(state == null || !(state.getBlock().data instanceof JCMBlock)) return;
 
-        ((JCMBlock)state.getBlock().data).forEachBlockEntity(state, world, blockPos, be -> {
+        ((JCMBlock)state.getBlock().data).loopStructure(state, world, blockPos, (bs, be) -> {
             if(be.data instanceof PIDSBlockEntity) {
                 ((PIDSBlockEntity)be.data).setData(customMessages, filteredPlatforms, rowHidden, hidePlatformNumber, presetId);
             }

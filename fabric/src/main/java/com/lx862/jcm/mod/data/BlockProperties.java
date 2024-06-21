@@ -12,6 +12,7 @@ import org.mtr.mod.block.IBlock;
  */
 public interface BlockProperties {
     public static final DirectionProperty FACING = DirectionHelper.FACING;
+    public static final BooleanProperty UNPOWERED = BooleanProperty.of("unpowered");
     public static final BooleanProperty HORIZONTAL_IS_LEFT = BooleanProperty.of("left");
     public static final EnumProperty<IBlock.DoubleBlockHalf> VERTICAL_2 = IBlock.HALF;
     public static final EnumProperty<IBlock.EnumThird> VERTICAL_PART_3 = IBlock.THIRD;

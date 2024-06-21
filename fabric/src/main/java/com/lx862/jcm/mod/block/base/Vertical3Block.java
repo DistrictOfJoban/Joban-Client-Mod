@@ -43,26 +43,26 @@ public abstract class Vertical3Block extends DirectionalBlock {
     }
 
     @Override
-    protected BlockEntity[] getBlockEntity(BlockState state, World world, BlockPos pos) {
+    public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
         switch(BlockUtil.getProperty(state, new Property<>(THIRD.data))) {
             case LOWER:
-                return new BlockEntity[]{
-                        BlockUtil.getBlockEntityOrNull(world, pos),
-                        BlockUtil.getBlockEntityOrNull(world, pos.up()),
-                        BlockUtil.getBlockEntityOrNull(world, pos.up(2))};
+                return new BlockPos[]{
+                        pos,
+                        pos.up(),
+                        pos.up(2)};
             case MIDDLE:
-                return new BlockEntity[]{
-                        BlockUtil.getBlockEntityOrNull(world, pos.down()),
-                        BlockUtil.getBlockEntityOrNull(world, pos),
-                        BlockUtil.getBlockEntityOrNull(world, pos.up())};
+                return new BlockPos[]{
+                        pos.down(),
+                        pos,
+                        pos.up()};
             case UPPER:
-                return new BlockEntity[]{
-                        BlockUtil.getBlockEntityOrNull(world, pos.down(2)),
-                        BlockUtil.getBlockEntityOrNull(world, pos.down()),
-                        BlockUtil.getBlockEntityOrNull(world, pos)};
+                return new BlockPos[]{
+                        pos.down(2),
+                        pos.down(),
+                        pos};
+            default:
+                return super.getAllPos(state, world, pos);
         }
-
-        return new BlockEntity[]{};
     }
 
     public int getPart(IBlock.EnumThird e) {

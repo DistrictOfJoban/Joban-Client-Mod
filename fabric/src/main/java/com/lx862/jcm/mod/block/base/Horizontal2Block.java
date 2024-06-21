@@ -37,11 +37,11 @@ public abstract class Horizontal2Block extends DirectionalBlock implements Horiz
     }
 
     @Override
-    protected BlockEntity[] getBlockEntity(BlockState state, World world, BlockPos pos) {
+    public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
         Direction facing = BlockUtil.getProperty(state, FACING);
         boolean isLeft = BlockUtil.getProperty(state, IS_LEFT);
 
         BlockPos secondaryPos = isLeft ? pos.offset(facing.rotateYClockwise()) : pos.offset(facing.rotateYCounterclockwise());
-        return new BlockEntity[]{ BlockUtil.getBlockEntityOrNull(world, pos), BlockUtil.getBlockEntityOrNull(world, secondaryPos) };
+        return new BlockPos[]{ pos, secondaryPos };
     }
 }

@@ -35,10 +35,19 @@ public abstract class Vertical2Block extends DirectionalBlock implements Vertica
     }
 
     @Override
-    protected BlockEntity[] getBlockEntity(BlockState state, World world, BlockPos pos) {
-        BlockPos above = pos.up();
-        BlockPos below = pos.down();
-        return new BlockEntity[]{ BlockUtil.getBlockEntityOrNull(world, below), BlockUtil.getBlockEntityOrNull(world, pos), BlockUtil.getBlockEntityOrNull(world, above) };
+    public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
+        switch(BlockUtil.getProperty(state, new Property<>(HALF.data))) {
+            case LOWER:
+                return new BlockPos[]{
+                        pos,
+                        pos.up()};
+            case UPPER:
+                return new BlockPos[]{
+                        pos.down(),
+                        pos};
+            default:
+                return super.getAllPos(state, world, pos);
+        }
     }
 
     @Override
