@@ -59,7 +59,7 @@ jobs:
           files: |
             build/*.jar
           name: '[${{ matrix.minecraft }}] v${{ inputs.publish-tag }}'
-          version: ${{ steps.prevtag.outputs.tag }}+${{ matrix.minecraft }}
+          version: ${{ inputs.publish-tag }}+${{ matrix.minecraft }}
           version-type: ${{ inputs.release-type }}
           modrinth-featured: ${{ inputs.release-type == 'release' }}
           changelog-file: CHANGELOG.md
@@ -67,7 +67,7 @@ jobs:
           loaders: |
             fabric
             forge
-            neoforge
+            ${{ startsWith(matrix.minecraft, '1.20') && 'neoforge' || '' }}
           game-versions: |
             ${{ matrix.minecraft }}
 
