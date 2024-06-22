@@ -6,3 +6,6 @@
 
 **Changes:**
 - All modloaders has been merged into 1 jar again (via [Forgix](https://github.com/PacifistMC/Forgix)), just like in JCM v1
+
+**Download:**
+You can download this release on [Modrinth](https://modrinth.com/mod/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

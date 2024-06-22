@@ -54,7 +54,7 @@ jobs:
         if: ${{ env.MODRINTH_KEY != '' }}
         uses: Kir-Antipov/mc-publish@v3.3
         with:
-          modrinth-id: qq2xNfbz
+          modrinth-id: lQqKCDhg
           modrinth-token: ${{ secrets.MODRINTH_PAT }}
           files: |
             build/*.jar
