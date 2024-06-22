@@ -81,6 +81,7 @@ jobs:
         with:
           name: JCM for Minecraft ${{ matrix.minecraft }}
           path: build/
+
   publish:
     needs: build
     runs-on: ubuntu-latest
@@ -88,9 +89,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Read CHANGELOG.md
-        run: 'echo "CHANGELOG=$(cat CHANGELOG.md)" >> $GITHUB_ENV'
+        run: |
+          echo 'CHANGELOG<<EOF' >> $GITHUB_ENV
+          echo "$(cat CHANGELOG.md)" >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
       - name: Publish announcement Discord
-          uses: tsickert/discord-webhook@v6.0.0
-          with:
-            webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
-            content: '<@866988297740877844> ${{ env.CHANGELOG }}'
+        uses: tsickert/discord-webhook@v6.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: |
+            <@866988297740877844>
+            ${{ env.CHANGELOG }}
