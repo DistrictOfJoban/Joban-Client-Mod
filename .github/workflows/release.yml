@@ -98,5 +98,5 @@ jobs:
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
           content: |
-            <@866988297740877844>
+            <@&944884315853045764>
             ${{ env.CHANGELOG }}
