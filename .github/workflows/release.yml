@@ -17,7 +17,7 @@ on:
       publish-tag:
         type: string
         required: true
-        description: Tag name to publish (vX.X.X)
+        description: Tag name to publish (X.X.X)
 
 jobs:
   build:
@@ -48,6 +48,32 @@ jobs:
           prerelease: ${{ inputs.publish-tag == 'beta' }}
           fail_on_unmatched_files: true
           files: build/*.jar
+      - name: Upload to Modrinth
+        env:
+          MODRINTH_KEY: ${{ secrets.MODRINTH_PAT }}
+        if: ${{ env.MODRINTH_KEY != '' && inputs.upload-modrinth }}
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: qq2xNfbz
+          modrinth-token: ${{ secrets.MODRINTH_PAT }}
+          files: |
+            build/*.jar
+          name: '[${{ matrix.minecraft }}] ${{ inputs.publish-tag }}'
+          version: ${{ steps.prevtag.outputs.tag }}+${{ matrix.minecraft }}
+          version-type: ${{ inputs.release-type }}
+          changelog-file: CHANGELOG.md
+
+          loaders: |
+            fabric
+            forge
+          game-versions: |
+            ${{ matrix.minecraft }}
+
+          dependencies: |
+            minecraft-transit-railway
+          retry-attempts: 3
+          retry-delay: 30000
+          fail-mode: fail
       - name: Upload Artifacts to GitHub
         uses: actions/upload-artifact@v4
         with:
