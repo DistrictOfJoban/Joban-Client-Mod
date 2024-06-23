@@ -50,7 +50,7 @@ subprojects {
 				(merged_mc_version as int) <= 12004 ? 17 :
 				21
 
-		lg_unicode = (mc_main as int) <= 19 ? rootProject.properties.legacy_unicode_font : ""
+		lg_unicode = (mc_main as int) <= 19 ? rootProject.properties.legacy_unicode_font : rootProject.properties.modern_fallback_font
 		door_blockstate = (mc_main as int) <= 18 ? rootProject.properties.mc_door_118 : rootProject.properties.mc_door_119
 		full_mod_version = version + artifact_date
 	}
