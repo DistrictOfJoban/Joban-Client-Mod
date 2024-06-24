@@ -103,12 +103,12 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
 //        }
 
         HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
-        if(!preset.builtin) widgetSet.addWidget(new MappedWidget(editBtn));
+        // if(!preset.builtin) widgetSet.addWidget(new MappedWidget(editBtn));
         widgetSet.addWidget(new MappedWidget(selectBtn));
         widgetSet.setXYSize(0, 0, 100, 20);
 
         addChild(new ClickableWidget(selectBtn));
-        if(!preset.builtin) addChild(new ClickableWidget(editBtn));
+        // if(!preset.builtin) addChild(new ClickableWidget(editBtn));
         addChild(new ClickableWidget(widgetSet));
         ContentItem contentItem = new ContentItem(TextUtil.literal(preset.getName()), new MappedWidget(widgetSet), 26);
 
