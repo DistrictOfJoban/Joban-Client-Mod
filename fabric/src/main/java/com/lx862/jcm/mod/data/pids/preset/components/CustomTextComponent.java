@@ -21,6 +21,11 @@ public class CustomTextComponent extends TextComponent {
         drawText(graphicsHolder, guiDrawing, facing, text);
     }
 
+    @Override
+    public boolean canRender(PIDSContext context) {
+        return !text.isEmpty();
+    }
+
     public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {
         return new CustomTextComponent(x, y, width, height, new KVPair(jsonObject));
     }

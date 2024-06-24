@@ -12,13 +12,14 @@ import org.mtr.mapping.mapper.GuiDrawing;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CycleComponent extends PIDSComponent {
     private List<PIDSComponent> components;
     private double cycleTime;
-    private int currentComponents = 0;
-    public CycleComponent(double x, double y, double width, double height, KVPair additionalParam) {
-        super(x, y, width, height);
+
+    public CycleComponent(KVPair additionalParam) {
+        super(0, 0, 0, 0);
         this.cycleTime = additionalParam.getDouble("cycleTime", 1);
         this.components = new ArrayList<>();
         JsonArray array = additionalParam.get("components", new JsonArray());
@@ -29,23 +30,20 @@ public class CycleComponent extends PIDSComponent {
 
     @Override
     public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
-        if(cycleTime == -1) {
-            for(PIDSComponent component : components) {
-                if(component.canRender(context)) {
-                    component.render(graphicsHolder, guiDrawing, facing, context);
-                    break;
-                }
-            }
-        } else {
-            currentComponents = (int) ((int)((JCMClientStats.getGameTick() / 20.0) % (cycleTime * components.size())) / cycleTime);
+        if(components.isEmpty()) return;
+        List<PIDSComponent> filteredComponents = components.stream().filter(e -> e.canRender(context)).collect(Collectors.toList());
 
-            if(!components.isEmpty()) {
-                components.get(currentComponents).render(graphicsHolder, guiDrawing, facing, context);
-            }
+        if(cycleTime == -1 && !filteredComponents.isEmpty()) {
+            filteredComponents.get(0).render(graphicsHolder, guiDrawing, facing, context); // Render first available component
+        } else {
+            int currentComponentIndex = (int) ((int)((JCMClientStats.getGameTick() / 20.0) % (cycleTime * filteredComponents.size())) / cycleTime);
+
+            PIDSComponent component = filteredComponents.get(currentComponentIndex);
+            component.render(graphicsHolder, guiDrawing, facing, context);
         }
     }
 
     public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {
-        return new CycleComponent(x, y, width, height, new KVPair(jsonObject));
+        return new CycleComponent(new KVPair(jsonObject));
     }
 }
