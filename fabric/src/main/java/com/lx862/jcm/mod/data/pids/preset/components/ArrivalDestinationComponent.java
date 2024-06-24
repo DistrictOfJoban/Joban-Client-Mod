@@ -25,7 +25,7 @@ public class ArrivalDestinationComponent extends TextComponent {
 
         ArrivalResponse arrival = arrivals.get(arrivalIndex);
         String routeNo = arrival.getRouteNumber().isEmpty() ? "" : arrival.getRouteNumber() + " ";
-        String destinationString = cycleString(routeNo + arrival.getDestination());
+        String destinationString = cycleString(routeNo) + cycleString(arrival.getDestination());
         drawText(graphicsHolder, guiDrawing, facing, destinationString);
     }
 
