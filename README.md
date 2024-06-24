@@ -26,7 +26,7 @@ Prebuilt jar of the mod can be found in the [action tab](https://github.com/Dist
 Use with caution!
 
 ## Links
-- [Website](https://www.joban.org/JCM/)
+- [Website](https://www.joban.org/jcm)
 - [Wiki](https://www.joban.org/wiki/JCM:Joban_Client_Mod)
 
 ## License
