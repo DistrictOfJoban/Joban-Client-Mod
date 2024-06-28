@@ -20,18 +20,18 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(value = TicketSystem.class, remap = false)
 public abstract class MixinTicketSystem {
-
-    private static long fFare;
-
     @Shadow
     private static void incrementPlayerScore(World world, PlayerEntity player, String objective, String title, int value) {
     }
 
     @Inject(method = "onExit", at = @At(value = "INVOKE", target = "Lorg/mtr/mod/data/TicketSystem;incrementPlayerScore(Lorg/mtr/mapping/holder/World;Lorg/mtr/mapping/holder/PlayerEntity;Ljava/lang/String;Ljava/lang/String;I)V"), locals = LocalCapture.CAPTURE_FAILSOFT)
     private static void onExit(World world, Station station, PlayerEntity player, boolean remindIfNoRecord, CallbackInfoReturnable<Boolean> cir, int entryZone1, int entryZone2, int entryZone3, boolean entered, long fare, long finalFare) {
-        if (entered && FareSaverBlock.discountList.containsKey(player.getUuid())) {
+        long finalDeductedAmount = -finalFare;
+
+        if(entered && FareSaverBlock.discountList.containsKey(player.getUuid())) {
             long subsidyAmount = Math.min(finalFare, FareSaverBlock.discountList.get(player.getUuid()));
             incrementPlayerScore(world, player, "mtr_balance", "Balance", (int) subsidyAmount);
+            finalDeductedAmount += subsidyAmount;
 
             if (subsidyAmount < 0 && finalFare > 0) {
                 player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "faresaver.saved_sarcasm", -subsidyAmount)), false);
@@ -42,14 +42,7 @@ public abstract class MixinTicketSystem {
             FareSaverBlock.discountList.remove(player.getUuid());
         }
 
-        fFare = finalFare;
-    }
-
-    @Inject(method = "onExit", at = @At("TAIL"))
-    private static void afterExit(World world, Station station, PlayerEntity player, boolean remindIfNoRecord, CallbackInfoReturnable<Boolean> cir) {
-        if (!world.isClient()) {
-            TransactionLog.writeLog(player, new TransactionEntry(station.getName(), -fFare, System.currentTimeMillis()));
-        }
+        TransactionLog.writeLog(player, new TransactionEntry(station.getName(), finalDeductedAmount, System.currentTimeMillis()));
     }
 
     @Inject(method = "addBalance", at = @At("TAIL"))

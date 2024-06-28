@@ -28,7 +28,7 @@ public class MTREnquiryMachine extends Vertical2Block implements EnquiryMachineB
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(!world.isClient()) enquiry(EnquiryScreenType.CLASSIC, world, player);
+        if(!world.isClient()) enquiry(EnquiryScreenType.CLASSIC, pos, world, player);
         return ActionResult.SUCCESS;
     }
 }

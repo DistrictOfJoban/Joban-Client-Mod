@@ -26,7 +26,7 @@ public class RVEnquiryMachine extends Vertical2Block implements EnquiryMachineBe
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(!world.isClient()) enquiry(EnquiryScreenType.RV, world, player);;
+        if(!world.isClient()) enquiry(EnquiryScreenType.NONE, pos, world, player);;
         return ActionResult.SUCCESS;
     }
 }

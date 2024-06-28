@@ -3,6 +3,9 @@
 **New:**  
 - Add ja_jp (Japanese) translation (Thanks CinderaceOTS!)
 - All Helpline & Emergency buttons now emits a Redstone signal when right-clicked, so you now can use this to setup your own contraption. (Helpline Death Trap anyone?)
+- Classic MTR Enquiry Machines now has a GUI when clicked! (Thanks *dooji*!)
+- - The screen would show transactions recorded by JCM after this update
+- - Transactions including "Add Value" via Ticket Machines and exiting ticket barrier
 
 **Changes:**  
 - All modloaders has been merged into 1 jar again (via [Forgix](https://github.com/PacifistMC/Forgix)), just like in JCM v1

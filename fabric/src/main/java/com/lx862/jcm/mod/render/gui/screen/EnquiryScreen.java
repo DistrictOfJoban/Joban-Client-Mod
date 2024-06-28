@@ -20,12 +20,12 @@ public class EnquiryScreen extends AnimatedScreen {
     private static final int BACKGROUND_COLOR = 0xFF034AE2;
     private static final int CONTENT_WIDTH = 260;
     private static final int CONTENT_HEIGHT = 200;
-    private final static Identifier font  = new Identifier(Constants.MOD_ID, "font1");
+    private final static Identifier font  = Constants.id("pids_lcd");
     private final List<TransactionEntry> entries;
-    private final int remainingBalance;
     private final ButtonWidgetExtension doneButton;
+    private final int remainingBalance;
 
-    public EnquiryScreen(List<TransactionEntry> entries, int remainingBalance) {
+    public EnquiryScreen(BlockPos pos, List<TransactionEntry> entries, int remainingBalance) {
         super(false);
         this.entries = entries;
         this.remainingBalance = remainingBalance;
@@ -52,18 +52,18 @@ public class EnquiryScreen extends AnimatedScreen {
         int scaledEnquiryScreenWidth = (int)(CONTENT_WIDTH * scaleFactor);
         int scaledEnquiryScreenHeight = (int)(CONTENT_HEIGHT * scaleFactor);
 
-        GuiHelper.drawRectangle(guiDrawing, (screenWidth - scaledEnquiryScreenWidth) / 2, (screenHeight - scaledEnquiryScreenHeight) / 2, scaledEnquiryScreenWidth, scaledEnquiryScreenHeight, BACKGROUND_COLOR);
+        GuiHelper.drawRectangle(guiDrawing, (screenWidth - scaledEnquiryScreenWidth) / 2.0, (screenHeight - scaledEnquiryScreenHeight) / 2.0, scaledEnquiryScreenWidth, scaledEnquiryScreenHeight, BACKGROUND_COLOR);
         graphicsHolder.drawCenteredText(TextUtil.translatable(TextCategory.BLOCK, "mtr_enquiry_machine"), getWidthMapped() / 2, ((screenHeight - scaledEnquiryScreenHeight) / 2) / 2, RenderHelper.ARGB_WHITE);
 
         int startX = 5;
         int startY = 5;
 
         graphicsHolder.push();
-        graphicsHolder.translate((screenWidth - scaledEnquiryScreenWidth) / 2, (screenHeight - scaledEnquiryScreenHeight) / 2, 0);
+        graphicsHolder.translate((screenWidth - scaledEnquiryScreenWidth) / 2.0, (screenHeight - scaledEnquiryScreenHeight) / 2.0, 0);
         graphicsHolder.scale(scaleFactor, scaleFactor, scaleFactor);
 
         String balancePrefix = remainingBalance >= 0 ? "" : "-";
-        graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.balance", balancePrefix + "$" + String.valueOf(Math.abs(remainingBalance))), font), startX, startY, RenderHelper.ARGB_WHITE, false, GraphicsHolder.getDefaultLight());
+        graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.balance", balancePrefix + "$" + Math.abs(remainingBalance)), font), startX, startY, RenderHelper.ARGB_WHITE, false, GraphicsHolder.getDefaultLight());
 
         startY += 14;
         graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "enquiry_screen.points", "0"), font), startX, startY, RenderHelper.ARGB_WHITE, false, GraphicsHolder.getDefaultLight());
