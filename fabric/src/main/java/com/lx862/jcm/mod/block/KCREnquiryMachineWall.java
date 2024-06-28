@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
 import com.lx862.jcm.mod.block.behavior.EnquiryMachineBehavior;
+import com.lx862.jcm.mod.data.EnquiryScreenType;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
@@ -18,7 +19,7 @@ public class KCREnquiryMachineWall extends WallAttachedBlock implements EnquiryM
 
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(!world.isClient()) enquiry(world, player);
+        if(!world.isClient()) enquiry(EnquiryScreenType.RV, world, player);
         return ActionResult.SUCCESS;
     }
 }
