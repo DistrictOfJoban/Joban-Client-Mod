@@ -24,6 +24,7 @@ public class Networking {
         registerPacket(PIDSUpdatePacket.class, PIDSUpdatePacket::new);
         registerPacket(SoundLooperUpdatePacket.class, SoundLooperUpdatePacket::new);
         registerPacket(SubsidyMachineUpdatePacket.class, SubsidyMachineUpdatePacket::new);
+        registerPacket(EnquiryUpdateGUIPacket.class, EnquiryUpdateGUIPacket::new);
 
         // GUI Screen
         registerPacket(ButterflyLightGUIPacket.class, ButterflyLightGUIPacket::new);
