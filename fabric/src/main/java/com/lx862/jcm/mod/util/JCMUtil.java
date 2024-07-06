@@ -54,6 +54,8 @@ public class JCMUtil {
                     return Constants.id("operator_button");
                 case "pids_4":
                     return Constants.id("pids_lcd");
+                case "pids_rv_sil":
+                    return Constants.id("pids_rv_sil_1");
                 case "station_ceiling_1":
                     return Constants.id("station_ceiling_wrl");
                 case "station_ceiling_1_station_color":

@@ -27,6 +27,6 @@ public class RVPIDSPole extends PoleBlock {
 
     @Override
     public boolean blockIsAllowed(Block block) {
-        return block.data instanceof RVPIDSBlock || block.data instanceof RVPIDSPole;
+        return block.data instanceof JCMPIDSBlock || block.data instanceof RVPIDSPole;
     }
 }

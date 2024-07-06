@@ -13,6 +13,7 @@
 **Fixes:**
 - Fix JCM-provided fonts showing up as a square in unsupported languages. (Now fallback to Minecraft font)
 - Fix PIDS Route No. only appearing in the first language.
+- Added back South Island Variants of RV PIDS
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

@@ -20,8 +20,10 @@ public final class BlockEntityRenderers {
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_BLUE, (dispatcher) -> new StaticSignalLightRenderer(dispatcher, 0xFF0000FF, true));
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_GREEN, (dispatcher) -> new StaticSignalLightRenderer(dispatcher, 0xFF00FF00, false));
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.PIDS_1A, (dispatcher) -> new RenderPIDS<>(dispatcher, 1, 9.75F, 6, 8.85F, 30, true, 1));
-        JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.RV_PIDS, RVPIDSRenderer::new);
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.LCD_PIDS, LCDPIDSRenderer::new);
+        JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.RV_PIDS, RVPIDSRenderer::new);
+        JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.RV_PIDS_SIL_1, RVPIDSSILRenderer::new);
+        JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.RV_PIDS_SIL_2, RVPIDSSILRenderer::new);
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.STATION_NAME_STANDING, StationNameStandingRenderer::new);
     }
 }

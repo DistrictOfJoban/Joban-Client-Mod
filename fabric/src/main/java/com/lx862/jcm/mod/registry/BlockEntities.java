@@ -24,6 +24,9 @@ public final class BlockEntities {
     public static final BlockEntityTypeRegistryObject<PIDS1ABlockEntity> PIDS_1A = JCMRegistry.registerBlockEntity("pids_4", PIDS1ABlockEntity::new, Blocks.PIDS_1A);
     public static final BlockEntityTypeRegistryObject<LCDPIDSBlockEntity> LCD_PIDS = JCMRegistry.registerBlockEntity("pids_4a", LCDPIDSBlockEntity::new, Blocks.LCD_PIDS);
     public static final BlockEntityTypeRegistryObject<RVPIDSBlockEntity> RV_PIDS = JCMRegistry.registerBlockEntity("pids_5", RVPIDSBlockEntity::new, Blocks.RV_PIDS);
+    public static final BlockEntityTypeRegistryObject<RVPIDSSIL1BlockEntity> RV_PIDS_SIL_1 = JCMRegistry.registerBlockEntity("pids_rv_sil", RVPIDSSIL1BlockEntity::new, Blocks.RV_PIDS_SIL_1);
+    public static final BlockEntityTypeRegistryObject<RVPIDSSIL2BlockEntity> RV_PIDS_SIL_2 = JCMRegistry.registerBlockEntity("pids_rv_sil_2", RVPIDSSIL2BlockEntity::new, Blocks.RV_PIDS_SIL_2);
+
     public static final BlockEntityTypeRegistryObject<StationNameStandingBlockEntity> STATION_NAME_STANDING = JCMRegistry.registerBlockEntity("station_name_tall_stand", StationNameStandingBlockEntity::new, Blocks.STATION_NAME_STANDING);
 
     public static void register() {

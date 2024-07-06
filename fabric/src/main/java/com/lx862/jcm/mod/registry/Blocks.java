@@ -65,6 +65,8 @@ public final class Blocks {
     public static final BlockRegistryObject PIDS_1A = JCMRegistry.registerBlockItem("pids_1a", () -> new Block(new PIDS1ABlock()), ItemGroups.PIDS);
     public static final BlockRegistryObject LCD_PIDS = JCMRegistry.registerBlockItem("pids_lcd", () -> new Block(new LCDPIDSBlock(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque())), ItemGroups.PIDS);
     public static final BlockRegistryObject RV_PIDS = JCMRegistry.registerBlockItem("pids_rv", () -> new Block(new RVPIDSBlock(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque())), ItemGroups.PIDS);
+    public static final BlockRegistryObject RV_PIDS_SIL_1 = JCMRegistry.registerBlockItem("pids_rv_sil_1", () -> new Block(new RVPIDSSIL1Block(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque())), ItemGroups.PIDS);
+    public static final BlockRegistryObject RV_PIDS_SIL_2 = JCMRegistry.registerBlockItem("pids_rv_sil_2", () -> new Block(new RVPIDSSIL2Block(BlockHelper.createBlockSettings(false, state -> 8).strength(4.0f).nonOpaque())), ItemGroups.PIDS);
     public static final BlockRegistryObject RV_PIDS_POLE = JCMRegistry.registerBlockItem("rv_pids_pole", () -> new Block(new RVPIDSPole(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.PIDS);
     public static final BlockRegistryObject RV_ENQUIRY_MACHINE = JCMRegistry.registerBlockItem("rv_enquiry_machine", () -> new Block(new RVEnquiryMachine(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject TCL_EMG_STOP_BUTTON = JCMRegistry.registerBlockItem("tcl_emg_stop_button", () -> new Block(new TCLEmergencyButtonBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
@@ -111,6 +113,8 @@ public final class Blocks {
                 KCR_EMG_STOP_SIGN,
                 MTR_ENQUIRY_MACHINE,
                 RV_ENQUIRY_MACHINE,
+                RV_PIDS_SIL_1,
+                RV_PIDS_SIL_2,
                 SUBSIDY_MACHINE,
                 SPOT_LAMP,
                 HELPLINE_2,

@@ -1,3 +1,6 @@
 {
-  "parent": "jsblock:block/rv_pids_pole"
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "jsblock:item/rv_pids_pole"
+  }
 }
