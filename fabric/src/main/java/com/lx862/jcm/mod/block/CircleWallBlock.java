@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.DirectionalBlock;
 import com.lx862.jcm.mod.registry.Blocks;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 
 public class CircleWallBlock extends DirectionalBlock {
@@ -31,7 +31,7 @@ public class CircleWallBlock extends DirectionalBlock {
 
     @Override
     public VoxelShape getCullingShape2(BlockState state, BlockView world, BlockPos pos) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 0, 0, 16, 16, 15);
+        return IBlock.getVoxelShapeByDirection(0, 0, 0, 16, 16, 15, IBlock.getStatePropertySafe(state, FACING));
     }
 
     /**

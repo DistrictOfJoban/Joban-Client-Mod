@@ -36,7 +36,7 @@ public abstract class Vertical2Block extends DirectionalBlock implements Vertica
 
     @Override
     public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
-        switch(BlockUtil.getProperty(state, new Property<>(HALF.data))) {
+        switch(IBlock.getStatePropertySafe(state, new Property<>(HALF.data))) {
             case LOWER:
                 return new BlockPos[]{
                         pos,

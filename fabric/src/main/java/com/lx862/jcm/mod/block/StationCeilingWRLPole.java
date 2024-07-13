@@ -2,9 +2,9 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.PoleBlock;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public class StationCeilingWRLPole extends PoleBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 7.5, 0, 7.5, 8.5, 16, 8.5);
+        return IBlock.getVoxelShapeByDirection(7.5, 0, 7.5, 8.5, 16, 8.5, IBlock.getStatePropertySafe(state, FACING));
     }
 
 
@@ -26,7 +26,7 @@ public class StationCeilingWRLPole extends PoleBlock {
 
         BlockState blockBelow = ctx.getWorld().getBlockState(ctx.getBlockPos().down());
         return superState
-                .with(new Property<>(FACING.data), BlockUtil.getProperty(blockBelow, FACING).data);
+                .with(new Property<>(FACING.data), IBlock.getStatePropertySafe(blockBelow, FACING).data);
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.block.behavior.HorizontalDoubleBlockBehavior;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public abstract class Horizontal2Block extends DirectionalBlock implements Horiz
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        boolean isLeft = BlockUtil.getProperty(state, IS_LEFT);
+        boolean isLeft = IBlock.getStatePropertySafe(state, IS_LEFT);
         if(!HorizontalDoubleBlockBehavior.blockIsValid(pos, state, world, isLeft)) return Blocks.getAirMapped().getDefaultState();
 
         return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos);
@@ -38,8 +39,8 @@ public abstract class Horizontal2Block extends DirectionalBlock implements Horiz
 
     @Override
     public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
-        Direction facing = BlockUtil.getProperty(state, FACING);
-        boolean isLeft = BlockUtil.getProperty(state, IS_LEFT);
+        Direction facing = IBlock.getStatePropertySafe(state, FACING);
+        boolean isLeft = IBlock.getStatePropertySafe(state, IS_LEFT);
 
         BlockPos secondaryPos = isLeft ? pos.offset(facing.rotateYClockwise()) : pos.offset(facing.rotateYCounterclockwise());
         return new BlockPos[]{ pos, secondaryPos };

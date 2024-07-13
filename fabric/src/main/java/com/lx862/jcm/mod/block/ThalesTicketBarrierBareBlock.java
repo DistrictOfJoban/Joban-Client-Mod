@@ -3,10 +3,10 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.DirectionalBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 import org.mtr.mod.block.BlockGlassFence;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -20,16 +20,16 @@ public class ThalesTicketBarrierBareBlock extends DirectionalBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        boolean hasFence = BlockUtil.getProperty(state, FENCE_TYPE) != 0;
-        boolean flipped = BlockUtil.getProperty(state, FLIPPED);
-        VoxelShape mainBarrierShape = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 12, 0, 0, 16, 16, 16);
+        boolean hasFence = IBlock.getStatePropertySafe(state, FENCE_TYPE) != 0;
+        boolean flipped = IBlock.getStatePropertySafe(state, FLIPPED);
+        VoxelShape mainBarrierShape = IBlock.getVoxelShapeByDirection(12, 0, 0, 16, 16, 16, IBlock.getStatePropertySafe(state, FACING));
 
         VoxelShape vx1;
         if(hasFence) {
             if(flipped) {
-                vx1 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 0, 13, 12, 19, 16);
+                vx1 = IBlock.getVoxelShapeByDirection(0, 0, 13, 12, 19, 16, IBlock.getStatePropertySafe(state, FACING));
             } else {
-                vx1 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 0, 0, 12, 19, 3);
+                vx1 = IBlock.getVoxelShapeByDirection(0, 0, 0, 12, 19, 3, IBlock.getStatePropertySafe(state, FACING));
             }
         } else {
             vx1 = VoxelShapes.empty();
@@ -39,17 +39,17 @@ public class ThalesTicketBarrierBareBlock extends DirectionalBlock {
 
     @Override
     public VoxelShape getCollisionShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        boolean hasFence = BlockUtil.getProperty(state, FENCE_TYPE) != 0;
-        boolean flipped = BlockUtil.getProperty(state, FLIPPED);
+        boolean hasFence = IBlock.getStatePropertySafe(state, FENCE_TYPE) != 0;
+        boolean flipped = IBlock.getStatePropertySafe(state, FLIPPED);
 
-        VoxelShape mainBarrierShape = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 12, 0, 0, 16, 24, 16);
+        VoxelShape mainBarrierShape = IBlock.getVoxelShapeByDirection(12, 0, 0, 16, 24, 16, IBlock.getStatePropertySafe(state, FACING));
 
         VoxelShape vx1;
         if(hasFence) {
             if(flipped) {
-                vx1 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 0, 13, 12, 24, 16);
+                vx1 = IBlock.getVoxelShapeByDirection(0, 0, 13, 12, 24, 16, IBlock.getStatePropertySafe(state, FACING));
             } else {
-                vx1 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 0, 0, 12, 24, 3);
+                vx1 = IBlock.getVoxelShapeByDirection(0, 0, 0, 12, 24, 3, IBlock.getStatePropertySafe(state, FACING));
             }
         } else {
             vx1 = VoxelShapes.empty();
@@ -67,9 +67,9 @@ public class ThalesTicketBarrierBareBlock extends DirectionalBlock {
             return state;
         }
 
-        Direction thisDirection = BlockUtil.getProperty(state, FACING);
+        Direction thisDirection = IBlock.getStatePropertySafe(state, FACING);
         if(stateNear.getBlock().data instanceof BlockGlassFence) {
-            Direction nearbyFacing = BlockUtil.getProperty(stateNear, FACING);
+            Direction nearbyFacing = IBlock.getStatePropertySafe(stateNear, FACING);
             boolean valid = (nearbyFacing == thisDirection) || (nearbyFacing == thisDirection.getOpposite());
             boolean flipped = nearbyFacing != thisDirection;
 

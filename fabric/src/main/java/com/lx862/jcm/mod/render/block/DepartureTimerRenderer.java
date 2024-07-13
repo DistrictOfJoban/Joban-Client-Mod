@@ -16,6 +16,7 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.InitClient;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.ArrivalsCacheClient;
 
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
 
     @Override
     public void renderCurated(DepartureTimerBlockEntity blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
-        Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
+        Direction facing = IBlock.getStatePropertySafe(state, BlockProperties.FACING);
 
         graphicsHolder.push();
         graphicsHolder.translate(0.5, 0.5, 0.5);

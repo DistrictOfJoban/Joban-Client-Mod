@@ -12,6 +12,7 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.InitClient;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.IGui;
 
 public class KCRStationNameSignRenderer extends JCMBlockEntityRenderer<KCRStationNameSignBlockEntity> {
@@ -28,7 +29,7 @@ public class KCRStationNameSignRenderer extends JCMBlockEntityRenderer<KCRStatio
 
         final Station station = InitClient.findStation(blockEntity.getPos2());
         final String stationName = station == null ? TextUtil.translatable("gui.mtr.untitled").getString() : station.getName();
-        double offsetForExitDirection = BlockUtil.getProperty(state, BlockProperties.EXIT_ON_LEFT) ? -0.225 : 0.225;
+        double offsetForExitDirection = IBlock.getStatePropertySafe(state, BlockProperties.EXIT_ON_LEFT) ? -0.225 : 0.225;
 
         // Draw both sides
         for(int i = 0; i < 2; i++) {

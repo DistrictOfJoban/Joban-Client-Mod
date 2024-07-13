@@ -9,7 +9,6 @@ import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
@@ -27,7 +26,7 @@ public class SubsidyMachineBlock extends WallAttachedBlock implements BlockWithE
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 4, 1.25, 0, 12, 14.75, 2);
+        return IBlock.getVoxelShapeByDirection(4, 1.25, 0, 12, 14.75, 2, IBlock.getStatePropertySafe(state, FACING));
     }
 
     @Override

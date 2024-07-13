@@ -6,6 +6,7 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public abstract class CeilingAttachedDirectional2Block extends CeilingAttachedDi
 
     public boolean canPlace(BlockState state, BlockPos pos, ItemPlacementContext ctx) {
         boolean canPlaceHorizontally = HorizontalDoubleBlockBehavior.canBePlaced(ctx);
-        boolean canPlaceVertically = VerticallyAttachedBlock.canPlace(true, false, ctx) && VerticallyAttachedBlock.canPlace(true, false, pos.offset(BlockUtil.getProperty(state, FACING).rotateYClockwise()), ctx);
+        boolean canPlaceVertically = VerticallyAttachedBlock.canPlace(true, false, ctx) && VerticallyAttachedBlock.canPlace(true, false, pos.offset(IBlock.getStatePropertySafe(state, FACING).rotateYClockwise()), ctx);
         return canPlaceHorizontally && (this.enforceLogicalPattern && canPlaceVertically);
     }
 
@@ -34,7 +35,7 @@ public abstract class CeilingAttachedDirectional2Block extends CeilingAttachedDi
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        boolean isLeft = BlockUtil.getProperty(state, IS_LEFT);
+        boolean isLeft = IBlock.getStatePropertySafe(state, IS_LEFT);
 
         if(!HorizontalDoubleBlockBehavior.blockIsValid(pos, state, world, isLeft)) {
             return Blocks.getAirMapped().getDefaultState();

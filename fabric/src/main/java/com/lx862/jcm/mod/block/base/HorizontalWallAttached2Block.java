@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.block.behavior.WallAttachedBlockBehavior;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -18,8 +19,8 @@ public abstract class HorizontalWallAttached2Block extends DirectionalBlock impl
         BlockState superState = super.getPlacementState2(ctx);
         if(superState == null) return null;
 
-        boolean firstBlockAttachable = WallAttachedBlockBehavior.canBePlaced(ctx.getBlockPos(), ctx.getWorld(), BlockUtil.getProperty(superState, FACING));
-        boolean secondBlockAttachable = WallAttachedBlockBehavior.canBePlaced(ctx.getBlockPos().offset(BlockUtil.getProperty(superState, FACING).rotateYClockwise()), ctx.getWorld(), BlockUtil.getProperty(superState, FACING));
+        boolean firstBlockAttachable = WallAttachedBlockBehavior.canBePlaced(ctx.getBlockPos(), ctx.getWorld(), IBlock.getStatePropertySafe(superState, FACING));
+        boolean secondBlockAttachable = WallAttachedBlockBehavior.canBePlaced(ctx.getBlockPos().offset(IBlock.getStatePropertySafe(superState, FACING).rotateYClockwise()), ctx.getWorld(), IBlock.getStatePropertySafe(superState, FACING));
 
         return firstBlockAttachable && secondBlockAttachable && HorizontalDoubleBlockBehavior.canBePlaced(ctx) ? super.getPlacementState2(ctx) : null;
     }
@@ -31,9 +32,9 @@ public abstract class HorizontalWallAttached2Block extends DirectionalBlock impl
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        boolean isLeft = BlockUtil.getProperty(state, IS_LEFT);
+        boolean isLeft = IBlock.getStatePropertySafe(state, IS_LEFT);
 
-        boolean blockAttachable = WallAttachedBlockBehavior.canBePlaced(pos, World.cast(world), BlockUtil.getProperty(state, FACING));
+        boolean blockAttachable = WallAttachedBlockBehavior.canBePlaced(pos, World.cast(world), IBlock.getStatePropertySafe(state, FACING));
 
         if(!HorizontalDoubleBlockBehavior.blockIsValid(pos, state, world, isLeft) || !blockAttachable) {
             return Blocks.getAirMapped().getDefaultState();
@@ -44,7 +45,7 @@ public abstract class HorizontalWallAttached2Block extends DirectionalBlock impl
 
     @Override
     public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
-        Direction facing = BlockUtil.getProperty(state, FACING);
+        Direction facing = IBlock.getStatePropertySafe(state, FACING);
         BlockPos otherPos = pos.offset(facing);
         return new BlockPos[]{ pos, otherPos };
     }

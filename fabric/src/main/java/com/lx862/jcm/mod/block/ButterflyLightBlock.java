@@ -5,11 +5,10 @@ import com.lx862.jcm.mod.block.entity.ButterflyLightBlockEntity;
 import com.lx862.jcm.mod.network.gui.ButterflyLightGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
-import org.mtr.mod.block.IBlock;
 
 public class ButterflyLightBlock extends DirectionalBlock implements BlockWithEntity {
 
@@ -19,7 +18,7 @@ public class ButterflyLightBlock extends DirectionalBlock implements BlockWithEn
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 2, 0, 0, 14, 5.85, 10);
+        return IBlock.getVoxelShapeByDirection(2, 0, 0, 14, 5.85, 10, IBlock.getStatePropertySafe(state, FACING));
     }
 
     @Override

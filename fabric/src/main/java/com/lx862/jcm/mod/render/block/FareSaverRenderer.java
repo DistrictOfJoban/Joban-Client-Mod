@@ -20,8 +20,8 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
 
     @Override
     public void renderCurated(FareSaverBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
-        Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
-        if(BlockUtil.getProperty(state, new Property<>(BlockProperties.VERTICAL_PART_3.data)) != IBlock.EnumThird.UPPER) return;
+        Direction facing = IBlock.getStatePropertySafe(state, BlockProperties.FACING);
+        if(IBlock.getStatePropertySafe(state, new Property<>(BlockProperties.VERTICAL_PART_3.data)) != IBlock.EnumThird.UPPER) return;
 
         MutableText discountText = TextUtil.literal(be.getPrefix() + be.getDiscount());
 

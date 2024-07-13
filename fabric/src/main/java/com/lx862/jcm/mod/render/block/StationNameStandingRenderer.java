@@ -24,7 +24,7 @@ public class StationNameStandingRenderer extends RenderStationNameBase<StationNa
 
     @Override
     protected void drawStationName(World world, BlockPos pos, BlockState state, Direction facing, StoredMatrixTransformations storedMatrixTransformations, String stationName, int stationColor, int color, int light) {
-        if (BlockUtil.getProperty(state, new Property<>(BlockProperties.VERTICAL_PART_3.data)) == IBlock.EnumThird.MIDDLE) {
+        if (IBlock.getStatePropertySafe(state, new Property<>(BlockProperties.VERTICAL_PART_3.data)) == IBlock.EnumThird.MIDDLE) {
             MainRenderer.scheduleRender(DynamicTextureCache.instance.getTallStationName(color, stationName, stationColor, WIDTH / HEIGHT).identifier, false, QueuedRenderLayer.EXTERIOR, (graphicsHolder, offset) -> {
                 storedMatrixTransformations.transform(graphicsHolder, offset);
                 IDrawing.drawTexture(graphicsHolder, -WIDTH / 2, -HEIGHT / 2 - OFFSET_Y, WIDTH, HEIGHT, 0, 0, 1, 1, facing, ARGB_WHITE, light);

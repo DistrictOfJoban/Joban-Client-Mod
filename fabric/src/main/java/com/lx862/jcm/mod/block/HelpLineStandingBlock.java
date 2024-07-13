@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.Vertical3Block;
 import com.lx862.jcm.mod.block.behavior.PowerableBlockBehavior;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 import org.mtr.mod.block.IBlock;
@@ -17,13 +17,13 @@ public class HelpLineStandingBlock extends Vertical3Block implements PowerableBl
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        switch (BlockUtil.getProperty(state, new Property<>(THIRD.data))) {
+        switch (IBlock.getStatePropertySafe(state, new Property<>(THIRD.data))) {
             case LOWER:
             case MIDDLE:
-                return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 4, 0, 7.5, 12, 16, 8.5);
+                return IBlock.getVoxelShapeByDirection(4, 0, 7.5, 12, 16, 8.5, IBlock.getStatePropertySafe(state, FACING));
             case UPPER:
-                VoxelShape vx1 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 4, 0, 7.5, 12, 16, 8.5);
-                VoxelShape vx2 = VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 5.5, 0, 8.5, 10.5, 16, 10.5);
+                VoxelShape vx1 = IBlock.getVoxelShapeByDirection(4, 0, 7.5, 12, 16, 8.5, IBlock.getStatePropertySafe(state, FACING));
+                VoxelShape vx2 = IBlock.getVoxelShapeByDirection(5.5, 0, 8.5, 10.5, 16, 10.5, IBlock.getStatePropertySafe(state, FACING));
                 return VoxelShapes.union(vx1, vx2);
             default:
                 return VoxelShapes.empty();

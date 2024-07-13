@@ -5,7 +5,7 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 import org.mtr.mod.block.IBlock;
@@ -20,7 +20,7 @@ public class KCREmergencyStopSign extends WallAttachedBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 0, 0, 6.5, 26, 7, 9.5);
+        return IBlock.getVoxelShapeByDirection(0, 0, 6.5, 26, 7, 9.5, IBlock.getStatePropertySafe(state, FACING));
     }
 
     @Override

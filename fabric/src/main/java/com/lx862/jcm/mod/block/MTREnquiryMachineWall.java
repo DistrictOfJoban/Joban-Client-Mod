@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.block.base.WallAttachedBlock;
 import com.lx862.jcm.mod.block.behavior.EnquiryMachineBehavior;
 import com.lx862.jcm.mod.data.EnquiryScreenType;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 
 public class MTREnquiryMachineWall extends WallAttachedBlock implements EnquiryMachineBehavior {
@@ -14,7 +14,7 @@ public class MTREnquiryMachineWall extends WallAttachedBlock implements EnquiryM
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 2.5, 1, 0, 13.5, 15, 0.2);
+        return IBlock.getVoxelShapeByDirection(2.5, 1, 0, 13.5, 15, 0.2, IBlock.getStatePropertySafe(state, FACING));
     }
 
     @Override

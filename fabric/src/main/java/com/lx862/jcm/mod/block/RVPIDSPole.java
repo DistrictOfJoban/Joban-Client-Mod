@@ -2,7 +2,7 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.PoleBlock;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 
 public class RVPIDSPole extends PoleBlock {
@@ -12,7 +12,7 @@ public class RVPIDSPole extends PoleBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 7.5, 0, 8.5, 8.5, 16, 9.5);
+        return IBlock.getVoxelShapeByDirection(7.5, 0, 8.5, 8.5, 16, 9.5, IBlock.getStatePropertySafe(state, FACING));
     }
 
     @Override
@@ -22,7 +22,7 @@ public class RVPIDSPole extends PoleBlock {
 
         BlockState blockBelow = ctx.getWorld().getBlockState(ctx.getBlockPos().down());
         return superState
-                .with(new Property<>(FACING.data), BlockUtil.getProperty(blockBelow, FACING).data);
+                .with(new Property<>(FACING.data), IBlock.getStatePropertySafe(blockBelow, FACING).data);
     }
 
     @Override

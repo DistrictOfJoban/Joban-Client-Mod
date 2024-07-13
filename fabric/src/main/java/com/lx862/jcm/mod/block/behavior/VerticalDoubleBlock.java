@@ -16,7 +16,7 @@ public interface VerticalDoubleBlock {
     }
 
     static boolean blockNotValid(Block blockInstance, WorldAccess world, BlockPos pos, BlockState state) {
-        IBlock.DoubleBlockHalf thisPart = BlockUtil.getProperty(state, new Property<>(HALF.data));
+        IBlock.DoubleBlockHalf thisPart = IBlock.getStatePropertySafe(state, new Property<>(HALF.data));
         int offset = thisPart == IBlock.DoubleBlockHalf.UPPER ? -1 : 1;
         return !world.getBlockState(pos.offset(Axis.Y, offset)).isOf(blockInstance);
     }

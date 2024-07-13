@@ -6,7 +6,7 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
@@ -25,7 +25,7 @@ public class KCRStationNameSignBlock extends CeilingAttachedDirectionalBlock imp
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), -7, 2, 5.5, 23, 16, 10.5);
+        return IBlock.getVoxelShapeByDirection(-7, 2, 5.5, 23, 16, 10.5, IBlock.getStatePropertySafe(state, FACING));
     }
 
     @Override

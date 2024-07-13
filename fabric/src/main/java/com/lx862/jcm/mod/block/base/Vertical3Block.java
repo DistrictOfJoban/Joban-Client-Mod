@@ -29,7 +29,7 @@ public abstract class Vertical3Block extends DirectionalBlock {
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if(!BlockUtil.canSurvive(state.getBlock(), world, pos, Direction.UP, getPart(BlockUtil.getProperty(state, new Property<>(THIRD.data))), HEIGHT)) {
+        if(!BlockUtil.canSurvive(state.getBlock(), world, pos, Direction.UP, getPart(IBlock.getStatePropertySafe(state, new Property<>(THIRD.data))), HEIGHT)) {
             return Blocks.getAirMapped().getDefaultState();
         }
 
@@ -44,7 +44,7 @@ public abstract class Vertical3Block extends DirectionalBlock {
 
     @Override
     public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
-        switch(BlockUtil.getProperty(state, new Property<>(THIRD.data))) {
+        switch(IBlock.getStatePropertySafe(state, new Property<>(THIRD.data))) {
             case LOWER:
                 return new BlockPos[]{
                         pos,

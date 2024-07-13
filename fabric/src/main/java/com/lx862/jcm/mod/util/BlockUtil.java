@@ -43,22 +43,6 @@ public class BlockUtil {
         return true;
     }
 
-    public static boolean getProperty(BlockState state, BooleanProperty property) {
-        return getProperty(state, new Property<>(property.data));
-    }
-
-    public static Direction getProperty(BlockState state, DirectionProperty property) {
-        return Direction.convert(getProperty(state, new Property<>(property.data)));
-    }
-
-    public static int getProperty(BlockState state, IntegerProperty property) {
-        return getProperty(state, new Property<>(property.data));
-    }
-
-    public static <T extends Comparable<T>> T getProperty(BlockState state, Property<T> property) {
-        return state.contains(property) ? state.get(property) : new ArrayList<>(property.getValues()).get(0);
-    }
-
     /**
      * Get block entity in world, but will return null if chunk is not loaded (And will not attempt to load the chunk).
      */

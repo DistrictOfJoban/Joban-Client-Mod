@@ -10,11 +10,11 @@ public interface WaterloggableBehavior extends Waterloggable {
     BooleanProperty WATERLOGGED = new BooleanProperty(Properties.WATERLOGGED);
 
     default FluidState getFluidState(BlockState state) {
-        return BlockUtil.getProperty(state, WATERLOGGED) ? new FluidState(Fluids.WATER.getStill(false)) : new FluidState(Fluids.EMPTY.getDefaultState());
+        return IBlock.getStatePropertySafe(state, WATERLOGGED) ? new FluidState(Fluids.WATER.getStill(false)) : new FluidState(Fluids.EMPTY.getDefaultState());
     }
 
     default void updateWaterState(BlockState state, WorldAccess world, BlockPos pos) {
-        if (BlockUtil.getProperty(state, WATERLOGGED)) {
+        if (IBlock.getStatePropertySafe(state, WATERLOGGED)) {
             #if MC_VERSION == "11802"
                 world.createAndScheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world.data));
             #elif MC_VERSION < "11904"

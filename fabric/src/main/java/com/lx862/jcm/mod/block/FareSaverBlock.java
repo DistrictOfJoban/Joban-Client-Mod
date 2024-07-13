@@ -8,6 +8,7 @@ import com.lx862.jcm.mod.util.*;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
+import org.mtr.mod.block.IBlock;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -20,7 +21,7 @@ public class FareSaverBlock extends Vertical3Block implements BlockWithEntity {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 3, 0, 6.5, 13, 16, 9.5);
+        return IBlock.getVoxelShapeByDirection(3, 0, 6.5, 13, 16, 9.5, IBlock.getStatePropertySafe(state, FACING));
     }
 
     @Override

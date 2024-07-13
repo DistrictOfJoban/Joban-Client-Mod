@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
 import com.lx862.jcm.mod.block.behavior.PowerableBlockBehavior;
-import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 import org.mtr.mod.block.IBlock;
@@ -16,7 +15,7 @@ public class WallAttachedHelpLineBlock extends WallAttachedBlock implements Powe
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(IBlock.getStatePropertySafe(state, FACING), 5.5, 0, 0, 10.5, 16, 2);
+        return IBlock.getVoxelShapeByDirection(5.5, 0, 0, 10.5, 16, 2, IBlock.getStatePropertySafe(state, FACING));
     }
 
     @Override

@@ -5,7 +5,7 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 import org.mtr.mod.Items;
@@ -25,7 +25,7 @@ public class OperatorButtonBlock extends WallAttachedBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 5, 5, 0, 11, 11.5, 0.2);
+        return IBlock.getVoxelShapeByDirection(5, 5, 0, 11, 11.5, 0.2, IBlock.getStatePropertySafe(state, FACING));
     }
 
     @Override
@@ -61,12 +61,12 @@ public class OperatorButtonBlock extends WallAttachedBlock {
 
     @Override
     public int getWeakRedstonePower2(BlockState state, BlockView world, BlockPos pos, Direction direction) {
-        return BlockUtil.getProperty(state, POWERED) ? 15 : 0;
+        return IBlock.getStatePropertySafe(state, POWERED) ? 15 : 0;
     }
 
     @Override
     public int getStrongRedstonePower2(BlockState state, BlockView world, BlockPos pos, Direction direction) {
-        return BlockUtil.getProperty(state, POWERED) ? 15 : 0;
+        return IBlock.getStatePropertySafe(state, POWERED) ? 15 : 0;
     }
 
     private void setPowered(World world, BlockState blockState, BlockPos pos, boolean powered) {

@@ -5,7 +5,6 @@ import com.lx862.jcm.mod.block.entity.ButterflyLightBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.tool.Utilities;
@@ -14,6 +13,7 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.InitClient;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.ArrivalsCacheClient;
 
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ public class ButterflyLightRenderer extends JCMBlockEntityRenderer<ButterflyLigh
     @Override
     public void renderCurated(ButterflyLightBlockEntity blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
         int startBlinkingSeconds = blockEntity.getStartBlinkingSeconds();
-        Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
+        Direction facing = IBlock.getStatePropertySafe(state, BlockProperties.FACING);
 
         List<Platform> closestPlatforms = new ArrayList<>();
         InitClient.findClosePlatform(pos, 5, closestPlatforms::add);

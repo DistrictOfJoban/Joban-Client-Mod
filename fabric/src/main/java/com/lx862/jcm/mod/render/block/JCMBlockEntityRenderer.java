@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.render.block;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
@@ -12,6 +11,7 @@ import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.block.IBlock;
 
 import javax.annotation.Nonnull;
 
@@ -46,7 +46,7 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
         World world = blockEntity.getWorld2();
         if(world != null) {
             BlockState state = world.getBlockState(blockEntity.getPos2());
-            Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
+            Direction facing = IBlock.getStatePropertySafe(state, BlockProperties.FACING);
             graphicsHolder.rotateYDegrees(-facing.asRotation());
         }
     }

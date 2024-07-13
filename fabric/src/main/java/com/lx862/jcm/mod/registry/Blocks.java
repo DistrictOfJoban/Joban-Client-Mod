@@ -8,6 +8,7 @@ import org.mtr.mapping.holder.Block;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.BlockHelper;
 import org.mtr.mapping.registry.BlockRegistryObject;
+import org.mtr.mod.block.IBlock;
 
 import static com.lx862.jcm.mod.block.SpotLampBlock.LIT;
 
@@ -34,12 +35,12 @@ public final class Blocks {
     public static final BlockRegistryObject FARE_SAVER = JCMRegistry.registerBlockItem("faresaver", () -> new Block(new FareSaverBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN = JCMRegistry.registerBlockItem("kcr_name_sign", () -> new Block(new KCRStationNameSignBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque(), false)), ItemGroups.MAIN);
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN_STATION_COLOR = JCMRegistry.registerBlockItem("kcr_name_sign_station_color", () -> new Block(new KCRStationNameSignBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque(), true)), ItemGroups.MAIN);
-    public static final BlockRegistryObject LIGHT_BLOCK = JCMRegistry.registerBlockItem("light_block", () -> new Block(new LightBlock(BlockHelper.createBlockSettings(false, state -> BlockUtil.getProperty(state, BlockProperties.LIGHT_LEVEL)).strength(1.0f).nonOpaque())), ItemGroups.MAIN);
-    public static final BlockRegistryObject LIGHT_LANTERN = JCMRegistry.registerBlockItem("light_lantern", () -> new Block(new LightLanternBlock(BlockHelper.createBlockSettings(false, state -> BlockUtil.getProperty(state, LIT) ? 15 : 0).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
+    public static final BlockRegistryObject LIGHT_BLOCK = JCMRegistry.registerBlockItem("light_block", () -> new Block(new LightBlock(BlockHelper.createBlockSettings(false, state -> IBlock.getStatePropertySafe(state, BlockProperties.LIGHT_LEVEL)).strength(1.0f).nonOpaque())), ItemGroups.MAIN);
+    public static final BlockRegistryObject LIGHT_LANTERN = JCMRegistry.registerBlockItem("light_lantern", () -> new Block(new LightLanternBlock(BlockHelper.createBlockSettings(false, state -> IBlock.getStatePropertySafe(state, LIT) ? 15 : 0).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject MTR_STAIRS = JCMRegistry.registerBlockItem("mtr_stairs", () -> new Block(new MTRStairsBlock(BlockHelper.createBlockSettings(false).strength(4.0f))), ItemGroups.MAIN);
     public static final BlockRegistryObject OPERATOR_BUTTON = JCMRegistry.registerBlockItem("operator_button", () -> new Block(new OperatorButtonBlock(BlockHelper.createBlockSettings(false, state -> 5).nonOpaque(), 40)), ItemGroups.MAIN);
     public static final BlockRegistryObject SPOT_LAMP = JCMRegistry.registerBlockItem("spot_lamp", () ->
-        new Block(new SpotLampBlock(BlockHelper.createBlockSettings(false, state -> BlockUtil.getProperty(state, LIT) ? 15 : 0).nonOpaque())), ItemGroups.MAIN);
+        new Block(new SpotLampBlock(BlockHelper.createBlockSettings(false, state -> IBlock.getStatePropertySafe(state, LIT) ? 15 : 0).nonOpaque())), ItemGroups.MAIN);
 
     public static final BlockRegistryObject SUBSIDY_MACHINE = JCMRegistry.registerBlockItem("subsidy_machine", () -> new Block(new SubsidyMachineBlock(BlockHelper.createBlockSettings(false).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject SOUND_LOOPER = JCMRegistry.registerBlockItem("sound_looper", () -> new Block(new SoundLooperBlock(BlockHelper.createBlockSettings(false))), ItemGroups.MAIN);

@@ -24,7 +24,7 @@ public class StaticSignalLightRenderer<T extends BlockEntityExtension> extends J
 
         @Override
         public final void renderCurated(T entity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int overlay) {
-            final Direction facing = BlockUtil.getProperty(state, BlockProperties.FACING);
+            final Direction facing = IBlock.getStatePropertySafe(state, BlockProperties.FACING);
             final float angle = facing.asRotation() + (IBlock.getStatePropertySafe(state, BlockSignalBase.IS_22_5).booleanValue ? 22.5F : 0) + (IBlock.getStatePropertySafe(state, BlockSignalBase.IS_45).booleanValue ? 45 : 0);
 
             graphicsHolder.push();

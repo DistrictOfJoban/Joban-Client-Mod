@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public interface HorizontalDoubleBlockBehavior {
     }
 
     static boolean blockIsValid(BlockPos pos, BlockState state, WorldAccess world, boolean thisBlockIsLeftPart) {
-        Direction dir = BlockUtil.getProperty(state, FACING);
+        Direction dir = IBlock.getStatePropertySafe(state, FACING);
         boolean checkLeft = !thisBlockIsLeftPart;
 
         BlockPos neighbourPos = checkLeft ? pos.offset(dir.rotateYCounterclockwise()) : pos.offset(dir.rotateYClockwise());
@@ -29,7 +30,7 @@ public interface HorizontalDoubleBlockBehavior {
     }
 
     static void onPlaced(World world, BlockState state, BlockPos placedPos) {
-        world.setBlockState(placedPos.offset(BlockUtil.getProperty(state, FACING).rotateYClockwise()), state.with(new Property<>(IS_LEFT.data), false));
+        world.setBlockState(placedPos.offset(IBlock.getStatePropertySafe(state, FACING).rotateYClockwise()), state.with(new Property<>(IS_LEFT.data), false));
     }
 
     static void addProperties(List<HolderBase<?>> properties) {

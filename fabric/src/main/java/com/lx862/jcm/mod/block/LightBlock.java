@@ -7,6 +7,7 @@ import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
+import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -48,7 +49,7 @@ public class LightBlock extends JCMBlock {
         if(player.isHolding(this.asItem2())) {
             BlockState newState = state.cycle(new Property<>(LIGHT_LEVEL.data));
             world.setBlockState(pos, newState);
-            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "light_block.success", BlockUtil.getProperty(newState, new Property<>(LIGHT_LEVEL.data)))), true);
+            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "light_block.success", IBlock.getStatePropertySafe(newState, new Property<>(LIGHT_LEVEL.data)))), true);
             return ActionResult.SUCCESS;
         } else {
             return ActionResult.FAIL;

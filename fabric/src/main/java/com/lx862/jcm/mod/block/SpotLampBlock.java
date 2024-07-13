@@ -3,10 +3,9 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.VerticallyAttachedBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
+import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
-import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
@@ -19,10 +18,10 @@ public class SpotLampBlock extends VerticallyAttachedBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        if (BlockUtil.getProperty(state, TOP)) {
-            return VoxelUtil.getShape16(4, 15.75, 4, 12, 16, 12);
+        if (IBlock.getStatePropertySafe(state, TOP)) {
+            return IBlock.getVoxelShapeByDirection(4, 15.75, 4, 12, 16, 12, Direction.NORTH);
         } else {
-            return VoxelUtil.getShape16(4, 0, 4, 12, 0.25, 12);
+            return IBlock.getVoxelShapeByDirection(4, 0, 4, 12, 0.25, 12, Direction.NORTH);
         }
     }
 

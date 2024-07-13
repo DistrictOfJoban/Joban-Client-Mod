@@ -2,9 +2,9 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.Vertical2Block;
 import com.lx862.jcm.mod.util.BlockUtil;
-import com.lx862.jcm.mod.util.VoxelUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.PlayerHelper;
+import org.mtr.mod.block.IBlock;
 
 public class WaterMachineBlock extends Vertical2Block {
     public WaterMachineBlock(BlockSettings settings) {
@@ -13,7 +13,7 @@ public class WaterMachineBlock extends Vertical2Block {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelUtil.getDirectionalShape16(BlockUtil.getProperty(state, FACING), 2.5, 0, 2.5, 13.5, 16, 13.5);
+        return IBlock.getVoxelShapeByDirection(2.5, 0, 2.5, 13.5, 16, 13.5, IBlock.getStatePropertySafe(state, FACING));
     }
 
     @Override
