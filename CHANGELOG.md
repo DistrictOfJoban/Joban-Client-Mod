@@ -1,11 +1,14 @@
-## (JCM v2.0.0 beta-3) for (MTR 4 beta-9) has been released!
+## (JCM v2.0.0 beta-3) for (MTR 4 beta-8) has been released!
+
+This release is originally planned to release with the upcoming MTR beta version, but we recognize that existing MTR 4 beta-8 players may benefit from the changes made so far.
 
 **New:**  
 - Add ja_jp (Japanese) translation (Thanks CinderaceOTS!)
-- All Helpline & Emergency buttons now emits a Redstone signal when right-clicked, so you now can use this to setup your own contraption. (Helpline Death Trap anyone?)
+- All Helpline & Emergency buttons now emits a Redstone signal when right-clicked, so you now can use this to setup your own contraption.
 - Classic MTR Enquiry Machines now has a GUI when clicked! (Thanks *dooji*!)
 - - The screen would show transactions recorded by JCM after this update
 - - Transactions including "Add Value" via Ticket Machines and exiting ticket barrier
+- - RV Enquiry Machines screen is planned to be added later
 
 **Changes:**  
 - All modloaders has been merged into 1 jar again (via [Forgix](https://github.com/PacifistMC/Forgix)), just like in JCM v1
