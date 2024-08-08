@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.render.block;
 
-import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.block.entity.PIDSProjectorBlockEntity;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import org.mtr.core.operation.ArrivalResponse;
@@ -21,6 +20,9 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
         graphicsHolder.translate(-0.21 + blockEntity.getX(), -0.14 + blockEntity.getY(), -0.128 + blockEntity.getZ());
         graphicsHolder.scale(1/96F, 1/96F, 1/96F);
         graphicsHolder.scale(blockEntity.getScale(), blockEntity.getScale(), blockEntity.getScale());
+        graphicsHolder.rotateXDegrees(blockEntity.getRotateX());
+        graphicsHolder.rotateYDegrees(blockEntity.getRotateY());
+        graphicsHolder.rotateZDegrees(blockEntity.getRotateZ());
         pidsPreset.render(blockEntity, graphicsHolder, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 136, 76);
     }
 }
