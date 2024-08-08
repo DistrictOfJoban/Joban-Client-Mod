@@ -27,6 +27,10 @@ public final class ClientHelper {
 		MinecraftClient.getInstance().openScreen(new Screen(new PIDSScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId)));
 	}
 
+	public static void openPIDSGUIScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId, float x1, float y1, float z1, float scale) {
+		MinecraftClient.getInstance().openScreen(new Screen(new PIDSProjectorScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId, x1, y1, z1, scale)));
+	}
+
 	public static void openSoundLooperGUIScreen(BlockPos blockPos, BlockPos corner1, BlockPos corner2, String soundId, int soundCategory, float soundVolume, int interval, boolean needRedstone, boolean limitRange) {
 		MinecraftClient.getInstance().openScreen(new Screen(new SoundLooperScreen(blockPos, corner1, corner2, soundId, soundCategory, soundVolume, interval, needRedstone, limitRange)));
 	}

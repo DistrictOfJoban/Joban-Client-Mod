@@ -11,12 +11,12 @@ import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
 
 public class PIDSUpdatePacket extends PacketHandler {
-    private final BlockPos blockPos;
-    private final LongAVLTreeSet filteredPlatforms;
-    private final String[] customMessages;
-    private final boolean[] rowHidden;
-    private final boolean hidePlatformNumber;
-    private final String presetId;
+    protected final BlockPos blockPos;
+    protected final LongAVLTreeSet filteredPlatforms;
+    protected final String[] customMessages;
+    protected final boolean[] rowHidden;
+    protected final boolean hidePlatformNumber;
+    protected final String presetId;
 
     public PIDSUpdatePacket(PacketBufferReceiver packetBufferReceiver) {
         this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());

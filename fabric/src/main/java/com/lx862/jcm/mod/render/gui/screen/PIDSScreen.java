@@ -29,14 +29,14 @@ import org.mtr.mod.screen.DashboardListSelectorScreen;
 import static org.mtr.mod.screen.PIDSConfigScreen.getPlatformsForList;
 
 public class PIDSScreen extends BlockConfigScreen {
-    private final TextFieldWidgetExtension[] customMessagesWidgets;
-    private final CheckboxWidgetExtension[] rowHiddenWidgets;
-    private final CheckboxWidgetExtension hidePlatformNumber;
-    private final ButtonWidgetExtension choosePresetButton;
-    private final ButtonWidgetExtension choosePlatformButton;
+    protected final TextFieldWidgetExtension[] customMessagesWidgets;
+    protected final CheckboxWidgetExtension[] rowHiddenWidgets;
+    protected final CheckboxWidgetExtension hidePlatformNumber;
+    protected final ButtonWidgetExtension choosePresetButton;
+    protected final ButtonWidgetExtension choosePlatformButton;
 
-    private LongAVLTreeSet filteredPlatforms;
-    private String presetId;
+    protected LongAVLTreeSet filteredPlatforms;
+    protected String presetId;
     public PIDSScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId) {
         super(blockPos);
         this.filteredPlatforms = new LongAVLTreeSet();

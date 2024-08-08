@@ -21,6 +21,7 @@ public final class BlockEntities {
     public static final BlockEntityTypeRegistryObject<DepartureTimerBlockEntity> DEPARTURE_TIMER = JCMRegistry.registerBlockEntity("departure_timer", DepartureTimerBlockEntity::new, Blocks.DEPARTURE_TIMER);
     public static final BlockEntityTypeRegistryObject<KCRStationNameSignBlockEntity> KCR_STATION_NAME_SIGN = JCMRegistry.registerBlockEntity("kcr_name_sign", (blockPos, blockState) -> new KCRStationNameSignBlockEntity(blockPos, blockState, false), Blocks.KCR_STATION_NAME_SIGN);
     public static final BlockEntityTypeRegistryObject<KCRStationNameSignBlockEntity> KCR_STATION_NAME_SIGN_STATION_COLOR = JCMRegistry.registerBlockEntity("kcr_name_sign_station_color", (blockPos, blockState) -> new KCRStationNameSignBlockEntity(blockPos, blockState, true), Blocks.KCR_STATION_NAME_SIGN_STATION_COLOR);
+    public static final BlockEntityTypeRegistryObject<PIDSProjectorBlockEntity> PIDS_PROJECTOR = JCMRegistry.registerBlockEntity("pids_projector", PIDSProjectorBlockEntity::new, Blocks.PIDS_PROJECTOR);
     public static final BlockEntityTypeRegistryObject<PIDS1ABlockEntity> PIDS_1A = JCMRegistry.registerBlockEntity("pids_4", PIDS1ABlockEntity::new, Blocks.PIDS_1A);
     public static final BlockEntityTypeRegistryObject<LCDPIDSBlockEntity> LCD_PIDS = JCMRegistry.registerBlockEntity("pids_4a", LCDPIDSBlockEntity::new, Blocks.LCD_PIDS);
     public static final BlockEntityTypeRegistryObject<RVPIDSBlockEntity> RV_PIDS = JCMRegistry.registerBlockEntity("pids_5", RVPIDSBlockEntity::new, Blocks.RV_PIDS);
