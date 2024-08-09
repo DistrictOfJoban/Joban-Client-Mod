@@ -7,7 +7,7 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 
 import java.util.function.Consumer;
 
-public class BlockPosWidget extends ClickableWidgetExtension implements MultiWidgetContainer {
+public class BlockPosWidget extends ClickableWidgetExtension implements WidgetsWrapper {
     private final CoordTextField posXTextField;
     private final CoordTextField posYTextField;
     private final CoordTextField posZTextField;

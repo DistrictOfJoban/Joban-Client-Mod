@@ -49,6 +49,6 @@ public class PIDSProjectorGUIPacket extends PIDSGUIPacket {
 
     @Override
     public void runClient() {
-        ClientHelper.openPIDSGUIScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId, x1, y1, z1, rotateX, rotateY, rotateZ, scale);
+        ClientHelper.openPIDSProjectorGUIScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId, x1, y1, z1, rotateX, rotateY, rotateZ, scale);
     }
 }

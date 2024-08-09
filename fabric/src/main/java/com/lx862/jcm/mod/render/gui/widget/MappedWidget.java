@@ -132,8 +132,8 @@ public class MappedWidget {
     }
 
     public void setX(int newX) {
-        if(widget instanceof MultiWidgetContainer) {
-            ((MultiWidgetContainer) widget).setAllX(newX);
+        if(widget instanceof WidgetsWrapper) {
+            ((WidgetsWrapper) widget).setAllX(newX);
         }
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension) widget).setX2(newX);
@@ -156,8 +156,8 @@ public class MappedWidget {
     }
 
     public void setY(int newY) {
-        if(widget instanceof MultiWidgetContainer) {
-            ((MultiWidgetContainer) widget).setAllY(newY);
+        if(widget instanceof WidgetsWrapper) {
+            ((WidgetsWrapper) widget).setAllY(newY);
         }
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension) widget).setY2(newY);

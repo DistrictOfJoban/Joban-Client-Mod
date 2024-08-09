@@ -2,7 +2,10 @@ package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.network.block.PIDSProjectorUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
+import com.lx862.jcm.mod.render.gui.widget.CategoryItem;
+import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
+import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
@@ -22,13 +25,13 @@ public class PIDSProjectorScreen extends PIDSScreen {
     public PIDSProjectorScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId, float x1, float y1, float z1, float rotateX, float rotateY, float rotateZ, float scale) {
         super(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId);
 
-        this.xField = new TextFieldWidgetExtension(0, 0, 60, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.x").getString());
-        this.yField = new TextFieldWidgetExtension(0, 0, 60, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.y").getString());
-        this.zField = new TextFieldWidgetExtension(0, 0, 60, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.y").getString());
-        this.rotateXField = new TextFieldWidgetExtension(0, 0, 60, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateX").getString());
-        this.rotateYField = new TextFieldWidgetExtension(0, 0, 60, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateY").getString());
-        this.rotateZField = new TextFieldWidgetExtension(0, 0, 60, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateZ").getString());
-        this.scaleField = new TextFieldWidgetExtension(0, 0, 60, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.scale").getString());
+        this.xField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.x").getString());
+        this.yField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.y").getString());
+        this.zField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.y").getString());
+        this.rotateXField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateX").getString());
+        this.rotateYField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateY").getString());
+        this.rotateZField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateZ").getString());
+        this.scaleField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.scale").getString());
 
         xField.setText2(String.valueOf(x1));
         yField.setText2(String.valueOf(y1));
@@ -46,7 +49,8 @@ public class PIDSProjectorScreen extends PIDSScreen {
 
     @Override
     public void addConfigEntries() {
-        super.addConfigEntries();
+        WidgetSet positionFields = new WidgetSet(20, 0);
+        WidgetSet rotationFields = new WidgetSet(20, 0);
 
         addChild(new ClickableWidget(xField));
         addChild(new ClickableWidget(yField));
@@ -55,14 +59,25 @@ public class PIDSProjectorScreen extends PIDSScreen {
         addChild(new ClickableWidget(rotateYField));
         addChild(new ClickableWidget(rotateZField));
         addChild(new ClickableWidget(scaleField));
+        addChild(new ClickableWidget(positionFields));
+        addChild(new ClickableWidget(rotationFields));
 
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.x"), new MappedWidget(xField));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.y"), new MappedWidget(yField));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.z"), new MappedWidget(zField));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateX"), new MappedWidget(rotateXField));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateY"), new MappedWidget(rotateYField));
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateZ"), new MappedWidget(rotateZField));
+        positionFields.addWidget(new MappedWidget(xField));
+        positionFields.addWidget(new MappedWidget(yField));
+        positionFields.addWidget(new MappedWidget(zField));
+
+        rotationFields.addWidget(new MappedWidget(rotateXField));
+        rotationFields.addWidget(new MappedWidget(rotateYField));
+        rotationFields.addWidget(new MappedWidget(rotateZField));
+
+        rotationFields.setXYSize(0, 0, 140, 20);
+        positionFields.setXYSize(0, 0, 140, 20);
+        listViewWidget.add(new CategoryItem(TextUtil.translatable(TextCategory.GUI, "pids.listview.category.projection")));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.position"), new MappedWidget(positionFields));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotate"), new MappedWidget(rotationFields));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.scale"), new MappedWidget(scaleField));
+        listViewWidget.add(new CategoryItem(TextUtil.translatable(TextCategory.GUI, "pids.listview.category.pids")));
+        super.addConfigEntries();
     }
 
     @Override
