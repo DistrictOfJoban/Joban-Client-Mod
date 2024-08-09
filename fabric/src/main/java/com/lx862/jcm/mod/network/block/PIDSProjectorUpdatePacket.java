@@ -8,26 +8,26 @@ import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
 
 public class PIDSProjectorUpdatePacket extends PIDSUpdatePacket {
-    private final float x;
-    private final float y;
-    private final float z;
-    private final float rotateX;
-    private final float rotateY;
-    private final float rotateZ;
-    private final float scale;
+    private final double x;
+    private final double y;
+    private final double z;
+    private final double rotateX;
+    private final double rotateY;
+    private final double rotateZ;
+    private final double scale;
 
     public PIDSProjectorUpdatePacket(PacketBufferReceiver packetBufferReceiver) {
         super(packetBufferReceiver);
-        this.x = packetBufferReceiver.readFloat();
-        this.y = packetBufferReceiver.readFloat();
-        this.z = packetBufferReceiver.readFloat();
-        this.rotateX = packetBufferReceiver.readFloat();
-        this.rotateY = packetBufferReceiver.readFloat();
-        this.rotateZ = packetBufferReceiver.readFloat();
-        this.scale = packetBufferReceiver.readFloat();
+        this.x = packetBufferReceiver.readDouble();
+        this.y = packetBufferReceiver.readDouble();
+        this.z = packetBufferReceiver.readDouble();
+        this.rotateX = packetBufferReceiver.readDouble();
+        this.rotateY = packetBufferReceiver.readDouble();
+        this.rotateZ = packetBufferReceiver.readDouble();
+        this.scale = packetBufferReceiver.readDouble();
     }
 
-    public PIDSProjectorUpdatePacket(BlockPos blockPos, LongAVLTreeSet filteredPlatforms, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPreset, float x, float y, float z, float rotateX, float rotateY, float rotateZ, float scale) {
+    public PIDSProjectorUpdatePacket(BlockPos blockPos, LongAVLTreeSet filteredPlatforms, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPreset, double x, double y, double z, double rotateX, double rotateY, double rotateZ, double scale) {
         super(blockPos, filteredPlatforms, customMessages, rowHidden, hidePlatformNumber, pidsPreset);
         this.x = x;
         this.y = y;
@@ -41,13 +41,13 @@ public class PIDSProjectorUpdatePacket extends PIDSUpdatePacket {
     @Override
     public void write(PacketBufferSender packetBufferSender) {
         super.write(packetBufferSender);
-        packetBufferSender.writeFloat(x);
-        packetBufferSender.writeFloat(y);
-        packetBufferSender.writeFloat(z);
-        packetBufferSender.writeFloat(rotateX);
-        packetBufferSender.writeFloat(rotateY);
-        packetBufferSender.writeFloat(rotateZ);
-        packetBufferSender.writeFloat(scale);
+        packetBufferSender.writeDouble(x);
+        packetBufferSender.writeDouble(y);
+        packetBufferSender.writeDouble(z);
+        packetBufferSender.writeDouble(rotateX);
+        packetBufferSender.writeDouble(rotateY);
+        packetBufferSender.writeDouble(rotateZ);
+        packetBufferSender.writeDouble(scale);
     }
 
     @Override

@@ -7,13 +7,13 @@ import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.CompoundTag;
 
 public class PIDSProjectorBlockEntity extends PIDSBlockEntity {
-    private float x;
-    private float y;
-    private float z;
-    private float rotateX;
-    private float rotateY;
-    private float rotateZ;
-    private float scale;
+    private double x;
+    private double y;
+    private double z;
+    private double rotateX;
+    private double rotateY;
+    private double rotateZ;
+    private double scale;
 
     public PIDSProjectorBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(BlockEntities.PIDS_PROJECTOR.get(), blockPos, blockState);
@@ -29,27 +29,25 @@ public class PIDSProjectorBlockEntity extends PIDSBlockEntity {
     @Override
     public void readCompoundTag(CompoundTag compoundTag) {
         super.readCompoundTag(compoundTag);
-
-        this.x = compoundTag.getFloat("x1");
-        this.y = compoundTag.getFloat("y1");
-        this.z = compoundTag.getFloat("z1");
-        this.rotateX = compoundTag.getFloat("rotateX");
-        this.rotateY = compoundTag.getFloat("rotateY");
-        this.rotateZ = compoundTag.getFloat("rotateZ");
-        this.scale = compoundTag.getFloat("scale");
+        this.x = compoundTag.getDouble("x1");
+        this.y = compoundTag.getDouble("y1");
+        this.z = compoundTag.getDouble("z1");
+        this.rotateX = compoundTag.getDouble("rotateX");
+        this.rotateY = compoundTag.getDouble("rotateY");
+        this.rotateZ = compoundTag.getDouble("rotateZ");
+        this.scale = compoundTag.getDouble("scale");
     }
 
     @Override
     public void writeCompoundTag(CompoundTag compoundTag) {
         super.writeCompoundTag(compoundTag);
-
-        compoundTag.putFloat("x1", this.x);
-        compoundTag.putFloat("y1", this.y);
-        compoundTag.putFloat("z1", this.z);
-        compoundTag.putFloat("rotateX", this.rotateX);
-        compoundTag.putFloat("rotateY", this.rotateY);
-        compoundTag.putFloat("rotateZ", this.rotateZ);
-        compoundTag.putFloat("scale", this.scale);
+        compoundTag.putDouble("x1", this.x);
+        compoundTag.putDouble("y1", this.y);
+        compoundTag.putDouble("z1", this.z);
+        compoundTag.putDouble("rotateX", this.rotateX);
+        compoundTag.putDouble("rotateY", this.rotateY);
+        compoundTag.putDouble("rotateZ", this.rotateZ);
+        compoundTag.putDouble("scale", this.scale);
     }
 
     @Override
@@ -62,9 +60,8 @@ public class PIDSProjectorBlockEntity extends PIDSBlockEntity {
         return 4;
     }
 
-    public void setData(String[] customMessages, LongAVLTreeSet filteredPlatforms, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPresetId, float x, float y, float z, float rotateX, float rotateY, float rotateZ, float scale) {
+    public void setData(String[] customMessages, LongAVLTreeSet filteredPlatforms, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPresetId, double x, double y, double z, double rotateX, double rotateY, double rotateZ, double scale) {
         super.setData(customMessages, filteredPlatforms, rowHidden, hidePlatformNumber, pidsPresetId);
-
         this.x = x;
         this.y = y;
         this.z = z;
@@ -72,23 +69,22 @@ public class PIDSProjectorBlockEntity extends PIDSBlockEntity {
         this.rotateX = rotateX;
         this.rotateY = rotateY;
         this.rotateZ = rotateZ;
-
         this.markDirty2();
     }
 
-    public float getX() { return x; }
+    public double getX() { return x; }
 
-    public float getY() {
+    public double getY() {
         return y;
     }
 
-    public float getZ() {
+    public double getZ() {
         return z;
     }
 
-    public float getScale() { return scale; }
+    public double getScale() { return scale; }
 
-    public float getRotateX() { return rotateX; }
-    public float getRotateY() { return rotateY; }
-    public float getRotateZ() { return rotateZ; }
+    public double getRotateX() { return rotateX; }
+    public double getRotateY() { return rotateY; }
+    public double getRotateZ() { return rotateZ; }
 }

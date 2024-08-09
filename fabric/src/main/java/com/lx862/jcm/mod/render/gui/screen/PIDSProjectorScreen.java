@@ -2,10 +2,7 @@ package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.network.block.PIDSProjectorUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.render.gui.widget.CategoryItem;
-import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
-import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
-import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
+import com.lx862.jcm.mod.render.gui.widget.*;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
@@ -14,28 +11,28 @@ import org.mtr.mapping.tool.TextCase;
 
 public class PIDSProjectorScreen extends PIDSScreen {
 
-    private final TextFieldWidgetExtension xField;
-    private final TextFieldWidgetExtension yField;
-    private final TextFieldWidgetExtension zField;
-    private final TextFieldWidgetExtension scaleField;
-    private final TextFieldWidgetExtension rotateXField;
-    private final TextFieldWidgetExtension rotateYField;
-    private final TextFieldWidgetExtension rotateZField;
+    private final DoubleTextField xField;
+    private final DoubleTextField yField;
+    private final DoubleTextField zField;
+    private final DoubleTextField scaleField;
+    private final DoubleTextField rotateXField;
+    private final DoubleTextField rotateYField;
+    private final DoubleTextField rotateZField;
 
-    public PIDSProjectorScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId, float x1, float y1, float z1, float rotateX, float rotateY, float rotateZ, float scale) {
+    public PIDSProjectorScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId, double x, double y, double z, double rotateX, double rotateY, double rotateZ, double scale) {
         super(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId);
 
-        this.xField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.x").getString());
-        this.yField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.y").getString());
-        this.zField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.y").getString());
-        this.rotateXField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateX").getString());
-        this.rotateYField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateY").getString());
-        this.rotateZField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotateZ").getString());
-        this.scaleField = new TextFieldWidgetExtension(0, 0, 40, 20, "", 100, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.scale").getString());
+        this.xField = new DoubleTextField(0, 0, 40, 20, -1000, 1000, 0);
+        this.yField = new DoubleTextField(0, 0, 40, 20, -1000, 1000, 0);
+        this.zField = new DoubleTextField(0, 0, 40, 20, -1000, 1000, 0);
+        this.rotateXField = new DoubleTextField(0, 0, 40, 20, -359, 360, 0);
+        this.rotateYField = new DoubleTextField(0, 0, 40, 20, -359, 360, 0);
+        this.rotateZField = new DoubleTextField(0, 0, 40, 20, -359, 360, 0);
+        this.scaleField = new DoubleTextField(0, 0, 40, 20, 0, 30, 0);
 
-        xField.setText2(String.valueOf(x1));
-        yField.setText2(String.valueOf(y1));
-        zField.setText2(String.valueOf(z1));
+        xField.setText2(String.valueOf(x));
+        yField.setText2(String.valueOf(y));
+        zField.setText2(String.valueOf(z));
         rotateXField.setText2(String.valueOf(rotateX));
         rotateYField.setText2(String.valueOf(rotateY));
         rotateZField.setText2(String.valueOf(rotateZ));
@@ -93,6 +90,6 @@ public class PIDSProjectorScreen extends PIDSScreen {
             rowHidden[i] = this.rowHiddenWidgets[i].isChecked2();
         }
 
-        Networking.sendPacketToServer(new PIDSProjectorUpdatePacket(blockPos, filteredPlatforms, customMessages, rowHidden, hidePlatformNumber.isChecked2(), presetId, Float.parseFloat(xField.getText2()), Float.parseFloat(yField.getText2()), Float.parseFloat(zField.getText2()), Float.parseFloat(rotateXField.getText2()), Float.parseFloat(rotateYField.getText2()), Float.parseFloat(rotateZField.getText2()), Float.parseFloat(scaleField.getText2())));
+        Networking.sendPacketToServer(new PIDSProjectorUpdatePacket(blockPos, filteredPlatforms, customMessages, rowHidden, hidePlatformNumber.isChecked2(), presetId, xField.getNumber(), yField.getNumber(), zField.getNumber(), rotateXField.getNumber(), rotateYField.getNumber(), rotateZField.getNumber(), scaleField.getNumber()));
     }
 }

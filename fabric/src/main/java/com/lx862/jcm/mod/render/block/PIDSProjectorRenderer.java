@@ -17,26 +17,37 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
 
     @Override
     public void renderPIDS(PIDSProjectorBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
-        boolean showOutline = false;
-        if(JCMUtil.playerHoldingBrush(PlayerEntity.cast(MinecraftClient.getInstance().getPlayerMapped()))) {
-            final HitResult hitResult = MinecraftClient.getInstance().getCrosshairTargetMapped();
-            if(hitResult != null && hitResult.getType() == HitResultType.BLOCK) {
-                BlockHitResult bhr = BlockHitResult.cast(hitResult);
-                showOutline = bhr.getBlockPos().equals(blockEntity.getPos2());
-            }
+        graphicsHolder.rotateYDegrees(90);
+        float scale = (float)blockEntity.getScale();
+        boolean showOutline = JCMUtil.playerHoldingBrush(PlayerEntity.cast(MinecraftClient.getInstance().getPlayerMapped()));
+        graphicsHolder.translate(-0.5 + blockEntity.getX(), -0.5 - blockEntity.getY(), 0.5 + blockEntity.getZ());
+
+        graphicsHolder.rotateXDegrees((float)blockEntity.getRotateX());
+        graphicsHolder.rotateYDegrees((float)blockEntity.getRotateY());
+        graphicsHolder.rotateZDegrees((float)blockEntity.getRotateZ());
+
+        // Draw projection effect
+        if(showOutline && blockEntity.getRotateX() == 0 && blockEntity.getRotateY() == 0 && blockEntity.getRotateZ() == 0) {
+            graphicsHolder.push();
+            graphicsHolder.createVertexConsumer(RenderLayer.getLines());
+
+            float offsetX = (float)(0.5 - blockEntity.getX());
+            float offsetY = (float)(0.5 + blockEntity.getY());
+            float offsetZ = (float)(-0.5 - blockEntity.getZ());
+
+            graphicsHolder.drawLineInWorld(offsetX, offsetY, offsetZ, 0, 0, 0, 0xFFFF0000);
+            graphicsHolder.drawLineInWorld(offsetX, offsetY, offsetZ, 0 + (1.785f * scale), 0, 0, 0xFFFF0000);
+
+            graphicsHolder.drawLineInWorld(offsetX, offsetY, offsetZ, 0, 0 + (1 * scale), 0, 0xFFFF0000);
+            graphicsHolder.drawLineInWorld(offsetX, offsetY, offsetZ, 0 + (1.785f * scale), 0 + (1 * scale), 0, 0xFFFF0000);
+            graphicsHolder.pop();
         }
 
-        graphicsHolder.rotateYDegrees(90);
-        graphicsHolder.translate(-0.5 + blockEntity.getX(), -0.5 + blockEntity.getY(), 0.5 + blockEntity.getZ());
         graphicsHolder.scale(1/76F, 1/76F, 1/76F);
-
-        graphicsHolder.scale(blockEntity.getScale(), blockEntity.getScale(), blockEntity.getScale());
-        graphicsHolder.rotateXDegrees(blockEntity.getRotateX());
-        graphicsHolder.rotateYDegrees(blockEntity.getRotateY());
-        graphicsHolder.rotateZDegrees(blockEntity.getRotateZ());
-
+        graphicsHolder.scale(scale, scale, scale);
         pidsPreset.render(blockEntity, graphicsHolder, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 136, 76);
 
+        // Border
         if(showOutline) {
             graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(Constants.id("textures/block/light_1.png"), false));
             RenderHelper.drawTexture(graphicsHolder, -8, -1, 0.1f, 138, 78, facing, 0xFFFF0000, MAX_RENDER_LIGHT);

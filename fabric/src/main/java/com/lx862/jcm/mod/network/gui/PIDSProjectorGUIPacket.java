@@ -5,26 +5,26 @@ import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
 
 public class PIDSProjectorGUIPacket extends PIDSGUIPacket {
-    private final float x1;
-    private final float y1;
-    private final float z1;
-    private final float rotateX;
-    private final float rotateY;
-    private final float rotateZ;
-    private final float scale;
+    private final double x1;
+    private final double y1;
+    private final double z1;
+    private final double rotateX;
+    private final double rotateY;
+    private final double rotateZ;
+    private final double scale;
 
     public PIDSProjectorGUIPacket(PacketBufferReceiver packetBufferReceiver) {
         super(packetBufferReceiver);
-        this.x1 = packetBufferReceiver.readFloat();
-        this.y1 = packetBufferReceiver.readFloat();
-        this.z1 = packetBufferReceiver.readFloat();
-        this.rotateX = packetBufferReceiver.readFloat();
-        this.rotateY = packetBufferReceiver.readFloat();
-        this.rotateZ = packetBufferReceiver.readFloat();
-        this.scale = packetBufferReceiver.readFloat();
+        this.x1 = packetBufferReceiver.readDouble();
+        this.y1 = packetBufferReceiver.readDouble();
+        this.z1 = packetBufferReceiver.readDouble();
+        this.rotateX = packetBufferReceiver.readDouble();
+        this.rotateY = packetBufferReceiver.readDouble();
+        this.rotateZ = packetBufferReceiver.readDouble();
+        this.scale = packetBufferReceiver.readDouble();
     }
 
-    public PIDSProjectorGUIPacket(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId, float x1, float y1, float z1, float rotateX, float rotateY, float rotateZ, float scale) {
+    public PIDSProjectorGUIPacket(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId, double x1, double y1, double z1, double rotateX, double rotateY, double rotateZ, double scale) {
         super(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId);
         this.x1 = x1;
         this.y1 = y1;
@@ -38,13 +38,13 @@ public class PIDSProjectorGUIPacket extends PIDSGUIPacket {
     @Override
     public void write(PacketBufferSender packetBufferSender) {
         super.write(packetBufferSender);
-        packetBufferSender.writeFloat(x1);
-        packetBufferSender.writeFloat(y1);
-        packetBufferSender.writeFloat(z1);
-        packetBufferSender.writeFloat(rotateX);
-        packetBufferSender.writeFloat(rotateY);
-        packetBufferSender.writeFloat(rotateZ);
-        packetBufferSender.writeFloat(scale);
+        packetBufferSender.writeDouble(x1);
+        packetBufferSender.writeDouble(y1);
+        packetBufferSender.writeDouble(z1);
+        packetBufferSender.writeDouble(rotateX);
+        packetBufferSender.writeDouble(rotateY);
+        packetBufferSender.writeDouble(rotateZ);
+        packetBufferSender.writeDouble(scale);
     }
 
     @Override
