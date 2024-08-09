@@ -12,7 +12,7 @@ import java.util.List;
  * Holds a set of widget within a defined area.
  * Able to tile the widgets horizontally and add new rows like a grid/table.
  */
-public class WidgetSet extends ClickableWidgetExtension implements RenderHelper {
+public class WidgetSet extends ClickableWidgetExtension implements WidgetsWrapper, RenderHelper {
     public int widgetXMargin;
     private final List<List<MappedWidget>> widgetRows = new ArrayList<>();
     private final int maxWidgetHeight;
@@ -57,11 +57,6 @@ public class WidgetSet extends ClickableWidgetExtension implements RenderHelper 
         this.widgetRows.clear();
     }
 
-    @Override
-    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
-        // On some version like 1.16, by default a widget is rendered as a button. But this is just a dummy widget for positioning, so we override the render and do nothing
-    }
-
     private void positionWidgets() {
         int x = getX2();
         int y = getY2();
@@ -83,5 +78,36 @@ public class WidgetSet extends ClickableWidgetExtension implements RenderHelper 
                 widget.setWidth((int)Math.round(perWidgetWidth));
             }
         }
+    }
+
+    @Override
+    public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
+        for(List<MappedWidget> row : widgetRows) {
+            for(MappedWidget widget : row) {
+                widget.render(graphicsHolder, mouseX, mouseY, delta);
+            }
+        }
+    }
+
+    @Override
+    public void setAllX(int newX) {
+        super.setX2(newX);
+        positionWidgets();
+    }
+
+    @Override
+    public void setAllY(int newY) {
+        super.setY2(newY);
+        positionWidgets();
+    }
+
+    @Override
+    public void setVisibleMapped(boolean visible) {
+        for(List<MappedWidget> row : widgetRows) {
+            for(MappedWidget widget : row) {
+                widget.setVisible(visible);
+            }
+        }
+        super.setVisibleMapped(visible);
     }
 }

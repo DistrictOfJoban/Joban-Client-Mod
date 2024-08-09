@@ -113,17 +113,17 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
         // Draw Background
         graphicsHolder.createVertexConsumer(RenderLayer.getText(getBackground()));
-        RenderHelper.drawTexture(graphicsHolder, getBackground(), 0, 0, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+        RenderHelper.drawTexture(graphicsHolder, getBackground(), x, y, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
 
         // Debug View Texture
-        if(JCMClient.getConfig().debug && JCMClient.getConfig().debug) {
+        if(JCMClient.getConfig().debug) {
             //TextureTextRenderer.stressTest(5);
             drawAtlasBackground(graphicsHolder, width, height, facing);
         }
 
         graphicsHolder.translate(startX, 0, -0.05);
 
-        List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, 0, headerHeight + 4, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
+        List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, x, y, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
         PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
 
         // Texture
@@ -142,11 +142,11 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         List<PIDSComponent> components = new ArrayList<>();
 
         if(showClock) {
-            components.add(new ClockComponent(screenWidth, 2, screenWidth, 10, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), ARGB_WHITE, 0.9)));
+            components.add(new ClockComponent(x + screenWidth, y + 2, screenWidth, 10, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), ARGB_WHITE, 0.9)));
         }
 
         if(showWeather) {
-            components.add(new WeatherIconComponent(0, 0, 9, 9, new KVPair()
+            components.add(new WeatherIconComponent(x, y, 9, 9, new KVPair()
                     .with("weatherIconSunny", ICON_WEATHER_SUNNY)
                     .with("weatherIconRainy", ICON_WEATHER_RAINY)
                     .with("weatherIconThunder", ICON_WEATHER_THUNDER)));
@@ -156,7 +156,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
         /* Arrivals */
         int arrivalIndex = 0;
-        double rowY = y;
+        double rowY = y + (topPadding ? HEADER_HEIGHT : 0) + 4;
         for(int i = 0; i < rows; i++) {
             if(customMessages[i] != null && !customMessages[i].isEmpty()) {
                 components.add(new CustomTextComponent(x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));

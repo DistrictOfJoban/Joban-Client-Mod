@@ -27,7 +27,7 @@ public final class ClientHelper {
 		MinecraftClient.getInstance().openScreen(new Screen(new PIDSScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId)));
 	}
 
-	public static void openPIDSGUIScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId, float x1, float y1, float z1, float rotateX, float rotateY, float rotateZ, float scale) {
+	public static void openPIDSProjectorGUIScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId, float x1, float y1, float z1, float rotateX, float rotateY, float rotateZ, float scale) {
 		MinecraftClient.getInstance().openScreen(new Screen(new PIDSProjectorScreen(blockPos, customMessages, rowHidden, hidePlatformNumber, presetId, x1, y1, z1, rotateX, rotateY, rotateZ, scale)));
 	}
 

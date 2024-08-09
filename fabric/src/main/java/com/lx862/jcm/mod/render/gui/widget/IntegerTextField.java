@@ -14,13 +14,13 @@ import javax.annotation.Nonnull;
 /**
  * Text Field Widget that is specifically designed for entering number only
  */
-public class NumericTextField extends TextFieldWidgetExtension implements RenderHelper {
+public class IntegerTextField extends TextFieldWidgetExtension implements RenderHelper {
     private final long min;
     private final long max;
     private final String prefix;
     private final long defaultValue;
 
-    public NumericTextField(int x, int y, int width, int height, long min, long max, long defaultValue, @Nonnull String prefix) {
+    public IntegerTextField(int x, int y, int width, int height, long min, long max, long defaultValue, @Nonnull String prefix) {
         super(x, y, width, height, 16, TextCase.LOWER, null, String.valueOf(defaultValue));
         this.min = min;
         this.max = max;
@@ -28,11 +28,11 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         this.defaultValue = defaultValue;
     }
 
-    public NumericTextField(int x, int y, int width, int height, int min, int max, int defaultValue, MutableText prefix) {
+    public IntegerTextField(int x, int y, int width, int height, int min, int max, int defaultValue, MutableText prefix) {
         this(x, y, width, height, min, max, defaultValue, prefix.getString());
     }
 
-    public NumericTextField(int x, int y, int width, int height, int min, int max, int defaultValue) {
+    public IntegerTextField(int x, int y, int width, int height, int min, int max, int defaultValue) {
         this(x, y, width, height, min, max, defaultValue, (String)null);
     }
 

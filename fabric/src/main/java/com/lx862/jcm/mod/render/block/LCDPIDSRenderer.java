@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.render.block;
 
 import com.lx862.jcm.mod.block.entity.LCDPIDSBlockEntity;
-import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
