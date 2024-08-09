@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.network.block;
 
-import com.lx862.jcm.mod.block.base.JCMBlock;
 import com.lx862.jcm.mod.block.entity.PIDSProjectorBlockEntity;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
@@ -53,15 +52,11 @@ public class PIDSProjectorUpdatePacket extends PIDSUpdatePacket {
 
     @Override
     public void runServer(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
-        super.runServer(minecraftServer, serverPlayerEntity);
-
         World world = serverPlayerEntity.getEntityWorld();
-        BlockState state = BlockUtil.getBlockState(world, blockPos);
+        BlockEntity be = BlockUtil.getBlockEntityOrNull(world, blockPos);
 
-        ((JCMBlock)state.getBlock().data).loopStructure(state, world, blockPos, (bs, be) -> {
-            if(be.data instanceof PIDSProjectorBlockEntity) {
-                ((PIDSProjectorBlockEntity)be.data).setData(customMessages, filteredPlatforms, rowHidden, hidePlatformNumber, presetId, x, y, z, rotateX, rotateY, rotateZ, scale);
-            }
-        });
+        if(be != null && be.data instanceof PIDSProjectorBlockEntity) {
+            ((PIDSProjectorBlockEntity)be.data).setData(customMessages, filteredPlatforms, rowHidden, hidePlatformNumber, presetId, x, y, z, rotateX, rotateY, rotateZ, scale);
+        }
     }
 }
