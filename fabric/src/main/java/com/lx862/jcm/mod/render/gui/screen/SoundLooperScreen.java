@@ -6,7 +6,7 @@ import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreen;
 import com.lx862.jcm.mod.render.gui.widget.BlockPosWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
-import com.lx862.jcm.mod.render.gui.widget.NumericTextField;
+import com.lx862.jcm.mod.render.gui.widget.IntegerTextField;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.BlockPos;
@@ -21,8 +21,8 @@ import org.mtr.mapping.tool.TextCase;
 public class SoundLooperScreen extends BlockConfigScreen {
     private final ButtonWidgetExtension soundCategoryButton;
     private final TextFieldWidgetExtension soundIdTextField;
-    private final NumericTextField repeatTickTextField;
-    private final NumericTextField soundVolumeTextField;
+    private final IntegerTextField repeatTickTextField;
+    private final IntegerTextField soundVolumeTextField;
     private final CheckboxWidgetExtension needRedstonePowerCheckbox;
     private final CheckboxWidgetExtension limitSoundRangeCheckbox;
     private final BlockPosWidget corner1Widget;
@@ -41,9 +41,9 @@ public class SoundLooperScreen extends BlockConfigScreen {
 
         this.soundIdTextField = new TextFieldWidgetExtension(0, 0, 100, 20, 100, TextCase.LOWER, null, "mtr:ticket_barrier");
         this.soundIdTextField.setText2(soundId);
-        this.soundVolumeTextField = new NumericTextField(0, 0, 60, 20, 1, 1000, 100);
+        this.soundVolumeTextField = new IntegerTextField(0, 0, 60, 20, 1, 1000, 100);
         this.soundVolumeTextField.setValue((int)(volume * 100));
-        this.repeatTickTextField = new NumericTextField(0, 0, 60, 20, 1, 99999, 20);
+        this.repeatTickTextField = new IntegerTextField(0, 0, 60, 20, 1, 99999, 20);
         this.repeatTickTextField.setValue(repeatTick);
         this.needRedstonePowerCheckbox = new CheckboxWidgetExtension(0, 0, 20, 20, false, (checked) -> {});
         this.needRedstonePowerCheckbox.setChecked(needRedstonePower);

@@ -23,7 +23,7 @@ public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEn
     }
 
     @Override
-    public void renderCurated(PIDSBlockEntity blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
+    public void renderCurated(T blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
         PIDSPresetBase pidsPreset = getPreset(blockEntity);
         if(pidsPreset == null) return;
 
@@ -54,7 +54,7 @@ public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEn
         graphicsHolder.pop();
     }
 
-    public abstract void renderPIDS(PIDSBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden);
+    public abstract void renderPIDS(T blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden);
 
     private PIDSPresetBase getPreset(PIDSBlockEntity blockEntity) {
         return PIDSManager.getPreset(blockEntity.getPresetId(), PIDSManager.getPreset(blockEntity.getDefaultPresetId()));

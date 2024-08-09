@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.network.block.SubsidyMachineUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreen;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
-import com.lx862.jcm.mod.render.gui.widget.NumericTextField;
+import com.lx862.jcm.mod.render.gui.widget.IntegerTextField;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.BlockPos;
@@ -12,12 +12,12 @@ import org.mtr.mapping.holder.ClickableWidget;
 import org.mtr.mapping.holder.MutableText;
 
 public class SubsidyMachineScreen extends BlockConfigScreen {
-    private final NumericTextField priceTextField;
-    private final NumericTextField cooldownTextField;
+    private final IntegerTextField priceTextField;
+    private final IntegerTextField cooldownTextField;
     public SubsidyMachineScreen(BlockPos blockPos, int pricePerUse, int cooldown) {
         super(blockPos);
-        this.priceTextField = new NumericTextField(0, 0, 60, 20, 0, 50000, 10, TextUtil.translatable(TextCategory.GUI, "subsidy_machine.currency"));
-        this.cooldownTextField = new NumericTextField(0, 0, 60, 20, 0, 1200, 0);
+        this.priceTextField = new IntegerTextField(0, 0, 60, 20, 0, 50000, 10, TextUtil.translatable(TextCategory.GUI, "subsidy_machine.currency"));
+        this.cooldownTextField = new IntegerTextField(0, 0, 60, 20, 0, 1200, 0);
 
         this.priceTextField.setValue(pricePerUse);
         this.cooldownTextField.setValue(cooldown);

@@ -7,11 +7,11 @@ import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
 
 public class PIDSGUIPacket extends PacketHandler {
-    private final BlockPos blockPos;
-    private final String[] customMessages;
-    private final boolean[] rowHidden;
-    private final boolean hidePlatformNumber;
-    private final String presetId;
+    protected final BlockPos blockPos;
+    protected final String[] customMessages;
+    protected final boolean[] rowHidden;
+    protected final boolean hidePlatformNumber;
+    protected final String presetId;
 
     public PIDSGUIPacket(PacketBufferReceiver packetBufferReceiver) {
         this.blockPos = BlockPos.fromLong(packetBufferReceiver.readLong());

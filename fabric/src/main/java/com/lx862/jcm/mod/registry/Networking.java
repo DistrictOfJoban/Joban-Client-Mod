@@ -22,6 +22,7 @@ public class Networking {
         registerPacket(ButterflyLightUpdatePacket.class, ButterflyLightUpdatePacket::new);
         registerPacket(FareSaverUpdatePacket.class, FareSaverUpdatePacket::new);
         registerPacket(PIDSUpdatePacket.class, PIDSUpdatePacket::new);
+        registerPacket(PIDSProjectorUpdatePacket.class, PIDSProjectorUpdatePacket::new);
         registerPacket(SoundLooperUpdatePacket.class, SoundLooperUpdatePacket::new);
         registerPacket(SubsidyMachineUpdatePacket.class, SubsidyMachineUpdatePacket::new);
         registerPacket(EnquiryUpdateGUIPacket.class, EnquiryUpdateGUIPacket::new);
@@ -30,6 +31,7 @@ public class Networking {
         registerPacket(ButterflyLightGUIPacket.class, ButterflyLightGUIPacket::new);
         registerPacket(FareSaverGUIPacket.class, FareSaverGUIPacket::new);
         registerPacket(PIDSGUIPacket.class, PIDSGUIPacket::new);
+        registerPacket(PIDSProjectorGUIPacket.class, PIDSProjectorGUIPacket::new);
         registerPacket(SoundLooperGUIPacket.class, SoundLooperGUIPacket::new);
         registerPacket(SubsidyMachineGUIPacket.class, SubsidyMachineGUIPacket::new);
     }

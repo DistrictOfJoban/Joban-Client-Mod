@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.render.block;
 
 import com.lx862.jcm.mod.block.entity.LCDPIDSBlockEntity;
-import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -17,7 +16,7 @@ public class LCDPIDSRenderer extends PIDSRenderer<LCDPIDSBlockEntity> {
     }
 
     @Override
-    public void renderPIDS(PIDSBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
+    public void renderPIDS(LCDPIDSBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
         graphicsHolder.translate(-0.19, -0.125, -0.130);
         graphicsHolder.scale(1/96F, 1/96F, 1/96F);
 

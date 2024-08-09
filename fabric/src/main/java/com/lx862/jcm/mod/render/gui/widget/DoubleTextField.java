@@ -10,17 +10,18 @@ import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
 import javax.annotation.Nonnull;
+import java.math.BigDecimal;
 
 /**
  * Text Field Widget that is specifically designed for entering number only
  */
-public class NumericTextField extends TextFieldWidgetExtension implements RenderHelper {
-    private final long min;
-    private final long max;
+public class DoubleTextField extends TextFieldWidgetExtension implements RenderHelper {
+    private final double min;
+    private final double max;
     private final String prefix;
-    private final long defaultValue;
+    private final double defaultValue;
 
-    public NumericTextField(int x, int y, int width, int height, long min, long max, long defaultValue, @Nonnull String prefix) {
+    public DoubleTextField(int x, int y, int width, int height, double min, double max, double defaultValue, @Nonnull String prefix) {
         super(x, y, width, height, 16, TextCase.LOWER, null, String.valueOf(defaultValue));
         this.min = min;
         this.max = max;
@@ -28,11 +29,11 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         this.defaultValue = defaultValue;
     }
 
-    public NumericTextField(int x, int y, int width, int height, int min, int max, int defaultValue, MutableText prefix) {
+    public DoubleTextField(int x, int y, int width, int height, double min, double max, double defaultValue, MutableText prefix) {
         this(x, y, width, height, min, max, defaultValue, prefix.getString());
     }
 
-    public NumericTextField(int x, int y, int width, int height, int min, int max, int defaultValue) {
+    public DoubleTextField(int x, int y, int width, int height, double min, double max, double defaultValue) {
         this(x, y, width, height, min, max, defaultValue, (String)null);
     }
 
@@ -43,9 +44,9 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
 
         try {
             String newString = getText2();
-            int val = Integer.parseInt(newString);
+            double val = Double.parseDouble(newString);
             if(val < min || val > max) {
-                JCMLogger.debug("NumericTextField: Value too large or small");
+                JCMLogger.debug("DoubleTextField: Value too large or small");
                 setText2(prevValue);
                 return false;
             }
@@ -119,22 +120,23 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
         return super.mouseClicked2(mouseX, mouseY, button);
     }
 
-    public long getNumber() {
+    public double getNumber() {
         try {
-            return Integer.parseInt(getText2());
+            return Double.parseDouble(getText2());
         } catch (Exception e) {
             return defaultValue;
         }
     }
 
-    public void setValue(long value) {
+    public void setValue(double value) {
         if(value < min || value > max) return;
         setText2(String.valueOf(value));
     }
 
     private void increment() {
         try {
-            setValue(Integer.parseInt(getText2())+1);
+            BigDecimal result = new BigDecimal(getText2()).add(new BigDecimal("0.1"));
+            setValue(result.doubleValue());
         } catch (Exception e) {
             setValue(defaultValue);
         }
@@ -142,7 +144,8 @@ public class NumericTextField extends TextFieldWidgetExtension implements Render
 
     private void decrement() {
         try {
-            setValue(Integer.parseInt(getText2())-1);
+            BigDecimal result = new BigDecimal(getText2()).subtract(new BigDecimal("0.1"));
+            setValue(result.doubleValue());
         } catch (Exception e) {
             setValue(defaultValue);
         }
