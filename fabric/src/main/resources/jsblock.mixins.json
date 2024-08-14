@@ -3,10 +3,10 @@
   "package": "com.lx862.jcm.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "RainMixin",
     "compat.SimpleDefaultedRegistryMixin",
     "modded.mtr.MixinTicketSystem"
   ],
+  "client": ["RainMixin"],
   "injectors": {
     "defaultRequire": 1
   }
