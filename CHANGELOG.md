@@ -6,6 +6,7 @@
 **Changes:**  
 
 **Fixes:**
+- Fix Exit sign (Even) not migrated from JCM v1
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

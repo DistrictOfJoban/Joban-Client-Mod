@@ -24,6 +24,8 @@ public class JCMUtil {
                     return Constants.id("ceiling_slanted");
                 case "exit_sign_1":
                     return Constants.id("exit_sign_odd");
+                case "exit_sign_1e":
+                    return Constants.id("exit_sign_even");
                 case "faresaver_1":
                     return Constants.id("faresaver");
                 case "helpline_3":
