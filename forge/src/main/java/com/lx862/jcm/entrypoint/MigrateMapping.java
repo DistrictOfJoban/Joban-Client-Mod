@@ -1,3 +1,5 @@
+#if MC_VERSION < "11904"
+#else
 package com.lx862.jcm.entrypoint;
 
 
@@ -9,7 +11,7 @@ import net.minecraftforge.registries.MissingMappingsEvent;
 import org.mtr.mapping.holder.Identifier;
 
 /**
- * Block renamed in JCM 2.0.0, this can be remapped on Forge via the MissingMappingsEvent.
+ * Block renamed in JCM 2.0.0, unfortunately there's no easy way to migrate ids.
  * This class helps migrate these ids
  */
 public class MigrateMapping {
@@ -23,3 +25,4 @@ public class MigrateMapping {
         });
     }
 }
+#endif

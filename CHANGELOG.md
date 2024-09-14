@@ -6,7 +6,7 @@
 **Changes:**  
 
 **Fixes:**
-- All blocks will now be preserved when upgrading from JCM v1 to JCM v2 on Minecraft Forge.
+- All blocks will now be preserved when upgrading from JCM v1 to JCM v2 on Minecraft Forge 1.19.4 - 1.20.4.
 - Fix Exit sign (Even) not migrated from JCM v1
 - Fix LRT Inter Car Barriers see-through when paired with some optimization mods.
 
