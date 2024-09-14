@@ -13,7 +13,7 @@ public class LRTInterCarBarrierBlock extends DirectionalBlock {
 
     @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        return VoxelShapes.fullCube();
+        return IBlock.getVoxelShapeByDirection(0.01, 0, 0.01, 15.99, 16, 15.99, Direction.NORTH);
     }
 
     @Override
