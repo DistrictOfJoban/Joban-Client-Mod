@@ -13,8 +13,6 @@ public class MainForge {
     public MainForge() {
         JCM.initialize();
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> JCMClient::initializeClient);
-        #if MC_VERSION > "11903"
         MinecraftForge.EVENT_BUS.register(new MigrateMapping());
-        #endif
     }
 }
