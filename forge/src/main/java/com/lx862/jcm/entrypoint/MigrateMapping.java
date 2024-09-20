@@ -3,7 +3,7 @@
  * This class helps migrate these ids
  */
 
-#if MC_VERSION < "11904"
+#if MC_VERSION < "11902"
 package com.lx862.jcm.entrypoint;
 
 import com.lx862.jcm.mod.util.JCMUtil;
