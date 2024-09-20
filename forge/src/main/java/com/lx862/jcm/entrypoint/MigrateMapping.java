@@ -6,10 +6,14 @@
 #if MC_VERSION < "11904"
 package com.lx862.jcm.entrypoint;
 
-
 import com.lx862.jcm.mod.util.JCMUtil;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.Block;
+#if MC_VERSION == "11605"
+    import net.minecraft.block.Block;
+    import net.minecraft.util.ResourceLocation;
+#else
+    import net.minecraft.world.level.block.Block;
+    import net.minecraft.resources.ResourceLocation;
+#endif
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;

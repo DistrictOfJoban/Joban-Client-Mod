@@ -1,4 +1,4 @@
-## (JCM v2.0.0 beta-4) for (MTR 4 beta-8) has been released!
+## (JCM v2.0.0 beta-4) for (MTR 4 beta-9) has been released!
 
 **New:**  
 - Add PIDS Projector, project PIDS screen anywhere and scale it as you wish! (Thanks *dooji*!)
