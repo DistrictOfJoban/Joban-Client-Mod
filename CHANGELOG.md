@@ -2,6 +2,7 @@
 
 **New:**  
 - Add PIDS Projector, project PIDS screen anywhere and scale it as you wish! (Thanks *dooji*!)
+- Add Wall-attached Helpline (Hong Kong West Kowloon Station Variants)
 - You can now access JCM Config in the Forge Mod Menu again.
 
 **Changes:**  

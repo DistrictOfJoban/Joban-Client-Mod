@@ -39,9 +39,7 @@ public final class Blocks {
     public static final BlockRegistryObject LIGHT_LANTERN = JCMRegistry.registerBlockItem("light_lantern", () -> new Block(new LightLanternBlock(BlockHelper.createBlockSettings(false, state -> IBlock.getStatePropertySafe(state, LIT) ? 15 : 0).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject MTR_STAIRS = JCMRegistry.registerBlockItem("mtr_stairs", () -> new Block(new MTRStairsBlock(BlockHelper.createBlockSettings(false).strength(4.0f))), ItemGroups.MAIN);
     public static final BlockRegistryObject OPERATOR_BUTTON = JCMRegistry.registerBlockItem("operator_button", () -> new Block(new OperatorButtonBlock(BlockHelper.createBlockSettings(false, state -> 5).nonOpaque(), 40)), ItemGroups.MAIN);
-    public static final BlockRegistryObject SPOT_LAMP = JCMRegistry.registerBlockItem("spot_lamp", () ->
-        new Block(new SpotLampBlock(BlockHelper.createBlockSettings(false, state -> IBlock.getStatePropertySafe(state, LIT) ? 15 : 0).nonOpaque())), ItemGroups.MAIN);
-
+    public static final BlockRegistryObject SPOT_LAMP = JCMRegistry.registerBlockItem("spot_lamp", () -> new Block(new SpotLampBlock(BlockHelper.createBlockSettings(false, state -> IBlock.getStatePropertySafe(state, LIT) ? 15 : 0).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject SUBSIDY_MACHINE = JCMRegistry.registerBlockItem("subsidy_machine", () -> new Block(new SubsidyMachineBlock(BlockHelper.createBlockSettings(false).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject SOUND_LOOPER = JCMRegistry.registerBlockItem("sound_looper", () -> new Block(new SoundLooperBlock(BlockHelper.createBlockSettings(false))), ItemGroups.MAIN);
     public static final BlockRegistryObject STATION_NAME_STANDING = JCMRegistry.registerBlockItem("station_name_standing", () -> new Block(new StationNameStandingBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
@@ -56,6 +54,7 @@ public final class Blocks {
     public static final BlockRegistryObject THALES_TICKET_BARRIER_BARE = JCMRegistry.registerBlockItem("thales_ticket_barrier_bare", () -> new Block(new ThalesTicketBarrierBareBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject HELPLINE_1 = JCMRegistry.registerBlockItem("helpline_1", () -> new Block(new WallAttachedHelpLineBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject HELPLINE_2 = JCMRegistry.registerBlockItem("helpline_2", () -> new Block(new WallAttachedHelpLineBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
+    public static final BlockRegistryObject HELPLINE_HKWK = JCMRegistry.registerBlockItem("helpline_hkwk", () -> new Block(new WallAttachedHelpLineBlock(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject HELPLINE_STANDING = JCMRegistry.registerBlockItem("helpline_standing", () -> new Block(new HelpLineStandingBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject HELPLINE_STANDING_EAL = JCMRegistry.registerBlockItem("helpline_standing_eal", () -> new Block(new HelpLineStandingEALBlock(BlockHelper.createBlockSettings(false, state -> 15).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject KCR_EMG_STOP_SIGN = JCMRegistry.registerBlockItem("kcr_emg_stop_sign", () -> new Block(new KCREmergencyStopSign(BlockHelper.createBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
@@ -119,8 +118,9 @@ public final class Blocks {
                 RV_PIDS_SIL_2,
                 SUBSIDY_MACHINE,
                 SPOT_LAMP,
-                HELPLINE_2,
                 HELPLINE_1,
+                HELPLINE_2,
+                HELPLINE_HKWK,
                 HELPLINE_STANDING,
                 HELPLINE_STANDING_EAL,
                 SIL_EMG_STOP_BUTTON,
