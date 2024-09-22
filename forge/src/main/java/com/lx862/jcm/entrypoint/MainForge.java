@@ -12,7 +12,10 @@ import net.minecraftforge.fml.common.Mod;
 public class MainForge {
     public MainForge() {
         JCM.initialize();
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> JCMClient::initializeClient);
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+            ForgeConfig.registerConfig();
+            JCMClient.initializeClient();
+        });
         MinecraftForge.EVENT_BUS.register(new MigrateMapping());
     }
 }

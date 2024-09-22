@@ -2,6 +2,7 @@
 
 **New:**  
 - Add PIDS Projector, project PIDS screen anywhere and scale it as you wish! (Thanks *dooji*!)
+- You can now access JCM Config in the Forge Mod Menu again.
 
 **Changes:**  
 
