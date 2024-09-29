@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.components.*;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
@@ -156,6 +157,18 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         }
 
         boolean platformShown = !hidePlatform && !this.hidePlatform;
+        boolean showCar = false;
+        int tmpCar = -1;
+        for(ArrivalResponse arrival : arrivals) {
+            if(tmpCar == -1) {
+                tmpCar = arrival.getCarCount();
+                continue;
+            }
+
+            if(tmpCar != arrival.getCarCount()) {
+                showCar = true;
+            }
+        }
 
         /* Arrivals */
         int arrivalIndex = 0;
@@ -180,11 +193,21 @@ public class JsonPIDSPreset extends PIDSPresetBase {
                     boolean haveCjk = IGui.isCjk(thisArrival.getDestination());
                     boolean haveEn = TextUtil.haveNonCjk(thisArrival.getDestination());
                     TextTranslationMode mode = haveCjk && haveEn ? TextTranslationMode.CYCLE : haveCjk ? TextTranslationMode.CJK : TextTranslationMode.NON_CJK;
-
-                    components.add(new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), textColor, ARRIVAL_TEXT_SCALE)
+                    ArrivalETAComponent eta = new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), textColor, ARRIVAL_TEXT_SCALE)
                             .with("arrivalIndex", arrivalIndex)
                             .with("textTranslationMode", mode.name())
-                    ));
+                    );
+
+                    ArrivalCarComponent car = new ArrivalCarComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), textColor, ARRIVAL_TEXT_SCALE)
+                            .with("arrivalIndex", arrivalIndex)
+                            .with("textTranslationMode", mode.name())
+                    );
+
+                    if(showCar) {
+                        components.add(new CycleComponent(new KVPair().with("cycleTime", 80), eta, car));
+                    } else {
+                        components.add(eta);
+                    }
                     arrivalIndex++;
                 }
             }

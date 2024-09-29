@@ -25,6 +25,7 @@ public abstract class PIDSComponent implements RenderHelper {
     static {
         componentList.put("arrival_destination", ArrivalDestinationComponent::parseComponent);
         componentList.put("arrival_eta", ArrivalETAComponent::parseComponent);
+        componentList.put("arrival_car", ArrivalCarComponent::parseComponent);
         componentList.put("clock", ClockComponent::parseComponent);
         componentList.put("cycle", CycleComponent::parseComponent);
         componentList.put("custom_text", CustomTextComponent::parseComponent);
@@ -68,8 +69,4 @@ public abstract class PIDSComponent implements RenderHelper {
         }
         return null;
     }
-}
-@FunctionalInterface
-interface ComponentParser {
-    PIDSComponent parse(double x, double y, double width, double height, JsonObject jsonObject);
 }

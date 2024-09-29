@@ -6,6 +6,8 @@ import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.PIDSContext;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
+import com.lx862.jcm.mod.render.text.TextAlignment;
+import com.lx862.jcm.mod.render.text.TextOverflowMode;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
@@ -15,16 +17,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CycleComponent extends PIDSComponent {
-    private List<PIDSComponent> components;
-    private double cycleTime;
+    private final List<PIDSComponent> components;
+    private final double cycleTime;
 
-    public CycleComponent(KVPair additionalParam) {
+    public CycleComponent(KVPair additionalParam, PIDSComponent... components) {
         super(0, 0, 0, 0);
-        this.cycleTime = additionalParam.getDouble("cycleTime", 1);
+        this.cycleTime = additionalParam.getInt("cycleTime", 20);
         this.components = new ArrayList<>();
         JsonArray array = additionalParam.get("components", new JsonArray());
         for(int i = 0; i < array.size(); i++) {
-            components.add(PIDSComponent.parse(array.get(i).getAsJsonObject()));
+            this.components.add(PIDSComponent.parse(array.get(i).getAsJsonObject()));
+        }
+        for(PIDSComponent component : components) {
+            this.components.add(component);
         }
     }
 
@@ -36,7 +41,7 @@ public class CycleComponent extends PIDSComponent {
         if(cycleTime == -1 && !filteredComponents.isEmpty()) {
             filteredComponents.get(0).render(graphicsHolder, guiDrawing, facing, context); // Render first available component
         } else {
-            int currentComponentIndex = (int) ((int)((JCMClientStats.getGameTick() / 20.0) % (cycleTime * filteredComponents.size())) / cycleTime);
+            int currentComponentIndex = (int) ((int)(JCMClientStats.getGameTick() % (cycleTime * filteredComponents.size())) / cycleTime);
 
             PIDSComponent component = filteredComponents.get(currentComponentIndex);
             component.render(graphicsHolder, guiDrawing, facing, context);
