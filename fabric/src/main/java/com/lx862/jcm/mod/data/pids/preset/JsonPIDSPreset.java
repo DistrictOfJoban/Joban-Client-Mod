@@ -12,12 +12,15 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextOverflowMode;
+import com.lx862.jcm.mod.render.text.TextTranslationMode;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.data.IGui;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -32,7 +35,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private static final String ICON_WEATHER_RAINY = Constants.MOD_ID + ":textures/block/pids/weather_rainy.png";
     private static final String ICON_WEATHER_THUNDER = Constants.MOD_ID + ":textures/block/pids/weather_thunder.png";
     private static final String TEXTURE_PLATFORM_CIRCLE = Constants.MOD_ID + ":textures/block/pids/plat_circle.png";
-    private final Identifier background;
+    private final @Nonnull Identifier background;
     private final String fontId;
     private final TextOverflowMode textOverflowMode;
     private final boolean showClock;
@@ -42,7 +45,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private final int textColor;
     private final boolean[] rowHidden;
 
-    public JsonPIDSPreset(String id, @Nullable String name, @Nullable Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, boolean hidePlatform, int textColor) {
+    public JsonPIDSPreset(String id, @Nullable String name, @Nonnull Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, boolean hidePlatform, int textColor) {
         super(id, name, builtin);
         this.background = background;
         this.showClock = showClock;
@@ -172,7 +175,16 @@ public class JsonPIDSPreset extends PIDSPresetBase {
                         components.add(new PlatformComponent(59 * ARRIVAL_TEXT_SCALE, rowY, 8, 8, getFont(), RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
                     }
 
-                    components.add(new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
+                    // ETA text cycle should follow destination
+                    ArrivalResponse thisArrival = arrivals.get(arrivalIndex);
+                    boolean haveCjk = IGui.isCjk(thisArrival.getDestination());
+                    boolean haveEn = TextUtil.haveNonCjk(thisArrival.getDestination());
+                    TextTranslationMode mode = haveCjk && haveEn ? TextTranslationMode.CYCLE : haveCjk ? TextTranslationMode.CJK : TextTranslationMode.NON_CJK;
+
+                    components.add(new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), textColor, ARRIVAL_TEXT_SCALE)
+                            .with("arrivalIndex", arrivalIndex)
+                            .with("textTranslationMode", mode.name())
+                    ));
                     arrivalIndex++;
                 }
             }

@@ -6,6 +6,7 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.Style;
 import org.mtr.mapping.mapper.TextHelper;
+import org.mtr.mod.data.IGui;
 
 public class TextUtil {
     public static MutableText literal(String content) {
@@ -27,5 +28,14 @@ public class TextUtil {
         }  else {
             return text;
         }
+    }
+
+    public static boolean haveNonCjk(String str) {
+        for(String dest : str.split("\\|")) {
+            if(!IGui.isCjk(dest)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -5,7 +5,8 @@
 - Add Wall-attached Helpline (Hong Kong West Kowloon Station Variants)
 - You can now access JCM Config in the Forge Mod Menu again.
 
-**Changes:**  
+**Changes:**
+- PIDS text will no longer cycle between Chinese/English if the destination does not contain either of those.
 
 **Fixes:**
 - All blocks will now be preserved when upgrading from JCM v1 to JCM v2 on Minecraft Forge.

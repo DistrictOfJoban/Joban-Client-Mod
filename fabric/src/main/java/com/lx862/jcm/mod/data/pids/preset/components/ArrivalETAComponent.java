@@ -46,9 +46,9 @@ public class ArrivalETAComponent extends TextComponent {
             etaText = TextUtil.literal(new SimpleDateFormat("HH:mm").format(new Date(arrival.getArrival())));
         } else {
             if(remSec >= 60) {
-                etaText = TextUtil.translatable(cycleString("gui.mtr.arrival_min_cjk", "gui.mtr.arrival_min"), remSec / 60);
+                etaText = TextUtil.translatable(cycleStringTranslation("gui.mtr.arrival_min_cjk", "gui.mtr.arrival_min"), remSec / 60);
             } else {
-                etaText = TextUtil.translatable(cycleString("gui.mtr.arrival_sec_cjk", "gui.mtr.arrival_sec"), remSec % 60);
+                etaText = TextUtil.translatable(cycleStringTranslation("gui.mtr.arrival_sec_cjk", "gui.mtr.arrival_sec"), remSec % 60);
             }
         }
 

@@ -10,6 +10,10 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mod.data.IGui;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public abstract class TextComponent extends PIDSComponent {
     public static final int SWITCH_LANG_DURATION = 60;
     protected final TextOverflowMode textOverflowMode;
@@ -69,40 +73,39 @@ public abstract class TextComponent extends PIDSComponent {
         graphicsHolder.pop();
     }
 
-    protected String cycleString(String mtrString) {
-        String[] split = mtrString.split("\\|");
-        if(split.length == 0) return "";
-
-        if(textTranslationMode == TextTranslationMode.CYCLE) {
-            return split[((int)JCMClientStats.getGameTick() / SWITCH_LANG_DURATION) % split.length];
-        }
-
+    protected String cycleString(String mtrString, boolean isForTranslation) {
         if(textTranslationMode == TextTranslationMode.MERGE) {
             return mtrString.replace("|", " ");
         }
 
-        if(textTranslationMode == TextTranslationMode.CJK) {
-            for(String str : split) {
-                if(IGui.isCjk(str)) {
-                    return str;
+        List<String> split = new ArrayList<>(Arrays.asList(mtrString.split("\\|")));
+
+        if(textTranslationMode != TextTranslationMode.CYCLE) {
+            for(String lang : new ArrayList<>(split)) {
+                if(textTranslationMode == TextTranslationMode.CJK && !isCjk(lang, isForTranslation)) {
+                    split.remove(lang);
+                }
+                if(textTranslationMode == TextTranslationMode.NON_CJK && isCjk(lang, isForTranslation)) {
+                    split.remove(lang);
                 }
             }
-            return "";
         }
 
-        if(textTranslationMode == TextTranslationMode.NON_CJK) {
-            for(String str : split) {
-                if(!IGui.isCjk(str)) {
-                    return str;
-                }
-            }
-            return "";
-        }
+        if(split.isEmpty()) return "";
 
-        return mtrString;
+        return split.get(((int)JCMClientStats.getGameTick() / SWITCH_LANG_DURATION) % split.size());
+    }
+
+    protected boolean isCjk(String str, boolean isTranslation) {
+        if(isTranslation) return str.endsWith("_cjk");
+        return IGui.isCjk(str);
     }
 
     protected String cycleString(String... string) {
-        return cycleString(String.join("|", string));
+        return cycleString(String.join("|", string), false);
+    }
+
+    protected String cycleStringTranslation(String... string) {
+        return cycleString(String.join("|", string), true);
     }
 }
