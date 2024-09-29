@@ -17,13 +17,9 @@
   </a>
 </p>
 
-Joban Client Mod is an addon mod for the **Minecraft Transit Railway 4.0**, adding various blocks, from **Emergency stop button**, **Helpline** to fully customizable Passenger Information Display System and more!  
+Joban Client Mod is an addon mod for the **Minecraft Transit Railway 4.0**, adding various blocks from **Emergency stop button**, **Helpline** to fully customizable Passenger Information Display System and more!  
 
-This is an experimental rewrite of the Joban Client Mod from scratch.  
-It is currently not production ready yet and contains many changes (Including block ids) from Joban Client Mod v1 series which may not be migrated properly to v2.  
-
-Prebuilt jar of the mod can be found in the [action tab](https://github.com/DistrictOfJoban/Joban-Client-Mod/actions).  
-Use with caution!
+This repository contains the source code for Joban Client Mod.
 
 ## Links
 - [Website](https://www.joban.org/jcm)
