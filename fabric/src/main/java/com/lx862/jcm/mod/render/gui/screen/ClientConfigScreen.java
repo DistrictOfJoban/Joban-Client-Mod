@@ -184,25 +184,6 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         GuiHelper.drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
     }
 
-    private void drawPride(GraphicsHolder graphicsHolder) {
-        graphicsHolder.push();
-        graphicsHolder.rotateYDegrees(5);
-        graphicsHolder.scale((float) animationProgress, 1, 1);
-        double prideAnimationProgress = closing ? 1 : animationProgress;
-        int startY = (height / 2);
-        int h = height / 46;
-
-        // TODO: where my matrices :(
-        GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
-        GuiHelper.drawRectangle(guiDrawing, 0, startY, width * prideAnimationProgress, h, 0xFFDF6277);
-        GuiHelper.drawRectangle(guiDrawing, 0, startY + h, width * prideAnimationProgress, h, 0xFFFB9168);
-        GuiHelper.drawRectangle(guiDrawing, 0, startY + h*2, width * prideAnimationProgress, h, 0xFFF3DB6C);
-        GuiHelper.drawRectangle(guiDrawing, 0, startY + h*3, width * prideAnimationProgress, h, 0xFF7AB392);
-        GuiHelper.drawRectangle(guiDrawing, 0, startY + h*4, width * prideAnimationProgress, h, 0xFF4B7CBC);
-        GuiHelper.drawRectangle(guiDrawing, 0, startY + h*5, width * prideAnimationProgress, h, 0xFF6F488C);
-        graphicsHolder.pop();
-    }
-
     @Override
     public void onClose2() {
         if(!closing) {

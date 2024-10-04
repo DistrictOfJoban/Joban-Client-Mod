@@ -109,7 +109,7 @@ public class ContentItem extends AbstractListItem {
         graphicsHolder.translate(ENTRY_PADDING, 0, 0);
 
         if(hasIcon()) {
-            drawIconCallback.accept(new GuiDrawing(graphicsHolder), entryX + ENTRY_PADDING, entryY + ((height - iconSize) / 2), iconSize, iconSize);
+            drawIconCallback.accept(new GuiDrawing(graphicsHolder), 0, ((height - iconSize) / 2), iconSize, iconSize);
             graphicsHolder.translate(iconSize + ENTRY_PADDING, 0, 0); // Shift the text to the right
         }
 
