@@ -30,6 +30,7 @@ subprojects {
 
 	dependencies {
 		implementation 'com.google.code.findbugs:jsr305:+'
+		implementation "org.mozilla:rhino:1.7.14"
 	}
 
 	repositories {

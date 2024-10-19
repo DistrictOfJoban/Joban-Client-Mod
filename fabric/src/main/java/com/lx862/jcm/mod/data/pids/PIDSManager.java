@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.data.pids.preset.CustomComponentPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
+import com.lx862.jcm.mod.data.pids.preset.ScriptPIDSPreset;
 import com.lx862.jcm.mod.util.JCMLogger;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 
@@ -24,6 +25,8 @@ public class PIDSManager {
 
                 if(jsonObject.has("file")) {
                     preset = CustomComponentPIDSPreset.parse(jsonObject);
+                } else if(jsonObject.has("script")) {
+                    preset = ScriptPIDSPreset.parse(jsonObject);
                 } else {
                     preset = JsonPIDSPreset.parse(e.getAsJsonObject());
                 }
