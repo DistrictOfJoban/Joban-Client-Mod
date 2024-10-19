@@ -15,7 +15,7 @@ public class ScriptResourceUtil {
         for(Object obj : objs) {
             sb.append(obj.toString());
         }
-        JCMLogger.info("[PIDS] {}", sb.toString().trim());
+        JCMLogger.info("[Scripting] {}", sb.toString().trim());
     }
 
     public static Identifier identifier(String textForm) {

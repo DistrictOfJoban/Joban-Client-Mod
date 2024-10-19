@@ -5,6 +5,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
+import com.lx862.jcm.mod.data.scripting.ScriptInstanceManager;
+import com.lx862.jcm.mod.data.scripting.ScriptManager;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -19,6 +21,8 @@ public class JCMResourceManager {
         TextRenderingManager.initialize();
         McMetaManager.reset();
         PIDSManager.reset();
+        ScriptManager.reset();
+        ScriptInstanceManager.reset();
 
         parseCustomResources();
     }
