@@ -1,19 +1,16 @@
 package com.lx862.jcm.mod.data.pids.preset;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
-import com.lx862.jcm.mod.data.scripting.PIDSScriptInstance;
-import com.lx862.jcm.mod.data.scripting.PIDSScriptObject;
+import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptContext;
+import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptInstance;
+import com.lx862.jcm.mod.data.pids.scripting.PIDSWrapper;
+import com.lx862.jcm.mod.data.scripting.ParsedScript;
 import com.lx862.jcm.mod.data.scripting.ScriptInstanceManager;
 import com.lx862.jcm.mod.data.scripting.base.ScriptInstance;
-import com.lx862.jcm.mod.data.scripting.util.*;
-import com.lx862.jcm.mod.util.JCMLogger;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.NativeJavaClass;
-import org.mozilla.javascript.NativeJavaMethod;
-import org.mozilla.javascript.Scriptable;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.BlockPos;
@@ -21,7 +18,6 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mapping.mapper.ResourceManagerHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -29,12 +25,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScriptPIDSPreset extends PIDSPresetBase {
-    public final Scriptable scope;
+    public final ParsedScript parsedScripts;
     private static final Identifier PLACEHOLDER_BACKGROUND = Constants.id("textures/block/pids/rv_default.png");
 
-    public ScriptPIDSPreset(String id, @Nullable String name, Scriptable scope) {
+    public ScriptPIDSPreset(String id, @Nullable String name, ParsedScript parsedScripts) {
         super(id, name, false);
-        this.scope = scope;
+        this.parsedScripts = parsedScripts;
     }
 
     public static ScriptPIDSPreset parse(JsonObject rootJsonObject) {
@@ -44,47 +40,26 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             name = rootJsonObject.get("name").getAsString();
         }
 
-        Identifier scriptLocation = new Identifier(rootJsonObject.get("script").getAsString());
-
-        String scriptText = ResourceManagerHelper.readResource(scriptLocation);
-        if(!scriptText.isEmpty()) {
-            try {
-                Context cx = Context.enter();
-                cx.setLanguageVersion(Context.VERSION_ES6);
-                Scriptable scope = cx.initStandardObjects();
-                scope.put("print", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("print", Object[].class), "print"));
-
-                scope.put("Timing", scope, new NativeJavaClass(scope, TimingUtil.class));
-                scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTracker.class));
-                scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTracker.class));
-                scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimit.class));
-                scope.put("TextUtil", scope, new NativeJavaClass(scope, TextUtil.class));
-
-                scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientUtil.class));
-
-
-                cx.evaluateString(scope, "\"use strict\"", "", 1, null);
-                cx.evaluateString(scope, scriptText, scriptLocation.getNamespace() + ":" + scriptLocation.getPath(), 1, null);
-                ScriptPIDSPreset preset = new ScriptPIDSPreset(id, name, scope);
-                JCMLogger.info("Script for " + scriptLocation.getNamespace() + ":" + scriptLocation.getPath() + " has been parsed!");
-                return preset;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        List<Identifier> scriptsToLoad = new ArrayList<>();
+        JsonArray arr = rootJsonObject.get("scripts").getAsJsonArray();
+        for(int i = 0; i < arr.size(); i++) {
+            scriptsToLoad.add(new Identifier(arr.get(i).getAsString()));
         }
-        return null;
+
+        ParsedScript parsedScripts = new ParsedScript("PIDS", scriptsToLoad);
+        return new ScriptPIDSPreset(id, name, parsedScripts);
     }
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
-        ScriptInstance scriptInstance = ScriptInstanceManager.getInstance(pos.asLong(), () -> new PIDSScriptInstance(pos, scope));
-        PIDSScriptObject obj = new PIDSScriptObject(graphicsHolder, be.getCustomMessages(), be.getRowHidden(), be.platformNumberHidden());
+        PIDSWrapper wrapperObj = new PIDSWrapper(be);
+        ScriptInstance scriptInstance = ScriptInstanceManager.getInstance(pos.asLong(), () -> new PIDSScriptInstance(pos, parsedScripts, wrapperObj));
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance)scriptInstance;
-            scriptInstance.execute(obj, () -> {
+            scriptInstance.onRender(wrapperObj, () -> {
                 pidsScriptInstance.components.clear();
-                pidsScriptInstance.components.addAll(obj.getDrawCalls());
+                pidsScriptInstance.components.addAll(((PIDSScriptContext)scriptInstance.getScriptContext()).getDrawCalls());
             });
 
             graphicsHolder.translate(0, 0, -0.5);

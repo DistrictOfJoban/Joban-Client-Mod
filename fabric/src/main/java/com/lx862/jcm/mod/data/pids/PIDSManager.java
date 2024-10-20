@@ -25,7 +25,7 @@ public class PIDSManager {
 
                 if(jsonObject.has("file")) {
                     preset = CustomComponentPIDSPreset.parse(jsonObject);
-                } else if(jsonObject.has("script")) {
+                } else if(jsonObject.has("scripts")) {
                     preset = ScriptPIDSPreset.parse(jsonObject);
                 } else {
                     preset = JsonPIDSPreset.parse(e.getAsJsonObject());

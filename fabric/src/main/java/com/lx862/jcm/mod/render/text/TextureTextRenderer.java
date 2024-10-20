@@ -223,7 +223,7 @@ public class TextureTextRenderer implements RenderHelper {
         }
     }
 
-    private static int toAbgr(int rgb) {
+    public static int toAbgr(int rgb) {
         int a = (rgb >> 24) & 255;
         int r = (rgb >> 16) & 255;
         int g = (rgb >> 8) & 255;

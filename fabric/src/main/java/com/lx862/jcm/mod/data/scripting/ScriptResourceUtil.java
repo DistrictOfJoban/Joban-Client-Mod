@@ -1,15 +1,21 @@
-package com.lx862.jcm.mod.data.scripting.util;
+package com.lx862.jcm.mod.data.scripting;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/ScriptResourceUtil.java#L44 */
 
 import com.lx862.jcm.mod.util.JCMLogger;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mod.Keys;
 
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 
+@SuppressWarnings("unused")
 public class ScriptResourceUtil {
+    public static Context activeCtx;
+    public static Scriptable activeScope;
+
     public static void print(Object... objs) {
         StringBuilder sb = new StringBuilder();
         for(Object obj : objs) {
@@ -21,6 +27,7 @@ public class ScriptResourceUtil {
     public static Identifier identifier(String textForm) {
         return new Identifier(textForm);
     }
+
     public static Identifier id(String textForm) {
         return new Identifier(textForm);
     }

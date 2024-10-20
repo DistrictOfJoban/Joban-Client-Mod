@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.scripting;
 
+import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptContext;
 import com.lx862.jcm.mod.data.scripting.base.ScriptInstance;
 import com.lx862.jcm.mod.util.JCMLogger;
 
@@ -15,6 +16,7 @@ public class ScriptInstanceManager {
             return instances.get(uuid);
         } else {
             ScriptInstance instance = getInstance.get();
+            instance.parsedScript.invokeCreateFunction(instance, new PIDSScriptContext(), null, () -> {});
             instances.put(uuid, instance);
             return instance;
         }
@@ -24,8 +26,11 @@ public class ScriptInstanceManager {
         int count = 0;
         for(Map.Entry<Long, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
             if(entry.getValue().isDead()) {
+                ScriptInstance instance = entry.getValue();
                 count++;
-                instances.remove(entry.getKey());
+                instance.parsedScript.invokeDisposeFunction(instance, new PIDSScriptContext(), null, () -> {
+                    instances.remove(entry.getKey());
+                });
             }
         }
         if(count > 0) {
