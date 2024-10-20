@@ -1,7 +1,6 @@
-package com.lx862.jcm.mod.data.scripting;
+package com.lx862.jcm.mod.scripting;
 
-import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptContext;
-import com.lx862.jcm.mod.data.scripting.base.ScriptInstance;
+import com.lx862.jcm.mod.scripting.base.ScriptInstance;
 import com.lx862.jcm.mod.util.JCMLogger;
 
 import java.util.HashMap;
@@ -16,7 +15,7 @@ public class ScriptInstanceManager {
             return instances.get(uuid);
         } else {
             ScriptInstance instance = getInstance.get();
-            instance.parsedScript.invokeCreateFunction(instance, new PIDSScriptContext(), null, () -> {});
+            instance.parsedScripts.invokeCreateFunction(instance, () -> {});
             instances.put(uuid, instance);
             return instance;
         }
@@ -28,13 +27,13 @@ public class ScriptInstanceManager {
             if(entry.getValue().isDead()) {
                 ScriptInstance instance = entry.getValue();
                 count++;
-                instance.parsedScript.invokeDisposeFunction(instance, new PIDSScriptContext(), null, () -> {
+                instance.parsedScripts.invokeDisposeFunction(instance, () -> {
                     instances.remove(entry.getKey());
                 });
             }
         }
         if(count > 0) {
-            JCMLogger.info("[Scripting] Removed {} dead instance", count);
+            JCMLogger.debug("[Scripting] Removed {} dead instance", count);
         }
     }
 

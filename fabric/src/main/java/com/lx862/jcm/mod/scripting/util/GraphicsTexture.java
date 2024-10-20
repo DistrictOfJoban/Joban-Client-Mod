@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.scripting.util;
+package com.lx862.jcm.mod.scripting.util;
 
 import com.lx862.jcm.mod.Constants;
 import com.mojang.blaze3d.systems.RenderSystem;

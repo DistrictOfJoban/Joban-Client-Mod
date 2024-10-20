@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.scripting.base;
+package com.lx862.jcm.mod.scripting.base;
 
 import com.lx862.jcm.mod.util.JCMLogger;
 

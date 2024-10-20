@@ -1,9 +1,8 @@
-package com.lx862.jcm.mod.data.scripting;
+package com.lx862.jcm.mod.scripting;
 
 import com.lx862.jcm.mod.data.pids.scripting.TextWrapper;
-import com.lx862.jcm.mod.data.scripting.base.ScriptContext;
-import com.lx862.jcm.mod.data.scripting.base.ScriptInstance;
-import com.lx862.jcm.mod.data.scripting.util.*;
+import com.lx862.jcm.mod.scripting.base.ScriptInstance;
+import com.lx862.jcm.mod.scripting.util.*;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mozilla.javascript.*;
 import org.mtr.mapping.holder.Identifier;
@@ -15,16 +14,13 @@ import java.util.concurrent.Future;
 
 public class ParsedScript {
     private static final int SCRIPT_RESET_TIME = 4000;
-    private long lastFailedTime = -1;
-    private final String contextName;
     private final Scriptable scope;
     private final List<Function> createFunctions = new ArrayList<>();
     private final List<Function> renderFunctions = new ArrayList<>();
     private final List<Function> disposeFunctions = new ArrayList<>();
+    private long lastFailedTime = -1;
 
     public ParsedScript(String contextName, List<Identifier> scriptsLocation) {
-        this.contextName = contextName;
-
         try {
             Context cx = Context.enter();
             cx.setLanguageVersion(Context.VERSION_ES6);
@@ -81,7 +77,7 @@ public class ParsedScript {
         }
     }
 
-    public Future<?> invokeFunction(ScriptInstance scriptInstance, ScriptContext contextObj, Object params, List<Function> functionList, Runnable callback) {
+    public Future<?> invokeFunction(ScriptInstance scriptInstance, List<Function> functionList, Runnable callback) {
         if(lastFailedTime != -1 && System.currentTimeMillis() - lastFailedTime <= SCRIPT_RESET_TIME) {
             return null;
         }
@@ -95,7 +91,7 @@ public class ParsedScript {
                 if(scriptInstance.state == null) scriptInstance.state = cx.newObject(scope);
 
                 for(Function func : functionList) {
-                    func.call(cx, scope, scope, new Object[]{contextObj, scriptInstance.state, params});
+                    func.call(cx, scope, scope, new Object[]{scriptInstance.getScriptContext(), scriptInstance.state, scriptInstance.getWrapperObject()});
                 }
             } catch (Exception e) {
                 JCMLogger.error("[Scripting] Error executing script!");
@@ -108,16 +104,19 @@ public class ParsedScript {
         });
     }
 
-    public Future<?> invokeCreateFunction(ScriptInstance instance, ScriptContext contextObj, Object params, Runnable callback) {
-        return invokeFunction(instance, contextObj, params, createFunctions, callback);
+    public Future<?> invokeCreateFunction(ScriptInstance instance, Runnable callback) {
+        return invokeFunction(instance, createFunctions, callback);
     }
 
-    public Future<?> invokeRenderFunction(ScriptInstance instance, ScriptContext contextObj, Object params, Runnable callback) {
-        return invokeFunction(instance, contextObj, params, renderFunctions, callback);
+    public Future<?> invokeRenderFunction(ScriptInstance instance, Runnable callback) {
+        if(instance.scriptTask != null && !instance.scriptTask.isDone()) {
+            return instance.scriptTask;
+        }
+        return invokeFunction(instance, renderFunctions, callback);
     }
 
-    public Future<?> invokeDisposeFunction(ScriptInstance instance, ScriptContext contextObj, Object params, Runnable callback) {
-        return invokeFunction(instance, contextObj, params, disposeFunctions, callback);
+    public Future<?> invokeDisposeFunction(ScriptInstance instance, Runnable callback) {
+        return invokeFunction(instance, disposeFunctions, callback);
     }
 
     public Scriptable getScope() {

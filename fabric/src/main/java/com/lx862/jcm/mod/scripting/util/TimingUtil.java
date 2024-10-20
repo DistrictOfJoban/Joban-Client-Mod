@@ -1,6 +1,6 @@
-package com.lx862.jcm.mod.data.scripting.util;
+package com.lx862.jcm.mod.scripting.util;
 
-import com.lx862.jcm.mod.data.scripting.base.ScriptInstance;
+import com.lx862.jcm.mod.scripting.base.ScriptInstance;
 import org.mtr.mod.InitClient;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/TimingUtil.java */

@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.scripting.util;
+package com.lx862.jcm.mod.scripting.util;
 
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.render.StoredMatrixTransformations;

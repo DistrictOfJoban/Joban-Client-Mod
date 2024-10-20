@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.scripting;
+package com.lx862.jcm.mod.scripting;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

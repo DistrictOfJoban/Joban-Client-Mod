@@ -9,9 +9,9 @@ import com.lx862.jcm.mod.data.pids.scripting.DrawCall;
 import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptContext;
 import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptInstance;
 import com.lx862.jcm.mod.data.pids.scripting.PIDSWrapper;
-import com.lx862.jcm.mod.data.scripting.ParsedScript;
-import com.lx862.jcm.mod.data.scripting.ScriptInstanceManager;
-import com.lx862.jcm.mod.data.scripting.base.ScriptInstance;
+import com.lx862.jcm.mod.scripting.ParsedScript;
+import com.lx862.jcm.mod.scripting.ScriptInstanceManager;
+import com.lx862.jcm.mod.scripting.base.ScriptInstance;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.BlockPos;
@@ -58,7 +58,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance)scriptInstance;
-            scriptInstance.onRender(wrapperObj, () -> {
+            scriptInstance.parsedScripts.invokeRenderFunction(scriptInstance, () -> {
                 pidsScriptInstance.drawCalls.clear();
                 pidsScriptInstance.drawCalls.addAll(((PIDSScriptContext)scriptInstance.getScriptContext()).getDrawCalls());
             });
@@ -77,11 +77,6 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     @Override
     public List<PIDSComponent> getComponents(ObjectArrayList<ArrivalResponse> arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
         return new ArrayList<>();
-    }
-
-    @Override
-    public String getFont() {
-        return "mtr:mtr";
     }
 
     @Override

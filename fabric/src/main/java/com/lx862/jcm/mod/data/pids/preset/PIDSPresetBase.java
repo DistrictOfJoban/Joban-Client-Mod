@@ -47,7 +47,6 @@ public abstract class PIDSPresetBase implements RenderHelper {
     }
 
     public abstract List<PIDSComponent> getComponents(ObjectArrayList<ArrivalResponse> arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform);
-    public abstract String getFont();
     public abstract @Nonnull Identifier getBackground();
     public abstract int getTextColor();
     public abstract boolean isRowHidden(int row);

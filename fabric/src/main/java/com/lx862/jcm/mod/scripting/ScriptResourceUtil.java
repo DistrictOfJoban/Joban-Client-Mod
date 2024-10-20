@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.scripting;
+package com.lx862.jcm.mod.scripting;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/ScriptResourceUtil.java#L44 */
 

@@ -2,7 +2,7 @@ package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.JCMServerStats;
-import com.lx862.jcm.mod.data.scripting.ScriptInstanceManager;
+import com.lx862.jcm.mod.scripting.ScriptInstanceManager;
 import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 
