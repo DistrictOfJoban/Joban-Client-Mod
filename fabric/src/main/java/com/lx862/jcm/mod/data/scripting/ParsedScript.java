@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.scripting;
 
+import com.lx862.jcm.mod.data.pids.scripting.TextWrapper;
 import com.lx862.jcm.mod.data.scripting.base.ScriptContext;
 import com.lx862.jcm.mod.data.scripting.base.ScriptInstance;
 import com.lx862.jcm.mod.data.scripting.util.*;
@@ -39,7 +40,11 @@ public class ParsedScript {
             scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimit.class));
             scope.put("TextUtil", scope, new NativeJavaClass(scope, TextUtil.class));
 
+            scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
+
             scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientUtil.class));
+
+            scope.put("Text", scope, new NativeJavaClass(scope, TextWrapper.class));
 
 
             cx.evaluateString(scope, "\"use strict\"", "", 1, null);
@@ -57,7 +62,7 @@ public class ParsedScript {
                 tryAndAddFunction("render" + contextName, scope, renderFunctions);
                 tryAndAddFunction("dispose" + contextName, scope, disposeFunctions);
 
-                JCMLogger.info("[Scripting] Loaded script" + scriptLocation.getNamespace() + ":" + scriptLocation.getPath());
+                JCMLogger.info("[Scripting] Loaded script: " + scriptLocation.getNamespace() + ":" + scriptLocation.getPath());
             }
         } finally {
             ScriptResourceUtil.activeCtx = null;

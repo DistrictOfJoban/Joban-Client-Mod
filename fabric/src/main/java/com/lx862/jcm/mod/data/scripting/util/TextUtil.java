@@ -53,4 +53,24 @@ public class TextUtil {
         return result.toString().trim();
     }
 
+    public static String formatDayTime(int base, int timeOfDay) {
+        long timeNow = timeOfDay + 6000;
+        long hours = timeNow / 1000;
+        long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
+        StringBuilder sb = new StringBuilder();
+        if(base == 24) {
+            sb.append(String.format("%02d", hours % 24));
+        } else {
+            sb.append(hours % 12);
+        }
+        sb.append(":");
+        sb.append(String.format("%02d", minutes % 60));
+
+        if(base == 12) {
+            sb.append(" ");
+            sb.append(((hours % 24 >= 12) ? "PM" : "AM"));
+        }
+        return sb.toString();
+    }
+
 }

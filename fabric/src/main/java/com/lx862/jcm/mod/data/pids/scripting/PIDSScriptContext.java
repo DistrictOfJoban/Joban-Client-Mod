@@ -3,25 +3,30 @@ package com.lx862.jcm.mod.data.pids.scripting;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.scripting.base.ScriptContext;
+import com.lx862.jcm.mod.data.scripting.util.Matrices;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PIDSScriptContext extends ScriptContext {
-    private final List<PIDSComponent> drawCalls = new ArrayList<>();
+    private final List<DrawCall> drawCalls = new ArrayList<>();
 
     public PIDSComponent parseComponent(String str) {
         return PIDSComponent.parse(new JsonParser().parse(str).getAsJsonObject());
     }
 
-    public void drawComponent(PIDSComponent component) {
-        if(component != null) {
-            this.drawCalls.add(component);
+    public void draw(Object obj, Matrices matrices) {
+        if(matrices == null) matrices = new Matrices();
+
+        if(obj instanceof TextWrapper) {
+            this.drawCalls.add(new TextDrawCall((TextWrapper)obj, matrices.getStoredMatrixTransformations().copy()));
+        } else {
+            throw new IllegalArgumentException("Unsupported draw type!");
         }
     }
 
-    public List<PIDSComponent> getDrawCalls() {
-        List<PIDSComponent> drawCalls = new ArrayList<>(this.drawCalls);
+    public List<DrawCall> getDrawCalls() {
+        List<DrawCall> drawCalls = new ArrayList<>(this.drawCalls);
         this.drawCalls.clear();
         return drawCalls;
     }

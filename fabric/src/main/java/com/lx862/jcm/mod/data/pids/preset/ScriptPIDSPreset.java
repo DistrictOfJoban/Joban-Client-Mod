@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
+import com.lx862.jcm.mod.data.pids.scripting.DrawCall;
 import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptContext;
 import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptInstance;
 import com.lx862.jcm.mod.data.pids.scripting.PIDSWrapper;
@@ -52,22 +53,22 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
-        PIDSWrapper wrapperObj = new PIDSWrapper(be);
+        PIDSWrapper wrapperObj = new PIDSWrapper(be, arrivals);
         ScriptInstance scriptInstance = ScriptInstanceManager.getInstance(pos.asLong(), () -> new PIDSScriptInstance(pos, parsedScripts, wrapperObj));
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance)scriptInstance;
             scriptInstance.onRender(wrapperObj, () -> {
-                pidsScriptInstance.components.clear();
-                pidsScriptInstance.components.addAll(((PIDSScriptContext)scriptInstance.getScriptContext()).getDrawCalls());
+                pidsScriptInstance.drawCalls.clear();
+                pidsScriptInstance.drawCalls.addAll(((PIDSScriptContext)scriptInstance.getScriptContext()).getDrawCalls());
             });
 
             graphicsHolder.translate(0, 0, -0.5);
-            PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
-            for(PIDSComponent component : new ArrayList<>(pidsScriptInstance.components)) {
+            for(DrawCall drawCall : new ArrayList<>(pidsScriptInstance.drawCalls)) {
+                if(drawCall == null) continue;
                 graphicsHolder.translate(0, 0, -0.02);
                 graphicsHolder.push();
-                component.render(graphicsHolder, null, facing, pidsContext);
+                drawCall.draw(graphicsHolder);
                 graphicsHolder.pop();
             }
         }

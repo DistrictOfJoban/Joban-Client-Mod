@@ -8,6 +8,7 @@ import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.Text;
 import org.mtr.mapping.holder.Vector3f;
 import org.mtr.mapping.mapper.TextHelper;
+import org.mtr.mapping.mapper.WorldHelper;
 
 public class MinecraftClientUtil {
 
@@ -23,9 +24,8 @@ public class MinecraftClientUtil {
     }
 
     public static int worldDayTime() {
-        throw new NotImplementedException("Not implemented in Minecraft Mappings");
-//        return MinecraftClient.getInstance().getWorldMapped() != null
-//                ? (int) MinecraftClient.getInstance().getWorldMapped().getTime() : 0;
+        return MinecraftClient.getInstance().getWorldMapped() != null
+                ? (int) WorldHelper.getTimeOfDay(MinecraftClient.getInstance().getWorldMapped()) : 0;
     }
 
     public static void narrate(String message) {

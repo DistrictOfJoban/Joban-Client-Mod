@@ -1,35 +1,46 @@
 package com.lx862.jcm.mod.data.scripting.util;
 
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.render.StoredMatrixTransformations;
+
+/* This is a wrapper for storedMatrixTransformations for scripting purposes */
 
 public class Matrices {
-    private final GraphicsHolder graphicsHolder;
+    private final StoredMatrixTransformations storedMatrixTransformations;
 
-    public Matrices(GraphicsHolder graphicsHolder) {
-        this.graphicsHolder = graphicsHolder;
+    public Matrices() {
+        this.storedMatrixTransformations = new StoredMatrixTransformations();
     }
 
     public void push() {
-        this.graphicsHolder.push();
+        this.storedMatrixTransformations.add(GraphicsHolder::push);
     }
 
     public void translate(double x, double y, double z) {
-        this.graphicsHolder.translate(x, y, z);
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.translate(x, y, z));
     }
 
     public void rotateX(float x) {
-        this.graphicsHolder.rotateXDegrees(x);
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateXDegrees(x));
     }
 
     public void rotateY(float y) {
-        this.graphicsHolder.rotateYDegrees(y);
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateYDegrees(y));
     }
 
     public void rotateZ(float z) {
-        this.graphicsHolder.rotateZDegrees(z);
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateZDegrees(z));
+    }
+
+    public void scale(float x, float y, float z) {
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.scale(x, y, z));
     }
 
     public void pop() {
-        this.graphicsHolder.pop();
+        this.storedMatrixTransformations.add(GraphicsHolder::pop);
+    }
+
+    public StoredMatrixTransformations getStoredMatrixTransformations() {
+        return storedMatrixTransformations;
     }
 }
