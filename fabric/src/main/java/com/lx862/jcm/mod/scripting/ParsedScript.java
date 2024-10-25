@@ -8,6 +8,7 @@ import com.lx862.jcm.mod.util.JCMLogger;
 import org.mozilla.javascript.*;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
+import org.mtr.mod.client.MinecraftClientData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,13 +22,13 @@ public class ParsedScript {
     private final List<Function> disposeFunctions = new ArrayList<>();
     private long lastFailedTime = -1;
 
-    public ParsedScript(String contextName, List<Identifier> scriptsLocation) {
+    public ParsedScript(String contextName, List<Identifier> scriptsLocation) throws Exception {
         try {
             Context cx = Context.enter();
             cx.setLanguageVersion(Context.VERSION_ES6);
             scope = cx.initStandardObjects();
-            //scope.put("print", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("print", Object[].class), "print"));
 
+            scope.put("print", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("print", Object[].class), "print"));
             scope.put("Resources", scope, new NativeJavaClass(scope, ScriptResourceUtil.class));
             scope.put("GraphicsTexture", scope, new NativeJavaClass(scope, GraphicsTexture.class));
 
@@ -36,8 +37,11 @@ public class ParsedScript {
             scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTracker.class));
             scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimit.class));
             scope.put("TextUtil", scope, new NativeJavaClass(scope, TextUtil.class));
+            scope.put("MTRUtil", scope, new NativeJavaClass(scope, MTRUtil.class));
 
             scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
+
+            scope.put("MTRClientData", scope, new NativeJavaClass(scope, MinecraftClientData.class));
 
             scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientUtil.class));
 

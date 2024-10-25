@@ -34,7 +34,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         this.parsedScripts = parsedScripts;
     }
 
-    public static ScriptPIDSPreset parse(JsonObject rootJsonObject) {
+    public static ScriptPIDSPreset parse(JsonObject rootJsonObject) throws Exception {
         String id = rootJsonObject.get("id").getAsString();
         String name = id;
         if(rootJsonObject.has("name")) {
@@ -53,11 +53,13 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
-        PIDSWrapper wrapperObj = new PIDSWrapper(be, arrivals);
-        ScriptInstance scriptInstance = ScriptInstanceManager.getInstance(pos.asLong(), () -> new PIDSScriptInstance(pos, parsedScripts, wrapperObj));
+        ScriptInstance scriptInstance = ScriptInstanceManager.getInstance(pos.asLong(), () -> new PIDSScriptInstance(pos, parsedScripts));
 
         if(scriptInstance instanceof PIDSScriptInstance) {
-            PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance)scriptInstance;
+            PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;
+            PIDSWrapper wrapperObj = new PIDSWrapper(be, arrivals, width, height);
+
+            pidsScriptInstance.updateWrapperObject(wrapperObj);
             scriptInstance.parsedScripts.invokeRenderFunction(scriptInstance, () -> {
                 pidsScriptInstance.drawCalls.clear();
                 pidsScriptInstance.drawCalls.addAll(((PIDSScriptContext)scriptInstance.getScriptContext()).getDrawCalls());

@@ -5,9 +5,10 @@ import org.mozilla.javascript.Scriptable;
 
 import java.util.concurrent.Future;
 
-public abstract class ScriptInstance {
+public abstract class ScriptInstance<T> {
     private final ScriptContext scriptContext;
     public final ParsedScript parsedScripts;
+    protected T wrapperObject;
     public Scriptable state;
     public Future<?> scriptTask;
     public double lastExecuteTime = 0;
@@ -21,7 +22,11 @@ public abstract class ScriptInstance {
         return scriptContext;
     }
 
-    public abstract Object getWrapperObject();
+    public abstract T getWrapperObject();
+
+    public void updateWrapperObject(T obj) {
+        wrapperObject = obj;
+    }
 
     public abstract boolean isDead();
 }

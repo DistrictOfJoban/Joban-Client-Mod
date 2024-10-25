@@ -9,20 +9,18 @@ import org.mtr.mapping.holder.MinecraftClient;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PIDSScriptInstance extends ScriptInstance {
+public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> {
     public List<DrawCall> drawCalls;
     private final BlockEntity be;
-    private final PIDSWrapper wrapperObject;
 
-    public PIDSScriptInstance(BlockPos pos, ParsedScript script, PIDSWrapper wrapperObject) {
+    public PIDSScriptInstance(BlockPos pos, ParsedScript script) {
         super(new PIDSScriptContext(), script);
-        this.wrapperObject = wrapperObject;
         this.be = MinecraftClient.getInstance().getWorldMapped().getBlockEntity(pos);
         this.drawCalls = new ArrayList<>();
     }
 
     @Override
-    public Object getWrapperObject() {
+    public PIDSWrapper getWrapperObject() {
         return wrapperObject;
     }
 
