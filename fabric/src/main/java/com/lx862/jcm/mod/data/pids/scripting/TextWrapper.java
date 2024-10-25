@@ -6,14 +6,15 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.TextHelper;
+import org.mtr.mod.Init;
 
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
 public class TextWrapper extends DrawCall {
     public String str;
-    public String fontId;
+    public Identifier fontId;
     public boolean shadow;
-    public double scale = 1;
+    public double scale;
     public int alignment;
     public int color;
 
@@ -21,6 +22,8 @@ public class TextWrapper extends DrawCall {
         super(100, 25);
         this.str = str;
         this.alignment = -1;
+        this.scale = 1;
+        this.fontId = new Identifier(Init.MOD_ID, "mtr");
     }
 
     public TextWrapper pos(double x, double y) {
@@ -61,6 +64,10 @@ public class TextWrapper extends DrawCall {
     }
 
     public TextWrapper font(String fontId) {
+        return font(new Identifier(fontId));
+    }
+
+    public TextWrapper font(Identifier fontId) {
         this.fontId = fontId;
         return this;
     }
@@ -75,7 +82,7 @@ public class TextWrapper extends DrawCall {
         graphicsHolder.scale((float)scale, (float)scale, (float)scale);
         MutableText finalText = TextHelper.literal(str);
         if(fontId != null) {
-            finalText = TextUtil.withFont(finalText, new Identifier(fontId));
+            finalText = TextUtil.withFont(finalText, fontId);
         }
 
         int totalW = GraphicsHolder.getTextWidth(finalText);
