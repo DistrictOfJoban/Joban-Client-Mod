@@ -68,7 +68,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
                 if(drawCall == null) continue;
                 graphicsHolder.translate(0, 0, -0.02);
                 graphicsHolder.push();
-                drawCall.draw(graphicsHolder);
+                drawCall.draw(graphicsHolder, facing);
                 graphicsHolder.pop();
             }
         }

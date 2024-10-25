@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting;
 
 import com.lx862.jcm.mod.data.pids.scripting.TextWrapper;
+import com.lx862.jcm.mod.data.pids.scripting.TextureWrapper;
 import com.lx862.jcm.mod.scripting.base.ScriptInstance;
 import com.lx862.jcm.mod.scripting.util.*;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -41,9 +42,10 @@ public class ParsedScript {
             scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientUtil.class));
 
             scope.put("Text", scope, new NativeJavaClass(scope, TextWrapper.class));
+            scope.put("Texture", scope, new NativeJavaClass(scope, TextureWrapper.class));
 
 
-            cx.evaluateString(scope, "\"use strict\"", "", 1, null);
+            cx.evaluateString(scope, "\"use strict\";", "", 1, null);
 
             ScriptResourceUtil.activeCtx = cx;
             ScriptResourceUtil.activeScope = scope;

@@ -16,12 +16,14 @@ public class PIDSScriptContext extends ScriptContext {
     }
 
     public void draw(Object obj, Matrices matrices) {
-        if(matrices == null) matrices = new Matrices();
+        if(obj instanceof DrawCall) {
+            if(matrices != null) {
+                ((DrawCall) obj).setMatrix(matrices.getStoredMatrixTransformations().copy());
+            }
 
-        if(obj instanceof TextWrapper) {
-            this.drawCalls.add(new TextDrawCall((TextWrapper)obj, matrices.getStoredMatrixTransformations().copy()));
+            this.drawCalls.add((DrawCall)obj);
         } else {
-            throw new IllegalArgumentException("Unsupported draw type!");
+            throw new IllegalArgumentException("1st parameter is not a DrawCall!");
         }
     }
 
