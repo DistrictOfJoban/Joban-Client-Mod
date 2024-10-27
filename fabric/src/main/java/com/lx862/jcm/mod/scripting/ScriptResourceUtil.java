@@ -3,11 +3,11 @@ package com.lx862.jcm.mod.scripting;
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/ScriptResourceUtil.java#L44 */
 
 import com.lx862.jcm.mod.util.JCMLogger;
-import org.apache.commons.lang3.NotImplementedException;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
+import org.mtr.mapping.render.obj.ObjModelLoader;
 import org.mtr.mod.Keys;
 
 import java.awt.font.FontRenderContext;
@@ -60,15 +60,15 @@ public class ScriptResourceUtil {
         if (scriptLocationStack.empty()) throw new RuntimeException(
                 "Cannot use idRelative in functions."
         );
-        throw new NotImplementedException("idRelative is not implemented."); // TODO
-//        return ResourceUtil.resolveRelativePath(scriptLocationStack.peek(), textForm, null);
+        return ObjModelLoader.resolveRelativePath(scriptLocationStack.peek(), textForm, null);
     }
+
     public static Identifier idr(String textForm) {
         if (scriptLocationStack.empty()) throw new RuntimeException(
                 "Cannot use idr in functions."
         );
-        throw new NotImplementedException("idr is not implemented."); // TODO
-//        return ResourceUtil.resolveRelativePath(scriptLocationStack.peek(), textForm, null);
+        Identifier id = scriptLocationStack.peek();
+        return ObjModelLoader.resolveRelativePath(id, textForm, null);
     }
 
     private static final FontRenderContext FONT_CONTEXT = new FontRenderContext(new AffineTransform(), true, false);
