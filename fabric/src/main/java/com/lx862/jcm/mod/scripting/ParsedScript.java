@@ -28,6 +28,7 @@ public class ParsedScript {
             cx.setLanguageVersion(Context.VERSION_ES6);
             scope = cx.initStandardObjects();
 
+            scope.put("include", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("includeScript", Object.class), "includeScript"));
             scope.put("print", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("print", Object[].class), "print"));
             scope.put("Resources", scope, new NativeJavaClass(scope, ScriptResourceUtil.class));
             scope.put("GraphicsTexture", scope, new NativeJavaClass(scope, GraphicsTexture.class));
@@ -51,11 +52,11 @@ public class ParsedScript {
 
             cx.evaluateString(scope, "\"use strict\";", "", 1, null);
 
-            ScriptResourceUtil.activeCtx = cx;
+            ScriptResourceUtil.activeContext = cx;
             ScriptResourceUtil.activeScope = scope;
             for(Identifier scriptLocation : scriptsLocation) {
                 String scriptText = ResourceManagerHelper.readResource(scriptLocation);
-                cx.evaluateString(scope, scriptText, scriptLocation.getNamespace() + ":" + scriptLocation.getPath(), 1, null);
+                ScriptResourceUtil.executeScript(cx, scope, scriptLocation, scriptText);
 
                 tryAndAddFunction("create", scope, createFunctions);
                 tryAndAddFunction("render", scope, renderFunctions);
@@ -67,7 +68,7 @@ public class ParsedScript {
                 JCMLogger.info("[Scripting] Loaded script: " + scriptLocation.getNamespace() + ":" + scriptLocation.getPath());
             }
         } finally {
-            ScriptResourceUtil.activeCtx = null;
+            ScriptResourceUtil.activeContext = null;
             ScriptResourceUtil.activeScope = null;
             Context.exit();
         }
