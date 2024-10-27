@@ -6,8 +6,7 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-import static com.lx862.jcm.mod.render.RenderHelper.ARGB_WHITE;
-import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
+import static com.lx862.jcm.mod.render.RenderHelper.*;
 
 public class TextureWrapper extends DrawCall {
     public final Identifier id;
@@ -42,6 +41,6 @@ public class TextureWrapper extends DrawCall {
     @Override
     protected void drawTransformed(GraphicsHolder graphicsHolder, Direction facing) {
         graphicsHolder.createVertexConsumer(RenderLayer.getText(this.id));
-        RenderHelper.drawTexture(graphicsHolder, 0, 0, 0, (float)w, (float)h, facing, color, MAX_RENDER_LIGHT);
+        RenderHelper.drawTexture(graphicsHolder, 0, 0, 0, (float)w, (float)h, facing, ARGB_BLACK + color, MAX_RENDER_LIGHT);
     }
 }
