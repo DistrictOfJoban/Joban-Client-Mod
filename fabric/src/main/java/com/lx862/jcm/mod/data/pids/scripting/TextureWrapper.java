@@ -11,6 +11,10 @@ import static com.lx862.jcm.mod.render.RenderHelper.*;
 public class TextureWrapper extends DrawCall {
     public Identifier id;
     public int color = ARGB_WHITE;
+    public float u1 = 0;
+    public float v1 = 0;
+    public float u2 = 1;
+    public float v2 = 1;
 
     public TextureWrapper() {
         super(20, 20);
@@ -38,6 +42,22 @@ public class TextureWrapper extends DrawCall {
         return this;
     }
 
+    public TextureWrapper uv(float u1, float v1, float u2, float v2) {
+        this.u1 = u1;
+        this.v1 = v1;
+        this.u2 = u2;
+        this.v2 = v2;
+        return this;
+    }
+
+    public TextureWrapper uv(float u2, float v2) {
+        this.u1 = 0;
+        this.v1 = 0;
+        this.u2 = u2;
+        this.v2 = v2;
+        return this;
+    }
+
     @Override
     protected void validate() {
         if(id == null) throw new IllegalArgumentException("texture must be filled");
@@ -46,6 +66,6 @@ public class TextureWrapper extends DrawCall {
     @Override
     protected void drawTransformed(GraphicsHolder graphicsHolder, Direction facing) {
         graphicsHolder.createVertexConsumer(RenderLayer.getText(this.id));
-        RenderHelper.drawTexture(graphicsHolder, 0, 0, 0, (float)w, (float)h, facing, ARGB_BLACK + color, MAX_RENDER_LIGHT);
+        RenderHelper.drawTexture(graphicsHolder, 0, 0, 0, (float)w, (float)h, u1, v1, u2, v2, facing, ARGB_BLACK + color, MAX_RENDER_LIGHT);
     }
 }
