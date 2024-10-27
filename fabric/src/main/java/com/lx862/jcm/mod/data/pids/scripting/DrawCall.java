@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.pids.scripting;
 
+import com.lx862.jcm.mod.scripting.util.Matrices;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -18,8 +19,25 @@ public abstract class DrawCall {
         this.storedMatrixTransformations = new StoredMatrixTransformations();
     }
 
-    protected void setMatrix(StoredMatrixTransformations matrix) {
-        this.storedMatrixTransformations = matrix;
+    public DrawCall pos(double x, double y) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    public DrawCall size(double w, double h) {
+        this.w = w;
+        this.h = h;
+        return this;
+    }
+
+    public DrawCall matrices(Matrices matrices) {
+        this.storedMatrixTransformations = matrices.getStoredMatrixTransformations().copy();
+        return this;
+    }
+
+    public void draw(PIDSScriptContext ctx) {
+        ctx.draw(this);
     }
 
     public void draw(GraphicsHolder graphicsHolder, Direction facing) {
@@ -29,6 +47,8 @@ public abstract class DrawCall {
         drawTransformed(graphicsHolder, facing);
         graphicsHolder.pop();
     }
+
+    protected abstract void validate();
 
     protected abstract void drawTransformed(GraphicsHolder graphicsHolder, Direction facing);
 }

@@ -18,23 +18,23 @@ public class TextWrapper extends DrawCall {
     public int alignment;
     public int color;
 
-    public TextWrapper(String str) {
+    protected TextWrapper() {
         super(100, 25);
-        this.str = str;
         this.alignment = -1;
         this.scale = 1;
         this.fontId = new Identifier(Init.MOD_ID, "mtr");
     }
 
-    public TextWrapper pos(double x, double y) {
-        this.x = x;
-        this.y = y;
-        return this;
+    public static TextWrapper create() {
+        return new TextWrapper();
     }
 
-    public TextWrapper size(double w, double h) {
-        this.w = w;
-        this.h = h;
+    public static TextWrapper create(String comment) {
+        return create();
+    }
+
+    public TextWrapper text(String str) {
+        this.str = str;
         return this;
     }
 
@@ -75,6 +75,11 @@ public class TextWrapper extends DrawCall {
     public TextWrapper color(int color) {
         this.color = color;
         return this;
+    }
+
+    @Override
+    protected void validate() {
+        if(str == null) throw new IllegalArgumentException("Text must be filled");
     }
 
     @Override

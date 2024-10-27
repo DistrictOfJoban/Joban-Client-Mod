@@ -4,7 +4,6 @@ import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.scripting.base.ScriptContext;
-import com.lx862.jcm.mod.scripting.util.Matrices;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,12 +18,9 @@ public class PIDSScriptContext extends ScriptContext {
         return PIDSComponent.parse(new JsonParser().parse(str).getAsJsonObject());
     }
 
-    public void draw(Object obj, Matrices matrices) {
+    public void draw(Object obj) {
         if(obj instanceof DrawCall) {
-            if(matrices != null) {
-                ((DrawCall) obj).setMatrix(matrices.getStoredMatrixTransformations().copy());
-            }
-
+            ((DrawCall)obj).validate();
             this.drawCalls.add((DrawCall)obj);
         } else {
             throw new IllegalArgumentException("1st parameter is not a DrawCall!");
