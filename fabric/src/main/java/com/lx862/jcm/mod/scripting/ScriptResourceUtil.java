@@ -7,12 +7,13 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
-import org.mtr.mapping.render.obj.ObjModelLoader;
 import org.mtr.mod.Keys;
 
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.util.Locale;
 import java.util.Stack;
 
 @SuppressWarnings("unused")
@@ -60,7 +61,7 @@ public class ScriptResourceUtil {
         if (scriptLocationStack.empty()) throw new RuntimeException(
                 "Cannot use idRelative in functions."
         );
-        return ObjModelLoader.resolveRelativePath(scriptLocationStack.peek(), textForm, null);
+        return resolveRelativePath(scriptLocationStack.peek(), textForm);
     }
 
     public static Identifier idr(String textForm) {
@@ -68,7 +69,7 @@ public class ScriptResourceUtil {
                 "Cannot use idr in functions."
         );
         Identifier id = scriptLocationStack.peek();
-        return ObjModelLoader.resolveRelativePath(id, textForm, null);
+        return resolveRelativePath(id, textForm);
     }
 
     private static final FontRenderContext FONT_CONTEXT = new FontRenderContext(new AffineTransform(), true, false);
@@ -85,5 +86,21 @@ public class ScriptResourceUtil {
             mtrModVersion = null;
         }
         return mtrModVersion;
+    }
+
+    private static Identifier resolveRelativePath(Identifier baseFile, String relative) {
+        String result = relative.toLowerCase(Locale.ROOT).replace('\\', '/');
+        if (result.contains(":")) {
+            result = result.replaceAll("[^a-z0-9/.:_-]", "_");
+            return new Identifier(result);
+        } else {
+            result = result.replaceAll("[^a-z0-9/._-]", "_");
+            if (result.endsWith(".jpg") || result.endsWith(".bmp") || result.endsWith(".tga")) {
+                String var10000 = result.substring(0, result.length() - 4);
+                result = var10000 + ".png";
+            }
+
+            return new Identifier(baseFile.getNamespace(), FileSystems.getDefault().getPath(baseFile.getPath()).getParent().resolve(result).normalize().toString().replace('\\', '/'));
+        }
     }
 }
