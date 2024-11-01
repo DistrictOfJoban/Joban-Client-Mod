@@ -74,6 +74,11 @@ public class TextWrapper extends DrawCall {
         return this;
     }
 
+    public TextWrapper fontMC() {
+        this.fontId = null;
+        return this;
+    }
+
     public TextWrapper font(String fontId) {
         return font(new Identifier(fontId));
     }
