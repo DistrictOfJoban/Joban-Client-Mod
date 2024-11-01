@@ -15,6 +15,7 @@ public class TextWrapper extends DrawCall {
     public Identifier fontId;
     public boolean shadow;
     public double scale;
+    public int overflowMode;
     public int alignment;
     public int color;
 
@@ -63,6 +64,16 @@ public class TextWrapper extends DrawCall {
         return this;
     }
 
+    public TextWrapper stretchXY() {
+        this.overflowMode = 1;
+        return this;
+    }
+
+    public TextWrapper scaleXY() {
+        this.overflowMode = 2;
+        return this;
+    }
+
     public TextWrapper font(String fontId) {
         return font(new Identifier(fontId));
     }
@@ -91,6 +102,21 @@ public class TextWrapper extends DrawCall {
         }
 
         int totalW = GraphicsHolder.getTextWidth(finalText);
+        int totalH = 9;
+
+        if(overflowMode == 1) {
+            if(totalW > w) {
+                graphicsHolder.scale((float)(w / totalW), 1, 1);
+            }
+            if(h > 9) {
+                graphicsHolder.scale(1, (float)(totalH / h), 1);
+            }
+        } else if(overflowMode == 2) {
+            double minScale = Math.min(totalW > w ? w / totalW : 1, h > totalH ? totalH / h : 1);
+            graphicsHolder.translate(0, (h - (totalH * minScale)) / 2, 0); // Center it vertically
+            graphicsHolder.scale((float)minScale, (float)minScale, 0);
+        }
+
         int startX = 0;
         if(alignment == 0) {
             startX -= totalW / 2;

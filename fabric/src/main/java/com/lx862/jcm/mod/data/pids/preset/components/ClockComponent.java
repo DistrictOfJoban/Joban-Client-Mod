@@ -28,7 +28,7 @@ public class ClockComponent extends TextComponent {
     public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
         long timeNow = WorldHelper.getTimeOfDay(context.world) + 6000;
         long hours = timeNow / 1000;
-        long minutes = Math.round((timeNow - (hours * 1000)) / 16.8);
+        long minutes = (long)Math.floor((timeNow - (hours * 1000)) / 16.8);
         String str = "";
         if(showHour) {
             if(use24h) str += String.format("%02d", hours % 24);
