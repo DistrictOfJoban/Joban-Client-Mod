@@ -17,6 +17,11 @@ public class MinecraftClientUtil {
                 && MinecraftClient.getInstance().getWorldMapped().isRaining();
     }
 
+    public static boolean worldIsThundering() {
+        return MinecraftClient.getInstance().getWorldMapped() != null
+                && MinecraftClient.getInstance().getWorldMapped().isThundering();
+    }
+
     public static boolean worldIsRainingAt(Vector3f pos) {
         throw new NotImplementedException("Not implemented in Minecraft Mappings");
 //        return MinecraftClient.getInstance().getWorldMapped() != null
