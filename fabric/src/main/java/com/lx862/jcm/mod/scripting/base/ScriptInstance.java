@@ -7,13 +7,15 @@ import java.util.concurrent.Future;
 
 public abstract class ScriptInstance<T> {
     private final ScriptContext scriptContext;
-    public final ParsedScript parsedScripts;
     protected T wrapperObject;
+    public final String id;
+    public final ParsedScript parsedScripts;
     public Scriptable state;
     public Future<?> scriptTask;
     public double lastExecuteTime = 0;
 
-    public ScriptInstance(ScriptContext scriptContext, ParsedScript script) {
+    public ScriptInstance(String id, ScriptContext scriptContext, ParsedScript script) {
+        this.id = id;
         this.scriptContext = scriptContext;
         this.parsedScripts = script;
     }

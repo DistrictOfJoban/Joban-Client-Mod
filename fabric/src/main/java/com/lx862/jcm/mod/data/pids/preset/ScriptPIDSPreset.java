@@ -53,7 +53,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
-        ScriptInstance scriptInstance = ScriptInstanceManager.getInstance(pos.asLong(), () -> new PIDSScriptInstance(pos, parsedScripts));
+        ScriptInstance scriptInstance = ScriptInstanceManager.getInstance(getId(), pos.asLong(), () -> new PIDSScriptInstance(getId(), pos, parsedScripts));
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;

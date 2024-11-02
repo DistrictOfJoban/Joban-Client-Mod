@@ -10,15 +10,21 @@ import java.util.function.Supplier;
 public class ScriptInstanceManager {
     private final static Map<Long, ScriptInstance> instances = new HashMap<>();
 
-    public static ScriptInstance getInstance(long uuid, Supplier<ScriptInstance> getInstance) {
-        if(instances.containsKey(uuid)) {
-            return instances.get(uuid);
-        } else {
-            ScriptInstance instance = getInstance.get();
-            instance.parsedScripts.invokeCreateFunction(instance, () -> {});
-            instances.put(uuid, instance);
-            return instance;
+    public static ScriptInstance<?> getInstance(String id, long position, Supplier<ScriptInstance> getInstance) {
+        ScriptInstance<?> existingInstance = instances.get(position);
+        if(existingInstance != null) {
+            if(!existingInstance.id.equals(id)) {
+                existingInstance.parsedScripts.invokeDisposeFunction(existingInstance, () -> {});
+                instances.remove(position);
+            } else {
+                return existingInstance;
+            }
         }
+
+        ScriptInstance newInstance = getInstance.get();
+        newInstance.parsedScripts.invokeCreateFunction(newInstance, () -> {});
+        instances.put(position, newInstance);
+        return newInstance;
     }
 
     public static void clearDeadInstance() {
