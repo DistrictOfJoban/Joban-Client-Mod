@@ -20,17 +20,16 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ScriptPIDSPreset extends PIDSPresetBase {
     public final ParsedScript parsedScripts;
-    private static final Identifier PLACEHOLDER_BACKGROUND = Constants.id("textures/block/pids/rv_default.png");
+    private static final Identifier PLACEHOLDER_BACKGROUND = Constants.id("textures/gui/pids_preview_js.png");
 
-    public ScriptPIDSPreset(String id, @Nullable String name, ParsedScript parsedScripts) {
-        super(id, name, false);
+    public ScriptPIDSPreset(String id, @Nullable String name, Identifier thumbnail, ParsedScript parsedScripts) {
+        super(id, name, thumbnail, false);
         this.parsedScripts = parsedScripts;
     }
 
@@ -40,6 +39,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         if(rootJsonObject.has("name")) {
             name = rootJsonObject.get("name").getAsString();
         }
+        Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : PLACEHOLDER_BACKGROUND;
 
         List<Identifier> scriptsToLoad = new ArrayList<>();
         JsonArray arr = rootJsonObject.get("scripts").getAsJsonArray();
@@ -48,7 +48,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         }
 
         ParsedScript parsedScripts = new ParsedScript("PIDS", scriptsToLoad);
-        return new ScriptPIDSPreset(id, name, parsedScripts);
+        return new ScriptPIDSPreset(id, name, thumbnail, parsedScripts);
     }
 
     @Override
@@ -79,11 +79,6 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     @Override
     public List<PIDSComponent> getComponents(ObjectArrayList<ArrivalResponse> arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
         return new ArrayList<>();
-    }
-
-    @Override
-    public @Nonnull Identifier getBackground() {
-        return PLACEHOLDER_BACKGROUND;
     }
 
     @Override

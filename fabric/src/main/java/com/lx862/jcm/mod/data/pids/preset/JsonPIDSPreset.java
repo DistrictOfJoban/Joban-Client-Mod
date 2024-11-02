@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.data.pids.preset.components.*;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
@@ -46,8 +45,8 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private final int textColor;
     private final boolean[] rowHidden;
 
-    public JsonPIDSPreset(String id, @Nullable String name, @Nonnull Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, boolean hidePlatform, int textColor) {
-        super(id, name, builtin);
+    public JsonPIDSPreset(String id, @Nullable String name, @Nonnull Identifier background, Identifier thumbnail, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, boolean hidePlatform, int textColor) {
+        super(id, name, thumbnail, builtin);
         this.background = background;
         this.showClock = showClock;
         this.showWeather = showWeather;
@@ -59,12 +58,12 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         this.hidePlatform = hidePlatform;
     }
 
-    public static JsonPIDSPreset parse(JsonObject jsonObject) {
-        String id = jsonObject.get("id").getAsString();
-        boolean showWeather = jsonObject.has("showWeather") && jsonObject.get("showWeather").getAsBoolean();
-        boolean showClock = jsonObject.has("showClock") && jsonObject.get("showClock").getAsBoolean();
-        boolean topPadding = !jsonObject.has("topPadding") ? true : jsonObject.get("topPadding").getAsBoolean();
-        boolean hidePlatform = jsonObject.has("hidePlatform") && jsonObject.get("hidePlatform").getAsBoolean();
+    public static JsonPIDSPreset parse(JsonObject rootJsonObject) {
+        String id = rootJsonObject.get("id").getAsString();
+        boolean showWeather = rootJsonObject.has("showWeather") && rootJsonObject.get("showWeather").getAsBoolean();
+        boolean showClock = rootJsonObject.has("showClock") && rootJsonObject.get("showClock").getAsBoolean();
+        boolean topPadding = !rootJsonObject.has("topPadding") ? true : rootJsonObject.get("topPadding").getAsBoolean();
+        boolean hidePlatform = rootJsonObject.has("hidePlatform") && rootJsonObject.get("hidePlatform").getAsBoolean();
         boolean[] rowHidden;
 
         int textColor = ARGB_BLACK;
@@ -72,20 +71,20 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         String font = null;
         Identifier background = null;
         TextOverflowMode textOverflowMode = TextOverflowMode.STRETCH;
-        if(jsonObject.has("color")) {
-            textColor = (int)Long.parseLong(jsonObject.get("color").getAsString(), 16);
+        if(rootJsonObject.has("color")) {
+            textColor = (int)Long.parseLong(rootJsonObject.get("color").getAsString(), 16);
         }
-        if(jsonObject.has("name")) {
-            name = jsonObject.get("name").getAsString();
+        if(rootJsonObject.has("name")) {
+            name = rootJsonObject.get("name").getAsString();
         }
-        if(jsonObject.has("fonts")) {
-            font = jsonObject.get("fonts").getAsString();
+        if(rootJsonObject.has("fonts")) {
+            font = rootJsonObject.get("fonts").getAsString();
         }
-        if(jsonObject.has("textOverflowMode")) {
-            textOverflowMode = TextOverflowMode.valueOf(jsonObject.get("textOverflowMode").getAsString());
+        if(rootJsonObject.has("textOverflowMode")) {
+            textOverflowMode = TextOverflowMode.valueOf(rootJsonObject.get("textOverflowMode").getAsString());
         }
-        if(jsonObject.has("hideRow")) {
-            JsonArray arr = jsonObject.getAsJsonArray("hideRow");
+        if(rootJsonObject.has("hideRow")) {
+            JsonArray arr = rootJsonObject.getAsJsonArray("hideRow");
             rowHidden = new boolean[arr.size()];
             for(int i = 0; i < arr.size(); i++) {
                 rowHidden[i] = arr.get(i).getAsBoolean();
@@ -93,8 +92,8 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         } else {
             rowHidden = new boolean[]{};
         }
-        if(jsonObject.has("background")) {
-            Identifier backgroundId = new Identifier(jsonObject.get("background").getAsString());
+        if(rootJsonObject.has("background")) {
+            Identifier backgroundId = new Identifier(rootJsonObject.get("background").getAsString());
             try {
                 McMetaManager.load(backgroundId);
             } catch (Exception e) {
@@ -104,8 +103,9 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
             background = backgroundId;
         }
-        boolean builtin = jsonObject.has("builtin") && jsonObject.get("builtin").getAsBoolean();
-        return new JsonPIDSPreset(id, name, background, font, textOverflowMode, rowHidden, showClock, showWeather, topPadding, builtin, hidePlatform, textColor);
+        Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : background;
+        boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
+        return new JsonPIDSPreset(id, name, background, thumbnail, font, textOverflowMode, rowHidden, showClock, showWeather, topPadding, builtin, hidePlatform, textColor);
     }
 
     @Override
@@ -116,8 +116,8 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         int contentHeight = height - headerHeight - 3;
 
         // Draw Background
-        graphicsHolder.createVertexConsumer(RenderLayer.getText(getBackground()));
-        RenderHelper.drawTexture(graphicsHolder, getBackground(), x, y, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+        graphicsHolder.createVertexConsumer(RenderLayer.getText(background));
+        RenderHelper.drawTexture(graphicsHolder, background, x, y, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
 
         // Debug View Texture
         if(JCMClient.getConfig().debug) {
@@ -219,11 +219,6 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
     public String getFont() {
         return fontId;
-    }
-
-    @Override
-    public @Nonnull Identifier getBackground() {
-        return background;
     }
 
     @Override

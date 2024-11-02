@@ -125,7 +125,7 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         GuiHelper.drawTexture(guiDrawing, PIDS_PREVIEW_BASE, startX, startY, width, height);
         if(preset == null) return;
 
-        GuiHelper.drawTexture(guiDrawing, preset.getBackground(), startX+0.5, startY+offset+0.5, width-1, height-offset-4);
+        GuiHelper.drawTexture(guiDrawing, preset.getThumbnail(), startX+0.5, startY+offset+0.5, width-1, height-offset-4);
 
         if(!backgroundOnly) {
             double perRow = height / 8.5;
