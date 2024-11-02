@@ -3,8 +3,9 @@ package com.lx862.jcm.mod.scripting;
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/ScriptResourceUtil.java#L44 */
 
 import com.lx862.jcm.mod.util.JCMLogger;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Scriptable;
+
+import vendor.com.lx862.jcm.org.mozilla.javascript.Context;
+import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 import org.mtr.mod.Keys;

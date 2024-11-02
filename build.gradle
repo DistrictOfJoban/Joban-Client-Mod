@@ -1,5 +1,6 @@
 plugins {
 	id "io.github.pacifistmc.forgix" version "1.+"
+	id 'com.gradleup.shadow' version '8.3.4' apply false
 }
 
 forgix {
@@ -18,11 +19,17 @@ forgix {
 	}
 }
 
-subprojects {
+configure(subprojects.findAll {it.name != 'rhino'}) {
 	apply plugin: "java"
+	apply plugin: 'com.gradleup.shadow'
 
 	group project.maven_group
 	version "${rootProject.properties.mod_version}+${rootProject.properties.minecraft_version}"
+
+	configurations {
+		shadowImplementation
+		implementation.extendsFrom shadowImplementation
+	}
 
 	base {
 		archivesName = "${rootProject.archives_base_name}-${project.properties.loader_name}"
@@ -30,12 +37,16 @@ subprojects {
 
 	dependencies {
 		implementation 'com.google.code.findbugs:jsr305:+'
-		implementation "org.mozilla:rhino:1.7.14"
+		shadowImplementation project(":rhino")
 	}
 
 	repositories {
 		flatDir { dirs "../libs" }
 		maven { url "https://jitpack.io" }
+	}
+
+	shadowJar {
+		configurations = [project.configurations.shadowImplementation]
 	}
 
 	def mc_ver = rootProject.properties.minecraft_version
@@ -104,6 +115,7 @@ subprojects {
 		}
 	}
 
+	compileJava.dependsOn(":rhino:checkRhino")
 	build.finalizedBy(mergeJars)
 	assemble.finalizedBy(mergeJars)
 }

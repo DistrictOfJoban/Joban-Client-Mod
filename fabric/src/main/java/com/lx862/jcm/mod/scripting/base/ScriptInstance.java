@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.scripting.base;
 
 import com.lx862.jcm.mod.scripting.ParsedScript;
-import org.mozilla.javascript.Scriptable;
+import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
 
 import java.util.concurrent.Future;
 

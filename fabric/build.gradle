@@ -52,3 +52,9 @@ jar {
         rename { "${it}_${base.archivesName.get()}"}
     }
 }
+
+remapJar {
+    dependsOn(shadowJar)
+    mustRunAfter(shadowJar)
+    inputFile = file(shadowJar.archivePath)
+}

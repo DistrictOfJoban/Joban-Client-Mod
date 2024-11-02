@@ -27,6 +27,7 @@ jobs:
       - name: Build with Gradle
         run: |
           NOW=$(date '+%Y-%m-%d-%H.%M')
+          ./gradlew :rhino:setupRhino
           ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Partifact_date=".artifact_$NOW"
       - name: Upload Artifacts to GitHub
         uses: actions/upload-artifact@v4

@@ -5,7 +5,7 @@ import com.lx862.jcm.mod.data.pids.scripting.TextureWrapper;
 import com.lx862.jcm.mod.scripting.base.ScriptInstance;
 import com.lx862.jcm.mod.scripting.util.*;
 import com.lx862.jcm.mod.util.JCMLogger;
-import org.mozilla.javascript.*;
+import vendor.com.lx862.jcm.org.mozilla.javascript.*;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 import org.mtr.mod.client.MinecraftClientData;

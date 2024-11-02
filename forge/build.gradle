@@ -65,3 +65,9 @@ tasks.register("setupFiles") {
 artifacts {
     archives jar
 }
+
+reobf {
+    shadowJar {}
+}
+
+assemble.dependsOn(shadowJar)
