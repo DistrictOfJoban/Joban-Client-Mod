@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting.util;
+package com.lx862.jcm.mod.data.pids.scripting.util;
 
 import org.mtr.core.data.Platform;
 import org.mtr.mod.client.MinecraftClientData;

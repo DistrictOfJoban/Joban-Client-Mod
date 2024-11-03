@@ -1,14 +1,12 @@
 package com.lx862.jcm.mod.scripting;
 
-import com.lx862.jcm.mod.data.pids.scripting.TextWrapper;
-import com.lx862.jcm.mod.data.pids.scripting.TextureWrapper;
+import com.lx862.jcm.mod.api.scripting.ScriptingAPI;
 import com.lx862.jcm.mod.scripting.base.ScriptInstance;
 import com.lx862.jcm.mod.scripting.util.*;
 import com.lx862.jcm.mod.util.JCMLogger;
 import vendor.com.lx862.jcm.org.mozilla.javascript.*;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
-import org.mtr.mod.client.MinecraftClientData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,18 +35,12 @@ public class ParsedScript {
             scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTracker.class));
             scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTracker.class));
             scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimit.class));
-            scope.put("TextUtil", scope, new NativeJavaClass(scope, TextUtil.class));
-            scope.put("MTRUtil", scope, new NativeJavaClass(scope, MTRUtil.class));
 
             scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
 
-            scope.put("MTRClientData", scope, new NativeJavaClass(scope, MinecraftClientData.class));
-
             scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientUtil.class));
 
-            scope.put("Text", scope, new NativeJavaClass(scope, TextWrapper.class));
-            scope.put("Texture", scope, new NativeJavaClass(scope, TextureWrapper.class));
-
+            ScriptingAPI.callOnParseScriptCallback(contextName, cx, scope);
 
             cx.evaluateString(scope, "\"use strict\";", "", 1, null);
 

@@ -1,11 +1,18 @@
 package com.lx862.jcm.mod.data.pids;
 
 import com.google.gson.JsonObject;
+import com.lx862.jcm.mod.api.scripting.ScriptingAPI;
 import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.data.pids.preset.ScriptPIDSPreset;
+import com.lx862.jcm.mod.data.pids.scripting.TextWrapper;
+import com.lx862.jcm.mod.data.pids.scripting.TextureWrapper;
+import com.lx862.jcm.mod.data.pids.scripting.util.MTRUtil;
+import com.lx862.jcm.mod.data.pids.scripting.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import org.mtr.mod.client.MinecraftClientData;
+import vendor.com.lx862.jcm.org.mozilla.javascript.NativeJavaClass;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +43,20 @@ public class PIDSManager {
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JCMLogger.error("Failed to parse PIDS Preset \"{}\"!", presetId);
+            }
+        });
+    }
+
+    public static void registerScripting() {
+        ScriptingAPI.onParseScript((contextName, context, scriptable) -> {
+            // On behalf of MTR
+            scriptable.put("MTRUtil", scriptable, new NativeJavaClass(scriptable, MTRUtil.class));
+            scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
+            scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
+
+            if(contextName.equals("PIDS")) {
+                scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));
+                scriptable.put("Texture", scriptable, new NativeJavaClass(scriptable, TextureWrapper.class));
             }
         });
     }
