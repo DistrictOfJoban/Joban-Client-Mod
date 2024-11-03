@@ -99,39 +99,35 @@ public class ScriptResourceUtil {
     private static Font NOTO_SERIF_CACHE;
 
     public static Font getSystemFont(String fontName) {
-        switch (fontName) {
-            case "Noto Sans" -> {
-                if (NOTO_SANS_MAYBE_CJK == null) {
-                    if (hasNotoSansCjk) {
-                        try {
-                            NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_CJK_LOCATION);
-                        } catch (Exception ex) {
-                            JCMLogger.warn("Failed loading font", ex);
-                        }
-                    } else {
-                        try {
-                            NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_LOCATION);
-                        } catch (Exception ex) {
-                            JCMLogger.warn("Failed loading font", ex);;
-                        }
-                    }
-                }
-                return NOTO_SANS_MAYBE_CJK;
-            }
-            case "Noto Serif" -> {
-                if(NOTO_SERIF_CACHE == null) {
+        if(fontName.equals("Noto Sans")) {
+            if (NOTO_SANS_MAYBE_CJK == null) {
+                if (hasNotoSansCjk) {
                     try {
-                        NOTO_SERIF_CACHE = readFont(NOTO_SERIF_LOCATION);
+                        NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_CJK_LOCATION);
                     } catch (Exception ex) {
                         JCMLogger.warn("Failed loading font", ex);
-                        return null;
+                    }
+                } else {
+                    try {
+                        NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_LOCATION);
+                    } catch (Exception ex) {
+                        JCMLogger.warn("Failed loading font", ex);;
                     }
                 }
-                return NOTO_SERIF_CACHE;
             }
-            default -> {
-                return new Font(fontName, Font.PLAIN, 1);
+            return NOTO_SANS_MAYBE_CJK;
+        } else if(fontName.equals("Noto Serif")) {
+            if(NOTO_SERIF_CACHE == null) {
+                try {
+                    NOTO_SERIF_CACHE = readFont(NOTO_SERIF_LOCATION);
+                } catch (Exception ex) {
+                    JCMLogger.warn("Failed loading font", ex);
+                    return null;
+                }
             }
+            return NOTO_SERIF_CACHE;
+        } else {
+            return new Font(fontName, Font.PLAIN, 1);
         }
     }
 
