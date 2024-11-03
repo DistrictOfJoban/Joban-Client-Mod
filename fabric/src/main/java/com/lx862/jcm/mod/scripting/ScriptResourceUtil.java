@@ -164,7 +164,7 @@ public class ScriptResourceUtil {
     }
 
     public static BufferedImage readBufferedImage(Identifier identifier) {
-        final BufferedImage[] result = {null};
+        final BufferedImage[] result = new BufferedImage[]{null};
         ResourceManagerHelper.readResource(identifier, (is) -> {
             try {
                 result[0] = ImageIO.read(is);
@@ -176,7 +176,7 @@ public class ScriptResourceUtil {
     }
 
     public static Font readFont(Identifier identifier) {
-        final Font[] result = {null};
+        final Font[] result = new Font[]{null};
         ResourceManagerHelper.readResource(identifier, (is) -> {
             try {
                 result[0] = Font.createFont(Font.TRUETYPE_FONT, is);
