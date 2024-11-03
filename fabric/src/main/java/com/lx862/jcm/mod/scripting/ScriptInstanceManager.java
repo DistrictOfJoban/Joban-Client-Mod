@@ -44,6 +44,10 @@ public class ScriptInstanceManager {
     }
 
     public static void reset() {
+        for(Map.Entry<Long, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
+            ScriptInstance instance = entry.getValue();
+            instance.parsedScripts.invokeDisposeFunction(instance, () -> {});
+        }
         instances.clear();
     }
 }
