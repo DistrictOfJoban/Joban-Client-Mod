@@ -1,8 +1,10 @@
 package com.lx862.jcm.mod.data.pids.scripting;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import org.mtr.core.data.Station;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.mod.InitClient;
 
 public class PIDSWrapper {
     private final PIDSBlockEntity be;
@@ -33,6 +35,10 @@ public class PIDSWrapper {
 
     public boolean isPlatformNumberHidden() {
         return be.platformNumberHidden();
+    }
+
+    public Station station() {
+        return InitClient.findStation(be.getPos2());
     }
 
     public ArrivalsWrapper arrivals() {
