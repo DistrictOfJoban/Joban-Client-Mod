@@ -24,7 +24,7 @@ public class ParsedScript {
         try {
             Context cx = Context.enter();
             cx.setLanguageVersion(Context.VERSION_ES6);
-            scope = cx.initStandardObjects();
+            scope = new ImporterTopLevel(cx);
 
             scope.put("include", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("includeScript", Object.class), "includeScript"));
             scope.put("print", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("print", Object[].class), "print"));
