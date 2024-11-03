@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.scripting;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/ScriptResourceUtil.java#L44 */
 
+import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.util.JCMLogger;
 
 import vendor.com.lx862.jcm.org.mozilla.javascript.Context;
@@ -77,6 +78,22 @@ public class ScriptResourceUtil {
 
     public static FontRenderContext getFontRenderContext() {
         return FONT_CONTEXT;
+    }
+
+    public static String getJCMVersion() {
+        return Constants.MOD_VERSION;
+    }
+
+    public static String getNTEVersion() { // Hardcoded for backward compat
+        return "0.5.2+1.19.2";
+    }
+
+    public static int getNTEVersionInt() { // Hardcoded for backward compat
+        return 502;
+    }
+
+    public static int getNTEProtoVersion() { // Hardcoded for backward compat
+        return 2;
     }
 
     public static String getMTRVersion() {
