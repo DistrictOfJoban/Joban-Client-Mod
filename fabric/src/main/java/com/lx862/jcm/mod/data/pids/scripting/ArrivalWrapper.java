@@ -39,7 +39,7 @@ public class ArrivalWrapper {
         return arrivalResponse.getDepartureIndex();
     }
 
-    public boolean isTerminating() {
+    public boolean terminating() {
         return arrivalResponse.getIsTerminating();
     }
 
