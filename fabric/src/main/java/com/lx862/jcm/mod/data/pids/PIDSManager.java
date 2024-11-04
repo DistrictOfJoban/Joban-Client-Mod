@@ -66,9 +66,6 @@ public class PIDSManager {
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
 
-            scriptable.put("RawModel", scriptable, new NativeJavaClass(scriptable, RawModel.class));
-            scriptable.put("RawMesh", scriptable, new NativeJavaClass(scriptable, RawMesh.class));
-
             if(contextName.equals("PIDS")) {
                 scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));
                 scriptable.put("Texture", scriptable, new NativeJavaClass(scriptable, TextureWrapper.class));
