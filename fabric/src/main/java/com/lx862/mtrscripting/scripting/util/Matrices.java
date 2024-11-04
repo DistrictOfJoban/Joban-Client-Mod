@@ -12,7 +12,7 @@ public class Matrices {
         this.storedMatrixTransformations = new StoredMatrixTransformations();
     }
 
-    public void push() {
+    public void pushPose() {
         this.storedMatrixTransformations.add(GraphicsHolder::push);
     }
 
@@ -36,8 +36,13 @@ public class Matrices {
         this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.scale(x, y, z));
     }
 
-    public void pop() {
+    public void popPose() {
         this.storedMatrixTransformations.add(GraphicsHolder::pop);
+    }
+
+    public void popPushPose() {
+        this.storedMatrixTransformations.add(GraphicsHolder::pop);
+        this.storedMatrixTransformations.add(GraphicsHolder::push);
     }
 
     public StoredMatrixTransformations getStoredMatrixTransformations() {

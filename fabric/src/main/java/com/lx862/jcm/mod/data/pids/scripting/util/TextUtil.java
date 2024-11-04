@@ -2,7 +2,14 @@ package com.lx862.jcm.mod.data.pids.scripting.util;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/TextUtil.java*/
 
+import org.mtr.mod.InitClient;
 import org.mtr.mod.data.IGui;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent.SWITCH_LANG_DURATION;
 
 public class TextUtil {
 
@@ -29,6 +36,13 @@ public class TextUtil {
 
     public static boolean isCjk(String src) {
         return IGui.isCjk(src);
+    }
+
+    public String cycleString(String mtrString) {
+        List<String> split = new ArrayList<>(Arrays.asList(mtrString.split("\\|")));
+        if(split.isEmpty()) return "";
+
+        return split.get(((int) InitClient.getGameTick() / SWITCH_LANG_DURATION) % split.size());
     }
 
     private static String getExtraMatching(String src, boolean extra) {

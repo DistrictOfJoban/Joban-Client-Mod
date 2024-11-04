@@ -12,6 +12,8 @@ import com.lx862.jcm.mod.data.pids.scripting.util.MTRUtil;
 import com.lx862.jcm.mod.data.pids.scripting.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import org.mtr.mapping.render.model.RawMesh;
+import org.mtr.mapping.render.model.RawModel;
 import org.mtr.mod.Keys;
 import org.mtr.mod.client.MinecraftClientData;
 import vendor.com.lx862.jcm.org.mozilla.javascript.NativeJavaClass;
@@ -63,6 +65,9 @@ public class PIDSManager {
             scriptable.put("MTRUtil", scriptable, new NativeJavaClass(scriptable, MTRUtil.class));
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
+
+            scriptable.put("RawModel", scriptable, new NativeJavaClass(scriptable, RawModel.class));
+            scriptable.put("RawMesh", scriptable, new NativeJavaClass(scriptable, RawMesh.class));
 
             if(contextName.equals("PIDS")) {
                 scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));
