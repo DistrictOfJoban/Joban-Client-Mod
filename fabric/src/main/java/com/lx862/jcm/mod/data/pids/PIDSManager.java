@@ -12,8 +12,6 @@ import com.lx862.jcm.mod.data.pids.scripting.util.MTRUtil;
 import com.lx862.jcm.mod.data.pids.scripting.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import org.mtr.mapping.render.model.RawMesh;
-import org.mtr.mapping.render.model.RawModel;
 import org.mtr.mod.Keys;
 import org.mtr.mod.client.MinecraftClientData;
 import vendor.com.lx862.jcm.org.mozilla.javascript.NativeJavaClass;
