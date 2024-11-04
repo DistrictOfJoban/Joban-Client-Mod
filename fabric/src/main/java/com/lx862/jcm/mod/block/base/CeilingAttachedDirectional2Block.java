@@ -13,15 +13,19 @@ import java.util.List;
 public abstract class CeilingAttachedDirectional2Block extends CeilingAttachedDirectionalBlock implements HorizontalDoubleBlockBehavior {
     public static final int width = 2;
     public static final BooleanProperty IS_LEFT = BlockProperties.HORIZONTAL_IS_LEFT;
+    private final boolean canAttachTop;
+    private final boolean canAttachBottom;
 
     public CeilingAttachedDirectional2Block(BlockSettings settings, boolean canAttachTop, boolean canAttachBottom, boolean enforceLogicalPattern) {
         super(settings, enforceLogicalPattern);
+        this.canAttachTop = canAttachTop;
+        this.canAttachBottom = canAttachBottom;
     }
 
     public boolean canPlace(BlockState state, BlockPos pos, ItemPlacementContext ctx) {
         boolean canPlaceHorizontally = HorizontalDoubleBlockBehavior.canBePlaced(ctx);
-        boolean canPlaceVertically = VerticallyAttachedBlock.canPlace(true, false, ctx) && VerticallyAttachedBlock.canPlace(true, false, pos.offset(IBlock.getStatePropertySafe(state, FACING).rotateYClockwise()), ctx);
-        return canPlaceHorizontally && (this.enforceLogicalPattern && canPlaceVertically);
+        boolean canPlaceVertically = VerticallyAttachedBlock.canPlace(canAttachTop, canAttachBottom, ctx) && VerticallyAttachedBlock.canPlace(canAttachTop, canAttachBottom, pos.offset(IBlock.getStatePropertySafe(state, FACING).rotateYClockwise()), ctx);
+        return this.enforceLogicalPattern ? canPlaceHorizontally && canPlaceVertically : canPlaceHorizontally;
     }
 
     @Override
