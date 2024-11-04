@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.data.pids.scripting;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
-import com.lx862.jcm.mod.scripting.base.ScriptContext;
+import com.lx862.mtrscripting.scripting.base.ScriptContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;

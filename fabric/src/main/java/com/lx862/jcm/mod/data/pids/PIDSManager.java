@@ -1,7 +1,8 @@
 package com.lx862.jcm.mod.data.pids;
 
 import com.google.gson.JsonObject;
-import com.lx862.jcm.mod.api.scripting.ScriptingAPI;
+import com.lx862.jcm.mod.Constants;
+import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.data.pids.preset.ScriptPIDSPreset;
@@ -11,6 +12,7 @@ import com.lx862.jcm.mod.data.pids.scripting.util.MTRUtil;
 import com.lx862.jcm.mod.data.pids.scripting.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import org.mtr.mod.Keys;
 import org.mtr.mod.client.MinecraftClientData;
 import vendor.com.lx862.jcm.org.mozilla.javascript.NativeJavaClass;
 
@@ -48,6 +50,14 @@ public class PIDSManager {
     }
 
     public static void registerScripting() {
+        String mtrModVersion = null;
+        try {
+            mtrModVersion = (String) Keys.class.getField("MOD_VERSION").get(null);
+        } catch (ReflectiveOperationException ignored) {
+        }
+        ScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
+        ScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);
+
         ScriptingAPI.onParseScript((contextName, context, scriptable) -> {
             // On behalf of MTR
             scriptable.put("MTRUtil", scriptable, new NativeJavaClass(scriptable, MTRUtil.class));

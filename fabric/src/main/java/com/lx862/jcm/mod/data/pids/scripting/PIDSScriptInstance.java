@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.data.pids.scripting;
 
-import com.lx862.jcm.mod.scripting.ParsedScript;
-import com.lx862.jcm.mod.scripting.base.ScriptInstance;
+import com.lx862.mtrscripting.scripting.ParsedScript;
+import com.lx862.mtrscripting.scripting.base.ScriptInstance;
 import org.mtr.mapping.holder.BlockEntity;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;

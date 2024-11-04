@@ -1,9 +1,9 @@
-package com.lx862.jcm.mod.scripting;
+package com.lx862.mtrscripting.scripting;
 
-import com.lx862.jcm.mod.api.scripting.ScriptingAPI;
-import com.lx862.jcm.mod.scripting.base.ScriptInstance;
-import com.lx862.jcm.mod.scripting.util.*;
-import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.jcm.mod.JCMClient;
+import com.lx862.mtrscripting.api.ScriptingAPI;
+import com.lx862.mtrscripting.scripting.base.ScriptInstance;
+import com.lx862.mtrscripting.scripting.util.*;
 import vendor.com.lx862.jcm.org.mozilla.javascript.*;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
@@ -57,7 +57,7 @@ public class ParsedScript {
                 tryAndAddFunction("render" + contextName, scope, renderFunctions);
                 tryAndAddFunction("dispose" + contextName, scope, disposeFunctions);
 
-                JCMLogger.info("[Scripting] Loaded script: " + scriptLocation.getNamespace() + ":" + scriptLocation.getPath());
+                ScriptManager.LOGGER.info("[Scripting] Loaded script: " + scriptLocation.getNamespace() + ":" + scriptLocation.getPath());
             }
         } finally {
             ScriptResourceUtil.activeContext = null;
@@ -81,7 +81,7 @@ public class ParsedScript {
             return null;
         }
 
-        return ScriptManager.submitScript(() -> {
+        return JCMClient.scriptManager.submitScriptTask(() -> {
             TimingUtil.prepareForScript(scriptInstance);
             try {
                 Scriptable scope = getScope();
@@ -93,7 +93,7 @@ public class ParsedScript {
                     func.call(cx, scope, scope, new Object[]{scriptInstance.getScriptContext(), scriptInstance.state, scriptInstance.getWrapperObject()});
                 }
             } catch (Exception e) {
-                JCMLogger.error("[Scripting] Error executing script!");
+                ScriptManager.LOGGER.error("[Scripting] Error executing script!");
                 e.printStackTrace();
                 lastFailedTime = System.currentTimeMillis();
             } finally {

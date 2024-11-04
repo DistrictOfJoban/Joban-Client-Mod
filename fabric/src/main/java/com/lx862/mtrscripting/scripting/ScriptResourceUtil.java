@@ -1,17 +1,14 @@
-package com.lx862.jcm.mod.scripting;
+package com.lx862.mtrscripting.scripting;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/ScriptResourceUtil.java#L44 */
 
-import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.scripting.util.GraphicsTexture;
-import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.mtrscripting.api.ScriptingAPI;
+import com.lx862.mtrscripting.scripting.util.GraphicsTexture;
 
-import org.mtr.mod.Init;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Context;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
-import org.mtr.mod.Keys;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -57,7 +54,7 @@ public class ScriptResourceUtil {
         for(Object obj : objs) {
             sb.append(obj.toString());
         }
-        JCMLogger.info("[Scripting] {}", sb.toString().trim());
+        ScriptManager.LOGGER.info("[Scripting] {}", sb.toString().trim());
     }
 
     public static Identifier identifier(String textForm) {
@@ -91,9 +88,9 @@ public class ScriptResourceUtil {
         return ResourceManagerHelper.readResource(identifier);
     }
 
-    private static final Identifier NOTO_SANS_CJK_LOCATION = new Identifier(Init.MOD_ID, "font/noto-sans-cjk-tc-medium.otf");
-    private static final Identifier NOTO_SANS_LOCATION = new Identifier(Init.MOD_ID, "font/noto-sans-semibold.ttf");
-    private static final Identifier NOTO_SERIF_LOCATION = new Identifier(Init.MOD_ID, "font/noto-serif-cjk-tc-semibold.ttf");
+    private static final Identifier NOTO_SANS_CJK_LOCATION = new Identifier("mtr", "font/noto-sans-cjk-tc-medium.otf");
+    private static final Identifier NOTO_SANS_LOCATION = new Identifier("mtr", "font/noto-sans-semibold.ttf");
+    private static final Identifier NOTO_SERIF_LOCATION = new Identifier("mtr", "font/noto-serif-cjk-tc-semibold.ttf");
     private static boolean hasNotoSansCjk = false;
     private static Font NOTO_SANS_MAYBE_CJK;
     private static Font NOTO_SERIF_CACHE;
@@ -105,13 +102,13 @@ public class ScriptResourceUtil {
                     try {
                         NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_CJK_LOCATION);
                     } catch (Exception ex) {
-                        JCMLogger.warn("Failed loading font", ex);
+                        ScriptManager.LOGGER.warn("[Scripting] Failed loading font", ex);
                     }
                 } else {
                     try {
                         NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_LOCATION);
                     } catch (Exception ex) {
-                        JCMLogger.warn("Failed loading font", ex);;
+                        ScriptManager.LOGGER.warn("[Scripting] Failed loading font", ex);;
                     }
                 }
             }
@@ -121,7 +118,7 @@ public class ScriptResourceUtil {
                 try {
                     NOTO_SERIF_CACHE = readFont(NOTO_SERIF_LOCATION);
                 } catch (Exception ex) {
-                    JCMLogger.warn("Failed loading font", ex);
+                    ScriptManager.LOGGER.warn("[Scripting] Failed loading font", ex);
                     return null;
                 }
             }
@@ -183,28 +180,26 @@ public class ScriptResourceUtil {
         return result[0];
     }
 
+    public static String getAddonVersion(String modid) {
+        return ScriptingAPI.getAddonVersion(modid);
+    }
+
+    @Deprecated
     public static String getMTRVersion() {
-        String mtrModVersion;
-        try {
-            mtrModVersion = (String) Keys.class.getField("MOD_VERSION").get(null);
-        } catch (ReflectiveOperationException ignored) {
-            mtrModVersion = null;
-        }
-        return mtrModVersion;
+        return getAddonVersion("mtr"); // This assumes MTR have registered the version
     }
 
-    public static String getJCMVersion() {
-        return Constants.MOD_VERSION;
-    }
-
+    @Deprecated
     public static String getNTEVersion() { // Hardcoded for backward compat
         return "0.5.2+1.19.2";
     }
 
+    @Deprecated
     public static int getNTEVersionInt() { // Hardcoded for backward compat
         return 502;
     }
 
+    @Deprecated
     public static int getNTEProtoVersion() { // Hardcoded for backward compat
         return 2;
     }

@@ -3,15 +3,15 @@ package com.lx862.jcm.mod.data.pids.preset;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.data.pids.scripting.DrawCall;
 import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptContext;
 import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptInstance;
 import com.lx862.jcm.mod.data.pids.scripting.PIDSWrapper;
-import com.lx862.jcm.mod.scripting.ParsedScript;
-import com.lx862.jcm.mod.scripting.ScriptInstanceManager;
-import com.lx862.jcm.mod.scripting.base.ScriptInstance;
+import com.lx862.mtrscripting.scripting.ParsedScript;
+import com.lx862.mtrscripting.scripting.base.ScriptInstance;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.BlockPos;
@@ -53,7 +53,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
-        ScriptInstance scriptInstance = ScriptInstanceManager.getInstance(getId(), pos.asLong(), () -> new PIDSScriptInstance(getId(), pos, parsedScripts));
+        ScriptInstance scriptInstance = JCMClient.scriptManager.instanceManager.getInstance(getId(), pos.asLong(), () -> new PIDSScriptInstance(getId(), pos, parsedScripts));
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;

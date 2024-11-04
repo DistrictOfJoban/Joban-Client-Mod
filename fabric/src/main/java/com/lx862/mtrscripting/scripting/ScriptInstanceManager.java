@@ -1,16 +1,15 @@
-package com.lx862.jcm.mod.scripting;
+package com.lx862.mtrscripting.scripting;
 
-import com.lx862.jcm.mod.scripting.base.ScriptInstance;
-import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.mtrscripting.scripting.base.ScriptInstance;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
 public class ScriptInstanceManager {
-    private final static Map<Long, ScriptInstance> instances = new HashMap<>();
+    private final Map<Long, ScriptInstance> instances = new HashMap<>();
 
-    public static ScriptInstance<?> getInstance(String id, long position, Supplier<ScriptInstance> getInstance) {
+    public ScriptInstance<?> getInstance(String id, long position, Supplier<ScriptInstance> getInstance) {
         ScriptInstance<?> existingInstance = instances.get(position);
         if(existingInstance != null) {
             if(!existingInstance.id.equals(id)) {
@@ -27,7 +26,7 @@ public class ScriptInstanceManager {
         return newInstance;
     }
 
-    public static void clearDeadInstance() {
+    public void clearDeadInstance() {
         int count = 0;
         for(Map.Entry<Long, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
             if(entry.getValue().isDead()) {
@@ -39,11 +38,11 @@ public class ScriptInstanceManager {
             }
         }
         if(count > 0) {
-            JCMLogger.debug("[Scripting] Removed {} dead instance", count);
+            ScriptManager.LOGGER.debug("[Scripting] Removed {} dead instance", count);
         }
     }
 
-    public static void reset() {
+    public void reset() {
         for(Map.Entry<Long, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
             ScriptInstance instance = entry.getValue();
             instance.parsedScripts.invokeDisposeFunction(instance, () -> {});
