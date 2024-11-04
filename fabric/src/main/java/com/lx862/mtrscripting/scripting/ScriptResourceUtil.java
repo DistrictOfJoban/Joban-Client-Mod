@@ -32,7 +32,7 @@ public class ScriptResourceUtil {
 
     public static void executeScript(Context rhinoCtx, Scriptable scope, Identifier scriptLocation, String script) {
         scriptLocationStack.push(scriptLocation);
-        rhinoCtx.evaluateString(scope, script, scriptLocation.toString(), 1, null);
+        rhinoCtx.evaluateString(scope, script, scriptLocation.getNamespace() + ":" + scriptLocation.getPath(), 1, null);
         scriptLocationStack.pop();
     }
 
