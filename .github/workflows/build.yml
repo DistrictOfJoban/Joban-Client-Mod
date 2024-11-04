@@ -23,7 +23,7 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
       - name: Setup Forge files
-        run: ./gradlew forge:setupFiles -Pminecraft_version="${{ matrix.minecraft }}"
+        run: ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Build with Gradle
         run: |
           NOW=$(date '+%Y-%m-%d-%H.%M')

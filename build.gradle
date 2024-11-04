@@ -119,3 +119,36 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 	build.finalizedBy(mergeJars)
 	assemble.finalizedBy(mergeJars)
 }
+
+tasks.register("setupFiles") {
+	var sourceModloader = "fabric"
+
+	doLast {
+		for(var targetModloader : ["forge"]) {
+			delete fileTree("${targetModloader}/src/main/java/com/lx862/jcm/mod")
+			delete fileTree("${targetModloader}/src/main/java/com/lx862/mtrscripting")
+			delete fileTree("${targetModloader}/src/main/resources/assets")
+			delete fileTree("${targetModloader}/src/main/resources/data")
+
+			copy {
+				from "${sourceModloader}/src/main/java/com/lx862/jcm/mod"
+				into "${targetModloader}/src/main/java/com/lx862/jcm/mod"
+			}
+
+			copy {
+				from "${sourceModloader}/src/main/java/com/lx862/mtrscripting"
+				into "${targetModloader}/src/main/java/com/lx862/mtrscripting"
+			}
+
+			copy {
+				from "${sourceModloader}/src/main/resources/assets"
+				into "${targetModloader}/src/main/resources/assets"
+			}
+
+			copy {
+				from "${sourceModloader}/src/main/resources/data"
+				into "${targetModloader}/src/main/resources/data"
+			}
+		}
+	}
+}
