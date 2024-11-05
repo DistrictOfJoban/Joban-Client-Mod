@@ -38,7 +38,7 @@ public class TextUtil {
         return IGui.isCjk(src);
     }
 
-    public String cycleString(String mtrString) {
+    public static String cycleString(String mtrString) {
         List<String> split = new ArrayList<>(Arrays.asList(mtrString.split("\\|")));
         if(split.isEmpty()) return "";
 
