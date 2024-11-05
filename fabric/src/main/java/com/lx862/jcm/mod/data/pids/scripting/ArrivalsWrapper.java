@@ -4,6 +4,8 @@ import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
+import java.util.function.Consumer;
+
 public class ArrivalsWrapper {
     public final ObjectArrayList<ArrivalWrapper> arrivals;
 
@@ -36,5 +38,18 @@ public class ArrivalsWrapper {
             }
         }
         return platforms;
+    }
+
+    public void forEach(Consumer<ArrivalWrapper> consumer) {
+        for(ArrivalWrapper arrivalResponse : arrivals) {
+            consumer.accept(arrivalResponse);
+        }
+    }
+
+    public void forEach(long platformId, Consumer<ArrivalWrapper> consumer) {
+        for(ArrivalWrapper arrivalResponse : arrivals) {
+            if(arrivalResponse.platformId() != platformId) continue;
+            consumer.accept(arrivalResponse);
+        }
     }
 }

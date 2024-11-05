@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
+import org.mtr.mapping.holder.Style;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mod.Init;
@@ -14,6 +15,8 @@ public class TextWrapper extends DrawCall {
     public String str;
     public Identifier fontId;
     public boolean shadow;
+    public boolean styleItalic;
+    public boolean styleBold;
     public double scale;
     public int overflowMode;
     public int alignment;
@@ -88,6 +91,16 @@ public class TextWrapper extends DrawCall {
         return this;
     }
 
+    public TextWrapper italic() {
+        this.styleItalic = true;
+        return this;
+    }
+
+    public TextWrapper bold() {
+        this.styleBold = true;
+        return this;
+    }
+
     public TextWrapper color(int color) {
         this.color = color;
         return this;
@@ -101,11 +114,15 @@ public class TextWrapper extends DrawCall {
     @Override
     protected void drawTransformed(GraphicsHolder graphicsHolder, Direction facing) {
         graphicsHolder.scale((float)scale, (float)scale, (float)scale);
-        MutableText finalText = TextHelper.literal(str);
+        Style fontStyle;
         if(fontId != null) {
-            finalText = TextUtil.withFont(finalText, fontId);
+            fontStyle = TextUtil.withFontStyle(fontId);
+        } else {
+            fontStyle = Style.getEmptyMapped();
         }
+        fontStyle = fontStyle.withBold(styleBold).withItalic(styleItalic);
 
+        MutableText finalText = TextHelper.setStyle(TextHelper.literal(str), fontStyle);
         int totalW = GraphicsHolder.getTextWidth(finalText);
         int totalH = 9;
 

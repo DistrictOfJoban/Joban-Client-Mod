@@ -21,13 +21,13 @@ public class TextUtil {
         return TextHelper.translatable(id, variables);
     }
 
+    public static Style withFontStyle(Identifier fontId) {
+        return JCMClient.getConfig().useCustomFont ? Style.getEmptyMapped().withFont(fontId) : Style.getEmptyMapped();
+    }
+
     /** Set a custom font style to MutableText, this respects the client config. */
     public static MutableText withFont(MutableText text, Identifier fontId) {
-        if(JCMClient.getConfig().useCustomFont) {
-            return TextHelper.setStyle(text, Style.getEmptyMapped().withFont(fontId));
-        }  else {
-            return text;
-        }
+        return TextHelper.setStyle(text, withFontStyle(fontId));
     }
 
     public static boolean haveNonCjk(String str) {

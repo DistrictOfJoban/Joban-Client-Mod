@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.data.pids.scripting;
 
 import org.mtr.core.data.Platform;
 import org.mtr.core.data.Route;
+import org.mtr.core.data.SimplifiedRoute;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.CarDetails;
 import org.mtr.mod.client.MinecraftClientData;
@@ -23,8 +24,16 @@ public class ArrivalWrapper {
         return arrivalResponse.getArrival();
     }
 
+    public boolean arrived() {
+        return arrivalTime() <= System.currentTimeMillis();
+    }
+
     public long departureTime() {
         return arrivalResponse.getDeparture();
+    }
+
+    public boolean departed() {
+        return departureTime() <= System.currentTimeMillis();
     }
 
     public long deviation() {
@@ -43,8 +52,13 @@ public class ArrivalWrapper {
         return arrivalResponse.getIsTerminating();
     }
 
-    public Route route() {
-        return MinecraftClientData.getInstance().routeIdMap.get(routeId());
+    public SimplifiedRoute route() {
+        for(SimplifiedRoute route : MinecraftClientData.getInstance().simplifiedRoutes) {
+            if(route.getId() == routeId()) {
+                return route;
+            }
+        }
+        return null;
     }
 
     public long routeId() {
