@@ -19,8 +19,10 @@ import java.util.List;
 public abstract class PIDSPresetBase implements RenderHelper {
     private final String id;
     private final String name;
+    protected final Identifier thumbnail;
     public final boolean builtin;
-    public PIDSPresetBase(String id, @Nullable String name, boolean builtin) {
+
+    public PIDSPresetBase(String id, @Nullable String name, Identifier thumbnail, boolean builtin) {
         this.id = id;
         if(name == null) {
             this.name = id;
@@ -28,9 +30,10 @@ public abstract class PIDSPresetBase implements RenderHelper {
             this.name = name;
         }
         this.builtin = builtin;
+        this.thumbnail = thumbnail;
     }
     public PIDSPresetBase(String id) {
-        this(id, null, false);
+        this(id, null, null, false);
     }
 
     public String getId() {
@@ -47,8 +50,9 @@ public abstract class PIDSPresetBase implements RenderHelper {
     }
 
     public abstract List<PIDSComponent> getComponents(ObjectArrayList<ArrivalResponse> arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform);
-    public abstract String getFont();
-    public abstract @Nonnull Identifier getBackground();
+    public Identifier getThumbnail() {
+        return thumbnail;
+    }
     public abstract int getTextColor();
     public abstract boolean isRowHidden(int row);
 

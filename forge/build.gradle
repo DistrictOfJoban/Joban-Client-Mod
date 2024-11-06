@@ -38,30 +38,12 @@ java {
     withSourcesJar()
 }
 
-tasks.register("setupFiles") {
-    delete fileTree("src/main/java/com/lx862/jcm/mod")
-    delete fileTree("src/main/resources/assets")
-    delete fileTree("src/main/resources/data")
-
-    copy {
-        outputs.upToDateWhen { false }
-        from "../fabric/src/main/java/com/lx862/jcm/mod"
-        into "src/main/java/com/lx862/jcm/mod"
-    }
-
-    copy {
-        outputs.upToDateWhen { false }
-        from "../fabric/src/main/resources/assets"
-        into "src/main/resources/assets"
-    }
-
-    copy {
-        outputs.upToDateWhen { false }
-        from "../fabric/src/main/resources/data"
-        into "src/main/resources/data"
-    }
-}
-
 artifacts {
     archives jar
 }
+
+reobf {
+    shadowJar {}
+}
+
+assemble.dependsOn(shadowJar)

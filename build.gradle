@@ -1,5 +1,6 @@
 plugins {
 	id "io.github.pacifistmc.forgix" version "1.+"
+	id 'com.gradleup.shadow' version '8.3.4' apply false
 }
 
 forgix {
@@ -18,11 +19,17 @@ forgix {
 	}
 }
 
-subprojects {
+configure(subprojects.findAll {it.name != 'rhino'}) {
 	apply plugin: "java"
+	apply plugin: 'com.gradleup.shadow'
 
 	group project.maven_group
 	version "${rootProject.properties.mod_version}+${rootProject.properties.minecraft_version}"
+
+	configurations {
+		shadowImplementation
+		implementation.extendsFrom shadowImplementation
+	}
 
 	base {
 		archivesName = "${rootProject.archives_base_name}-${project.properties.loader_name}"
@@ -30,11 +37,16 @@ subprojects {
 
 	dependencies {
 		implementation 'com.google.code.findbugs:jsr305:+'
+		shadowImplementation project(":rhino")
 	}
 
 	repositories {
 		flatDir { dirs "../libs" }
 		maven { url "https://jitpack.io" }
+	}
+
+	shadowJar {
+		configurations = [project.configurations.shadowImplementation]
 	}
 
 	def mc_ver = rootProject.properties.minecraft_version
@@ -103,6 +115,40 @@ subprojects {
 		}
 	}
 
+	compileJava.dependsOn(":rhino:checkRhino")
 	build.finalizedBy(mergeJars)
 	assemble.finalizedBy(mergeJars)
+}
+
+tasks.register("setupFiles") {
+	var sourceModloader = "fabric"
+
+	doLast {
+		for(var targetModloader : ["forge"]) {
+			delete fileTree("${targetModloader}/src/main/java/com/lx862/jcm/mod")
+			delete fileTree("${targetModloader}/src/main/java/com/lx862/mtrscripting")
+			delete fileTree("${targetModloader}/src/main/resources/assets")
+			delete fileTree("${targetModloader}/src/main/resources/data")
+
+			copy {
+				from "${sourceModloader}/src/main/java/com/lx862/jcm/mod"
+				into "${targetModloader}/src/main/java/com/lx862/jcm/mod"
+			}
+
+			copy {
+				from "${sourceModloader}/src/main/java/com/lx862/mtrscripting"
+				into "${targetModloader}/src/main/java/com/lx862/mtrscripting"
+			}
+
+			copy {
+				from "${sourceModloader}/src/main/resources/assets"
+				into "${targetModloader}/src/main/resources/assets"
+			}
+
+			copy {
+				from "${sourceModloader}/src/main/resources/data"
+				into "${targetModloader}/src/main/resources/data"
+			}
+		}
+	}
 }

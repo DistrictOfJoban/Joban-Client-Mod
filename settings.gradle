@@ -16,5 +16,6 @@ plugins {
 
 include ("fabric")
 include ("forge")
+include ("rhino")
 
 rootProject.name = "Joban-Client-Mod"

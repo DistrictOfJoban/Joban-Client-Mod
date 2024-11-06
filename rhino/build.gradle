@@ -1,0 +1,64 @@
+plugins {
+    id 'java'
+    id "de.undercouch.download" version "5.6.0"
+}
+
+def rhinoVersion = "1_7_15"
+def shadowPath = ["vendor", "com", "lx862", "jcm", "org", "mozilla"]
+
+tasks.register('downloadRhino', Download) {
+    src "https://github.com/mozilla/rhino/archive/refs/tags/Rhino${rhinoVersion}_Release.zip"
+    dest "./src/main/rhino_src.zip"
+
+    doLast {
+        copy {
+            from zipTree(dest)
+            into "./src/main/"
+        }
+        delete(dest)
+    }
+}
+
+tasks.register('setupRhino') {
+    dependsOn downloadRhino
+    def extractedSrc = project.file("src/main/rhino-Rhino${rhinoVersion}_Release")
+    def srcDestination = project.file("src/main/java/${shadowPath.join("/")}")
+
+    doFirst {
+        srcDestination.mkdirs()
+
+        copy {
+            from extractedSrc.toPath().resolve("src/org/mozilla/").toFile()
+            into srcDestination
+            filter {
+                String line -> line.replaceAll('org/mozilla/', "${shadowPath.join("/")}/").replaceAll("org\\.mozilla", "${shadowPath.join(".")}")
+            }
+        }
+    }
+
+    doLast {
+        extractedSrc.deleteDir()
+    }
+}
+
+tasks.register('checkRhino') {
+    doLast {
+        if (!project.file("src/main/java").exists()) {
+            println("---------------------")
+            println("Rhino is not set up, consider running :rhino:setupRhino")
+            println("---------------------")
+            throw new GradleException("Please setup the Rhino (JS Engine) Project with :rhino:setupRhino before build")
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 8
+}
+
+dependencies {
+}
