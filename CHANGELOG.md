@@ -6,6 +6,10 @@
 - - Experimental, feedback needed!
 - - Documentation and Example Pack available at https://www.joban.org/wiki/JCM:Scripted_PIDS_Preset
 
+**Changes**
+- PIDS Variable are introduced again, just like in JCM v1.
+- - `{worldPlayer}` are not implemented, and will return `?` for now.
+
 **Fixes:**
 - Fix West Rail Line Double Ceiling Block not being able to be placed
 
