@@ -1,4 +1,4 @@
-## (JCM v2.0.0 beta.5) for (MTR 4 beta-10/11) has been released!
+## (JCM v2.0.0 beta.5) for (MTR 4.0.0-beta.12) has been released!
 
 **New:**
 - **Added Scripted PIDS Preset**
@@ -16,6 +16,7 @@
 - - - Most preset should render correctly on all of these screens, but may become useful when for-example vertical-shaped PIDS is introduced.
 
 **Fixes:**
+- Fix LRT Inter-Car barrier breaking when flooded with water
 - Fix West Rail Line Double Ceiling Block not being able to be placed
 
 **Download:**  
