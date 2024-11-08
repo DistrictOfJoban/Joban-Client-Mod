@@ -66,6 +66,10 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
         return this.rowHidden;
     }
 
+    public boolean platformNumberHidden() {
+        return this.hidePlatformNumber;
+    }
+
     public void setData(String[] customMessages, LongAVLTreeSet filteredPlatforms, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPresetId) {
         System.arraycopy(customMessages, 0, this.customMessages, 0, customMessages.length);
         System.arraycopy(rowHidden, 0, this.rowHidden, 0, rowHidden.length);
@@ -76,13 +80,11 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
         this.markDirty2();
     }
 
-    public boolean platformNumberHidden() {
-        return hidePlatformNumber;
-    }
-
     public String getPresetId() {
         return pidsPresetId.isEmpty() ? getDefaultPresetId() : pidsPresetId;
     }
+
+    public abstract String getPIDSType();
 
     public abstract String getDefaultPresetId();
 

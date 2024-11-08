@@ -9,8 +9,8 @@ import java.util.function.Supplier;
 public class ScriptInstanceManager {
     private final Map<Long, ScriptInstance> instances = new HashMap<>();
 
-    public ScriptInstance<?> getInstance(String id, long position, Supplier<ScriptInstance> getInstance) {
-        ScriptInstance<?> existingInstance = instances.get(position);
+    public <T> ScriptInstance<T> getInstance(String id, long position, Supplier<ScriptInstance<T>> getInstance) {
+        ScriptInstance<T> existingInstance = instances.get(position);
         if(existingInstance != null) {
             if(!existingInstance.id.equals(id)) {
                 existingInstance.parsedScripts.invokeDisposeFunction(existingInstance, () -> {});
@@ -20,7 +20,7 @@ public class ScriptInstanceManager {
             }
         }
 
-        ScriptInstance newInstance = getInstance.get();
+        ScriptInstance<T> newInstance = getInstance.get();
         newInstance.parsedScripts.invokeCreateFunction(newInstance, () -> {});
         instances.put(position, newInstance);
         return newInstance;

@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
+import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.render.GuiHelper;
@@ -11,10 +12,7 @@ import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import org.mtr.mapping.holder.ClickableWidget;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.MutableText;
-import org.mtr.mapping.holder.Text;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
@@ -28,12 +26,19 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
     private final ListViewWidget listViewWidget;
     private final Consumer<String> callback;
     private final String selectedPreset;
-    public PIDSPresetScreen(String selectedPreset, Consumer<String> callback) {
+    private final String pidsType;
+    public PIDSPresetScreen(BlockPos pos, String selectedPreset, Consumer<String> callback) {
         super(false);
+        BlockEntity be = MinecraftClient.getInstance().getWorldMapped().getBlockEntity(pos);
+        if(be != null && be.data instanceof PIDSBlockEntity) {
+            this.pidsType = ((PIDSBlockEntity)be.data).getPIDSType();
+        } else {
+            this.pidsType = "";
+        }
+        this.selectedPreset = selectedPreset;
         this.callback = callback;
         this.listViewWidget = new ListViewWidget();
         this.searchBox = new TextFieldWidgetExtension(0, 0, 0, 22, 60, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "widget.search").getString());
-        this.selectedPreset = selectedPreset;
     }
 
     @Override
@@ -84,12 +89,10 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
     }
 
     private void addPreset(PIDSPresetBase preset) {
+        if(!preset.typeAllowed(pidsType)) return;
+
         ButtonWidgetExtension selectBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.choose"), (btn) -> {
             choose(preset.getId());
-        });
-
-        ButtonWidgetExtension editBtn = new ButtonWidgetExtension(0, 0, 40, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.edit"), (btn) -> {
-            // TODO: Launch screen to edit PIDS preset
         });
 
         if(preset.getId().equals(selectedPreset)) {
@@ -97,18 +100,11 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
             selectBtn.active = false;
         }
 
-//        if(preset.builtin) {
-//            // Can't edit built-in preset
-//            editBtn.active = false;
-//        }
-
         HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
-        // if(!preset.builtin) widgetSet.addWidget(new MappedWidget(editBtn));
         widgetSet.addWidget(new MappedWidget(selectBtn));
         widgetSet.setXYSize(0, 0, 100, 20);
 
         addChild(new ClickableWidget(selectBtn));
-        // if(!preset.builtin) addChild(new ClickableWidget(editBtn));
         addChild(new ClickableWidget(widgetSet));
         ContentItem contentItem = new ContentItem(TextUtil.literal(preset.getName()), new MappedWidget(widgetSet), 26);
 

@@ -11,6 +11,11 @@ public class RVPIDSBlockEntity extends PIDSBlockEntity {
     }
 
     @Override
+    public String getPIDSType() {
+        return "rv_pids";
+    }
+
+    @Override
     public String getDefaultPresetId() {
         return "rv_pids";
     }

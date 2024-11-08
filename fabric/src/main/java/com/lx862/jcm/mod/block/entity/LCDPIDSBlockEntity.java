@@ -10,6 +10,11 @@ public class LCDPIDSBlockEntity extends PIDSBlockEntity {
     }
 
     @Override
+    public String getPIDSType() {
+        return "lcd_pids";
+    }
+
+    @Override
     public String getDefaultPresetId() {
         return "lcd_pids";
     }

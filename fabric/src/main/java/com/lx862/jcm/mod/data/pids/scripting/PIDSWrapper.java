@@ -9,11 +9,13 @@ import org.mtr.mod.InitClient;
 public class PIDSWrapper {
     private final PIDSBlockEntity be;
     private final ArrivalsWrapper arrivalsWrapper;
+    public final String type;
     public final int width;
     public final int height;
 
     public PIDSWrapper(PIDSBlockEntity be, ObjectArrayList<ArrivalResponse> arrivalsResponse, int width, int height) {
         this.be = be;
+        this.type = be.getPIDSType();
         this.width = width;
         this.height = height;
         this.arrivalsWrapper = new ArrivalsWrapper(arrivalsResponse);

@@ -51,6 +51,11 @@ public class PIDSProjectorBlockEntity extends PIDSBlockEntity {
     }
 
     @Override
+    public String getPIDSType() {
+        return "pids_projector";
+    }
+
+    @Override
     public String getDefaultPresetId() {
         return "rv_pids";
     }

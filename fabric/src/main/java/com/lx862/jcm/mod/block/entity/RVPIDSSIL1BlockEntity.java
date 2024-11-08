@@ -11,6 +11,11 @@ public class RVPIDSSIL1BlockEntity extends PIDSBlockEntity {
     }
 
     @Override
+    public String getPIDSType() {
+        return "rv_pids_sil_1";
+    }
+
+    @Override
     public String getDefaultPresetId() {
         return "rv_pids";
     }

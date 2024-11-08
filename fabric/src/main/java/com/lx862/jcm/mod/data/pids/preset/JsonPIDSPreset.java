@@ -14,7 +14,6 @@ import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextTranslationMode;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
-import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -22,7 +21,6 @@ import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.data.IGui;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +33,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private static final String ICON_WEATHER_RAINY = Constants.MOD_ID + ":textures/block/pids/weather_rainy.png";
     private static final String ICON_WEATHER_THUNDER = Constants.MOD_ID + ":textures/block/pids/weather_thunder.png";
     private static final String TEXTURE_PLATFORM_CIRCLE = Constants.MOD_ID + ":textures/block/pids/plat_circle.png";
-    private final @Nonnull Identifier background;
+    private final Identifier background;
     private final String fontId;
     private final TextOverflowMode textOverflowMode;
     private final boolean showClock;
@@ -45,8 +43,8 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private final int textColor;
     private final boolean[] rowHidden;
 
-    public JsonPIDSPreset(String id, @Nullable String name, @Nonnull Identifier background, Identifier thumbnail, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, boolean hidePlatform, int textColor) {
-        super(id, name, thumbnail, builtin);
+    public JsonPIDSPreset(String id, @Nullable String name, Identifier thumbnail, List<String> blacklist, Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, boolean hidePlatform, int textColor) {
+        super(id, name, thumbnail, blacklist, builtin);
         this.background = background;
         this.showClock = showClock;
         this.showWeather = showWeather;
@@ -59,30 +57,25 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     public static JsonPIDSPreset parse(JsonObject rootJsonObject) {
-        String id = rootJsonObject.get("id").getAsString();
-        boolean showWeather = rootJsonObject.has("showWeather") && rootJsonObject.get("showWeather").getAsBoolean();
-        boolean showClock = rootJsonObject.has("showClock") && rootJsonObject.get("showClock").getAsBoolean();
-        boolean topPadding = !rootJsonObject.has("topPadding") ? true : rootJsonObject.get("topPadding").getAsBoolean();
-        boolean hidePlatform = rootJsonObject.has("hidePlatform") && rootJsonObject.get("hidePlatform").getAsBoolean();
-        boolean[] rowHidden;
+        final String id = rootJsonObject.get("id").getAsString();
+        final String name = rootJsonObject.has("name") ? rootJsonObject.get("name").getAsString() : id;
+        final Identifier background = rootJsonObject.has("background") ? new Identifier(rootJsonObject.get("background").getAsString()) : null;
+        final Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : background;
+        final String font = rootJsonObject.has("fonts") ? rootJsonObject.get("fonts").getAsString() : null;
+        final TextOverflowMode textOverflowMode = rootJsonObject.has("textOverflowMode") ? TextOverflowMode.valueOf(rootJsonObject.get("textOverflowMode").getAsString()) : TextOverflowMode.STRETCH;
+        final boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
+        final boolean showWeather = rootJsonObject.has("showWeather") && rootJsonObject.get("showWeather").getAsBoolean();
+        final boolean showClock = rootJsonObject.has("showClock") && rootJsonObject.get("showClock").getAsBoolean();
+        final boolean topPadding = !rootJsonObject.has("topPadding") ? true : rootJsonObject.get("topPadding").getAsBoolean();
+        final boolean hidePlatform = rootJsonObject.has("hidePlatform") && rootJsonObject.get("hidePlatform").getAsBoolean();
+        final int textColor = rootJsonObject.has("color") ? (int)Long.parseLong(rootJsonObject.get("color").getAsString(), 16) : ARGB_BLACK;
 
-        int textColor = ARGB_BLACK;
-        String name = id;
-        String font = null;
-        Identifier background = null;
-        TextOverflowMode textOverflowMode = TextOverflowMode.STRETCH;
-        if(rootJsonObject.has("color")) {
-            textColor = (int)Long.parseLong(rootJsonObject.get("color").getAsString(), 16);
-        }
-        if(rootJsonObject.has("name")) {
-            name = rootJsonObject.get("name").getAsString();
-        }
-        if(rootJsonObject.has("fonts")) {
-            font = rootJsonObject.get("fonts").getAsString();
-        }
-        if(rootJsonObject.has("textOverflowMode")) {
-            textOverflowMode = TextOverflowMode.valueOf(rootJsonObject.get("textOverflowMode").getAsString());
-        }
+        if(background == null) throw new IllegalArgumentException("A JSON PIDS Preset must have background set!");
+        McMetaManager.load(background);
+
+        final boolean[] rowHidden;
+        List<String> blackList = new ArrayList<>();
+
         if(rootJsonObject.has("hideRow")) {
             JsonArray arr = rootJsonObject.getAsJsonArray("hideRow");
             rowHidden = new boolean[arr.size()];
@@ -92,20 +85,15 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         } else {
             rowHidden = new boolean[]{};
         }
-        if(rootJsonObject.has("background")) {
-            Identifier backgroundId = new Identifier(rootJsonObject.get("background").getAsString());
-            try {
-                McMetaManager.load(backgroundId);
-            } catch (Exception e) {
-                e.printStackTrace();
-                JCMLogger.warn("Failed to parse mcmeta animation file: " + backgroundId.getPath());
-            }
 
-            background = backgroundId;
+        if(rootJsonObject.has("blacklist")) {
+            JsonArray arr = rootJsonObject.getAsJsonArray("blacklist");
+            for(int i = 0; i < arr.size(); i++) {
+                blackList.add(arr.get(i).getAsString());
+            }
         }
-        Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : background;
-        boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
-        return new JsonPIDSPreset(id, name, background, thumbnail, font, textOverflowMode, rowHidden, showClock, showWeather, topPadding, builtin, hidePlatform, textColor);
+
+        return new JsonPIDSPreset(id, name, thumbnail, blackList, background, font, textOverflowMode, rowHidden, showClock, showWeather, topPadding, builtin, hidePlatform, textColor);
     }
 
     @Override
@@ -141,12 +129,11 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         graphicsHolder.pop();
     }
 
-    @Override
     public List<PIDSComponent> getComponents(ObjectArrayList<ArrivalResponse> arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {
         List<PIDSComponent> components = new ArrayList<>();
 
         if(showClock) {
-            components.add(new ClockComponent(x + screenWidth, y + 2, screenWidth, 10, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), ARGB_WHITE, 0.9)));
+            components.add(new ClockComponent(x + screenWidth, y + 2, screenWidth, 10, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, ARGB_WHITE, 0.9)));
         }
 
         if(showWeather) {
@@ -175,17 +162,17 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         double rowY = y + (topPadding ? HEADER_HEIGHT : 0) + 4;
         for(int i = 0; i < rows; i++) {
             if(customMessages[i] != null && !customMessages[i].isEmpty()) {
-                components.add(new CustomTextComponent(x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, getFont(), getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
+                components.add(new CustomTextComponent(x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
             } else {
                 if(arrivalIndex >= arrivals.size()) continue;
 
                 if (!rowHidden[i]) {
                     float destinationMaxWidth = platformShown ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    components.add(new ArrivalDestinationComponent(x, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, getFont(), textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
+                    components.add(new ArrivalDestinationComponent(x, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
 
                     if (platformShown) {
                         components.add(new ArrivalTextureComponent(59 * ARRIVAL_TEXT_SCALE, rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
-                        components.add(new PlatformComponent(59 * ARRIVAL_TEXT_SCALE, rowY, 8, 8, getFont(), RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
+                        components.add(new PlatformComponent(59 * ARRIVAL_TEXT_SCALE, rowY, 8, 8, fontId, RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
                     }
 
                     // ETA text cycle should follow destination
@@ -193,12 +180,12 @@ public class JsonPIDSPreset extends PIDSPresetBase {
                     boolean haveCjk = IGui.isCjk(thisArrival.getDestination());
                     boolean haveEn = TextUtil.haveNonCjk(thisArrival.getDestination());
                     TextTranslationMode mode = haveCjk && haveEn ? TextTranslationMode.CYCLE : haveCjk ? TextTranslationMode.CJK : TextTranslationMode.NON_CJK;
-                    ArrivalETAComponent eta = new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), textColor, ARRIVAL_TEXT_SCALE)
+                    ArrivalETAComponent eta = new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
                             .with("arrivalIndex", arrivalIndex)
                             .with("textTranslationMode", mode.name())
                     );
 
-                    ArrivalCarComponent car = new ArrivalCarComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, getFont(), textColor, ARRIVAL_TEXT_SCALE)
+                    ArrivalCarComponent car = new ArrivalCarComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
                             .with("arrivalIndex", arrivalIndex)
                             .with("textTranslationMode", mode.name())
                     );
@@ -215,10 +202,6 @@ public class JsonPIDSPreset extends PIDSPresetBase {
             rowY += (screenHeight / 4.7) * ARRIVAL_TEXT_SCALE;
         }
         return components;
-    }
-
-    public String getFont() {
-        return fontId;
     }
 
     @Override

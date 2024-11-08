@@ -61,7 +61,7 @@ public class PIDSScreen extends BlockConfigScreen {
 
         this.choosePresetButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.choose_preset"), (btn) -> {
             MinecraftClient.getInstance().openScreen(
-                new Screen(new PIDSPresetScreen(this.presetId, (str) -> {
+                new Screen(new PIDSPresetScreen(blockPos, presetId, (str) -> {
                     this.presetId = str;
                 }).withPreviousScreen(new Screen(this)))
             );
