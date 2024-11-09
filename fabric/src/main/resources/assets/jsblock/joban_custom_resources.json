@@ -71,7 +71,7 @@
       "name": "PIDS 1A",
       "builtin": true,
       "thumbnail": "jsblock:textures/block/pids/thumbnail/pids_1a.png",
-      "scripts": ["jsblock:scripts/builtin/pids_1a.js"]
+      "scriptFiles": ["jsblock:scripts/builtin/pids_1a.js"]
     }
   ]
 }

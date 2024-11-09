@@ -31,7 +31,7 @@ public class PIDSManager {
                 presetId = jsonObject.get("id").getAsString();
                 PIDSPresetBase preset;
 
-                if(jsonObject.has("scripts")) {
+                if(jsonObject.has("scriptFiles") || jsonObject.has("scriptTexts")) {
                     preset = ScriptPIDSPreset.parse(jsonObject);
                 } else {
                     preset = JsonPIDSPreset.parse(e.getAsJsonObject());

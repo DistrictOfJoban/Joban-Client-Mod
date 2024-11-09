@@ -12,16 +12,19 @@ import com.lx862.jcm.mod.data.pids.scripting.PIDSWrapper;
 import com.lx862.mtrscripting.scripting.ParsedScript;
 import com.lx862.mtrscripting.scripting.base.ScriptInstance;
 import org.mtr.core.operation.ArrivalResponse;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.ResourceManagerHelper;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ScriptPIDSPreset extends PIDSPresetBase {
     private static final Identifier DEFAULT_THUMBNAIL = Constants.id("textures/gui/pids_preview_js.png");
@@ -38,10 +41,19 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         final boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
         final Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : DEFAULT_THUMBNAIL;
 
-        List<Identifier> scriptsToLoad = new ArrayList<>();
-        JsonArray scripts = rootJsonObject.get("scripts").getAsJsonArray();
-        for(int i = 0; i < scripts.size(); i++) {
-            scriptsToLoad.add(new Identifier(scripts.get(i).getAsString()));
+        final Map<Identifier, String> scripts = new Object2ObjectArrayMap<>();
+        if(rootJsonObject.has("scriptFiles")) {
+            JsonArray scriptFilesArray = rootJsonObject.get("scriptFiles").getAsJsonArray();
+            for(int i = 0; i < scriptFilesArray.size(); i++) {
+                scripts.put(new Identifier(scriptFilesArray.get(i).getAsString()), null);
+            }
+        }
+
+        if(rootJsonObject.has("scriptTexts")) {
+            JsonArray scriptTextArray = rootJsonObject.get("scriptTexts").getAsJsonArray();
+            for(int i = 0; i < scriptTextArray.size(); i++) {
+                scripts.put(new Identifier(Constants.MOD_ID, "script_texts/" + id + "/line" + i), scriptTextArray.get(i).getAsString());
+            }
         }
 
         List<String> blackList = new ArrayList<>();
@@ -52,7 +64,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             }
         }
 
-        ParsedScript parsedScripts = new ParsedScript("PIDS", scriptsToLoad);
+        ParsedScript parsedScripts = new ParsedScript("PIDS", scripts);
         return new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, parsedScripts);
     }
 

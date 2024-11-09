@@ -10,6 +10,7 @@ import org.mtr.mapping.mapper.ResourceManagerHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 public class ParsedScript {
@@ -20,7 +21,7 @@ public class ParsedScript {
     private final List<Function> disposeFunctions = new ArrayList<>();
     private long lastFailedTime = -1;
 
-    public ParsedScript(String contextName, List<Identifier> scriptsLocation) throws Exception {
+    public ParsedScript(String contextName, Map<Identifier, String> scripts) throws Exception {
         try {
             Context cx = Context.enter();
             cx.setLanguageVersion(Context.VERSION_ES6);
@@ -46,9 +47,16 @@ public class ParsedScript {
 
             ScriptResourceUtil.activeContext = cx;
             ScriptResourceUtil.activeScope = scope;
-            for(Identifier scriptLocation : scriptsLocation) {
-                String scriptText = ResourceManagerHelper.readResource(scriptLocation);
-                ScriptResourceUtil.executeScript(cx, scope, scriptLocation, scriptText);
+            for(Map.Entry<Identifier, String> scriptEntry : scripts.entrySet()) {
+                final Identifier scriptLocation = scriptEntry.getKey();
+                final String scriptContent;
+                if(scriptEntry.getValue() == null) {
+                    scriptContent = ResourceManagerHelper.readResource(scriptEntry.getKey());
+                } else {
+                    scriptContent = scriptEntry.getValue();
+                }
+
+                ScriptResourceUtil.executeScript(cx, scope, scriptEntry.getKey(), scriptContent);
 
                 tryAndAddFunction("create", scope, createFunctions);
                 tryAndAddFunction("render", scope, renderFunctions);
