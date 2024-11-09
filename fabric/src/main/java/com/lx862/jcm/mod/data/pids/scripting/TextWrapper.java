@@ -162,7 +162,7 @@ public class TextWrapper extends DrawCall {
                     curLine.append(c);
                 }
             }
-            if(!curLine.isEmpty()) {
+            if(curLine.length() > 0) {
                 texts.add(getFormattedText(curLine.toString()));
             }
         } else {
