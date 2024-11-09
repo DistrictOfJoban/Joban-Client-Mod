@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.render.block;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.ButterflyLightBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
-import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
@@ -46,7 +45,7 @@ public class ButterflyLightRenderer extends JCMBlockEntityRenderer<ButterflyLigh
 
         long secondsLeft = dwellLeft / 1000;
 
-        if(secondsLeft <= startBlinkingSeconds && JCMClientStats.getGameTick() % 40 > 20) {
+        if(secondsLeft <= startBlinkingSeconds && InitClient.getGameTick() % 40 > 20) {
             graphicsHolder.push();
             graphicsHolder.translate(0.5, 0.5, 0.5);
             graphicsHolder.scale(1/16F, 1/16F, 1/16F);

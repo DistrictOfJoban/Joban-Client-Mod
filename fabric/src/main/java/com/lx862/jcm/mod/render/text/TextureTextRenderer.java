@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.render.text;
 
-import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.font.FontSet;
@@ -12,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.ObjectList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
+import org.mtr.mod.InitClient;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
@@ -288,8 +288,8 @@ public class TextureTextRenderer implements RenderHelper {
             float ratio = textSlot.getMaxWidth() / (float)textSlot.getPhysicalWidth();
             u2 = u2 * ratio;
 
-            u1 += (JCMServerStats.getGameTick() % 100) / 100F;
-            u2 += (JCMServerStats.getGameTick() % 100) / 100F;
+            u1 += (InitClient.getGameTick() % 100) / 100F;
+            u2 += (InitClient.getGameTick() % 100) / 100F;
         }
 
         GuiHelper.drawTexture(guiDrawing, getAtlasIdentifier(), x, y, (int)textSlot.getRenderedWidth(), RENDERED_TEXT_SIZE, u1, v1, u2, v2);
@@ -311,15 +311,15 @@ public class TextureTextRenderer implements RenderHelper {
             float ratio = textSlot.getMaxWidth() / (float)textSlot.getPhysicalWidth();
             u2 = u2 * ratio;
 
-            u1 += (JCMServerStats.getGameTick() % 100) / 100F;
-            u2 += (JCMServerStats.getGameTick() % 100) / 100F;
+            u1 += (InitClient.getGameTick() % 100) / 100F;
+            u2 += (InitClient.getGameTick() % 100) / 100F;
         }
 
         RenderHelper.drawTexture(graphicsHolder, x, y - 0.75F, 0, (int)textSlot.getRenderedWidth(), RENDERED_TEXT_SIZE, u1, v1, u2, v2, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
     public static void stressTest(int updateFrequency) {
-        if(JCMServerStats.getGameTick() % updateFrequency == 0) {
+        if(InitClient.getGameTick() % updateFrequency == 0) {
             String[] strArr = new String[]{
                     "Central", "610 Tuen Mun Ferry Pier", "Admiralty", "Kennedy Town",
                     "Minecraft!", "$050302", "33:44",

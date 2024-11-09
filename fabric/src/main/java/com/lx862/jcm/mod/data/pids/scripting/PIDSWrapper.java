@@ -10,6 +10,7 @@ public class PIDSWrapper {
     private final PIDSBlockEntity be;
     private final ArrivalsWrapper arrivalsWrapper;
     public final String type;
+    public final int rows;
     public final int width;
     public final int height;
 
@@ -18,6 +19,7 @@ public class PIDSWrapper {
         this.type = be.getPIDSType();
         this.width = width;
         this.height = height;
+        this.rows = be.getRowAmount();
         this.arrivalsWrapper = new ArrivalsWrapper(arrivalsResponse);
     }
 

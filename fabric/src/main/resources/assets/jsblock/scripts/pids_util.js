@@ -23,6 +23,13 @@ const PIDSUtil = {
             return `${Math.floor(hrs).toString()}:${(Math.floor(mins % 60)).toString().toString().padStart(2, '0')}`;
         }
     },
+    getCarText(len) {
+        if(len <= 1) {
+            return `${len}卡|${len}-car`;
+        } else {
+            return `${len}卡|${len}-cars`;
+        }
+    },
     formatDateTime(d) {
         return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
     }

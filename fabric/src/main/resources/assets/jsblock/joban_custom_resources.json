@@ -10,7 +10,8 @@
       "showWeather": true,
       "showClock": true,
       "fonts": "mtr:mtr",
-      "hideRow": [false, false, false, false]
+      "hideRow": [false, false, false, false],
+      "blacklist": ["pids_1a"]
     },
     {
       "id": "door_cls_psd",
@@ -22,7 +23,8 @@
       "showWeather": true,
       "showClock": true,
       "fonts": "mtr:mtr",
-      "hideRow": [true, true, true, false]
+      "hideRow": [true, true, true, false],
+      "blacklist": ["pids_1a"]
     },
     {
       "id": "door_cls_apg",
@@ -34,7 +36,8 @@
       "showWeather": true,
       "showClock": true,
       "fonts": "mtr:mtr",
-      "hideRow": [true, true, true, false]
+      "hideRow": [true, true, true, false],
+      "blacklist": ["pids_1a"]
     },
     {
       "id": "door_cls_train",
@@ -46,7 +49,8 @@
       "showWeather": true,
       "showClock": true,
       "fonts": "mtr:mtr",
-      "hideRow": [true, true, true, false]
+      "hideRow": [true, true, true, false],
+      "blacklist": ["pids_1a"]
     },
     {
       "id": "lcd_pids",
@@ -59,7 +63,15 @@
       "showClock": false,
       "hidePlatform": true,
       "fonts": "jsblock:pids_lcd",
-      "hideRow": [false, false, false, false]
+      "hideRow": [false, false, false, false],
+      "blacklist": ["pids_1a"]
+    },
+    {
+      "id": "pids_1a",
+      "name": "PIDS 1A",
+      "builtin": true,
+      "thumbnail": "jsblock:textures/block/pids/thumbnail/pids_1a.png",
+      "scripts": ["jsblock:scripts/builtin/pids_1a.js"]
     }
   ]
 }

@@ -27,14 +27,15 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     private static final Identifier DEFAULT_THUMBNAIL = Constants.id("textures/gui/pids_preview_js.png");
     public final ParsedScript parsedScripts;
 
-    public ScriptPIDSPreset(String id, @Nullable String name, Identifier thumbnail, List<String> blacklist, ParsedScript parsedScripts) {
-        super(id, name, thumbnail, blacklist, false);
+    public ScriptPIDSPreset(String id, @Nullable String name, Identifier thumbnail, List<String> blacklist, boolean builtin, ParsedScript parsedScripts) {
+        super(id, name, thumbnail, blacklist, builtin);
         this.parsedScripts = parsedScripts;
     }
 
     public static ScriptPIDSPreset parse(JsonObject rootJsonObject) throws Exception {
         final String id = rootJsonObject.get("id").getAsString();
         final String name = rootJsonObject.has("name") ? rootJsonObject.get("name").getAsString() : null;
+        final boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
         final Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : DEFAULT_THUMBNAIL;
 
         List<Identifier> scriptsToLoad = new ArrayList<>();
@@ -52,7 +53,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         }
 
         ParsedScript parsedScripts = new ParsedScript("PIDS", scriptsToLoad);
-        return new ScriptPIDSPreset(id, name, thumbnail, blackList, parsedScripts);
+        return new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, parsedScripts);
     }
 
     @Override

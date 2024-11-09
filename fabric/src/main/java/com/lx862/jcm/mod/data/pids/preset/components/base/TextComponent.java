@@ -1,13 +1,13 @@
 package com.lx862.jcm.mod.data.pids.preset.components.base;
 
 import com.lx862.jcm.mod.JCMClient;
-import com.lx862.jcm.mod.data.JCMClientStats;
 import com.lx862.jcm.mod.data.KVPair;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.*;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
+import org.mtr.mod.InitClient;
 import org.mtr.mod.data.IGui;
 
 import java.util.ArrayList;
@@ -93,7 +93,7 @@ public abstract class TextComponent extends PIDSComponent {
 
         if(split.isEmpty()) return "";
 
-        return split.get(((int)JCMClientStats.getGameTick() / SWITCH_LANG_DURATION) % split.size());
+        return split.get(((int)InitClient.getGameTick() / SWITCH_LANG_DURATION) % split.size());
     }
 
     protected boolean isCjk(String str, boolean isTranslation) {

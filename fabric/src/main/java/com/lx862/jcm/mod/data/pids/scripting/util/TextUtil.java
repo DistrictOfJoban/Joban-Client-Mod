@@ -39,10 +39,16 @@ public class TextUtil {
     }
 
     public static String cycleString(String mtrString) {
+        return cycleString(mtrString, SWITCH_LANG_DURATION);
+    }
+
+    public static String cycleString(String mtrString, int switchDuration) {
+        if(mtrString == null) return "";
+
         List<String> split = new ArrayList<>(Arrays.asList(mtrString.split("\\|")));
         if(split.isEmpty()) return "";
 
-        return split.get(((int) InitClient.getGameTick() / SWITCH_LANG_DURATION) % split.size());
+        return split.get(((int) InitClient.getGameTick() / switchDuration) % split.size());
     }
 
     private static String getExtraMatching(String src, boolean extra) {

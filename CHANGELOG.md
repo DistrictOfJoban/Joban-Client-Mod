@@ -12,8 +12,11 @@
 - PIDS Preset (JSON/Scripted)
 - - You can now set `name` as a property (string) to show a user-friendly name shown in the UI
 - - You can now set `blacklist` as a property (String JSON Array) to prevent your preset from being used in certain PIDS:
-- - - Possible values for inclusion are `rv_pids`, `rv_pids_sil_1`, `rv_pids_sil_2`, `lcd_pids`, `pids_projector`
-- - - Most preset should render correctly on all of these screens, but may become useful when for-example vertical-shaped PIDS is introduced.
+- - - Possible values for inclusion are `rv_pids`, `rv_pids_sil_1`, `rv_pids_sil_2`, `lcd_pids`, `pids_1a`, `pids_projector`
+
+**Changes**
+- The PIDS 1A block now also supports PIDS Preset
+- - A new PIDS Preset "PIDS 1A" is introduced to replicate the PIDS 1A look.
 
 **Fixes:**
 - Fix LRT Inter-Car barrier breaking when flooded with water

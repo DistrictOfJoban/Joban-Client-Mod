@@ -161,18 +161,26 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         int arrivalIndex = 0;
         double rowY = y + (topPadding ? HEADER_HEIGHT : 0) + 4;
         for(int i = 0; i < rows; i++) {
+            double totalWidth = screenWidth;
+            totalWidth -= PIDS_MARGIN;
+            totalWidth -= PIDS_MARGIN;
+            totalWidth -= (22 * ARRIVAL_TEXT_SCALE);
+            if(platformShown) {
+                totalWidth -= (22 * ARRIVAL_TEXT_SCALE);
+            }
+
+
             if(customMessages[i] != null && !customMessages[i].isEmpty()) {
-                components.add(new CustomTextComponent(x, rowY, 78 * ARRIVAL_TEXT_SCALE, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
+                components.add(new CustomTextComponent(x, rowY, totalWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
             } else {
                 if(arrivalIndex >= arrivals.size()) continue;
 
                 if (!rowHidden[i]) {
-                    float destinationMaxWidth = platformShown ? (44 * ARRIVAL_TEXT_SCALE) : (54 * ARRIVAL_TEXT_SCALE);
-                    components.add(new ArrivalDestinationComponent(x, rowY, destinationMaxWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
+                    components.add(new ArrivalDestinationComponent(x, rowY, totalWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
 
                     if (platformShown) {
-                        components.add(new ArrivalTextureComponent(59 * ARRIVAL_TEXT_SCALE, rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
-                        components.add(new PlatformComponent(59 * ARRIVAL_TEXT_SCALE, rowY, 8, 8, fontId, RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
+                        components.add(new ArrivalTextureComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
+                        components.add(new PlatformComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 8, 8, fontId, RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
                     }
 
                     // ETA text cycle should follow destination
