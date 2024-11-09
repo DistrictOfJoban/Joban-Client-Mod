@@ -35,7 +35,7 @@ function render(ctx, state, pids) {
             Text.create("Destination Text")
             .text(destinationStr)
             .scale(1.725)
-            .size(pids.width - 30 - (SIDE_PADDING*3), 9)
+            .size((pids.width / 1.725) - 30 - ((SIDE_PADDING / 1.725) * 3), 9)
             .stretchXY()
             .fontMC()
             .color(0xFC9700)
