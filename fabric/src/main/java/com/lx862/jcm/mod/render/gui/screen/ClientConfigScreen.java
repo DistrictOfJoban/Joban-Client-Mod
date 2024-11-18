@@ -34,10 +34,6 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         JCMClient.getConfig().disableRendering = bool;
     });
 
-    CheckboxWidgetExtension useCustomFontButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        JCMClient.getConfig().useCustomFont = bool;
-    });
-
     CheckboxWidgetExtension useNewTextRendererButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
         JCMClient.getConfig().useNewTextRenderer = bool;
     });
@@ -91,7 +87,6 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
     private void setEntryStateFromClientConfig() {
         disableRenderingButton.setChecked(JCMClient.getConfig().disableRendering);
-        useCustomFontButton.setChecked(JCMClient.getConfig().useCustomFont);
         useNewTextRendererButton.setChecked(JCMClient.getConfig().useNewTextRenderer);
         debugModeButton.setChecked(JCMClient.getConfig().debug);
     }
@@ -104,9 +99,6 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_rendering"), new MappedWidget(disableRenderingButton));
         addChild(new ClickableWidget(disableRenderingButton));
-
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.custom_font"), new MappedWidget(useCustomFontButton));
-        addChild(new ClickableWidget(useCustomFontButton));
 
         /*  New Text Renderer is deprecated, we shouldn't offer player to switch to it anymore if it isn't enabled */
         if(JCMClient.getConfig().useNewTextRenderer) {

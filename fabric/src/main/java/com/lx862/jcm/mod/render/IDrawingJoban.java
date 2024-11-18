@@ -9,6 +9,7 @@ import org.mtr.mapping.holder.OrderedText;
 import org.mtr.mapping.holder.Style;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.TextHelper;
+import org.mtr.mod.config.Config;
 import org.mtr.mod.data.IGui;
 
 import javax.annotation.Nullable;
@@ -30,7 +31,7 @@ public interface IDrawingJoban {
     }
 
     static void drawStringWithFont(GraphicsHolder graphicsHolder, String text, Identifier font, IGui.HorizontalAlignment horizontalAlignment, IGui.VerticalAlignment verticalAlignment, IGui.HorizontalAlignment xAlignment, float x, float y, float maxWidth, float maxHeight, float scale, int textColorCjk, int textColor, float fontSizeRatio, boolean shadow, int light, @Nullable DrawingCallback drawingCallback) {
-        final Style style = JCMClient.getConfig().useCustomFont ? Style.getEmptyMapped().withFont(font) : Style.getEmptyMapped();
+        final Style style = Config.getClient().getUseMTRFont() ? Style.getEmptyMapped().withFont(font) : Style.getEmptyMapped();
 
         while (text.contains("||")) {
             text = text.replace("||", "|");

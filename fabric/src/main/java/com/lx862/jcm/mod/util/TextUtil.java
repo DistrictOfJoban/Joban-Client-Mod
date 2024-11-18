@@ -1,11 +1,11 @@
 package com.lx862.jcm.mod.util;
 
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.JCMClient;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.Style;
 import org.mtr.mapping.mapper.TextHelper;
+import org.mtr.mod.config.Config;
 import org.mtr.mod.data.IGui;
 
 public class TextUtil {
@@ -22,7 +22,7 @@ public class TextUtil {
     }
 
     public static Style withFontStyle(Identifier fontId) {
-        return JCMClient.getConfig().useCustomFont ? Style.getEmptyMapped().withFont(fontId) : Style.getEmptyMapped();
+        return Config.getClient().getUseMTRFont() ? Style.getEmptyMapped().withFont(fontId) : Style.getEmptyMapped();
     }
 
     /** Set a custom font style to MutableText, this respects the client config. */

@@ -17,6 +17,7 @@
 **Changes**
 - The PIDS 1A block now also supports PIDS Preset
 - - A new PIDS Preset "PIDS 1A" is introduced to replicate the PIDS 1A look.
+- "Use Custom Font" config in JCM is removed, now instead now follows MTR "Use MTR Font" settings.
 
 **Fixes:**
 - Fix LRT Inter-Car barrier breaking when flooded with water
