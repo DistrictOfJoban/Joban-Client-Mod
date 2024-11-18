@@ -14,9 +14,6 @@ function render(ctx, state, pids) {
         let rowY = TOP_PADDING + (i*perRowHeight);
         let customMsg = pids.getCustomMessage(i);
         let arrival = pids.arrivals().get(arrivalIdx);
-        if(arrival == null) {
-            continue;
-        }
         
         if(customMsg != "") {
             Text.create("Custom Text")
@@ -28,7 +25,7 @@ function render(ctx, state, pids) {
             .color(0xFC9700)
             .pos(SIDE_PADDING, rowY)
             .draw(ctx);
-        } else if(!pids.isRowHidden(i)) {
+        } else if(arrival != null && !pids.isRowHidden(i)) {
             let destinationStr = TextUtil.cycleString(arrival.routeNumber()) + " " + TextUtil.cycleString(arrival.destination());
             destinationStr = destinationStr.trim();
             
