@@ -101,8 +101,7 @@ public class ParsedScript {
                     func.call(cx, scope, scope, new Object[]{scriptInstance.getScriptContext(), scriptInstance.state, scriptInstance.getWrapperObject()});
                 }
             } catch (Exception e) {
-                ScriptManager.LOGGER.error("[Scripting] Error executing script!");
-                e.printStackTrace();
+                ScriptManager.LOGGER.error("[Scripting] Error executing script!", e);
                 lastFailedTime = System.currentTimeMillis();
             } finally {
                 Context.exit();

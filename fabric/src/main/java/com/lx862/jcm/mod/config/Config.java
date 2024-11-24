@@ -25,7 +25,7 @@ public abstract class Config {
                 JsonObject jsonObject = new JsonParser().parse(String.join("", Files.readAllLines(configPath))).getAsJsonObject();
                 fromJson(jsonObject);
             } catch (Exception e) {
-                e.printStackTrace();
+                JCMLogger.error("Error reading the config file: ", e);
                 write();
                 JCMLogger.warn("Failed to read config file, config may be left at it's default state.");
             }
@@ -37,7 +37,7 @@ public abstract class Config {
             configPath.getParent().toFile().mkdirs();
             Files.write(configPath, Collections.singleton(new GsonBuilder().setPrettyPrinting().create().toJson(toJson())));
         } catch (Exception e) {
-            e.printStackTrace();
+            JCMLogger.error("", e);
         }
     }
 

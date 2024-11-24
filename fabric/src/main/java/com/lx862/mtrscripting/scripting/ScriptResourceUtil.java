@@ -162,7 +162,7 @@ public class ScriptResourceUtil {
             try {
                 result[0] = ImageIO.read(is);
             } catch (IOException e) {
-                e.printStackTrace();
+                ScriptManager.LOGGER.error("[Scripting] Failed to read image:", e);
             }
         });
         return GraphicsTexture.createArgbBufferedImage(result[0]);
@@ -174,7 +174,7 @@ public class ScriptResourceUtil {
             try {
                 result[0] = Font.createFont(Font.TRUETYPE_FONT, is);
             } catch (IOException | FontFormatException e) {
-                e.printStackTrace();
+                ScriptManager.LOGGER.error("[Scripting] Failed to read font:", e);
             }
         });
         return result[0];

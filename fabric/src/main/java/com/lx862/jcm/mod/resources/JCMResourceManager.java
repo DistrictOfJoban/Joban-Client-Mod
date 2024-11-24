@@ -31,8 +31,7 @@ public class JCMResourceManager {
                 JsonObject jsonObject = new JsonParser().parse(str).getAsJsonObject();
                 PIDSManager.loadJson(jsonObject);
             } catch (Exception e) {
-                e.printStackTrace();
-                JCMLogger.error("Failed to parse custom resource file!");
+                JCMLogger.error("Failed to parse custom resource file!", e);
             }
         }));
     }

@@ -22,6 +22,10 @@ public final class JCMLogger {
         LOGGER.error(Constants.LOGGING_PREFIX + s, o);
     }
 
+    public static void error(String s, Throwable e) {
+        LOGGER.error(Constants.LOGGING_PREFIX + s, e);
+    }
+
     public static void fatal(String s, Object... o) {
         LOGGER.fatal(Constants.LOGGING_PREFIX + s, o);
     }

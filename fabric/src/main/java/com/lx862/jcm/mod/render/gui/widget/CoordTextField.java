@@ -48,7 +48,7 @@ public class CoordTextField extends TextFieldWidgetExtension implements RenderHe
                 return false;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            JCMLogger.error("", e);
             return false;
         }
 

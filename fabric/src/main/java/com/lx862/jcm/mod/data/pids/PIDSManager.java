@@ -43,8 +43,7 @@ public class PIDSManager {
                     presetList.put(preset.getId(), preset);
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
-                JCMLogger.error("Failed to parse PIDS Preset \"{}\"!", presetId);
+                JCMLogger.error("Failed to parse PIDS Preset \"" + presetId + "\"!", ex);
             }
         });
     }

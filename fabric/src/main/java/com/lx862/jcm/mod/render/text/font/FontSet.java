@@ -59,8 +59,7 @@ public class FontSet {
                 Font createdFont = Font.createFont(Font.TRUETYPE_FONT, inputStream);
                 callback.accept(createdFont);
             } catch (Exception e) {
-                JCMLogger.warn("Failed to load font from path " + path.getPath());
-                e.printStackTrace();
+                JCMLogger.error("Failed to load font from path " + path.getPath(), e);
             }
         });
     }

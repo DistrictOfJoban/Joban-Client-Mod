@@ -41,8 +41,7 @@ public class McMetaManager {
                     mcMetaList.put(imagePath, mcMeta1);
                 });
             } catch (Exception e) {
-                e.printStackTrace();
-                JCMLogger.error("[McMetaManager] Failed to read mcmeta file {}!", imagePath.toString());
+                JCMLogger.error("[McMetaManager] Failed to read mcmeta file {}!", imagePath.toString(), e);
             }
         }
     }
