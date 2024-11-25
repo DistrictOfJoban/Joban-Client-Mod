@@ -171,7 +171,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
 
             if(customMessages[i] != null && !customMessages[i].isEmpty()) {
-                components.add(new CustomTextComponent(x, rowY, totalWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
+                components.add(new CustomTextComponent(x, rowY, screenWidth - (PIDS_MARGIN * 3), 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
             } else {
                 if(arrivalIndex >= arrivals.size()) continue;
 
