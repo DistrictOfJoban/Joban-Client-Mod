@@ -71,9 +71,7 @@ public class PIDSScreen extends BlockConfigScreen {
             final Station station = InitClient.findStation(blockPos);
             if (station != null) {
                 final ObjectImmutableList<DashboardListItem> platformsForList = getPlatformsForList(station);
-                MinecraftClient.getInstance().openScreen(new Screen(new DashboardListSelectorScreen(() -> {
-                    MinecraftClient.getInstance().openScreen(new Screen(this));
-                }, new ObjectImmutableList<>(platformsForList), filteredPlatforms, false, false)));
+                MinecraftClient.getInstance().openScreen(new Screen(new DashboardListSelectorScreen(new ObjectImmutableList<>(platformsForList), filteredPlatforms, false, false, this)));
             }
         });
 
