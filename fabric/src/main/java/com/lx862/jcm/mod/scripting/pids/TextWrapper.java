@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.pids.scripting;
+package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Direction;
@@ -15,7 +15,7 @@ import java.util.List;
 
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
-public class TextWrapper extends DrawCall {
+public class TextWrapper extends PIDSDrawCall {
     public String str;
     public Identifier fontId;
     public boolean shadow;

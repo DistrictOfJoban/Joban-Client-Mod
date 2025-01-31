@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.pids.scripting;
+package com.lx862.jcm.mod.scripting.pids;
 
 import org.mtr.core.data.Platform;
 import org.mtr.core.data.Route;

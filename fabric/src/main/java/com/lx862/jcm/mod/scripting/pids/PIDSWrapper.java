@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.pids.scripting;
+package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import org.mtr.core.data.Station;

@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.data.pids.scripting;
+package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Direction;
@@ -8,7 +8,7 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 
 import static com.lx862.jcm.mod.render.RenderHelper.*;
 
-public class TextureWrapper extends DrawCall {
+public class TextureWrapper extends PIDSDrawCall {
     public Identifier id;
     public int color = ARGB_WHITE;
     public float u1 = 0;

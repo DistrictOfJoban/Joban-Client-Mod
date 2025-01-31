@@ -5,10 +5,10 @@ import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.data.pids.scripting.DrawCall;
-import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptContext;
-import com.lx862.jcm.mod.data.pids.scripting.PIDSScriptInstance;
-import com.lx862.jcm.mod.data.pids.scripting.PIDSWrapper;
+import com.lx862.jcm.mod.scripting.pids.PIDSDrawCall;
+import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
+import com.lx862.jcm.mod.scripting.pids.PIDSScriptInstance;
+import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
 import com.lx862.mtrscripting.scripting.ParsedScript;
 import com.lx862.mtrscripting.scripting.base.ScriptInstance;
 import org.mtr.core.operation.ArrivalResponse;
@@ -82,11 +82,11 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             });
 
             graphicsHolder.translate(0, 0, -0.5);
-            for(DrawCall drawCall : new ArrayList<>(pidsScriptInstance.drawCalls)) {
-                if(drawCall == null) continue;
+            for(PIDSDrawCall PIDSDrawCall : new ArrayList<>(pidsScriptInstance.drawCalls)) {
+                if(PIDSDrawCall == null) continue;
                 graphicsHolder.translate(0, 0, -0.02);
                 graphicsHolder.push();
-                drawCall.draw(graphicsHolder, facing);
+                PIDSDrawCall.draw(graphicsHolder, facing);
                 graphicsHolder.pop();
             }
         }

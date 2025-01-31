@@ -8,16 +8,16 @@ import vendor.com.lx862.jcm.org.mozilla.javascript.Context;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
 
 /**
- * This class contains the event to hook into scripting, i.e. add new property and objects
+ * This class contains the event to hook into scripting, e.g. add new property and objects
  */
 public class ScriptingAPI {
     private static final Object2ObjectArrayMap<String, String> addonVersionMap = new Object2ObjectArrayMap<>();
     private static final ObjectList<TriConsumer<String, Context, Scriptable>> onParseScriptCallback = new ObjectArrayList<>();
 
     /**
-     * Register a version for a Mod ID, used by scripts for {@link com.lx862.mtrscripting.scripting.ScriptResourceUtil#getAddonVersion};
+     * Register a version for a Mod ID, used by scripts calling {@link com.lx862.mtrscripting.scripting.ScriptResourceUtil#getAddonVersion};
      * @param modid Your Mod ID
-     * @param version Your version number. The format of the version string should be mentioned in your mod's documentation.
+     * @param version Your version number. The format of the version string should be documented in your mod's documentation.
      */
     public static void registerAddonVersion(String modid, String version) {
         addonVersionMap.put(modid, version);

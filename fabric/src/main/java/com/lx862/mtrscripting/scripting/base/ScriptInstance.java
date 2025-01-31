@@ -24,10 +24,12 @@ public abstract class ScriptInstance<T> {
         return scriptContext;
     }
 
-    public abstract T getWrapperObject();
-
     public void updateWrapperObject(T obj) {
         wrapperObject = obj;
+    }
+
+    public T getWrapperObject() {
+        return wrapperObject;
     }
 
     public abstract boolean isDead();
