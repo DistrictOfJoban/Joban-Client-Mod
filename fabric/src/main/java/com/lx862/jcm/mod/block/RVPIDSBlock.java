@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.entity.RVPIDSBlockEntity;
-import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;

@@ -6,8 +6,6 @@ import com.lx862.jcm.mod.render.gui.widget.*;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
-import org.mtr.mapping.mapper.TextFieldWidgetExtension;
-import org.mtr.mapping.tool.TextCase;
 
 public class PIDSProjectorScreen extends PIDSScreen {
 

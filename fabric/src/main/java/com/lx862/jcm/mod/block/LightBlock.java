@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.JCMBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
-import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;

@@ -14,6 +14,7 @@ import java.awt.geom.Rectangle2D;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -24,11 +25,7 @@ public class FontSet {
     private final List<Font> fontList;
 
     public FontSet(Font... fonts) {
-        fontList = new ArrayList<>();
-
-        for(int i = 0; i < fonts.length; i++) {
-            fontList.add(fonts[i]);
-        }
+        fontList = new ArrayList<>(Arrays.asList(fonts));
     }
 
     public FontSet(JsonObject vanillaFontJson) throws NoTTFFontException {

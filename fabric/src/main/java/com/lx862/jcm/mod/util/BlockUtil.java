@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.util;
 import org.mtr.mapping.holder.*;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 
 /**
  * Contains utilities method for block checking/manipulation

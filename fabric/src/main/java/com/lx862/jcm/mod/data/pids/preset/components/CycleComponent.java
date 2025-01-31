@@ -11,6 +11,7 @@ import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mod.InitClient;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,9 +27,7 @@ public class CycleComponent extends PIDSComponent {
         for(int i = 0; i < array.size(); i++) {
             this.components.add(PIDSComponent.parse(array.get(i).getAsJsonObject()));
         }
-        for(PIDSComponent component : components) {
-            this.components.add(component);
-        }
+        this.components.addAll(Arrays.asList(components));
     }
 
     @Override

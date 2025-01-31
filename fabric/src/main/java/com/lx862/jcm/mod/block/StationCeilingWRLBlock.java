@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.CeilingAttachedDirectionalBlock;
-import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mod.block.IBlock;
 

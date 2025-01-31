@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.entity.APGDoorDRLBlockEntity;
 import com.lx862.jcm.mod.registry.Items;
-import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;

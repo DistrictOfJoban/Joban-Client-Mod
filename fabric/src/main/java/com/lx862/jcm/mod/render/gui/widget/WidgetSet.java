@@ -13,9 +13,9 @@ import java.util.List;
  * Able to tile the widgets horizontally and add new rows like a grid/table.
  */
 public class WidgetSet extends ClickableWidgetExtension implements WidgetsWrapper, RenderHelper {
-    public int widgetXMargin;
     private final List<List<MappedWidget>> widgetRows = new ArrayList<>();
     private final int maxWidgetHeight;
+    public final int widgetXMargin;
 
     public WidgetSet(int maxWidgetHeight, int widgetXMargin) {
         super(0, 0, 0, 0);

@@ -8,9 +8,7 @@ import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 public class Events {
     public static void register() {
         // Start Tick Event for counting tick
-        JCMRegistry.REGISTRY.eventRegistry.registerStartServerTick(() -> {
-            JCMServerStats.incrementGameTick();
-        });
+        JCMRegistry.REGISTRY.eventRegistry.registerStartServerTick(JCMServerStats::incrementGameTick);
     }
 
     public static void registerClient() {

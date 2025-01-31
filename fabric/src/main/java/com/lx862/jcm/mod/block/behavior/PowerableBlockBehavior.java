@@ -5,7 +5,7 @@ import org.mtr.mapping.holder.*;
 import org.mtr.mod.block.IBlock;
 
 public interface PowerableBlockBehavior  {
-    static BooleanProperty UNPOWERED = BlockProperties.UNPOWERED;
+    BooleanProperty UNPOWERED = BlockProperties.UNPOWERED;
 
     default void updateRedstone(World world, BlockPos pos, Block block, BlockState state) {
         world.updateNeighbors(pos, block);

@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.render;
 
-import com.lx862.jcm.mod.JCMClient;
 import org.mtr.libraries.it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.Identifier;

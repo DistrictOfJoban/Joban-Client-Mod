@@ -19,7 +19,6 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mapping.mapper.ResourceManagerHelper;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

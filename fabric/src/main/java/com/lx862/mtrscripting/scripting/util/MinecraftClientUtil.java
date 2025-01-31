@@ -2,6 +2,7 @@ package com.lx862.mtrscripting.scripting.util;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/MinecraftClientUtil.java */
 
+import com.mojang.text2speech.Narrator;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.mapping.holder.ClientPlayerEntity;
 import org.mtr.mapping.holder.MinecraftClient;
@@ -34,10 +35,7 @@ public class MinecraftClientUtil {
     }
 
     public static void narrate(String message) {
-        throw new NotImplementedException("Not implemented in Minecraft Mappings");
-//        MinecraftClient.getInstance().execute(() -> {
-//            Narrator.getNarrator().say(message, true);
-//        });
+        Narrator.getNarrator().say(message, true);
     }
 
     public static void displayMessage(String message, boolean actionBar) {

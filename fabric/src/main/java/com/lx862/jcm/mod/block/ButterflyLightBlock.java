@@ -4,7 +4,6 @@ import com.lx862.jcm.mod.block.base.DirectionalBlock;
 import com.lx862.jcm.mod.block.entity.ButterflyLightBlockEntity;
 import com.lx862.jcm.mod.network.gui.ButterflyLightGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;

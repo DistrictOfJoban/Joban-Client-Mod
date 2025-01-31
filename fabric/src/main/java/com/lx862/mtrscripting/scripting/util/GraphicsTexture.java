@@ -1,6 +1,5 @@
 package com.lx862.mtrscripting.scripting.util;
 
-import com.lx862.jcm.mod.Constants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.mtr.mapping.holder.*;
 

@@ -30,12 +30,7 @@ public class ContentItem extends AbstractListItem {
     }
 
     public ContentItem setIcon(Identifier textureId) {
-        this.drawIconCallback = new DrawIconCallback() {
-            @Override
-            public void accept(GuiDrawing guiDrawing, int startX, int startY, int width, int height) {
-                GuiHelper.drawTexture(guiDrawing, textureId, startX, startY, width, height);
-            }
-        };
+        this.drawIconCallback = (guiDrawing, startX, startY, width, height) -> GuiHelper.drawTexture(guiDrawing, textureId, startX, startY, width, height);
         return this;
     }
 
@@ -61,7 +56,7 @@ public class ContentItem extends AbstractListItem {
 
     @Override
     public boolean matchQuery(String searchTerm) {
-        return Objects.equals(searchTerm, "") || (title == null ? false : title.getString().contains(searchTerm));
+        return Objects.equals(searchTerm, "") || (title != null && title.getString().contains(searchTerm));
     }
 
     @Override

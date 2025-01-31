@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.block.behavior.WallAttachedBlockBehavior;
-import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mod.block.IBlock;
 
@@ -30,9 +29,5 @@ public abstract class WallAttachedBlock extends DirectionalBlock implements Wall
         }
 
         return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos);
-    }
-
-    public Direction getWallDirection(Direction defaultDirection) {
-        return defaultDirection;
     }
 }

@@ -65,7 +65,7 @@ public class ParsedScript {
                 tryAndAddFunction("render" + contextName, scope, renderFunctions);
                 tryAndAddFunction("dispose" + contextName, scope, disposeFunctions);
 
-                ScriptManager.LOGGER.info("[Scripting] Loaded script: " + scriptLocation.getNamespace() + ":" + scriptLocation.getPath());
+                ScriptManager.LOGGER.info("[Scripting] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
             }
         } finally {
             ScriptResourceUtil.activeContext = null;
@@ -84,7 +84,7 @@ public class ParsedScript {
         }
     }
 
-    public Future<?> invokeFunction(ScriptInstance scriptInstance, List<Function> functionList, Runnable callback) {
+    public Future<?> invokeFunction(ScriptInstance<?> scriptInstance, List<Function> functionList, Runnable callback) {
         if(lastFailedTime != -1 && System.currentTimeMillis() - lastFailedTime <= SCRIPT_RESET_TIME) {
             return null;
         }
@@ -110,18 +110,18 @@ public class ParsedScript {
         });
     }
 
-    public Future<?> invokeCreateFunction(ScriptInstance instance, Runnable callback) {
+    public Future<?> invokeCreateFunction(ScriptInstance<?> instance, Runnable callback) {
         return invokeFunction(instance, createFunctions, callback);
     }
 
-    public Future<?> invokeRenderFunction(ScriptInstance instance, Runnable callback) {
+    public Future<?> invokeRenderFunction(ScriptInstance<?> instance, Runnable callback) {
         if(instance.scriptTask != null && !instance.scriptTask.isDone()) {
             return instance.scriptTask;
         }
         return invokeFunction(instance, renderFunctions, callback);
     }
 
-    public Future<?> invokeDisposeFunction(ScriptInstance instance, Runnable callback) {
+    public Future<?> invokeDisposeFunction(ScriptInstance<?> instance, Runnable callback) {
         return invokeFunction(instance, disposeFunctions, callback);
     }
 

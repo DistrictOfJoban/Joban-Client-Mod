@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.block.base;
 
 import com.lx862.jcm.mod.block.behavior.HorizontalDoubleBlockBehavior;
-import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.HolderBase;
 import org.mtr.mod.block.IBlock;

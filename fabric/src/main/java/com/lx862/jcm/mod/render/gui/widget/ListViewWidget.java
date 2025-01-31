@@ -83,22 +83,21 @@ public class ListViewWidget extends AbstractScrollViewWidget implements RenderHe
         elapsed += (tickDelta / Constants.MC_TICK_PER_SECOND);
 
         int incY = 0;
-        for(int i = 0; i < displayedEntryList.size(); i++) {
+        for (AbstractListItem abstractListItem : displayedEntryList) {
             ClipStack.ensureStateCorrect();
-            AbstractListItem listItem = displayedEntryList.get(i);
             int entryX = getX2();
-            int entryY = getY2() + incY - (int)currentScroll;
+            int entryY = getY2() + incY - (int) currentScroll;
             boolean widgetVisible = false;
 
-            if(listItem instanceof ContentItem) {
-                ContentItem ci = (ContentItem) listItem;
-                boolean topLeftVisible = inRectangle(ci.widget.getX(), ci.widget.getY(), getX2(), getY2(), getWidth2(), getHeight2());
-                boolean bottomRightVisible = inRectangle(ci.widget.getX() + ci.widget.getWidth(), ci.widget.getY() + ci.widget.getHeight(), getX2(), getY2(), getWidth2(), getHeight2());
+            if (abstractListItem instanceof ContentItem) {
+                ContentItem contentItem = (ContentItem) abstractListItem;
+                boolean topLeftVisible = inRectangle(contentItem.widget.getX(), contentItem.widget.getY(), getX2(), getY2(), getWidth2(), getHeight2());
+                boolean bottomRightVisible = inRectangle(contentItem.widget.getX() + contentItem.widget.getWidth(), contentItem.widget.getY() + contentItem.widget.getHeight(), getX2(), getY2(), getWidth2(), getHeight2());
                 widgetVisible = topLeftVisible && bottomRightVisible;
             }
 
-            listItem.draw(graphicsHolder, guiDrawing, entryX, entryY, width - getScrollbarOffset(), height, mouseX, mouseY, widgetVisible, elapsed, tickDelta);
-            incY += listItem.height;
+            abstractListItem.draw(graphicsHolder, guiDrawing, entryX, entryY, width - getScrollbarOffset(), height, mouseX, mouseY, widgetVisible, elapsed, tickDelta);
+            incY += abstractListItem.height;
         }
     }
 
@@ -126,11 +125,10 @@ public class ListViewWidget extends AbstractScrollViewWidget implements RenderHe
         int startY = getY2();
 
         int incY = 0;
-        for(int i = 0; i < displayedEntryList.size(); i++) {
-            AbstractListItem listItem = displayedEntryList.get(i);
+        for (AbstractListItem listItem : displayedEntryList) {
             int entryY = startY + incY;
             int x = (startX + width - getScrollbarOffset()) - ENTRY_PADDING;
-            listItem.positionChanged(x, (int)-scroll + entryY);
+            listItem.positionChanged(x, (int) -scroll + entryY);
             incY += listItem.height;
         }
     }

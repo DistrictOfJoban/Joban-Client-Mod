@@ -10,13 +10,13 @@ import java.nio.file.Path;
 import java.util.Collections;
 
 public abstract class Config {
-    private Path configPath;
+    private final Path configPath;
 
     public Config(Path configPath) {
         this.configPath = configPath;
     }
 
-    public final void read() {
+    public void read() {
         if(!Files.exists(configPath)) {
             write();
             read();
@@ -32,7 +32,7 @@ public abstract class Config {
         }
     }
 
-    public final void write() {
+    public void write() {
         try {
             configPath.getParent().toFile().mkdirs();
             Files.write(configPath, Collections.singleton(new GsonBuilder().setPrettyPrinting().create().toJson(toJson())));

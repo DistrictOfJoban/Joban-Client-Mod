@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> {
-    public List<DrawCall> drawCalls;
+    public final List<DrawCall> drawCalls;
     private final BlockEntity be;
 
     public PIDSScriptInstance(String id, BlockPos pos, ParsedScript script) {

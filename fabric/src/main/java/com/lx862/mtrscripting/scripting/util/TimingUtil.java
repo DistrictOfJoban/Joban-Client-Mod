@@ -11,7 +11,7 @@ public class TimingUtil {
     private static double timeElapsedForScript = 0;
     private static double frameDeltaForScript = 0;
 
-    public static void prepareForScript(ScriptInstance scriptContext) {
+    public static void prepareForScript(ScriptInstance<?> scriptContext) {
         timeElapsedForScript = InitClient.getGameMillis() / 1000.0;
         frameDeltaForScript = timeElapsedForScript - scriptContext.lastExecuteTime;
         scriptContext.lastExecuteTime = timeElapsedForScript;

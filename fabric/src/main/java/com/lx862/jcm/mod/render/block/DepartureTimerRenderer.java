@@ -4,7 +4,6 @@ import com.lx862.jcm.mod.block.entity.DepartureTimerBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.text.TextInfo;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
-import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.tool.Utilities;

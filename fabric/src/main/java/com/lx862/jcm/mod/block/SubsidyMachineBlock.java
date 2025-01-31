@@ -6,7 +6,6 @@ import com.lx862.jcm.mod.block.entity.SubsidyMachineBlockEntity;
 import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.network.gui.SubsidyMachineGUIPacket;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.util.BlockUtil;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;

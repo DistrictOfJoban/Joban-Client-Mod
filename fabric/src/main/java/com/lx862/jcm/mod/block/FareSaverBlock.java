@@ -14,7 +14,8 @@ import java.util.HashMap;
 import java.util.UUID;
 
 public class FareSaverBlock extends Vertical3Block implements BlockWithEntity {
-    public static HashMap<UUID, Integer> discountList = new HashMap<>();
+    public static final HashMap<UUID, Integer> discountList = new HashMap<>();
+
     public FareSaverBlock(BlockSettings settings) {
         super(settings);
     }

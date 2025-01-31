@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.block.base;
 import org.mtr.mapping.holder.*;
 
 public abstract class CeilingAttachedBlock extends JCMBlock {
-    protected boolean enforceLogicalPattern;
+    protected final boolean enforceLogicalPattern;
 
     public CeilingAttachedBlock(BlockSettings settings, boolean enforceLogicalPattern) {
         super(settings);

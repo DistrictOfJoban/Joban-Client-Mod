@@ -62,10 +62,10 @@ public class RVEnquiryScreen extends AnimatedScreen {
         }
 
         if (!showBalance) {
-            GuiHelper.drawTexture(guiDrawing, cardScreenTexture, (screenWidth - (int) scaledWidth) / 2, (screenHeight - (int) scaledHeight) / 2, (int) scaledWidth, (int) scaledHeight);
+            GuiHelper.drawTexture(guiDrawing, cardScreenTexture, (screenWidth - (int) scaledWidth) / 2.0, (screenHeight - (int) scaledHeight) / 2.0, (int) scaledWidth, (int) scaledHeight);
             GuiHelper.drawTexture(guiDrawing, octopusCardTexture, mouseX, mouseY, 140, 86);
         } else {
-            GuiHelper.drawTexture(guiDrawing, balanceTexture, (screenWidth - (int) scaledWidth) / 2, (screenHeight - (int) scaledHeight) / 2, (int) scaledWidth, (int) scaledHeight);
+            GuiHelper.drawTexture(guiDrawing, balanceTexture, (screenWidth - (int) scaledWidth) / 2.0, (screenHeight - (int) scaledHeight) / 2.0, (int) scaledWidth, (int) scaledHeight);
 
             int renderY = startY;
 
@@ -128,8 +128,7 @@ public class RVEnquiryScreen extends AnimatedScreen {
         } else {
             renderTextString = String.format("%s     %s     $%.2f", transactionEntry.getFormattedDate(), IGui.formatStationName(transactionEntry.source), (double) transactionEntry.amount);
         }
-        MutableText renderText = TextUtil.literal(renderTextString);
-        return renderText;
+        return TextUtil.literal(renderTextString);
     }
 
     @Override

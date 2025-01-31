@@ -36,7 +36,7 @@ public class ScriptResourceUtil {
         scriptLocationStack.pop();
     }
 
-    public static void includeScript(Object pathOrIdentifier) throws IOException {
+    public static void includeScript(Object pathOrIdentifier) {
         if (activeContext == null) throw new RuntimeException(
                 "Cannot use include in functions, as by that time scripts are no longer processed."
         );
@@ -102,13 +102,13 @@ public class ScriptResourceUtil {
                     try {
                         NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_CJK_LOCATION);
                     } catch (Exception ex) {
-                        ScriptManager.LOGGER.warn("[Scripting] Failed loading font", ex);
+                        ScriptManager.LOGGER.warn("[Scripting] Failed to load font", ex);
                     }
                 } else {
                     try {
                         NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_LOCATION);
                     } catch (Exception ex) {
-                        ScriptManager.LOGGER.warn("[Scripting] Failed loading font", ex);;
+                        ScriptManager.LOGGER.warn("[Scripting] Failed to load font", ex);
                     }
                 }
             }

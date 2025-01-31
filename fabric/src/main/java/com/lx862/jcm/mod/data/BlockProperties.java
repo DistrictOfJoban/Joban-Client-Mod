@@ -10,7 +10,7 @@ import org.mtr.mod.block.IBlock;
 /**
  * Stores all block properties JCM uses. Block classes from JCM should reference the block properties in here
  */
-public interface BlockProperties {
+public final class BlockProperties {
     public static final DirectionProperty FACING = DirectionHelper.FACING;
     public static final BooleanProperty UNPOWERED = BooleanProperty.of("unpowered");
     public static final BooleanProperty HORIZONTAL_IS_LEFT = BooleanProperty.of("left");

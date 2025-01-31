@@ -8,7 +8,6 @@ import com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
-import org.mtr.mapping.mapper.WorldHelper;
 
 public class WeatherTextComponent extends TextComponent {
     private final String sunnyText;

@@ -26,32 +26,39 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/gui/config_screen/bg.png");
     private static final Identifier TEXTURE_STAR = new Identifier("jsblock:textures/gui/config_screen/stars.png");
     private static final Identifier TEXTURE_TERRAIN = new Identifier("jsblock:textures/gui/config_screen/terrain.png");
+
     private final WidgetSet bottomRowWidget;
     private final ListViewWidget listViewWidget;
+    private final CheckboxWidgetExtension disableRenderingButton;
+    private final CheckboxWidgetExtension useNewTextRendererButton;
+    private final CheckboxWidgetExtension debugModeButton;
+    private final ButtonWidgetExtension textAtlasButton;
+
     private boolean discardConfig = false;
 
-    CheckboxWidgetExtension disableRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        JCMClient.getConfig().disableRendering = bool;
-    });
 
-    CheckboxWidgetExtension useNewTextRendererButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        JCMClient.getConfig().useNewTextRenderer = bool;
-    });
-
-    CheckboxWidgetExtension debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-        JCMClient.getConfig().debug = bool;
-    });
-
-    ButtonWidgetExtension textAtlasButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.listview.widget.open"), (buttonWidget -> {
-        MinecraftClient.getInstance().openScreen(new Screen(
-                new TextureTextAtlasScreen().withPreviousScreen(new Screen(this))
-        ));
-    }));
-    
     public ClientConfigScreen() {
         super(true);
         bottomRowWidget = new WidgetSet(20);
         listViewWidget = new ListViewWidget();
+
+        this.disableRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+            JCMClient.getConfig().disableRendering = bool;
+        });
+
+        this.useNewTextRendererButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+            JCMClient.getConfig().useNewTextRenderer = bool;
+        });
+
+        this.debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+            JCMClient.getConfig().debug = bool;
+        });
+
+        this.textAtlasButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.listview.widget.open"), (buttonWidget -> {
+            MinecraftClient.getInstance().openScreen(new Screen(
+                    new TextureTextAtlasScreen().withPreviousScreen(new Screen(this))
+            ));
+        }));
     }
 
     @Override
