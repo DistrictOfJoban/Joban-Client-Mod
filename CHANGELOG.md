@@ -2,6 +2,8 @@
 
 **New:**
 - Disneyland Resorts Line APG now reacts to redstone signal just like built-in APGs in MTR 4
+- **JSON PIDS Preset**
+- - The PIDS Variable `{worldPlayer}` is now implemented and displayed correctly again
 
 **Changes:**
 - Most blocks can now be crafted with a crafting recipe and drop items again, making it possible to use survival mode with JCM (Albeit still need improvements)

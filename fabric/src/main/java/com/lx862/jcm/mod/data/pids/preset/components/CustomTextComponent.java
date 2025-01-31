@@ -49,11 +49,18 @@ public class CustomTextComponent extends TextComponent {
             timeGreetings = "Night";
         }
 
+        int playerInWorld;
+        #if LOADER == "forge"
+            playerInWorld = context.world.data.players().size();
+        #else
+            playerInWorld = context.world.data.getPlayers().size();
+        #endif
+
         return str.replace("{time}", timeString)
                 .replace("{day}", String.valueOf(worldDay))
                 .replace("{weather}", weatherString)
                 .replace("{time_period}", timeGreetings)
                 .replace("{weatherChin}", weatherChinString)
-                .replace("{worldPlayer}", "?");
+                .replace("{worldPlayer}", String.valueOf(playerInWorld));
     }
 }
