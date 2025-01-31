@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "BGB",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "G": {
+      "item": "minecraft:glowstone"
+    },
+    "B": {
+      "item": "minecraft:black_concrete"
+    }
+  },
+  "result": {
+    "item": "jsblock:pids_rv_sil_2",
+    "count": 8
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IDI",
+    " I ",
+    "   "
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "D": {
+      "tag": "c:dyes"
+    }
+  },
+  "result": {
+    "item": "jsblock:helpline_1",
+    "count": 4
+  }
+}

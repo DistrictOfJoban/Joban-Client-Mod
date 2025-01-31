@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:${condition}",
+              "terms": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "jsblock:helpline_standing_eal",
+                  "properties": {
+                    "half": "lower"
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "jsblock:helpline_standing_eal"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "C  ",
+    "CC ",
+    "CCC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:black_concrete"
+    }
+  },
+  "result": {
+    "item": "jsblock:circle_wall_2",
+    "count": 16
+  }
+}

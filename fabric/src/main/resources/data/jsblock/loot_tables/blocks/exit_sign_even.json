@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:${condition}",
+              "terms": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "jsblock:exit_sign_even",
+                  "properties": {
+                    "left": "true"
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "jsblock:exit_sign_even"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

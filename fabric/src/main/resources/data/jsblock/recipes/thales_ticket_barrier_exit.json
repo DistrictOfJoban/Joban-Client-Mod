@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "jsblock:thales_ticket_barrier_entrance"
+    }
+  ],
+  "result": {
+    "item": "jsblock:thales_ticket_barrier_exit"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:${condition}",
+              "terms": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "jsblock:mtr_trespass_sign",
+                  "properties": {
+                    "left": "true"
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "jsblock:mtr_trespass_sign"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

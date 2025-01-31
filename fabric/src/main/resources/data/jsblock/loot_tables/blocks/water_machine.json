@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:${condition}",
+              "terms": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "jsblock:water_machine",
+                  "properties": {
+                    "half": "lower"
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "jsblock:water_machine"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

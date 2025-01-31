@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "jsblock:signal_light_red_2"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

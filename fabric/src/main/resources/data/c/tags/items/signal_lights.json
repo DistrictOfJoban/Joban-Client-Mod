@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "mtr:signal_light_1",
+    "mtr:signal_light_3",
+    "mtr:signal_light_2",
+    "mtr:signal_light_4"
+  ]
+}

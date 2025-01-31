@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "Y  ",
+    "LL ",
+    "GGG"
+  ],
+  "key": {
+    "Y": {
+      "item": "minecraft:yellow_concrete_powder"
+    },
+    "L": {
+      "item": "minecraft:light_gray_concrete_powder"
+    },
+    "G": {
+      "item": "minecraft:gray_concrete_powder"
+    }
+  },
+  "result": {
+    "item": "jsblock:mtr_stairs",
+    "count": 24
+  }
+}

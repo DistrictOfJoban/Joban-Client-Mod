@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "S S",
+    "CCC",
+    " D "
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:white_concrete"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "D": {
+      "tag": "c:dyes"
+    }
+  },
+  "result": {
+    "item": "jsblock:station_ceiling_wrl_station_color",
+    "count": 6
+  }
+}

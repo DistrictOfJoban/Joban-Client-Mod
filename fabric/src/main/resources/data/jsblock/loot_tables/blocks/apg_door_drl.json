@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:block_state_property",
+              "block": "jsblock:apg_door_drl",
+              "properties": {
+                "half": "lower",
+                "side": "left"
+              }
+            }
+          ],
+          "name": "jsblock:apg_door_drl"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:${condition}",
+              "terms": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "jsblock:tml_emg_stop_button",
+                  "properties": {
+                    "third": "lower"
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "jsblock:tml_emg_stop_button"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

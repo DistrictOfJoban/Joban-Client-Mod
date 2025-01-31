@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "jsblock:signal_light_inverted_2"
+    }
+  ],
+  "result": {
+    "item": "jsblock:signal_light_inverted_1",
+    "count": 1
+  }
+}

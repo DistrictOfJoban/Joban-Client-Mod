@@ -1,0 +1,36 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:${condition}",
+              "terms": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "jsblock:pids_rv_sil_2",
+                  "properties": {
+                    "facing": "north"
+                  }
+                },
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "jsblock:pids_rv_sil_2",
+                  "properties": {
+                    "facing": "east"
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "jsblock:pids_rv_sil_2"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

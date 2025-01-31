@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CCC",
+    "CDC",
+    "CRC"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:blue_dye"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "C": {
+      "item": "minecraft:blackstone"
+    }
+  },
+  "result": {
+    "item": "jsblock:signal_light_blue",
+    "count": 2
+  }
+}

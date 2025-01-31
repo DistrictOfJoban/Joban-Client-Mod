@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "jsblock:station_ceiling_wrl"
+    },
+    {
+      "tag": "c:dyes"
+    }
+  ],
+  "result": {
+    "item": "jsblock:station_ceiling_wrl_station_color",
+    "count": 1
+  }
+}

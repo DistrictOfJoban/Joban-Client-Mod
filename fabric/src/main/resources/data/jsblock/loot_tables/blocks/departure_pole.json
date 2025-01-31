@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "jsblock:departure_pole"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

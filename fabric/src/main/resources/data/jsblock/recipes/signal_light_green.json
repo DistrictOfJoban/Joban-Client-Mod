@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CCC",
+    "CRC",
+    "CDC"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:lime_dye"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "C": {
+      "item": "minecraft:blackstone"
+    }
+  },
+  "result": {
+    "item": "jsblock:signal_light_green",
+    "count": 2
+  }
+}

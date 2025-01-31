@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "   ",
+    "CCC",
+    "III"
+  ],
+  "key": {
+    "C": {
+      "tag": "c:concretes"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "jsblock:train_model_e44",
+    "count": 8
+  }
+}

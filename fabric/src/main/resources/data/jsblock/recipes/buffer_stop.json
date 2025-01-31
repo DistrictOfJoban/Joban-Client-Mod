@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "T T",
+    "CCC",
+    "C C"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:yellow_concrete"
+    },
+    "T": {
+      "item": "minecraft:redstone_torch"
+    }
+  },
+  "result": {
+    "item": "jsblock:buffer_stop",
+    "count": 8
+  }
+}

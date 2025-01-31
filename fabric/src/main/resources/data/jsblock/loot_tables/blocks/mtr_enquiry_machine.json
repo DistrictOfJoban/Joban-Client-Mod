@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:${condition}",
+              "terms": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "jsblock:mtr_enquiry_machine",
+                  "properties": {
+                    "half": "lower"
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "jsblock:mtr_enquiry_machine"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

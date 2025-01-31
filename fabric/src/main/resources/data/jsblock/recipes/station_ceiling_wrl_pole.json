@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " C ",
+    " S ",
+    "   "
+  ],
+  "key": {
+    "C": {
+      "item": "jsblock:station_ceiling_wrl"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "jsblock:station_ceiling_wrl_pole",
+    "count": 32
+  }
+}

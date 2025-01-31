@@ -57,10 +57,10 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 
 	ext { // Expose to subproject
 		java_version =
-				(merged_mc_version as int) <= 11605 ? 8 :
-				(merged_mc_version as int) <= 11701 ? 16 :
-				(merged_mc_version as int) <= 12004 ? 17 :
-				21
+			(merged_mc_version as int) <= 11605 ? 8 :
+			(merged_mc_version as int) <= 11701 ? 16 :
+			(merged_mc_version as int) <= 12004 ? 17 :
+			21
 
 		lg_unicode = (mc_main as int) <= 19 ? rootProject.properties.legacy_unicode_font : rootProject.properties.modern_fallback_font
 		door_blockstate = (mc_main as int) <= 18 ? rootProject.properties.mc_door_118 : rootProject.properties.mc_door_119
@@ -70,9 +70,9 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 	/* Manifold support */
 	tasks.withType(JavaCompile).forEach {
 		it.options.compilerArgs += [ // Dependencies declared in subproject
-				"-Xplugin:Manifold",
-				"-AMC_VERSION=$merged_mc_version",
-				"-ALOADER=$project.properties.loader_name"
+			"-Xplugin:Manifold",
+			"-AMC_VERSION=$merged_mc_version",
+			"-ALOADER=$project.properties.loader_name"
 		]
 	}
 
@@ -87,30 +87,37 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 		inputs.property "minecraft_version", rootProject.minecraft_version
 		inputs.property "legacy_unicode", project.lg_unicode
 		inputs.property "mc_door_blockstate", project.door_blockstate
+		inputs.property "condition", merged_mc_version >= 12000 ? "any_of" : "alternative"
 
 		filesMatching('META-INF/mods.toml') {
 			expand (
-					"minecraft_version": minecraft_version,
-					"mod_version": project.full_mod_version
+				"minecraft_version": minecraft_version,
+				"mod_version": project.full_mod_version
 			)
 		}
 
 		filesMatching("fabric.mod.json") {
 			expand (
-					"version": project.full_mod_version,
-					"minecraft_version": rootProject.minecraft_version
+				"version": project.full_mod_version,
+				"minecraft_version": rootProject.minecraft_version
 			)
 		}
 
 		filesMatching("**/font/*.json") {
 			expand (
-					"legacy_unicode": project.lg_unicode,
+				"legacy_unicode": project.lg_unicode,
 			)
 		}
 
 		filesMatching("**/blockstates/auto_iron_door.json") {
 			expand (
-					"mc_door_blockstate": project.door_blockstate,
+				"mc_door_blockstate": project.door_blockstate,
+			)
+		}
+
+		filesMatching("**/loot_tables/blocks/*.json") {
+			expand(
+				"condition": merged_mc_version >= 12000 ? "any_of" : "alternative"
 			)
 		}
 	}
