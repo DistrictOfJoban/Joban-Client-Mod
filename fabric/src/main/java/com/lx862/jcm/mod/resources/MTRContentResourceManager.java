@@ -30,7 +30,7 @@ public class MTRContentResourceManager {
         ResourceManagerHelper.readDirectory("eyecandies", (identifier, inputStream) -> {
             if (identifier.getNamespace().equals(Init.MOD_ID_NTE) && identifier.getPath().endsWith(".json")) {
                 try(InputStreamReader isp = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-                    final JsonObject jsonObject = JsonParser.parseReader(isp).getAsJsonObject();
+                    final JsonObject jsonObject = new JsonParser().parse(isp).getAsJsonObject();
 
                     for(Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
                         final String id = entry.getKey();
