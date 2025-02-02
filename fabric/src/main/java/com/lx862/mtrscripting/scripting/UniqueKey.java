@@ -2,6 +2,7 @@ package com.lx862.mtrscripting.scripting;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /* A key that can uniquely identify a set of objects. */
 public class UniqueKey {
@@ -35,6 +36,6 @@ public class UniqueKey {
 
     @Override
     public String toString() {
-        return String.join(", ", Arrays.stream(objs).map(Object::toString).toList());
+        return Arrays.stream(objs).map(Object::toString).collect(Collectors.joining(", "));
     }
 }
