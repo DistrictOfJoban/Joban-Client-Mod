@@ -8,25 +8,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TrainScriptContext extends ScriptContext {
-    private final List<TrainDrawCall> carModelDrawCalls = new ArrayList<>();
-    private final List<TrainDrawCall> conectionModelDrawCalls = new ArrayList<>();
+    private final List<TrainModelDrawCall> carModelDrawCalls = new ArrayList<>();
+    private final List<TrainModelDrawCall> conectionModelDrawCalls = new ArrayList<>();
 
     public void drawCarModel(NewModel model, int carIndex, Matrices matrices) {
-        this.carModelDrawCalls.add(new TrainDrawCall(model, carIndex, matrices.getStoredMatrixTransformations().copy()));
+        this.carModelDrawCalls.add(new TrainModelDrawCall(model, carIndex, matrices.getStoredMatrixTransformations().copy()));
     }
 
     public void drawConnModel(NewModel model, int carIndex, Matrices matrices) {
-        this.conectionModelDrawCalls.add(new TrainDrawCall(model, carIndex, matrices.getStoredMatrixTransformations().copy()));
+        this.conectionModelDrawCalls.add(new TrainModelDrawCall(model, carIndex, matrices.getStoredMatrixTransformations().copy()));
     }
 
-    public List<TrainDrawCall> getCarModelDrawCalls() {
-        List<TrainDrawCall> drawCalls = new ArrayList<>(this.carModelDrawCalls);
+    public List<TrainModelDrawCall> getCarModelDrawCalls() {
+        List<TrainModelDrawCall> drawCalls = new ArrayList<>(this.carModelDrawCalls);
         this.carModelDrawCalls.clear();
         return drawCalls;
     }
 
-    public List<TrainDrawCall> getConnectionModelDrawCalls() {
-        List<TrainDrawCall> drawCalls = new ArrayList<>(this.conectionModelDrawCalls);
+    public List<TrainModelDrawCall> getConnectionModelDrawCalls() {
+        List<TrainModelDrawCall> drawCalls = new ArrayList<>(this.conectionModelDrawCalls);
         this.conectionModelDrawCalls.clear();
         return drawCalls;
     }

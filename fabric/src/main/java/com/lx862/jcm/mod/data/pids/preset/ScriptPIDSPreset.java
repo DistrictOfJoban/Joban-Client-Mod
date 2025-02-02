@@ -10,6 +10,7 @@ import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptInstance;
 import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
 import com.lx862.mtrscripting.scripting.ParsedScript;
+import com.lx862.mtrscripting.scripting.UniqueKey;
 import com.lx862.mtrscripting.scripting.base.ScriptInstance;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
@@ -51,7 +52,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         if(rootJsonObject.has("scriptTexts")) {
             JsonArray scriptTextArray = rootJsonObject.get("scriptTexts").getAsJsonArray();
             for(int i = 0; i < scriptTextArray.size(); i++) {
-                scripts.put(new Identifier(Constants.MOD_ID, "script_texts/" + id + "/line" + i), scriptTextArray.get(i).getAsString());
+                scripts.put(new Identifier(Constants.MOD_ID, "script_texts/jcm/pids/" + id + "/line" + i), scriptTextArray.get(i).getAsString());
             }
         }
 
@@ -69,7 +70,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
-        ScriptInstance<PIDSWrapper> scriptInstance = JCMClient.scriptManager.instanceManager.getInstance(getId(), pos.asLong(), () -> new PIDSScriptInstance(getId(), pos, parsedScripts));
+        ScriptInstance<PIDSWrapper> scriptInstance = JCMClient.scriptManager.getInstanceManager().getInstance(new UniqueKey("jcm", "pids", getId(), pos), () -> new PIDSScriptInstance(pos, parsedScripts));
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;

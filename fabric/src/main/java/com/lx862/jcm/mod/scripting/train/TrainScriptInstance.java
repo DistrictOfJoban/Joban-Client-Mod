@@ -12,10 +12,10 @@ import java.util.List;
 
 public class TrainScriptInstance extends ScriptInstance<PIDSWrapper> {
     private final VehicleExtension vehicleExtension;
-    public final List<TrainDrawCall> drawCalls;
+    public final List<TrainModelDrawCall> drawCalls;
 
-    public TrainScriptInstance(String id, VehicleExtension vehicleExtension, ParsedScript script) {
-        super(id, new PIDSScriptContext(), script);
+    public TrainScriptInstance(VehicleExtension vehicleExtension, ParsedScript script) {
+        super(new PIDSScriptContext(), script);
         this.vehicleExtension = vehicleExtension;
         this.drawCalls = new ArrayList<>();
     }

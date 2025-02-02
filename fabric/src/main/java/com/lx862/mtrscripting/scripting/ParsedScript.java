@@ -15,10 +15,10 @@ import java.util.concurrent.Future;
 
 public class ParsedScript {
     private static final int SCRIPT_RESET_TIME = 4000;
-    private final Scriptable scope;
     private final List<Function> createFunctions = new ArrayList<>();
     private final List<Function> renderFunctions = new ArrayList<>();
     private final List<Function> disposeFunctions = new ArrayList<>();
+    private final Scriptable scope;
     private long lastFailedTime = -1;
 
     public ParsedScript(String contextName, Map<Identifier, String> scripts) throws Exception {
@@ -53,6 +53,7 @@ public class ParsedScript {
                 final String scriptContent;
                 if(scriptEntry.getValue() == null) {
                     scriptContent = ResourceManagerHelper.readResource(scriptEntry.getKey());
+                    if(scriptContent.isEmpty()) throw new IllegalStateException(String.format("Cannot find script %s!", scriptLocation.getNamespace() + ":" + scriptLocation.getPath()));
                 } else {
                     scriptContent = scriptEntry.getValue();
                 }

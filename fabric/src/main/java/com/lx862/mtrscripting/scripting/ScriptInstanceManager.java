@@ -3,34 +3,30 @@ package com.lx862.mtrscripting.scripting;
 import com.lx862.mtrscripting.scripting.base.ScriptInstance;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 public class ScriptInstanceManager {
-    private final Map<Long, ScriptInstance> instances = new HashMap<>();
+    private final Map<UniqueKey, ScriptInstance> instances = new HashMap<>();
 
-    public <T> ScriptInstance<T> getInstance(String id, long position, Supplier<ScriptInstance<T>> getInstance) {
-        ScriptInstance<T> existingInstance = instances.get(position);
+    public <T> ScriptInstance<T> getInstance(UniqueKey id, Supplier<ScriptInstance<T>> getInstance) {
+        ScriptInstance<T> existingInstance = instances.get(id);
         if(existingInstance != null) {
-            if(!existingInstance.id.equals(id)) {
-                existingInstance.parsedScripts.invokeDisposeFunction(existingInstance, () -> {});
-                instances.remove(position);
-            } else {
-                return existingInstance;
-            }
+            return existingInstance;
         }
 
         ScriptInstance<T> newInstance = getInstance.get();
         newInstance.parsedScripts.invokeCreateFunction(newInstance, () -> {});
-        instances.put(position, newInstance);
+        instances.put(id, newInstance);
         return newInstance;
     }
 
     public void clearDeadInstance() {
         int count = 0;
-        for(Map.Entry<Long, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
+        for(Map.Entry<UniqueKey, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
             if(entry.getValue().isDead()) {
-                ScriptInstance instance = entry.getValue();
+                ScriptInstance<?> instance = entry.getValue();
                 count++;
                 instance.parsedScripts.invokeDisposeFunction(instance, () -> {
                     instances.remove(entry.getKey());
@@ -43,8 +39,7 @@ public class ScriptInstanceManager {
     }
 
     public void reset() {
-        for(Map.Entry<Long, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
-            ScriptInstance instance = entry.getValue();
+        for(ScriptInstance<?> instance : new HashMap<>(instances).values()) {
             instance.parsedScripts.invokeDisposeFunction(instance, () -> {});
         }
         instances.clear();
