@@ -6,6 +6,9 @@
   "mixins": [
     "modded.mtr.MixinTicketSystem"
   ],
+  "client": [
+    "modded.mtr.RenderEyeCandyMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   },
