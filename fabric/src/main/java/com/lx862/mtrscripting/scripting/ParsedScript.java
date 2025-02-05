@@ -40,7 +40,7 @@ public class ParsedScript {
             scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
 
             scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientUtil.class));
-            scope.put("NewModelManager", scope, new NativeJavaClass(scope, NewModelManager.class));
+            scope.put("ModelManager", scope, new NativeJavaClass(scope, ModelManager.class));
 
             ScriptingAPI.callOnParseScriptCallback(contextName, cx, scope);
 

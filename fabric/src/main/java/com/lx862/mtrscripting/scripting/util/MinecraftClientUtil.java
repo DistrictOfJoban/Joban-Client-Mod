@@ -35,7 +35,9 @@ public class MinecraftClientUtil {
     }
 
     public static void narrate(String message) {
-        Narrator.getNarrator().say(message, true);
+        MinecraftClient.getInstance().execute(() -> {
+            Narrator.getNarrator().say(message, true);
+        });
     }
 
     public static void displayMessage(String message, boolean actionBar) {

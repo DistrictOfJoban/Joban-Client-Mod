@@ -17,7 +17,7 @@ public class ScriptInstanceManager {
         }
 
         ScriptInstance<T> newInstance = getInstance.get();
-        newInstance.parsedScripts.invokeCreateFunction(newInstance, () -> {});
+        newInstance.getScript().invokeCreateFunction(newInstance, () -> {});
         instances.put(id, newInstance);
         return newInstance;
     }
@@ -28,7 +28,7 @@ public class ScriptInstanceManager {
             if(entry.getValue().isDead()) {
                 ScriptInstance<?> instance = entry.getValue();
                 count++;
-                instance.parsedScripts.invokeDisposeFunction(instance, () -> {
+                instance.getScript().invokeDisposeFunction(instance, () -> {
                     instances.remove(entry.getKey());
                 });
             }
@@ -40,7 +40,7 @@ public class ScriptInstanceManager {
 
     public void reset() {
         for(ScriptInstance<?> instance : new HashMap<>(instances).values()) {
-            instance.parsedScripts.invokeDisposeFunction(instance, () -> {});
+            instance.getScript().invokeDisposeFunction(instance, () -> {});
         }
         instances.clear();
     }

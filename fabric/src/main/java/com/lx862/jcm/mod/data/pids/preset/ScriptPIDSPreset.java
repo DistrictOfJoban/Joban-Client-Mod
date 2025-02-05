@@ -76,10 +76,11 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;
             PIDSWrapper pidsState = new PIDSWrapper(be, arrivals, width, height);
 
-            scriptInstance.updateWrapperObject(pidsState);
-            scriptInstance.parsedScripts.invokeRenderFunction(scriptInstance, () -> {
+            scriptInstance.setWrapperObject(pidsState);
+            scriptInstance.getScript().invokeRenderFunction(scriptInstance, () -> {
                 pidsScriptInstance.drawCalls.clear();
                 pidsScriptInstance.drawCalls.addAll(((PIDSScriptContext)scriptInstance.getScriptContext()).getDrawCalls());
+                scriptInstance.getScriptContext().reset();
             });
 
             graphicsHolder.translate(0, 0, -0.5);

@@ -2,9 +2,11 @@ package com.lx862.mtrscripting.scripting;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/ScriptResourceUtil.java#L44 */
 
+import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.mtrscripting.scripting.util.GraphicsTexture;
 
+import org.apache.commons.io.IOUtils;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Context;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
 import org.mtr.mapping.holder.Identifier;
@@ -18,6 +20,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.text.AttributedString;
 import java.util.Locale;
@@ -85,7 +88,15 @@ public class ScriptResourceUtil {
     }
 
     public static String readString(Identifier identifier) {
-        return ResourceManagerHelper.readResource(identifier);
+        String[] string = new String[]{null};
+        ResourceManagerHelper.readResource(identifier, (inputStream) -> {
+            try {
+                string[0] = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                JCMLogger.error("", e);
+            }
+        });
+        return string[0];
     }
 
     private static final Identifier NOTO_SANS_CJK_LOCATION = new Identifier("mtr", "font/noto-sans-cjk-tc-medium.otf");

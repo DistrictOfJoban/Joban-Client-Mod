@@ -7,11 +7,11 @@ import java.util.concurrent.Future;
 
 public abstract class ScriptInstance<T> {
     private final ScriptContext scriptContext;
+    private final ParsedScript parsedScripts;
+    public double lastExecuteTime = 0;
     protected T wrapperObject;
-    public final ParsedScript parsedScripts;
     public Scriptable state;
     public Future<?> scriptTask;
-    public double lastExecuteTime = 0;
 
     public ScriptInstance(ScriptContext scriptContext, ParsedScript script) {
         this.scriptContext = scriptContext;
@@ -22,7 +22,11 @@ public abstract class ScriptInstance<T> {
         return scriptContext;
     }
 
-    public void updateWrapperObject(T obj) {
+    public ParsedScript getScript() {
+        return parsedScripts;
+    }
+
+    public void setWrapperObject(T obj) {
         wrapperObject = obj;
     }
 

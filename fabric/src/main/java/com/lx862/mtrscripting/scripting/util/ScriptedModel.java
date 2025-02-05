@@ -12,10 +12,10 @@ import org.mtr.mod.render.StoredMatrixTransformations;
 import org.mtr.mod.resource.OptimizedModelWrapper;
 import org.mtr.mod.resource.StoredModelResourceBase;
 
-public class NewModel implements StoredModelResourceBase {
+public class ScriptedModel implements StoredModelResourceBase {
     private final ObjectObjectImmutablePair<OptimizedModelWrapper, DynamicVehicleModel> models;
 
-    public NewModel(Identifier location, boolean flipV) {
+    public ScriptedModel(Identifier location, boolean flipV) {
         this.models = load(location.getNamespace() + ":" + location.getPath(), "", flipV, 0, ResourceManagerHelper::readResource);
     }
 

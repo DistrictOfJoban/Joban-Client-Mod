@@ -52,7 +52,7 @@ public class MTRContentResourceManager {
                                 }
                             }
                         }
-                        ParsedScript ps = new ParsedScript("Eyecandy", scripts);
+                        ParsedScript ps = new ParsedScript("Block", scripts);
                         eyecandyScripts.put(id, ps);
                     }
                 } catch (Exception e) {

@@ -10,6 +10,7 @@
 
 **Changes:**
 - **Scripting**
+- - `Resources.readString` now returns null instead of an empty string if reading fails, just like previously in NTE
 - - Scripts that points to an invalid location will now error out in the console
 - Most blocks can now be crafted with a crafting recipe and drop items again, making it possible to use survival mode with JCM (Albeit still need improvements)
 - - This currently only covers blocks added in JCM v1, new blocks added in JCM v2 don't have a recipe nor item drops yet.

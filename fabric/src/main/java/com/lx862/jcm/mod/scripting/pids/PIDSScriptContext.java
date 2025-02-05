@@ -24,8 +24,11 @@ public class PIDSScriptContext extends ScriptContext {
     }
 
     public List<PIDSDrawCall> getDrawCalls() {
-        List<PIDSDrawCall> PIDSDrawCalls = new ArrayList<>(this.drawCalls);
+        return new ArrayList<>(this.drawCalls);
+    }
+
+    @Override
+    public void reset() {
         this.drawCalls.clear();
-        return PIDSDrawCalls;
     }
 }
