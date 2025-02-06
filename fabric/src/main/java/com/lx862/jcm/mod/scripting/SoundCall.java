@@ -1,12 +1,12 @@
 package com.lx862.jcm.mod.scripting;
 
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.SoundCategory;
-import org.mtr.mapping.holder.SoundEvent;
-import org.mtr.mapping.holder.World;
+import com.lx862.mtrscripting.api.ScriptResultCall;
+import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.SoundHelper;
+import org.mtr.mod.render.StoredMatrixTransformations;
 
-public class SoundCall {
+public class SoundCall extends ScriptResultCall {
     private final SoundEvent soundEvent;
     private final double x;
     private final double y;
@@ -23,7 +23,8 @@ public class SoundCall {
         this.pitch = pitch;
     }
 
-    public void draw(World world) {
+    @Override
+    public void run(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         world.playSound(x, y, z, soundEvent, SoundCategory.MASTER, volume, pitch, false);
     }
 }

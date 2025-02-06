@@ -1,12 +1,14 @@
 package com.lx862.jcm.mod.scripting.pids;
 
+import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.scripting.util.Matrices;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Vector3d;
+import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
-public abstract class PIDSDrawCall {
+public abstract class PIDSDrawCall extends ScriptResultCall {
     public StoredMatrixTransformations storedMatrixTransformations;
     public double x;
     public double y;
@@ -40,7 +42,8 @@ public abstract class PIDSDrawCall {
         ctx.draw(this);
     }
 
-    public void draw(GraphicsHolder graphicsHolder, Direction facing) {
+    @Override
+    public void run(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         graphicsHolder.push();
         storedMatrixTransformations.transform(graphicsHolder, Vector3d.getZeroMapped());
         graphicsHolder.translate(this.x, this.y, 0);

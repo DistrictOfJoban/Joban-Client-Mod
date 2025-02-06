@@ -1,4 +1,4 @@
-## (JCM v2.0.0 beta.7) for (MTR 4.0.0-beta.13) has been released!
+## (JCM v2.0.0 beta.7) for (MTR 4.0.0-beta.14) has been released!
 
 **New:**
 - **Scripting**
@@ -9,6 +9,7 @@
 - - The PIDS Variable `{worldPlayer}` is now implemented and displayed correctly again
 
 **Changes:**
+- Compatiiblity for MTR 4.0.0-beta.14
 - **Scripting**
 - - `Resources.readString` now returns null instead of an empty string if reading fails, just like previously in NTE
 - - Scripts that points to an invalid location will now error out in the console

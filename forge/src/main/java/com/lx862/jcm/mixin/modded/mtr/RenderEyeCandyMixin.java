@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.eyecandy.EyeCandyScriptContext;
 import com.lx862.jcm.mod.scripting.eyecandy.EyeCandyScriptInstance;
-import com.lx862.jcm.mod.scripting.eyecandy.ModelDrawCall;
+import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.scripting.ParsedScript;
 import com.lx862.mtrscripting.scripting.UniqueKey;
 import com.lx862.mtrscripting.scripting.base.ScriptInstance;
@@ -47,25 +47,23 @@ public class RenderEyeCandyMixin {
         BlockPos blockPos = blockEntity.getPos2();
         Direction facing = IBlock.getStatePropertySafe(blockEntity.getWorld2(), blockPos, BlockEyeCandy.FACING);
 
-        StoredMatrixTransformations blockStoredMatrixTransformations = new StoredMatrixTransformations(0.5 + (double)blockEntity.getPos2().getX(), (double)blockEntity.getPos2().getY(), 0.5 + (double)blockEntity.getPos2().getZ());
+        StoredMatrixTransformations blockStoredMatrixTransformations = new StoredMatrixTransformations(0.5 + (double)blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), 0.5 + (double)blockEntity.getPos2().getZ());
+        StoredMatrixTransformations storedMatrixTransformations = blockStoredMatrixTransformations.copy();
+        storedMatrixTransformations.add((graphicsHolderNew) -> {
+            graphicsHolderNew.translate(blockEntity.getTranslateX(), blockEntity.getTranslateY(), (double)blockEntity.getTranslateZ());
+            graphicsHolderNew.rotateYDegrees(180.0F - facing.asRotation());
+            graphicsHolderNew.rotateXDegrees(blockEntity.getRotateX() + 180.0F);
+            graphicsHolderNew.rotateYDegrees(blockEntity.getRotateY());
+            graphicsHolderNew.rotateZDegrees(blockEntity.getRotateZ());
+        });
 
-        for(ModelDrawCall drawCall : new ArrayList<>(eyeCandyScriptInstance.drawCalls)) {
+        for(ScriptResultCall drawCall : new ArrayList<>(eyeCandyScriptInstance.drawCalls)) {
             if(drawCall == null) continue;
-
-            StoredMatrixTransformations storedMatrixTransformations = blockStoredMatrixTransformations.copy();
-            if(drawCall.getTransformation() != null) {
-                storedMatrixTransformations.add(drawCall.getTransformation());
-            }
-
-            storedMatrixTransformations.add((graphicsHolderNew) -> {
-                graphicsHolderNew.translate(blockEntity.getTranslateX(), blockEntity.getTranslateY(), (double)blockEntity.getTranslateZ());
-                graphicsHolderNew.rotateYDegrees(180.0F - facing.asRotation());
-                graphicsHolderNew.rotateXDegrees(blockEntity.getRotateX() + 180.0F);
-                graphicsHolderNew.rotateYDegrees(blockEntity.getRotateY());
-                graphicsHolderNew.rotateZDegrees(blockEntity.getRotateZ());
-            });
-
-            drawCall.draw(storedMatrixTransformations, light);
+            drawCall.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
+        }
+        for(ScriptResultCall soundCall : new ArrayList<>(eyeCandyScriptInstance.soundCalls)) {
+            if(soundCall == null) continue;
+            soundCall.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
         }
         ci.cancel();
     }

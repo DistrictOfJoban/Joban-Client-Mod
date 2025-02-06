@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.eyecandy;
 
 import com.lx862.jcm.mod.scripting.SoundCall;
+import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.scripting.ParsedScript;
 import com.lx862.mtrscripting.scripting.base.ScriptInstance;
 import org.mtr.mod.block.BlockEyeCandy;
@@ -10,8 +11,8 @@ import java.util.List;
 
 public class EyeCandyScriptInstance extends ScriptInstance<BlockEyeCandy.BlockEntity> {
     private final BlockEyeCandy.BlockEntity be;
-    public final List<ModelDrawCall> drawCalls;
-    public final List<SoundCall> soundCalls;
+    public final List<ScriptResultCall> drawCalls;
+    public final List<ScriptResultCall> soundCalls;
 
     public EyeCandyScriptInstance(EyeCandyScriptContext context, BlockEyeCandy.BlockEntity be, ParsedScript script) {
         super(context, script);

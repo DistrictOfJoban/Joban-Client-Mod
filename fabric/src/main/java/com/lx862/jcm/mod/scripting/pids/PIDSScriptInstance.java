@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.pids;
 
+import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.scripting.ParsedScript;
 import com.lx862.mtrscripting.scripting.base.ScriptInstance;
 import org.mtr.mapping.holder.BlockEntity;
@@ -11,7 +12,7 @@ import java.util.List;
 
 public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> {
     private final BlockEntity be;
-    public final List<PIDSDrawCall> drawCalls;
+    public final List<ScriptResultCall> drawCalls;
 
     public PIDSScriptInstance(BlockPos pos, ParsedScript script) {
         super(new PIDSScriptContext(), script);

@@ -5,10 +5,10 @@ import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.scripting.pids.PIDSDrawCall;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptInstance;
 import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
+import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.scripting.ParsedScript;
 import com.lx862.mtrscripting.scripting.UniqueKey;
 import com.lx862.mtrscripting.scripting.base.ScriptInstance;
@@ -20,6 +20,7 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.render.StoredMatrixTransformations;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -84,11 +85,11 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             });
 
             graphicsHolder.translate(0, 0, -0.5);
-            for(PIDSDrawCall PIDSDrawCall : new ArrayList<>(pidsScriptInstance.drawCalls)) {
-                if(PIDSDrawCall == null) continue;
+            for(ScriptResultCall resultCalls : new ArrayList<>(pidsScriptInstance.drawCalls)) {
+                if(resultCalls == null) continue;
                 graphicsHolder.translate(0, 0, -0.02);
                 graphicsHolder.push();
-                PIDSDrawCall.draw(graphicsHolder, facing);
+                resultCalls.run(world, graphicsHolder, new StoredMatrixTransformations(), facing, MAX_RENDER_LIGHT);
                 graphicsHolder.pop();
             }
         }
