@@ -1,14 +1,14 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.entity.PIDS1ABlockEntity;
-import org.mtr.mapping.mapper.BlockHelper;
-import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
+import org.mtr.mod.Blocks;
+import org.mtr.mod.block.IBlock;
 
 public class PIDS1ABlock extends JCMPIDSBlock {
     public PIDS1ABlock() {
-        super(BlockHelper.createBlockSettings(true, (state) -> 5).nonOpaque());
+        super(Blocks.createDefaultBlockSettings(true, (state) -> 5).nonOpaque());
     }
 
     @Override

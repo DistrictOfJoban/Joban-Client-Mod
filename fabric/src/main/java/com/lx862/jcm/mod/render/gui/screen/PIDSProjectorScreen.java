@@ -2,10 +2,15 @@ package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.network.block.PIDSProjectorUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.render.gui.widget.*;
+import com.lx862.jcm.mod.render.gui.widget.CategoryItem;
+import com.lx862.jcm.mod.render.gui.widget.DoubleTextField;
+import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
+import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import org.mtr.mapping.holder.*;
+import org.mtr.mapping.holder.BlockPos;
+import org.mtr.mapping.holder.ClickableWidget;
+import org.mtr.mapping.holder.MutableText;
 
 public class PIDSProjectorScreen extends PIDSScreen {
 

@@ -3,8 +3,8 @@ package com.lx862.jcm.mod.block;
 import com.lx862.jcm.mod.block.base.Vertical2Block;
 import com.lx862.jcm.mod.block.behavior.EnquiryMachineBehavior;
 import com.lx862.jcm.mod.data.EnquiryScreenType;
-import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
+import org.mtr.mod.block.IBlock;
 
 public class MTREnquiryMachine extends Vertical2Block implements EnquiryMachineBehavior {
     public MTREnquiryMachine(BlockSettings settings) {

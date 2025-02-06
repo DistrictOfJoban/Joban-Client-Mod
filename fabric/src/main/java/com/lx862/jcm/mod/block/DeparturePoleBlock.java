@@ -1,8 +1,8 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.DirectionalBlock;
-import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
+import org.mtr.mod.block.IBlock;
 
 public class DeparturePoleBlock extends DirectionalBlock {
 

@@ -1,9 +1,9 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.entity.LCDPIDSBlockEntity;
-import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
+import org.mtr.mod.block.IBlock;
 
 public class LCDPIDSBlock extends JCMPIDSBlock {
 
