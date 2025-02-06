@@ -37,7 +37,7 @@
 	"depends": {
 		"fabricloader": ">=0.15.0",
 		"minecraft": "~${minecraft_version}",
-		"mtr": ">=4.0.0-beta.12",
+		"mtr": ">=4.0.0-beta.14",
 		"fabric": "*"
 	},
 	"custom": {

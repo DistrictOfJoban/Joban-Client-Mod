@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.data.pids;
 
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
-import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.data.pids.preset.ScriptPIDSPreset;
@@ -11,6 +10,7 @@ import com.lx862.jcm.mod.scripting.pids.TextureWrapper;
 import com.lx862.jcm.mod.scripting.util.MTRUtil;
 import com.lx862.jcm.mod.scripting.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.mtrscripting.api.ScriptingAPI;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import org.mtr.mod.Keys;
 import org.mtr.mod.client.MinecraftClientData;

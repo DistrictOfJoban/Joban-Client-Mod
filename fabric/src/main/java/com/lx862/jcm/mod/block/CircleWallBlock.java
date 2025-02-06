@@ -2,8 +2,8 @@ package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.DirectionalBlock;
 import com.lx862.jcm.mod.registry.Blocks;
-import org.mtr.mod.block.IBlock;
 import org.mtr.mapping.holder.*;
+import org.mtr.mod.block.IBlock;
 
 public class CircleWallBlock extends DirectionalBlock {
     public CircleWallBlock(BlockSettings settings) {
