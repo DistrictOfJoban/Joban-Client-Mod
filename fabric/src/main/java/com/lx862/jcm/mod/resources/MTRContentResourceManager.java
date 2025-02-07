@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.scripting.ParsedScript;
+import org.apache.commons.io.FilenameUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
@@ -30,36 +31,48 @@ public class MTRContentResourceManager {
         ResourceManagerHelper.readDirectory("eyecandies", (identifier, inputStream) -> {
             if (identifier.getNamespace().equals(Init.MOD_ID_NTE) && identifier.getPath().endsWith(".json")) {
                 try(InputStreamReader isp = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-                    final JsonObject jsonObject = new JsonParser().parse(isp).getAsJsonObject();
+                    final JsonObject rootObject = new JsonParser().parse(isp).getAsJsonObject();
 
-                    for(Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
-                        final String id = entry.getKey();
-                        final JsonObject entryObject = entry.getValue().getAsJsonObject();
+                    if(rootObject.has("model")) {
+                        tryRegisterScript(FilenameUtils.getBaseName(identifier.getPath()), rootObject);
+                    } else {
+                        for (Map.Entry<String, JsonElement> entry : rootObject.entrySet()) {
+                            final String id = entry.getKey();
+                            final JsonObject entryObject = entry.getValue().getAsJsonObject();
 
-                        final Map<Identifier, String> scripts = new Object2ObjectArrayMap<>();
-                        if (entryObject.has("scriptFiles") || jsonObject.has("scriptTexts")) {
-                            if(entryObject.has("scriptFiles")) {
-                                JsonArray scriptFilesArray = entryObject.get("scriptFiles").getAsJsonArray();
-                                for(int i = 0; i < scriptFilesArray.size(); i++) {
-                                    scripts.put(new Identifier(scriptFilesArray.get(i).getAsString()), null);
-                                }
-                            }
-
-                            if(entryObject.has("scriptTexts")) {
-                                JsonArray scriptTextArray = entryObject.get("scriptTexts").getAsJsonArray();
-                                for(int i = 0; i < scriptTextArray.size(); i++) {
-                                    scripts.put(new Identifier(Constants.MOD_ID, "script_texts/eyecandy/" + id + "/line" + i), scriptTextArray.get(i).getAsString());
-                                }
-                            }
+                            tryRegisterScript(id, entryObject);
                         }
-                        ParsedScript ps = new ParsedScript("Block", scripts);
-                        eyecandyScripts.put(id, ps);
                     }
                 } catch (Exception e) {
                     JCMLogger.error("", e);
                 }
             }
         });
+    }
+
+    private static void tryRegisterScript(String id, JsonObject jsonObject) throws Exception {
+        final Map<Identifier, String> scripts = new Object2ObjectArrayMap<>();
+
+        if (jsonObject.has("scriptFiles") || jsonObject.has("scriptTexts")) {
+            if(jsonObject.has("scriptFiles")) {
+                JsonArray scriptFilesArray = jsonObject.get("scriptFiles").getAsJsonArray();
+                for(int i = 0; i < scriptFilesArray.size(); i++) {
+                    scripts.put(new Identifier(scriptFilesArray.get(i).getAsString()), null);
+                }
+            }
+
+            if(jsonObject.has("scriptTexts")) {
+                JsonArray scriptTextArray = jsonObject.get("scriptTexts").getAsJsonArray();
+                for(int i = 0; i < scriptTextArray.size(); i++) {
+                    scripts.put(new Identifier(Constants.MOD_ID, "script_texts/eyecandy/" + id + "/line" + i), scriptTextArray.get(i).getAsString());
+                }
+            }
+        }
+
+        if(!scripts.isEmpty()) {
+            ParsedScript ps = new ParsedScript("Block", scripts);
+            eyecandyScripts.put(id, ps);
+        }
     }
 
     public static ParsedScript getEyecandyScript(String id) {
