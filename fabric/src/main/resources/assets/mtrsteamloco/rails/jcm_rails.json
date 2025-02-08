@@ -1,0 +1,8 @@
+{
+    "jcm_circular_tunnel": {
+        "name": "JCM Circular Tunnel",
+        "model": "mtrsteamloco:rails/circular_tunnel/circular_tunnel.obj",
+        "flipV": true,
+        "repeatInterval": 1
+    }
+}

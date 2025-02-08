@@ -16,9 +16,9 @@ import java.util.function.Consumer;
  * Class to handle McMeta animated textures, as I couldn't figure out how MC does it :D
  */
 public class McMetaManager {
-    private static final HashMap<Identifier, McMeta> mcMetaList = new HashMap<>();
+    private final HashMap<Identifier, McMeta> mcMetaList = new HashMap<>();
 
-    public static void reset() {
+    public void reset() {
         mcMetaList.clear();
     }
 
@@ -26,7 +26,7 @@ public class McMetaManager {
      * Try to load an animated mcmeta file if it exists, will do nothing otherwise
      * @param imagePath The identifier path that leads to the png file
      */
-    public static void load(Identifier imagePath) {
+    public void load(Identifier imagePath) {
         if(mcMetaList.containsKey(imagePath)) return;
         Identifier mcmetaFile = new Identifier(imagePath.getNamespace(), imagePath.getPath() + ".mcmeta");
 
@@ -47,10 +47,9 @@ public class McMetaManager {
     }
 
     /**
-     * Call to increment tick counter to update animated mcmeta texture.<br>
-     * Only 1 party should call this at the end of each game tick.
+     * Call to increment tick counter to update animated mcmeta texture.
      */
-    public static void tick() {
+    public void tick() {
         for(McMeta mcMeta : mcMetaList.values()) {
             mcMeta.tick();
         }
@@ -61,7 +60,7 @@ public class McMetaManager {
      * @param id Identifier of the texture
      * @return The starting and the end V, default to 0.0 and 1.0 (Full Texture) if the texture is not a mcmeta animation loaded to this manager
      */
-    public static Pair<Float, Float> getUV(Identifier id) {
+    public Pair<Float, Float> getUV(Identifier id) {
         if(!mcMetaList.containsKey(id)) return new Pair<>(0F, 1F);
         return mcMetaList.get(id).getUV();
     }

@@ -13,7 +13,6 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextTranslationMode;
-import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -71,7 +70,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         final int textColor = rootJsonObject.has("color") ? (int)Long.parseLong(rootJsonObject.get("color").getAsString(), 16) : ARGB_BLACK;
 
         if(background == null) throw new IllegalArgumentException("A JSON PIDS Preset must have background set!");
-        McMetaManager.load(background);
+        JCMClient.getMcMetaManager().load(background);
 
         final boolean[] rowHidden;
         List<String> blackList = new ArrayList<>();

@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render;
 
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.Pair;
-import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -15,7 +15,7 @@ public interface GuiHelper {
     int MAX_BUTTON_WIDTH = 375;
 
     static void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height) {
-        Pair<Float, Float> uv = McMetaManager.getUV(identifier);
+        Pair<Float, Float> uv = JCMClient.getMcMetaManager().getUV(identifier);
         drawTexture(guiDrawing, identifier, x, y, width, height, 0, uv.getLeft(), 1, uv.getRight());
     }
 

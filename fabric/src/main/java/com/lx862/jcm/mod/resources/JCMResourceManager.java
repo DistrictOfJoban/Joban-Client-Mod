@@ -4,9 +4,9 @@ import com.google.common.base.Charsets;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.render.text.TextRenderingManager;
-import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
@@ -16,8 +16,8 @@ public class JCMResourceManager {
     private static final Identifier CUSTOM_RESOURCE_PATH = Constants.id("joban_custom_resources.json");
 
     public static void reload() {
+        JCMClient.getMcMetaManager().reset();
         TextRenderingManager.initialize();
-        McMetaManager.reset();
         PIDSManager.reset();
         parseCustomResources();
     }

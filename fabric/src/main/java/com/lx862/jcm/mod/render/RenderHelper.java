@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render;
 
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.Pair;
-import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
@@ -50,7 +50,7 @@ public interface RenderHelper {
      * Use this method if you need support for drawing animated McMeta textures
      */
     static void drawTexture(GraphicsHolder graphicsHolder, Identifier textureId, float x, float y, float z, float width, float height, Direction facing, int color, int light) {
-        Pair<Float, Float> uv = McMetaManager.getUV(textureId);
+        Pair<Float, Float> uv = JCMClient.getMcMetaManager().getUV(textureId);
         drawTextureRaw(graphicsHolder, x, y, z, x + width, y + height, z, 0, uv.getLeft(), 1, uv.getRight(), facing, color, light);
     }
 

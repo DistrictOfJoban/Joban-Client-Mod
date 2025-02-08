@@ -20,7 +20,7 @@ public class Events {
         });
 
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerStartClientTick(() -> {
-            McMetaManager.tick();
+            JCMClient.getMcMetaManager().tick();
             JCMClient.scriptManager.tick();
         });
     }
