@@ -6,7 +6,9 @@ import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.mtrscripting.scripting.util.GraphicsTexture;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import org.apache.commons.io.IOUtils;
+import org.mtr.mapping.holder.CompoundTag;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Context;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
 import org.mtr.mapping.holder.Identifier;
@@ -188,7 +190,16 @@ public class ScriptResourceUtil {
                 ScriptManager.LOGGER.error("[Scripting] Failed to read font:", e);
             }
         });
+
         return result[0];
+    }
+
+    public static CompoundTag readNbtString(String str) throws CommandSyntaxException {
+        #if LOADER == "forge"
+            return new CompoundTag(net.minecraft.nbt.TagParser.parseTag(str));
+        #else
+            return new CompoundTag(net.minecraft.nbt.StringNbtReader.parse(str));
+        #endif
     }
 
     public static String getAddonVersion(String modid) {
