@@ -6,9 +6,7 @@ import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.mtrscripting.scripting.util.GraphicsTexture;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.mapping.holder.CompoundTag;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Context;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
@@ -196,7 +194,7 @@ public class ScriptResourceUtil {
     }
 
     public static CompoundTag readNbtString(String str) {
-        throw new NotImplementedException();
+        throw new IllegalArgumentException("Method not implemented in JCM");
 //        #if LOADER == "forge"
 //            return new CompoundTag(net.minecraft.nbt.TagParser.parseTag(str));
 //        #else
