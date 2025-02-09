@@ -7,7 +7,6 @@ import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.data.pids.preset.ScriptPIDSPreset;
 import com.lx862.jcm.mod.scripting.pids.TextWrapper;
 import com.lx862.jcm.mod.scripting.pids.TextureWrapper;
-import com.lx862.jcm.mod.scripting.util.MTRUtil;
 import com.lx862.jcm.mod.scripting.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.api.ScriptingAPI;
@@ -59,7 +58,6 @@ public class PIDSManager {
 
         ScriptingAPI.onParseScript((contextName, context, scriptable) -> {
             // On behalf of MTR
-            scriptable.put("MTRUtil", scriptable, new NativeJavaClass(scriptable, MTRUtil.class));
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
 
