@@ -1,10 +1,10 @@
-## (JCM v2.0.0 beta.8) for (MTR 4.0.0-beta.14) has been released!
+## (JCM v2.0.0 beta.8) for (MTR 4.0.0-beta.15) has been released!
 
 **Added:**
 - Add JCM Circular Tunnel as a MTR rail model
 
 **Fixes:**
-- Scripting
+- **Scripting**
 - - Fix error when reading root-level decoration object json.
 - - Fix eyecandy `scriptTexts` not working.
 
