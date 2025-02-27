@@ -163,9 +163,9 @@ public class JsonPIDSPreset extends PIDSPresetBase {
             double totalWidth = screenWidth;
             totalWidth -= PIDS_MARGIN;
             totalWidth -= PIDS_MARGIN;
-            totalWidth -= (22 * ARRIVAL_TEXT_SCALE);
+            totalWidth -= (28 * ARRIVAL_TEXT_SCALE);
             if(platformShown) {
-                totalWidth -= (22 * ARRIVAL_TEXT_SCALE);
+                totalWidth -= (16 * ARRIVAL_TEXT_SCALE);
             }
 
 
