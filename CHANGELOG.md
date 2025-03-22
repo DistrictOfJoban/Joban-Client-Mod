@@ -1,13 +1,20 @@
 ## JCM v2.0.0 for MTR 4.0 has been released!
 
 **Changes:**
-- As it is expected that most if not all scripts needs to be ported, some dummy/compatibility functions has been removed:
-- - `Resources.getNTEProtoVersion()`
-- - `Resources.getNTEVersionInt()`
-- - `Resources.getNTEVersion()`
-- - `Resources.getMTRVersion()`
-- - - Replacement: `getAddonVersion("mtr")`
-- - `Resources.readNbtString()`
+- **Scripting**
+- - As it is expected that most if not all scripts needed to be ported, some dummy/compatibility functions has been removed:
+- - - `Resources.getNTEProtoVersion()`
+- - - `Resources.getNTEVersionInt()`
+- - - `Resources.getNTEVersion()`
+- - - `Resources.getMTRVersion()`
+- - - `Resources.readNbtString()`
+- - - - Replacement: `Resources.getAddonVersion("mtr")`
+- - To prevent misuse of scripts, script may now only run java method from the following packages:
+- - - `com.lx862.jcm.mod.scripting.*`
+- - - `org.mtr.*`
+- - - `java.awt.*`
+- - - `java.lang.*`
+- - - `sun.java2d.*`
 
 **Fixes:**
 - **JSON PIDS Preset**

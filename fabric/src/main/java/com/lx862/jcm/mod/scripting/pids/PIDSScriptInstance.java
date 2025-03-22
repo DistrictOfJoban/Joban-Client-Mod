@@ -14,8 +14,9 @@ public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> {
     private final BlockEntity be;
     public final List<ScriptResultCall> drawCalls;
 
-    public PIDSScriptInstance(BlockPos pos, ParsedScript script) {
+    public PIDSScriptInstance(BlockPos pos, ParsedScript script, PIDSWrapper wrapperObject) {
         super(new PIDSScriptContext(), script);
+        setWrapperObject(wrapperObject);
         this.be = MinecraftClient.getInstance().getWorldMapped().getBlockEntity(pos);
         this.drawCalls = new ArrayList<>();
     }

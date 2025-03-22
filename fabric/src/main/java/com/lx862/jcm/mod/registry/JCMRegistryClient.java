@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.data.pids.PIDSManager;
+import com.lx862.jcm.mod.scripting.JCMScriptManager;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
@@ -38,7 +38,7 @@ public class JCMRegistryClient {
         Blocks.registerClient();
         BlockEntityRenderers.registerClient();
         Networking.registerClient();
-        PIDSManager.registerScripting();
+        JCMScriptManager.registerScripting();
         REGISTRY_CLIENT.init();
     }
 }

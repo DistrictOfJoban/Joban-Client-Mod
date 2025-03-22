@@ -1,19 +1,11 @@
 package com.lx862.jcm.mod.data.pids;
 
 import com.google.gson.JsonObject;
-import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.data.pids.preset.ScriptPIDSPreset;
-import com.lx862.jcm.mod.scripting.pids.TextWrapper;
-import com.lx862.jcm.mod.scripting.pids.TextureWrapper;
-import com.lx862.jcm.mod.scripting.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
-import com.lx862.mtrscripting.api.ScriptingAPI;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import org.mtr.mod.Keys;
-import org.mtr.mod.client.MinecraftClientData;
-import vendor.com.lx862.jcm.org.mozilla.javascript.NativeJavaClass;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,27 +35,6 @@ public class PIDSManager {
                 }
             } catch (Exception ex) {
                 JCMLogger.error("Failed to parse PIDS Preset \"" + presetId + "\"!", ex);
-            }
-        });
-    }
-
-    public static void registerScripting() {
-        String mtrModVersion = null;
-        try {
-            mtrModVersion = (String) Keys.class.getField("MOD_VERSION").get(null);
-        } catch (ReflectiveOperationException ignored) {
-        }
-        ScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
-        ScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);
-
-        ScriptingAPI.onParseScript((contextName, context, scriptable) -> {
-            // On behalf of MTR
-            scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
-            scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
-
-            if(contextName.equals("PIDS")) {
-                scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));
-                scriptable.put("Texture", scriptable, new NativeJavaClass(scriptable, TextureWrapper.class));
             }
         });
     }

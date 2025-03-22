@@ -2,6 +2,7 @@ package com.lx862.mtrscripting.scripting;
 
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.mtrscripting.api.ScriptingAPI;
+import com.lx862.mtrscripting.scripting.base.MTRClassShutter;
 import com.lx862.mtrscripting.scripting.base.ScriptInstance;
 import com.lx862.mtrscripting.scripting.util.*;
 import vendor.com.lx862.jcm.org.mozilla.javascript.*;
@@ -25,6 +26,7 @@ public class ParsedScript {
         try {
             Context cx = Context.enter();
             cx.setLanguageVersion(Context.VERSION_ES6);
+            cx.setClassShutter(ScriptManager.CLASS_SHUTTER);
             scope = new ImporterTopLevel(cx);
 
             scope.put("include", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("includeScript", Object.class), "includeScript"));
@@ -91,12 +93,14 @@ public class ParsedScript {
             return null;
         }
 
+        // TODO: Remove JCMClient dependency
         return JCMClient.scriptManager.submitScriptTask(() -> {
             TimingUtil.prepareForScript(scriptInstance);
             try {
                 Scriptable scope = getScope();
                 Context cx = Context.enter();
                 cx.setLanguageVersion(Context.VERSION_ES6);
+                cx.setClassShutter(ScriptManager.CLASS_SHUTTER);
                 if(scriptInstance.state == null) scriptInstance.state = cx.newObject(scope);
 
                 for(Function func : functionList) {
