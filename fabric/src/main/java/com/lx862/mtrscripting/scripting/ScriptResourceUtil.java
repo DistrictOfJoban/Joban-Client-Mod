@@ -193,37 +193,8 @@ public class ScriptResourceUtil {
         return result[0];
     }
 
-    public static CompoundTag readNbtString(String str) {
-        throw new IllegalArgumentException("Method not implemented in JCM");
-//        #if LOADER == "forge"
-//            return new CompoundTag(net.minecraft.nbt.TagParser.parseTag(str));
-//        #else
-//            return new CompoundTag(net.minecraft.nbt.StringNbtReader.parse(str));
-//        #endif
-    }
-
     public static String getAddonVersion(String modid) {
         return ScriptingAPI.getAddonVersion(modid);
-    }
-
-    @Deprecated
-    public static String getMTRVersion() {
-        return getAddonVersion("mtr"); // This assumes MTR have registered the version
-    }
-
-    @Deprecated
-    public static String getNTEVersion() { // Hardcoded for backward compat
-        return "0.5.2+1.19.2";
-    }
-
-    @Deprecated
-    public static int getNTEVersionInt() { // Hardcoded for backward compat
-        return 502;
-    }
-
-    @Deprecated
-    public static int getNTEProtoVersion() { // Hardcoded for backward compat
-        return 2;
     }
 
     private static Identifier resolveRelativePath(Identifier baseFile, String relative) {

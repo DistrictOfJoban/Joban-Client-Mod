@@ -1,4 +1,13 @@
-## (JCM v2.0.0-beta.9) for (MTR 4.0.0-beta.15) has been released!
+## JCM v2.0.0 for MTR 4.0 has been released!
+
+**Changes:**
+- As it is expected that most if not all scripts needs to be ported, some dummy/compatibility functions has been removed:
+- - `Resources.getNTEProtoVersion()`
+- - `Resources.getNTEVersionInt()`
+- - `Resources.getNTEVersion()`
+- - `Resources.getMTRVersion()`
+- - - Replacement: `getAddonVersion("mtr")`
+- - `Resources.readNbtString()`
 
 **Fixes:**
 - **JSON PIDS Preset**
