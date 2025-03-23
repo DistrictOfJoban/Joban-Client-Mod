@@ -69,10 +69,15 @@ public class PIDSScreen extends BlockConfigScreen {
 
         this.choosePlatformButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.change_platform"), (btn) -> {
             final Station station = InitClient.findStation(blockPos);
-            if (station != null) {
-                final ObjectImmutableList<DashboardListItem> platformsForList = getPlatformsForList(station);
-                MinecraftClient.getInstance().openScreen(new Screen(new DashboardListSelectorScreen(new ObjectImmutableList<>(platformsForList), filteredPlatforms, false, false, this)));
+            final ObjectImmutableList<DashboardListItem> platformsForList;
+            if(station != null) {
+                platformsForList = getPlatformsForList(new ObjectArrayList<>(station.savedRails));
+            } else {
+                ObjectArrayList<Platform> nearbyPlatforms = new ObjectArrayList<>();
+                InitClient.findClosePlatform(blockPos.down(4), 5, nearbyPlatforms::add);
+                platformsForList = getPlatformsForList(nearbyPlatforms);
             }
+            MinecraftClient.getInstance().openScreen(new Screen(new DashboardListSelectorScreen(new ObjectImmutableList<>(platformsForList), filteredPlatforms, false, false, this)));
         });
 
         this.presetId = presetId;

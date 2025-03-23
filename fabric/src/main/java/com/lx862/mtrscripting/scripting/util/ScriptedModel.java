@@ -29,6 +29,10 @@ public class ScriptedModel implements StoredModelResourceBase {
         return models.right();
     }
 
+    @Override
+    public void preload() {
+    }
+
     public void draw(StoredMatrixTransformations storedMatrixTransformations, int light) {
         final DynamicVehicleModel dynamicVehicleModel = getDynamicVehicleModel();
         OptimizedModelWrapper optimizedModelWrapper = getOptimizedModel();
