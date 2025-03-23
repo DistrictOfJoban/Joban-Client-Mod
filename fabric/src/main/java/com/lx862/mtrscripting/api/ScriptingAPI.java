@@ -59,7 +59,6 @@ public class ScriptingAPI {
         for(String cs : allowedScriptClasses) {
             if(str.startsWith(cs)) return true;
         }
-        System.out.println("Blocked " + str);
         return false;
     }
 }
