@@ -19,6 +19,7 @@ public class JCMScriptManager {
         ScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
         ScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);
 
+        ScriptingAPI.allowClass("vendor.*");
         ScriptingAPI.allowClass("com.lx862.jcm.mod.scripting");
         ScriptingAPI.allowClass("org.mtr");
         ScriptingAPI.allowClass("java.awt");
