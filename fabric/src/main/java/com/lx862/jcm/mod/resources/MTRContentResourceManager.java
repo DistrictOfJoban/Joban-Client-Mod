@@ -5,8 +5,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.util.JCMLogger;
-import com.lx862.mtrscripting.scripting.ParsedScript;
+import com.lx862.mtrscripting.core.ParsedScript;
 import org.apache.commons.io.FilenameUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import org.mtr.mapping.holder.Identifier;
@@ -70,7 +71,7 @@ public class MTRContentResourceManager {
         }
 
         if(!scripts.isEmpty()) {
-            ParsedScript ps = new ParsedScript("Block", scripts);
+            ParsedScript ps = new ParsedScript(JCMClient.scriptManager,"Block", scripts);
             eyecandyScripts.put(id, ps);
         }
     }

@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.scripting.eyecandy;
 
 import com.lx862.mtrscripting.api.ScriptResultCall;
-import com.lx862.mtrscripting.scripting.util.ScriptedModel;
+import com.lx862.mtrscripting.util.ScriptedModel;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;

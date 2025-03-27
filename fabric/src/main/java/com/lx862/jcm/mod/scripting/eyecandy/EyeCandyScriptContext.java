@@ -1,9 +1,9 @@
 package com.lx862.jcm.mod.scripting.eyecandy;
 
 import com.lx862.jcm.mod.scripting.SoundCall;
-import com.lx862.mtrscripting.scripting.base.ScriptContext;
-import com.lx862.mtrscripting.scripting.util.Matrices;
-import com.lx862.mtrscripting.scripting.util.ScriptedModel;
+import com.lx862.mtrscripting.core.ScriptContext;
+import com.lx862.mtrscripting.util.Matrices;
+import com.lx862.mtrscripting.util.ScriptedModel;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mod.block.BlockEyeCandy;
 

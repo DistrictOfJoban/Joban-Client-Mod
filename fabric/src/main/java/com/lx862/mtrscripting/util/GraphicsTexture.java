@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.scripting.util;
+package com.lx862.mtrscripting.util;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.mtr.mapping.holder.*;
@@ -12,7 +12,6 @@ import static com.lx862.jcm.mod.render.text.TextureTextRenderer.toAbgr;
 
 @SuppressWarnings("unused")
 public class GraphicsTexture implements Closeable {
-
     private final NativeImageBackedTexture dynamicTexture;
     public final Identifier identifier;
 

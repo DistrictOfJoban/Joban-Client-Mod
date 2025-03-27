@@ -1,10 +1,8 @@
-package com.lx862.mtrscripting.scripting;
+package com.lx862.mtrscripting.core;
 
-import com.lx862.jcm.mod.JCMClient;
 import com.lx862.mtrscripting.api.ScriptingAPI;
-import com.lx862.mtrscripting.scripting.base.MTRClassShutter;
-import com.lx862.mtrscripting.scripting.base.ScriptInstance;
-import com.lx862.mtrscripting.scripting.util.*;
+import com.lx862.mtrscripting.ScriptManager;
+import com.lx862.mtrscripting.util.*;
 import vendor.com.lx862.jcm.org.mozilla.javascript.*;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
@@ -16,13 +14,19 @@ import java.util.concurrent.Future;
 
 public class ParsedScript {
     private static final int SCRIPT_RESET_TIME = 4000;
-    private final List<Function> createFunctions = new ArrayList<>();
-    private final List<Function> renderFunctions = new ArrayList<>();
-    private final List<Function> disposeFunctions = new ArrayList<>();
+    private final List<Function> createFunctions;
+    private final List<Function> renderFunctions;
+    private final List<Function> disposeFunctions;
+    private final ScriptManager scriptManager;
     private final Scriptable scope;
     private long lastFailedTime = -1;
 
-    public ParsedScript(String contextName, Map<Identifier, String> scripts) throws Exception {
+    public ParsedScript(ScriptManager scriptManager, String contextName, Map<Identifier, String> scripts) throws Exception {
+        this.scriptManager = scriptManager;
+        this.createFunctions = new ArrayList<>();
+        this.renderFunctions = new ArrayList<>();
+        this.disposeFunctions = new ArrayList<>();
+
         try {
             Context cx = Context.enter();
             cx.setLanguageVersion(Context.VERSION_ES6);
@@ -94,8 +98,7 @@ public class ParsedScript {
             return null;
         }
 
-        // TODO: Remove JCMClient dependency
-        return JCMClient.scriptManager.submitScriptTask(() -> {
+        return scriptManager.submitScriptTask(() -> {
             TimingUtil.prepareForScript(scriptInstance);
             try {
                 Scriptable scope = getScope();

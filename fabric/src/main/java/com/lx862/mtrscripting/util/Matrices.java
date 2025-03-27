@@ -1,10 +1,10 @@
-package com.lx862.mtrscripting.scripting.util;
+package com.lx862.mtrscripting.util;
 
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
-/* This is a wrapper for storedMatrixTransformations for scripting purposes */
-
+/** This is a wrapper for storedMatrixTransformations for scripting purposes */
+@SuppressWarnings("unused")
 public class Matrices {
     private final StoredMatrixTransformations storedMatrixTransformations;
 

@@ -1,6 +1,6 @@
-package com.lx862.mtrscripting.scripting.util;
+package com.lx862.mtrscripting.util;
 
-import com.lx862.mtrscripting.scripting.ScriptManager;
+import com.lx862.mtrscripting.ScriptManager;
 import org.mtr.mapping.holder.Identifier;
 
 public class ModelManager {

@@ -1,9 +1,9 @@
-package com.lx862.mtrscripting.scripting;
+package com.lx862.mtrscripting;
 
-import com.lx862.mtrscripting.scripting.base.ScriptInstance;
+import com.lx862.mtrscripting.core.ScriptInstance;
+import com.lx862.mtrscripting.data.UniqueKey;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 

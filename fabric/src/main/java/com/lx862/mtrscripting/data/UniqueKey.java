@@ -1,10 +1,10 @@
-package com.lx862.mtrscripting.scripting;
+package com.lx862.mtrscripting.data;
 
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-/* A key that can uniquely identify a set of objects. */
+/** A key that can uniquely identify a set of objects. */
 public class UniqueKey {
     private final Object[] objs;
 

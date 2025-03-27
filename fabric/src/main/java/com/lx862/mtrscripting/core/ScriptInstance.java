@@ -1,6 +1,5 @@
-package com.lx862.mtrscripting.scripting.base;
+package com.lx862.mtrscripting.core;
 
-import com.lx862.mtrscripting.scripting.ParsedScript;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
 
 import java.util.concurrent.Future;
@@ -8,8 +7,8 @@ import java.util.concurrent.Future;
 public abstract class ScriptInstance<T> {
     private final ScriptContext scriptContext;
     private final ParsedScript parsedScripts;
-    public double lastExecuteTime = 0;
     protected T wrapperObject;
+    public double lastExecuteTime;
     public Scriptable state;
     public Future<?> scriptTask;
 

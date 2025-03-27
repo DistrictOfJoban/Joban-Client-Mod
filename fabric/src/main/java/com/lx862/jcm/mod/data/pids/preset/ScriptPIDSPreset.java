@@ -9,9 +9,9 @@ import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptInstance;
 import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
 import com.lx862.mtrscripting.api.ScriptResultCall;
-import com.lx862.mtrscripting.scripting.ParsedScript;
-import com.lx862.mtrscripting.scripting.UniqueKey;
-import com.lx862.mtrscripting.scripting.base.ScriptInstance;
+import com.lx862.mtrscripting.core.ParsedScript;
+import com.lx862.mtrscripting.data.UniqueKey;
+import com.lx862.mtrscripting.core.ScriptInstance;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -65,7 +65,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             }
         }
 
-        ParsedScript parsedScripts = new ParsedScript("PIDS", scripts);
+        ParsedScript parsedScripts = new ParsedScript(JCMClient.scriptManager, "PIDS", scripts);
         return new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, parsedScripts);
     }
 

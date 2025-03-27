@@ -1,10 +1,10 @@
-package com.lx862.mtrscripting.scripting.util;
+package com.lx862.mtrscripting.util;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/ScriptResourceUtil.java#L44 */
 
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.api.ScriptingAPI;
-import com.lx862.mtrscripting.scripting.ScriptManager;
+import com.lx862.mtrscripting.ScriptManager;
 
 import org.apache.commons.io.IOUtils;
 import vendor.com.lx862.jcm.org.mozilla.javascript.Context;

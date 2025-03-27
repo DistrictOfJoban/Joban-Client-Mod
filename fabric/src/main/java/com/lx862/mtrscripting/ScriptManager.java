@@ -1,6 +1,6 @@
-package com.lx862.mtrscripting.scripting;
+package com.lx862.mtrscripting;
 
-import com.lx862.mtrscripting.scripting.base.MTRClassShutter;
+import com.lx862.mtrscripting.core.MTRClassShutter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import vendor.com.lx862.jcm.org.mozilla.javascript.ClassShutter;

@@ -2,8 +2,8 @@ package com.lx862.jcm.mod.scripting.train;
 
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
 import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
-import com.lx862.mtrscripting.scripting.ParsedScript;
-import com.lx862.mtrscripting.scripting.base.ScriptInstance;
+import com.lx862.mtrscripting.core.ParsedScript;
+import com.lx862.mtrscripting.core.ScriptInstance;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.VehicleExtension;
 

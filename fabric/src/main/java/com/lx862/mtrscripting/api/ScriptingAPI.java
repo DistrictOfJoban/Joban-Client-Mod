@@ -1,6 +1,6 @@
 package com.lx862.mtrscripting.api;
 
-import com.lx862.mtrscripting.scripting.util.ScriptResourceUtil;
+import com.lx862.mtrscripting.util.ScriptResourceUtil;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;

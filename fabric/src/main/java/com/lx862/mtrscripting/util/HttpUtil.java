@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.scripting.util;
+package com.lx862.mtrscripting.util;
 
 import org.apache.commons.io.IOUtils;
 import vendor.com.lx862.jcm.org.mozilla.javascript.NativeObject;
@@ -13,6 +13,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class HttpUtil {
     public static NetworkResponse<?> fetchString(String urlStr) throws IOException {
         return fetchString(urlStr, null);

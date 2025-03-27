@@ -1,10 +1,9 @@
-package com.lx862.mtrscripting.scripting.util;
+package com.lx862.mtrscripting.util;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/StateTracker.java */
 
 @SuppressWarnings("unused")
 public class StateTracker {
-
     private String lastState;
     private String currentState;
     private double currentStateTime;

@@ -7,7 +7,7 @@ import com.lx862.jcm.mod.scripting.eyecandy.EyeCandyScriptInstance;
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.scripting.ParsedScript;
 import com.lx862.mtrscripting.scripting.UniqueKey;
-import com.lx862.mtrscripting.scripting.base.ScriptInstance;
+import com.lx862.mtrscripting.scripting.core.ScriptInstance;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;

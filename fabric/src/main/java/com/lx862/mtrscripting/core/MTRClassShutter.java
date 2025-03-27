@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.scripting.base;
+package com.lx862.mtrscripting.core;
 
 import com.lx862.mtrscripting.api.ScriptingAPI;
 import vendor.com.lx862.jcm.org.mozilla.javascript.ClassShutter;

@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.config.ClientConfig;
 import com.lx862.jcm.mod.registry.JCMRegistryClient;
 import com.lx862.jcm.mod.render.gui.screen.ClientConfigScreen;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
-import com.lx862.mtrscripting.scripting.ScriptManager;
+import com.lx862.mtrscripting.ScriptManager;
 import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.holder.ScreenAbstractMapping;
 

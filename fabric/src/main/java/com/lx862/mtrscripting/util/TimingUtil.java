@@ -1,13 +1,12 @@
-package com.lx862.mtrscripting.scripting.util;
+package com.lx862.mtrscripting.util;
 
-import com.lx862.mtrscripting.scripting.base.ScriptInstance;
+import com.lx862.mtrscripting.core.ScriptInstance;
 import org.mtr.mod.InitClient;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/TimingUtil.java */
 
 @SuppressWarnings("unused")
 public class TimingUtil {
-
     private static double timeElapsedForScript = 0;
     private static double frameDeltaForScript = 0;
 

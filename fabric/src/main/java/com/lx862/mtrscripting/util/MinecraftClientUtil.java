@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.scripting.util;
+package com.lx862.mtrscripting.util;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/MinecraftClientUtil.java */
 
@@ -11,8 +11,8 @@ import org.mtr.mapping.holder.Vector3f;
 import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mapping.mapper.WorldHelper;
 
+@SuppressWarnings("unused")
 public class MinecraftClientUtil {
-
     public static boolean worldIsRaining() {
         return MinecraftClient.getInstance().getWorldMapped() != null
                 && MinecraftClient.getInstance().getWorldMapped().isRaining();

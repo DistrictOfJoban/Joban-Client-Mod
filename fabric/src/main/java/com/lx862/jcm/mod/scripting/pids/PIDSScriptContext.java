@@ -2,7 +2,7 @@ package com.lx862.jcm.mod.scripting.pids;
 
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
-import com.lx862.mtrscripting.scripting.base.ScriptContext;
+import com.lx862.mtrscripting.core.ScriptContext;
 
 import java.util.ArrayList;
 import java.util.List;

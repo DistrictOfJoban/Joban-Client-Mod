@@ -3,6 +3,7 @@
 **Added:**
 - **Scripting**
 - - Added `HttpUtil` for networking in scripts
+- - Add `java.util.*` package to whitelist
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

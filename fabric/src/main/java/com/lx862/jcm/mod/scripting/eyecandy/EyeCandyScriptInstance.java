@@ -2,8 +2,8 @@ package com.lx862.jcm.mod.scripting.eyecandy;
 
 import com.lx862.jcm.mod.scripting.SoundCall;
 import com.lx862.mtrscripting.api.ScriptResultCall;
-import com.lx862.mtrscripting.scripting.ParsedScript;
-import com.lx862.mtrscripting.scripting.base.ScriptInstance;
+import com.lx862.mtrscripting.core.ParsedScript;
+import com.lx862.mtrscripting.core.ScriptInstance;
 import org.mtr.mod.block.BlockEyeCandy;
 
 import java.util.ArrayList;
