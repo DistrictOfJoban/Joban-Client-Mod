@@ -1,7 +1,7 @@
 package com.lx862.mtrscripting.util;
 
 import org.apache.commons.io.IOUtils;
-import vendor.com.lx862.jcm.org.mozilla.javascript.NativeObject;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeObject;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

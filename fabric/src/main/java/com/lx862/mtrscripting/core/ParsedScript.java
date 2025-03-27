@@ -3,7 +3,7 @@ package com.lx862.mtrscripting.core;
 import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.util.*;
-import vendor.com.lx862.jcm.org.mozilla.javascript.*;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 

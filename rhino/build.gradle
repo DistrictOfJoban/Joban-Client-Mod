@@ -4,7 +4,7 @@ plugins {
 }
 
 def rhinoVersion = "1_7_15"
-def shadowPath = ["vendor", "com", "lx862", "jcm", "org", "mozilla"]
+def shadowPath = ["com", "lx862", "mtrscripting", "lib", "org", "mozilla"]
 
 tasks.register('downloadRhino', Download) {
     src "https://github.com/mozilla/rhino/archive/refs/tags/Rhino${rhinoVersion}_Release.zip"

@@ -1,6 +1,6 @@
 package com.lx862.mtrscripting.core;
 
-import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
 
 import java.util.concurrent.Future;
 

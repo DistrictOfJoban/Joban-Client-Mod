@@ -5,8 +5,8 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import org.apache.logging.log4j.util.TriConsumer;
-import vendor.com.lx862.jcm.org.mozilla.javascript.Context;
-import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
 
 /**
  * This class contains the event to hook into scripting, e.g. add new property and objects
@@ -20,6 +20,7 @@ public class ScriptingAPI {
         addClassRule(ClassRule.parse("java.awt.*"));
         addClassRule(ClassRule.parse("java.lang.*"));
         addClassRule(ClassRule.parse("java.util.*"));
+        addClassRule(ClassRule.parse("sun.java2d.*"));
         addClassRule(ClassRule.parse("java.io.Closeable"));
         addClassRule(ClassRule.parse("java.io.InputStream"));
         addClassRule(ClassRule.parse("java.io.OutputStream"));

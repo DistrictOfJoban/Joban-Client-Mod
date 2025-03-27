@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.scripting.JCMScriptManager;
+import com.lx862.jcm.mod.scripting.MTRScriptManager;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
@@ -38,7 +39,8 @@ public class JCMRegistryClient {
         Blocks.registerClient();
         BlockEntityRenderers.registerClient();
         Networking.registerClient();
-        JCMScriptManager.registerScripting();
+        MTRScriptManager.initScripting();
+        JCMScriptManager.initScripting();
         REGISTRY_CLIENT.init();
     }
 }

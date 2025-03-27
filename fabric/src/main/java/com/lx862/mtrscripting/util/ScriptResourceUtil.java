@@ -7,8 +7,8 @@ import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.mtrscripting.ScriptManager;
 
 import org.apache.commons.io.IOUtils;
-import vendor.com.lx862.jcm.org.mozilla.javascript.Context;
-import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 

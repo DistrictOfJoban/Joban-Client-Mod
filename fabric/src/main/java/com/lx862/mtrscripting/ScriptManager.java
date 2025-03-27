@@ -3,7 +3,7 @@ package com.lx862.mtrscripting;
 import com.lx862.mtrscripting.core.MTRClassShutter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import vendor.com.lx862.jcm.org.mozilla.javascript.ClassShutter;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.ClassShutter;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

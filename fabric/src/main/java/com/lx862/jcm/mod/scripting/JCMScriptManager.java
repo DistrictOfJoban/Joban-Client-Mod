@@ -8,28 +8,18 @@ import com.lx862.mtrscripting.api.ClassRule;
 import com.lx862.mtrscripting.api.ScriptingAPI;
 import org.mtr.mod.Keys;
 import org.mtr.mod.client.MinecraftClientData;
-import vendor.com.lx862.jcm.org.mozilla.javascript.NativeJavaClass;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeJavaClass;
 
 public class JCMScriptManager {
-    public static void registerScripting() {
-        String mtrModVersion = null;
-        try {
-            mtrModVersion = (String) Keys.class.getField("MOD_VERSION").get(null);
-        } catch (ReflectiveOperationException ignored) {
-        }
-        ScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
+    /**
+     * Called once when the mod entrypoint is invoked
+     */
+    public static void initScripting() {
         ScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);
 
-        ScriptingAPI.addClassRule(ClassRule.parse("vendor.*"));
         ScriptingAPI.addClassRule(ClassRule.parse("com.lx862.jcm.mod.scripting.*"));
-        ScriptingAPI.addClassRule(ClassRule.parse("org.mtr.*"));
-        ScriptingAPI.addClassRule(ClassRule.parse("sun.java2d.*"));
 
         ScriptingAPI.onParseScript((contextName, context, scriptable) -> {
-            // On behalf of MTR
-            scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
-            scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
-
             if (contextName.equals("PIDS")) {
                 scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));
                 scriptable.put("Texture", scriptable, new NativeJavaClass(scriptable, TextureWrapper.class));
