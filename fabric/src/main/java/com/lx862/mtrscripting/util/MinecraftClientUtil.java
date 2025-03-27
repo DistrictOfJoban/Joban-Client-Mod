@@ -2,12 +2,9 @@ package com.lx862.mtrscripting.util;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/MinecraftClientUtil.java */
 
+import com.lx862.jcm.mapping.LoaderImpl;
 import com.mojang.text2speech.Narrator;
-import org.apache.commons.lang3.NotImplementedException;
-import org.mtr.mapping.holder.ClientPlayerEntity;
-import org.mtr.mapping.holder.MinecraftClient;
-import org.mtr.mapping.holder.Text;
-import org.mtr.mapping.holder.Vector3f;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mapping.mapper.WorldHelper;
 
@@ -24,9 +21,8 @@ public class MinecraftClientUtil {
     }
 
     public static boolean worldIsRainingAt(Vector3f pos) {
-        throw new NotImplementedException("Not implemented in Minecraft Mappings");
-//        return MinecraftClient.getInstance().getWorldMapped() != null
-//                && MinecraftClient.getInstance().getWorldMapped().isRainingAt(pos.toBlockPos());
+        return MinecraftClient.getInstance().getWorldMapped() != null
+                && LoaderImpl.isRainingAt(World.cast(MinecraftClient.getInstance().getWorldMapped()), new BlockPos((int)pos.getX(), (int)pos.getY(), (int)pos.getZ()));
     }
 
     public static int worldDayTime() {
