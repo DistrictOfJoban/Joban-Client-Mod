@@ -14,8 +14,16 @@ import vendor.com.lx862.jcm.org.mozilla.javascript.Scriptable;
 public class ScriptingAPI {
     private static final Object2ObjectArrayMap<String, String> addonVersionMap = new Object2ObjectArrayMap<>();
     private static final ObjectList<TriConsumer<String, Context, Scriptable>> onParseScriptCallback = new ObjectArrayList<>();
-    private static final ObjectList<String> allowedScriptClasses = new ObjectArrayList<>();
-    private static final ObjectList<String> deniedScriptClasses = new ObjectArrayList<>();
+    private static final ObjectList<ClassRule> allowedScriptClasses = new ObjectArrayList<>();
+
+    static {
+        addClassRule(ClassRule.parse("java.awt.*"));
+        addClassRule(ClassRule.parse("java.lang.*"));
+        addClassRule(ClassRule.parse("java.util.*"));
+        addClassRule(ClassRule.parse("java.io.Closeable"));
+        addClassRule(ClassRule.parse("java.io.InputStream"));
+        addClassRule(ClassRule.parse("java.io.OutputStream"));
+    }
 
     /**
      * Register a version for a Mod ID, used by scripts calling {@link ScriptResourceUtil#getAddonVersion};
@@ -41,8 +49,8 @@ public class ScriptingAPI {
      * It is compared using String.startWith, so this can also be used for allowing a whole package (e.g. java.awt)
      * Please use this wisely instead of blindly allowing classes for your convenience, we don't want a script to affect anything outside of MC.
      */
-    public static void allowClass(String className) {
-        allowedScriptClasses.add(className);
+    public static void addClassRule(ClassRule classRule) {
+        allowedScriptClasses.add(classRule);
     }
 
     public static String getAddonVersion(String modid) {
@@ -56,8 +64,8 @@ public class ScriptingAPI {
     }
 
     public static boolean isClassAllowed(String str) {
-        for(String cs : allowedScriptClasses) {
-            if(str.startsWith(cs)) return true;
+        for(ClassRule cs : allowedScriptClasses) {
+            if(cs.match(str)) return true;
         }
         return false;
     }

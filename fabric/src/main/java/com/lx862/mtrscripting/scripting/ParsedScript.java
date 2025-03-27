@@ -38,6 +38,7 @@ public class ParsedScript {
             scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTracker.class));
             scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTracker.class));
             scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimit.class));
+            scope.put("HttpUtil", scope, new NativeJavaClass(scope, HttpUtil.class));
 
             scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
 

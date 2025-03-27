@@ -55,7 +55,7 @@ public class ScriptResourceUtil {
     public static void print(Object... objs) {
         StringBuilder sb = new StringBuilder();
         for(Object obj : objs) {
-            sb.append(obj.toString());
+            sb.append(obj);
         }
         ScriptManager.LOGGER.info("[Scripting] {}", sb.toString().trim());
     }

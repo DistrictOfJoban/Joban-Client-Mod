@@ -1,6 +1,8 @@
-## JCM (v2.0.0-beta.10) for (MTR 4.0.0-beta.16) has been released!
+## JCM (v2.0.0-beta.11) for (MTR 4.0.0-beta.16) has been released!
 
-Sorry I broke the scripting function on beta.9, this release fixes it :)
+**Added:**
+- **Scripting**
+- - Added `HttpUtil` for networking in scripts
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
