@@ -6,10 +6,8 @@ import org.mtr.mod.Keys;
 
 public class JCM {
     public static void initialize() {
-        JCMLogger.info("Joban Client Mod v{}", Constants.MOD_VERSION);
-
         try {
-            JCMLogger.info("Hello MTR {}", Keys.class.getField("MOD_VERSION").get(null));
+            JCMLogger.info("Joban Client Mod v{} @ MTR {}", Constants.MOD_VERSION, Keys.class.getField("MOD_VERSION").get(null));
         } catch (Exception e) {
             JCMLogger.warn("Cannot obtain MTR Version, countdown to disaster...");
         }

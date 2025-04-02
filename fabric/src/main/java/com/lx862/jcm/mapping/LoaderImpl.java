@@ -18,9 +18,8 @@ public class LoaderImpl {
                 new Screen(new ConfirmLinkScreen((confirmed) -> {
                     if(confirmed) {
                         Util.getOperatingSystem().open(url);
-                    } else {
-                        mc.openScreen(new Screen(parentScreen));
                     }
+                    mc.openScreen(new Screen(parentScreen));
                 }, url, true)
             )
         );
