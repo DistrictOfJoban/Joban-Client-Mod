@@ -7,20 +7,20 @@ import org.mtr.mapping.mapper.ClickableWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
+import static com.lx862.jcm.mod.render.RenderHelper.ARGB_WHITE;
+
 public abstract class AbstractScrollViewWidget extends ClickableWidgetExtension {
     public static final int SCROLLBAR_WIDTH = 6;
     protected double currentScroll = 0;
     private boolean scrollbarDragging = false;
+
     public AbstractScrollViewWidget(int x, int y, int width, int height) {
         super(x, y, width, height);
     }
 
     @Override
     public boolean mouseClicked2(double mouseX, double mouseY, int button) {
-        int scrollbarEndX = getX2() + getWidth2();
-        int scrollbarStartX = scrollbarEndX - getScrollbarOffset();
-
-        if(button == 0 && mouseX >= scrollbarStartX && mouseX <= scrollbarEndX && mouseY >= getY2() && mouseY <= getY2() + getHeight2()) {
+        if(button == 0 && isOverScrollbar(mouseX, mouseY)) {
             scrollbarDragging = true;
         } else {
             scrollbarDragging = false;
@@ -40,9 +40,11 @@ public abstract class AbstractScrollViewWidget extends ClickableWidgetExtension 
 
     public boolean mouseDragged2(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (visible && isFocused2() && scrollbarDragging) {
-            double remainingView = getContentHeight() - getHeight2();
-            double percentage = 1 - (((getY2() + getHeight2()) - mouseY) / getHeight2());
-            setScroll(remainingView * percentage);
+            double remainingHeight = getContentHeight() - getHeight2();
+
+            int s1 = (getHeight2() * getHeight2()) / getContentHeight();
+            double scrollScale = remainingHeight / ((double)getHeight2() - s1);
+            setScroll(currentScroll + (deltaY * scrollScale));
             return true;
         } else {
             return false;
@@ -92,15 +94,15 @@ public abstract class AbstractScrollViewWidget extends ClickableWidgetExtension 
         }
     }
 
-    private void drawScrollbar(GuiDrawing guiDrawing) {
+    private void renderScrollbar(GuiDrawing guiDrawing, boolean isMouseOverScrollbar) {
         if(!contentOverflowed()) return;
 
         int fullHeight = getContentHeight();
         int visibleHeight = getHeight2();
-        double scrollbarHeight =  visibleHeight * ((double)visibleHeight / fullHeight);
+        double scrollbarHeight = visibleHeight * ((double)visibleHeight / fullHeight);
         double bottomOffset = currentScroll / (fullHeight - visibleHeight);
         double yOffset = bottomOffset * (visibleHeight - scrollbarHeight);
-        GuiHelper.drawRectangle(guiDrawing, getX2() + getWidth2() - SCROLLBAR_WIDTH, getY2() + yOffset, SCROLLBAR_WIDTH, scrollbarHeight, 0xFFC0C0C0);
+        GuiHelper.drawRectangle(guiDrawing, getX2() + getWidth2() - SCROLLBAR_WIDTH, getY2() + yOffset, SCROLLBAR_WIDTH, scrollbarHeight, isMouseOverScrollbar ? ARGB_WHITE : 0xFFC0C0C0);
 
         // Border
         GuiHelper.drawRectangle(guiDrawing, getX2() + getWidth2() - 1, getY2() + yOffset, 1, scrollbarHeight, 0xFF808080);
@@ -116,8 +118,14 @@ public abstract class AbstractScrollViewWidget extends ClickableWidgetExtension 
         renderContent(graphicsHolder, mouseX, mouseY, tickDelta);
         ClipStack.pop();
 
-        drawScrollbar(guiDrawing);
+        renderScrollbar(guiDrawing, isOverScrollbar(mouseX, mouseY));
         ClipStack.pop();
+    }
+
+    private boolean isOverScrollbar(double mouseX, double mouseY) {
+        int scrollbarEndX = getX2() + getWidth2();
+        int scrollbarStartX = scrollbarEndX - getScrollbarOffset();
+        return mouseX >= scrollbarStartX && mouseX <= scrollbarEndX && mouseY >= getY2() && mouseY <= getY2() + getHeight2();
     }
 
     public abstract void renderContent(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta);
