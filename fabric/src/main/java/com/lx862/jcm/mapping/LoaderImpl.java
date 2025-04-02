@@ -14,6 +14,10 @@ public class LoaderImpl {
 
     public static void openURLScreen(ScreenExtension parentScreen, String url) {
         MinecraftClient mc = MinecraftClient.getInstance();
+
+        #if MC_VERSION == "11605"
+            Util.getOperatingSystem().open(url);
+        #else
         mc.openScreen(
                 new Screen(new ConfirmLinkScreen((confirmed) -> {
                     if(confirmed) {
@@ -23,5 +27,6 @@ public class LoaderImpl {
                 }, url, true)
             )
         );
+        #endif
     }
 }
