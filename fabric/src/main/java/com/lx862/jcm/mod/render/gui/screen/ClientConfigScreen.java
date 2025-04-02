@@ -26,6 +26,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/gui/config_screen/bg.png");
     private static final Identifier TEXTURE_STAR = new Identifier("jsblock:textures/gui/config_screen/stars.png");
     private static final Identifier TEXTURE_TERRAIN = new Identifier("jsblock:textures/gui/config_screen/terrain.png");
+    private static final int STAR_ROTATION_LENGTH = 260 * 1000;
 
     private final WidgetSet bottomRowWidget;
     private final ListViewWidget listViewWidget;
@@ -166,13 +167,22 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
     @Override
     public void drawBackground(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
-        double terrainHeight = (width / 3.75);
-        double starSize = Math.max(width, height);
+        double terrainHeight = (getWidthMapped() / 3.75);
+        double starSize = Math.max(width, height) * 4;
         float starUVSize = (float) (starSize / 384F);
         double translateY = height * (1 - animationProgress);
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
         GuiHelper.drawTexture(guiDrawing, TEXTURE_BACKGROUND, 0, 0, width, height);
-        GuiHelper.drawTexture(guiDrawing, TEXTURE_STAR, 0, translateY * 0.2, starSize, starSize, 0, 0, starUVSize, starUVSize);
+        graphicsHolder.push();
+        graphicsHolder.translate(0, translateY * 0.2f, 0);
+        graphicsHolder.translate(getWidthMapped() / 2.0, getHeightMapped() / 2.0, 0);
+
+        float starRot = (System.currentTimeMillis() % STAR_ROTATION_LENGTH) / (float)STAR_ROTATION_LENGTH;
+        graphicsHolder.rotateZDegrees(starRot * 360);
+        graphicsHolder.translate(-getWidthMapped() / 2.0, -getHeightMapped() / 2.0, 0);
+        GuiHelper.drawTexture(guiDrawing, TEXTURE_STAR, 0, 0, starSize, starSize, 0, 0, starUVSize, starUVSize);
+        graphicsHolder.pop();
+
         GuiHelper.drawTexture(guiDrawing, TEXTURE_TERRAIN, 0, translateY + height - terrainHeight, width, terrainHeight);
     }
 
