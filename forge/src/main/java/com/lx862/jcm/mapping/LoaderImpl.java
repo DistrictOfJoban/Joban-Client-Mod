@@ -15,8 +15,16 @@ public class LoaderImpl {
     public static void openURLScreen(ScreenExtension parentScreen, String url) {
         MinecraftClient mc = MinecraftClient.getInstance();
 
-        #if MC_VERSION == "11605"
-            Util.getOperatingSystem().open(url);
+        #if MC_VERSION <= "11605"
+            mc.openScreen(
+                    new Screen(new ConfirmOpenLinkScreen((confirmed) -> {
+                        if(confirmed) {
+                            Util.getOperatingSystem().open(url);
+                        }
+                        mc.openScreen(new Screen(parentScreen));
+                    }, url, true)
+                )
+            );
         #else
         mc.openScreen(
                 new Screen(new ConfirmLinkScreen((confirmed) -> {
