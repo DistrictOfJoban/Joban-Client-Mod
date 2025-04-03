@@ -16,7 +16,7 @@ public class LoaderImpl {
 
         #if MC_VERSION <= "11605"
             mc.openScreen(
-                    new Screen(new net.minecraft.client.gui.screens.ConfirmOpenLinkScreen((confirmed) -> {
+                    new Screen(new net.minecraft.client.gui.screen.ConfirmOpenLinkScreen((confirmed) -> {
                         if(confirmed) {
                             Util.getOperatingSystem().open(url);
                         }
