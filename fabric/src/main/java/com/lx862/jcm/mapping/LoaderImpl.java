@@ -1,6 +1,5 @@
 package com.lx862.jcm.mapping;
 
-import net.minecraft.client.gui.screen.ConfirmLinkScreen;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ScreenExtension;
 
@@ -17,7 +16,7 @@ public class LoaderImpl {
 
         #if MC_VERSION <= "11802"
             mc.openScreen(
-                    new Screen(new ConfirmChatLinkScreen((confirmed) -> {
+                    new Screen(new net.minecraft.client.gui.screen.ConfirmChatLinkScreen((confirmed) -> {
                         if(confirmed) {
                             Util.getOperatingSystem().open(url);
                         }
@@ -27,7 +26,7 @@ public class LoaderImpl {
             );
         #else
         mc.openScreen(
-                new Screen(new ConfirmLinkScreen((confirmed) -> {
+                new Screen(new net.minecraft.client.gui.screen.ConfirmLinkScreen((confirmed) -> {
                     if(confirmed) {
                         Util.getOperatingSystem().open(url);
                     }
