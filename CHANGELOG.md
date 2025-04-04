@@ -2,9 +2,11 @@
 
 **Added:**
 - **Scripting**
-- - Added `HttpUtil` for networking in scripts
-- - Add `java.util.*` package to whitelist
+- - Added [Networking](https://www.joban.org/wiki/JCM:Scripting:Documentation:Utilities#Networking) to enable networking functionalities in scripts
+- - Added [Files](https://www.joban.org/wiki/JCM:Scripting:Documentation:Utilities#Files) for basic data saving functionalities in scripts
 - - Implement `MinecraftClient.worldIsRainingAt` functionality
+- - Add `java.util.*` package to whitelist
+- - Add `Timing.currentTimeMillis()` and `Timing.nanoTime()`, these are equivalent methods to `java.lang.System.currentTimeMillis()` and `java.lang.System.currentTimeMillis()`. It is advisable to use this over java.lang.System as it may no longer be available soon.
 
 **Fix:**
 - Fix Scrollbar in GUI screens shifting away when dragged with mouse

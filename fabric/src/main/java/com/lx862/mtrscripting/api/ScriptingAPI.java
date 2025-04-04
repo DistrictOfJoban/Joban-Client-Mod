@@ -15,15 +15,17 @@ public class ScriptingAPI {
     private static final Object2ObjectArrayMap<String, String> addonVersionMap = new Object2ObjectArrayMap<>();
     private static final ObjectList<TriConsumer<String, Context, Scriptable>> onParseScriptCallback = new ObjectArrayList<>();
     private static final ObjectList<ClassRule> allowedScriptClasses = new ObjectArrayList<>();
+    private static final ObjectList<ClassRule> deniedScriptClasses = new ObjectArrayList<>();
 
     static {
-        addClassRule(ClassRule.parse("java.awt.*"));
-        addClassRule(ClassRule.parse("java.lang.*"));
-        addClassRule(ClassRule.parse("java.util.*"));
-        addClassRule(ClassRule.parse("sun.java2d.*"));
-        addClassRule(ClassRule.parse("java.io.Closeable"));
-        addClassRule(ClassRule.parse("java.io.InputStream"));
-        addClassRule(ClassRule.parse("java.io.OutputStream"));
+        allowClass(ClassRule.parse("java.awt.*"));
+        allowClass(ClassRule.parse("java.lang.*"));
+        allowClass(ClassRule.parse("java.util.*"));
+        allowClass(ClassRule.parse("sun.java2d.*"));
+        allowClass(ClassRule.parse("java.io.Closeable"));
+        allowClass(ClassRule.parse("java.io.InputStream"));
+        allowClass(ClassRule.parse("java.io.OutputStream"));
+        denyClass(ClassRule.parse("java.lang.reflect.*"));
     }
 
     /**
@@ -50,8 +52,12 @@ public class ScriptingAPI {
      * It is compared using String.startWith, so this can also be used for allowing a whole package (e.g. java.awt)
      * Please use this wisely instead of blindly allowing classes for your convenience, we don't want a script to affect anything outside of MC.
      */
-    public static void addClassRule(ClassRule classRule) {
+    public static void allowClass(ClassRule classRule) {
         allowedScriptClasses.add(classRule);
+    }
+
+    public static void denyClass(ClassRule classRule) {
+        deniedScriptClasses.add(classRule);
     }
 
     public static String getAddonVersion(String modid) {
@@ -65,6 +71,9 @@ public class ScriptingAPI {
     }
 
     public static boolean isClassAllowed(String str) {
+        for(ClassRule cs : deniedScriptClasses) {
+            if(cs.match(str)) return false;
+        }
         for(ClassRule cs : allowedScriptClasses) {
             if(cs.match(str)) return true;
         }

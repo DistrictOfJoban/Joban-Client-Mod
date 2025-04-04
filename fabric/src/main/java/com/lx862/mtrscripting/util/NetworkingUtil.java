@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @SuppressWarnings("unused")
-public class HttpUtil {
+public class NetworkingUtil {
     public static NetworkResponse<?> fetchString(String urlStr) throws IOException {
         return fetchString(urlStr, null);
     }

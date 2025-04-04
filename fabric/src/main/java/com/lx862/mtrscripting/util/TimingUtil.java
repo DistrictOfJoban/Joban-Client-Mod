@@ -23,4 +23,12 @@ public class TimingUtil {
     public static double delta() {
         return frameDeltaForScript;
     }
+
+    public static long currentTimeMillis() {
+        return System.currentTimeMillis();
+    }
+
+    public static long nanoTime() {
+        return System.nanoTime();
+    }
 }

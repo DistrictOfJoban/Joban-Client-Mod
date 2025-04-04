@@ -22,7 +22,7 @@ public class MTRScriptManager {
         }
         ScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
 
-        ScriptingAPI.addClassRule(ClassRule.parse("org.mtr.*"));
+        ScriptingAPI.allowClass(ClassRule.parse("org.mtr.*"));
 
         ScriptingAPI.onParseScript((contextName, context, scriptable) -> {
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
