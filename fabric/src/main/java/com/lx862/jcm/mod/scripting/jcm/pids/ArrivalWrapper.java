@@ -6,6 +6,7 @@ import org.mtr.core.data.SimplifiedRoute;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.CarDetails;
 import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.mod.data.ArrivalsCacheClient;
 
 import java.util.function.Consumer;
 
@@ -21,7 +22,7 @@ public class ArrivalWrapper {
     }
 
     public long arrivalTime() {
-        return arrivalResponse.getArrival();
+        return arrivalResponse.getArrival() - ArrivalsCacheClient.INSTANCE.getMillisOffset();
     }
 
     public boolean arrived() {
@@ -29,7 +30,7 @@ public class ArrivalWrapper {
     }
 
     public long departureTime() {
-        return arrivalResponse.getDeparture();
+        return arrivalResponse.getDeparture() - ArrivalsCacheClient.INSTANCE.getMillisOffset();
     }
 
     public boolean departed() {

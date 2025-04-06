@@ -13,6 +13,7 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
+import org.mtr.mod.data.ArrivalsCacheClient;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -36,7 +37,7 @@ public class ArrivalETAComponent extends TextComponent {
         ArrivalResponse arrival = arrivals.get(arrivalIndex);
         long arrDepTime = showDeparture ? arrival.getDeparture() : arrival.getArrival();
 
-        long remTime = arrDepTime - System.currentTimeMillis();
+        long remTime = arrDepTime - ArrivalsCacheClient.INSTANCE.getMillisOffset() - System.currentTimeMillis();
         int remSec = (int)(remTime / 1000L);
         if(remSec <= 0) return;
 
