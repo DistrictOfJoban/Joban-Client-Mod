@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.util.JCMLogger;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -34,9 +35,9 @@ public abstract class Config {
 
     public void write() {
         try {
-            configPath.getParent().toFile().mkdirs();
+            Files.createDirectories(configPath.getParent());
             Files.write(configPath, Collections.singleton(new GsonBuilder().setPrettyPrinting().create().toJson(toJson())));
-        } catch (Exception e) {
+        } catch (IOException e) {
             JCMLogger.error("", e);
         }
     }

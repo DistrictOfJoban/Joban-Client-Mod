@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting.pids;
+package com.lx862.jcm.mod.scripting.jcm.pids;
 
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.util.Matrices;

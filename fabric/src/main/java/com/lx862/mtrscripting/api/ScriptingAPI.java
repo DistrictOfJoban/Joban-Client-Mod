@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.api;
 
+import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.util.ScriptResourceUtil;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -8,24 +9,20 @@ import org.apache.logging.log4j.util.TriConsumer;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * This class contains the event to hook into scripting, e.g. add new property and objects
  */
 public class ScriptingAPI {
     private static final Object2ObjectArrayMap<String, String> addonVersionMap = new Object2ObjectArrayMap<>();
-    private static final ObjectList<TriConsumer<String, Context, Scriptable>> onParseScriptCallback = new ObjectArrayList<>();
-    private static final ObjectList<ClassRule> allowedScriptClasses = new ObjectArrayList<>();
-    private static final ObjectList<ClassRule> deniedScriptClasses = new ObjectArrayList<>();
 
-    static {
-        allowClass(ClassRule.parse("java.awt.*"));
-        allowClass(ClassRule.parse("java.lang.*"));
-        allowClass(ClassRule.parse("java.util.*"));
-        allowClass(ClassRule.parse("sun.java2d.*"));
-        allowClass(ClassRule.parse("java.io.Closeable"));
-        allowClass(ClassRule.parse("java.io.InputStream"));
-        allowClass(ClassRule.parse("java.io.OutputStream"));
-        denyClass(ClassRule.parse("java.lang.reflect.*"));
+    /**
+     * Create a new script manager.
+     * @param thread An executor service, where script tasks will be submitted.
+     */
+    public static ScriptManager createScriptManager() {
+        return new ScriptManager();
     }
 
     /**
@@ -37,46 +34,7 @@ public class ScriptingAPI {
         addonVersionMap.put(modid, version);
     }
 
-    /**
-     * Register a callback that will be called when a script is to be parsed.
-     * This can be to add new types/objects to the script.
-     * @param callback The callback to run (Context type, Rhino Context, Scriptable)
-     */
-    public static void onParseScript(TriConsumer<String, Context, Scriptable> callback) {
-        onParseScriptCallback.add(callback);
-    }
-
-    /**
-     * By default, MTR Scripting does not allow loading any arbitrary java class for security reasons
-     * Here, you can explicitly allow a class to be loaded.
-     * It is compared using String.startWith, so this can also be used for allowing a whole package (e.g. java.awt)
-     * Please use this wisely instead of blindly allowing classes for your convenience, we don't want a script to affect anything outside of MC.
-     */
-    public static void allowClass(ClassRule classRule) {
-        allowedScriptClasses.add(classRule);
-    }
-
-    public static void denyClass(ClassRule classRule) {
-        deniedScriptClasses.add(classRule);
-    }
-
     public static String getAddonVersion(String modid) {
         return addonVersionMap.get(modid);
-    }
-
-    public static void callOnParseScriptCallback(String contextName, Context context, Scriptable scriptable) {
-        for(TriConsumer<String, Context, Scriptable> entry : onParseScriptCallback) {
-            entry.accept(contextName, context, scriptable);
-        }
-    }
-
-    public static boolean isClassAllowed(String str) {
-        for(ClassRule cs : deniedScriptClasses) {
-            if(cs.match(str)) return false;
-        }
-        for(ClassRule cs : allowedScriptClasses) {
-            if(cs.match(str)) return true;
-        }
-        return false;
     }
 }

@@ -5,11 +5,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.core.ParsedScript;
+import com.lx862.mtrscripting.data.ScriptContent;
 import org.apache.commons.io.FilenameUtils;
-import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 import org.mtr.mod.Init;
@@ -17,6 +18,7 @@ import org.mtr.mod.Init;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** Temporary class to hold resource handling regarding MTR/NTE contents, until they are upstreamed */
@@ -52,26 +54,35 @@ public class MTRContentResourceManager {
     }
 
     private static void tryRegisterScript(String id, JsonObject jsonObject) throws Exception {
-        final Map<Identifier, String> scripts = new Object2ObjectArrayMap<>();
+        final List<ScriptContent> scripts = new ObjectArrayList<>();
 
         if (jsonObject.has("scriptFiles") || jsonObject.has("scriptTexts")) {
             if(jsonObject.has("scriptFiles")) {
                 JsonArray scriptFilesArray = jsonObject.get("scriptFiles").getAsJsonArray();
                 for(int i = 0; i < scriptFilesArray.size(); i++) {
-                    scripts.put(new Identifier(scriptFilesArray.get(i).getAsString()), null);
+                    Identifier scriptLocation = new Identifier(scriptFilesArray.get(i).getAsString());
+                    String scriptText = ResourceManagerHelper.readResource(scriptLocation);
+                    if(scriptText.isEmpty()) {
+                        JCMLogger.warn("Script {}:{} is either missing, or the file content is empty!", scriptLocation.getNamespace(), scriptLocation.getPath());
+                        continue;
+                    }
+
+                    scripts.add(new ScriptContent(scriptLocation, scriptText));
                 }
             }
 
             if(jsonObject.has("scriptTexts")) {
                 JsonArray scriptTextArray = jsonObject.get("scriptTexts").getAsJsonArray();
                 for(int i = 0; i < scriptTextArray.size(); i++) {
-                    scripts.put(new Identifier(Constants.MOD_ID, "script_texts/eyecandy/" + id + "/line" + i), scriptTextArray.get(i).getAsString());
+                    Identifier scriptLocation = new Identifier(Constants.MOD_ID, "script_texts/eyecandy/" + id + "/line" + i);
+                    String scriptText = scriptTextArray.get(i).getAsString();
+                    scripts.add(new ScriptContent(scriptLocation, scriptText));
                 }
             }
         }
 
         if(!scripts.isEmpty()) {
-            ParsedScript ps = new ParsedScript(JCMClient.scriptManager,"Block", scripts);
+            ParsedScript ps = MTRScripting.getScriptManager().parseScript("Block", scripts);
             eyecandyScripts.put(id, ps);
         }
     }

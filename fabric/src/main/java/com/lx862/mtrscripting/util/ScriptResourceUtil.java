@@ -54,10 +54,14 @@ public class ScriptResourceUtil {
 
     public static void print(Object... objs) {
         StringBuilder sb = new StringBuilder();
-        for(Object obj : objs) {
-            sb.append(obj);
+        if(objs == null) {
+            sb.append("null");
+        } else {
+            for(Object obj : objs) {
+                sb.append(obj);
+            }
         }
-        ScriptManager.LOGGER.info("[Scripting] {}", sb.toString().trim());
+        ScriptManager.LOGGER.info("[Scripting] {}", sb.toString());
     }
 
     public static Identifier identifier(String textForm) {

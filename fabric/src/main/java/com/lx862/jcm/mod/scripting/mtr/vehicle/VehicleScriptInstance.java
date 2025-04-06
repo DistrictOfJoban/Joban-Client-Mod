@@ -1,6 +1,6 @@
-package com.lx862.jcm.mod.scripting.vehicle;
+package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
-import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
+import com.lx862.jcm.mod.scripting.jcm.pids.PIDSWrapper;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import org.mtr.mod.client.MinecraftClientData;

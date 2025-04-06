@@ -17,6 +17,7 @@ public class ClientConfig extends Config {
         super(CONFIG_PATH);
     }
 
+    @Override
     public void fromJson(JsonObject jsonConfig) {
         JCMLogger.info("Loading client config...");
         this.disableRendering = jsonConfig.get("disable_rendering").getAsBoolean();
@@ -24,6 +25,7 @@ public class ClientConfig extends Config {
         this.useNewTextRenderer = jsonConfig.get("new_text_renderer").getAsBoolean();
     }
 
+    @Override
     public JsonObject toJson() {
         JCMLogger.info("Writing client config...");
         final JsonObject jsonConfig = new JsonObject();

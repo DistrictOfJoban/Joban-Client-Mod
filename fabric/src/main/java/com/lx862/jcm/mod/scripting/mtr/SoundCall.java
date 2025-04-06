@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting;
+package com.lx862.jcm.mod.scripting.mtr;
 
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import org.mtr.mapping.holder.*;

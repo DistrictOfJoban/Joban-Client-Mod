@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting.util;
+package com.lx862.jcm.mod.scripting.mtr.util;
 
 // On behalf of MTR
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/TextUtil.java*/
@@ -12,6 +12,7 @@ import java.util.List;
 
 import static com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent.SWITCH_LANG_DURATION;
 
+@SuppressWarnings("unused")
 public class TextUtil {
 
     public static String getCjkParts(String src) {

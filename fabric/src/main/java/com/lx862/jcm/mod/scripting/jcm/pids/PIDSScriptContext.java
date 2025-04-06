@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting.pids;
+package com.lx862.jcm.mod.scripting.jcm.pids;
 
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;

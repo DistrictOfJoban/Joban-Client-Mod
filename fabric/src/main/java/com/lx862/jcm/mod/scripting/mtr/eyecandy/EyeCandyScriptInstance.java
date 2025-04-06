@@ -1,6 +1,6 @@
-package com.lx862.jcm.mod.scripting.eyecandy;
+package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
-import com.lx862.jcm.mod.scripting.SoundCall;
+import com.lx862.jcm.mod.scripting.mtr.SoundCall;
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.core.ScriptInstance;

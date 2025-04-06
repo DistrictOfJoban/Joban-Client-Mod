@@ -2,8 +2,8 @@ package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
-import com.lx862.jcm.mod.scripting.eyecandy.EyeCandyScriptContext;
-import com.lx862.jcm.mod.scripting.eyecandy.EyeCandyScriptInstance;
+import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptContext;
+import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptInstance;
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.UniqueKey;

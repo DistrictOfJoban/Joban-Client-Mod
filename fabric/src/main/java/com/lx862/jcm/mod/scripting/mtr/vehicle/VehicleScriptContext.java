@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting.vehicle;
+package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
 import com.lx862.mtrscripting.core.ScriptContext;
 import com.lx862.mtrscripting.util.Matrices;

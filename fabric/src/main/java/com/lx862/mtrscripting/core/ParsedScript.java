@@ -2,14 +2,13 @@ package com.lx862.mtrscripting.core;
 
 import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.mtrscripting.ScriptManager;
+import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.util.*;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
 import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.mapper.ResourceManagerHelper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Future;
 
 public class ParsedScript {
@@ -21,7 +20,7 @@ public class ParsedScript {
     private final Scriptable scope;
     private long lastFailedTime = -1;
 
-    public ParsedScript(ScriptManager scriptManager, String contextName, Map<Identifier, String> scripts) throws Exception {
+    public ParsedScript(ScriptManager scriptManager, String contextName, List<ScriptContent> scripts) throws Exception {
         this.scriptManager = scriptManager;
         this.createFunctions = new ArrayList<>();
         this.renderFunctions = new ArrayList<>();
@@ -30,7 +29,7 @@ public class ParsedScript {
         try {
             Context cx = Context.enter();
             cx.setLanguageVersion(Context.VERSION_ES6);
-            cx.setClassShutter(ScriptManager.CLASS_SHUTTER);
+            cx.setClassShutter(scriptManager.getClassShutter());
             scope = new ImporterTopLevel(cx);
 
             scope.put("include", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("includeScript", Object.class), "includeScript"));
@@ -50,23 +49,17 @@ public class ParsedScript {
             scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientUtil.class));
             scope.put("ModelManager", scope, new NativeJavaClass(scope, ModelManager.class));
 
-            ScriptingAPI.callOnParseScriptCallback(contextName, cx, scope);
+            scriptManager.callOnParseScriptCallback(contextName, cx, scope);
 
             cx.evaluateString(scope, "\"use strict\";", "", 1, null);
 
             ScriptResourceUtil.activeContext = cx;
             ScriptResourceUtil.activeScope = scope;
-            for(Map.Entry<Identifier, String> scriptEntry : scripts.entrySet()) {
-                final Identifier scriptLocation = scriptEntry.getKey();
-                final String scriptContent;
-                if(scriptEntry.getValue() == null) {
-                    scriptContent = ResourceManagerHelper.readResource(scriptEntry.getKey());
-                    if(scriptContent.isEmpty()) throw new IllegalStateException(String.format("Cannot find script %s!", scriptLocation.getNamespace() + ":" + scriptLocation.getPath()));
-                } else {
-                    scriptContent = scriptEntry.getValue();
-                }
+            for(ScriptContent scriptEntry : scripts) {
+                final Identifier scriptLocation = scriptEntry.getLocation();
+                final String scriptContent = scriptEntry.getContent();
 
-                ScriptResourceUtil.executeScript(cx, scope, scriptEntry.getKey(), scriptContent);
+                ScriptResourceUtil.executeScript(cx, scope, scriptLocation, scriptContent);
 
                 tryAndAddFunction("create", scope, createFunctions);
                 tryAndAddFunction("render", scope, renderFunctions);
@@ -105,7 +98,7 @@ public class ParsedScript {
                 Scriptable scope = getScope();
                 Context cx = Context.enter();
                 cx.setLanguageVersion(Context.VERSION_ES6);
-                cx.setClassShutter(ScriptManager.CLASS_SHUTTER);
+                cx.setClassShutter(scriptManager.getClassShutter());
                 if(scriptInstance.state == null) scriptInstance.state = cx.newObject(scope);
 
                 for(Function func : functionList) {

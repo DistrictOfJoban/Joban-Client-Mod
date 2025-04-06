@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting.pids;
+package com.lx862.jcm.mod.scripting.jcm.pids;
 
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;

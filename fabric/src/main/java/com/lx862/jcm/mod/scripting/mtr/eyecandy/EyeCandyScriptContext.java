@@ -1,6 +1,6 @@
-package com.lx862.jcm.mod.scripting.eyecandy;
+package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
-import com.lx862.jcm.mod.scripting.SoundCall;
+import com.lx862.jcm.mod.scripting.mtr.SoundCall;
 import com.lx862.mtrscripting.core.ScriptContext;
 import com.lx862.mtrscripting.util.Matrices;
 import com.lx862.mtrscripting.util.ScriptedModel;
@@ -10,6 +10,7 @@ import org.mtr.mod.block.BlockEyeCandy;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class EyeCandyScriptContext extends ScriptContext {
     private final BlockEyeCandy.BlockEntity blockEntity;
     private final List<ModelDrawCall> drawCalls = new ArrayList<>();
