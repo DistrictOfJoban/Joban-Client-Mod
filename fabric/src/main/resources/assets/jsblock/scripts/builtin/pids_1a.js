@@ -26,11 +26,19 @@ function render(ctx, state, pids) {
             .pos(SIDE_PADDING, rowY)
             .draw(ctx);
         } else if(arrival != null && !pids.isRowHidden(i)) {
-            let destinationStr = TextUtil.cycleString(arrival.routeNumber()) + " " + TextUtil.cycleString(arrival.destination());
-            destinationStr = destinationStr.trim();
-            
+            let routeNumber = TextUtil.cycleString(arrival.routeNumber());
+            let destinationStr = TextUtil.cycleString(arrival.destination()).trim();
+
+            if(arrival.circularState().toString() == "CLOCKWISE") {
+                destinationStr = TextUtil.cycleString("順時針經|Clockwise via ") + destinationStr;
+            } else if(arrival.circularState().toString() == "ANTI_CLOCKWISE") {
+                destinationStr = TextUtil.cycleString("逆時針經|Anticlockwise via ") + destinationStr;
+            }
+
+            let finalDestinationDisplay = (routeNumber + " " + destinationStr).trim();
+
             Text.create("Destination Text")
-            .text(destinationStr)
+            .text(finalDestinationDisplay)
             .scale(1.725)
             .size((pids.width / 1.725) - 30 - ((SIDE_PADDING / 1.725) * 3), 9)
             .stretchXY()
