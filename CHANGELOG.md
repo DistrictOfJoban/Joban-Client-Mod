@@ -9,6 +9,8 @@
 - - Add `Timing.currentTimeMillis()` and `Timing.nanoTime()`, these are equivalent methods to `java.lang.System.currentTimeMillis()` and `java.lang.System.currentTimeMillis()`. It is advisable to use this over java.lang.System as it may no longer be available soon.
 
 **Fix:**
+- Fix JSON PIDS (RV/LCD) destination text potentially overlapping if platform is hidden
+- Fix PIDS 1A custom destination text overflowing beyond the PIDS if too long
 - Fix circular route not displayed in JCM PIDS
 - Fix miscalculation of PIDS arrival time, now they should more accurate.
 - Fix Scrollbar in GUI screens shifting away when dragged with mouse
