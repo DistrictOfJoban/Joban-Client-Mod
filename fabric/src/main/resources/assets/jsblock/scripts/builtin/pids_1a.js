@@ -19,7 +19,7 @@ function render(ctx, state, pids) {
             Text.create("Custom Text")
             .text(TextUtil.cycleString(customMsg))
             .scale(1.725)
-            .size(pids.width - (SIDE_PADDING * 2), 9)
+            .size((pids.width / 1.725) - ((SIDE_PADDING / 1.725) * 2), 9)
             .stretchXY()
             .fontMC()
             .color(0xFC9700)
