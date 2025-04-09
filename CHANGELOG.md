@@ -6,7 +6,7 @@
 - - Added [Files](https://www.joban.org/wiki/JCM:Scripting:Documentation:Utilities#Files) for basic data saving functionalities in scripts
 - - Implement `MinecraftClient.worldIsRainingAt` functionality
 - - Add `java.util.*` package to whitelist
-- - Add `Timing.currentTimeMillis()` and `Timing.nanoTime()`, these are equivalent methods to `java.lang.System.currentTimeMillis()` and `java.lang.System.currentTimeMillis()`. It is advisable to use this over java.lang.System as it may no longer be available soon.
+- - Add `Timing.currentTimeMillis()` and `Timing.nanoTime()`, these are equivalent methods to `java.lang.System.currentTimeMillis()` and `java.lang.System.nanoTime()`. It is advisable to use this over java.lang.System as it may no longer be available soon.
 
 **Fix:**
 - Fix JSON PIDS (RV/LCD) destination text potentially overlapping if platform is hidden
