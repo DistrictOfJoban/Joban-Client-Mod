@@ -39,7 +39,6 @@ jobs:
         run: ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Build with Gradle
         run: |
-          ./gradlew :rhino:setupRhino
           ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Create release
         uses: softprops/action-gh-release@v2

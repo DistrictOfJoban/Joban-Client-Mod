@@ -4,6 +4,7 @@ plugins {
 }
 
 def rhinoVersion = "1_7_15"
+def rhinoExist = project.file("src/main/java").exists()
 def shadowPath = ["com", "lx862", "mtrscripting", "lib", "org", "mozilla"]
 
 tasks.register('downloadRhino', Download) {
@@ -41,15 +42,8 @@ tasks.register('setupRhino') {
     }
 }
 
-tasks.register('checkRhino') {
-    doLast {
-        if (!project.file("src/main/java").exists()) {
-            println("---------------------")
-            println("Rhino is not set up, consider running :rhino:setupRhino")
-            println("---------------------")
-            throw new GradleException("Please setup the Rhino (JS Engine) Project with :rhino:setupRhino before build")
-        }
-    }
+if (!rhinoExist) {
+    compileJava.dependsOn(setupRhino)
 }
 
 repositories {

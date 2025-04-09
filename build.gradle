@@ -122,7 +122,6 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 		}
 	}
 
-	compileJava.dependsOn(":rhino:checkRhino")
 	build.finalizedBy(mergeJars)
 	assemble.finalizedBy(mergeJars)
 }
