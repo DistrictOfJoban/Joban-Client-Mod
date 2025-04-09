@@ -42,7 +42,7 @@ public class FilesUtil {
         Path p = resolvePathSafe(dataPath, prefix, filename);
 
         File f = p.toFile();
-        return f.exists() && f.isFile();
+        return f.exists();
     }
 
     /**
