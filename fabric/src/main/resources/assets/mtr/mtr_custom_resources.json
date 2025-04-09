@@ -1,0 +1,12 @@
+{
+  "rails": [
+    {
+      "id": "jcm_circular_tunnel",
+      "name": "JCM Circular Tunnel",
+      "color": "444444",
+      "modelResource": "mtr:rails/circular_tunnel/circular_tunnel.obj",
+      "flipTextureV": true,
+      "repeatInterval": 1
+    }
+  ]
+}
