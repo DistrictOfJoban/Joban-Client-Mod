@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.block.base;
 
+import com.lx862.jcm.mapping.LoaderImpl;
 import com.lx862.jcm.mod.util.BlockUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockExtension;
@@ -8,7 +9,7 @@ import java.util.function.BiConsumer;
 
 public abstract class JCMBlock extends BlockExtension {
     public JCMBlock(BlockSettings settings) {
-        super(settings);
+        super(LoaderImpl.getSolidBlockSettings(settings));
     }
 
     /**

@@ -11,6 +11,15 @@ public class LoaderImpl {
         return world.data.hasRain(pos.data);
     }
 
+    /** Get a block settings forcing it to be solid, as we don't want water to break our block. */
+    public static BlockSettings getSolidBlockSettings(BlockSettings settings) {
+        #if MC_VERSION >= "12001"
+            return new BlockSettings(settings.data.solid());
+        #else
+            return settings;
+        #endif
+    }
+
     public static void openURLScreen(ScreenExtension parentScreen, String url) {
         MinecraftClient mc = MinecraftClient.getInstance();
 
