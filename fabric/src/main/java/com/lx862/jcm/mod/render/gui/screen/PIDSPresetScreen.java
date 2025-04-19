@@ -56,6 +56,7 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         searchBox.setY2(searchStartY);
         searchBox.setWidth2(contentWidth);
         searchBox.setChangedListener2(listViewWidget::setSearchTerm);
+        searchBox.setText2(searchBox.getText2());
 
         listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
         addChild(new ClickableWidget(listViewWidget));

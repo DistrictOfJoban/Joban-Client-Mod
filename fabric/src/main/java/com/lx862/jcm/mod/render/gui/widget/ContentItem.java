@@ -98,6 +98,7 @@ public class ContentItem extends AbstractListItem {
         int widgetWidth = widget == null ? 0 : widget.getWidth();
         int availableTextWidth = width - widgetWidth - ENTRY_PADDING - iconSize;
         int textY = (height / 2) - (textHeight / 2);
+        boolean widgetEnabled = widget == null || widget.getActive();
 
         graphicsHolder.push();
         graphicsHolder.translate(entryX, entryY, 0);
@@ -108,7 +109,8 @@ public class ContentItem extends AbstractListItem {
             graphicsHolder.translate(iconSize + ENTRY_PADDING, 0, 0); // Shift the text to the right
         }
 
-        GuiHelper.drawScrollableText(graphicsHolder, title, elapsed, entryX + ENTRY_PADDING + iconSize, 0, textY, availableTextWidth - iconSize - ENTRY_PADDING - ENTRY_PADDING - ENTRY_PADDING, ARGB_WHITE, true);
+        int textColor = widgetEnabled ? ARGB_WHITE : 0xFF888888;
+        GuiHelper.drawScrollableText(graphicsHolder, title, elapsed, entryX + ENTRY_PADDING + iconSize, 0, textY, availableTextWidth - iconSize - ENTRY_PADDING - ENTRY_PADDING - ENTRY_PADDING, textColor, true);
         graphicsHolder.pop();
     }
 }

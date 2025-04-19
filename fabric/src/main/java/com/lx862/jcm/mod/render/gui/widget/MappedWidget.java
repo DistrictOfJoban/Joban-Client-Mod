@@ -110,6 +110,28 @@ public class MappedWidget {
         return 0;
     }
 
+    public boolean getActive() {
+        if(widget instanceof ButtonWidgetExtension) {
+            return ((ButtonWidgetExtension) widget).getActiveMapped();
+        }
+        if(widget instanceof TextFieldWidgetExtension) {
+            return ((TextFieldWidgetExtension) widget).getActiveMapped();
+        }
+        if(widget instanceof CheckboxWidgetExtension) {
+            return ((CheckboxWidgetExtension) widget).getActiveMapped();
+        }
+        if(widget instanceof SliderWidgetExtension) {
+            return ((SliderWidgetExtension) widget).getActiveMapped();
+        }
+        if(widget instanceof ClickableWidgetExtension) {
+            return ((ClickableWidgetExtension) widget).getActiveMapped();
+        }
+        if(widget instanceof MappedWidget) {
+            return ((MappedWidget) widget).getActive();
+        }
+        return true;
+    }
+
     public void setWidth(int width) {
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension) widget).setWidth2(width);
