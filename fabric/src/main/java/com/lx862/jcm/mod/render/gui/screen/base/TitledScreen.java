@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.render.gui.screen.base;
 
-import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -36,7 +36,7 @@ public abstract class TitledScreen extends AnimatedScreen {
         int y1 = 18;
         int y2 = 18 + 8;
         if(button == 0 && mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2) {
-            LoaderImpl.openURLScreen(this, "https://github.com/DistrictOfJoban/Joban-Client-Mod/issues");
+            LoaderImplClient.openURLScreen(this, "https://github.com/DistrictOfJoban/Joban-Client-Mod/issues");
             new ClickableWidgetExtension(0, 0, 0, 0).playDownSound2(MinecraftClient.getInstance().getSoundManager());
         }
         return super.mouseClicked2(mouseX, mouseY, button);
