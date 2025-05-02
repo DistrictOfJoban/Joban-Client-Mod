@@ -24,7 +24,7 @@ This repository contains the source code for Joban Client Mod.
 ## Future plans
 Due to the shift away from **Minecraft Mappings** in the upcoming MTR version, JCM will need to make sweeping changes to adapt.
 
-A port of JCM v2 for NeoMTR (MTR 3/Architectury) have been made, which is expected to align closer with the architectury port of MTR. 
+A [port of JCM v2 for NeoMTR (MTR 3/Architectury)](https://github.com/DistrictOfJoban/NeoMTR/tree/lx/common/src/main/java/com/lx862/jcm) have been made, which is expected to align closer with the architectury port of MTR. 
 
 ## Links
 - [Website](https://www.joban.org/jcm)
