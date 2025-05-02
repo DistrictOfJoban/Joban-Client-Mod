@@ -4,6 +4,7 @@
 - JCM blocks now no longer have the potential break when water gets flowed towards the block
 
 **Fix:**
+- Account for server time differences for departure timer
 - Minor GUI fixes
 
 **Download:**  

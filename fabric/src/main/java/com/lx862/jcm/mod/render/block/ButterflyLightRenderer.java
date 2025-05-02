@@ -39,8 +39,8 @@ public class ButterflyLightRenderer extends JCMBlockEntityRenderer<ButterflyLigh
         ArrivalResponse firstArrival = Utilities.getElement(arrivals, 0);
         if (firstArrival == null) return;
 
-        boolean arrived = firstArrival.getArrival() <= System.currentTimeMillis();
-        long dwellLeft = firstArrival.getDeparture() - System.currentTimeMillis();
+        boolean arrived = firstArrival.getArrival() - ArrivalsCacheClient.INSTANCE.getMillisOffset() <= System.currentTimeMillis();
+        long dwellLeft = firstArrival.getDeparture() - ArrivalsCacheClient.INSTANCE.getMillisOffset() - System.currentTimeMillis();
         if (!arrived) return;
 
         long secondsLeft = dwellLeft / 1000;
