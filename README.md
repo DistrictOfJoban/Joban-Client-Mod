@@ -21,6 +21,11 @@ Joban Client Mod is an addon mod for the **Minecraft Transit Railway 4.0**, addi
 
 This repository contains the source code for Joban Client Mod.
 
+## Future plans
+Due to the shift away from **Minecraft Mappings** in the upcoming MTR version, JCM will need to make sweeping changes to adapt.
+
+A port of JCM v2 for NeoMTR (MTR 3/Architectury) have been made, which is expected to align closer with the architectury port of MTR. 
+
 ## Links
 - [Website](https://www.joban.org/jcm)
 - [Wiki](https://www.joban.org/wiki/JCM:Joban_Client_Mod)
