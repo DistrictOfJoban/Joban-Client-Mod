@@ -45,7 +45,7 @@ jobs:
         with:
           body_path: CHANGELOG.md
           draft: false
-          tag_name: ${{ inputs.publish-tag }}
+          tag_name: v${{ inputs.publish-tag }}
           prerelease: ${{ inputs.release-type == 'beta' }}
           fail_on_unmatched_files: true
           files: build/*.jar
@@ -60,7 +60,7 @@ jobs:
           files: |
             build/*.jar
           name: '[${{ matrix.minecraft }}] v${{ inputs.publish-tag }}'
-          version: ${{ inputs.publish-tag }}+${{ matrix.minecraft }}
+          version: v${{ inputs.publish-tag }}+${{ matrix.minecraft }}
           version-type: ${{ inputs.release-type }}
           modrinth-featured: ${{ inputs.release-type == 'release' }}
           changelog-file: CHANGELOG.md
