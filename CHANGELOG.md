@@ -1,4 +1,4 @@
-## JCM (v2.0.0-beta.12) for (MTR 4.0.0-beta.16) has been released!
+## JCM (v2.0.0-beta.12) for (MTR 4.0.0-prerelease.1) has been released!
 
 **Changes**
 - JCM blocks now no longer have the potential break when water gets flowed towards the block
