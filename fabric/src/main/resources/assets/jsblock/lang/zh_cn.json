@@ -52,7 +52,7 @@
 	"block.jsblock.signal_light_blue": "信号灯 (蓝色在上)",
 	"block.jsblock.signal_light_green": "信号灯 (绿色在下)",
 	"block.jsblock.signal_light_inverted_1": "信号灯 (反转，蓝-红)",
-	"block.jsblock.signal_light_inverted_2": "信号灯 (反转，蓝-绿)",
+	"block.jsblock.signal_light_inverted_2": "信号灯 (反转，红-绿)",
 	"block.jsblock.signal_light_red_1": "信号灯 (红色在下)",
 	"block.jsblock.signal_light_red_2": "信号灯 (红色在上)",
 	"block.jsblock.sil_emg_stop_button": "紧急停车按钮 (立柱, 南港岛线)",

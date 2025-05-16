@@ -52,7 +52,7 @@
 	"block.jsblock.signal_light_blue": "信號燈 (藍色在上)",
 	"block.jsblock.signal_light_green": "信號燈 (綠色在下)",
 	"block.jsblock.signal_light_inverted_1": "信號燈 (反轉，藍-紅)",
-	"block.jsblock.signal_light_inverted_2": "信號燈 (反轉，藍-綠)",
+	"block.jsblock.signal_light_inverted_2": "信號燈 (反轉，紅-綠)",
 	"block.jsblock.signal_light_red_1": "信號燈 (紅色在下)",
 	"block.jsblock.signal_light_red_2": "信號燈 (紅色在上)",
 	"block.jsblock.sil_emg_stop_button": "緊急停車掣 (立柱, 南港島綫)",
