@@ -1,27 +1,25 @@
 package com.lx862.jcm.mod.scripting.jcm.pids;
 
+import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.core.ScriptInstance;
-import org.mtr.mapping.holder.BlockEntity;
-import org.mtr.mapping.holder.BlockPos;
-import org.mtr.mapping.holder.MinecraftClient;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> {
-    private final BlockEntity be;
+    private final PIDSBlockEntity blockEntity;
     public final List<ScriptResultCall> drawCalls;
 
-    public PIDSScriptInstance(BlockPos pos, ParsedScript script, PIDSWrapper wrapperObject) {
+    public PIDSScriptInstance(PIDSBlockEntity blockEntity, ParsedScript script, PIDSWrapper wrapperObject) {
         super(new PIDSScriptContext(), script);
         setWrapperObject(wrapperObject);
-        this.be = MinecraftClient.getInstance().getWorldMapped().getBlockEntity(pos);
+        this.blockEntity = blockEntity;
         this.drawCalls = new ArrayList<>();
     }
 
     public boolean isDead() {
-        return be.isRemoved();
+        return blockEntity.isRemoved2();
     }
 }
