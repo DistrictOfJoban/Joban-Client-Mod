@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.10-SNAPSHOT'
+    id 'fabric-loom' version "${loom_version}"
 }
 
 loom {
@@ -19,10 +19,10 @@ dependencies {
     minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
     mappings "net.fabricmc:yarn:${yarn_version}:v2"
     modImplementation "org.mtr:MTR-fabric:${rootProject.mtr_version}+${rootProject.minecraft_version}-server"
-    modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
     modApi "com.terraformersmc:modmenu:${mod_menu_version}"
-    annotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.33' // Delibrate: Newer versions just throws an error *when displaying an compiling error*
+    annotationProcessor "systems.manifold:manifold-preprocessor:${manifold_preprocessor}"
 }
 
 tasks.withType(JavaCompile).configureEach {
