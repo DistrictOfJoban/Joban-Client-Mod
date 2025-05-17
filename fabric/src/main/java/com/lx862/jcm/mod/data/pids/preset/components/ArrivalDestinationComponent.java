@@ -26,8 +26,7 @@ public class ArrivalDestinationComponent extends TextComponent {
         if(arrivalIndex >= arrivals.size()) return;
 
         ArrivalResponse arrival = arrivals.get(arrivalIndex);
-        String routeNo = arrival.getRouteNumber().isEmpty() ? "" : arrival.getRouteNumber() + " ";
-        String destinationString = cycleString(routeNo) + cycleString(arrival.getDestination());
+        String destinationString = getDestinationString(arrival);
         if(arrival.getCircularState() == Route.CircularState.CLOCKWISE) {
             destinationString = (isCjk(destinationString, false) ? TranslationProvider.GUI_MTR_CLOCKWISE_VIA_CJK : TranslationProvider.GUI_MTR_CLOCKWISE_VIA).getString(destinationString);
         } else if(arrival.getCircularState() == Route.CircularState.ANTICLOCKWISE) {
@@ -35,6 +34,11 @@ public class ArrivalDestinationComponent extends TextComponent {
         }
 
         drawText(graphicsHolder, guiDrawing, facing, destinationString);
+    }
+
+    public String getDestinationString(ArrivalResponse arrival) {
+        String routeNo = arrival.getRouteNumber().isEmpty() ? "" : arrival.getRouteNumber() + " ";
+        return cycleString(routeNo) + cycleString(arrival.getDestination());
     }
 
     public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {

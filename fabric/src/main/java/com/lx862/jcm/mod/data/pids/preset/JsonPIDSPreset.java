@@ -175,7 +175,8 @@ public class JsonPIDSPreset extends PIDSPresetBase {
                 if(arrivalIndex >= arrivals.size()) continue;
 
                 if (!rowHidden[i]) {
-                    components.add(new ArrivalDestinationComponent(x, rowY, totalWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex)));
+                    ArrivalDestinationComponent arrivalDestinationComponent = new ArrivalDestinationComponent(x, rowY, totalWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex));
+                    components.add(arrivalDestinationComponent);
 
                     if (platformShown) {
                         components.add(new ArrivalTextureComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
@@ -184,9 +185,8 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
                     // ETA text cycle should follow destination
                     ArrivalResponse thisArrival = arrivals.get(arrivalIndex);
-                    boolean haveCjk = IGui.isCjk(thisArrival.getDestination());
-                    boolean haveEn = TextUtil.haveNonCjk(thisArrival.getDestination());
-                    TextTranslationMode mode = haveCjk && haveEn ? TextTranslationMode.CYCLE : haveCjk ? TextTranslationMode.CJK : TextTranslationMode.NON_CJK;
+                    boolean destinationIsCjk = IGui.isCjk(arrivalDestinationComponent.getDestinationString(thisArrival));
+                    TextTranslationMode mode = destinationIsCjk ? TextTranslationMode.CJK : TextTranslationMode.NON_CJK;
                     ArrivalETAComponent eta = new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
                             .with("arrivalIndex", arrivalIndex)
                             .with("textTranslationMode", mode.name())
