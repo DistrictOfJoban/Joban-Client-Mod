@@ -28,7 +28,7 @@ A [port of JCM v2 for NeoMTR (MTR 3/Architectury)](https://github.com/DistrictOf
 
 ## Links
 - [Website](https://www.joban.org/jcm)
-- [Wiki](https://www.joban.org/wiki/JCM:Joban_Client_Mod)
+- Documentation (Work In Progress!)
 
 ## License
 This project is licensed under the MIT License.

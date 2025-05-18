@@ -5,7 +5,7 @@ Thanks for considering to contribute to Joban Client Mod, below you'll find some
 Submitting a bug report is a great way to put lights on the issue you noticed that are not behaving correctly. To get started, head over to the [issues](https://github.com/DistrictOfJoban/Joban-Client-Mod/issues) page and submit a new issue!
 
 ## Documentation
-All information and documentation regarding JCM is located on our [wiki](https://www.joban.org/wiki/JCM:Joban_Client_Mod), if you would like to update or add any information, you can create an account there and start modifying!
+A new documentation is currently in the making!
 
 ## Translation
 We currently provide official translations for **English**, **Chinese Simplified (zh_cn)** and **Chinese Traditional (zh_tw, zh_hk)**.  
