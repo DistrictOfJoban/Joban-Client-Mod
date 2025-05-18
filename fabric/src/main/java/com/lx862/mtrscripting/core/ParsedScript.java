@@ -88,11 +88,13 @@ public class ParsedScript {
     }
 
     public Future<?> invokeFunction(ScriptInstance<?> scriptInstance, List<Function> functionList, Runnable callback) {
-        if(lastFailedTime != -1 && System.currentTimeMillis() - lastFailedTime <= SCRIPT_RESET_TIME) {
+        if(duringFailCooldown()) {
             return null;
         }
 
         return scriptManager.submitScriptTask(() -> {
+            if(duringFailCooldown()) return;
+
             TimingUtil.prepareForScript(scriptInstance);
             try {
                 Scriptable scope = getScope();
@@ -127,6 +129,10 @@ public class ParsedScript {
 
     public Future<?> invokeDisposeFunction(ScriptInstance<?> instance, Runnable callback) {
         return invokeFunction(instance, disposeFunctions, callback);
+    }
+
+    private boolean duringFailCooldown() {
+        return lastFailedTime != -1 && System.currentTimeMillis() - lastFailedTime <= SCRIPT_RESET_TIME;
     }
 
     public Scriptable getScope() {
