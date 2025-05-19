@@ -39,6 +39,10 @@ public final class ClientHelper {
 		MinecraftClient.getInstance().openScreen(new Screen(new SubsidyMachineScreen(blockPos, pricePerUse, cooldown)));
 	}
 
+	public static void openOperatorButtonGUIScreen(BlockPos blockPos, boolean[] keyRequirements) {
+		MinecraftClient.getInstance().openScreen(new Screen(new OperatorButtonScreen(blockPos, keyRequirements)));
+	}
+
 	public static void openEnquiryScreen(EnquiryScreenType type, BlockPos pos, List<TransactionEntry> entries, int remainingBalance) {
 		if(type == EnquiryScreenType.RV) {
 			MinecraftClient.getInstance().openScreen(new Screen(new RVEnquiryScreen(pos, entries, remainingBalance)));

@@ -13,6 +13,7 @@ public interface GuiHelper {
     int MAX_CONTENT_WIDTH = 400;
     int BOTTOM_ROW_MARGIN = 6;
     int MAX_BUTTON_WIDTH = 375;
+    int MAX_ALPHA = 0xFF000000;
 
     static void drawTexture(GuiDrawing guiDrawing, Identifier identifier, double x, double y, double width, double height) {
         Pair<Float, Float> uv = JCMClient.getMcMetaManager().getUV(identifier);

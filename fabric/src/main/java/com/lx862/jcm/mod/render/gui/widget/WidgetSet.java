@@ -26,6 +26,10 @@ public class WidgetSet extends ClickableWidgetExtension implements WidgetsWrappe
         this(maxWidgetHeight, 10);
     }
 
+    /**
+     * Set the position and size of the widget and reposition all added widget.
+     * Make sure to call this after all widget has been added.
+     */
     public void setXYSize(int x, int y, int width, int height) {
         setX2(x);
         setY2(y);

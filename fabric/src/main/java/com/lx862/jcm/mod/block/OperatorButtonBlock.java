@@ -1,19 +1,26 @@
 package com.lx862.jcm.mod.block;
 
 import com.lx862.jcm.mod.block.base.WallAttachedBlock;
+import com.lx862.jcm.mod.block.entity.OperatorButtonBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
+import com.lx862.jcm.mod.network.gui.OperatorButtonGUIPacket;
+import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.BlockEntityExtension;
+import org.mtr.mapping.mapper.BlockWithEntity;
 import org.mtr.mapping.tool.HolderBase;
 import org.mtr.mod.Items;
 import org.mtr.mod.block.IBlock;
+import org.mtr.mod.item.ItemDriverKey;
 
 import java.util.List;
 
-public class OperatorButtonBlock extends WallAttachedBlock {
-    private final int poweredDuration;
+public class OperatorButtonBlock extends WallAttachedBlock implements BlockWithEntity {
+    public static final Item[] ACCEPTED_KEYS = {org.mtr.mod.Items.BASIC_DRIVER_KEY.get(), org.mtr.mod.Items.GUARD_KEY.get(), org.mtr.mod.Items.ADVANCED_DRIVER_KEY.get(), Items.CREATIVE_DRIVER_KEY.get()};
     public static final BooleanProperty POWERED = BlockProperties.POWERED;
+    private final int poweredDuration;
 
     public OperatorButtonBlock(BlockSettings settings, int poweredDuration) {
         super(settings);
@@ -29,13 +36,33 @@ public class OperatorButtonBlock extends WallAttachedBlock {
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if(world.isClient()) return ActionResult.SUCCESS;
+        BlockEntity thisBE = world.getBlockEntity(pos);
+        OperatorButtonBlockEntity be = thisBE == null ? null : (OperatorButtonBlockEntity)thisBE.data;
 
-        return IBlock.checkHoldingItem(world, player, (item) -> {
-            setPowered(world, state, pos, true);
-            scheduleBlockTick(world, pos, new Block(this), poweredDuration);
+        IBlock.checkHoldingBrush(world, player, () -> {
+            Networking.sendPacketToClient(player, new OperatorButtonGUIPacket(pos, be.getKeyRequirements()));
         }, () -> {
-            player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "operator_button.fail").formatted(TextFormatting.RED)), true);
-        }, Items.DRIVER_KEY.get());
+            boolean pass = false;
+
+            if(be == null) {
+                if(player.getActiveItem().getItem().data instanceof ItemDriverKey) {
+                    pass = true;
+                }
+            } else {
+                if(be.canOpen(player.getMainHandStack())) {
+                    pass = true;
+                }
+            }
+
+            if(pass) {
+                setPowered(world, state, pos, true);
+                scheduleBlockTick(world, pos, new Block(this), poweredDuration);
+            } else {
+                player.sendMessage(Text.cast(TextUtil.translatable(TextCategory.HUD, "operator_button.fail").formatted(TextFormatting.RED)), true);
+            }
+        });
+
+        return ActionResult.SUCCESS;
     }
 
     @Override
@@ -65,6 +92,11 @@ public class OperatorButtonBlock extends WallAttachedBlock {
     @Override
     public int getStrongRedstonePower2(BlockState state, BlockView world, BlockPos pos, Direction direction) {
         return IBlock.getStatePropertySafe(state, POWERED) ? 15 : 0;
+    }
+
+    @Override
+    public BlockEntityExtension createBlockEntity(BlockPos blockPos, BlockState blockState) {
+        return new OperatorButtonBlockEntity(blockPos, blockState);
     }
 
     private void setPowered(World world, BlockState blockState, BlockPos pos, boolean powered) {
