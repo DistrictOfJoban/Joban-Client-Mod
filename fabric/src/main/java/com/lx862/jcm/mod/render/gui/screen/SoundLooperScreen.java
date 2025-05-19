@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.render.gui.screen;
 import com.lx862.jcm.mod.block.entity.SoundLooperBlockEntity;
 import com.lx862.jcm.mod.network.block.SoundLooperUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreen;
+import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigListScreen;
 import com.lx862.jcm.mod.render.gui.widget.BlockPosWidget;
 import com.lx862.jcm.mod.render.gui.widget.IntegerTextField;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
@@ -18,7 +18,7 @@ import org.mtr.mapping.mapper.CheckboxWidgetExtension;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
-public class SoundLooperScreen extends BlockConfigScreen {
+public class SoundLooperScreen extends BlockConfigListScreen {
     private final ButtonWidgetExtension soundCategoryButton;
     private final TextFieldWidgetExtension soundIdTextField;
     private final IntegerTextField repeatTickTextField;

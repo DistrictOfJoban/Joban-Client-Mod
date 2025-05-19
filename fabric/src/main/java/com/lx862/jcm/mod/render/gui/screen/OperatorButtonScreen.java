@@ -5,7 +5,7 @@ import com.lx862.jcm.mod.network.block.OperatorButtonUpdatePacket;
 import com.lx862.jcm.mod.registry.Blocks;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.GuiHelper;
-import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigRawScreen;
+import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreen;
 import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -21,7 +21,7 @@ import org.mtr.mod.item.ItemDriverKey;
 
 import java.util.function.Consumer;
 
-public class OperatorButtonScreen extends BlockConfigRawScreen {
+public class OperatorButtonScreen extends BlockConfigScreen {
     private static final int KEY_BUTTON_SIZE = 50;
     private final boolean[] keyRequirements;
     private KeyToggleButton hoveredButton = null;

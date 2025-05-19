@@ -12,6 +12,7 @@ public abstract class TitledScreen extends AnimatedScreen {
     public static final int TEXT_PADDING = 10;
     public static final int TITLE_SCALE = 2;
     protected double elapsed = 0;
+
     public TitledScreen(boolean animatable) {
         super(animatable);
     }

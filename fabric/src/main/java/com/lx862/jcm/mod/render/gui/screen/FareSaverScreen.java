@@ -2,7 +2,7 @@ package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.network.block.FareSaverUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreen;
+import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigListScreen;
 import com.lx862.jcm.mod.render.gui.widget.IntegerTextField;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
@@ -13,7 +13,7 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
-public class FareSaverScreen extends BlockConfigScreen {
+public class FareSaverScreen extends BlockConfigListScreen {
     private final IntegerTextField discountTextField;
     private final TextFieldWidgetExtension prefixTextField;
     public FareSaverScreen(BlockPos blockPos, String prefix, int discount) {

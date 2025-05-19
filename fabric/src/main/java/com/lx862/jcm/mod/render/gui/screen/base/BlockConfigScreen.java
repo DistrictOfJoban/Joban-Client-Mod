@@ -1,7 +1,6 @@
 package com.lx862.jcm.mod.render.gui.screen.base;
 
 import com.lx862.jcm.mod.render.GuiHelper;
-import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -16,31 +15,75 @@ import org.mtr.mod.data.IGui;
 /**
  * GUI Screen for configuring block settings, you should extend this class for your own block config screen
  */
-public abstract class BlockConfigScreen extends BlockConfigRawScreen implements GuiHelper {
-    protected final ListViewWidget listViewWidget;
+public abstract class BlockConfigScreen extends TitledScreen implements GuiHelper {
+    protected final BlockPos blockPos;
+    protected final WidgetSet bottomEntryWidget;
+    private final ButtonWidgetExtension saveButton;
+    private final ButtonWidgetExtension discardButton;
+    private boolean discardConfig = false;
 
     public BlockConfigScreen(BlockPos blockPos) {
-        super(blockPos);
-        this.listViewWidget = new ListViewWidget();
+        super(false);
+        this.blockPos = blockPos;
+
+        this.saveButton = new ButtonWidgetExtension(0, 0, 0, 20, TextUtil.translatable(TextCategory.GUI, "block_config.save"), (btn) -> {
+            onClose2();
+        });
+
+        this.discardButton = new ButtonWidgetExtension(0, 0, 0, 20, TextUtil.translatable(TextCategory.GUI, "block_config.discard"), (btn) -> {
+            discardConfig = true;
+            onClose2();
+        });
+
+        this.bottomEntryWidget = new WidgetSet(20);
+    }
+
+    protected int getContentWidth() {
+        return (int)Math.min((width * 0.75), MAX_CONTENT_WIDTH);
+    }
+
+    protected void addBottomRowEntry(int x, int y, int width, int height) {
+        bottomEntryWidget.reset();
+        addChild(new ClickableWidget(saveButton));
+        addChild(new ClickableWidget(discardButton));
+
+        bottomEntryWidget.addWidget(saveButton);
+        bottomEntryWidget.addWidget(discardButton);
+        bottomEntryWidget.setXYSize(x, y, width, height);
+        addChild(new ClickableWidget(bottomEntryWidget));
     }
 
     @Override
-    protected void init2() {
-        super.init2();
-        int contentWidth = getContentWidth();
-        int listViewHeight = Math.max(160, (int)((height - 60) * 0.75));
-        int startX = (width - contentWidth) / 2;
-        int startY = TEXT_PADDING * 5;
-        int bottomEntryHeight = (height - startY - listViewHeight - (BOTTOM_ROW_MARGIN * 2));
+    public MutableText getScreenSubtitle() {
+        Station atStation = InitClient.findStation(blockPos);
 
-        listViewWidget.reset();
-
-        listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
-        addConfigEntries();
-        addBottomRowEntry(startX, startY + listViewHeight + BOTTOM_ROW_MARGIN, contentWidth, bottomEntryHeight);
-        listViewWidget.positionWidgets();
-        addChild(new ClickableWidget(listViewWidget));
+        if(atStation != null) {
+            return TextUtil.translatable(TextCategory.GUI,
+                    "block_config.subtitle_with_station",
+                    blockPos.getX(), blockPos.getY(), blockPos.getZ(),
+                    IGui.formatStationName(atStation.getName())
+            );
+        } else {
+            return TextUtil.translatable(TextCategory.GUI,
+                    "block_config.subtitle",
+                    blockPos.getX(), blockPos.getY(), blockPos.getZ()
+            );
+        }
     }
 
-    public abstract void addConfigEntries();
+    @Override
+    public void onClose2() {
+        // Save config by default, unless explicitly requested not to
+        if(!discardConfig) {
+            onSave();
+        }
+        super.onClose2();
+    }
+
+    protected abstract void onSave();
+
+    @Override
+    public boolean isPauseScreen2() {
+        return false;
+    }
 }

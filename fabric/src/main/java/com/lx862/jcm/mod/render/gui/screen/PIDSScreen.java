@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.network.block.PIDSUpdatePacket;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigScreen;
+import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigListScreen;
 import com.lx862.jcm.mod.render.gui.widget.ContentItem;
 import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
@@ -28,7 +28,7 @@ import org.mtr.mod.screen.DashboardListSelectorScreen;
 
 import static org.mtr.mod.screen.PIDSConfigScreen.getPlatformsForList;
 
-public class PIDSScreen extends BlockConfigScreen {
+public class PIDSScreen extends BlockConfigListScreen {
     protected final TextFieldWidgetExtension[] customMessagesWidgets;
     protected final CheckboxWidgetExtension[] rowHiddenWidgets;
     protected final CheckboxWidgetExtension hidePlatformNumber;
