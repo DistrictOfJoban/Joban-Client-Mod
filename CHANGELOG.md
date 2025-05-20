@@ -6,6 +6,7 @@
 
 **Fix:**
 - Fix JSON PIDS ETA text potentially not following the destination's language
+- Fix Scripted PIDS Preset not working reliably
 - Fix some textures not being power-of-two resolution. The mipmap level can now be raised to 2 with solely MTR and JCM installed.
 
 **Download:**  

@@ -1,6 +1,5 @@
 package com.lx862.mtrscripting.core;
 
-import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.util.*;
@@ -102,7 +101,6 @@ public class ParsedScript {
                 cx.setLanguageVersion(Context.VERSION_ES6);
                 cx.setClassShutter(scriptManager.getClassShutter());
                 if(scriptInstance.state == null) scriptInstance.state = cx.newObject(scope);
-
                 for(Function func : functionList) {
                     func.call(cx, scope, scope, new Object[]{scriptInstance.getScriptContext(), scriptInstance.state, scriptInstance.getWrapperObject()});
                 }
@@ -124,7 +122,8 @@ public class ParsedScript {
         if(instance.scriptTask != null && !instance.scriptTask.isDone()) {
             return instance.scriptTask;
         }
-        return invokeFunction(instance, renderFunctions, callback);
+        instance.scriptTask = invokeFunction(instance, renderFunctions, callback);
+        return instance.scriptTask;
     }
 
     public Future<?> invokeDisposeFunction(ScriptInstance<?> instance, Runnable callback) {
