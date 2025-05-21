@@ -37,6 +37,12 @@ public abstract class CeilingAttachedDirectional2Block extends CeilingAttachedDi
     }
 
     @Override
+    public void onBreak2(World world, BlockPos breakPos, BlockState breakState, PlayerEntity player) {
+        breakWithoutDropIfCreative(world, breakPos, breakState, player, this, HorizontalDoubleBlockBehavior::getLootDropPos);
+        super.onBreak2(world, breakPos, breakState, player);
+    }
+
+    @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         boolean isLeft = IBlock.getStatePropertySafe(state, IS_LEFT);
 

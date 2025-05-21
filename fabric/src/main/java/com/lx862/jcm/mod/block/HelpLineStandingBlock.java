@@ -17,9 +17,9 @@ public class HelpLineStandingBlock extends Vertical3Block implements PowerableBl
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
         switch (IBlock.getStatePropertySafe(state, new Property<>(THIRD.data))) {
             case LOWER:
-            case MIDDLE:
-                return IBlock.getVoxelShapeByDirection(4, 0, 7.5, 12, 16, 8.5, IBlock.getStatePropertySafe(state, FACING));
             case UPPER:
+                return IBlock.getVoxelShapeByDirection(4, 0, 7.5, 12, 16, 8.5, IBlock.getStatePropertySafe(state, FACING));
+            case MIDDLE:
                 VoxelShape vx1 = IBlock.getVoxelShapeByDirection(4, 0, 7.5, 12, 16, 8.5, IBlock.getStatePropertySafe(state, FACING));
                 VoxelShape vx2 = IBlock.getVoxelShapeByDirection(5.5, 0, 8.5, 10.5, 16, 10.5, IBlock.getStatePropertySafe(state, FACING));
                 return VoxelShapes.union(vx1, vx2);
@@ -31,9 +31,9 @@ public class HelpLineStandingBlock extends Vertical3Block implements PowerableBl
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         for(BlockPos bPos : getAllPos(state, world, pos)) {
-            BlockState bs = world.getBlockState(bPos);
-            world.setBlockState(bPos, bs.with(new Property<>(UNPOWERED.data), false));
-            updateAllRedstone(World.cast(world), bPos, new Block(this), bs);
+            BlockState blockState = world.getBlockState(bPos);
+            world.setBlockState(bPos, blockState.with(new Property<>(UNPOWERED.data), false));
+            updateAllRedstone(World.cast(world), bPos, new Block(this), blockState);
             scheduleBlockTick(world, bPos, new Block(this), 20);
         }
         return ActionResult.SUCCESS;

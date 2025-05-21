@@ -27,6 +27,12 @@ public abstract class Horizontal2MirroredBlock extends DirectionalBlock {
     }
 
     @Override
+    public void onBreak2(World world, BlockPos breakPos, BlockState breakState, PlayerEntity player) {
+        breakWithoutDropIfCreative(world, breakPos, breakState, player, this, this::getLootDropPos);
+        super.onBreak2(world, breakPos, breakState, player);
+    }
+
+    @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         if(IBlock.getStatePropertySafe(state, FACING) == direction && !(neighborState.isOf(new Block(this)))) {
             return Blocks.getAirMapped().getDefaultState();
@@ -35,9 +41,15 @@ public abstract class Horizontal2MirroredBlock extends DirectionalBlock {
     }
 
     @Override
-    public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
+    public BlockPos[] getAllPos(BlockState state, WorldAccess world, BlockPos pos) {
         Direction facing = IBlock.getStatePropertySafe(state, FACING);
         BlockPos otherPos = pos.offset(facing);
         return new BlockPos[]{ pos, otherPos };
+    }
+
+    public BlockPos getLootDropPos(BlockState state, BlockPos pos) {
+        Direction facing = IBlock.getStatePropertySafe(state, FACING);
+        if(facing == Direction.EAST || facing == Direction.NORTH) return pos;
+        return pos.offset(facing);
     }
 }

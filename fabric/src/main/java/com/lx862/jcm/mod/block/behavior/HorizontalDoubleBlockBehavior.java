@@ -33,6 +33,12 @@ public interface HorizontalDoubleBlockBehavior {
         world.setBlockState(placedPos.offset(IBlock.getStatePropertySafe(state, FACING).rotateYClockwise()), state.with(new Property<>(IS_LEFT.data), false));
     }
 
+    static BlockPos getLootDropPos(BlockState state, BlockPos pos) {
+        Direction facing = IBlock.getStatePropertySafe(state, FACING);
+        boolean isLeft = IBlock.getStatePropertySafe(state, IS_LEFT);
+        return isLeft ? pos : pos.offset(facing.rotateYCounterclockwise());
+    }
+
     static void addProperties(List<HolderBase<?>> properties) {
         properties.add(IS_LEFT);
     }

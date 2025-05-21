@@ -23,6 +23,12 @@ public abstract class Horizontal2Block extends DirectionalBlock implements Horiz
     }
 
     @Override
+    public void onBreak2(World world, BlockPos breakPos, BlockState breakState, PlayerEntity player) {
+        breakWithoutDropIfCreative(world, breakPos, breakState, player, this, HorizontalDoubleBlockBehavior::getLootDropPos);
+        super.onBreak2(world, breakPos, breakState, player);
+    }
+
+    @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         boolean isLeft = IBlock.getStatePropertySafe(state, IS_LEFT);
         if(!HorizontalDoubleBlockBehavior.blockIsValid(pos, state, world, isLeft)) return Blocks.getAirMapped().getDefaultState();
@@ -37,7 +43,7 @@ public abstract class Horizontal2Block extends DirectionalBlock implements Horiz
     }
 
     @Override
-    public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
+    public BlockPos[] getAllPos(BlockState state, WorldAccess world, BlockPos pos) {
         Direction facing = IBlock.getStatePropertySafe(state, FACING);
         boolean isLeft = IBlock.getStatePropertySafe(state, IS_LEFT);
 

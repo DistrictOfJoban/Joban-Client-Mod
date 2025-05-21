@@ -43,7 +43,7 @@ public abstract class HorizontalWallAttached2Block extends DirectionalBlock impl
     }
 
     @Override
-    public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
+    public BlockPos[] getAllPos(BlockState state, WorldAccess world, BlockPos pos) {
         Direction facing = IBlock.getStatePropertySafe(state, FACING);
         BlockPos otherPos = pos.offset(facing);
         return new BlockPos[]{ pos, otherPos };

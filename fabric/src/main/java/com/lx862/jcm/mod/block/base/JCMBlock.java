@@ -6,6 +6,7 @@ import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockExtension;
 
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 public abstract class JCMBlock extends BlockExtension {
     public JCMBlock(BlockSettings settings) {
@@ -24,8 +25,26 @@ public abstract class JCMBlock extends BlockExtension {
         }
     }
 
+    protected void breakWithoutDropIfCreative(World world, BlockPos pos, BlockState state, PlayerEntity player, BlockExtension blockInstance, GetLootDropPositionCallback getLootPos) {
+        if(player.isCreative()) {
+            BlockPos dropPos = getLootPos.get(state, pos);
+            if(world.getBlockState(dropPos).getBlock().data.equals(blockInstance)) {
+                world.breakBlock(dropPos, false);
+            }
+        }
+    }
+
     /* Get all pos of the entire block structure */
-    public BlockPos[] getAllPos(BlockState state, World world, BlockPos sourcePos) {
+    public BlockPos[] getAllPos(BlockState state, WorldAccess world, BlockPos sourcePos) {
         return new BlockPos[]{sourcePos};
+    }
+
+    public BlockPos[] getAllPos(BlockState state, World world, BlockPos sourcePos) {
+        return getAllPos(state, WorldAccess.cast(world), sourcePos);
+    }
+
+    @FunctionalInterface
+    public interface GetLootDropPositionCallback {
+        BlockPos get(BlockState state, BlockPos pos);
     }
 }

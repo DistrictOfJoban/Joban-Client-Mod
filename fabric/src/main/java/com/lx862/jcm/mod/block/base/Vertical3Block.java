@@ -28,6 +28,12 @@ public abstract class Vertical3Block extends DirectionalBlock {
     }
 
     @Override
+    public void onBreak2(World world, BlockPos breakPos, BlockState breakState, PlayerEntity player) {
+        breakWithoutDropIfCreative(world, breakPos, breakState, player, this, this::getLootDropPos);
+        super.onBreak2(world, breakPos, breakState, player);
+    }
+
+    @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         if(!BlockUtil.canSurvive(state.getBlock(), world, pos, Direction.UP, getPart(IBlock.getStatePropertySafe(state, new Property<>(THIRD.data))), HEIGHT)) {
             return Blocks.getAirMapped().getDefaultState();
@@ -62,6 +68,15 @@ public abstract class Vertical3Block extends DirectionalBlock {
                         pos};
             default:
                 return super.getAllPos(state, world, pos);
+        }
+    }
+
+    private BlockPos getLootDropPos(BlockState state, BlockPos pos) {
+        switch(IBlock.getStatePropertySafe(state, new Property<>(THIRD.data))) {
+            case LOWER: return pos;
+            case MIDDLE: return pos.down();
+            case UPPER: return pos.down(2);
+            default: return pos;
         }
     }
 

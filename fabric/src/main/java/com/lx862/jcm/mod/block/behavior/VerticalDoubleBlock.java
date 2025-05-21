@@ -15,6 +15,14 @@ public interface VerticalDoubleBlock {
         world.setBlockState(startPos.up(), state.with(new Property<>(HALF.data), IBlock.DoubleBlockHalf.UPPER));
     }
 
+    static BlockPos getLootDropPos(BlockState state, BlockPos pos) {
+        switch(IBlock.getStatePropertySafe(state, new Property<>(HALF.data))) {
+            case LOWER: return pos;
+            case UPPER: return pos.down();
+            default: return pos;
+        }
+    }
+
     static boolean blockNotValid(Block blockInstance, WorldAccess world, BlockPos pos, BlockState state) {
         IBlock.DoubleBlockHalf thisPart = IBlock.getStatePropertySafe(state, new Property<>(HALF.data));
         int offset = thisPart == IBlock.DoubleBlockHalf.UPPER ? -1 : 1;

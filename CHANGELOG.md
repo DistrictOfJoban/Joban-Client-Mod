@@ -10,6 +10,7 @@
 - Fix JSON PIDS ETA text potentially not following the destination's language
 - Fix Scripted PIDS Preset not working reliably
 - Fix some textures not being power-of-two resolution. The mipmap level can now be raised to 2 with solely MTR and JCM installed.
+- Fix block with multiple parts still dropping item in creative when broken
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

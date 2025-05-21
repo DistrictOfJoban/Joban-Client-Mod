@@ -34,7 +34,13 @@ public abstract class Vertical2Block extends DirectionalBlock implements Vertica
     }
 
     @Override
-    public BlockPos[] getAllPos(BlockState state, World world, BlockPos pos) {
+    public void onBreak2(World world, BlockPos breakPos, BlockState breakState, PlayerEntity player) {
+        breakWithoutDropIfCreative(world, breakPos, breakState, player, this, VerticalDoubleBlock::getLootDropPos);
+        super.onBreak2(world, breakPos, breakState, player);
+    }
+
+    @Override
+    public BlockPos[] getAllPos(BlockState state, WorldAccess world, BlockPos pos) {
         switch(IBlock.getStatePropertySafe(state, new Property<>(HALF.data))) {
             case LOWER:
                 return new BlockPos[]{
