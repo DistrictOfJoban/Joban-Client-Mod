@@ -151,9 +151,9 @@ public class OperatorButtonScreen extends BlockConfigScreen {
                 GuiHelper.drawRectangle(guiDrawing, getX2(), getY2(), 1, getHeight2(), borderColor);
                 GuiHelper.drawRectangle(guiDrawing, getX2() + getWidth2()-1, getY2(), 1, getHeight2(), borderColor);
 
-                if(this.lastHovered != hovered) {
-                    hoverCallback.accept(hovered ? this : null);
-                    this.lastHovered = hovered;
+                if(this.lastHovered != isHovered()) {
+                    hoverCallback.accept(isHovered() ? this : null);
+                    this.lastHovered = isHovered();
                 }
             }
         }
