@@ -7,6 +7,7 @@
 - - The JCM variant will be kept for backward compatibility, but will no longer be obtainable in the inventory.
 
 **Fixes:**
+- Fix some block disappearing when migrating to JCM v2.
 - Fix JSON PIDS ETA text potentially not following the destination's language
 - Fix Scripted PIDS Preset not working reliably
 - Fix some textures not being power-of-two resolution. The mipmap level can now be raised to 2 with solely MTR and JCM installed.

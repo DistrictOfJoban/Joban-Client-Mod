@@ -61,7 +61,7 @@ public class JCMUtil {
                 case "station_ceiling_1":
                     return Constants.id("station_ceiling_wrl");
                 case "station_ceiling_1_station_color":
-                    return Constants.id("station_ceiling_wrl_station_colored");
+                    return Constants.id("station_ceiling_wrl_station_color");
                 case "station_ceiling_pole":
                     return Constants.id("station_ceiling_wrl_pole");
                 case "station_name_tall_stand":
