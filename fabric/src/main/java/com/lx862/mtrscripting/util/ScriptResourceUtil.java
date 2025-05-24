@@ -200,6 +200,26 @@ public class ScriptResourceUtil {
         return ScriptingAPI.getAddonVersion(modid);
     }
 
+    @Deprecated
+    public static String getMTRVersion() {
+        return getAddonVersion("mtr"); // This assumes MTR have registered the version
+    }
+
+    @Deprecated
+    public static String getNTEVersion() {
+        return "0.5.2+1.19.2"; // Hardcoded for backward compat
+    }
+
+    @Deprecated
+    public static int getNTEVersionInt() {
+        return 502; // Hardcoded for backward compat
+    }
+
+    @Deprecated
+    public static int getNTEProtoVersion() {
+        return 2; // Hardcoded for backward compat
+    }
+
     private static Identifier resolveRelativePath(Identifier baseFile, String relative) {
         String result = relative.toLowerCase(Locale.ROOT).replace('\\', '/');
         if (result.contains(":")) {

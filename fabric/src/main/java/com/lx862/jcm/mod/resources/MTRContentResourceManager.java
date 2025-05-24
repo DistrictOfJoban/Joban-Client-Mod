@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.core.ParsedScript;
@@ -23,11 +24,14 @@ import java.util.Map;
 
 /** Temporary class to hold resource handling regarding MTR/NTE contents, until they are upstreamed */
 public class MTRContentResourceManager {
+    private static final HashMap<String, ParsedScript> vehicleScripts = new HashMap<>();
     private static final HashMap<String, ParsedScript> eyecandyScripts = new HashMap<>();
 
     public static void reload() {
         eyecandyScripts.clear();
+        vehicleScripts.clear();
         registerEyecandyScripts();
+        registerVehicleScripts();
     }
 
     private static void registerEyecandyScripts() {
@@ -37,28 +41,58 @@ public class MTRContentResourceManager {
                     final JsonObject rootObject = new JsonParser().parse(isp).getAsJsonObject();
 
                     if(rootObject.has("model")) {
-                        tryRegisterScript(FilenameUtils.getBaseName(identifier.getPath()), rootObject);
+                        tryRegisterScript(FilenameUtils.getBaseName(identifier.getPath()), "eyecandy", "Block", rootObject, false);
                     } else {
                         for (Map.Entry<String, JsonElement> entry : rootObject.entrySet()) {
                             final String id = entry.getKey();
                             final JsonObject entryObject = entry.getValue().getAsJsonObject();
 
-                            tryRegisterScript(id, entryObject);
+                            tryRegisterScript(id, "eyecandy", "Block", entryObject, false);
                         }
                     }
                 } catch (Exception e) {
-                    JCMLogger.error("", e);
+                    if(JCMClient.getConfig().debug) {
+                        JCMLogger.error("Error when parsing eyecandy scripts!", e);
+                    } else {
+                        JCMLogger.error("Error when parsing eyecandy scripts: " + e.getMessage());
+                        JCMLogger.error("(Enable debug mode to see more information)");
+                    }
                 }
             }
         });
     }
 
-    private static void tryRegisterScript(String id, JsonObject jsonObject) throws Exception {
-        final List<ScriptContent> scripts = new ObjectArrayList<>();
+    private static void registerVehicleScripts() {
+        ResourceManagerHelper.readAllResources(new Identifier("mtr", "mtr_custom_resources.json"), (inputStream) -> {
+            try(InputStreamReader isp = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+                final JsonObject rootObject = new JsonParser().parse(isp).getAsJsonObject();
+                if(rootObject.has("custom_trains")) {
+                    final JsonObject vehicleObject = rootObject.get("custom_trains").getAsJsonObject();
+                    for(Map.Entry<String, JsonElement> map : vehicleObject.entrySet()) {
+                        String id = map.getKey();
+                        JsonObject vehicleResource = map.getValue().getAsJsonObject();
+                        tryRegisterScript(id, "vehicle", "Train", vehicleResource, true);
+                    }
+                }
+            } catch (Exception e) {
+                if(JCMClient.getConfig().debug) {
+                    JCMLogger.error("Error when parsing vehicle scripts!", e);
+                } else {
+                    JCMLogger.error("Error when parsing vehicle scripts: " + e.getMessage());
+                    JCMLogger.error("(Enable debug mode to see more information)");
+                }
+            }
+        });
+    }
 
-        if (jsonObject.has("scriptFiles") || jsonObject.has("scriptTexts")) {
-            if(jsonObject.has("scriptFiles")) {
-                JsonArray scriptFilesArray = jsonObject.get("scriptFiles").getAsJsonArray();
+    private static void tryRegisterScript(String id, String name, String contextName, JsonObject jsonObject, boolean useSnakeCase) throws Exception {
+        final List<ScriptContent> scripts = new ObjectArrayList<>();
+        final String scriptFilesKey = useSnakeCase ? "script_files" : "scriptFiles";
+        final String scriptTextsKey = useSnakeCase ? "script_texts" : "scriptTexts";
+
+        if (jsonObject.has(scriptFilesKey) || jsonObject.has(scriptTextsKey)) {
+            if(jsonObject.has(scriptFilesKey)) {
+                JsonArray scriptFilesArray = jsonObject.get(scriptFilesKey).getAsJsonArray();
                 for(int i = 0; i < scriptFilesArray.size(); i++) {
                     Identifier scriptLocation = new Identifier(scriptFilesArray.get(i).getAsString());
                     String scriptText = ResourceManagerHelper.readResource(scriptLocation);
@@ -71,10 +105,10 @@ public class MTRContentResourceManager {
                 }
             }
 
-            if(jsonObject.has("scriptTexts")) {
-                JsonArray scriptTextArray = jsonObject.get("scriptTexts").getAsJsonArray();
+            if(jsonObject.has(scriptTextsKey)) {
+                JsonArray scriptTextArray = jsonObject.get(scriptTextsKey).getAsJsonArray();
                 for(int i = 0; i < scriptTextArray.size(); i++) {
-                    Identifier scriptLocation = new Identifier(Constants.MOD_ID, "script_texts/eyecandy/" + id + "/line" + i);
+                    Identifier scriptLocation = new Identifier(Constants.MOD_ID, "script_texts/" + name + "/" + id + "/line" + i);
                     String scriptText = scriptTextArray.get(i).getAsString();
                     scripts.add(new ScriptContent(scriptLocation, scriptText));
                 }
@@ -82,12 +116,16 @@ public class MTRContentResourceManager {
         }
 
         if(!scripts.isEmpty()) {
-            ParsedScript ps = MTRScripting.getScriptManager().parseScript("Block", scripts);
+            ParsedScript ps = MTRScripting.getScriptManager().parseScript(contextName, scripts);
             eyecandyScripts.put(id, ps);
         }
     }
 
-    public static ParsedScript getEyecandyScript(String id) {
-        return eyecandyScripts.get(id);
+    public static ParsedScript getEyecandyScript(String modelId) {
+        return eyecandyScripts.get(modelId);
+    }
+
+    public static ParsedScript getVehicleScript(String carriageId) {
+        return vehicleScripts.get(carriageId);
     }
 }

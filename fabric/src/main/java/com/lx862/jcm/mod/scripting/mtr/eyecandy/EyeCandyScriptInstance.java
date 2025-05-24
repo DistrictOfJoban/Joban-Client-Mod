@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
-import com.lx862.jcm.mod.scripting.mtr.SoundCall;
+import com.lx862.jcm.mod.scripting.mtr.sound.PositionedSoundCall;
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.core.ScriptInstance;
@@ -26,7 +26,7 @@ public class EyeCandyScriptInstance extends ScriptInstance<BlockEyeCandy.BlockEn
         this.drawCalls.addAll(newDrawCalls);
     }
 
-    public void setSoundCalls(List<SoundCall> calls) {
+    public void setSoundCalls(List<PositionedSoundCall> calls) {
         this.soundCalls.clear();
         this.soundCalls.addAll(calls);
     }

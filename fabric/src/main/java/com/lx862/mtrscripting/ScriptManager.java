@@ -18,8 +18,8 @@ import java.util.concurrent.Future;
 
 public class ScriptManager {
     public static final Logger LOGGER = LogManager.getLogger("JCM Scripting");
-    private final MTRClassShutter classShutter;
     private static final ObjectList<TriConsumer<String, Context, Scriptable>> onParseScriptCallback = new ObjectArrayList<>();
+    private final MTRClassShutter classShutter;
 
     private final ScriptInstanceManager instanceManager;
     private ExecutorService scriptThread;
@@ -34,14 +34,14 @@ public class ScriptManager {
         return this.instanceManager;
     }
 
-    public void callOnParseScriptCallback(String contextName, Context context, Scriptable scriptable) {
+    public void onParseScript(String contextName, Context context, Scriptable scriptable) {
         for(TriConsumer<String, Context, Scriptable> entry : onParseScriptCallback) {
             entry.accept(contextName, context, scriptable);
         }
     }
 
     /**
-     * Register a callback that will be called when a script is to be parsed.
+     * Register a callback that will be called when a script is to be parsed.<br>
      * This can be to add new types/objects to the script.
      * @param callback The callback to run (Context type, Rhino Context, Scriptable)
      */
@@ -60,13 +60,13 @@ public class ScriptManager {
         return new ParsedScript(this, contextName, scripts);
     }
 
-    /** Currently this checks and dispose dead script instances (i.e. Those that are no longer active).
+    /** Currently this checks and dispose dead script instances (i.e. Those that are no longer active).<br>
      * This should be called from time to time. */
     public void tick() {
         this.instanceManager.clearDeadInstance();
     }
 
-    /** Clear all script instances
+    /** Clear all script instances<br>
      * This should be called on resource reload */
     public void reset() {
         instanceManager.reset();

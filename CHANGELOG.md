@@ -6,6 +6,8 @@
 - - Configurable via brush
 - The JCM **Standing Station Name Block** has been moved to the official MTR Mod!
 - - The JCM variant will be kept for backward compatibility, but will no longer be obtainable in the inventory.
+- **Scripting**
+- - Reverse stance on backward compatibility, JCM will try to facilitate with migration of existing scripts. Functions to check for MTR & NTE version has been re-added.
 
 **Fixes:**
 - Fix some block disappearing when migrating to JCM v2.
