@@ -49,8 +49,6 @@ public class OperatorButtonBlockEntity extends JCMBlockEntityBase {
                 return keyRequirements[i];
             }
         }
-
-        System.out.println("0");
         return false;
     }
 }

@@ -11,25 +11,33 @@ import org.mtr.mapping.holder.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class VehicleScriptContext extends ScriptContext {
     private final List<VehicleModelDrawCall> carModelDrawCalls = new ArrayList<>();
     private final List<VehicleModelDrawCall> conectionModelDrawCalls = new ArrayList<>();
     private final List<SoundCall> carSoundCalls = new ArrayList<>();
     private final List<SoundCall> announceSoundCalls = new ArrayList<>();
+    private final String vehicleId;
 
     @Override
     public void reset() {
         this.carModelDrawCalls.clear();
         this.conectionModelDrawCalls.clear();
+        this.carSoundCalls.clear();
+        this.announceSoundCalls.clear();
+    }
+
+    public VehicleScriptContext(String vehicleId) {
+        this.vehicleId = vehicleId;
     }
 
     public void drawCarModel(ScriptedModel model, int carIndex, Matrices matrices) {
-        this.carModelDrawCalls.add(new VehicleModelDrawCall(model, carIndex, matrices.getStoredMatrixTransformations().copy()));
+        carModelDrawCalls.add(new VehicleModelDrawCall(model, carIndex, matrices == null ? null :  matrices.getStoredMatrixTransformations().copy()));
     }
 
     public void drawConnModel(ScriptedModel model, int carIndex, Matrices matrices) {
-        this.conectionModelDrawCalls.add(new VehicleModelDrawCall(model, carIndex, matrices.getStoredMatrixTransformations().copy()));
+        this.conectionModelDrawCalls.add(new VehicleModelDrawCall(model, carIndex, matrices == null ? null : matrices.getStoredMatrixTransformations().copy()));
     }
 
     public void playCarSound(Identifier sound, int carIndex, float x, float y, float z, float volume, float pitch) {
@@ -39,6 +47,11 @@ public class VehicleScriptContext extends ScriptContext {
 
     public void playAnnSound(Identifier sound, float volume, float pitch) {
         this.announceSoundCalls.add(new NonPositionedSoundCall(sound, volume, pitch));
+    }
+
+    public boolean isMyVehicle(VehicleWrapper vehicleWrapper, int carIndex) {
+        String theirVehicleId = vehicleWrapper.trainTypeId(carIndex);
+        return Objects.equals(vehicleId, theirVehicleId);
     }
 
     public List<VehicleModelDrawCall> getCarModelDrawCalls() {

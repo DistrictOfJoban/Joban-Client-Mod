@@ -28,6 +28,7 @@ public class MTRContentResourceManager {
     private static final HashMap<String, ParsedScript> eyecandyScripts = new HashMap<>();
 
     public static void reload() {
+        JCMLogger.info("Loading scripts on-behalf of MTR...");
         eyecandyScripts.clear();
         vehicleScripts.clear();
         registerEyecandyScripts();
@@ -41,13 +42,16 @@ public class MTRContentResourceManager {
                     final JsonObject rootObject = new JsonParser().parse(isp).getAsJsonObject();
 
                     if(rootObject.has("model")) {
-                        tryRegisterScript(FilenameUtils.getBaseName(identifier.getPath()), "eyecandy", "Block", rootObject, false);
+                        String id = FilenameUtils.getBaseName(identifier.getPath());
+                        ParsedScript ps = tryParseScript(id, "eyecandy", "Block", rootObject, false);
+                        eyecandyScripts.put(id, ps);
                     } else {
                         for (Map.Entry<String, JsonElement> entry : rootObject.entrySet()) {
                             final String id = entry.getKey();
                             final JsonObject entryObject = entry.getValue().getAsJsonObject();
 
-                            tryRegisterScript(id, "eyecandy", "Block", entryObject, false);
+                            ParsedScript ps = tryParseScript(id, "eyecandy", "Block", entryObject, false);
+                            eyecandyScripts.put(id, ps);
                         }
                     }
                 } catch (Exception e) {
@@ -69,9 +73,15 @@ public class MTRContentResourceManager {
                 if(rootObject.has("custom_trains")) {
                     final JsonObject vehicleObject = rootObject.get("custom_trains").getAsJsonObject();
                     for(Map.Entry<String, JsonElement> map : vehicleObject.entrySet()) {
-                        String id = map.getKey();
+                        String baseId = "mtr_custom_train_" + map.getKey();
                         JsonObject vehicleResource = map.getValue().getAsJsonObject();
-                        tryRegisterScript(id, "vehicle", "Train", vehicleResource, true);
+                        ParsedScript ps = tryParseScript(baseId, "vehicle", "Vehicle", vehicleResource, true);
+                        if(ps != null) {
+                            vehicleScripts.put(baseId + "_trailer", ps);
+                            vehicleScripts.put(baseId + "_cab_1", ps);
+                            vehicleScripts.put(baseId + "_cab_2", ps);
+                            vehicleScripts.put(baseId + "_cab_3", ps);
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -85,7 +95,7 @@ public class MTRContentResourceManager {
         });
     }
 
-    private static void tryRegisterScript(String id, String name, String contextName, JsonObject jsonObject, boolean useSnakeCase) throws Exception {
+    private static ParsedScript tryParseScript(String id, String name, String contextName, JsonObject jsonObject, boolean useSnakeCase) throws Exception {
         final List<ScriptContent> scripts = new ObjectArrayList<>();
         final String scriptFilesKey = useSnakeCase ? "script_files" : "scriptFiles";
         final String scriptTextsKey = useSnakeCase ? "script_texts" : "scriptTexts";
@@ -115,10 +125,7 @@ public class MTRContentResourceManager {
             }
         }
 
-        if(!scripts.isEmpty()) {
-            ParsedScript ps = MTRScripting.getScriptManager().parseScript(contextName, scripts);
-            eyecandyScripts.put(id, ps);
-        }
+        return scripts.isEmpty() ? null : MTRScripting.getScriptManager().parseScript(contextName, scripts);
     }
 
     public static ParsedScript getEyecandyScript(String modelId) {

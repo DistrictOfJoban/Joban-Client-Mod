@@ -7,7 +7,9 @@
     "modded.mtr.MixinTicketSystem"
   ],
   "client": [
-    "modded.mtr.RenderEyeCandyMixin"
+    "modded.mtr.VehicleResourceMixin",
+    "modded.mtr.RenderEyeCandyMixin",
+    "modded.mtr.RenderVehiclesMixin"
   ],
   "injectors": {
     "defaultRequire": 1

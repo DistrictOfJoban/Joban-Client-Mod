@@ -11,7 +11,7 @@ public class ScriptInstanceManager {
     private final Map<UniqueKey, ScriptInstance> instances = new HashMap<>();
 
     public <T> ScriptInstance<T> getInstance(UniqueKey id, Supplier<ScriptInstance<T>> getInstance) {
-        ScriptInstance<T> existingInstance = instances.get(id);
+        ScriptInstance<T> existingInstance = getInstance(id);
         if(existingInstance != null) {
             return existingInstance;
         }
@@ -20,6 +20,10 @@ public class ScriptInstanceManager {
         newInstance.getScript().invokeCreateFunction(newInstance, () -> {});
         instances.put(id, newInstance);
         return newInstance;
+    }
+
+    public <T> ScriptInstance<T> getInstance(UniqueKey id) {
+        return instances.get(id);
     }
 
     public void clearDeadInstance() {
