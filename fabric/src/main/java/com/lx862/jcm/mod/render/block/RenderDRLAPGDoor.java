@@ -33,7 +33,7 @@ public class RenderDRLAPGDoor<T extends APGDoorDRLBlockEntity> extends BlockEnti
         if (world == null) {
             return;
         }
-        entity.updateRedstone(tickDelta);
+        entity.tick(tickDelta);
 
         final BlockPos blockPos = entity.getPos2();
         final Direction facing = IBlock.getStatePropertySafe(world, blockPos, BlockPSDAPGDoorBase.FACING);
