@@ -19,5 +19,7 @@
 - Fix some textures not being power-of-two resolution. The mipmap level can now be raised to 2 with solely MTR and JCM installed.
 - Fix block with multiple parts still dropping item in creative when broken
 
+**MTR 4.0.0-prerelease.2 may crash with older JCM releases (i.e. beta.13), please update to this version instead!**
+
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
