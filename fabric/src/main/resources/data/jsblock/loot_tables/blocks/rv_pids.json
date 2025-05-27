@@ -1,0 +1,36 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:${condition}",
+              "terms": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "jsblock:rv_pids",
+                  "properties": {
+                    "facing": "north"
+                  }
+                },
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "jsblock:rv_pids",
+                  "properties": {
+                    "facing": "east"
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "jsblock:rv_pids"
+        }
+      ],
+      "conditions": []
+    }
+  ]
+}

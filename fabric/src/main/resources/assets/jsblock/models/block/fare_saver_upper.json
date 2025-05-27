@@ -1,0 +1,47 @@
+{
+	"texture_size": [16, 32],
+	"textures": {
+		"1": "jsblock:block/fare_saver_upper",
+		"2": "jsblock:block/fare_saver_banner_upper",
+		"3": "mtr:block/sign/logo",
+		"particle": "jsblock:block/fare_saver_banner_upper"
+	},
+	"elements": [
+		{
+			"from": [3, 0, 6.5],
+			"to": [13, 16, 9.5],
+			"shade": false,
+			"faces": {
+				"north": {"uv": [14.5216, 0, 16, 16], "texture": "#1"},
+				"east": {"uv": [0.5, 0, 2.1875, 16], "texture": "#1"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"west": {"uv": [0.5, 0, 2.125, 16], "texture": "#1"},
+				"up": {"uv": [0, 1.00524, 1.60733, 2.84555], "texture": "#1", "cullface": "up"}
+			}
+		},
+		{
+			"from": [4.5, 0.6, 9.6],
+			"to": [11.5, 10.2, 9.6],
+			"shade": false,
+			"faces": {
+				"east": {"uv": [0, 0, 2.1875, 16], "texture": "#2"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#2"},
+				"west": {"uv": [0, 0, 2.25, 16], "texture": "#2"},
+				"up": {"uv": [0, 1.00524, 1.60733, 2.84555], "texture": "#2"},
+				"down": {"uv": [0, 0, 14, 0.5], "texture": "#2"}
+			}
+		},
+		{
+			"from": [6.7, 10.1, 9.6],
+			"to": [9.1, 12.5, 9.6],
+			"shade": false,
+			"faces": {
+				"east": {"uv": [0, 0, 2.1875, 16], "texture": "#3"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#3"},
+				"west": {"uv": [0, 0, 2.25, 16], "texture": "#3"},
+				"up": {"uv": [0, 1.00524, 1.60733, 2.84555], "texture": "#3"},
+				"down": {"uv": [0, 0, 14, 0.5], "texture": "#3"}
+			}
+		}
+	]
+}
