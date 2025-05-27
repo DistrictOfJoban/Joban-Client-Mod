@@ -16,20 +16,32 @@ public class Matrices {
         this.storedMatrixTransformations.add(GraphicsHolder::push);
     }
 
-    public void translate(double x, double y, double z) {
+    public void translate(float x, float y, float z) {
         this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.translate(x, y, z));
     }
 
-    public void rotateX(float x) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateXDegrees(x));
+    public void rotateX(float xRad) {
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateXRadians(xRad));
     }
 
-    public void rotateY(float y) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateYDegrees(y));
+    public void rotateY(float yRad) {
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateYRadians(yRad));
     }
 
-    public void rotateZ(float z) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateZDegrees(z));
+    public void rotateZ(float zRad) {
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateZRadians(zRad));
+    }
+
+    public void rotateXDegrees(float xDeg) {
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateXDegrees(xDeg));
+    }
+
+    public void rotateYDegrees(float yDeg) {
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateYDegrees(yDeg));
+    }
+
+    public void rotateZDegrees(float zDeg) {
+        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateZDegrees(zDeg));
     }
 
     public void scale(float x, float y, float z) {

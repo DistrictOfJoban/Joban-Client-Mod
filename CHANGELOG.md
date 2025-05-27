@@ -9,6 +9,8 @@
 - **Scripting**
 - - Reverse stance on backward compatibility, JCM will try to facilitate with migration of existing scripts. Functions to check for MTR & NTE version has been re-added.
 - - Add vehicle scripting, *not useful to developer at the minute as it's still missing many functions*, however if you see more error than usual in the console log, you know why.
+- - `Matrices.rotateX`, `Matrices.rotateY`, `Matrices.rotateZ` now uses radian instead of degrees, just like how they were in NTE.
+- - - Use `Matrices.rotateXDegrees`, `Matrices.rotateYDegrees`, `Matrices.rotateZDegrees` to continue rotating with degrees.
 
 **Fixes:**
 - Fix some block disappearing when migrating to JCM v2.
