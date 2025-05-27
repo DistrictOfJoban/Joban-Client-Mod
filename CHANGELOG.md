@@ -8,6 +8,7 @@
 - - The JCM variant will be kept for backward compatibility, but will no longer be obtainable in the inventory.
 - **Scripting**
 - - Reverse stance on backward compatibility, JCM will try to facilitate with migration of existing scripts. Functions to check for MTR & NTE version has been re-added.
+- - Add vehicle scripting, *not useful to developer at the minute as it's still missing many functions*, however if you see more error than usual in the console log, you know why.
 
 **Fixes:**
 - Fix some block disappearing when migrating to JCM v2.
