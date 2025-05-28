@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.network.block.PIDSProjectorUpdatePacket;
+import com.lx862.jcm.mod.registry.Blocks;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.gui.widget.CategoryItem;
 import com.lx862.jcm.mod.render.gui.widget.DoubleTextField;
@@ -44,7 +45,7 @@ public class PIDSProjectorScreen extends PIDSScreen {
 
     @Override
     public MutableText getScreenTitle() {
-        return TextUtil.translatable(TextCategory.BLOCK, "pids_projector");
+        return Blocks.PIDS_PROJECTOR.get().getName();
     }
 
     @Override

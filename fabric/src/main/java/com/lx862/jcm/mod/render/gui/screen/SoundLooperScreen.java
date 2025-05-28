@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.block.entity.SoundLooperBlockEntity;
 import com.lx862.jcm.mod.network.block.SoundLooperUpdatePacket;
+import com.lx862.jcm.mod.registry.Blocks;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigListScreen;
 import com.lx862.jcm.mod.render.gui.widget.BlockPosWidget;
@@ -63,7 +64,7 @@ public class SoundLooperScreen extends BlockConfigListScreen {
 
     @Override
     public MutableText getScreenTitle() {
-        return TextUtil.translatable(TextCategory.BLOCK, "sound_looper");
+        return Blocks.SOUND_LOOPER.get().getName();
     }
 
     @Override

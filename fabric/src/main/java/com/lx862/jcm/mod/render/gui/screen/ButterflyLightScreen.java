@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.network.block.ButterflyLightUpdatePacket;
+import com.lx862.jcm.mod.registry.Blocks;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigListScreen;
 import com.lx862.jcm.mod.render.gui.widget.IntegerTextField;
@@ -21,7 +22,7 @@ public class ButterflyLightScreen extends BlockConfigListScreen {
 
     @Override
     public MutableText getScreenTitle() {
-        return TextUtil.translatable(TextCategory.BLOCK, "butterfly_light");
+        return Blocks.BUTTERFLY_LIGHT.get().getName();
     }
 
     @Override

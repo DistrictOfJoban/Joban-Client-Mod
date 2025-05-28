@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.render.gui.screen;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.network.block.PIDSUpdatePacket;
+import com.lx862.jcm.mod.registry.Blocks;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigListScreen;
 import com.lx862.jcm.mod.render.gui.widget.ContentItem;
@@ -92,7 +93,7 @@ public class PIDSScreen extends BlockConfigListScreen {
 
     @Override
     public MutableText getScreenTitle() {
-        return TextUtil.translatable(TextCategory.BLOCK, "pids_rv");
+        return Blocks.RV_PIDS.get().getName();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.network.block.FareSaverUpdatePacket;
+import com.lx862.jcm.mod.registry.Blocks;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigListScreen;
 import com.lx862.jcm.mod.render.gui.widget.IntegerTextField;
@@ -26,7 +27,7 @@ public class FareSaverScreen extends BlockConfigListScreen {
 
     @Override
     public MutableText getScreenTitle() {
-        return TextUtil.translatable(TextCategory.BLOCK, "faresaver");
+        return Blocks.FARE_SAVER.get().getName();
     }
 
     @Override
