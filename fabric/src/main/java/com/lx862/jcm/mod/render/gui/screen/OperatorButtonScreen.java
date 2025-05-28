@@ -140,9 +140,18 @@ public class OperatorButtonScreen extends BlockConfigScreen {
             if (this.visible) {
                 GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
                 ColorHelper.unpackColor(GuiHelper.MAX_ALPHA | keyItem.color, (a, r, g, b) -> {
+                    #if MC_VERSION <= "11605"
+                    RenderSystem.color4f(r / 255f, g / 255f, b / 255f, a / 255f);
+                    #else
                     RenderSystem.setShaderColor(r / 255f, g / 255f, b / 255f, a / 255f);
+                    #endif
                     GuiHelper.drawTexture(guiDrawing, KEY_TEXTURE, getX2() + BORDER_PADDING, getY2() + BORDER_PADDING, getWidth2() - (BORDER_PADDING * 2), getHeight2() - (BORDER_PADDING * 2));
+
+                    #if MC_VERSION <= "11605"
+                    RenderSystem.color4f(1, 1, 1, 1);
+                    #else
                     RenderSystem.setShaderColor(1, 1, 1, 1);
+                    #endif
                 });
 
                 int borderColor = allowed ? SELECTED_COLOR : DESELECTED_COLOR;
