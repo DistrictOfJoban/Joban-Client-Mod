@@ -1,6 +1,7 @@
 ## JCM (v2.0.0-prerelease.1) for (MTR 4.0.0-prerelease.2) has been released!
 
 **Changes:**
+- The **Fire Alarm** block now emits redstone signals when right-clicked!
 - Update Japanese translations (Thanks **CinderaceOTS**!)
 - To adapt to the new train driver key changes in MTR 4, **Operator Button** now allows choosing which driver keys are allowed.
 - - Configurable via brush
