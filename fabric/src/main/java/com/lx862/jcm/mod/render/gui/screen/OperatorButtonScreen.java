@@ -44,7 +44,7 @@ public class OperatorButtonScreen extends BlockConfigScreen {
 
         for(int i = 0; i < OperatorButtonBlock.ACCEPTED_KEYS.length; i++) {
             final int keyIdx = i;
-            KeyToggleButton keyToggleButton = new KeyToggleButton((ItemDriverKey) OperatorButtonBlock.ACCEPTED_KEYS[keyIdx].data, keyRequirements[keyIdx], (itm) -> {
+            KeyToggleButton keyToggleButton = new KeyToggleButton((ItemDriverKey) OperatorButtonBlock.ACCEPTED_KEYS[keyIdx].get().data, keyRequirements[keyIdx], (itm) -> {
                 hoveredButton = itm;
             }, 0, 0, KEY_BUTTON_SIZE, KEY_BUTTON_SIZE, (btn) -> {
                 keyRequirements[keyIdx] = ((KeyToggleButton)btn.data).isAllowed();

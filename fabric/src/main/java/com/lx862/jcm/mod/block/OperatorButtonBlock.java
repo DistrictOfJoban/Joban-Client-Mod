@@ -10,6 +10,7 @@ import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockWithEntity;
+import org.mtr.mapping.registry.ItemRegistryObject;
 import org.mtr.mapping.tool.HolderBase;
 import org.mtr.mod.Items;
 import org.mtr.mod.block.IBlock;
@@ -18,7 +19,7 @@ import org.mtr.mod.item.ItemDriverKey;
 import java.util.List;
 
 public class OperatorButtonBlock extends WallAttachedBlock implements BlockWithEntity {
-    public static final Item[] ACCEPTED_KEYS = {org.mtr.mod.Items.BASIC_DRIVER_KEY.get(), org.mtr.mod.Items.GUARD_KEY.get(), org.mtr.mod.Items.ADVANCED_DRIVER_KEY.get(), Items.CREATIVE_DRIVER_KEY.get()};
+    public static final ItemRegistryObject[] ACCEPTED_KEYS = {org.mtr.mod.Items.BASIC_DRIVER_KEY, org.mtr.mod.Items.GUARD_KEY, org.mtr.mod.Items.ADVANCED_DRIVER_KEY, Items.CREATIVE_DRIVER_KEY};
     public static final BooleanProperty POWERED = BlockProperties.POWERED;
     private final int poweredDuration;
 

@@ -45,7 +45,7 @@ public class OperatorButtonBlockEntity extends JCMBlockEntityBase {
 
     public boolean canOpen(ItemStack itemStack) {
         for(int i = 0; i < OperatorButtonBlock.ACCEPTED_KEYS.length; i++) {
-            if(Objects.equals(OperatorButtonBlock.ACCEPTED_KEYS[i].data, itemStack.getItem().data)) {
+            if(Objects.equals(OperatorButtonBlock.ACCEPTED_KEYS[i].get().data, itemStack.getItem().data)) {
                 return keyRequirements[i];
             }
         }
