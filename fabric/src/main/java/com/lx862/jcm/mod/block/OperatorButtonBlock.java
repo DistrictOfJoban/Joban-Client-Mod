@@ -44,13 +44,15 @@ public class OperatorButtonBlock extends WallAttachedBlock implements BlockWithE
             Networking.sendPacketToClient(player, new OperatorButtonGUIPacket(pos, be.getKeyRequirements()));
         }, () -> {
             boolean pass = false;
+            ItemStack mainHandStack = player.getMainHandStack();
+            ItemStack offHandStack = player.getOffHandStack();
 
             if(be == null) {
-                if(player.getActiveItem().getItem().data instanceof ItemDriverKey) {
+                if(mainHandStack.getItem().data instanceof ItemDriverKey || offHandStack.getItem().data instanceof ItemDriverKey) {
                     pass = true;
                 }
             } else {
-                if(be.canOpen(player.getMainHandStack())) {
+                if(be.canOpen(mainHandStack) || be.canOpen(offHandStack)) {
                     pass = true;
                 }
             }
