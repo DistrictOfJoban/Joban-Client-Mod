@@ -168,42 +168,40 @@ public class JsonPIDSPreset extends PIDSPresetBase {
                 totalWidth -= (14 * ARRIVAL_TEXT_SCALE);
             }
 
+            boolean haveCustomMessage = customMessages[i] != null && !customMessages[i].isEmpty();
+            boolean canShowArrival = arrivalIndex < arrivals.size() && !rowHidden[i];
 
-            if(customMessages[i] != null && !customMessages[i].isEmpty()) {
+            if(haveCustomMessage) {
                 components.add(new CustomTextComponent(x, rowY, screenWidth - (PIDS_MARGIN * 3), 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
-            } else {
-                if(arrivalIndex >= arrivals.size()) continue;
+            } else if(canShowArrival) {
+                ArrivalDestinationComponent arrivalDestinationComponent = new ArrivalDestinationComponent(x, rowY, totalWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex));
+                components.add(arrivalDestinationComponent);
 
-                if (!rowHidden[i]) {
-                    ArrivalDestinationComponent arrivalDestinationComponent = new ArrivalDestinationComponent(x, rowY, totalWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex));
-                    components.add(arrivalDestinationComponent);
-
-                    if (platformShown) {
-                        components.add(new ArrivalTextureComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
-                        components.add(new PlatformComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 8, 8, fontId, RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
-                    }
-
-                    // ETA text cycle should follow destination
-                    ArrivalResponse thisArrival = arrivals.get(arrivalIndex);
-                    boolean destinationIsCjk = IGui.isCjk(arrivalDestinationComponent.getDestinationString(thisArrival));
-                    TextTranslationMode mode = destinationIsCjk ? TextTranslationMode.CJK : TextTranslationMode.NON_CJK;
-                    ArrivalETAComponent eta = new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
-                            .with("arrivalIndex", arrivalIndex)
-                            .with("textTranslationMode", mode.name())
-                    );
-
-                    ArrivalCarComponent car = new ArrivalCarComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
-                            .with("arrivalIndex", arrivalIndex)
-                            .with("textTranslationMode", mode.name())
-                    );
-
-                    if(showCar) {
-                        components.add(new CycleComponent(new KVPair().with("cycleTime", 80), eta, car));
-                    } else {
-                        components.add(eta);
-                    }
-                    arrivalIndex++;
+                if (platformShown) {
+                    components.add(new ArrivalTextureComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
+                    components.add(new PlatformComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 8, 8, fontId, RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
                 }
+
+                // ETA text cycle should follow destination
+                ArrivalResponse thisArrival = arrivals.get(arrivalIndex);
+                boolean destinationIsCjk = IGui.isCjk(arrivalDestinationComponent.getDestinationString(thisArrival));
+                TextTranslationMode mode = destinationIsCjk ? TextTranslationMode.CJK : TextTranslationMode.NON_CJK;
+                ArrivalETAComponent eta = new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
+                        .with("arrivalIndex", arrivalIndex)
+                        .with("textTranslationMode", mode.name())
+                );
+
+                ArrivalCarComponent car = new ArrivalCarComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
+                        .with("arrivalIndex", arrivalIndex)
+                        .with("textTranslationMode", mode.name())
+                );
+
+                if(showCar) {
+                    components.add(new CycleComponent(new KVPair().with("cycleTime", 80), eta, car));
+                } else {
+                    components.add(eta);
+                }
+                arrivalIndex++;
             }
 
             rowY += (screenHeight / 4.7) * ARRIVAL_TEXT_SCALE;
