@@ -8,6 +8,7 @@ import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleWrapper;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.UniqueKey;
 import org.mtr.core.data.VehicleCar;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectImmutableList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.VehicleExtension;
@@ -22,10 +23,14 @@ public abstract class RenderVehiclesMixin {
     @Inject(method = "render(JLorg/mtr/mapping/holder/Vector3d;)V", at = @At(value = "INVOKE", target = "Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArraySet;forEach(Ljava/util/function/Consumer;)V"))
     private static void renderScript(long millisElapsed, Vector3d cameraShakeOffset, CallbackInfo ci) {
         for(VehicleExtension vehicle : MinecraftClientData.getInstance().vehicles) {
-            for(VehicleCar vehicleCar : vehicle.vehicleExtraData.immutableVehicleCars) {
+            ObjectImmutableList<VehicleCar> cars = vehicle.vehicleExtraData.immutableVehicleCars;
+            for(int i = 0; i < cars.size(); i++) {
+                final int carIndex = i;
+                VehicleCar vehicleCar = cars.get(carIndex);
                 ParsedScript script = MTRContentResourceManager.getVehicleScript(vehicleCar.getVehicleId());
                 if(script == null) continue;
-                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "vehicle", vehicle.getId(), vehicleCar.getVehicleId()), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicleCar.getVehicleId()), vehicle, script));
+
+                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "vehicle", vehicle.getId(), vehicleCar.getVehicleId()), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicleCar.getVehicleId(), carIndex), vehicle, script));
                 if(!(scriptInstance instanceof VehicleScriptInstance)) continue;
 
                 VehicleWrapper wrapperObject = new VehicleWrapper(vehicle);

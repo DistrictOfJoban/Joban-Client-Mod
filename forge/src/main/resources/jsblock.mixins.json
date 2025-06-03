@@ -9,7 +9,8 @@
   "client": [
     "modded.mtr.VehicleResourceMixin",
     "modded.mtr.RenderEyeCandyMixin",
-    "modded.mtr.RenderVehiclesMixin"
+    "modded.mtr.RenderVehiclesMixin",
+    "modded.mtr.VehicleSchemaMixin"
   ],
   "injectors": {
     "defaultRequire": 1

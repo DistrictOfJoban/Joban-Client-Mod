@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
+import com.lx862.jcm.mixin.modded.mtr.VehicleSchemaMixin;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.core.data.PathData;
 import org.mtr.core.data.TransportMode;
@@ -22,10 +23,11 @@ public class VehicleWrapper {
         }
     }
 
-    public boolean shouldRender() {
-        return true;
+    public boolean shouldRender(int carIndex) {
+        return vehicleExtension.persistentVehicleData.rayTracing[carIndex];
     }
 
+    @Deprecated
     public boolean shouldRenderDetail() {
         return true;
     }
@@ -47,6 +49,14 @@ public class VehicleWrapper {
         return vehicleExtension.getTransportMode();
     }
 
+    public double spacing(int carIndex) {
+        return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getLength();
+    }
+
+    public double width(int carIndex) {
+        return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getWidth();
+    }
+
     public int trainCars() {
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.size();
     }
@@ -63,12 +73,8 @@ public class VehicleWrapper {
         return vehicleExtension.vehicleExtraData.getMaxManualSpeed();
     }
 
-    public int manualToAutomaticTime() {
-        throw new NotImplementedException("Not implemented yet.");
-    }
-
     public double railProgress() {
-        throw new NotImplementedException("Not implemented yet.");
+        return ((VehicleSchemaMixin)vehicleExtension).getRailProgress();
     }
 
     public double speed() {
