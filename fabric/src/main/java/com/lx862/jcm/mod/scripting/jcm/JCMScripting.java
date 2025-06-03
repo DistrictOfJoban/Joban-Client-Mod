@@ -10,11 +10,8 @@ import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeJavaClass;
 import org.mtr.mod.client.MinecraftClientData;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 public class JCMScripting {
-    private static final ScriptManager scriptManager = ScriptingAPI.createScriptManager();
+    private static final ScriptManager scriptManager = new ScriptManager();
     /**
      * Called once when the mod entrypoint is invoked
      */

@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.util;
+package com.lx862.jcm.mod.scripting.mtr.util;
 
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;

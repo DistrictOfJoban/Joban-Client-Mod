@@ -5,7 +5,7 @@ import com.lx862.jcm.mod.scripting.mtr.sound.PositionedSoundCall;
 import com.lx862.jcm.mod.scripting.mtr.sound.SoundCall;
 import com.lx862.mtrscripting.core.ScriptContext;
 import com.lx862.mtrscripting.util.Matrices;
-import com.lx862.mtrscripting.util.ScriptedModel;
+import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.mapping.holder.Identifier;
 

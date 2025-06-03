@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr;
 
+import com.lx862.jcm.mod.scripting.mtr.util.ModelManager;
 import com.lx862.jcm.mod.scripting.mtr.util.TextUtil;
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.api.ClassRule;
@@ -12,7 +13,7 @@ import org.mtr.mod.client.MinecraftClientData;
  * A stub for scripting in MTR mod
  */
 public class MTRScripting {
-    private static final ScriptManager scriptManager = ScriptingAPI.createScriptManager();
+    private static final ScriptManager scriptManager = new ScriptManager();
 
     /**
      * Called once when the mod entrypoint is invoked
@@ -31,6 +32,7 @@ public class MTRScripting {
         scriptManager.onParseScript((contextName, context, scriptable) -> {
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
+            scriptable.put("ModelManager", scriptable, new NativeJavaClass(scriptable, ModelManager.class));
         });
     }
 

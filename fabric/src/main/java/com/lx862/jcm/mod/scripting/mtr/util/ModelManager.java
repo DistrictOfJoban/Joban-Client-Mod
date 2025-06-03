@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.util;
+package com.lx862.jcm.mod.scripting.mtr.util;
 
 import com.lx862.mtrscripting.ScriptManager;
 import org.mtr.mapping.holder.Identifier;

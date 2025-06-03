@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+/**
+ * Manages multiple instances of executing scripts
+ */
 public class ScriptInstanceManager {
     private final Map<UniqueKey, ScriptInstance> instances = new HashMap<>();
 
@@ -42,6 +45,9 @@ public class ScriptInstanceManager {
         }
     }
 
+    /**
+     * Dispose and clear all script instance
+     */
     public void reset() {
         for(ScriptInstance<?> instance : new HashMap<>(instances).values()) {
             instance.getScript().invokeDisposeFunction(instance, () -> {});

@@ -23,7 +23,6 @@ public class ScriptContent {
     }
 
     public String getContent() {
-        // We were given the file location of the script rather than the script content itself.
         return this.content;
     }
 }

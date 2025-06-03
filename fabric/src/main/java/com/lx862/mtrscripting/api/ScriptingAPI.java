@@ -1,29 +1,13 @@
 package com.lx862.mtrscripting.api;
 
-import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.util.ScriptResourceUtil;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
-import org.apache.logging.log4j.util.TriConsumer;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
-
-import java.util.concurrent.ExecutorService;
 
 /**
  * This class contains the event to hook into scripting, e.g. add new property and objects
  */
 public class ScriptingAPI {
     private static final Object2ObjectArrayMap<String, String> addonVersionMap = new Object2ObjectArrayMap<>();
-
-    /**
-     * Create a new script manager.
-     * @param thread An executor service, where script tasks will be submitted.
-     */
-    public static ScriptManager createScriptManager() {
-        return new ScriptManager();
-    }
 
     /**
      * Register a version for a Mod ID, used by scripts calling {@link ScriptResourceUtil#getAddonVersion};

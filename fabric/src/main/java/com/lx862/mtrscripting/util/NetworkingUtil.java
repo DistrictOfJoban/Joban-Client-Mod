@@ -15,6 +15,8 @@ import java.util.Map;
 
 @SuppressWarnings("unused")
 public class NetworkingUtil {
+    private static final String USER_AGENT_STRING = "Joban Client Mod (https://jcm.joban.org)";
+
     public static NetworkResponse<?> fetchString(String urlStr) throws IOException {
         return fetchString(urlStr, null);
     }
@@ -81,7 +83,7 @@ public class NetworkingUtil {
         }
 
         // Override User-Agent
-        connection.setRequestProperty("User-Agent", "Joban Client Mod (https://joban.org/jcm)");
+        connection.setRequestProperty("User-Agent", USER_AGENT_STRING);
 
         if(body != null) {
             byte[] bodyByte = body.getBytes();
