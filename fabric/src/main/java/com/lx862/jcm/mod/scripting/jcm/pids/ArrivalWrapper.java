@@ -8,13 +8,17 @@ import org.mtr.core.operation.CarDetails;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.ArrivalsCacheClient;
 
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ArrivalWrapper {
     public final ArrivalResponse arrivalResponse;
+    private final List<CarDetails> cars;
 
     public ArrivalWrapper(ArrivalResponse arrivalResponse) {
         this.arrivalResponse = arrivalResponse;
+        this.cars = new ArrayList<>();
+        arrivalResponse.iterateCarDetails(cars::add);
     }
 
     public String destination() {
@@ -98,7 +102,7 @@ public class ArrivalWrapper {
         return arrivalResponse.getCarCount();
     }
 
-    public void forEachCar(Consumer<CarDetails> consumer) {
-        arrivalResponse.iterateCarDetails(consumer);
+    public List<CarDetails> cars() {
+        return cars;
     }
 }

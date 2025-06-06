@@ -23,7 +23,8 @@ public class MTRClassShutter implements ClassShutter {
             ClassRule.parse("sun.java2d.*"),
             ClassRule.parse("java.io.Closeable"),
             ClassRule.parse("java.io.InputStream"),
-            ClassRule.parse("java.io.OutputStream")
+            ClassRule.parse("java.io.OutputStream"),
+            ClassRule.parse("jdk.proxy1.*")
         );
         denyClass(ClassRule.parse("java.lang.reflect.*"));
     }
