@@ -1,5 +1,5 @@
 plugins {
-    id "net.minecraftforge.gradle" version "+"
+    id "net.minecraftforge.gradle" version "6.0.36"
     id "org.spongepowered.mixin" version "+"
 }
 
