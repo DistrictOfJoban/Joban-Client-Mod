@@ -13,7 +13,6 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.TextAlignment;
 import com.lx862.jcm.mod.render.text.TextOverflowMode;
 import com.lx862.jcm.mod.render.text.TextTranslationMode;
-import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
@@ -168,39 +167,52 @@ public class JsonPIDSPreset extends PIDSPresetBase {
                 totalWidth -= (14 * ARRIVAL_TEXT_SCALE);
             }
 
-            boolean haveCustomMessage = customMessages[i] != null && !customMessages[i].isEmpty();
             boolean canShowArrival = arrivalIndex < arrivals.size() && !rowHidden[i];
+            boolean haveCustomMessage = customMessages[i] != null && !customMessages[i].isEmpty();
 
-            if(haveCustomMessage) {
-                components.add(new CustomTextComponent(x, rowY, screenWidth - (PIDS_MARGIN * 3), 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
-            } else if(canShowArrival) {
-                ArrivalDestinationComponent arrivalDestinationComponent = new ArrivalDestinationComponent(x, rowY, totalWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex));
-                components.add(arrivalDestinationComponent);
-
-                if (platformShown) {
-                    components.add(new ArrivalTextureComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
-                    components.add(new PlatformComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 8, 8, fontId, RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
+            if(rowHidden[i]) {
+                if(haveCustomMessage) {
+                    components.add(new StaticCustomMessageComponent(x, rowY, screenWidth - (PIDS_MARGIN * 3), 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
                 }
-
-                // ETA text cycle should follow destination
-                ArrivalResponse thisArrival = arrivals.get(arrivalIndex);
-                boolean destinationIsCjk = IGui.isCjk(arrivalDestinationComponent.getDestinationString(thisArrival));
-                TextTranslationMode mode = destinationIsCjk ? TextTranslationMode.CJK : TextTranslationMode.NON_CJK;
-                ArrivalETAComponent eta = new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
-                        .with("arrivalIndex", arrivalIndex)
-                        .with("textTranslationMode", mode.name())
-                );
-
-                ArrivalCarComponent car = new ArrivalCarComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
-                        .with("arrivalIndex", arrivalIndex)
-                        .with("textTranslationMode", mode.name())
-                );
-
-                if(showCar) {
-                    components.add(new CycleComponent(new KVPair().with("cycleTime", 80), eta, car));
+            } else {
+                if(!canShowArrival) {
+                    if(haveCustomMessage) {
+                        components.add(new StaticCustomMessageComponent(x, rowY, screenWidth - (PIDS_MARGIN * 3), 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, getTextColor(), ARRIVAL_TEXT_SCALE).with("text", customMessages[i])));
+                    }
                 } else {
-                    components.add(eta);
+                    DestinationMessageComponent destinationMessageComponent = new DestinationMessageComponent(x, rowY, totalWidth, 10, TextComponent.of(TextAlignment.LEFT, textOverflowMode, fontId, textColor, ARRIVAL_TEXT_SCALE).with("arrivalIndex", arrivalIndex).with("customMessageOverride", customMessages[i]));
+                    components.add(destinationMessageComponent);
+
+                    ArrivalResponse thisArrival = arrivals.get(arrivalIndex);
+                    DestinationMessageComponent.PIDSDisplay destinationDisplay = destinationMessageComponent.getDisplayString(thisArrival);
+
+                    if(!destinationDisplay.isRenderingCustomMessage()) {
+                        if (platformShown) {
+                            components.add(new ArrivalTextureComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 10, 10, new KVPair().with("textureId", TEXTURE_PLATFORM_CIRCLE).with("arrivalIndex", arrivalIndex)));
+                            components.add(new PlatformComponent(screenWidth - (40 * ARRIVAL_TEXT_SCALE), rowY, 8, 8, fontId, RenderHelper.ARGB_WHITE, 0.85, new KVPair().with("arrivalIndex", arrivalIndex)));
+                        }
+
+                        // ETA text cycle should follow destination
+                        boolean destinationIsCjk = IGui.isCjk(destinationDisplay.string());
+                        TextTranslationMode mode = destinationIsCjk ? TextTranslationMode.CJK : TextTranslationMode.NON_CJK;
+                        ArrivalETAComponent eta = new ArrivalETAComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
+                                .with("arrivalIndex", arrivalIndex)
+                                .with("textTranslationMode", mode.name())
+                        );
+
+                        ArrivalCarComponent car = new ArrivalCarComponent(screenWidth, rowY, 22 * ARRIVAL_TEXT_SCALE, 20, TextComponent.of(TextAlignment.RIGHT, TextOverflowMode.STRETCH, fontId, textColor, ARRIVAL_TEXT_SCALE)
+                                .with("arrivalIndex", arrivalIndex)
+                                .with("textTranslationMode", mode.name())
+                        );
+
+                        if(showCar) {
+                            components.add(new CycleComponent(new KVPair().with("cycleTime", 80), eta, car));
+                        } else {
+                            components.add(eta);
+                        }
+                    }
                 }
+
                 arrivalIndex++;
             }
 

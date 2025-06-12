@@ -1,5 +1,9 @@
 ## JCM (v2.0.0-prerelease.2) for (MTR 4.0.0-prerelease.3) has been released!
 
+**Changes:**
+- **JSON PIDS Preset**
+- - Restore custom message cycling behaviour, which should now resemble the built-in PIDS from the MTR mod.
+
 **Fixes:**
 - Fix operator button not activating when driver key is in off-hand slot.
 - Fix JSON PIDS Preset Custom message showing at wrong row if no arrivals

@@ -10,9 +10,9 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mapping.mapper.WorldHelper;
 
-public class CustomTextComponent extends TextComponent {
+public class StaticCustomMessageComponent extends TextComponent {
     private final String text;
-    public CustomTextComponent(double x, double y, double width, double height, KVPair addtionalParam) {
+    public StaticCustomMessageComponent(double x, double y, double width, double height, KVPair addtionalParam) {
         super(x, y, width, height, addtionalParam);
         this.text = addtionalParam.get("text", "");
     }
@@ -28,10 +28,10 @@ public class CustomTextComponent extends TextComponent {
     }
 
     public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {
-        return new CustomTextComponent(x, y, width, height, new KVPair(jsonObject));
+        return new StaticCustomMessageComponent(x, y, width, height, new KVPair(jsonObject));
     }
 
-    private static String parsePIDSVariable(String str, PIDSContext context) {
+    public static String parsePIDSVariable(String str, PIDSContext context) {
         long time = WorldHelper.getTimeOfDay(context.world) + 6000;
         long hours = time / 1000;
         long minutes = Math.round((time - (hours * 1000)) / 16.8);
