@@ -3,6 +3,12 @@
 **Changes:**
 - **JSON PIDS Preset**
 - - Restore custom message cycling behaviour, which should now resemble the built-in PIDS from the MTR mod.
+- **Scripting**
+- Now allows the following package:
+- - `java.time`
+- - `java.math`
+- - `javax.imageio`
+- - `sun.font`
 
 **Fixes:**
 - Fix operator button not activating when driver key is in off-hand slot.
