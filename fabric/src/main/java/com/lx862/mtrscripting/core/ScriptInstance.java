@@ -33,5 +33,5 @@ public abstract class ScriptInstance<T> {
         return wrapperObject;
     }
 
-    public abstract boolean isDead();
+    public abstract boolean shouldInvalidate();
 }

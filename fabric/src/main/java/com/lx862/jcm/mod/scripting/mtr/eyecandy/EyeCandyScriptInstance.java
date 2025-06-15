@@ -31,7 +31,7 @@ public class EyeCandyScriptInstance extends ScriptInstance<BlockEyeCandy.BlockEn
         this.soundCalls.addAll(calls);
     }
 
-    public boolean isDead() {
+    public boolean shouldInvalidate() {
         return be.isRemoved2();
     }
 }

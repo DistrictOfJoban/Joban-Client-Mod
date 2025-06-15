@@ -32,7 +32,7 @@ public class ScriptInstanceManager {
     public void clearDeadInstance() {
         int count = 0;
         for(Map.Entry<UniqueKey, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
-            if(entry.getValue().isDead()) {
+            if(entry.getValue().shouldInvalidate()) {
                 ScriptInstance<?> instance = entry.getValue();
                 count++;
                 instance.getScript().invokeDisposeFunction(instance, () -> {

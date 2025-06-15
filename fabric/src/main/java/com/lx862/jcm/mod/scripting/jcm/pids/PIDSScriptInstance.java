@@ -10,16 +10,18 @@ import java.util.List;
 
 public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> {
     private final PIDSBlockEntity blockEntity;
+    private final String presetId;
     public final List<ScriptResultCall> drawCalls;
 
-    public PIDSScriptInstance(PIDSBlockEntity blockEntity, ParsedScript script, PIDSWrapper wrapperObject) {
+    public PIDSScriptInstance(PIDSBlockEntity blockEntity, String presetId, ParsedScript script, PIDSWrapper wrapperObject) {
         super(new PIDSScriptContext(), script);
         setWrapperObject(wrapperObject);
         this.blockEntity = blockEntity;
+        this.presetId = presetId;
         this.drawCalls = new ArrayList<>();
     }
 
-    public boolean isDead() {
-        return blockEntity.isRemoved2();
+    public boolean shouldInvalidate() {
+        return blockEntity.isRemoved2() || !blockEntity.getPresetId().equals(presetId);
     }
 }

@@ -36,7 +36,7 @@ public class VehicleScriptInstance extends ScriptInstance<VehicleWrapper> {
         this.carSoundCalls.addAll(calls);
     }
 
-    public boolean isDead() {
+    public boolean shouldInvalidate() {
         return !MinecraftClientData.getInstance().vehicles.contains(vehicleExtension);
     }
 }
