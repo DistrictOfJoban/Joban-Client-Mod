@@ -8,9 +8,10 @@ public abstract class ScriptInstance<T> {
     private final ScriptContext scriptContext;
     private final ParsedScript parsedScripts;
     protected T wrapperObject;
-    public double lastExecuteTime;
     public Scriptable state;
     public Future<?> scriptTask;
+    public double lastExecuteTime;
+    private boolean createFunctionInvoked = false;
 
     public ScriptInstance(ScriptContext scriptContext, ParsedScript script) {
         this.scriptContext = scriptContext;
@@ -31,6 +32,14 @@ public abstract class ScriptInstance<T> {
 
     public T getWrapperObject() {
         return wrapperObject;
+    }
+
+    public void setCreateFunctionInvoked() {
+        this.createFunctionInvoked = true;
+    }
+
+    public boolean isCreateFunctionInvoked() {
+        return this.createFunctionInvoked;
     }
 
     public abstract boolean shouldInvalidate();

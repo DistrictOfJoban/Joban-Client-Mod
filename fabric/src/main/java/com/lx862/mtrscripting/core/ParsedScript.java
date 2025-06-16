@@ -117,20 +117,23 @@ public class ParsedScript {
         });
     }
 
-    public Future<?> invokeCreateFunction(ScriptInstance<?> instance, Runnable callback) {
-        return invokeFunction(instance, createFunctions, callback);
+    public Future<?> invokeCreateFunction(ScriptInstance<?> instance, Runnable finishCallback) {
+        return invokeFunction(instance, createFunctions, () -> {
+            instance.setCreateFunctionInvoked();
+            finishCallback.run();
+        });
     }
 
-    public Future<?> invokeRenderFunction(ScriptInstance<?> instance, Runnable callback) {
+    public Future<?> invokeRenderFunction(ScriptInstance<?> instance, Runnable finishCallback) {
         if(instance.scriptTask != null && !instance.scriptTask.isDone()) {
             return instance.scriptTask;
         }
-        instance.scriptTask = invokeFunction(instance, renderFunctions, callback);
+        instance.scriptTask = invokeFunction(instance, renderFunctions, finishCallback);
         return instance.scriptTask;
     }
 
-    public Future<?> invokeDisposeFunction(ScriptInstance<?> instance, Runnable callback) {
-        return invokeFunction(instance, disposeFunctions, callback);
+    public Future<?> invokeDisposeFunction(ScriptInstance<?> instance, Runnable finishCallback) {
+        return invokeFunction(instance, disposeFunctions, finishCallback);
     }
 
     /**

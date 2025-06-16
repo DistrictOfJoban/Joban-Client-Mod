@@ -4,6 +4,7 @@
 - Fix potential game crash when rendering JSON PIDS.
 - **PIDS Scripting**
 - - Fix changing PIDS Preset not disposing the script.
+- - Improve script disposal behaviour
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

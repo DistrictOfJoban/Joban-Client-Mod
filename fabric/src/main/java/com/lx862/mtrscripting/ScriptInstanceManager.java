@@ -35,9 +35,10 @@ public class ScriptInstanceManager {
             if(entry.getValue().shouldInvalidate()) {
                 ScriptInstance<?> instance = entry.getValue();
                 count++;
-                instance.getScript().invokeDisposeFunction(instance, () -> {
-                    instances.remove(entry.getKey());
-                });
+                instances.remove(entry.getKey());
+                if(instance.isCreateFunctionInvoked()) {
+                    instance.getScript().invokeDisposeFunction(instance, () -> {});
+                }
             }
         }
         return count;
