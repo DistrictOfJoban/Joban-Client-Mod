@@ -88,7 +88,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;
 
             scriptInstance.setWrapperObject(pidsState);
-            scriptInstance.getScript().invokeRenderFunction(scriptInstance, () -> {
+            scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
                 pidsScriptInstance.drawCalls.clear();
                 pidsScriptInstance.drawCalls.addAll(((PIDSScriptContext)scriptInstance.getScriptContext()).getDrawCalls());
                 scriptInstance.getScriptContext().reset();

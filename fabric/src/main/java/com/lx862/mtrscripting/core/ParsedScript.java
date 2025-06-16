@@ -1,6 +1,5 @@
 package com.lx862.mtrscripting.core;
 
-import com.lx862.jcm.mod.scripting.mtr.util.ModelManager;
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.util.*;
@@ -89,7 +88,7 @@ public class ParsedScript {
         }
     }
 
-    public Future<?> invokeFunction(ScriptInstance<?> scriptInstance, List<Function> functionList, Runnable callback) {
+    public Future<?> invokeFunctions(ScriptInstance<?> scriptInstance, List<Function> functions, Runnable callback) {
         if(duringFailCooldown()) {
             return null;
         }
@@ -104,7 +103,7 @@ public class ParsedScript {
                 cx.setLanguageVersion(Context.VERSION_ES6);
                 cx.setClassShutter(scriptManager.getClassShutter());
                 if(scriptInstance.state == null) scriptInstance.state = cx.newObject(scope);
-                for(Function func : functionList) {
+                for(Function func : functions) {
                     func.call(cx, scope, scope, new Object[]{scriptInstance.getScriptContext(), scriptInstance.state, scriptInstance.getWrapperObject()});
                 }
             } catch (Exception e) {
@@ -117,23 +116,22 @@ public class ParsedScript {
         });
     }
 
-    public Future<?> invokeCreateFunction(ScriptInstance<?> instance, Runnable finishCallback) {
-        return invokeFunction(instance, createFunctions, () -> {
+    public void invokeCreateFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
+        invokeFunctions(instance, createFunctions, () -> {
             instance.setCreateFunctionInvoked();
             finishCallback.run();
         });
     }
 
-    public Future<?> invokeRenderFunction(ScriptInstance<?> instance, Runnable finishCallback) {
-        if(instance.scriptTask != null && !instance.scriptTask.isDone()) {
-            return instance.scriptTask;
+    public void invokeRenderFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
+        if(instance.shouldInvalidate() || instance.scriptTask != null && !instance.scriptTask.isDone()) {
+            return;
         }
-        instance.scriptTask = invokeFunction(instance, renderFunctions, finishCallback);
-        return instance.scriptTask;
+        instance.scriptTask = invokeFunctions(instance, renderFunctions, finishCallback);
     }
 
-    public Future<?> invokeDisposeFunction(ScriptInstance<?> instance, Runnable finishCallback) {
-        return invokeFunction(instance, disposeFunctions, finishCallback);
+    public void invokeDisposeFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
+        invokeFunctions(instance, disposeFunctions, finishCallback);
     }
 
     /**

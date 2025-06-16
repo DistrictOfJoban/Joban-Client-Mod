@@ -40,7 +40,7 @@ public class RenderEyeCandyMixin {
         EyeCandyScriptContext eyeCandyScriptContext = (EyeCandyScriptContext)scriptInstance.getScriptContext();
         scriptInstance.setWrapperObject(blockEntity);
 
-        scriptInstance.getScript().invokeRenderFunction(scriptInstance, () -> {
+        scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
             eyeCandyScriptInstance.setDrawCalls(eyeCandyScriptContext.getDrawCalls());
             eyeCandyScriptInstance.setSoundCalls(eyeCandyScriptContext.getSoundCalls());
             eyeCandyScriptContext.reset();
