@@ -1,7 +1,9 @@
 package com.lx862.jcm.mod.scripting.mtr;
 
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.scripting.mtr.util.ModelManager;
 import com.lx862.jcm.mod.scripting.mtr.util.TextUtil;
+import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.api.ClassRule;
 import com.lx862.mtrscripting.api.ScriptingAPI;
@@ -41,7 +43,10 @@ public class MTRScripting {
     }
 
     public static void tick() {
-        scriptManager.tick();
+        int clearedInstance = scriptManager.getInstanceManager().clearDeadInstance();
+        if(clearedInstance > 0 && JCMClient.getConfig().debug) {
+            JCMLogger.info("Removed {} dead MTR script instance", clearedInstance);
+        }
     }
 
     public static void reset() {

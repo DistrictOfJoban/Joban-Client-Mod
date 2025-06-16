@@ -106,10 +106,10 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         RenderHelper.drawTexture(graphicsHolder, background, x, y, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
 
         // Debug View Texture
-        if(JCMClient.getConfig().debug) {
-            //TextureTextRenderer.stressTest(5);
-            drawAtlasBackground(graphicsHolder, width, height, facing);
-        }
+//        if(JCMClient.getConfig().debug) {
+//            TextureTextRenderer.stressTest(5);
+//            drawAtlasBackground(graphicsHolder, width, height, facing);
+//        }
 
         graphicsHolder.translate(startX, 0, -0.05);
 

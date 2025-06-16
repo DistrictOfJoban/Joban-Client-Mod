@@ -29,7 +29,7 @@ public class ScriptInstanceManager {
         return instances.get(id);
     }
 
-    public void clearDeadInstance() {
+    public int clearDeadInstance() {
         int count = 0;
         for(Map.Entry<UniqueKey, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
             if(entry.getValue().shouldInvalidate()) {
@@ -40,9 +40,7 @@ public class ScriptInstanceManager {
                 });
             }
         }
-        if(count > 0) {
-            ScriptManager.LOGGER.debug("[Scripting] Removed {} dead instance", count);
-        }
+        return count;
     }
 
     /**

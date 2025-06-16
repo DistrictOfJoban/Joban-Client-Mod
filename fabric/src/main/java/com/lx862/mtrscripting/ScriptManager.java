@@ -60,12 +60,6 @@ public class ScriptManager {
         return new ParsedScript(this, contextName, scripts);
     }
 
-    /** Currently this checks and dispose dead script instances (i.e. Those that are no longer active).<br>
-     * This should be called from time to time. */
-    public void tick() {
-        this.instanceManager.clearDeadInstance();
-    }
-
     /** Clear all script instances<br>
      * This should be called on resource reload */
     public void reset() {

@@ -1,9 +1,11 @@
 package com.lx862.jcm.mod.scripting.jcm;
 
 import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextWrapper;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextureWrapper;
 import com.lx862.jcm.mod.scripting.mtr.util.TextUtil;
+import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.api.ClassRule;
 import com.lx862.mtrscripting.api.ScriptingAPI;
@@ -38,7 +40,10 @@ public class JCMScripting {
     }
 
     public static void tick() {
-        scriptManager.tick();
+        int clearedInstance = scriptManager.getInstanceManager().clearDeadInstance();
+        if(clearedInstance > 0 && JCMClient.getConfig().debug) {
+            JCMLogger.info("Removed {} dead PIDS script instance", clearedInstance);
+        }
     }
 
     public static void reset() {
