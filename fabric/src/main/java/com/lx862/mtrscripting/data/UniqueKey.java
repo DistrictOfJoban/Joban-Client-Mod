@@ -36,6 +36,6 @@ public class UniqueKey {
 
     @Override
     public String toString() {
-        return Arrays.stream(objs).map(Object::toString).collect(Collectors.joining(", "));
+        return Arrays.stream(objs).map(Object::toString).collect(Collectors.joining("/"));
     }
 }

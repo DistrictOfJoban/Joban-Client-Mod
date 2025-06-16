@@ -15,6 +15,7 @@ import java.util.concurrent.Future;
  */
 public class ParsedScript {
     private static final int SCRIPT_RESET_TIME = 4000;
+    private final String displayName;
     private final List<Function> createFunctions;
     private final List<Function> renderFunctions;
     private final List<Function> disposeFunctions;
@@ -22,7 +23,8 @@ public class ParsedScript {
     private final Scriptable scope;
     private long lastFailedTime = -1;
 
-    public ParsedScript(ScriptManager scriptManager, String contextName, List<ScriptContent> scripts) throws Exception {
+    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scripts) throws Exception {
+        this.displayName = displayName;
         this.scriptManager = scriptManager;
         this.createFunctions = new ArrayList<>();
         this.renderFunctions = new ArrayList<>();
@@ -88,7 +90,7 @@ public class ParsedScript {
         }
     }
 
-    public Future<?> invokeFunctions(ScriptInstance<?> scriptInstance, List<Function> functions, Runnable callback) {
+    public Future<?> invokeFunctions(ScriptInstance<?> scriptInstance, List<Function> functions, Runnable finishCallback) {
         if(duringFailCooldown()) {
             return null;
         }
@@ -103,16 +105,18 @@ public class ParsedScript {
                 cx.setLanguageVersion(Context.VERSION_ES6);
                 cx.setClassShutter(scriptManager.getClassShutter());
                 if(scriptInstance.state == null) scriptInstance.state = cx.newObject(scope);
+                long startTime = System.nanoTime();
                 for(Function func : functions) {
                     func.call(cx, scope, scope, new Object[]{scriptInstance.getScriptContext(), scriptInstance.state, scriptInstance.getWrapperObject()});
                 }
+                scriptInstance.setLastExecutionDurationMs(System.nanoTime() - startTime);
             } catch (Exception e) {
-                ScriptManager.LOGGER.error("[Scripting] Error executing script!", e);
+                ScriptManager.LOGGER.error("[Scripting] Error executing script {}!", displayName, e);
                 lastFailedTime = System.currentTimeMillis();
             } finally {
                 Context.exit();
             }
-            callback.run();
+            finishCallback.run();
         });
     }
 
@@ -137,8 +141,12 @@ public class ParsedScript {
     /**
      * @return Whether we are currently in the cooldown period after an errored script execution, and script shouldn't be executed.
      */
-    private boolean duringFailCooldown() {
+    public boolean duringFailCooldown() {
         return lastFailedTime != -1 && System.currentTimeMillis() - lastFailedTime <= SCRIPT_RESET_TIME;
+    }
+
+    public String getDisplayName() {
+        return this.displayName;
     }
 
     public Scriptable getScope() {

@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.JCMServerStats;
+import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
 import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
@@ -25,6 +26,10 @@ public class Events {
             JCMClient.getMcMetaManager().tick();
             JCMScripting.tick();
             MTRScripting.tick();
+        });
+
+        JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerGuiRendering(graphicsHolder -> {
+            ScriptDebugOverlay.render(graphicsHolder);
         });
     }
 }

@@ -3,8 +3,7 @@ package com.lx862.mtrscripting;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import com.lx862.mtrscripting.data.UniqueKey;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
@@ -28,6 +27,12 @@ public class ScriptInstanceManager {
     public <T> ScriptInstance<T> getInstance(UniqueKey id) {
         return instances.get(id);
     }
+
+    public Map<UniqueKey, ScriptInstance> getInstances() {
+        return new HashMap<>(this.instances);
+    }
+
+
 
     public int clearDeadInstance() {
         int count = 0;

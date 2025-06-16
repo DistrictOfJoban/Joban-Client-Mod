@@ -7,6 +7,7 @@ import java.util.concurrent.Future;
 public abstract class ScriptInstance<T> {
     private final ScriptContext scriptContext;
     private final ParsedScript parsedScripts;
+    private double lastExecutionDurationMs;
     protected T wrapperObject;
     public Scriptable state;
     public Future<?> scriptTask;
@@ -32,6 +33,14 @@ public abstract class ScriptInstance<T> {
 
     public T getWrapperObject() {
         return wrapperObject;
+    }
+
+    public void setLastExecutionDurationMs(long nanoSec) {
+        this.lastExecutionDurationMs = nanoSec / 1000000.0;
+    }
+
+    public double getLastExecutionDurationMs() {
+        return this.lastExecutionDurationMs;
     }
 
     public void setCreateFunctionInvoked() {
