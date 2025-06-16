@@ -14,8 +14,6 @@ import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.generated.lang.TranslationProvider;
 
-import java.util.Arrays;
-
 public class DestinationMessageComponent extends TextComponent {
     private final int arrivalIndex;
     private final String customMessageOverride;
@@ -43,9 +41,10 @@ public class DestinationMessageComponent extends TextComponent {
     }
 
     public PIDSDisplay getDisplayString(ArrivalResponse arrival) {
+        String customMessage = customMessageOverride == null ? "" : customMessageOverride;
         final int languageTicks = (int) Math.floor(InitClient.getGameTick()) / TextComponent.SWITCH_LANG_DURATION;
         final String[] destinationSplit;
-        final String[] customMessageSplit = customMessageOverride.split("\\|");
+        final String[] customMessageSplit = customMessage.split("\\|");
         final String[] tempDestinationSplit = arrival.getDestination().split("\\|");
         if (arrival.getRouteNumber().isEmpty()) {
             destinationSplit = tempDestinationSplit;
@@ -66,7 +65,7 @@ public class DestinationMessageComponent extends TextComponent {
             }
             destinationSplit = newDestinations.toArray(new String[0]);
         }
-        final int messageCount = destinationSplit.length + (customMessageOverride.isEmpty() ? 0 : customMessageSplit.length);
+        final int messageCount = destinationSplit.length + (customMessage.isEmpty() ? 0 : customMessageSplit.length);
         boolean renderCustomMessage = languageTicks % messageCount >= destinationSplit.length;
         int languageIndex = (languageTicks % messageCount) - (renderCustomMessage ? destinationSplit.length : 0);
         String strToDisplay = renderCustomMessage ? customMessageSplit[languageIndex] : destinationSplit[languageIndex];
