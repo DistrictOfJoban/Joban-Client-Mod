@@ -2,6 +2,8 @@
 
 **Fixes:**
 - Fix potential game crash when rendering JSON PIDS.
+- **Scripting**
+- - Slightly improve GraphicsTexture performance
 - **PIDS Scripting**
 - - Fix changing PIDS Preset not disposing the script.
 - - Improve script disposal behaviour

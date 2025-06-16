@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ScriptDebugOverlay {
+    private static final double IDEAL_FRAMERATE = 60;
+
     public static void render(GraphicsHolder graphicsHolder) {
         if(!JCMClient.getConfig().debug) return;
 
@@ -43,12 +45,22 @@ public class ScriptDebugOverlay {
                 if(scriptInstance.getScript().duringFailCooldown()) {
                     graphicsHolder.drawText(String.format("%s FAILED", keyName), 0, 0, 0xFFFF0000, true, RenderHelper.MAX_RENDER_LIGHT);
                 } else {
-                    graphicsHolder.drawText(String.format("%s (%.2f ms)", keyName, executionMs), 0, 0, executionMs > (1000/60d) ? 0xFFFFFF00 : 0xFFCCCCFF, true, RenderHelper.MAX_RENDER_LIGHT);
+                    graphicsHolder.drawText(String.format("%s (%.2f ms)", keyName, executionMs), 0, 0, getColor(executionMs), true, RenderHelper.MAX_RENDER_LIGHT);
                 }
 
                 graphicsHolder.translate(0, 10, 0);
             }
             graphicsHolder.translate(-10, 0, 0);
+        }
+    }
+
+    private static int getColor(double executionMs) {
+        if(executionMs > (1000/(IDEAL_FRAMERATE/2))) {
+            return 0xFFFF0000;
+        } else if(executionMs > (1000/IDEAL_FRAMERATE)) {
+            return 0xFFFFFF00;
+        } else {
+            return 0xFFCCCCFF;
         }
     }
 }

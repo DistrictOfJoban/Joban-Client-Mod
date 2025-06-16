@@ -5,6 +5,9 @@ import org.mtr.mapping.holder.*;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferInt;
 import java.io.Closeable;
 import java.util.UUID;
 
@@ -43,9 +46,11 @@ public class GraphicsTexture implements Closeable {
     }
 
     public void upload() {
-        for(int w = 0; w < width; w++) {
-            for(int h = 0; h < height; h++) {
-                dynamicTexture.getImage().setPixelColor(w, h, toAbgr(bufferedImage.getRGB(w, h)));
+        int[] biData = ((DataBufferInt)bufferedImage.getData().getDataBuffer()).getData();
+        for(int x = 0; x < width; x++) {
+            for(int y = 0; y < height; y++) {
+                int rgb = biData[((width*y) + x)];
+                dynamicTexture.getImage().setPixelColor(x, y, toAbgr(rgb));
             }
         }
         RenderSystem.recordRenderCall(dynamicTexture::upload);
