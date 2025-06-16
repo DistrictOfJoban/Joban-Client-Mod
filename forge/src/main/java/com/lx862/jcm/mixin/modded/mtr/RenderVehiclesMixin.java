@@ -35,7 +35,7 @@ public abstract class RenderVehiclesMixin {
 
                 VehicleWrapper wrapperObject = new VehicleWrapper(vehicle);
                 scriptInstance.setWrapperObject(wrapperObject);
-                scriptInstance.getScript().invokeRenderFunction(scriptInstance, () -> {
+                scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
                     VehicleScriptContext ctx = (VehicleScriptContext) scriptInstance.getScriptContext();
                     scriptInstance.setCarSoundCalls(ctx.getCarSoundCalls());
                     scriptInstance.setAnnounceSoundCalls(ctx.getAnnounceSoundCalls());
