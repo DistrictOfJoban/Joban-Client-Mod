@@ -30,6 +30,7 @@ public class VehicleScriptContext extends ScriptContext {
     }
 
     public VehicleScriptContext(String vehicleId, int carIndex) {
+        super(vehicleId);
         this.vehicleId = vehicleId;
         this.carIndex = carIndex;
     }

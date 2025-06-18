@@ -8,6 +8,7 @@ import org.mtr.mod.block.BlockEyeCandy;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class EyeCandyScriptInstance extends ScriptInstance<BlockEyeCandy.BlockEntity> {
     private final BlockEyeCandy.BlockEntity be;
@@ -32,6 +33,6 @@ public class EyeCandyScriptInstance extends ScriptInstance<BlockEyeCandy.BlockEn
     }
 
     public boolean shouldInvalidate() {
-        return be.isRemoved2();
+        return be.getWorld2().getBlockEntity(be.getPos2()) == null || !Objects.equals(be.getModelId(), getScriptContext().getName());
     }
 }

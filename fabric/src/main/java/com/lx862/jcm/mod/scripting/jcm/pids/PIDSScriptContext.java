@@ -10,6 +10,10 @@ import java.util.List;
 public class PIDSScriptContext extends ScriptContext {
     private final List<PIDSDrawCall> drawCalls = new ArrayList<>();
 
+    public PIDSScriptContext(String name) {
+        super(name);
+    }
+
     public PIDSComponent parseComponent(String str) {
         return PIDSComponent.parse(new JsonParser().parse(str).getAsJsonObject());
     }

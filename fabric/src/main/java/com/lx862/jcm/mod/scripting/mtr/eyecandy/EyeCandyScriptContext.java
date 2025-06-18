@@ -17,6 +17,7 @@ public class EyeCandyScriptContext extends ScriptContext {
     private final List<PositionedSoundCall> positionedSoundCalls = new ArrayList<>();
 
     public EyeCandyScriptContext(BlockEyeCandy.BlockEntity blockEntity) {
+        super(blockEntity.getModelId());
         this.blockEntity = blockEntity;
     }
 
