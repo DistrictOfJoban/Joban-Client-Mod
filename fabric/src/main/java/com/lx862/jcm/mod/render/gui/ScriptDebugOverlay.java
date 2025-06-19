@@ -4,20 +4,26 @@ import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.Pair;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
+import com.lx862.jcm.mod.util.TextUtil;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import com.lx862.mtrscripting.data.UniqueKey;
+import org.mtr.mapping.holder.MinecraftClient;
+import org.mtr.mapping.holder.MutableText;
+import org.mtr.mapping.holder.TextFormatting;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ScriptDebugOverlay {
     private static final double IDEAL_FRAMERATE = 60;
+    private static final int COLOR_RED = 0xFFFF0000;
+    private static final int COLOR_BLUE = 0xFFCCCCFF;
+    private static final int COLOR_YELLOW = 0xFFFFFF00;
+
 
     public static void render(GraphicsHolder graphicsHolder) {
         if(!JCMClient.getConfig().debug) return;
+        if(MinecraftClient.getInstance().getCurrentScreenMapped() != null) return;
 
         graphicsHolder.translate(10, 10, 0);
 
@@ -31,24 +37,37 @@ public class ScriptDebugOverlay {
             groupedMap.put(map.getValue().getScript().getDisplayName(), existingInstances);
         }
 
+        for(List<Pair<UniqueKey, ScriptInstance>> instances : groupedMap.values()) {
+            instances.sort((e, f) -> Double.compare(f.getRight().getLastExecutionDurationMs(), e.getRight().getLastExecutionDurationMs()));
+        }
 
         for(Map.Entry<String, List<Pair<UniqueKey, ScriptInstance>>> group : groupedMap.entrySet()) {
-            graphicsHolder.drawText(group.getKey(), 0, 0, 0xFFCCCCFF, true, RenderHelper.MAX_RENDER_LIGHT);
+            MutableText title = TextUtil.literal(group.getKey()).formatted(TextFormatting.UNDERLINE);
+            graphicsHolder.drawText(title, 0, 0, COLOR_BLUE, true, RenderHelper.MAX_RENDER_LIGHT);
 
-            graphicsHolder.translate(10, 10, 0);
+            graphicsHolder.translate(10, 12, 0);
+
+            int i = 0;
             for(Pair<UniqueKey, ScriptInstance> scriptInstancePair : group.getValue()) {
                 String keyName = scriptInstancePair.getLeft().toString();
                 ScriptInstance scriptInstance = scriptInstancePair.getRight();
 
+                if(i >= 6) {
+                    graphicsHolder.drawText(String.format("... and %d more script instance(s)", group.getValue().size() - i), 0, 0, COLOR_BLUE, true, RenderHelper.MAX_RENDER_LIGHT);
+                    graphicsHolder.translate(0, 10, 0);
+                    break;
+                }
+
                 double executionMs = scriptInstance.getLastExecutionDurationMs();
 
                 if(scriptInstance.getScript().duringFailCooldown()) {
-                    graphicsHolder.drawText(String.format("%s FAILED", keyName), 0, 0, 0xFFFF0000, true, RenderHelper.MAX_RENDER_LIGHT);
+                    graphicsHolder.drawText(String.format("%s FAILED", keyName), 0, 0, COLOR_RED, true, RenderHelper.MAX_RENDER_LIGHT);
                 } else {
                     graphicsHolder.drawText(String.format("%s (%.2f ms)", keyName, executionMs), 0, 0, getColor(executionMs), true, RenderHelper.MAX_RENDER_LIGHT);
                 }
 
                 graphicsHolder.translate(0, 10, 0);
+                i++;
             }
             graphicsHolder.translate(-10, 0, 0);
         }
@@ -56,11 +75,11 @@ public class ScriptDebugOverlay {
 
     private static int getColor(double executionMs) {
         if(executionMs > (1000/(IDEAL_FRAMERATE/2))) {
-            return 0xFFFF0000;
+            return COLOR_RED;
         } else if(executionMs > (1000/IDEAL_FRAMERATE)) {
-            return 0xFFFFFF00;
+            return COLOR_YELLOW;
         } else {
-            return 0xFFCCCCFF;
+            return COLOR_BLUE;
         }
     }
 }

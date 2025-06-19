@@ -33,7 +33,7 @@ public class RenderEyeCandyMixin {
         ParsedScript script = MTRContentResourceManager.getEyecandyScript(blockEntity.getModelId());
         if(script == null) return;
 
-        ScriptInstance<BlockEyeCandy.BlockEntity> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "eyecandy", blockEntity.getModelId(), blockEntity.getPos2()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(blockEntity), blockEntity, script));
+        ScriptInstance<BlockEyeCandy.BlockEntity> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(blockEntity), blockEntity, script));
         if(!(scriptInstance instanceof EyeCandyScriptInstance)) return;
 
         EyeCandyScriptInstance eyeCandyScriptInstance = (EyeCandyScriptInstance) scriptInstance;
