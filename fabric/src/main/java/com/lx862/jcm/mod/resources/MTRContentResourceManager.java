@@ -101,6 +101,15 @@ public class MTRContentResourceManager {
         final String scriptTextsKey = useSnakeCase ? "script_texts" : "scriptTexts";
 
         if (jsonObject.has(scriptFilesKey) || jsonObject.has(scriptTextsKey)) {
+            if(jsonObject.has(scriptTextsKey)) {
+                JsonArray scriptTextArray = jsonObject.get(scriptTextsKey).getAsJsonArray();
+                for(int i = 0; i < scriptTextArray.size(); i++) {
+                    Identifier scriptLocation = new Identifier(Constants.MOD_ID, "script_texts/" + name + "/" + id + "/line" + i);
+                    String scriptText = scriptTextArray.get(i).getAsString();
+                    scripts.add(new ScriptContent(scriptLocation, scriptText));
+                }
+            }
+
             if(jsonObject.has(scriptFilesKey)) {
                 JsonArray scriptFilesArray = jsonObject.get(scriptFilesKey).getAsJsonArray();
                 for(int i = 0; i < scriptFilesArray.size(); i++) {
@@ -111,15 +120,6 @@ public class MTRContentResourceManager {
                         continue;
                     }
 
-                    scripts.add(new ScriptContent(scriptLocation, scriptText));
-                }
-            }
-
-            if(jsonObject.has(scriptTextsKey)) {
-                JsonArray scriptTextArray = jsonObject.get(scriptTextsKey).getAsJsonArray();
-                for(int i = 0; i < scriptTextArray.size(); i++) {
-                    Identifier scriptLocation = new Identifier(Constants.MOD_ID, "script_texts/" + name + "/" + id + "/line" + i);
-                    String scriptText = scriptTextArray.get(i).getAsString();
                     scripts.add(new ScriptContent(scriptLocation, scriptText));
                 }
             }
