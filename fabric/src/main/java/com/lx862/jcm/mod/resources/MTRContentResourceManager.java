@@ -125,7 +125,7 @@ public class MTRContentResourceManager {
             }
         }
 
-        return scripts.isEmpty() ? null : MTRScripting.getScriptManager().parseScript(id + " (name)", contextName, scripts);
+        return scripts.isEmpty() ? null : MTRScripting.getScriptManager().parseScript(id + " (" + name + ")", contextName, scripts);
     }
 
     public static ParsedScript getEyecandyScript(String modelId) {
