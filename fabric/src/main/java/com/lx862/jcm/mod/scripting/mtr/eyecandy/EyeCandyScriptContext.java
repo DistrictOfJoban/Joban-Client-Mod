@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.scripting.mtr.sound.PositionedSoundCall;
 import com.lx862.mtrscripting.core.ScriptContext;
 import com.lx862.mtrscripting.util.Matrices;
@@ -19,6 +20,10 @@ public class EyeCandyScriptContext extends ScriptContext {
     public EyeCandyScriptContext(BlockEyeCandy.BlockEntity blockEntity) {
         super(blockEntity.getModelId());
         this.blockEntity = blockEntity;
+    }
+
+    public boolean debugModeEnabled() {
+        return JCMClient.getConfig().debug;
     }
 
     public void drawModel(ScriptedModel model, Matrices matrices) {

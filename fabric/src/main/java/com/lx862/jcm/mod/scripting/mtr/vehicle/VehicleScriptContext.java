@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.scripting.mtr.sound.NonPositionedSoundCall;
 import com.lx862.jcm.mod.scripting.mtr.sound.PositionedSoundCall;
 import com.lx862.jcm.mod.scripting.mtr.sound.SoundCall;
@@ -33,6 +34,10 @@ public class VehicleScriptContext extends ScriptContext {
         super(vehicleId);
         this.vehicleId = vehicleId;
         this.carIndex = carIndex;
+    }
+
+    public boolean debugModeEnabled() {
+        return JCMClient.getConfig().debug;
     }
 
     public void drawCarModel(ScriptedModel model, int carIndex, Matrices matrices) {

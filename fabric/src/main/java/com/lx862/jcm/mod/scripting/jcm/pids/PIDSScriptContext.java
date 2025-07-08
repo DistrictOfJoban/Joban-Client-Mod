@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.jcm.pids;
 
 import com.google.gson.JsonParser;
+import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.mtrscripting.core.ScriptContext;
 
@@ -12,6 +13,10 @@ public class PIDSScriptContext extends ScriptContext {
 
     public PIDSScriptContext(String name) {
         super(name);
+    }
+
+    public boolean debugModeEnabled() {
+        return JCMClient.getConfig().debug;
     }
 
     public PIDSComponent parseComponent(String str) {
