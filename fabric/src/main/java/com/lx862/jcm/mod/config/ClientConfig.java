@@ -12,6 +12,7 @@ public class ClientConfig extends Config {
     public boolean disableRendering;
     public boolean debug;
     public boolean useNewTextRenderer;
+    public boolean disableScriptingRestriction;
 
     public ClientConfig() {
         super(CONFIG_PATH);
@@ -23,6 +24,7 @@ public class ClientConfig extends Config {
         this.disableRendering = jsonConfig.get("disable_rendering").getAsBoolean();
         this.debug = jsonConfig.get("debug_mode").getAsBoolean();
         this.useNewTextRenderer = jsonConfig.get("new_text_renderer").getAsBoolean();
+        this.disableScriptingRestriction = jsonConfig.get("disable_scripting_restriction") != null && jsonConfig.get("disable_scripting_restriction").getAsBoolean();
     }
 
     @Override
@@ -32,6 +34,7 @@ public class ClientConfig extends Config {
         jsonConfig.addProperty("disable_rendering", disableRendering);
         jsonConfig.addProperty("debug_mode", debug);
         jsonConfig.addProperty("new_text_renderer", useNewTextRenderer);
+        jsonConfig.addProperty("disable_scripting_restriction", disableScriptingRestriction);
         return jsonConfig;
     }
 

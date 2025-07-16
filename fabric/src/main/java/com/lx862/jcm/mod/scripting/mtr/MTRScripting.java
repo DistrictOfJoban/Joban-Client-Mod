@@ -15,12 +15,15 @@ import org.mtr.mod.client.MinecraftClientData;
  * A stub for scripting in MTR mod
  */
 public class MTRScripting {
-    private static final ScriptManager scriptManager = new ScriptManager();
+    private static ScriptManager scriptManager;
 
     /**
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
+        if(scriptManager == null) scriptManager = new ScriptManager();
+        scriptManager.getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
+
         String mtrModVersion = null;
         try {
             mtrModVersion = (String) Keys.class.getField("MOD_VERSION").get(null);

@@ -7,6 +7,8 @@ import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
+import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
+import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -33,6 +35,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private final CheckboxWidgetExtension disableRenderingButton;
     private final CheckboxWidgetExtension useNewTextRendererButton;
     private final CheckboxWidgetExtension debugModeButton;
+    private final CheckboxWidgetExtension disableScriptingClassRestrictionButton;
     private final ButtonWidgetExtension textAtlasButton;
 
     private boolean discardConfig = false;
@@ -53,6 +56,16 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
         this.debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
             JCMClient.getConfig().debug = bool;
+        });
+
+        this.disableScriptingClassRestrictionButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+            if(bool) {
+                MinecraftClient.getInstance().openScreen(new Screen(
+                        new ScriptRestrictionWarningScreen(() -> JCMClient.getConfig().disableScriptingRestriction = true).withPreviousScreen(new Screen(this))
+                ));
+            } else {
+                JCMClient.getConfig().disableScriptingRestriction = false;
+            }
         });
 
         this.textAtlasButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.listview.widget.open"), (buttonWidget -> {
@@ -97,6 +110,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         disableRenderingButton.setChecked(JCMClient.getConfig().disableRendering);
         useNewTextRendererButton.setChecked(JCMClient.getConfig().useNewTextRenderer);
         debugModeButton.setChecked(JCMClient.getConfig().debug);
+        disableScriptingClassRestrictionButton.setChecked(JCMClient.getConfig().disableScriptingRestriction);
     }
 
     private void addConfigEntries() {
@@ -107,6 +121,9 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_rendering"), new MappedWidget(disableRenderingButton));
         addChild(new ClickableWidget(disableRenderingButton));
+
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting_class_restriction"), new MappedWidget(disableScriptingClassRestrictionButton));
+        addChild(new ClickableWidget(disableScriptingClassRestrictionButton));
 
         /*  New Text Renderer is deprecated, we shouldn't offer player to switch to it anymore if it isn't enabled */
         if(JCMClient.getConfig().useNewTextRenderer) {
@@ -191,6 +208,8 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         if(!closing) {
             if (!discardConfig) {
                 JCMClient.getConfig().write();
+                JCMScripting.getScriptManager().getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
+                MTRScripting.getScriptManager().getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
             } else {
                 // Don't save our change to disk, and read it from disk, effectively discarding the config
                 JCMClient.getConfig().read();
