@@ -58,3 +58,24 @@ remapJar {
     mustRunAfter(shadowJar)
     inputFile = file(shadowJar.archivePath)
 }
+
+tasks.register("moveBuild") {
+    doLast {
+        delete fileTree("../build").matching {
+            include "**/*fabric*"
+        }
+        copy {
+            from "build/libs/JCM-fabric-${version}.jar"
+            into "../build"
+            rename { fileName -> fileName }
+        }
+    }
+}
+
+afterEvaluate {
+    for (def task in it.tasks) {
+        if (task == tasks.build) {
+            task.finalizedBy tasks.moveBuild
+        }
+    }
+}

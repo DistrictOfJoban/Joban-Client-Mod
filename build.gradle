@@ -122,21 +122,8 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 		}
 	}
 
-	tasks.register("moveBuild") {
-		copy {
-			from("build/libs/JCM-${project.properties.loader_name}-${project.mod_version}+${project.minecraft_version}${project.properties.loader_name == "forge" ? "-all" : ""}.jar")
-			into("${rootProject.projectDir}/build")
-			rename {
-				"JCM-${project.properties.loader_name}-${project.mod_version}+${project.minecraft_version}.jar"
-			}
-
-		}
-	}
-
 //	build.finalizedBy(mergeJars)
 //	assemble.finalizedBy(mergeJars)
-
-	build.finalizedBy(moveBuild)
 }
 
 tasks.register("setupFiles") {

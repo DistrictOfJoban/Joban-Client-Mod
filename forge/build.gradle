@@ -47,3 +47,24 @@ reobf {
 }
 
 assemble.dependsOn(shadowJar)
+
+tasks.register("moveBuild") {
+    doLast {
+        delete fileTree("../build").matching {
+            include "**/*forge*"
+        }
+        copy {
+            from "build/libs/JCM-forge-${version}-all.jar"
+            into "../build"
+            rename { fileName -> fileName.replace("-all", "") }
+        }
+    }
+}
+
+afterEvaluate {
+    for (def task in it.tasks) {
+        if (task == tasks.build) {
+            task.finalizedBy tasks.moveBuild
+        }
+    }
+}
