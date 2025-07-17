@@ -1,23 +1,23 @@
 plugins {
-	id "io.github.pacifistmc.forgix" version "1.2.9"
+//	id "io.github.pacifistmc.forgix" version "1.2.9"
 	id 'com.gradleup.shadow' version '8.3.4' apply false
 }
 
-forgix {
-	group = "com.lx862.jcm"
-	mergedJarName = "${project.archives_base_name}-${project.mod_version}+${project.minecraft_version}.jar"
-	outputDir = "build/"
+//forgix {
+//	group = "com.lx862.jcm"
+//	mergedJarName = "${project.archives_base_name}-${project.mod_version}+${project.minecraft_version}.jar"
+//	outputDir = "build/"
 
-	fabric {
-		projectName = "fabric"
-		jarLocation = "build/libs/${project.archives_base_name}-fabric-${project.mod_version}+${project.minecraft_version}.jar"
-	}
-
-	forge {
-		projectName = "forge"
-		jarLocation = "build/libs/${project.archives_base_name}-forge-${project.mod_version}+${project.minecraft_version}.jar"
-	}
-}
+//	fabric {
+//		projectName = "fabric"
+//		jarLocation = "build/libs/${project.archives_base_name}-fabric-${project.mod_version}+${project.minecraft_version}.jar"
+//	}
+//
+//	forge {
+//		projectName = "forge"
+//		jarLocation = "build/libs/${project.archives_base_name}-forge-${project.mod_version}+${project.minecraft_version}.jar"
+//	}
+//}
 
 configure(subprojects.findAll {it.name != 'rhino'}) {
 	apply plugin: "java"
@@ -122,8 +122,21 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 		}
 	}
 
-	build.finalizedBy(mergeJars)
-	assemble.finalizedBy(mergeJars)
+	tasks.register("moveBuild") {
+		copy {
+			from("build/libs/JCM-${project.properties.loader_name}-${project.mod_version}+${project.minecraft_version}${project.properties.loader_name == "forge" ? "-all" : ""}.jar")
+			into("${rootProject.projectDir}/build")
+			rename {
+				"JCM-${project.properties.loader_name}-${project.mod_version}+${project.minecraft_version}.jar"
+			}
+
+		}
+	}
+
+//	build.finalizedBy(mergeJars)
+//	assemble.finalizedBy(mergeJars)
+
+	build.finalizedBy(moveBuild)
 }
 
 tasks.register("setupFiles") {
