@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.render.gui;
 
+import com.google.common.base.Splitter;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.Pair;
 import com.lx862.jcm.mod.render.RenderHelper;
@@ -19,7 +20,7 @@ import java.util.*;
 
 public class ScriptDebugOverlay {
     private static final double IDEAL_FRAMERATE = 60;
-    private static final int COLOR_RED = 0xFFFF0000;
+    private static final int COLOR_RED = 0xFFFF8888;
     private static final int COLOR_BLUE = 0xFFCCCCFF;
     private static final int COLOR_YELLOW = 0xFFFFFF00;
     private static final int COLOR_WHITE = 0xFFFFFFFF;
@@ -54,6 +55,10 @@ public class ScriptDebugOverlay {
 
                     if(scriptInstance.getScript().duringFailCooldown()) {
                         graphicsHolder.drawText(String.format("%s FAILED", keyName), 0, 0, COLOR_RED, true, RenderHelper.MAX_RENDER_LIGHT);
+                        for(String exLine : Splitter.fixedLength(60).split(scriptInstance.getScript().getCapturedScriptException().getMessage())) {
+                            graphicsHolder.translate(0, 10, 0);
+                            graphicsHolder.drawText(String.format(exLine), 5, 0, COLOR_RED, true, RenderHelper.MAX_RENDER_LIGHT);
+                        }
                     } else {
                         graphicsHolder.drawText(String.format("%s (%.2f ms)", keyName, executionMs), 0, 0, getColor(executionMs), true, RenderHelper.MAX_RENDER_LIGHT);
                     }

@@ -21,6 +21,7 @@ public class ParsedScript {
     private final List<Function> disposeFunctions;
     private final ScriptManager scriptManager;
     private final Scriptable scope;
+    private Exception capturedScriptException = null;
     private long lastFailedTime = -1;
 
     public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scripts) throws Exception {
@@ -113,6 +114,7 @@ public class ParsedScript {
             } catch (Exception e) {
                 ScriptManager.LOGGER.error("[Scripting] Error executing script {}!", displayName, e);
                 lastFailedTime = System.currentTimeMillis();
+                capturedScriptException = e;
             } finally {
                 Context.exit();
             }
@@ -143,6 +145,11 @@ public class ParsedScript {
      */
     public boolean duringFailCooldown() {
         return lastFailedTime != -1 && System.currentTimeMillis() - lastFailedTime <= SCRIPT_RESET_TIME;
+    }
+
+    /** Returns the exception occurred during the last failed script execution. Use in combination with {@link ParsedScript#duringFailCooldown()} to ensure the exception is still relevant. */
+    public Exception getCapturedScriptException() {
+        return capturedScriptException;
     }
 
     public String getDisplayName() {
