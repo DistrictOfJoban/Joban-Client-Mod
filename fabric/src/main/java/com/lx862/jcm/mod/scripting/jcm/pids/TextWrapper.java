@@ -192,12 +192,22 @@ public class TextWrapper extends PIDSDrawCall {
     }
 
     private void drawMarqueeText(GraphicsHolder graphicsHolder, String str, int color, boolean shadow, int light) {
-        final MutableText text = getFormattedText(str);
-        int fullWidth = GraphicsHolder.getTextWidth(text);
-        int cycleDuration = str.length() * 16;
-        double marqueeProgress = ((InitClient.getGameTick() % cycleDuration) - (cycleDuration/2.0)) / (cycleDuration/2.0);
+        int[] textWidths = new int[str.length()];
+        /* textWidth accounts for the duration where the text starts to disappear by clipping to the left edge */
+        double textWidth = 0;
+        for(int i = 0; i < str.length(); i++) {
+            String st = String.valueOf(str.charAt(i));
+            final MutableText tx = getFormattedText(st);
+            textWidths[i] += GraphicsHolder.getTextWidth(tx);
+            textWidth += textWidths[i];
+        }
 
-        double wSoFar = fullWidth * -marqueeProgress;
+        /* + w accounts for the duration where the text starts to appear from the right edge */
+        int fullWidth = (int)(textWidth + (int)w);
+        int cycleDuration = str.length() * 10;
+        double marqueeProgress = (InitClient.getGameTick() % cycleDuration) / cycleDuration;
+
+        double wSoFar = w - (fullWidth * marqueeProgress);
         for(int i = 0; i < str.length(); i++) {
             String st = String.valueOf(str.charAt(i));
             final MutableText tx = getFormattedText(st);
@@ -209,7 +219,7 @@ public class TextWrapper extends PIDSDrawCall {
                 graphicsHolder.pop();
             }
 
-            wSoFar += GraphicsHolder.getTextWidth(tx);
+            wSoFar += textWidths[i];
         }
     }
 

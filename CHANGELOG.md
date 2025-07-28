@@ -11,7 +11,11 @@
 
 **Changes:**
 - **Scripting**
-- - Due to popular demand, an option is added in JCM config to disable scripting class restriction entirely, this allows any external java packages to be used just like in NTE. 
+- - Due to popular demand, an option is added in JCM config to disable scripting class restriction entirely, this allows any external java packages to be used just like in NTE.
+
+**Fixes:**
+- **Scripting**
+- - Texts with marquee overflow now no longer disappear for a prolonged duration of time before resetting.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
