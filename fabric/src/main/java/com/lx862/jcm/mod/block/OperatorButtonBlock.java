@@ -14,6 +14,7 @@ import org.mtr.mapping.registry.ItemRegistryObject;
 import org.mtr.mapping.tool.HolderBase;
 import org.mtr.mod.Items;
 import org.mtr.mod.block.IBlock;
+import org.mtr.mod.item.ItemDepotDriverKey;
 import org.mtr.mod.item.ItemDriverKey;
 
 import java.util.List;
@@ -44,17 +45,22 @@ public class OperatorButtonBlock extends WallAttachedBlock implements BlockWithE
             Networking.sendPacketToClient(player, new OperatorButtonGUIPacket(pos, be.getKeyRequirements()));
         }, () -> {
             boolean pass = false;
-            ItemStack mainHandStack = player.getMainHandStack();
-            ItemStack offHandStack = player.getOffHandStack();
-
-            if(be == null) {
-                if(mainHandStack.getItem().data instanceof ItemDriverKey || offHandStack.getItem().data instanceof ItemDriverKey) {
-                    pass = true;
+            ItemStack[] itemStacks = new ItemStack[]{player.getMainHandStack(), player.getOffHandStack()};
+            for(ItemStack stack : itemStacks) {
+                if(be == null) {
+                    if(stack.getItem().data instanceof ItemDriverKey) {
+                        pass = true;
+                    }
+                } else {
+                    if(be.canOpen(stack)) {
+                        pass = true;
+                    }
                 }
-            } else {
-                if(be.canOpen(mainHandStack) || be.canOpen(offHandStack)) {
-                    pass = true;
+                // Expiry check
+                if(stack.getItem().data instanceof ItemDepotDriverKey && stack.getOrCreateTag().getLong("expiry_time") < System.currentTimeMillis()) {
+                    pass = false;
                 }
+                if(pass) break;
             }
 
             if(pass) {

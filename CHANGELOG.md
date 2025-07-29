@@ -10,6 +10,7 @@
 - - Add `ctx.debugModeEnabled()` to determine if JCM debug mode is enabled.
 
 **Changes:**
+- **Operator Button** will no longer accept driver keys that are expired. (Creative key are always accepted)
 - **Scripting**
 - - Due to popular demand, an option is added in JCM config to disable scripting class restriction entirely, this allows any external java packages to be used just like in NTE.
 
