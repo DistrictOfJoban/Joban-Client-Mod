@@ -35,7 +35,7 @@ public abstract class HorizontalWallAttached2Block extends DirectionalBlock impl
 
         boolean blockAttachable = WallAttachedBlockBehavior.canBePlaced(pos, World.cast(world), IBlock.getStatePropertySafe(state, FACING));
 
-        if(!HorizontalDoubleBlockBehavior.blockIsValid(pos, state, world, isLeft) || !blockAttachable) {
+        if(!HorizontalDoubleBlockBehavior.blockIsValid(pos, state, direction, world, isLeft) || !blockAttachable) {
             return Blocks.getAirMapped().getDefaultState();
         }
 

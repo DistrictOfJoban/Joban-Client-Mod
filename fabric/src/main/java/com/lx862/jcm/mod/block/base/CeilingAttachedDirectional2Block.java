@@ -46,7 +46,7 @@ public abstract class CeilingAttachedDirectional2Block extends CeilingAttachedDi
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
         boolean isLeft = IBlock.getStatePropertySafe(state, IS_LEFT);
 
-        if(!HorizontalDoubleBlockBehavior.blockIsValid(pos, state, world, isLeft)) {
+        if(!HorizontalDoubleBlockBehavior.blockIsValid(pos, state, direction, world, isLeft)) {
             return Blocks.getAirMapped().getDefaultState();
         }
 
