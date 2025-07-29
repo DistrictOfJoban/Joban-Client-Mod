@@ -1,11 +1,8 @@
 package com.lx862.jcm.mod.render.gui.screen.base;
 
-import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
-import org.mtr.mapping.mapper.ClickableWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
 
 public abstract class TitledScreen extends AnimatedScreen {
@@ -22,25 +19,8 @@ public abstract class TitledScreen extends AnimatedScreen {
         drawBackground(graphicsHolder, mouseX, mouseY, tickDelta);
         drawTitle(graphicsHolder);
         drawSubtitle(graphicsHolder);
-
-        // TODO: Remove this on release
-        graphicsHolder.drawText(TextUtil.literal("JCM Pre-release").formatted(TextFormatting.YELLOW), width - GraphicsHolder.getTextWidth("JCM Beta release") - 6, 6, 0xFFFFFFFF, true, GraphicsHolder.getDefaultLight());
-        graphicsHolder.drawText(TextUtil.literal("Report issues here!").formatted(TextFormatting.UNDERLINE), width - GraphicsHolder.getTextWidth("Report issues here!") - 6, 18, 0xFFFFFFFF, true, GraphicsHolder.getDefaultLight());
         elapsed += tickDelta / Constants.MC_TICK_PER_SECOND;
         super.render(graphicsHolder, mouseX, mouseY, tickDelta);
-    }
-
-    @Override
-    public boolean mouseClicked2(double mouseX, double mouseY, int button) {
-        int x1 = width - GraphicsHolder.getTextWidth("Report issues here!") - 6;
-        int x2 = width - 6;
-        int y1 = 18;
-        int y2 = 18 + 8;
-        if(button == 0 && mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2) {
-            LoaderImplClient.openURLScreen(this, "https://github.com/DistrictOfJoban/Joban-Client-Mod/issues");
-            new ClickableWidgetExtension(0, 0, 0, 0).playDownSound2(MinecraftClient.getInstance().getSoundManager());
-        }
-        return super.mouseClicked2(mouseX, mouseY, button);
     }
 
     public void drawBackground(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
