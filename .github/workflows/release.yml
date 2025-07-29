@@ -51,11 +51,11 @@ jobs:
           prerelease: ${{ inputs.release-type == 'beta' }}
           fail_on_unmatched_files: true
           files: build/*.jar
-      - name: Upload to Modrinth (Fabric)
+      - name: Upload to Mod Distribution Platforms (Fabric)
         env:
           MODRINTH_KEY: ${{ secrets.MODRINTH_PAT }}
         if: ${{ env.MODRINTH_KEY != '' }}
-        uses: Kir-Antipov/mc-publish@v3.3
+        uses: Kira-NT/mc-publish@v3.3
         with:
           modrinth-id: lQqKCDhg
           modrinth-token: ${{ secrets.MODRINTH_PAT }}
@@ -77,14 +77,16 @@ jobs:
           retry-attempts: 3
           retry-delay: 30000
           fail-mode: fail
-      - name: Upload to Modrinth (Forge)
+      - name: Upload to Mod Distribution Platforms (Forge)
         env:
            MODRINTH_KEY: ${{ secrets.MODRINTH_PAT }}
         if: ${{ env.MODRINTH_KEY != '' }}
-        uses: Kir-Antipov/mc-publish@v3.3
+        uses: Kira-NT/mc-publish@v3.3
         with:
          modrinth-id: lQqKCDhg
+         #curseforge-id: 1316710
          modrinth-token: ${{ secrets.MODRINTH_PAT }}
+         #curseforge-token: ${{ secrets.CURSEFORGE_PAT }}
          files: |
            build/*forge*.jar
          name: '[Forge] [${{ matrix.minecraft }}] v${{ inputs.publish-tag }}'
