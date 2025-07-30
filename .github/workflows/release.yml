@@ -54,7 +54,8 @@ jobs:
       - name: Upload to Mod Distribution Platforms (Fabric)
         env:
           MODRINTH_KEY: ${{ secrets.MODRINTH_PAT }}
-        if: ${{ env.MODRINTH_KEY != '' }}
+          CURSEFORGE_KEY: ${{ secrets.CURSEFORGE_PAT }}
+        if: ${{ (env.MODRINTH_KEY != '') && (env.CURSEFORGE_KEY != '') }}
         uses: Kira-NT/mc-publish@v3.3
         with:
           modrinth-id: lQqKCDhg
@@ -82,7 +83,8 @@ jobs:
       - name: Upload to Mod Distribution Platforms (Forge)
         env:
            MODRINTH_KEY: ${{ secrets.MODRINTH_PAT }}
-        if: ${{ env.MODRINTH_KEY != '' }}
+           CURSEFORGE_KEY: ${{ secrets.CURSEFORGE_PAT }}
+        if: ${{ (env.MODRINTH_KEY != '') && (env.CURSEFORGE_KEY != '') }}
         uses: Kira-NT/mc-publish@v3.3
         with:
          modrinth-id: lQqKCDhg

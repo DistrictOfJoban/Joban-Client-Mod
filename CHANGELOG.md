@@ -1,23 +1,9 @@
-## JCM (v2.0.0-prerelease.4) for (MTR 4.0.0-prerelease.3) has been released!
+## JCM v2.0.0 for MTR 4.0.0 has been released!
 
-**Additions:**
-- **Scripting:**
-- - Add Script Debug Overlay to display all script instances.
-- - - Toggleable in **JCM Settings > Enable debug mode**
-- - - Text highlight color represents the execution speed (Blue = Normal, Yellow = Slow, Red = Very Slow!)
-- - - - Script authors should generally aim for Blue color
-- - Add back `ctx.setDebugInfo()` from NTE
-- - Add `ctx.debugModeEnabled()` to determine if JCM debug mode is enabled.
+JCM v2.0.0 is a huge milestone for Joban Client Mod! The mod has been rewritten from the ground up with more features empowering players to express their creativity. For more details please view the [full changelog](https://jcm.joban.org/latest/players/jcmv2/).
 
-**Changes:**
-- **Operator Button** will no longer accept driver keys that are expired. (Creative keys are always accepted)
-- **Scripting**
-- - Due to popular demand, an option is added in JCM config to disable scripting class restriction entirely, this allows any external java packages to be used just like in NTE.
-
-**Fixes:**
-- Fix horizontal blocks (Double ceiling/Trespass Sign) potentially breaking when stacked with WorldEdit
-- **Scripting**
-- - Texts with marquee overflow now no longer disappear for a prolonged duration of time before resetting.
+Note that JCM v2.0.0 is only designed for MTR 4.0.0, and is therefore incompatible with MTR v3.x.    
+Conversely, JCM v1.x only supports MTR 3.x, and is incompatible with MTR v4.x.
 
 **Download:**  
-You can download this release on [Modrinth](https://modrinth.com/mod/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
+You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
