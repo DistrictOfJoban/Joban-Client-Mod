@@ -58,10 +58,12 @@ jobs:
         uses: Kira-NT/mc-publish@v3.3
         with:
           modrinth-id: lQqKCDhg
+          curseforge-id: 1316710
           modrinth-token: ${{ secrets.MODRINTH_PAT }}
+          curseforge-token: ${{ secrets.CURSEFORGE_PAT }}
           files: |
             build/*fabric*.jar
-          name: '[Fabric] [${{ matrix.minecraft }}] v${{ inputs.publish-tag }}'
+          name: '[Fabric ${{ matrix.minecraft }}] v${{ inputs.publish-tag }}'
           version: v${{ inputs.publish-tag }}+${{ matrix.minecraft }}
           version-type: ${{ inputs.release-type }}
           modrinth-featured: ${{ inputs.release-type == 'release' }}
@@ -84,12 +86,12 @@ jobs:
         uses: Kira-NT/mc-publish@v3.3
         with:
          modrinth-id: lQqKCDhg
-         #curseforge-id: 1316710
+         curseforge-id: 1316710
          modrinth-token: ${{ secrets.MODRINTH_PAT }}
-         #curseforge-token: ${{ secrets.CURSEFORGE_PAT }}
+         curseforge-token: ${{ secrets.CURSEFORGE_PAT }}
          files: |
            build/*forge*.jar
-         name: '[Forge] [${{ matrix.minecraft }}] v${{ inputs.publish-tag }}'
+         name: '[Forge ${{ matrix.minecraft }}] v${{ inputs.publish-tag }}'
          version: v${{ inputs.publish-tag }}+${{ matrix.minecraft }}
          version-type: ${{ inputs.release-type }}
          modrinth-featured: ${{ inputs.release-type == 'release' }}
