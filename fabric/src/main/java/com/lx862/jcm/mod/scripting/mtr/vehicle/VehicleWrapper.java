@@ -77,6 +77,10 @@ public class VehicleWrapper {
         return ((VehicleSchemaMixin)vehicleExtension).getRailProgress();
     }
 
+    public double getRailSpeed(int pathIndex) {
+        return vehicleExtension.vehicleExtraData.immutablePath.get(pathIndex).getSpeedLimitMetersPerMillisecond();
+    }
+
     public double speed() {
         return vehicleExtension.getSpeed();
     }
