@@ -10,7 +10,8 @@
     "modded.mtr.VehicleResourceMixin",
     "modded.mtr.RenderEyeCandyMixin",
     "modded.mtr.RenderVehiclesMixin",
-    "modded.mtr.VehicleSchemaMixin"
+    "modded.mtr.VehicleSchemaMixin",
+    "modded.tsc.MixinVehiclePlatformRouteInfo"
   ],
   "injectors": {
     "defaultRequire": 1

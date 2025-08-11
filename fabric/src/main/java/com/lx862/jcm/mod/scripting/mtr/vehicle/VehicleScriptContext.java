@@ -20,7 +20,6 @@ public class VehicleScriptContext extends ScriptContext {
     private final List<SoundCall> carSoundCalls = new ArrayList<>();
     private final List<SoundCall> announceSoundCalls = new ArrayList<>();
     private final String vehicleId;
-    private final int carIndex;
 
     @Override
     public void reset() {
@@ -30,10 +29,9 @@ public class VehicleScriptContext extends ScriptContext {
         this.announceSoundCalls.clear();
     }
 
-    public VehicleScriptContext(String vehicleId, int carIndex) {
+    public VehicleScriptContext(String vehicleId) {
         super(vehicleId);
         this.vehicleId = vehicleId;
-        this.carIndex = carIndex;
     }
 
     public boolean debugModeEnabled() {
@@ -60,10 +58,6 @@ public class VehicleScriptContext extends ScriptContext {
     public boolean isMyVehicle(VehicleWrapper vehicleWrapper, int carIndex) {
         String theirVehicleId = vehicleWrapper.trainTypeId(carIndex);
         return Objects.equals(vehicleId, theirVehicleId);
-    }
-
-    public int carIndex() {
-        return this.carIndex;
     }
 
     public List<VehicleModelDrawCall> getCarModelDrawCalls() {
