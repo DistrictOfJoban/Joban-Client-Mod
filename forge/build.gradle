@@ -19,7 +19,7 @@ sourceSets.main.resources { srcDir "src/generated/resources" }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${rootProject.minecraft_version}-${project.properties["forge_version_$rootProject.minecraft_version"]}"
-    implementation fg.deobf("org.mtr:MTR-forge:${rootProject.mtr_version}+${rootProject.minecraft_version}-server")
+    implementation fg.deobf("maven.modrinth:minecraft-transit-railway:FORGE-${rootProject.mtr_version}+${rootProject.minecraft_version}")
     annotationProcessor "org.spongepowered:mixin:+:processor"
     annotationProcessor 'systems.manifold:manifold-preprocessor:+'
 }
@@ -65,6 +65,21 @@ afterEvaluate {
     for (def task in it.tasks) {
         if (task == tasks.build) {
             task.finalizedBy tasks.moveBuild
+        }
+    }
+}
+
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        forRepositories(fg.repository) // Only add this if you're using ForgeGradle, otherwise remove this line
+        filter {
+            includeGroup "maven.modrinth"
         }
     }
 }
