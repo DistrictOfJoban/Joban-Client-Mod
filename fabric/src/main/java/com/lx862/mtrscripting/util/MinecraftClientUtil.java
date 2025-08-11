@@ -30,6 +30,18 @@ public class MinecraftClientUtil {
                 ? (int) WorldHelper.getTimeOfDay(MinecraftClient.getInstance().getWorldMapped()) : 0;
     }
 
+    public static boolean isEmittingRedstonePower(BlockPos pos) {
+        for(Direction direction : Direction.values()) {
+            if(isEmittingRedstonePower(pos, direction)) return true;
+        }
+        return false;
+    }
+
+    public static boolean isEmittingRedstonePower(BlockPos pos, Direction direction) {
+        return MinecraftClient.getInstance().getWorldMapped() != null &&
+                MinecraftClient.getInstance().getWorldMapped().isEmittingRedstonePower(pos, direction);
+    }
+
     public static void narrate(String message) {
         MinecraftClient.getInstance().execute(() -> {
             Narrator.getNarrator().say(message, true);
