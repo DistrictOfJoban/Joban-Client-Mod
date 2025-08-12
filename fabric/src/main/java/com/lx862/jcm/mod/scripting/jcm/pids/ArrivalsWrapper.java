@@ -33,7 +33,7 @@ public class ArrivalsWrapper {
         ObjectArrayList<Platform> platforms = new ObjectArrayList<>();
         for(ArrivalWrapper wrapper : arrivals) {
             Platform plat = wrapper.platform();
-            if(plat != null) {
+            if(plat != null && !platforms.contains(plat)) {
                 platforms.add(plat);
             }
         }
