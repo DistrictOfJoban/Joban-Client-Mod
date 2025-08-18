@@ -66,7 +66,7 @@ public class DestinationMessageComponent extends TextComponent {
             destinationSplit = newDestinations.toArray(new String[0]);
         }
         final int messageCount = destinationSplit.length + (customMessage.isEmpty() ? 0 : customMessageSplit.length);
-        boolean renderCustomMessage = languageTicks % messageCount >= destinationSplit.length;
+        boolean renderCustomMessage = !customMessage.isEmpty() && languageTicks % messageCount >= destinationSplit.length;
         int languageIndex = (languageTicks % messageCount) - (renderCustomMessage ? destinationSplit.length : 0);
         String strToDisplay = renderCustomMessage ? customMessageSplit[languageIndex] : destinationSplit[languageIndex];
 
