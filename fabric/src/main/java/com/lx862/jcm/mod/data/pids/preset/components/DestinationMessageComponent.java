@@ -44,12 +44,12 @@ public class DestinationMessageComponent extends TextComponent {
         String customMessage = customMessageOverride == null ? "" : customMessageOverride;
         final int languageTicks = (int) Math.floor(InitClient.getGameTick()) / TextComponent.SWITCH_LANG_DURATION;
         final String[] destinationSplit;
-        final String[] customMessageSplit = customMessage.split("\\|");
-        final String[] tempDestinationSplit = arrival.getDestination().split("\\|");
+        final String[] customMessageSplit = customMessage.split("\\|", -1);
+        final String[] tempDestinationSplit = arrival.getDestination().split("\\|", -1);
         if (arrival.getRouteNumber().isEmpty()) {
             destinationSplit = tempDestinationSplit;
         } else {
-            final String[] tempNumberSplit = arrival.getRouteNumber().split("\\|");
+            final String[] tempNumberSplit = arrival.getRouteNumber().split("\\|", -1);
             int destinationIndex = 0;
             int numberIndex = 0;
             final ObjectArrayList<String> newDestinations = new ObjectArrayList<>();
