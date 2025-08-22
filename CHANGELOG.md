@@ -5,6 +5,7 @@ JCM v2.0.1 is mostly a bug-fix release, details as follows:
 **Fix:**
 - **PIDS Scripting**
 - - `ArrivalWrapper.platforms()` no longer return duplicated platform
+- - `sun.awt.*` is now whitelisted to allow Awt RenderHints to work
 - Fix a potential crash with RV PIDS
 
 **Download:**  

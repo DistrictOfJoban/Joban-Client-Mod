@@ -28,6 +28,7 @@ public class MTRClassShutter implements ClassShutter {
             ClassRule.parse("javax.imageio.*"),
             ClassRule.parse("sun.java2d.*"),
             ClassRule.parse("sun.font.*"),
+            ClassRule.parse("sun.awt.*"),
             ClassRule.parse("java.io.Closeable"),
             ClassRule.parse("java.io.InputStream"),
             ClassRule.parse("java.io.OutputStream"),
