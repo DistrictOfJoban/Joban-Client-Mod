@@ -1,4 +1,4 @@
-## JCM v2.0.1 for MTR 4.0.0 has been released!
+## JCM v2.0.1 for MTR 4.0.0/4.0.1 has been released!
 
 JCM v2.0.1 is mostly a bug-fix release, details as follows:
 
