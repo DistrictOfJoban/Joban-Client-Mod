@@ -2,6 +2,8 @@ package com.lx862.jcm.mapping;
 
 import org.mtr.mapping.holder.*;
 
+import java.util.Optional;
+
 /**
  * Fabric implementation via Yarn mapping
  */
@@ -17,5 +19,15 @@ public class LoaderImpl {
         #else
         return settings;
         #endif
+    }
+
+    public static Item getItemFromId(Identifier id) {
+        final Optional<net.minecraft.item.Item> itm;
+        #if MC_VERSION < "11903"
+            itm = net.minecraft.util.registry.Registry.ITEM.getOrEmpty(id.data);
+        #else
+            itm = net.minecraft.registry.Registries.ITEM.getOrEmpty(id.data);
+        #endif
+        return itm.map(Item::new).orElse(null);
     }
 }

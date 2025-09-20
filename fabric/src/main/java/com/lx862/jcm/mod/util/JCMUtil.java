@@ -1,8 +1,10 @@
 package com.lx862.jcm.mod.util;
 
 import com.lx862.jcm.mod.Constants;
+import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.PlayerEntity;
+import org.mtr.mapping.holder.Vector3f;
 
 public class JCMUtil {
     /**
@@ -98,5 +100,9 @@ public class JCMUtil {
             }
         }
         return checkId;
+    }
+
+    public static BlockPos vector3fToBlockPos(Vector3f vec3f) {
+        return new BlockPos((int)vec3f.getX(), (int)vec3f.getY(), (int)vec3f.getZ());
     }
 }

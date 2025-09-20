@@ -3,8 +3,10 @@ package com.lx862.mtrscripting.util;
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/MinecraftClientUtil.java */
 
 import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.jcm.mod.util.JCMUtil;
 import com.mojang.text2speech.Narrator;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.ScoreboardHelper;
 import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mapping.mapper.WorldHelper;
 
@@ -46,6 +48,32 @@ public class MinecraftClientUtil {
         MinecraftClient.getInstance().execute(() -> {
             Narrator.getNarrator().say(message, true);
         });
+    }
+
+    public static int blockLightAt(Vector3f pos) {
+        return MinecraftClient.getInstance().getWorldMapped().getLightLevel(LightType.BLOCK, JCMUtil.vector3fToBlockPos(pos));
+    }
+
+    public static int skyLightAt(Vector3f pos) {
+        return MinecraftClient.getInstance().getWorldMapped().getLightLevel(LightType.SKY, JCMUtil.vector3fToBlockPos(pos));
+    }
+
+    public static int lightLevelAt(Vector3f pos) {
+        return Math.min(blockLightAt(pos), skyLightAt(pos));
+    }
+
+    public static boolean isHoldingItem(String id) {
+        Item itm = LoaderImpl.getItemFromId(new Identifier(id));
+        if(itm == null) return false;
+        return MinecraftClient.getInstance().getPlayerMapped().isHolding(itm);
+    }
+
+    public static Integer getScoreboardScore(String objectiveName) {
+        ClientWorld world = MinecraftClient.getInstance().getWorldMapped();
+        Scoreboard scoreboard = world.getScoreboard();
+        ScoreboardObjective objective = ScoreboardHelper.getScoreboardObjective(scoreboard, objectiveName);
+        if(objective == null) return null;
+        return ScoreboardHelper.getPlayerScore(scoreboard, MinecraftClient.getInstance().getPlayerMapped().getGameProfile().getName(), objective);
     }
 
     public static void displayMessage(String message, boolean actionBar) {

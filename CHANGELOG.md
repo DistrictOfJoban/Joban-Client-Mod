@@ -1,12 +1,10 @@
-## JCM v2.0.1 for MTR 4.0.0/4.0.1 has been released!
+## JCM v2.1.0 for MTR 4.0.0/4.0.1 has been released!
 
-JCM v2.0.1 is mostly a bug-fix release, details as follows:
-
-**Fix:**
-- **PIDS Scripting**
-- - `ArrivalWrapper.platforms()` no longer return duplicated platform
-- - `sun.awt.*` is now whitelisted to allow Awt RenderHints to work
-- Fix a potential crash with RV PIDS
+**New:**
+- Scripting:
+- - Add `MinecraftClient.getScoreboardScore(objective: string)` to obtain the scoreboard score of the current player.
+- - Add `MinecraftClient.isHoldingItem(id: string)` to determine if the current player is holding an item.
+- - Add `MinecraftClient.blockLightAt(pos: vector3f)`, `MinecraftClient.skyLightAt(pos: vector3f)`, `MinecraftClient.lightLevelAt(pos: vector3f)` to determine light level in the world.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
