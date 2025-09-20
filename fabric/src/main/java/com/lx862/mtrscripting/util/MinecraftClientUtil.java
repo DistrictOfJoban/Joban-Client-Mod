@@ -32,16 +32,16 @@ public class MinecraftClientUtil {
                 ? (int) WorldHelper.getTimeOfDay(MinecraftClient.getInstance().getWorldMapped()) : 0;
     }
 
-    public static boolean isEmittingRedstonePower(BlockPos pos) {
+    public static boolean isEmittingRedstonePower(Vector3f pos) {
         for(Direction direction : Direction.values()) {
             if(isEmittingRedstonePower(pos, direction)) return true;
         }
         return false;
     }
 
-    public static boolean isEmittingRedstonePower(BlockPos pos, Direction direction) {
+    public static boolean isEmittingRedstonePower(Vector3f pos, Direction direction) {
         return MinecraftClient.getInstance().getWorldMapped() != null &&
-                MinecraftClient.getInstance().getWorldMapped().isEmittingRedstonePower(pos, direction);
+                MinecraftClient.getInstance().getWorldMapped().isEmittingRedstonePower(JCMUtil.vector3fToBlockPos(pos), direction);
     }
 
     public static void narrate(String message) {
