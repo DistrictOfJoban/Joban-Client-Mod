@@ -24,7 +24,7 @@ public class LoaderImpl {
     public static Item getItemFromId(Identifier id) {
         final Optional<net.minecraft.world.item.Item> itm;
         #if MC_VERSION < "11903"
-            itm = net.minecraft.core.Registry.ITEM.getOrEmpty(id.data);
+            itm = net.minecraft.core.Registry.ITEM.getOptional(id.data);
         #else
             itm = net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(id.data);
         #endif
