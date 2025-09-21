@@ -105,4 +105,8 @@ public class JCMUtil {
     public static BlockPos vector3fToBlockPos(Vector3f vec3f) {
         return new BlockPos((int)vec3f.getX(), (int)vec3f.getY(), (int)vec3f.getZ());
     }
+
+    public static Vector3f blockPosToVector3f(BlockPos pos) {
+        return new Vector3f(pos.getX(), pos.getY(), pos.getZ());
+    }
 }

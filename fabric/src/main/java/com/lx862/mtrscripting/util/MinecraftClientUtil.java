@@ -62,6 +62,15 @@ public class MinecraftClientUtil {
         return Math.min(blockLightAt(pos), skyLightAt(pos));
     }
 
+    public static Vector3f playerPos() {
+        Vector3d pos = MinecraftClient.getInstance().getPlayerMapped().getPos();
+        return new Vector3f((float)pos.getXMapped(), (float)pos.getYMapped(), (float)pos.getZMapped());
+    }
+
+    public static Vector3f playerBlockPos() {
+        return JCMUtil.blockPosToVector3f(MinecraftClient.getInstance().getPlayerMapped().getBlockPos());
+    }
+
     public static boolean isHoldingItem(String id) {
         Item itm = LoaderImpl.getItemFromId(new Identifier(id));
         if(itm == null) return false;

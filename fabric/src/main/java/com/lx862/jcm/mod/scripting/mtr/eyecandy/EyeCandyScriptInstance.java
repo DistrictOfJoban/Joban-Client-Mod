@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Objects;
 
 public class EyeCandyScriptInstance extends ScriptInstance<BlockEyeCandy.BlockEntity> {
-    private final BlockEyeCandy.BlockEntity be;
+    private final EyecandyBlockEntityWrapper be;
     public final List<ScriptResultCall> drawCalls;
     public final List<ScriptResultCall> soundCalls;
 
-    public EyeCandyScriptInstance(EyeCandyScriptContext context, BlockEyeCandy.BlockEntity be, ParsedScript script) {
+    public EyeCandyScriptInstance(EyeCandyScriptContext context, EyecandyBlockEntityWrapper be, ParsedScript script) {
         super(context, script);
         this.be = be;
         this.soundCalls = new ArrayList<>();
@@ -33,6 +33,6 @@ public class EyeCandyScriptInstance extends ScriptInstance<BlockEyeCandy.BlockEn
     }
 
     public boolean shouldInvalidate() {
-        return be.getWorld2().getBlockEntity(be.getPos2()) == null || !Objects.equals(be.getModelId(), getScriptContext().getName());
+        return be.getWorld().getBlockEntity(be.blockPos()) == null || !Objects.equals(be.getModelId(), getScriptContext().getName());
     }
 }

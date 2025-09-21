@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptContext;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptInstance;
+import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyecandyBlockEntityWrapper;
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.UniqueKey;
@@ -33,7 +34,7 @@ public class RenderEyeCandyMixin {
         ParsedScript script = MTRContentResourceManager.getEyecandyScript(blockEntity.getModelId());
         if(script == null) return;
 
-        ScriptInstance<BlockEyeCandy.BlockEntity> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(blockEntity), blockEntity, script));
+        ScriptInstance<BlockEyeCandy.BlockEntity> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(blockEntity), new EyecandyBlockEntityWrapper(blockEntity), script));
         if(!(scriptInstance instanceof EyeCandyScriptInstance)) return;
 
         EyeCandyScriptInstance eyeCandyScriptInstance = (EyeCandyScriptInstance) scriptInstance;
