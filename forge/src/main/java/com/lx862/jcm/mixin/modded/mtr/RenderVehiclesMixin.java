@@ -44,10 +44,9 @@ public abstract class RenderVehiclesMixin {
                 scriptInstance.setWrapperObject(wrapperObject);
                 scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
                     VehicleScriptContext ctx = (VehicleScriptContext) scriptInstance.getScriptContext();
-                    scriptInstance.setCarSoundCalls(ctx.getCarSoundCalls());
-                    scriptInstance.setAnnounceSoundCalls(ctx.getAnnounceSoundCalls());
+                    scriptInstance.updateSound(ctx.soundManager());
                     scriptInstance.setCarModelDrawCalls(ctx.getCarModelDrawCalls());
-                    ctx.reset();
+                    ctx.resetForNextRun();
                 });
             }
         }

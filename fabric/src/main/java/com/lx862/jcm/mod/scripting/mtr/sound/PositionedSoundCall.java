@@ -19,6 +19,6 @@ public class PositionedSoundCall extends SoundCall {
 
     @Override
     public void run(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        world.playSound(x, y, z, soundEvent, SoundCategory.MASTER, volume, pitch, false);
+        world.playSound(x, y, z, soundEvent, SoundCategory.valueOf(soundCategory), volume, pitch, false);
     }
 }

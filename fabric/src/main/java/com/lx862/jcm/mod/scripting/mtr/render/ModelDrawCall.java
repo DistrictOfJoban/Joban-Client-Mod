@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting.mtr.eyecandy;
+package com.lx862.jcm.mod.scripting.mtr.render;
 
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;

@@ -1,7 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
-import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptContext;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptInstance;
@@ -36,7 +35,7 @@ public class RenderEyeCandyMixin {
         if(script == null) return;
         EyecandyBlockEntityWrapper beWrapper = new EyecandyBlockEntityWrapper(blockEntity);
 
-        ScriptInstance<EyecandyBlockEntityWrapper> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(blockEntity), beWrapper, script));
+        ScriptInstance<EyecandyBlockEntityWrapper> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(beWrapper), beWrapper, script));
         if(!(scriptInstance instanceof EyeCandyScriptInstance)) return;
 
         EyeCandyScriptInstance eyeCandyScriptInstance = (EyeCandyScriptInstance) scriptInstance;
@@ -44,7 +43,9 @@ public class RenderEyeCandyMixin {
         scriptInstance.setWrapperObject(beWrapper);
 
         scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
-            eyeCandyScriptInstance.setDrawCalls(eyeCandyScriptContext.getDrawCalls());
+            eyeCandyScriptInstance.updateDrawCalls(eyeCandyScriptContext.getDrawCalls());
+            eyeCandyScriptInstance.updateSound(eyeCandyScriptContext.soundManager());
+            eyeCandyScriptContext.resetForNextRun();
         });
 
         BlockPos blockPos = blockEntity.getPos2();
@@ -64,10 +65,7 @@ public class RenderEyeCandyMixin {
             if(drawCall == null) continue;
             drawCall.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
         }
-        for(ScriptResultCall soundCall : new ArrayList<>(eyeCandyScriptInstance.soundCalls)) {
-            if(soundCall == null) continue;
-            soundCall.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
-        }
+        eyeCandyScriptInstance.getSoundManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, light);
         ci.cancel();
     }
 }

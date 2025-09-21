@@ -1,35 +1,38 @@
 package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
-import com.lx862.jcm.mod.scripting.mtr.sound.PositionedSoundCall;
-import com.lx862.mtrscripting.api.ScriptResultCall;
+import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
+import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.core.ScriptInstance;
-import org.mtr.mod.block.BlockEyeCandy;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class EyeCandyScriptInstance extends ScriptInstance<EyecandyBlockEntityWrapper> {
     private final EyecandyBlockEntityWrapper be;
-    public final List<ScriptResultCall> drawCalls;
-    public final List<ScriptResultCall> soundCalls;
+    private final ScriptRenderManager renderManager;
+    private final ScriptSoundManager soundManager;
 
     public EyeCandyScriptInstance(EyeCandyScriptContext context, EyecandyBlockEntityWrapper be, ParsedScript script) {
         super(context, script);
         this.be = be;
-        this.soundCalls = new ArrayList<>();
-        this.drawCalls = new ArrayList<>();
+        this.soundManager = new ScriptSoundManager();
+        this.renderManager = new ScriptRenderManager();
     }
 
-    public void setDrawCalls(List<ModelDrawCall> newDrawCalls) {
-        this.drawCalls.clear();
-        this.drawCalls.addAll(newDrawCalls);
+    public void updateRenderer(ScriptRenderManager renderManager) {
+        this.renderManager.updateDrawCalls(renderManager);
     }
 
-    public void setSoundCalls(List<PositionedSoundCall> calls) {
-        this.soundCalls.clear();
-        this.soundCalls.addAll(calls);
+    public void updateSound(ScriptSoundManager soundManager) {
+        this.soundManager.updateSoundCalls(soundManager);
+    }
+
+    public ScriptSoundManager getSoundManager() {
+        return this.soundManager;
+    }
+
+    public ScriptRenderManager getRenderManager() {
+        return this.renderManager;
     }
 
     public boolean shouldInvalidate() {

@@ -9,7 +9,6 @@ import com.lx862.jcm.mod.scripting.jcm.pids.PIDSScriptContext;
 import com.lx862.jcm.mod.scripting.jcm.pids.PIDSScriptInstance;
 import com.lx862.jcm.mod.scripting.jcm.pids.PIDSWrapper;
 import com.lx862.jcm.mod.util.JCMLogger;
-import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.data.UniqueKey;
@@ -86,22 +85,18 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;
+            PIDSScriptContext scriptContext = (PIDSScriptContext)scriptInstance.getScriptContext();
 
             scriptInstance.setWrapperObject(pidsState);
             scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
-                pidsScriptInstance.drawCalls.clear();
-                pidsScriptInstance.drawCalls.addAll(((PIDSScriptContext)scriptInstance.getScriptContext()).getDrawCalls());
-                scriptInstance.getScriptContext().reset();
+                pidsScriptInstance.updateRenderer(scriptContext.renderManager());
+                pidsScriptInstance.updateSound(scriptContext.soundManager());
+                scriptContext.resetForNextRun();
             });
 
             graphicsHolder.translate(0, 0, -0.5);
-            for(ScriptResultCall resultCalls : new ArrayList<>(pidsScriptInstance.drawCalls)) {
-                if(resultCalls == null) continue;
-                graphicsHolder.translate(0, 0, -0.02);
-                graphicsHolder.push();
-                resultCalls.run(world, graphicsHolder, new StoredMatrixTransformations(), facing, MAX_RENDER_LIGHT);
-                graphicsHolder.pop();
-            }
+            pidsScriptInstance.getRenderManager().invoke(world, graphicsHolder, new StoredMatrixTransformations(), facing, MAX_RENDER_LIGHT);
+            pidsScriptInstance.getSoundManager().invoke(world, graphicsHolder, new StoredMatrixTransformations(), facing, MAX_RENDER_LIGHT);
         }
     }
 

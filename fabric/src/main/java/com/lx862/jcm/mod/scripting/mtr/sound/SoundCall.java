@@ -5,6 +5,7 @@ import org.mtr.mapping.holder.SoundEvent;
 
 public abstract class SoundCall extends ScriptResultCall {
     protected final SoundEvent soundEvent;
+    protected final String soundCategory = "MASTER";
     protected final float volume;
     protected final float pitch;
 

@@ -26,11 +26,14 @@ public abstract class VehicleResourceMixin {
         for(VehicleCar vehicleCar : vehicle.vehicleExtraData.immutableVehicleCars) {
             ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "vehicle", vehicle.getId(), vehicleCar.getVehicleId()));
             if(!(scriptInstance instanceof VehicleScriptInstance)) return;
+            VehicleScriptInstance vehicleScriptInstance = (VehicleScriptInstance)scriptInstance;
 
             MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolder, vec) -> {
-                for(ModelDrawCall drawCall : ((VehicleScriptInstance)scriptInstance).carModelDrawCalls) {
-                    drawCall.run(World.cast(MinecraftClient.getInstance().getWorldMapped()), graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
+                World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
+                for(ModelDrawCall drawCall : vehicleScriptInstance.carModelDrawCalls) {
+                    drawCall.run(world, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
                 }
+                vehicleScriptInstance.getSoundManager().invoke(world, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
             });
         }
     }

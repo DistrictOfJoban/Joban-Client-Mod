@@ -26,5 +26,5 @@ public abstract class ScriptContext {
         return debugInfo.entrySet();
     }
 
-    public abstract void reset();
+    public abstract void resetForNextRun();
 }
