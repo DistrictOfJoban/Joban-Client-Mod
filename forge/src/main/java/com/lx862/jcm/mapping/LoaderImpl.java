@@ -22,10 +22,14 @@ public class LoaderImpl {
     }
 
     public static Item getItemFromId(Identifier id) {
-        final Optional<net.minecraft.world.item.Item> itm;
-        #if MC_VERSION < "11903"
+        #if MC_VERSION < "11701"
+            final Optional<net.minecraft.item.Item> itm;
+            itm = net.minecraft.core.Registry.ITEM.getOptional(id.data);
+        #elif MC_VERSION < "11903"
+            final Optional<net.minecraft.world.item.Item> itm;
             itm = net.minecraft.core.Registry.ITEM.getOptional(id.data);
         #else
+            final Optional<net.minecraft.world.item.Item> itm;
             itm = net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(id.data);
         #endif
         return itm.map(Item::new).orElse(null);
