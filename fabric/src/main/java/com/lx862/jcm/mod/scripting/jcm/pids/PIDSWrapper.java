@@ -1,12 +1,10 @@
 package com.lx862.jcm.mod.scripting.jcm.pids;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.util.JCMUtil;
+import com.lx862.mtrscripting.util.Vector3dWrapper;
 import org.mtr.core.data.Station;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import org.mtr.mapping.holder.BlockPos;
-import org.mtr.mapping.holder.Vector3f;
 import org.mtr.mod.InitClient;
 
 public class PIDSWrapper {
@@ -26,12 +24,8 @@ public class PIDSWrapper {
         this.arrivalsWrapper = new ArrivalsWrapper(arrivalsResponse);
     }
 
-    public Vector3f pos() {
-        return JCMUtil.blockPosToVector3f(be.getPos2());
-    }
-
-    public BlockPos blockPos() {
-        return be.getPos2();
+    public Vector3dWrapper blockPos() {
+        return new Vector3dWrapper(be.getPos2());
     }
 
     public boolean isRowHidden(int i) {

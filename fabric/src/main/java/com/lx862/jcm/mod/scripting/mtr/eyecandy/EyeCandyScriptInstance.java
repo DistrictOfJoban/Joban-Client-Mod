@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class EyeCandyScriptInstance extends ScriptInstance<BlockEyeCandy.BlockEntity> {
+public class EyeCandyScriptInstance extends ScriptInstance<EyecandyBlockEntityWrapper> {
     private final EyecandyBlockEntityWrapper be;
     public final List<ScriptResultCall> drawCalls;
     public final List<ScriptResultCall> soundCalls;
@@ -33,6 +33,6 @@ public class EyeCandyScriptInstance extends ScriptInstance<BlockEyeCandy.BlockEn
     }
 
     public boolean shouldInvalidate() {
-        return be.getWorld().getBlockEntity(be.blockPos()) == null || !Objects.equals(be.getModelId(), getScriptContext().getName());
+        return be.getWorld().getBlockEntity(be.blockPos().rawBlockPos()) == null || !Objects.equals(be.getModelId(), getScriptContext().getName());
     }
 }

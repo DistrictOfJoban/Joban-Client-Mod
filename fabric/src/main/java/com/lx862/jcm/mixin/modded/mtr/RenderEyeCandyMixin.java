@@ -33,13 +33,14 @@ public class RenderEyeCandyMixin {
 
         ParsedScript script = MTRContentResourceManager.getEyecandyScript(blockEntity.getModelId());
         if(script == null) return;
+        EyecandyBlockEntityWrapper beWrapper = new EyecandyBlockEntityWrapper(blockEntity);
 
-        ScriptInstance<BlockEyeCandy.BlockEntity> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(blockEntity), new EyecandyBlockEntityWrapper(blockEntity), script));
+        ScriptInstance<EyecandyBlockEntityWrapper> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(blockEntity), beWrapper, script));
         if(!(scriptInstance instanceof EyeCandyScriptInstance)) return;
 
         EyeCandyScriptInstance eyeCandyScriptInstance = (EyeCandyScriptInstance) scriptInstance;
         EyeCandyScriptContext eyeCandyScriptContext = (EyeCandyScriptContext)scriptInstance.getScriptContext();
-        scriptInstance.setWrapperObject(blockEntity);
+        scriptInstance.setWrapperObject(beWrapper);
 
         scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
             eyeCandyScriptInstance.setDrawCalls(eyeCandyScriptContext.getDrawCalls());

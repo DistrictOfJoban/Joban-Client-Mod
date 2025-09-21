@@ -3,7 +3,6 @@ package com.lx862.mtrscripting.util;
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/MinecraftClientUtil.java */
 
 import com.lx862.jcm.mapping.LoaderImpl;
-import com.lx862.jcm.mod.util.JCMUtil;
 import com.mojang.text2speech.Narrator;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ScoreboardHelper;
@@ -22,9 +21,9 @@ public class MinecraftClientUtil {
                 && MinecraftClient.getInstance().getWorldMapped().isThundering();
     }
 
-    public static boolean worldIsRainingAt(Vector3f pos) {
+    public static boolean worldIsRainingAt(Vector3dWrapper pos) {
         return MinecraftClient.getInstance().getWorldMapped() != null
-                && LoaderImpl.isRainingAt(World.cast(MinecraftClient.getInstance().getWorldMapped()), new BlockPos((int)pos.getX(), (int)pos.getY(), (int)pos.getZ()));
+                && LoaderImpl.isRainingAt(World.cast(MinecraftClient.getInstance().getWorldMapped()), pos.rawBlockPos());
     }
 
     public static int worldDayTime() {
@@ -32,16 +31,16 @@ public class MinecraftClientUtil {
                 ? (int) WorldHelper.getTimeOfDay(MinecraftClient.getInstance().getWorldMapped()) : 0;
     }
 
-    public static boolean isEmittingRedstonePower(Vector3f pos) {
+    public static boolean isEmittingRedstonePower(Vector3dWrapper pos) {
         for(Direction direction : Direction.values()) {
             if(isEmittingRedstonePower(pos, direction)) return true;
         }
         return false;
     }
 
-    public static boolean isEmittingRedstonePower(Vector3f pos, Direction direction) {
+    public static boolean isEmittingRedstonePower(Vector3dWrapper pos, Direction direction) {
         return MinecraftClient.getInstance().getWorldMapped() != null &&
-                MinecraftClient.getInstance().getWorldMapped().isEmittingRedstonePower(JCMUtil.vector3fToBlockPos(pos), direction);
+                MinecraftClient.getInstance().getWorldMapped().isEmittingRedstonePower(pos.rawBlockPos(), direction);
     }
 
     public static void narrate(String message) {
@@ -50,25 +49,25 @@ public class MinecraftClientUtil {
         });
     }
 
-    public static int blockLightAt(Vector3f pos) {
-        return MinecraftClient.getInstance().getWorldMapped().getLightLevel(LightType.BLOCK, JCMUtil.vector3fToBlockPos(pos));
+    public static int blockLightAt(Vector3dWrapper pos) {
+        return MinecraftClient.getInstance().getWorldMapped().getLightLevel(LightType.BLOCK, pos.rawBlockPos());
     }
 
-    public static int skyLightAt(Vector3f pos) {
-        return MinecraftClient.getInstance().getWorldMapped().getLightLevel(LightType.SKY, JCMUtil.vector3fToBlockPos(pos));
+    public static int skyLightAt(Vector3dWrapper pos) {
+        return MinecraftClient.getInstance().getWorldMapped().getLightLevel(LightType.SKY, pos.rawBlockPos());
     }
 
-    public static int lightLevelAt(Vector3f pos) {
+    public static int lightLevelAt(Vector3dWrapper pos) {
         return Math.min(blockLightAt(pos), skyLightAt(pos));
     }
 
-    public static Vector3f playerPos() {
+    public static Vector3dWrapper playerPos() {
         Vector3d pos = MinecraftClient.getInstance().getPlayerMapped().getPos();
-        return new Vector3f((float)pos.getXMapped(), (float)pos.getYMapped(), (float)pos.getZMapped());
+        return new Vector3dWrapper((float)pos.getXMapped(), (float)pos.getYMapped(), (float)pos.getZMapped());
     }
 
-    public static Vector3f playerBlockPos() {
-        return JCMUtil.blockPosToVector3f(MinecraftClient.getInstance().getPlayerMapped().getBlockPos());
+    public static Vector3dWrapper playerBlockPos() {
+        return new Vector3dWrapper(MinecraftClient.getInstance().getPlayerMapped().getBlockPos());
     }
 
     public static boolean isHoldingItem(String id) {

@@ -50,6 +50,7 @@ public class ParsedScript {
             scope.put("Files", scope, new NativeJavaClass(scope, FilesUtil.class));
 
             scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
+            scope.put("Vector3f", scope, new NativeJavaClass(scope, Vector3dWrapper.class));
 
             scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientUtil.class));
 
