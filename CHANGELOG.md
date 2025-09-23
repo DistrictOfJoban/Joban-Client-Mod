@@ -1,6 +1,7 @@
 ## JCM v2.1.0 for MTR 4.0.0/4.0.1 has been released!
 
 **New:**
+- Add **Help Line (Tiu Keng Leng Station Type)**
 - **Scripting:**
 - - Add **Vector3f** for performing position-related operation.
 - - **Sounds**

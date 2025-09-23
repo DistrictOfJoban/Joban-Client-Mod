@@ -1,0 +1,24 @@
+{
+	"format_version": "1.21.6",
+	"credit": "Made with Blockbench",
+	"texture_size": [16, 32],
+	"textures": {
+		"1": "jsblock:block/helpline_standing_tik_upper",
+		"particle": "jsblock:block/helpline_standing_tik_upper"
+	},
+	"elements": [
+		{
+			"from": [4, 0, 7.5],
+			"to": [12, 20, 8.5],
+			"shade": false,
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, 0, 1.5]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"east": {"uv": [0, 0, 1.0625, 16], "texture": "#1"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#1"},
+				"west": {"uv": [0, 0.125, 1.125, 15.8125], "texture": "#1"},
+				"up": {"uv": [1.25, 0, 1.375, 0.125], "texture": "#1"}
+			}
+		}
+	]
+}
