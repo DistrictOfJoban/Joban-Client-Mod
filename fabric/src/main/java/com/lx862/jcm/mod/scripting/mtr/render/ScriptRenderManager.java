@@ -11,6 +11,7 @@ import org.mtr.mod.render.StoredMatrixTransformations;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ScriptRenderManager {
     public final List<ScriptResultCall> drawCalls;
@@ -34,8 +35,8 @@ public class ScriptRenderManager {
 
     public void invoke(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         List<ScriptResultCall> drawCallsSaved = new ArrayList<>(drawCalls);
-        List<ScriptResultCall> modelDrawCalls = drawCallsSaved.stream().filter(e -> !(e instanceof PIDSDrawCall)).toList();
-        List<ScriptResultCall> pidsDrawCalls = drawCallsSaved.stream().filter(e -> e instanceof PIDSDrawCall).toList();
+        List<ScriptResultCall> modelDrawCalls = drawCallsSaved.stream().filter(e -> !(e instanceof PIDSDrawCall)).collect(Collectors.toList());
+        List<ScriptResultCall> pidsDrawCalls = drawCallsSaved.stream().filter(e -> e instanceof PIDSDrawCall).collect(Collectors.toList());
 
         for(ScriptResultCall drawCall : new ArrayList<>(modelDrawCalls)) {
             drawCall.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
