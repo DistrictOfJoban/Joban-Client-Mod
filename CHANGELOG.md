@@ -25,7 +25,7 @@
 - - Add `MinecraftClient.isHoldingItem(id: string)` to determine if the current player is holding an item with the corresponding item id.
 - - Add `MinecraftClient.blockLightAt(pos: vector3f)`, `MinecraftClient.skyLightAt(pos: vector3f)`, `MinecraftClient.lightLevelAt(pos: vector3f)` to determine light level in the world.
 - - Add `MinecraftClient.playerPos()` and `MinecraftClient.playerBlockPos()` to determine the position of the player.
-- - - Add `MinecraftClient.playerPos()` and `MinecraftClient.gamePaused()` to determine if the game is paused.
+- - Add `MinecraftClient.gamePaused()` to determine if the game is paused.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
