@@ -84,6 +84,10 @@ public class MinecraftClientUtil {
         return ScoreboardHelper.getPlayerScore(scoreboard, MinecraftClient.getInstance().getPlayerMapped().getGameProfile().getName(), objective);
     }
 
+    public static boolean gamePaused() {
+        return MinecraftClient.getInstance().isPaused();
+    }
+
     public static void displayMessage(String message, boolean actionBar) {
         final ClientPlayerEntity player = MinecraftClient.getInstance().getPlayerMapped();
         if (player != null) {
