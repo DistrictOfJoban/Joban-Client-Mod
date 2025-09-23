@@ -1,7 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
-import com.lx862.jcm.mod.scripting.mtr.eyecandy.ModelDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleScriptInstance;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import com.lx862.mtrscripting.data.UniqueKey;
@@ -30,9 +29,6 @@ public abstract class VehicleResourceMixin {
 
             MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolder, vec) -> {
                 World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
-                for(ModelDrawCall drawCall : vehicleScriptInstance.carModelDrawCalls) {
-                    drawCall.run(world, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
-                }
                 vehicleScriptInstance.getSoundManager().invoke(world, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
             });
         }

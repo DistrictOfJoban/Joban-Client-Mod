@@ -43,7 +43,7 @@ public class RenderEyeCandyMixin {
         scriptInstance.setWrapperObject(beWrapper);
 
         scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
-            eyeCandyScriptInstance.updateDrawCalls(eyeCandyScriptContext.getDrawCalls());
+            eyeCandyScriptInstance.updateRenderer(eyeCandyScriptContext.renderManager());
             eyeCandyScriptInstance.updateSound(eyeCandyScriptContext.soundManager());
             eyeCandyScriptContext.resetForNextRun();
         });
@@ -60,11 +60,7 @@ public class RenderEyeCandyMixin {
             graphicsHolderNew.rotateYDegrees(blockEntity.getRotateY());
             graphicsHolderNew.rotateZDegrees(blockEntity.getRotateZ());
         });
-
-        for(ScriptResultCall drawCall : new ArrayList<>(eyeCandyScriptInstance.drawCalls)) {
-            if(drawCall == null) continue;
-            drawCall.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
-        }
+        eyeCandyScriptInstance.getRenderManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, light);
         eyeCandyScriptInstance.getSoundManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, light);
         ci.cancel();
     }
