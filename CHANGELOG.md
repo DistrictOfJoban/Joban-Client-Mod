@@ -21,11 +21,13 @@
 - - - - This grants PIDS scripts the ability to render 3D OBJ model. It is advised to use this in conjunction with PIDS Projector, which is an invisible block.
 - - - Adapt SoundManager, can be accessed by `ctx.soundManager()`, see above.
 - - - Add `PIDSWrapper.blockPos()` to determine where the PIDS block is placed.
-- - Add `MinecraftClient.getScoreboardScore(objective: string)` to obtain the scoreboard score of the current player.
-- - Add `MinecraftClient.isHoldingItem(id: string)` to determine if the current player is holding an item with the corresponding item id.
-- - Add `MinecraftClient.blockLightAt(pos: vector3f)`, `MinecraftClient.skyLightAt(pos: vector3f)`, `MinecraftClient.lightLevelAt(pos: vector3f)` to determine light level in the world.
-- - Add `MinecraftClient.playerPos()` and `MinecraftClient.playerBlockPos()` to determine the position of the player.
-- - Add `MinecraftClient.gamePaused()` to determine if the game is paused.
+- - **Others**
+- - - Add `MinecraftClient.getScoreboardScore(objective: string, playerName: string)` to obtain the scoreboard score of a player.
+- - - Add `MinecraftClient.isHoldingItem(id: string)` to determine if the current player is holding an item with the corresponding item id.
+- - - Add `MinecraftClient.blockLightAt(pos: vector3f)`, `MinecraftClient.skyLightAt(pos: vector3f)`, `MinecraftClient.lightLevelAt(pos: vector3f)` to determine light level in the world.
+- - - Add `MinecraftClient.playerPos()` and `MinecraftClient.playerBlockPos()` to determine the position of the player.
+- - - Add `MinecraftClient.playerName()` to obtain the account name of the current player.
+- - - Add `MinecraftClient.gamePaused()` to determine if the game is paused.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

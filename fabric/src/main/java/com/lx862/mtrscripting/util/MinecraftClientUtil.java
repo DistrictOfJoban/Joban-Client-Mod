@@ -70,18 +70,22 @@ public class MinecraftClientUtil {
         return new Vector3dWrapper(MinecraftClient.getInstance().getPlayerMapped().getBlockPos());
     }
 
+    public static String playerName() {
+        return MinecraftClient.getInstance().getPlayerMapped().getGameProfile().getName();
+    }
+
     public static boolean isHoldingItem(String id) {
         Item itm = LoaderImpl.getItemFromId(new Identifier(id));
         if(itm == null) return false;
         return MinecraftClient.getInstance().getPlayerMapped().isHolding(itm);
     }
 
-    public static Integer getScoreboardScore(String objectiveName) {
+    public static Integer getScoreboardScore(String objectiveName, String playerName) {
         ClientWorld world = MinecraftClient.getInstance().getWorldMapped();
         Scoreboard scoreboard = world.getScoreboard();
         ScoreboardObjective objective = ScoreboardHelper.getScoreboardObjective(scoreboard, objectiveName);
         if(objective == null) return null;
-        return ScoreboardHelper.getPlayerScore(scoreboard, MinecraftClient.getInstance().getPlayerMapped().getGameProfile().getName(), objective);
+        return ScoreboardHelper.getPlayerScore(scoreboard, playerName, objective);
     }
 
     public static boolean gamePaused() {
