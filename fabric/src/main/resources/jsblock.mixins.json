@@ -4,12 +4,13 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "compat.SimpleDefaultedRegistryMixin",
-    "modded.mtr.MixinTicketSystem"
+    "modded.mtr.TicketSystemMixin",
+    "modded.mtr.BlockPIDSPoleMixin"
   ],
   "client": [
-    "modded.mtr.VehicleResourceMixin",
     "modded.mtr.RenderEyeCandyMixin",
     "modded.mtr.RenderVehiclesMixin",
+    "modded.mtr.VehicleResourceMixin",
     "modded.mtr.VehicleSchemaMixin",
     "modded.tsc.MixinVehiclePlatformRouteInfo"
   ],
