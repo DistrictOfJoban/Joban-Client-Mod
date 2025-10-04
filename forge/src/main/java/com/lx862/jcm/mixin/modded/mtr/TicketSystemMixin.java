@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(value = TicketSystem.class, remap = false)
-public abstract class MixinTicketSystem {
+public abstract class TicketSystemMixin {
     @Shadow
     private static void incrementPlayerScore(World world, PlayerEntity player, String objective, String title, int value) {
     }
