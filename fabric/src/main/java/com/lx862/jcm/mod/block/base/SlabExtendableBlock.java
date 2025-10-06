@@ -37,9 +37,9 @@ public abstract class SlabExtendableBlock extends DirectionalBlock {
     public static boolean shouldExtendForSlab(WorldAccess world, BlockPos pos) {
         BlockState blockTop = world.getBlockState(pos.up());
 
-        if (blockTop.getBlock().data instanceof SlabBlockExtension) {
+        try {
             return SlabBlockExtension.getType(blockTop) == SlabType.TOP;
-        } else {
+        } catch (IllegalArgumentException ignored) { // Likely no slab property
             return false;
         }
     }
