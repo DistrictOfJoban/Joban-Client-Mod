@@ -29,8 +29,5 @@
 - - - Add `MinecraftClient.playerName()` to obtain the account name of the current player.
 - - - Add `MinecraftClient.gamePaused()` to determine if the game is paused.
 
-**Fixes**
-- Allow PIDS 1A to be placed by regular MTR PIDS Pole again.
-
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
