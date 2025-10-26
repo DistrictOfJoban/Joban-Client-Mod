@@ -37,15 +37,15 @@ public abstract class RenderVehiclesMixin {
             }
 
             for(Map.Entry<String, ParsedScript> scriptEntry : scriptsInVehicle.entrySet()) {
-                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "vehicle", vehicle.getHexId(), scriptEntry.getKey()), () -> new VehicleScriptInstance(new VehicleScriptContext(scriptEntry.getKey()), vehicle, scriptEntry.getValue()));
+                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "vehicle", vehicle.getHexId(), scriptEntry.getKey()), () -> new VehicleScriptInstance(new VehicleScriptContext(scriptEntry.getKey(), cars.size()), vehicle, scriptEntry.getValue()));
                 if(!(scriptInstance instanceof VehicleScriptInstance)) continue;
 
                 VehicleWrapper wrapperObject = new VehicleWrapper(vehicle);
                 scriptInstance.setWrapperObject(wrapperObject);
                 scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
                     VehicleScriptContext ctx = (VehicleScriptContext) scriptInstance.getScriptContext();
-                    scriptInstance.updateSound(ctx.soundManager());
-                    scriptInstance.setCarModelDrawCalls(ctx.getCarModelDrawCalls());
+                    scriptInstance.saveSoundCalls(ctx.getCarSoundManagers());
+                    scriptInstance.saveRenderCalls(ctx.getCarRenderManager());
                     ctx.resetForNextRun();
                 });
             }

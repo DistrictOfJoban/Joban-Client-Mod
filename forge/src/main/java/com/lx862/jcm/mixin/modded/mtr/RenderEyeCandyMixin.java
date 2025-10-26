@@ -9,6 +9,7 @@ import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.UniqueKey;
 import com.lx862.mtrscripting.core.ScriptInstance;
+import com.lx862.mtrscripting.util.Vector3dWrapper;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
@@ -60,8 +61,8 @@ public class RenderEyeCandyMixin {
             graphicsHolderNew.rotateYDegrees(blockEntity.getRotateY());
             graphicsHolderNew.rotateZDegrees(blockEntity.getRotateZ());
         });
-        eyeCandyScriptInstance.getRenderManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, light);
-        eyeCandyScriptInstance.getSoundManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, light);
+        eyeCandyScriptInstance.getRenderManager().invoke(world, Vector3dWrapper.ZERO, graphicsHolder, storedMatrixTransformations, facing, light);
+        eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos(), graphicsHolder, storedMatrixTransformations, facing, light);
         ci.cancel();
     }
 }

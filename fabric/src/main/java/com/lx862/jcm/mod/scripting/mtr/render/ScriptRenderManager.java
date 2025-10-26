@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.scripting.jcm.pids.PIDSDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.util.Matrices;
+import com.lx862.mtrscripting.util.Vector3dWrapper;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -20,9 +21,9 @@ public class ScriptRenderManager {
         this.drawCalls = new ArrayList<>();
     }
 
-    public void updateDrawCalls(ScriptRenderManager other) {
-        drawCalls.clear();
-        drawCalls.addAll(other.drawCalls);
+    public ScriptRenderManager(List<ScriptResultCall> drawCalls) {
+        this.drawCalls = new ArrayList<>();
+        this.drawCalls.addAll(drawCalls);
     }
 
     public void drawModel(ScriptedModel model, Matrices matrices) {
@@ -33,20 +34,24 @@ public class ScriptRenderManager {
         this.drawCalls.add(drawCall);
     }
 
-    public void invoke(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+    public void invoke(World world, Vector3dWrapper basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         List<ScriptResultCall> drawCallsSaved = new ArrayList<>(drawCalls);
         List<ScriptResultCall> modelDrawCalls = drawCallsSaved.stream().filter(e -> !(e instanceof PIDSDrawCall)).collect(Collectors.toList());
         List<ScriptResultCall> pidsDrawCalls = drawCallsSaved.stream().filter(e -> e instanceof PIDSDrawCall).collect(Collectors.toList());
 
         for(ScriptResultCall drawCall : new ArrayList<>(modelDrawCalls)) {
-            drawCall.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
+            drawCall.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
         }
         for(ScriptResultCall drawCall : new ArrayList<>(pidsDrawCalls)) {
             graphicsHolder.translate(0, 0, -0.02);
             graphicsHolder.push();
-            drawCall.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
+            drawCall.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
             graphicsHolder.pop();
         }
+    }
+
+    public ScriptRenderManager copy() {
+        return new ScriptRenderManager(this.drawCalls);
     }
 
     public void reset() {

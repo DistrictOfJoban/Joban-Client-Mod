@@ -10,8 +10,8 @@ import java.util.Objects;
 
 public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> {
     private final PIDSBlockEntity blockEntity;
-    private final ScriptSoundManager soundManager;
-    private final ScriptRenderManager renderManager;
+    private ScriptSoundManager soundManager;
+    private ScriptRenderManager renderManager;
 
     public PIDSScriptInstance(PIDSBlockEntity blockEntity, ParsedScript script, PIDSWrapper wrapperObject) {
         super(new PIDSScriptContext(blockEntity.getPresetId()), script);
@@ -21,12 +21,12 @@ public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> {
         this.renderManager = new ScriptRenderManager();
     }
 
-    public void updateRenderer(ScriptRenderManager renderManager) {
-        this.renderManager.updateDrawCalls(renderManager);
+    public void saveRenderCalls(ScriptRenderManager renderManager) {
+        this.renderManager = renderManager.copy();
     }
 
-    public void updateSound(ScriptSoundManager soundManager) {
-        this.soundManager.updateSoundCalls(soundManager);
+    public void saveSoundCalls(ScriptSoundManager soundManager) {
+        this.soundManager = soundManager.copy();
     }
 
     public ScriptSoundManager getSoundManager() {

@@ -9,8 +9,8 @@ import java.util.Objects;
 
 public class EyeCandyScriptInstance extends ScriptInstance<EyecandyBlockEntityWrapper> {
     private final EyecandyBlockEntityWrapper be;
-    private final ScriptRenderManager renderManager;
-    private final ScriptSoundManager soundManager;
+    private ScriptRenderManager renderManager;
+    private ScriptSoundManager soundManager;
 
     public EyeCandyScriptInstance(EyeCandyScriptContext context, EyecandyBlockEntityWrapper be, ParsedScript script) {
         super(context, script);
@@ -20,11 +20,11 @@ public class EyeCandyScriptInstance extends ScriptInstance<EyecandyBlockEntityWr
     }
 
     public void updateRenderer(ScriptRenderManager renderManager) {
-        this.renderManager.updateDrawCalls(renderManager);
+        this.renderManager = renderManager.copy();
     }
 
     public void updateSound(ScriptSoundManager soundManager) {
-        this.soundManager.updateSoundCalls(soundManager);
+        this.soundManager = soundManager.copy();
     }
 
     public ScriptSoundManager getSoundManager() {

@@ -49,6 +49,10 @@ public class EyecandyBlockEntityWrapper {
         return realPos;
     }
 
+    public Vector3dWrapper offsetPos() {
+        return new Vector3dWrapper(getTranslateX(), getTranslateY(), getTranslateZ());
+    }
+
     public Vector3dWrapper blockPos() {
         return new Vector3dWrapper(be.getPos2());
     }

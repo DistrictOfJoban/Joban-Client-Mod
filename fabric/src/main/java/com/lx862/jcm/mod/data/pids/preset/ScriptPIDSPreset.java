@@ -80,23 +80,23 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
-        PIDSWrapper pidsState = new PIDSWrapper(be, arrivals, width, height);
-        ScriptInstance<PIDSWrapper> scriptInstance = JCMScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("jcm", "pids", getId(), pos.getX(), pos.getY(), pos.getZ()), () -> new PIDSScriptInstance(be, parsedScripts, pidsState));
+        PIDSWrapper pidsWrapper = new PIDSWrapper(be, arrivals, width, height);
+        ScriptInstance<PIDSWrapper> scriptInstance = JCMScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("jcm", "pids", getId(), pos.getX(), pos.getY(), pos.getZ()), () -> new PIDSScriptInstance(be, parsedScripts, pidsWrapper));
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;
             PIDSScriptContext scriptContext = (PIDSScriptContext)scriptInstance.getScriptContext();
 
-            scriptInstance.setWrapperObject(pidsState);
+            scriptInstance.setWrapperObject(pidsWrapper);
             scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
-                pidsScriptInstance.updateRenderer(scriptContext.renderManager());
-                pidsScriptInstance.updateSound(scriptContext.soundManager());
+                pidsScriptInstance.saveRenderCalls(scriptContext.renderManager());
+                pidsScriptInstance.saveSoundCalls(scriptContext.soundManager());
                 scriptContext.resetForNextRun();
             });
 
             graphicsHolder.translate(0, 0, -0.5);
-            pidsScriptInstance.getRenderManager().invoke(world, graphicsHolder, new StoredMatrixTransformations(), facing, MAX_RENDER_LIGHT);
-            pidsScriptInstance.getSoundManager().invoke(world, graphicsHolder, new StoredMatrixTransformations(), facing, MAX_RENDER_LIGHT);
+            pidsScriptInstance.getRenderManager().invoke(world, pidsWrapper.blockPos(), graphicsHolder, new StoredMatrixTransformations(), facing, MAX_RENDER_LIGHT);
+            pidsScriptInstance.getSoundManager().invoke(world, pidsWrapper.blockPos(), graphicsHolder, new StoredMatrixTransformations(), facing, MAX_RENDER_LIGHT);
         }
     }
 

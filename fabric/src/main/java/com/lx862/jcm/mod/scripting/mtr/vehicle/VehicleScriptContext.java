@@ -1,47 +1,58 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
 import com.lx862.jcm.mod.scripting.mtr.MTRScriptContext;
+import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
+import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.util.Matrices;
 import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;
 import com.lx862.mtrscripting.util.Vector3dWrapper;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.mapping.holder.Identifier;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class VehicleScriptContext extends MTRScriptContext {
-    private final List<VehicleModelDrawCall> carModelDrawCalls = new ArrayList<>();
-    private final List<VehicleModelDrawCall> conectionModelDrawCalls = new ArrayList<>();
+    private final ScriptRenderManager[] carRenderers;
+    private final ScriptSoundManager[] carSoundManagers;
     private final String vehicleId;
+    private final int carLength;
 
     @Override
     public void resetForNextRun() {
-        this.carModelDrawCalls.clear();
-        this.conectionModelDrawCalls.clear();
+        for(ScriptRenderManager rm : carRenderers) {
+            rm.reset();
+        }
+        for(ScriptSoundManager sm : carSoundManagers) {
+            sm.reset();
+        }
     }
 
-    public VehicleScriptContext(String vehicleId) {
+    public VehicleScriptContext(String vehicleId, int carLength) {
         super(vehicleId);
         this.vehicleId = vehicleId;
+        this.carLength = carLength;
+        this.carRenderers = new ScriptRenderManager[carLength];
+        this.carSoundManagers = new ScriptSoundManager[carLength];
+        for(int i = 0; i < carLength; i++) {
+            carRenderers[i] = new ScriptRenderManager();
+            carSoundManagers[i] = new ScriptSoundManager();
+        }
     }
 
     public void drawCarModel(ScriptedModel model, int carIndex, Matrices matrices) {
-        carModelDrawCalls.add(new VehicleModelDrawCall(model, carIndex, matrices == null ? null :  matrices.getStoredMatrixTransformations().copy()));
+        carRenderers[carIndex].drawCalls.add(new VehicleModelDrawCall(model, carIndex, matrices == null ? null : matrices.getStoredMatrixTransformations().copy()));
     }
 
     public void drawConnModel(ScriptedModel model, int carIndex, Matrices matrices) {
-        this.conectionModelDrawCalls.add(new VehicleModelDrawCall(model, carIndex, matrices == null ? null : matrices.getStoredMatrixTransformations().copy()));
-    }
-
-    public void playCarSound(Identifier sound, int carIndex, float x, float y, float z, float volume, float pitch) {
-        soundManager().playSound(sound, new Vector3dWrapper(x, y, z), volume, pitch);
         throw new NotImplementedException("Not implemented");
     }
 
+    public void playCarSound(Identifier sound, int carIndex, float x, float y, float z, float volume, float pitch) {
+        carSoundManagers[carIndex].playSound(sound, new Vector3dWrapper(x, y, z), volume, pitch);
+    }
+
     public void playAnnSound(Identifier sound, float volume, float pitch) {
-        soundManager().playLocalSound(sound, volume, pitch);
+        carSoundManagers[0].playLocalSound(sound, volume, pitch);
     }
 
     public boolean isMyVehicle(VehicleWrapper vehicleWrapper, int carIndex) {
@@ -49,11 +60,11 @@ public class VehicleScriptContext extends MTRScriptContext {
         return Objects.equals(vehicleId, theirVehicleId);
     }
 
-    public List<VehicleModelDrawCall> getCarModelDrawCalls() {
-        return new ArrayList<>(this.carModelDrawCalls);
+    public ScriptRenderManager[] getCarRenderManager() {
+        return this.carRenderers;
     }
 
-    public List<VehicleModelDrawCall> getConnectionModelDrawCalls() {
-        return new ArrayList<>(this.conectionModelDrawCalls);
+    public ScriptSoundManager[] getCarSoundManagers() {
+        return this.carSoundManagers;
     }
 }
