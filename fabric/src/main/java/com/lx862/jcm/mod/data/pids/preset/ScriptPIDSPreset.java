@@ -46,31 +46,31 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         if(rootJsonObject.has("scriptFiles")) {
             JsonArray scriptFilesArray = rootJsonObject.get("scriptFiles").getAsJsonArray();
             for(int i = 0; i < scriptFilesArray.size(); i++) {
-                Identifier scriptLocation = new Identifier(scriptFilesArray.get(i).getAsString());
-                String scriptText = ResourceManagerHelper.readResource(scriptLocation);
+                Identifier scriptLocationSource = new Identifier(scriptFilesArray.get(i).getAsString());
+                String scriptText = ResourceManagerHelper.readResource(scriptLocationSource);
                 if(scriptText.isEmpty()) {
-                    JCMLogger.warn("Script {}:{} is either missing, or the file content is empty!", scriptLocation.getNamespace(), scriptLocation.getPath());
+                    JCMLogger.warn("Script {}:{} is either missing, or the file content is empty!", scriptLocationSource.getNamespace(), scriptLocationSource.getPath());
                     continue;
                 }
 
-                scripts.add(new ScriptContent(scriptLocation, scriptText));
+                scripts.add(new ScriptContent(scriptLocationSource, scriptText));
             }
         }
 
         if(rootJsonObject.has("scriptTexts")) {
             JsonArray scriptTextArray = rootJsonObject.get("scriptTexts").getAsJsonArray();
             for(int i = 0; i < scriptTextArray.size(); i++) {
-                Identifier scriptLocation = new Identifier(Constants.MOD_ID, "script_texts/jcm/pids/" + id + "/line" + i);
+                Identifier scriptLocationSource = Constants.id("internal/pids/internal_script_texts/" + id + "/line" + i);
                 String scriptText = scriptTextArray.get(i).getAsString();
-                scripts.add(new ScriptContent(scriptLocation, scriptText));
+                scripts.add(new ScriptContent(scriptLocationSource, scriptText));
             }
         }
 
-        // Parse scriptConfig and pass to the script
-        if(rootJsonObject.has("scriptConfig")) {
-            String str = rootJsonObject.get("scriptConfig").toString();
-            Identifier scriptLocation = Constants.id("INTERNAL_insert_script_config/jcm/pids/" + id);
-            scripts.add(new ScriptContent(scriptLocation, "const SCRIPT_CONFIG = " + str + ";"));
+        // Parse script input and pass to the script
+        if(rootJsonObject.has("scriptInput")) {
+            String str = rootJsonObject.get("scriptInput").toString();
+            Identifier scriptLocationSource = Constants.id("internal/pids/internal_script_input/" + id);
+            scripts.add(new ScriptContent(scriptLocationSource, "const SCRIPT_INPUT = " + str + ";"));
         }
 
         List<String> blackList = new ArrayList<>();

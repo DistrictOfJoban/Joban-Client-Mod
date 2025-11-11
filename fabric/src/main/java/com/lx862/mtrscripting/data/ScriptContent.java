@@ -8,7 +8,7 @@ public class ScriptContent {
 
     /**
      * Create a new script content for parsing
-     * @param location The location of the script
+     * @param location The location source of the script, used for tracing back script errors in stacktraces.
      * @param content The plain text content of the script
      */
     public ScriptContent(Identifier location, String content) {

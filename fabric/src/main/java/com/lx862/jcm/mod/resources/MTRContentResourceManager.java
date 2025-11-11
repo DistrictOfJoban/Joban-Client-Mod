@@ -31,11 +31,11 @@ public class MTRContentResourceManager {
         JCMLogger.info("Loading scripts on-behalf of MTR...");
         eyecandyScripts.clear();
         vehicleScripts.clear();
-        registerEyecandyScripts();
-        registerVehicleScripts();
+        registerMtr3EyecandyScripts();
+        registerMtr3VehicleScripts();
     }
 
-    private static void registerEyecandyScripts() {
+    private static void registerMtr3EyecandyScripts() {
         ResourceManagerHelper.readDirectory("eyecandies", (identifier, inputStream) -> {
             if (identifier.getNamespace().equals(Init.MOD_ID_NTE) && identifier.getPath().endsWith(".json")) {
                 try(InputStreamReader isp = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
@@ -66,7 +66,7 @@ public class MTRContentResourceManager {
         });
     }
 
-    private static void registerVehicleScripts() {
+    private static void registerMtr3VehicleScripts() {
         ResourceManagerHelper.readAllResources(new Identifier("mtr", "mtr_custom_resources.json"), (inputStream) -> {
             try(InputStreamReader isp = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
                 final JsonObject rootObject = new JsonParser().parse(isp).getAsJsonObject();
@@ -104,32 +104,32 @@ public class MTRContentResourceManager {
             if(jsonObject.has(scriptTextsKey)) {
                 JsonArray scriptTextArray = jsonObject.get(scriptTextsKey).getAsJsonArray();
                 for(int i = 0; i < scriptTextArray.size(); i++) {
-                    Identifier scriptLocation = new Identifier(Constants.MOD_ID, "script_texts/mtr/" + contextName + "/" + name + "/" + id + "/line" + i);
+                    Identifier scriptLocationSource = new Identifier("mtr", "internal/script_texts/" + contextName.toLowerCase() + "/" + name + "/" + id + "/line" + i);
                     String scriptText = scriptTextArray.get(i).getAsString();
-                    scripts.add(new ScriptContent(scriptLocation, scriptText));
+                    scripts.add(new ScriptContent(scriptLocationSource, scriptText));
                 }
             }
 
             if(jsonObject.has(scriptFilesKey)) {
                 JsonArray scriptFilesArray = jsonObject.get(scriptFilesKey).getAsJsonArray();
                 for(int i = 0; i < scriptFilesArray.size(); i++) {
-                    Identifier scriptLocation = new Identifier(scriptFilesArray.get(i).getAsString());
-                    String scriptText = ResourceManagerHelper.readResource(scriptLocation);
+                    Identifier scriptLocationSource = new Identifier(scriptFilesArray.get(i).getAsString());
+                    String scriptText = ResourceManagerHelper.readResource(scriptLocationSource);
                     if(scriptText.isEmpty()) {
-                        JCMLogger.warn("Script {}:{} is either missing, or the file content is empty!", scriptLocation.getNamespace(), scriptLocation.getPath());
+                        JCMLogger.warn("Script {}:{} is either missing, or the file content is empty!", scriptLocationSource.getNamespace(), scriptLocationSource.getPath());
                         continue;
                     }
 
-                    scripts.add(new ScriptContent(scriptLocation, scriptText));
+                    scripts.add(new ScriptContent(scriptLocationSource, scriptText));
                 }
             }
         }
 
-        // Parse scriptConfig and pass to the script
-        if(jsonObject.has("scriptConfig")) {
-            String str = jsonObject.get("scriptConfig").toString();
-            Identifier scriptLocation = Constants.id("INTERNAL_insert_script_config/mtr/" + contextName + "/" + name + "/" + id);
-            scripts.add(new ScriptContent(scriptLocation, "const SCRIPT_CONFIG = " + str + ";"));
+        // Parse script input and pass to the script
+        if(jsonObject.has("scriptInput")) {
+            String str = jsonObject.get("scriptInput").toString();
+            Identifier scriptLocationSource = new Identifier("mtr", "internal/script_input/" + contextName.toLowerCase() + "/" + name + "/" + id);
+            scripts.add(new ScriptContent(scriptLocationSource, "const SCRIPT_INPUT = " + str + ";"));
         }
 
         return scripts.isEmpty() ? null : MTRScripting.getScriptManager().parseScript(id + " (" + name + ")", contextName, scripts);
