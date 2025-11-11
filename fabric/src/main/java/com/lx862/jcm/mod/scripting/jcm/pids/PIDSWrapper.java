@@ -28,6 +28,10 @@ public class PIDSWrapper {
         return new Vector3dWrapper(be.getPos2());
     }
 
+    public boolean isKeyBlock() {
+        return be.isKeyBlock();
+    }
+
     public boolean isRowHidden(int i) {
         boolean[] rowHidden = be.getRowHidden();
         if(i >= rowHidden.length) {

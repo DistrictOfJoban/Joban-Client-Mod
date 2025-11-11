@@ -21,6 +21,7 @@
 - - - - This grants PIDS scripts the ability to render 3D OBJ model. It is advised to use this in conjunction with PIDS Projector, which is an invisible block.
 - - - Adapt SoundManager, can be accessed by `ctx.soundManager()`, see above.
 - - - Add `PIDSWrapper.blockPos()` to determine where the PIDS block is placed.
+- - - Add `PIDSWrapper.isKeyBlock()` to locate a unique block within a set of PIDS (e.g. Identify 1 side of a dual-sided PIDS)
 - - **Others**
 - - - Add `MinecraftClient.getScoreboardScore(objective: string, playerName: string)` to obtain the scoreboard score of a player.
 - - - Add `MinecraftClient.isHoldingItem(id: string)` to determine if the current player is holding an item with the corresponding item id.

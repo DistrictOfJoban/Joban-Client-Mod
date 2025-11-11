@@ -65,6 +65,11 @@ public class PIDSProjectorBlockEntity extends PIDSBlockEntity {
         return 4;
     }
 
+    @Override
+    public boolean isKeyBlock() {
+        return true; // We only have a single block
+    }
+
     public void setData(String[] customMessages, LongAVLTreeSet filteredPlatforms, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPresetId, double x, double y, double z, double rotateX, double rotateY, double rotateZ, double scale) {
         super.setData(customMessages, filteredPlatforms, rowHidden, hidePlatformNumber, pidsPresetId);
         this.x = x;

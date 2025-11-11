@@ -89,4 +89,12 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
     public abstract String getDefaultPresetId();
 
     public abstract int getRowAmount();
+
+    /**
+     * Whether the block entity is associated with a key PIDS Block.<br>
+     * Each set of multi-structured PIDS block must only have a single key PIDS block.<br>
+     * This can be used for determining if an operation should be done for each set of PIDS.
+     * @return true if the PIDS block is a key block, false otherwise.
+     */
+    public abstract boolean isKeyBlock();
 }
