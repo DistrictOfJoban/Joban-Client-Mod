@@ -66,6 +66,13 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             }
         }
 
+        // Parse scriptConfig and pass to the script
+        if(rootJsonObject.has("scriptConfig")) {
+            String str = rootJsonObject.get("scriptConfig").toString();
+            Identifier scriptLocation = Constants.id("INTERNAL_insert_script_config/jcm/pids/" + id);
+            scripts.add(new ScriptContent(scriptLocation, "const SCRIPT_CONFIG = " + str + ";"));
+        }
+
         List<String> blackList = new ArrayList<>();
         if(rootJsonObject.has("blacklist")) {
             JsonArray blacklistedPIDS = rootJsonObject.getAsJsonArray("blacklist");

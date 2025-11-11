@@ -104,7 +104,7 @@ public class MTRContentResourceManager {
             if(jsonObject.has(scriptTextsKey)) {
                 JsonArray scriptTextArray = jsonObject.get(scriptTextsKey).getAsJsonArray();
                 for(int i = 0; i < scriptTextArray.size(); i++) {
-                    Identifier scriptLocation = new Identifier(Constants.MOD_ID, "script_texts/" + name + "/" + id + "/line" + i);
+                    Identifier scriptLocation = new Identifier(Constants.MOD_ID, "script_texts/mtr/" + contextName + "/" + name + "/" + id + "/line" + i);
                     String scriptText = scriptTextArray.get(i).getAsString();
                     scripts.add(new ScriptContent(scriptLocation, scriptText));
                 }
@@ -123,6 +123,13 @@ public class MTRContentResourceManager {
                     scripts.add(new ScriptContent(scriptLocation, scriptText));
                 }
             }
+        }
+
+        // Parse scriptConfig and pass to the script
+        if(jsonObject.has("scriptConfig")) {
+            String str = jsonObject.get("scriptConfig").toString();
+            Identifier scriptLocation = Constants.id("INTERNAL_insert_script_config/mtr/" + contextName + "/" + name + "/" + id);
+            scripts.add(new ScriptContent(scriptLocation, "const SCRIPT_CONFIG = " + str + ";"));
         }
 
         return scripts.isEmpty() ? null : MTRScripting.getScriptManager().parseScript(id + " (" + name + ")", contextName, scripts);
