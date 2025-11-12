@@ -12,7 +12,8 @@
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleResourceMixin",
     "modded.mtr.VehicleSchemaMixin",
-    "modded.tsc.MixinVehiclePlatformRouteInfo"
+    "modded.tsc.MixinVehiclePlatformRouteInfo",
+    "minecraft.NativeImageAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

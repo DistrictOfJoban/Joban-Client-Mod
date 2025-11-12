@@ -43,6 +43,22 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         final Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : DEFAULT_THUMBNAIL;
 
         final List<ScriptContent> scripts = new ObjectArrayList<>();
+        // Parse script input and pass to the script
+        if(rootJsonObject.has("scriptInput")) {
+            String str = rootJsonObject.get("scriptInput").toString();
+            Identifier scriptLocationSource = Constants.id("internal/pids/internal_script_input/" + id);
+            scripts.add(new ScriptContent(scriptLocationSource, "const SCRIPT_INPUT = " + str + ";"));
+        }
+
+        if(rootJsonObject.has("scriptTexts")) {
+            JsonArray scriptTextArray = rootJsonObject.get("scriptTexts").getAsJsonArray();
+            for(int i = 0; i < scriptTextArray.size(); i++) {
+                Identifier scriptLocationSource = Constants.id("internal/pids/internal_script_texts/" + id + "/line" + i);
+                String scriptText = scriptTextArray.get(i).getAsString();
+                scripts.add(new ScriptContent(scriptLocationSource, scriptText));
+            }
+        }
+
         if(rootJsonObject.has("scriptFiles")) {
             JsonArray scriptFilesArray = rootJsonObject.get("scriptFiles").getAsJsonArray();
             for(int i = 0; i < scriptFilesArray.size(); i++) {
@@ -55,22 +71,6 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
                 scripts.add(new ScriptContent(scriptLocationSource, scriptText));
             }
-        }
-
-        if(rootJsonObject.has("scriptTexts")) {
-            JsonArray scriptTextArray = rootJsonObject.get("scriptTexts").getAsJsonArray();
-            for(int i = 0; i < scriptTextArray.size(); i++) {
-                Identifier scriptLocationSource = Constants.id("internal/pids/internal_script_texts/" + id + "/line" + i);
-                String scriptText = scriptTextArray.get(i).getAsString();
-                scripts.add(new ScriptContent(scriptLocationSource, scriptText));
-            }
-        }
-
-        // Parse script input and pass to the script
-        if(rootJsonObject.has("scriptInput")) {
-            String str = rootJsonObject.get("scriptInput").toString();
-            Identifier scriptLocationSource = Constants.id("internal/pids/internal_script_input/" + id);
-            scripts.add(new ScriptContent(scriptLocationSource, "const SCRIPT_INPUT = " + str + ";"));
         }
 
         List<String> blackList = new ArrayList<>();

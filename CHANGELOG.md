@@ -1,25 +1,28 @@
 ## JCM v2.1.0 for MTR 4.0.0/4.0.1 has been released!
 
+This is an interim release with many scripting-related changes in order to to provide more possibilities for script developers.
+
 **New:**
 - Add **Help Line (Tiu Keng Leng Station Type)**
 - More scripting changes, implementation details are outlined below.
-- - Major milestone:
+- - **Major milestone reached:**
 - - Scripting for PIDS (As it always worked since JCM v2)
 - - Eyecandy LCD displays is now possible with the use of QuadDrawCall
 - - It is now possible to register scripts in the MTR 4 version of `mtr_custom_resources.json`
 
-**New (Scripting Implemenation):**
+**New (Scripting Implementation):**
 - **Script Registration:**
 - - The `scriptInput` field can now be supplied in the json entry alongside `scriptFiles` and `scriptText`.
 - - Anything within the field (JSON Object/Array/String) will be made accessible to the script via the `SCRIPT_INPUT` variable.
-- **Sound Management**
+- **Sound**
 - - Added a new `SoundManager` class for all types of scripting.
 - - - Provide generic ways to play sound onto the Minecraft world.
-- - `ctx.playSound()`, `ctx.playCarSound()` & `ctx.playAnnSound()` has been deprecated as SoundManager can now achieve the same effect (And are consistent across different scripting type)
-- **Rendering Management**
+- - `ctx.playSound()`, `ctx.playCarSound()` & `ctx.playAnnSound()` has been deprecated in favor of SoundManager.
+- **Rendering**
 - - Added a new `RenderManager` class for all types of scripting.
 - - Provide generic ways to draw 3D model onto the Minecraft world
-- - `ctx.drawModel()`, `ctx.drawCarModel()` and `ctx.drawConnModel()` has been deprecated as RenderManager can now achieve the same effect.
+- - `ctx.drawModel()`, `ctx.drawCarModel()` and `ctx.drawConnModel()` has been deprecated in favor of RenderManager.
+- - **GraphicsTexture.upload()** are now more optimized, should be mostly on-par with NTE.
 - **Eyecandy Scripting**
 - - Adapt RenderManager & SoundManager, can be accessed by `ctx.renderManager()` & `ctx.soundManager()`, see above.
 - - Add `EyecandyBlockEntity.pos()`, `EyecandyBlockEntity.blockPos()` and `EyecandyBlockEntity.offsetPos()` to determine where the eyecandy block is placed.

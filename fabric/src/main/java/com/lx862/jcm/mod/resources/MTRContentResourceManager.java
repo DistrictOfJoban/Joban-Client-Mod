@@ -101,6 +101,13 @@ public class MTRContentResourceManager {
         final String scriptTextsKey = useSnakeCase ? "script_texts" : "scriptTexts";
 
         if (jsonObject.has(scriptFilesKey) || jsonObject.has(scriptTextsKey)) {
+            // Parse script input and pass to the script
+            if(jsonObject.has("scriptInput")) {
+                String str = jsonObject.get("scriptInput").toString();
+                Identifier scriptLocationSource = new Identifier("mtr", "internal/script_input/" + contextName.toLowerCase() + "/" + name + "/" + id);
+                scripts.add(new ScriptContent(scriptLocationSource, "const SCRIPT_INPUT = " + str + ";"));
+            }
+
             if(jsonObject.has(scriptTextsKey)) {
                 JsonArray scriptTextArray = jsonObject.get(scriptTextsKey).getAsJsonArray();
                 for(int i = 0; i < scriptTextArray.size(); i++) {
@@ -123,13 +130,6 @@ public class MTRContentResourceManager {
                     scripts.add(new ScriptContent(scriptLocationSource, scriptText));
                 }
             }
-        }
-
-        // Parse script input and pass to the script
-        if(jsonObject.has("scriptInput")) {
-            String str = jsonObject.get("scriptInput").toString();
-            Identifier scriptLocationSource = new Identifier("mtr", "internal/script_input/" + contextName.toLowerCase() + "/" + name + "/" + id);
-            scripts.add(new ScriptContent(scriptLocationSource, "const SCRIPT_INPUT = " + str + ";"));
         }
 
         return scripts.isEmpty() ? null : MTRScripting.getScriptManager().parseScript(id + " (" + name + ")", contextName, scripts);

@@ -1,6 +1,8 @@
 package com.lx862.mtrscripting.util;
 
+import com.lx862.jcm.mapping.LoaderImplClient;
 import com.mojang.blaze3d.systems.RenderSystem;
+import org.lwjgl.system.MemoryUtil;
 import org.mtr.mapping.holder.*;
 
 import java.awt.*;
@@ -9,6 +11,8 @@ import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
 import java.io.Closeable;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.UUID;
 
 import static com.lx862.jcm.mod.render.text.TextureTextRenderer.toAbgr;
@@ -46,13 +50,19 @@ public class GraphicsTexture implements Closeable {
     }
 
     public void upload() {
-        int[] biData = ((DataBufferInt)bufferedImage.getData().getDataBuffer()).getData();
-        for(int x = 0; x < width; x++) {
-            for(int y = 0; y < height; y++) {
-                int rgb = biData[((width*y) + x)];
-                dynamicTexture.getImage().setPixelColor(x, y, toAbgr(rgb));
-            }
+        int[] imgData = ((DataBufferInt)bufferedImage.getData().getDataBuffer()).getData();
+        IntBuffer imgBuffer = IntBuffer.wrap(imgData);
+        long nativeImagePointer = LoaderImplClient.getNativeImagePointer(dynamicTexture.getImage());
+        ByteBuffer target = MemoryUtil.memByteBuffer(nativeImagePointer, width * height * 4);
+        for (int i = 0; i < width * height; i++) {
+            // ARGB to RGBA
+            int pixel = imgBuffer.get();
+            target.put((byte)((pixel >> 16) & 0xFF));
+            target.put((byte)((pixel >> 8) & 0xFF));
+            target.put((byte)(pixel & 0xFF));
+            target.put((byte)((pixel >> 24) & 0xFF));
         }
+
         RenderSystem.recordRenderCall(dynamicTexture::upload);
     }
 

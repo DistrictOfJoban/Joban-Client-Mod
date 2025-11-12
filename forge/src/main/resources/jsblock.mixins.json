@@ -12,7 +12,8 @@
     "modded.mtr.RenderEyeCandyMixin",
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleSchemaMixin",
-    "modded.tsc.MixinVehiclePlatformRouteInfo"
+    "modded.tsc.MixinVehiclePlatformRouteInfo",
+    "minecraft.NativeImageAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

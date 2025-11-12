@@ -1,5 +1,6 @@
 package com.lx862.jcm.mapping;
 
+import com.lx862.jcm.mixin.minecraft.NativeImageAccessor;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ScreenExtension;
 
@@ -32,5 +33,9 @@ public class LoaderImplClient {
                 )
         );
         #endif
+    }
+
+    public static long getNativeImagePointer(NativeImage nativeImage) {
+        return ((NativeImageAccessor)(Object)nativeImage.data).getPointer();
     }
 }
