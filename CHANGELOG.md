@@ -2,8 +2,13 @@
 
 **New:**
 - Add **Help Line (Tiu Keng Leng Station Type)**
+- More scripting changes, implementation details are outlined below.
+- - Major milestone:
+- - Scripting for PIDS (As it always worked since JCM v2)
+- - Eyecandy LCD displays is now possible with the use of QuadDrawCall
+- - It is now possible to register scripts in the MTR 4 version of `mtr_custom_resources.json`
 
-**New (Scripting):**
+**New (Scripting Implemenation):**
 - **Script Registration:**
 - - The `scriptInput` field can now be supplied in the json entry alongside `scriptFiles` and `scriptText`.
 - - Anything within the field (JSON Object/Array/String) will be made accessible to the script via the `SCRIPT_INPUT` variable.

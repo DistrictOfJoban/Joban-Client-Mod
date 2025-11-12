@@ -12,6 +12,10 @@ public class Matrices {
         this.storedMatrixTransformations = new StoredMatrixTransformations();
     }
 
+    private Matrices(StoredMatrixTransformations storedMatrixTransformations) {
+        this.storedMatrixTransformations = storedMatrixTransformations;
+    }
+
     public void pushPose() {
         this.storedMatrixTransformations.add(GraphicsHolder::push);
     }
@@ -55,6 +59,10 @@ public class Matrices {
     public void popPushPose() {
         this.storedMatrixTransformations.add(GraphicsHolder::pop);
         this.storedMatrixTransformations.add(GraphicsHolder::push);
+    }
+
+    public Matrices copy() {
+        return new Matrices(this.storedMatrixTransformations.copy());
     }
 
     public StoredMatrixTransformations getStoredMatrixTransformations() {

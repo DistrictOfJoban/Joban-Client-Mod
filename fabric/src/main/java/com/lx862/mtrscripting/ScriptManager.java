@@ -24,9 +24,13 @@ public class ScriptManager {
     private final ScriptInstanceManager instanceManager;
     private ExecutorService scriptThread;
 
-    public ScriptManager() {
+    /**
+     * Create a new script manager
+     * @param scriptThread - An ExecutorService where script execution will be passed to.
+     */
+    public ScriptManager(ExecutorService scriptThread) {
         this.instanceManager = new ScriptInstanceManager();
-        this.scriptThread = Executors.newSingleThreadExecutor();
+        this.scriptThread = scriptThread;
         this.classShutter = new MTRClassShutter();
     }
 
@@ -42,7 +46,7 @@ public class ScriptManager {
 
     /**
      * Register a callback that will be called when a script is to be parsed.<br>
-     * This can be to add new types/objects to the script.
+     * This can be to add new types/objects to the script context.
      * @param callback The callback to run (Context type, Rhino Context, Scriptable)
      */
     public void onParseScript(TriConsumer<String, Context, Scriptable> callback) {
@@ -64,8 +68,6 @@ public class ScriptManager {
      * This should be called on resource reload */
     public void reset() {
         instanceManager.reset();
-        scriptThread.shutdownNow();
-        scriptThread = Executors.newSingleThreadExecutor();
     }
 
     /** Submit a task to the script thread executor */

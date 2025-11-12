@@ -1,6 +1,9 @@
 package com.lx862.jcm.mod.scripting.mtr;
 
 import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
+import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
+import com.lx862.jcm.mod.scripting.mtr.render.QuadDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.util.ModelManager;
 import com.lx862.jcm.mod.scripting.mtr.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -11,17 +14,21 @@ import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeJavaClass;
 import org.mtr.mod.Keys;
 import org.mtr.mod.client.MinecraftClientData;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * A stub for scripting in MTR mod
  */
 public class MTRScripting {
+    public static ExecutorService scriptThread = Executors.newSingleThreadExecutor();
     private static ScriptManager scriptManager;
 
     /**
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
-        if(scriptManager == null) scriptManager = new ScriptManager();
+        if(scriptManager == null) scriptManager = new ScriptManager(scriptThread);
         scriptManager.getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
 
         String mtrModVersion = null;
@@ -30,11 +37,14 @@ public class MTRScripting {
         } catch (ReflectiveOperationException ignored) {
         }
         ScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
+        ScriptDebugOverlay.registerDebugSource("MTR", scriptManager);
 
         scriptManager.getClassShutter().allowClass(ClassRule.parse("org.mtr.*"));
         scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.jcm.mod.scripting.mtr.*"));
 
         scriptManager.onParseScript((contextName, context, scriptable) -> {
+            scriptable.put("ModelDrawCall", scriptable, new NativeJavaClass(scriptable, ModelDrawCall.class));
+            scriptable.put("QuadDrawCall", scriptable, new NativeJavaClass(scriptable, QuadDrawCall.class));
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
             scriptable.put("ModelManager", scriptable, new NativeJavaClass(scriptable, ModelManager.class));

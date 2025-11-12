@@ -2,8 +2,10 @@ package com.lx862.jcm.mod.scripting.jcm;
 
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextWrapper;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextureWrapper;
+import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.ScriptManager;
@@ -12,15 +14,21 @@ import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeJavaClass;
 import org.mtr.mod.client.MinecraftClientData;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class JCMScripting {
     private static ScriptManager scriptManager;
+
     /**
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
-        if(scriptManager == null) scriptManager = new ScriptManager();
+        if(scriptManager == null) scriptManager = new ScriptManager(MTRScripting.scriptThread);
         scriptManager.getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
+
         ScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);
+        ScriptDebugOverlay.registerDebugSource("JCM", scriptManager);
 
         scriptManager.getClassShutter().allowClass(ClassRule.parse("org.mtr.*"));
         scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.jcm.mod.scripting.jcm.*"));

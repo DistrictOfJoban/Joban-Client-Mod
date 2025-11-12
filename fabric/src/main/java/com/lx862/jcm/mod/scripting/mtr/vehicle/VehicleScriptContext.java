@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
 import com.lx862.jcm.mod.scripting.mtr.MTRScriptContext;
+import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
 import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.util.Matrices;
@@ -40,7 +41,10 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public void drawCarModel(ScriptedModel model, int carIndex, Matrices matrices) {
-        carRenderers[carIndex].drawCalls.add(new VehicleModelDrawCall(model, carIndex, matrices == null ? null : matrices.getStoredMatrixTransformations().copy()));
+        ModelDrawCall modelDrawCall = ModelDrawCall.create()
+                .matrices(matrices == null ? null : matrices.copy())
+                .modelObject(model);
+        carRenderers[carIndex].drawCalls.add(modelDrawCall);
     }
 
     public void drawConnModel(ScriptedModel model, int carIndex, Matrices matrices) {

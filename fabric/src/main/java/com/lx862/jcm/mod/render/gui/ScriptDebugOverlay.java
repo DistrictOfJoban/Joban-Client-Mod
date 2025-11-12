@@ -7,6 +7,7 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.util.TextUtil;
+import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import com.lx862.mtrscripting.data.UniqueKey;
 import com.lx862.mtrscripting.util.GraphicsTexture;
@@ -19,11 +20,16 @@ import org.mtr.mapping.mapper.GuiDrawing;
 import java.util.*;
 
 public class ScriptDebugOverlay {
+    private static final List<ScriptDebugSource> debugSources = new ArrayList<>();
     private static final double IDEAL_FRAMERATE = 60;
     private static final int COLOR_RED = 0xFFFF8888;
     private static final int COLOR_BLUE = 0xFFCCCCFF;
     private static final int COLOR_YELLOW = 0xFFFFFF00;
     private static final int COLOR_WHITE = 0xFFFFFFFF;
+
+    public static void registerDebugSource(String sourceName, ScriptManager scriptManager) {
+        debugSources.add(new ScriptDebugSource(sourceName, scriptManager));
+    }
 
     public static void render(GraphicsHolder graphicsHolder) {
         if(!JCMClient.getConfig().debug) return;
@@ -77,22 +83,14 @@ public class ScriptDebugOverlay {
     private static Map<String, List<Pair<UniqueKey, ScriptInstance>>> getInstancesGroupedByName() {
         Map<String, List<Pair<UniqueKey, ScriptInstance>>> groupedMap = new HashMap<>();
 
-        // JCM
-        for(Map.Entry<UniqueKey, ScriptInstance> map : JCMScripting.getScriptManager().getInstanceManager().getInstances().entrySet()) {
-            List<Pair<UniqueKey, ScriptInstance>> existingInstances = groupedMap.getOrDefault(map.getValue().getScript().getDisplayName(), new ArrayList<>());
-            if(!map.getValue().shouldInvalidate()) {
-                existingInstances.add(new Pair<>(map.getKey(), map.getValue()));
+        for(ScriptDebugSource source : debugSources) {
+            for(Map.Entry<UniqueKey, ScriptInstance> map : source.getScriptManager().getInstanceManager().getInstances().entrySet()) {
+                List<Pair<UniqueKey, ScriptInstance>> existingInstances = groupedMap.getOrDefault(map.getValue().getScript().getDisplayName(), new ArrayList<>());
+                if(!map.getValue().shouldInvalidate()) {
+                    existingInstances.add(new Pair<>(map.getKey(), map.getValue()));
+                }
+                groupedMap.put(map.getValue().getScript().getDisplayName(), existingInstances);
             }
-            groupedMap.put(map.getValue().getScript().getDisplayName(), existingInstances);
-        }
-
-        // MTR
-        for(Map.Entry<UniqueKey, ScriptInstance> map : MTRScripting.getScriptManager().getInstanceManager().getInstances().entrySet()) {
-            List<Pair<UniqueKey, ScriptInstance>> existingInstances = groupedMap.getOrDefault(map.getValue().getScript().getDisplayName(), new ArrayList<>());
-            if(!map.getValue().shouldInvalidate()) {
-                existingInstances.add(new Pair<>(map.getKey(), map.getValue()));
-            }
-            groupedMap.put(map.getValue().getScript().getDisplayName(), existingInstances);
         }
 
         // Sort instance by execution time
@@ -141,6 +139,24 @@ public class ScriptDebugOverlay {
             return COLOR_YELLOW;
         } else {
             return COLOR_BLUE;
+        }
+    }
+
+    public static class ScriptDebugSource {
+        private final String sourceName;
+        private final ScriptManager scriptManager;
+
+        public ScriptDebugSource(String sourceName, ScriptManager scriptManager) {
+            this.sourceName = sourceName;
+            this.scriptManager = scriptManager;
+        }
+
+        public String getSourceName() {
+            return sourceName;
+        }
+
+        public ScriptManager getScriptManager() {
+            return scriptManager;
         }
     }
 }
