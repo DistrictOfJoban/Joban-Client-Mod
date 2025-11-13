@@ -3,7 +3,8 @@ plugins {
     id "de.undercouch.download" version "5.6.0"
 }
 
-def rhinoVersion = "1_7_15"
+def useLatestRhino = (rootProject.properties.minecraft_version as String).startsWith("1.16") ? false : true
+def rhinoVersion = useLatestRhino ? "1_8_0" : "1_7_15"
 def rhinoExist = project.file("src/main/java").exists()
 def shadowPath = ["com", "lx862", "mtrscripting", "lib", "org", "mozilla"]
 
@@ -29,7 +30,7 @@ tasks.register('setupRhino') {
         srcDestination.mkdirs()
 
         copy {
-            from extractedSrc.toPath().resolve("src/org/mozilla/").toFile()
+            from extractedSrc.toPath().resolve(useLatestRhino ? "rhino/src/main/java/org/mozilla" : "src/org/mozilla/").toFile()
             into srcDestination
             filter {
                 String line -> line.replaceAll('org/mozilla/', "${shadowPath.join("/")}/").replaceAll("org\\.mozilla", "${shadowPath.join(".")}")
@@ -51,7 +52,8 @@ repositories {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 8
+    it.options.release = useLatestRhino ? 16 : 8
+    it.options.warnings = false // Mostly java.security stuff in Java 16+, not within our control
 }
 
 dependencies {
