@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
 import com.lx862.mtrscripting.util.Vector3dWrapper;
+import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.World;
 import org.mtr.mod.block.BlockEyeCandy;
 
@@ -49,12 +50,23 @@ public class EyecandyBlockEntityWrapper {
         return realPos;
     }
 
-    public Vector3dWrapper offsetPos() {
-        return new Vector3dWrapper(getTranslateX(), getTranslateY(), getTranslateZ());
-    }
-
     public Vector3dWrapper blockPos() {
         return new Vector3dWrapper(be.getPos2());
+    }
+
+    @Deprecated(since = "NTE Backward Compatibility")
+    public BlockPos getWorldPos() {
+        return blockPos().rawBlockPos();
+    }
+
+    @Deprecated(since = "NTE Backward Compatibility")
+    public Vector3dWrapper getWorldPosVector3f() {
+        return blockPos();
+    }
+
+    @Deprecated(since = "ANTE Backward Compatibility")
+    public Vector3dWrapper getTransformPosVector3f() {
+        return pos();
     }
 
     public World getWorld() {

@@ -30,7 +30,7 @@
 - - **GraphicsTexture.upload()** are now more optimized, should be mostly on-par with NTE.
 - **Eyecandy Scripting**
 - - Adapt RenderManager & SoundManager, can be accessed by `ctx.renderManager()` & `ctx.soundManager()`, see above.
-- - Add `EyecandyBlockEntity.pos()`, `EyecandyBlockEntity.blockPos()` and `EyecandyBlockEntity.offsetPos()` to determine where the eyecandy block is placed.
+- - Add `EyecandyBlockEntity.pos()` and `EyecandyBlockEntity.blockPos()` to determine where the eyecandy block is placed.
 - **PIDS Scripting**
 - - Adapt RenderManager & SoundManager, can be accessed by `ctx.renderManager()` & `ctx.soundManager()`, see above.
 - - - This grants PIDS scripts the ability to render 3D OBJ model. It is advised to use this in conjunction with PIDS Projector, which is an invisible block.
