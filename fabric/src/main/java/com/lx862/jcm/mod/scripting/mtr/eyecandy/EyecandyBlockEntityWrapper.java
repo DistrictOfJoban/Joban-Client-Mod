@@ -54,17 +54,29 @@ public class EyecandyBlockEntityWrapper {
         return new Vector3dWrapper(be.getPos2());
     }
 
-    @Deprecated(since = "NTE Backward Compatibility")
+    /**
+     * Equivalent to {@link EyecandyBlockEntityWrapper#blockPos()} and {@link Vector3dWrapper#rawBlockPos()}
+     * For backward compatibility of scripts designed for Nemo's Transit Expansion (NTE)
+     */
+    @Deprecated
     public BlockPos getWorldPos() {
         return blockPos().rawBlockPos();
     }
 
-    @Deprecated(since = "NTE Backward Compatibility")
+    /**
+     * Equivalent to {@link EyecandyBlockEntityWrapper#blockPos()}
+     * For backward compatibility of scripts designed for Nemo's Transit Expansion (NTE)
+     */
+    @Deprecated
     public Vector3dWrapper getWorldPosVector3f() {
         return blockPos();
     }
 
-    @Deprecated(since = "ANTE Backward Compatibility")
+    /**
+     * Equivalent to {@link EyecandyBlockEntityWrapper#pos()}
+     * For backward compatibility of scripts designed for Aphrodite's Nemo's Transit Expansion (ANTE)
+     */
+    @Deprecated
     public Vector3dWrapper getTransformPosVector3f() {
         return pos();
     }
