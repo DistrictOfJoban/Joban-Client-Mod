@@ -24,7 +24,7 @@ public abstract class VehicleResourceMixin {
     private void renderScript(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int totalCars, int light, boolean noOpenDoorways, CallbackInfo ci) {
         int carIndex = 0;
         for(VehicleCar vehicleCar : vehicle.vehicleExtraData.immutableVehicleCars) {
-            ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "vehicle", vehicle.getHexId(), vehicleCar.getVehicleId()));
+            ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), vehicleCar.getVehicleId()));
             if(!(scriptInstance instanceof VehicleScriptInstance)) return;
 
             ScriptRenderManager carRenderManager = ((VehicleScriptInstance)scriptInstance).renderManagers[carIndex];

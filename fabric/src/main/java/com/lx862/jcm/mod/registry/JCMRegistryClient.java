@@ -37,6 +37,7 @@ public class JCMRegistryClient {
         Blocks.registerClient();
         BlockEntityRenderers.registerClient();
         Networking.registerClient();
+        KeyBinds.registerClient();
         REGISTRY_CLIENT.init();
     }
 }

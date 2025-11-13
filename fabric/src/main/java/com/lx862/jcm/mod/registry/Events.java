@@ -28,6 +28,15 @@ public class Events {
             MTRScripting.tick();
         });
 
+        JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerEndClientTick(() -> {
+            if(KeyBinds.SCRIPT_DEBUG_SOURCE_PREV.wasPressed()) {
+                ScriptDebugOverlay.previousSource();
+            }
+            if(KeyBinds.SCRIPT_DEBUG_SOURCE_NEXT.wasPressed()) {
+                ScriptDebugOverlay.nextSource();
+            }
+        });
+
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerGuiRendering(graphicsHolder -> {
             ScriptDebugOverlay.render(graphicsHolder);
         });

@@ -4,6 +4,8 @@
 
 **New:**
 - Add **Help Line (Tiu Keng Leng Station Type)**
+- Script Debug Overlay now allows switching between sources (MTR/JCM) to provide a more clutter-free view.
+- - Default keybind is `[` and `]`, can be changed in Minecraft keybind settings.
 - **More scripting changes, implementation details are outlined below.**
 - - **Major milestone reached:**
 - - Scripting for PIDS (As it always worked since JCM v2)

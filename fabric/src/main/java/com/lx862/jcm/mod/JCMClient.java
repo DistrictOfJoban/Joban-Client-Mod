@@ -16,8 +16,8 @@ public class JCMClient {
     public static void initializeClient() {
         config.read();
         JCMRegistryClient.register();
-        JCMScripting.register();
         MTRScripting.register();
+        JCMScripting.register();
     }
 
     public static ScreenAbstractMapping getClientConfigScreen(Screen previousScreen) {

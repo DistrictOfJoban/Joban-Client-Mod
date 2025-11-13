@@ -11,21 +11,24 @@ import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import com.lx862.mtrscripting.data.UniqueKey;
 import com.lx862.mtrscripting.util.GraphicsTexture;
+import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.TextFormatting;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
+import org.mtr.mapping.mapper.SoundHelper;
 
 import java.util.*;
 
 public class ScriptDebugOverlay {
-    private static final List<ScriptDebugSource> debugSources = new ArrayList<>();
     private static final double IDEAL_FRAMERATE = 60;
     private static final int COLOR_RED = 0xFFFF8888;
     private static final int COLOR_BLUE = 0xFFCCCCFF;
     private static final int COLOR_YELLOW = 0xFFFFFF00;
     private static final int COLOR_WHITE = 0xFFFFFFFF;
+    private static final List<ScriptDebugSource> debugSources = new ArrayList<>();
+    private static int sourceIndex;
 
     public static void registerDebugSource(String sourceName, ScriptManager scriptManager) {
         debugSources.add(new ScriptDebugSource(sourceName, scriptManager));
@@ -36,9 +39,27 @@ public class ScriptDebugOverlay {
         if(MinecraftClient.getInstance().getCurrentScreenMapped() != null) return;
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
 
+        if(debugSources.isEmpty()) return;
+
         graphicsHolder.translate(10, 10, 0);
 
-        Map<String, List<Pair<UniqueKey, ScriptInstance>>> nameToInstances = getInstancesGroupedByName();
+        int textX = 0;
+        MutableText sourceSelectText = TextUtil.literal("Showing scripts for: ").formatted(TextFormatting.GRAY);
+        graphicsHolder.drawText(sourceSelectText, textX, 0, COLOR_WHITE, true, RenderHelper.MAX_RENDER_LIGHT);
+        textX += GraphicsHolder.getTextWidth(sourceSelectText);
+
+        for(int i = 0; i < debugSources.size(); i++) {
+            boolean isSelected = i == sourceIndex;
+            ScriptDebugSource source = debugSources.get(i);
+            MutableText sourceText = TextUtil.literal("[" + source.getSourceName() + "]").formatted(isSelected ? TextFormatting.YELLOW : TextFormatting.GRAY);
+            graphicsHolder.drawText(sourceText, textX, 0, COLOR_WHITE, true, RenderHelper.MAX_RENDER_LIGHT);
+            textX += GraphicsHolder.getTextWidth(sourceText);
+            textX += 5;
+        }
+
+        Map<String, List<Pair<UniqueKey, ScriptInstance>>> nameToInstances = getInstancesGroupedByName(debugSources.get(sourceIndex));
+
+        graphicsHolder.translate(10, 10, 0);
 
         for(Map.Entry<String, List<Pair<UniqueKey, ScriptInstance>>> group : nameToInstances.entrySet()) {
             MutableText title = TextUtil.literal(group.getKey()).formatted(TextFormatting.UNDERLINE);
@@ -80,17 +101,16 @@ public class ScriptDebugOverlay {
         }
     }
 
-    private static Map<String, List<Pair<UniqueKey, ScriptInstance>>> getInstancesGroupedByName() {
+    private static Map<String, List<Pair<UniqueKey, ScriptInstance>>> getInstancesGroupedByName(ScriptDebugSource selectedSource) {
         Map<String, List<Pair<UniqueKey, ScriptInstance>>> groupedMap = new HashMap<>();
+        if(debugSources.size() == 0) return groupedMap;
 
-        for(ScriptDebugSource source : debugSources) {
-            for(Map.Entry<UniqueKey, ScriptInstance> map : source.getScriptManager().getInstanceManager().getInstances().entrySet()) {
-                List<Pair<UniqueKey, ScriptInstance>> existingInstances = groupedMap.getOrDefault(map.getValue().getScript().getDisplayName(), new ArrayList<>());
-                if(!map.getValue().shouldInvalidate()) {
-                    existingInstances.add(new Pair<>(map.getKey(), map.getValue()));
-                }
-                groupedMap.put(map.getValue().getScript().getDisplayName(), existingInstances);
+        for(Map.Entry<UniqueKey, ScriptInstance> map : selectedSource.getScriptManager().getInstanceManager().getInstances().entrySet()) {
+            List<Pair<UniqueKey, ScriptInstance>> existingInstances = groupedMap.getOrDefault(map.getValue().getScript().getDisplayName(), new ArrayList<>());
+            if(!map.getValue().shouldInvalidate()) {
+                existingInstances.add(new Pair<>(map.getKey(), map.getValue()));
             }
+            groupedMap.put(map.getValue().getScript().getDisplayName(), existingInstances);
         }
 
         // Sort instance by execution time
@@ -139,6 +159,20 @@ public class ScriptDebugOverlay {
             return COLOR_YELLOW;
         } else {
             return COLOR_BLUE;
+        }
+    }
+
+    public static void previousSource() {
+        if(sourceIndex-1 >= 0) {
+            sourceIndex--;
+            MinecraftClient.getInstance().getPlayerMapped().playSound(SoundHelper.createSoundEvent(new Identifier("ui.button.click")), 1, 1);
+        }
+    }
+
+    public static void nextSource() {
+        if(sourceIndex+1 < debugSources.size()) {
+            sourceIndex++;
+            MinecraftClient.getInstance().getPlayerMapped().playSound(SoundHelper.createSoundEvent(new Identifier("ui.button.click")), 1, 1);
         }
     }
 
