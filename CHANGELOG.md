@@ -1,12 +1,10 @@
-## JCM v2.1.0-beta.1 for MTR 4.0.0/4.0.1 has been released!
-
-This is an interim release with many scripting-related changes in order to to provide more possibilities for script developers.
+## JCM v2.1.0-beta.1 for MTR 4.0.2 has been released!
 
 **[IMPORTANT NOTE] This is a beta release primarily for script developers to play around and give feedback on. Normal players are advised to wait until the final release of v2.1.0.**
 
 **New:**
 - Add **Help Line (Tiu Keng Leng Station Type)**
-- More scripting changes, implementation details are outlined below.
+- **More scripting changes, implementation details are outlined below.**
 - - **Major milestone reached:**
 - - Scripting for PIDS (As it always worked since JCM v2)
 - - Eyecandy LCD displays is now possible with the use of QuadDrawCall
@@ -44,6 +42,11 @@ This is an interim release with many scripting-related changes in order to to pr
 - - Add `MinecraftClient.playerPos()` and `MinecraftClient.playerBlockPos()` to determine the position of the player.
 - - Add `MinecraftClient.playerName()` to obtain the account name of the current player.
 - - Add `MinecraftClient.gamePaused()` to determine if the game has been paused.
+- - Add `StateTracker.changedTo(state: any)` and `StateTracker.changedFromTo(fromState: any, toState: any)`
+
+**Changes**
+- **Scripting:**
+- - `StateTracker` now accepts non-string values.
 
 **Notice for 1.16.5 players**  
 Minecraft 1.16.5 has already been released for well over 4 years. While there are many efforts in the codebase to make JCM available for 1.16.5, it also puts a burden to maintain them. 
