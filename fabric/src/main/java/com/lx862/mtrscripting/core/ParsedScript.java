@@ -24,7 +24,7 @@ public class ParsedScript {
     private Exception capturedScriptException = null;
     private long lastFailedTime = -1;
 
-    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scripts) throws Exception {
+    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scripts) throws NoSuchMethodException {
         this.displayName = displayName;
         this.scriptManager = scriptManager;
         this.createFunctions = new ArrayList<>();
@@ -73,7 +73,7 @@ public class ParsedScript {
                 tryAndAddFunction("render" + contextName, scope, renderFunctions);
                 tryAndAddFunction("dispose" + contextName, scope, disposeFunctions);
 
-                ScriptManager.LOGGER.info("[Scripting] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
+                ScriptManager.LOGGER.info("[JCM Scripting] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
             }
         } finally {
             ScriptResourceUtil.activeContext = null;
@@ -113,7 +113,7 @@ public class ParsedScript {
                 }
                 scriptInstance.setLastExecutionDurationMs(System.nanoTime() - startTime);
             } catch (Exception e) {
-                ScriptManager.LOGGER.error("[Scripting] Error executing script {}!", displayName, e);
+                ScriptManager.LOGGER.error("[JCM Scripting] Error executing script {}!", displayName, e);
                 lastFailedTime = System.currentTimeMillis();
                 capturedScriptException = e;
             } finally {

@@ -40,7 +40,7 @@
 	"depends": {
 		"fabricloader": ">=0.15.0",
 		"minecraft": "~${minecraft_version}",
-		"mtr": ">=4.0.0-prerelease.2 <4.1",
+		"mtr": ">=4.0.0 <4.1",
 		"fabric": "*"
 	},
 	"custom": {

@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class ScriptManager {
-    public static final Logger LOGGER = LogManager.getLogger("JCM Scripting");
+    public static final Logger LOGGER = LogManager.getLogger("MTR Scripting via JCM");
     private static final ObjectList<TriConsumer<String, Context, Scriptable>> onParseScriptCallback = new ObjectArrayList<>();
     private final MTRClassShutter classShutter;
 
@@ -60,8 +60,13 @@ public class ScriptManager {
         return this.classShutter;
     }
 
-    public ParsedScript parseScript(String scriptName, String contextName, List<ScriptContent> scripts) throws Exception {
-        return new ParsedScript(this, scriptName, contextName, scripts);
+    public ParsedScript parseScript(String scriptName, String contextName, List<ScriptContent> scripts) {
+        try {
+            return new ParsedScript(this, scriptName, contextName, scripts);
+        } catch (NoSuchMethodException e) {
+            ScriptManager.LOGGER.error("[JCM Scripting] Fatal error: Cannot find required java method to add to script!", e);
+            return null;
+        }
     }
 
     /** Clear all script instances<br>

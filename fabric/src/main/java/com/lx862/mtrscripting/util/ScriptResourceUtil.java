@@ -61,7 +61,7 @@ public class ScriptResourceUtil {
                 sb.append(obj);
             }
         }
-        ScriptManager.LOGGER.info("[Scripting] {}", sb.toString());
+        ScriptManager.LOGGER.info("[JCM Scripting] {}", sb.toString());
     }
 
     public static Identifier identifier(String textForm) {
@@ -117,13 +117,13 @@ public class ScriptResourceUtil {
                     try {
                         NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_CJK_LOCATION);
                     } catch (Exception ex) {
-                        ScriptManager.LOGGER.warn("[Scripting] Failed to load font", ex);
+                        ScriptManager.LOGGER.warn("[JCM Scripting] Failed to load font", ex);
                     }
                 } else {
                     try {
                         NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_LOCATION);
                     } catch (Exception ex) {
-                        ScriptManager.LOGGER.warn("[Scripting] Failed to load font", ex);
+                        ScriptManager.LOGGER.warn("[JCM Scripting] Failed to load font", ex);
                     }
                 }
             }
@@ -133,7 +133,7 @@ public class ScriptResourceUtil {
                 try {
                     NOTO_SERIF_CACHE = readFont(NOTO_SERIF_LOCATION);
                 } catch (Exception ex) {
-                    ScriptManager.LOGGER.warn("[Scripting] Failed loading font", ex);
+                    ScriptManager.LOGGER.warn("[JCM Scripting] Failed loading font", ex);
                     return null;
                 }
             }
@@ -177,7 +177,7 @@ public class ScriptResourceUtil {
             try {
                 result[0] = ImageIO.read(is);
             } catch (IOException e) {
-                ScriptManager.LOGGER.error("[Scripting] Failed to read image:", e);
+                ScriptManager.LOGGER.error("[JCM Scripting] Failed to read image:", e);
             }
         });
         return GraphicsTexture.createArgbBufferedImage(result[0]);
@@ -189,7 +189,7 @@ public class ScriptResourceUtil {
             try {
                 result[0] = Font.createFont(Font.TRUETYPE_FONT, is);
             } catch (IOException | FontFormatException e) {
-                ScriptManager.LOGGER.error("[Scripting] Failed to read font:", e);
+                ScriptManager.LOGGER.error("[JCM Scripting] Failed to read font:", e);
             }
         });
 

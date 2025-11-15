@@ -1,7 +1,5 @@
 ## JCM v2.1.0-beta.1 for MTR 4.0.2 has been released!
 
-**[IMPORTANT NOTE] This is a beta release primarily for script developers to play around and give feedback on. Normal players are advised to wait until the final release of v2.1.0.**
-
 **New:**
 - Add **Help Line (Tiu Keng Leng Station Type)**
 - Script Debug Overlay now allows switching between sources (MTR/JCM) to provide a more clutter-free view.
@@ -9,12 +7,14 @@
 - **More scripting changes, implementation details are outlined below.**
 - - **Major milestone reached:**
 - - Scripting for PIDS (As it always worked since JCM v2)
-- - Eyecandy LCD displays is now possible with the use of QuadDrawCall
+- - Scripted Eyecandy LCD display is now possible with the use of QuadDrawCall
 - - It is now possible to register scripts in the MTR 4 version of `mtr_custom_resources.json`
 
 **New (Scripting Implementation):**
 - **Script Registration:**
-- - The `scriptInput` field can now be supplied in the json entry alongside `scriptFiles` and `scriptText`.
+- - - Eyecandy/Decoration Object scripts in the MTR 4 custom resource format can now be registered!
+- - - See [documentation](https://jcm.joban.org/latest/dev/scripting/eyecandy/#registering-scripts-to-decoration-object) for details!
+- - The `scriptInput` (MTR 3/NTE/JCM) / `scripting`.`input` (MTR 4) field can now be supplied in the json entry alongside `scriptFiles` and `scriptText`.
 - - Anything within the field (JSON Object/Array/String) will be made accessible to the script via the `SCRIPT_INPUT` variable.
 - **Scripting Engine (Rhino)**
 - - **For Minecraft 1.17+**, the Rhino JS engine has been updated to **1.8.0** which added more support for modern JS syntax. See [this compatibility table](https://mozilla.github.io/rhino/compat/engines.html) for details.
@@ -50,11 +50,22 @@
 - **Scripting:**
 - - `StateTracker` now accepts non-string values.
 
-**Notice for 1.16.5 players**  
+## Important Note
+
+### For Minecraft 1.16.5 players
 Minecraft 1.16.5 has already been released for well over 4 years. While there are many efforts in the codebase to make JCM available for 1.16.5, it also puts a burden to maintain them. 
 - **For now** we will maintain the build for Minecraft 1.16.5, however feature parity cannot be guarenteed.
 - Players who are still using Minecraft 1.16.5 should consider upgrading to any newer version.
 - If demand are low enough, we may consider dropping 1.16.5 support all-together.
+
+### For other players
+This is a beta release primarily for script developers to play around and give feedback on.  
+Normal players are *strongly* advised to wait until the official release of v2.1.0.
+
+### For Script Developers
+Breaking changes may occur for all *new features* introduced during the v2.1.0 beta. JSON fields and scripting APIs may be moved, renamed or scrapped at any point during beta releases.
+
+You are more than encouraged to provide feedback for the newly introduced features (Yes, down to the naming!). Otherwise, no new breaking changes will be introduced after the official release, and any imperfections/annoyance that you perceive will stay with you forever :D
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
