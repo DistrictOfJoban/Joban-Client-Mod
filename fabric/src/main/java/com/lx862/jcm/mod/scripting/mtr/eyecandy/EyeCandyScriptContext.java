@@ -14,10 +14,16 @@ import java.util.List;
 public class EyeCandyScriptContext extends MTRScriptContext {
     private final EyecandyBlockEntityWrapper blockEntity;
     private final List<ModelDrawCall> drawCalls = new ArrayList<>();
+    private final EyecandyEvents events;
 
     public EyeCandyScriptContext(EyecandyBlockEntityWrapper blockEntity) {
         super(blockEntity.getModelId());
         this.blockEntity = blockEntity;
+        this.events = new EyecandyEvents();
+    }
+
+    public EyecandyEvents events() {
+        return events;
     }
 
     public void drawModel(ScriptedModel model, Matrices matrices) {

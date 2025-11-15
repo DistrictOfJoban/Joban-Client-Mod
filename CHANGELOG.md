@@ -31,15 +31,20 @@
 - **Eyecandy Scripting**
 - - Adapt RenderManager & SoundManager, can be accessed by `ctx.renderManager()` & `ctx.soundManager()`, see above.
 - - Add `EyecandyBlockEntity.pos()` and `EyecandyBlockEntity.blockPos()` to determine where the eyecandy block is placed.
+- - Add block use events for eyecandy
+- - - Call `ctx.events().blockUse.changedTo(true)` to check
+- - - **Important:** Acknowledge the event with `ctx.events().accept()` afterwards at suitable interval so the internal event state is reset.
 - **PIDS Scripting**
 - - Adapt RenderManager & SoundManager, can be accessed by `ctx.renderManager()` & `ctx.soundManager()`, see above.
 - - - This grants PIDS scripts the ability to render 3D OBJ model. It is advised to use this in conjunction with PIDS Projector, which is an invisible block.
 - - Add `PIDSWrapper.blockPos()` to determine where the PIDS block is placed.
 - - Add `PIDSWrapper.isKeyBlock()` to determine if the current block is a unique block within a PIDS pair (e.g. Identify 1 side of a dual-sided PIDS)
 - **Misc. Scripting Additions**
-- - Add **Vector3f** for performing position-related operation.
+- - Add `Vector3f` for performing position-related operation.
+- - Add `ItemStackWrapper` to receive basic information about an item stack.
 - - Add `MinecraftClient.getScoreboardScore(objective: string, playerName: string)` to obtain the scoreboard score of a player.
 - - Add `MinecraftClient.isHoldingItem(id: string)` to determine if the current player is holding an item with the corresponding item id.
+- - Add `MinecraftClient.mainHandItem(): ItemStackWrapper`, `MinecraftClient.offHandItem(): ItemStackWrapper` and `MinecraftClient.itemHeld(): ItemStackWrapper` to receive stack in player's hand.
 - - Add `MinecraftClient.blockLightAt(pos: vector3f)`, `MinecraftClient.skyLightAt(pos: vector3f)`, `MinecraftClient.lightLevelAt(pos: vector3f)` to determine light level in the world.
 - - Add `MinecraftClient.playerPos()` and `MinecraftClient.playerBlockPos()` to determine the position of the player.
 - - Add `MinecraftClient.playerName()` to obtain the account name of the current player.

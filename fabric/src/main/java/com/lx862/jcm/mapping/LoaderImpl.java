@@ -30,4 +30,12 @@ public class LoaderImpl {
         #endif
         return itm.map(Item::new).orElse(null);
     }
+
+    public static Identifier getIdFromItem(Item itm) {
+        #if MC_VERSION < "11903"
+            return new Identifier(net.minecraft.util.registry.Registry.ITEM.getId(itm.data));
+        #else
+            return new Identifier(net.minecraft.registry.Registries.ITEM.getId(itm.data));
+        #endif
+    }
 }

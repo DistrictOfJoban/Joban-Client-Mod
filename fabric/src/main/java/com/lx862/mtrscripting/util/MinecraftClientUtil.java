@@ -92,6 +92,26 @@ public class MinecraftClientUtil {
         return MinecraftClient.getInstance().isPaused();
     }
 
+    public static ItemStackWrapper mainHandItem() {
+        ItemStackWrapper itemStackWrapper = new ItemStackWrapper(MinecraftClient.getInstance().getPlayerMapped().getMainHandStack());
+        return itemStackWrapper.empty() ? null : itemStackWrapper;
+    }
+
+    public static ItemStackWrapper offHandItem() {
+        ItemStackWrapper itemStackWrapper = new ItemStackWrapper(MinecraftClient.getInstance().getPlayerMapped().getOffHandStack());
+        return itemStackWrapper.empty() ? null : itemStackWrapper;
+    }
+
+    public static ItemStackWrapper itemHeld() {
+        ItemStackWrapper mainHandItem = mainHandItem();
+        if(mainHandItem != null) return mainHandItem;
+
+        ItemStackWrapper offHandItem = offHandItem();
+        if(offHandItem != null) return offHandItem;
+
+        return null;
+    }
+
     public static void displayMessage(String message, boolean actionBar) {
         final ClientPlayerEntity player = MinecraftClient.getInstance().getPlayerMapped();
         if (player != null) {

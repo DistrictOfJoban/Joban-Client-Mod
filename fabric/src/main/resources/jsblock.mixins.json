@@ -12,6 +12,7 @@
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleResourceMixin",
     "modded.mtr.VehicleSchemaMixin",
+    "modded.mtr.BlockEyecandyMixin",
     "modded.tsc.MixinVehiclePlatformRouteInfo",
     "minecraft.NativeImageAccessor"
   ],
