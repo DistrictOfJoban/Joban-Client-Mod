@@ -5,6 +5,11 @@ import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mapping.holder.Vector3f;
 
 public class ScriptVector3f {
+    public static final ScriptVector3f ZERO = new ScriptVector3f(0, 0, 0);
+    public static final ScriptVector3f XP = new ScriptVector3f(1, 0, 0);
+    public static final ScriptVector3f YP = new ScriptVector3f(0, 1, 0);
+    public static final ScriptVector3f ZP = new ScriptVector3f(0, 0, 1);
+
     private Vector3d impl;
 
     public ScriptVector3f(Vector3d impl) {
@@ -23,9 +28,9 @@ public class ScriptVector3f {
         this(blockPos.getX(), blockPos.getY(), blockPos.getZ());
     }
 
-    public double x() { return impl.getXMapped(); }
-    public double y() { return impl.getYMapped(); }
-    public double z() { return impl.getZMapped(); }
+    public float x() { return (float)impl.getXMapped(); }
+    public float y() { return (float)impl.getYMapped(); }
+    public float z() { return (float)impl.getZMapped(); }
 
     public ScriptVector3f copy() {
         Vector3d newImpl = new Vector3d(x(), y(), z());
@@ -86,6 +91,14 @@ public class ScriptVector3f {
         return (dx * dx + dy * dy + dz * dz);
     }
 
+    /**
+     * Compatibility for NTE, equivalent to {@link ScriptVector3f#rawBlockPos()}
+     */
+    @Deprecated
+    public BlockPos toBlockPos() {
+        return rawBlockPos();
+    }
+
     public BlockPos rawBlockPos() {
         return new BlockPos((int)x(), (int)y(), (int)z());
     }
@@ -117,9 +130,4 @@ public class ScriptVector3f {
     public String toString() {
         return "Vector3dWrapper[" + "x=" + x() + ", y=" + y() + ", z=" + z() + "]";
     }
-
-    public static final ScriptVector3f ZERO = new ScriptVector3f(0, 0, 0);
-    public static final ScriptVector3f XP = new ScriptVector3f(1, 0, 0);
-    public static final ScriptVector3f YP = new ScriptVector3f(0, 1, 0);
-    public static final ScriptVector3f ZP = new ScriptVector3f(0, 0, 1);
 }
