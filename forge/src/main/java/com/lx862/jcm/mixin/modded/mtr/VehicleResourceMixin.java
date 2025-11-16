@@ -1,13 +1,12 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
-import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
 import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleScriptInstance;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import com.lx862.mtrscripting.data.UniqueKey;
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.core.data.VehicleCar;
 import org.mtr.core.tool.Vector;
 import org.mtr.mapping.holder.Direction;
@@ -40,7 +39,7 @@ public abstract class VehicleResourceMixin {
                 World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
 
                 Vector carMidPos = vehicle.getHeadPosition(); // TODO: Get middle pos of each car...
-                Vector3dWrapper basePos = new Vector3dWrapper((float)carMidPos.x, (float)carMidPos.y, (float)carMidPos.z);
+                ScriptVector3f basePos = new ScriptVector3f((float)carMidPos.x, (float)carMidPos.y, (float)carMidPos.z);
                 scriptRenderManager.invoke(world, basePos, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
                 scriptSoundManager.invoke(world, basePos, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
             });

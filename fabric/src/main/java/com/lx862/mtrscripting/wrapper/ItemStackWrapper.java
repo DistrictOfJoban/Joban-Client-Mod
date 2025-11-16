@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.util;
+package com.lx862.mtrscripting.wrapper;
 
 import com.lx862.jcm.mapping.LoaderImpl;
 import org.mtr.mapping.holder.Identifier;

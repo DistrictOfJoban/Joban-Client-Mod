@@ -5,6 +5,7 @@ import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
 import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.core.ScriptInstance;
+import org.mtr.mapping.holder.MinecraftClient;
 
 import java.util.Objects;
 
@@ -38,6 +39,9 @@ public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> {
     }
 
     public boolean shouldInvalidate() {
-        return blockEntity.getWorld2().getBlockEntity(blockEntity.getPos2()) == null || !Objects.equals(blockEntity.getPresetId(), getScriptContext().getName());
+        boolean beRemoved = blockEntity.isRemoved2() || blockEntity.getWorld2().getBlockEntity(blockEntity.getPos2()) == null;
+        boolean mismatchedPreset = !Objects.equals(blockEntity.getPresetId(), getScriptContext().getName());
+        boolean notInGame = MinecraftClient.getInstance().getWorldMapped() == null;
+        return notInGame || beRemoved || mismatchedPreset;
     }
 }

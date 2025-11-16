@@ -5,11 +5,10 @@ import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptContext;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptInstance;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyecandyBlockEntityWrapper;
-import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.UniqueKey;
 import com.lx862.mtrscripting.core.ScriptInstance;
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
@@ -22,8 +21,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.ArrayList;
 
 @Mixin(value = RenderEyeCandy.class, remap = false)
 public class RenderEyeCandyMixin {
@@ -63,7 +60,7 @@ public class RenderEyeCandyMixin {
             graphicsHolderNew.rotateZDegrees((float)Math.toDegrees(blockEntity.getRotateZ()));
         });
 
-        eyeCandyScriptInstance.getRenderManager().invoke(world, Vector3dWrapper.ZERO, graphicsHolder, storedMatrixTransformations, facing, light);
+        eyeCandyScriptInstance.getRenderManager().invoke(world, ScriptVector3f.ZERO, graphicsHolder, storedMatrixTransformations, facing, light);
         eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos(), graphicsHolder, blockStoredMatrixTransformations, facing, light);
         ci.cancel();
     }

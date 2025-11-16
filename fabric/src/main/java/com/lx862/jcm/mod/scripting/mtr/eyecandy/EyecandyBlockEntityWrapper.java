@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.World;
 import org.mtr.mod.block.BlockEyeCandy;
@@ -44,18 +44,18 @@ public class EyecandyBlockEntityWrapper {
         return be.getFullBrightness();
     }
 
-    public Vector3dWrapper pos() {
-        Vector3dWrapper realPos = new Vector3dWrapper(be.getPos2());
+    public ScriptVector3f pos() {
+        ScriptVector3f realPos = new ScriptVector3f(be.getPos2());
         realPos.add(getTranslateX(), getTranslateY(), getTranslateZ());
         return realPos;
     }
 
-    public Vector3dWrapper blockPos() {
-        return new Vector3dWrapper(be.getPos2());
+    public ScriptVector3f blockPos() {
+        return new ScriptVector3f(be.getPos2());
     }
 
     /**
-     * Equivalent to {@link EyecandyBlockEntityWrapper#blockPos()} and {@link Vector3dWrapper#rawBlockPos()}
+     * Equivalent to {@link EyecandyBlockEntityWrapper#blockPos()} and {@link ScriptVector3f#rawBlockPos()}
      * For backward compatibility of scripts designed for Nemo's Transit Expansion (NTE)
      */
     @Deprecated
@@ -68,7 +68,7 @@ public class EyecandyBlockEntityWrapper {
      * For backward compatibility of scripts designed for Nemo's Transit Expansion (NTE)
      */
     @Deprecated
-    public Vector3dWrapper getWorldPosVector3f() {
+    public ScriptVector3f getWorldPosVector3f() {
         return blockPos();
     }
 
@@ -77,11 +77,15 @@ public class EyecandyBlockEntityWrapper {
      * For backward compatibility of scripts designed for Aphrodite's Nemo's Transit Expansion (ANTE)
      */
     @Deprecated
-    public Vector3dWrapper getTransformPosVector3f() {
+    public ScriptVector3f getTransformPosVector3f() {
         return pos();
     }
 
     public World getWorld() {
         return be.getWorld2();
+    }
+
+    public boolean removed() {
+        return be.isRemoved2();
     }
 }

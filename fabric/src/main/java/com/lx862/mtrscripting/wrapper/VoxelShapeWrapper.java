@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.util;
+package com.lx862.mtrscripting.wrapper;
 
 import org.mtr.mapping.holder.Block;
 import org.mtr.mapping.holder.VoxelShape;

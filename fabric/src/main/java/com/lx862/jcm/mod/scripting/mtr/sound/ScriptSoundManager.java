@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.scripting.mtr.sound;
 
 import com.lx862.mtrscripting.api.ScriptResultCall;
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
@@ -27,11 +27,11 @@ public class ScriptSoundManager {
         this.soundCalls.add(new NonPositionedSoundCall(id, volume, pitch));
     }
 
-    public void playSound(Identifier id, Vector3dWrapper pos, float volume, float pitch) {
+    public void playSound(Identifier id, ScriptVector3f pos, float volume, float pitch) {
         this.soundCalls.add(new PositionedSoundCall(id, pos.x(), pos.y(), pos.z(), volume, pitch));
     }
 
-    public void invoke(World world, Vector3dWrapper basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+    public void invoke(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         for(ScriptResultCall soundCall : new ArrayList<>(soundCalls)) {
             soundCall.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
         }

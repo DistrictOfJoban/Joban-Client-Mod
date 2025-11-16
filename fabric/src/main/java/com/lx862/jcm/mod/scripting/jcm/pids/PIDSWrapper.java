@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.scripting.jcm.pids;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.core.data.Station;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -24,8 +24,8 @@ public class PIDSWrapper {
         this.arrivalsWrapper = new ArrivalsWrapper(arrivalsResponse);
     }
 
-    public Vector3dWrapper blockPos() {
-        return new Vector3dWrapper(be.getPos2());
+    public ScriptVector3f blockPos() {
+        return new ScriptVector3f(be.getPos2());
     }
 
     public boolean isKeyBlock() {

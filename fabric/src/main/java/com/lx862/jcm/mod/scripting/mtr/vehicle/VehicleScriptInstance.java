@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
 import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.core.ScriptInstance;
+import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.VehicleExtension;
 
@@ -32,6 +33,7 @@ public class VehicleScriptInstance extends ScriptInstance<VehicleWrapper> {
     }
 
     public boolean shouldInvalidate() {
-        return !MinecraftClientData.getInstance().vehicles.contains(vehicleExtension);
+        boolean notInGame = MinecraftClient.getInstance().getWorldMapped() == null;
+        return notInGame || !MinecraftClientData.getInstance().vehicles.contains(vehicleExtension);
     }
 }

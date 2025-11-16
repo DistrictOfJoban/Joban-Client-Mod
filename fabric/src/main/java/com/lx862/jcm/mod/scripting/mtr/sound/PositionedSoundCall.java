@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr.sound;
 
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.SoundHelper;
@@ -19,8 +19,8 @@ public class PositionedSoundCall extends SoundCall {
     }
 
     @Override
-    public void run(World world, Vector3dWrapper basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        Vector3dWrapper finalPos = basePos.copy();
+    public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        ScriptVector3f finalPos = basePos.copy();
         finalPos.add((float)x, (float)y, (float)z);
         world.playSound(finalPos.x(), finalPos.y(), finalPos.z(), soundEvent, SoundCategory.valueOf(soundCategory), volume, pitch, false);
     }

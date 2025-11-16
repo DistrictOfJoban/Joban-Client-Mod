@@ -4,6 +4,8 @@ import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.util.*;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
+import com.lx862.mtrscripting.wrapper.MinecraftClientWrapper;
+import com.lx862.mtrscripting.wrapper.VoxelShapeWrapper;
 import org.mtr.mapping.holder.Identifier;
 
 import java.util.ArrayList;
@@ -50,9 +52,9 @@ public class ParsedScript {
             scope.put("Files", scope, new NativeJavaClass(scope, FilesUtil.class));
 
             scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
-            scope.put("Vector3f", scope, new NativeJavaClass(scope, Vector3dWrapper.class));
+            scope.put("Vector3f", scope, new NativeJavaClass(scope, ScriptVector3f.class));
             scope.put("VoxelShape", scope, new NativeJavaClass(scope, VoxelShapeWrapper.class));
-            scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientUtil.class));
+            scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientWrapper.class));
 
             scriptManager.onParseScript(contextName, cx, scope);
 

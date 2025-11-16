@@ -4,22 +4,22 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mapping.holder.Vector3f;
 
-public class Vector3dWrapper {
+public class ScriptVector3f {
     private Vector3d impl;
 
-    public Vector3dWrapper(Vector3d impl) {
+    public ScriptVector3f(Vector3d impl) {
         this.impl = impl;
     }
 
-    public Vector3dWrapper(float x, float y, float z) {
+    public ScriptVector3f(float x, float y, float z) {
         this(new Vector3d(x, y, z));
     }
 
-    public Vector3dWrapper(Vector3f impl) {
+    public ScriptVector3f(Vector3f impl) {
         this(new Vector3d(impl));
     }
 
-    public Vector3dWrapper(BlockPos blockPos) {
+    public ScriptVector3f(BlockPos blockPos) {
         this(blockPos.getX(), blockPos.getY(), blockPos.getZ());
     }
 
@@ -27,9 +27,9 @@ public class Vector3dWrapper {
     public double y() { return impl.getYMapped(); }
     public double z() { return impl.getZMapped(); }
 
-    public Vector3dWrapper copy() {
+    public ScriptVector3f copy() {
         Vector3d newImpl = new Vector3d(x(), y(), z());
-        return new Vector3dWrapper(newImpl);
+        return new ScriptVector3f(newImpl);
     }
 
     public void normalize() {
@@ -40,11 +40,11 @@ public class Vector3dWrapper {
         impl = impl.add(x, y, z);
     }
 
-    public void add(Vector3dWrapper other) {
+    public void add(ScriptVector3f other) {
         impl = impl.add(other.impl);
     }
 
-    public void sub(Vector3dWrapper other) {
+    public void sub(ScriptVector3f other) {
         impl = impl.subtract(other.impl);
     }
 
@@ -68,18 +68,18 @@ public class Vector3dWrapper {
         impl = impl.rotateZ(rad);
     }
 
-    public void cross(Vector3dWrapper other) {
+    public void cross(ScriptVector3f other) {
         impl = impl.crossProduct(other.impl);
     }
 
-    public double distance(Vector3dWrapper other) {
+    public double distance(ScriptVector3f other) {
         double dx = x() - other.x();
         double dy = y() - other.y();
         double dz = z() - other.z();
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
-    public double distanceSq(Vector3dWrapper other) {
+    public double distanceSq(ScriptVector3f other) {
         double dx = x() - other.x();
         double dy = y() - other.y();
         double dz = z() - other.z();
@@ -109,8 +109,8 @@ public class Vector3dWrapper {
 
         if (o == null || getClass() != o.getClass()) return false;
 
-        Vector3dWrapper vector3dWrapper = (Vector3dWrapper) o;
-        return impl.equals(vector3dWrapper.impl);
+        ScriptVector3f scriptVector3F = (ScriptVector3f) o;
+        return impl.equals(scriptVector3F.impl);
     }
 
     @Override
@@ -118,8 +118,8 @@ public class Vector3dWrapper {
         return "Vector3dWrapper[" + "x=" + x() + ", y=" + y() + ", z=" + z() + "]";
     }
 
-    public static final Vector3dWrapper ZERO = new Vector3dWrapper(0, 0, 0);
-    public static final Vector3dWrapper XP = new Vector3dWrapper(1, 0, 0);
-    public static final Vector3dWrapper YP = new Vector3dWrapper(0, 1, 0);
-    public static final Vector3dWrapper ZP = new Vector3dWrapper(0, 0, 1);
+    public static final ScriptVector3f ZERO = new ScriptVector3f(0, 0, 0);
+    public static final ScriptVector3f XP = new ScriptVector3f(1, 0, 0);
+    public static final ScriptVector3f YP = new ScriptVector3f(0, 1, 0);
+    public static final ScriptVector3f ZP = new ScriptVector3f(0, 0, 1);
 }

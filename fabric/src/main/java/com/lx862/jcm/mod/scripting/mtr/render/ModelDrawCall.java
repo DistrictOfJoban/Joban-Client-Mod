@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.scripting.mtr.render;
 
 import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -24,7 +24,7 @@ public class ModelDrawCall extends RenderDrawCall<ModelDrawCall> {
     }
 
     @Override
-    public void run(World world, Vector3dWrapper basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+    public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         super.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
         this.model.draw(storedMatrixTransformations, light);
     }

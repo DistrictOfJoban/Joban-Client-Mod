@@ -1,10 +1,9 @@
 package com.lx862.jcm.mod.scripting.mtr.render;
 
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mod.client.CustomResourceLoader;
 import org.mtr.mod.render.MainRenderer;
 import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.render.StoredMatrixTransformations;
@@ -33,7 +32,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
         return create();
     }
 
-    public QuadDrawCall quad(Vector3dWrapper pos1, Vector3dWrapper pos2, Vector3dWrapper pos3, Vector3dWrapper pos4) {
+    public QuadDrawCall quad(ScriptVector3f pos1, ScriptVector3f pos2, ScriptVector3f pos3, ScriptVector3f pos4) {
         this.quadDefinition.x1 = (float)pos1.x();
         this.quadDefinition.y1 = (float)pos1.y();
         this.quadDefinition.z1 = (float)pos1.z();
@@ -61,28 +60,28 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
         return this;
     }
 
-    public QuadDrawCall corner1(Vector3dWrapper pos) {
+    public QuadDrawCall corner1(ScriptVector3f pos) {
         this.quadDefinition.x1 = (float)pos.x();
         this.quadDefinition.y1 = (float)pos.y();
         this.quadDefinition.z1 = (float)pos.z();
         return this;
     }
 
-    public QuadDrawCall corner2(Vector3dWrapper pos) {
+    public QuadDrawCall corner2(ScriptVector3f pos) {
         this.quadDefinition.x2 = (float)pos.x();
         this.quadDefinition.y2 = (float)pos.y();
         this.quadDefinition.z2 = (float)pos.z();
         return this;
     }
 
-    public QuadDrawCall corner3(Vector3dWrapper pos) {
+    public QuadDrawCall corner3(ScriptVector3f pos) {
         this.quadDefinition.x3 = (float)pos.x();
         this.quadDefinition.y3 = (float)pos.y();
         this.quadDefinition.z3 = (float)pos.z();
         return this;
     }
 
-    public QuadDrawCall corner4(Vector3dWrapper pos) {
+    public QuadDrawCall corner4(ScriptVector3f pos) {
         this.quadDefinition.x4 = (float)pos.x();
         this.quadDefinition.y4 = (float)pos.y();
         this.quadDefinition.z4 = (float)pos.z();
@@ -125,7 +124,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
     }
 
     @Override
-    public void run(World world, Vector3dWrapper basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+    public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         super.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
         MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolderNew, offset) -> {
             graphicsHolderNew.createVertexConsumer(RenderLayer.getBeaconBeam(textureId, translucent));

@@ -2,7 +2,7 @@ package com.lx862.jcm.mod.scripting.jcm.pids;
 
 import com.lx862.mtrscripting.api.ScriptResultCall;
 import com.lx862.mtrscripting.util.Matrices;
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mapping.holder.World;
@@ -44,7 +44,7 @@ public abstract class PIDSDrawCall extends ScriptResultCall {
     }
 
     @Override
-    public void run(World world, Vector3dWrapper basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+    public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         graphicsHolder.push();
         storedMatrixTransformations.transform(graphicsHolder, Vector3d.getZeroMapped());
         graphicsHolder.translate(this.x, this.y, 0);

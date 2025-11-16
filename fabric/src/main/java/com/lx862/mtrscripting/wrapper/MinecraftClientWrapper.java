@@ -1,8 +1,9 @@
-package com.lx862.mtrscripting.util;
+package com.lx862.mtrscripting.wrapper;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/MinecraftClientUtil.java */
 
 import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import com.mojang.text2speech.Narrator;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ScoreboardHelper;
@@ -10,7 +11,7 @@ import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mapping.mapper.WorldHelper;
 
 @SuppressWarnings("unused")
-public class MinecraftClientUtil {
+public class MinecraftClientWrapper {
     public static boolean worldIsRaining() {
         return MinecraftClient.getInstance().getWorldMapped() != null
                 && MinecraftClient.getInstance().getWorldMapped().isRaining();
@@ -21,7 +22,7 @@ public class MinecraftClientUtil {
                 && MinecraftClient.getInstance().getWorldMapped().isThundering();
     }
 
-    public static boolean worldIsRainingAt(Vector3dWrapper pos) {
+    public static boolean worldIsRainingAt(ScriptVector3f pos) {
         return MinecraftClient.getInstance().getWorldMapped() != null
                 && LoaderImpl.isRainingAt(World.cast(MinecraftClient.getInstance().getWorldMapped()), pos.rawBlockPos());
     }
@@ -31,14 +32,14 @@ public class MinecraftClientUtil {
                 ? (int) WorldHelper.getTimeOfDay(MinecraftClient.getInstance().getWorldMapped()) : 0;
     }
 
-    public static boolean isEmittingRedstonePower(Vector3dWrapper pos) {
+    public static boolean isEmittingRedstonePower(ScriptVector3f pos) {
         for(Direction direction : Direction.values()) {
             if(isEmittingRedstonePower(pos, direction)) return true;
         }
         return false;
     }
 
-    public static boolean isEmittingRedstonePower(Vector3dWrapper pos, Direction direction) {
+    public static boolean isEmittingRedstonePower(ScriptVector3f pos, Direction direction) {
         return MinecraftClient.getInstance().getWorldMapped() != null &&
                 MinecraftClient.getInstance().getWorldMapped().isEmittingRedstonePower(pos.rawBlockPos(), direction);
     }
@@ -49,35 +50,22 @@ public class MinecraftClientUtil {
         });
     }
 
-    public static int blockLightAt(Vector3dWrapper pos) {
+    public static int blockLightAt(ScriptVector3f pos) {
         return MinecraftClient.getInstance().getWorldMapped().getLightLevel(LightType.BLOCK, pos.rawBlockPos());
     }
 
-    public static int skyLightAt(Vector3dWrapper pos) {
+    public static int skyLightAt(ScriptVector3f pos) {
         return MinecraftClient.getInstance().getWorldMapped().getLightLevel(LightType.SKY, pos.rawBlockPos());
     }
 
-    public static int lightLevelAt(Vector3dWrapper pos) {
+    public static int lightLevelAt(ScriptVector3f pos) {
         return Math.min(blockLightAt(pos), skyLightAt(pos));
     }
 
-    public static Vector3dWrapper playerPos() {
-        Vector3d pos = MinecraftClient.getInstance().getPlayerMapped().getPos();
-        return new Vector3dWrapper((float)pos.getXMapped(), (float)pos.getYMapped(), (float)pos.getZMapped());
-    }
-
-    public static Vector3dWrapper playerBlockPos() {
-        return new Vector3dWrapper(MinecraftClient.getInstance().getPlayerMapped().getBlockPos());
-    }
-
-    public static String playerName() {
-        return MinecraftClient.getInstance().getPlayerMapped().getGameProfile().getName();
-    }
-
-    public static boolean isHoldingItem(String id) {
-        Item itm = LoaderImpl.getItemFromId(new Identifier(id));
-        if(itm == null) return false;
-        return MinecraftClient.getInstance().getPlayerMapped().isHolding(itm);
+    public PlayerEntityWrapper localPlayer() {
+        ClientPlayerEntity clientPlayerEntity = MinecraftClient.getInstance().getPlayerMapped();
+        if(clientPlayerEntity == null) return null;
+        return new PlayerEntityWrapper(PlayerEntity.cast(clientPlayerEntity));
     }
 
     public static Integer getScoreboardScore(String objectiveName, String playerName) {
@@ -90,26 +78,6 @@ public class MinecraftClientUtil {
 
     public static boolean gamePaused() {
         return MinecraftClient.getInstance().isPaused();
-    }
-
-    public static ItemStackWrapper mainHandItem() {
-        ItemStackWrapper itemStackWrapper = new ItemStackWrapper(MinecraftClient.getInstance().getPlayerMapped().getMainHandStack());
-        return itemStackWrapper.empty() ? null : itemStackWrapper;
-    }
-
-    public static ItemStackWrapper offHandItem() {
-        ItemStackWrapper itemStackWrapper = new ItemStackWrapper(MinecraftClient.getInstance().getPlayerMapped().getOffHandStack());
-        return itemStackWrapper.empty() ? null : itemStackWrapper;
-    }
-
-    public static ItemStackWrapper itemHeld() {
-        ItemStackWrapper mainHandItem = mainHandItem();
-        if(mainHandItem != null) return mainHandItem;
-
-        ItemStackWrapper offHandItem = offHandItem();
-        if(offHandItem != null) return offHandItem;
-
-        return null;
     }
 
     public static void displayMessage(String message, boolean actionBar) {

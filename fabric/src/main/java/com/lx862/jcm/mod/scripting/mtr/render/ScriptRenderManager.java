@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.scripting.mtr.render;
 import com.lx862.jcm.mod.scripting.jcm.pids.PIDSDrawCall;
 import com.lx862.jcm.mod.scripting.jcm.pids.PIDSScriptContext;
 import com.lx862.mtrscripting.api.ScriptResultCall;
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -33,7 +33,7 @@ public class ScriptRenderManager {
         this.drawCalls.add(call);
     }
 
-    public void invoke(World world, Vector3dWrapper basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+    public void invoke(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         List<ScriptResultCall> drawCallsSaved = new ArrayList<>(drawCalls);
         List<ScriptResultCall> modelDrawCalls = drawCallsSaved.stream().filter(e -> !(e instanceof PIDSDrawCall)).collect(Collectors.toList());
         List<ScriptResultCall> pidsDrawCalls = drawCallsSaved.stream().filter(e -> e instanceof PIDSDrawCall).collect(Collectors.toList());

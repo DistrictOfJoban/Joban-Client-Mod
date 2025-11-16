@@ -6,7 +6,7 @@ import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
 import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.util.Matrices;
 import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;
-import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.mapping.holder.Identifier;
 
@@ -52,7 +52,7 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public void playCarSound(Identifier sound, int carIndex, float x, float y, float z, float volume, float pitch) {
-        carSoundManagers[carIndex].playSound(sound, new Vector3dWrapper(x, y, z), volume, pitch);
+        carSoundManagers[carIndex].playSound(sound, new ScriptVector3f(x, y, z), volume, pitch);
     }
 
     public void playAnnSound(Identifier sound, float volume, float pitch) {

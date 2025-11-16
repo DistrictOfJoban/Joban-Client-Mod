@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
 import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.core.ScriptInstance;
+import org.mtr.mapping.holder.MinecraftClient;
 
 import java.util.Objects;
 
@@ -36,6 +37,9 @@ public class EyeCandyScriptInstance extends ScriptInstance<EyecandyBlockEntityWr
     }
 
     public boolean shouldInvalidate() {
-        return be.getWorld().getBlockEntity(be.blockPos().rawBlockPos()) == null || !Objects.equals(be.getModelId(), getScriptContext().getName());
+        boolean beRemoved = be.removed() || be.getWorld().getBlockEntity(be.blockPos().rawBlockPos()) == null;
+        boolean mismatchedModel = !Objects.equals(be.getModelId(), getScriptContext().getName());
+        boolean notInGame = MinecraftClient.getInstance().getWorldMapped() == null;
+        return notInGame || beRemoved || mismatchedModel;
     }
 }

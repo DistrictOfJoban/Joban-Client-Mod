@@ -2,6 +2,7 @@ package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptContext;
+import com.lx862.jcm.mod.scripting.mtr.eyecandy.event.BlockUseEvent;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import com.lx862.mtrscripting.data.UniqueKey;
 import org.mtr.mapping.holder.*;
@@ -15,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = BlockEyeCandy.class, remap = false)
 public class BlockEyecandyMixin extends BlockWaterloggable {
+
     public BlockEyecandyMixin(BlockSettings blockSettings) {
         super(blockSettings);
     }
@@ -42,15 +44,18 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
         return super.getOutlineShape2(state, world, pos, context);
     }
 
-    @Inject(method = "onUse2", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "onUse2", at = @At("RETURN"), cancellable = true)
     public void jcm$onEyecandyBlockUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit, CallbackInfoReturnable<ActionResult> cir) {
+        ActionResult returnValue = cir.getReturnValue();
+        if(returnValue == ActionResult.SUCCESS) return;
+
         if(world.isClient()) {
             if(!player.isHolding(Items.BRUSH.get())) {
-                BlockEntity blockEntity = world.getBlockEntity(pos);
+                org.mtr.mapping.holder.BlockEntity blockEntity = world.getBlockEntity(pos);
                 if (blockEntity != null && blockEntity.data instanceof BlockEyeCandy.BlockEntity) {
                     ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity)blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
                     if(scriptInstance != null && scriptInstance.getScriptContext() instanceof EyeCandyScriptContext) {
-                        ((EyeCandyScriptContext)scriptInstance.getScriptContext()).events().triggerOnBlockUse();
+                        ((EyeCandyScriptContext)scriptInstance.getScriptContext()).events().onBlockUse.trigger(new BlockUseEvent(player, player.getStackInHand(hand)));
                         cir.setReturnValue(ActionResult.SUCCESS);
                     }
                 }

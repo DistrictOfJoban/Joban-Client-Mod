@@ -49,7 +49,7 @@ public class JCMScripting {
     public static void tick() {
         int clearedInstance = scriptManager.getInstanceManager().clearDeadInstance();
         if(clearedInstance > 0 && JCMClient.getConfig().debug) {
-            JCMLogger.info("Removed {} dead PIDS script instance", clearedInstance);
+            JCMLogger.info("Removed {} dead JCM script instance", clearedInstance);
         }
     }
 

@@ -2,6 +2,7 @@ package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptContext;
+import com.lx862.jcm.mod.scripting.mtr.eyecandy.event.BlockUseEvent;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import com.lx862.mtrscripting.data.UniqueKey;
 import org.mtr.mapping.holder.*;
@@ -54,7 +55,7 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
                 if (blockEntity != null && blockEntity.data instanceof BlockEyeCandy.BlockEntity) {
                     ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity)blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
                     if(scriptInstance != null && scriptInstance.getScriptContext() instanceof EyeCandyScriptContext) {
-                        ((EyeCandyScriptContext)scriptInstance.getScriptContext()).events().triggerOnBlockUse();
+                        ((EyeCandyScriptContext)scriptInstance.getScriptContext()).events().onBlockUse.trigger(new BlockUseEvent(player, player.getStackInHand(hand)));
                         cir.setReturnValue(ActionResult.SUCCESS);
                     }
                 }
