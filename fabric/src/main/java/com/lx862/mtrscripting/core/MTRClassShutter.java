@@ -66,6 +66,7 @@ public class MTRClassShutter implements ClassShutter {
     private boolean isClassAllowed(String className) {
         if(!shutterEnabled) return true;
         if(className.startsWith("com.lx862.mtrscripting.util")) return true;
+        if(className.startsWith("com.lx862.mtrscripting.wrapper")) return true;
         if(className.startsWith("com.lx862.mtrscripting.lib.org.mozilla")) return true;
 
         for(ClassRule cs : deniedScriptClasses) {
