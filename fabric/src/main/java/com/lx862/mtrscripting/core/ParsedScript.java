@@ -51,7 +51,7 @@ public class ParsedScript {
 
             scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
             scope.put("Vector3f", scope, new NativeJavaClass(scope, Vector3dWrapper.class));
-
+            scope.put("VoxelShape", scope, new NativeJavaClass(scope, VoxelShapeWrapper.class));
             scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientUtil.class));
 
             scriptManager.onParseScript(contextName, cx, scope);

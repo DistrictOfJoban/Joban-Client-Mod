@@ -31,6 +31,7 @@
 - **Eyecandy Scripting**
 - - Adapt RenderManager & SoundManager, can be accessed by `ctx.renderManager()` & `ctx.soundManager()`, see above.
 - - Add `EyecandyBlockEntity.pos()` and `EyecandyBlockEntity.blockPos()` to determine where the eyecandy block is placed.
+- - Allow setting custom outline shape with `ctx.setOutlineShape(shape: VoxelShapeWrapper)`
 - - Add block use events for eyecandy
 - - - Call `ctx.events().blockUse.changedTo(true)` to check
 - - - **Important:** Acknowledge the event with `ctx.events().accept()` afterwards at suitable interval so the internal event state is reset.
@@ -42,6 +43,7 @@
 - **Misc. Scripting Additions**
 - - Add `Vector3f` for performing position-related operation.
 - - Add `ItemStackWrapper` to receive basic information about an item stack.
+- - Add `VoxelShapeWrapper` to create outline shapes for eyecandy.
 - - Add `MinecraftClient.getScoreboardScore(objective: string, playerName: string)` to obtain the scoreboard score of a player.
 - - Add `MinecraftClient.isHoldingItem(id: string)` to determine if the current player is holding an item with the corresponding item id.
 - - Add `MinecraftClient.mainHandItem(): ItemStackWrapper`, `MinecraftClient.offHandItem(): ItemStackWrapper` and `MinecraftClient.itemHeld(): ItemStackWrapper` to receive stack in player's hand.

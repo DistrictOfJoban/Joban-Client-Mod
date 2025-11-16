@@ -5,7 +5,9 @@ import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;
 import com.lx862.mtrscripting.util.Matrices;
 import com.lx862.mtrscripting.util.Vector3dWrapper;
+import com.lx862.mtrscripting.util.VoxelShapeWrapper;
 import org.mtr.mapping.holder.Identifier;
+import org.mtr.mapping.holder.VoxelShape;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,15 +17,25 @@ public class EyeCandyScriptContext extends MTRScriptContext {
     private final EyecandyBlockEntityWrapper blockEntity;
     private final List<ModelDrawCall> drawCalls = new ArrayList<>();
     private final EyecandyEvents events;
+    private VoxelShapeWrapper outlineShape;
 
     public EyeCandyScriptContext(EyecandyBlockEntityWrapper blockEntity) {
         super(blockEntity.getModelId());
         this.blockEntity = blockEntity;
         this.events = new EyecandyEvents();
+        this.outlineShape = null;
     }
 
     public EyecandyEvents events() {
         return events;
+    }
+
+    public VoxelShape getOutlineShape() {
+        return this.outlineShape == null ? null : this.outlineShape.impl();
+    }
+
+    public void setOutlineShape(VoxelShapeWrapper voxelShapeWrapper) {
+        this.outlineShape = voxelShapeWrapper;
     }
 
     public void drawModel(ScriptedModel model, Matrices matrices) {
