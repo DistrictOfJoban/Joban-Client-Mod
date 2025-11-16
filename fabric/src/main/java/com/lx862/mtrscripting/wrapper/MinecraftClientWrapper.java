@@ -81,10 +81,18 @@ public class MinecraftClientWrapper {
     }
 
     public static void displayMessage(String message, boolean actionBar) {
+        displayMessage(Text.cast(TextHelper.literal(message)), actionBar);
+    }
+
+    public static void displayMessage(VanillaTextWrapper vanillaTextWrapper, boolean actionBar) {
+        displayMessage(Text.cast(vanillaTextWrapper.impl()), actionBar);
+    }
+
+    private static void displayMessage(Text text, boolean actionBar) {
         final ClientPlayerEntity player = MinecraftClient.getInstance().getPlayerMapped();
         if (player != null) {
             MinecraftClient.getInstance().execute(() -> {
-                player.sendMessage(Text.cast(TextHelper.literal(message)), actionBar);
+                player.sendMessage(text, actionBar);
             });
         }
     }

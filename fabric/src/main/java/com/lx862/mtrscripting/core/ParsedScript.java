@@ -5,6 +5,7 @@ import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.util.*;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
 import com.lx862.mtrscripting.wrapper.MinecraftClientWrapper;
+import com.lx862.mtrscripting.wrapper.VanillaTextWrapper;
 import com.lx862.mtrscripting.wrapper.VoxelShapeWrapper;
 import org.mtr.mapping.holder.Identifier;
 
@@ -39,23 +40,8 @@ public class ParsedScript {
             cx.setClassShutter(scriptManager.getClassShutter());
             scope = new ImporterTopLevel(cx);
 
-            scope.put("include", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("includeScript", Object.class), "includeScript"));
-            scope.put("print", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("print", Object[].class), "print"));
-            scope.put("Resources", scope, new NativeJavaClass(scope, ScriptResourceUtil.class));
-            scope.put("GraphicsTexture", scope, new NativeJavaClass(scope, GraphicsTexture.class));
-
-            scope.put("Timing", scope, new NativeJavaClass(scope, TimingUtil.class));
-            scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTracker.class));
-            scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTracker.class));
-            scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimit.class));
-            scope.put("Networking", scope, new NativeJavaClass(scope, NetworkingUtil.class));
-            scope.put("Files", scope, new NativeJavaClass(scope, FilesUtil.class));
-
-            scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
-            scope.put("Vector3f", scope, new NativeJavaClass(scope, ScriptVector3f.class));
-            scope.put("VoxelShape", scope, new NativeJavaClass(scope, VoxelShapeWrapper.class));
-            scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientWrapper.class));
-
+            /* Init global variables */
+            initBasicContextVariables(scope);
             scriptManager.onParseScript(contextName, cx, scope);
 
             cx.evaluateString(scope, "\"use strict\";", "", 1, null);
@@ -82,6 +68,29 @@ public class ParsedScript {
             ScriptResourceUtil.activeScope = null;
             Context.exit();
         }
+    }
+
+    /**
+     * Expose basic methods/classes to provide a useful environment for script developer
+     */
+    private static void initBasicContextVariables(Scriptable scope) throws NoSuchMethodException {
+        scope.put("include", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("includeScript", Object.class), "includeScript"));
+        scope.put("print", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("print", Object[].class), "print"));
+        scope.put("Resources", scope, new NativeJavaClass(scope, ScriptResourceUtil.class));
+        scope.put("GraphicsTexture", scope, new NativeJavaClass(scope, GraphicsTexture.class));
+
+        scope.put("Timing", scope, new NativeJavaClass(scope, TimingUtil.class));
+        scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTracker.class));
+        scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTracker.class));
+        scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimit.class));
+        scope.put("Networking", scope, new NativeJavaClass(scope, NetworkingUtil.class));
+        scope.put("Files", scope, new NativeJavaClass(scope, FilesUtil.class));
+
+        scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
+        scope.put("Vector3f", scope, new NativeJavaClass(scope, ScriptVector3f.class));
+        scope.put("VoxelShape", scope, new NativeJavaClass(scope, VoxelShapeWrapper.class));
+        scope.put("VanillaText", scope, new NativeJavaClass(scope, VanillaTextWrapper.class));
+        scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientWrapper.class));
     }
 
     private void tryAndAddFunction(String name, Scriptable scope, List<Function> listToAdd) {

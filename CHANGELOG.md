@@ -33,22 +33,27 @@
 - Provide generic ways to draw 3D models or quads onto the Minecraft world
 - `ctx.drawModel()`, `ctx.drawCarModel()` and `ctx.drawConnModel()` has been deprecated in favor of RenderManager.
 - **GraphicsTexture.upload()** are now more optimized, should be mostly on-par with NTE.
+
 ### Eyecandy Scripting
 - Adapt RenderManager & SoundManager, can be accessed by `ctx.renderManager()` & `ctx.soundManager()`, see above.
 - Add `EyecandyBlockEntity.pos()` and `EyecandyBlockEntity.blockPos()` to determine where the eyecandy block is placed.
-- Allow setting custom outline shape with `ctx.setOutlineShape(shape: VoxelShapeWrapper)`
+- Allow setting custom outline shape with `ctx.setOutlineShape(shape: VoxelShape)`
 - Add block use events for eyecandy
 - - Call `ctx.events().blockUse.occurred()` to check, and `ctx.events().blockUse.detail()` for event detail.
 - - **Important:** Acknowledge events with `ctx.events().processed()` afterwards at suitable interval so the internal event state is reset.
+
 ### PIDS Scripting
 - Adapt RenderManager & SoundManager, can be accessed by `ctx.renderManager()` & `ctx.soundManager()`, see above.
 - - This grants PIDS scripts the ability to render 3D OBJ model. It is advised to use this in conjunction with PIDS Projector, which is an invisible block.
-- Add `PIDSWrapper.blockPos()` to determine where the PIDS block is placed.
-- Add `PIDSWrapper.isKeyBlock()` to determine if the current block is a unique block within a PIDS pair (e.g. Identify 1 side of a dual-sided PIDS)
+- Add `PIDSBlockEntity.blockPos()` to determine where the PIDS block is placed.
+- Add `PIDSBlockEntity.isKeyBlock()` to determine if the current block is a unique block within a PIDS pair (e.g. Identify 1 side of a dual-sided PIDS)
 
 ### Misc. Scripting Additions
 - - Add `Vector3f` for performing position-related operation.
-- - Add `MinecraftClient.localPlayer(): PlayerEntityWrapper` to retrieve more detailed info of the client player.
+- - Add `VanillaText` for creating and styling minecraft-based text. (Bold/Italic/Colors etc.)
+- - - Add `MinecraftClient.displayMessage(text: VanillaText, actionBar: boolean)` overload to display these text in chat or action bar, in addition to the `string` variant.
+- - - This can be considered a substitute of `ComponentUtil` in ANTE.
+- - Add `MinecraftClient.localPlayer(): PlayerEntity` to retrieve more detailed info of the client player.
 - - Add `MinecraftClient.getScoreboardScore(objective: string, playerName: string)` to obtain the scoreboard score of a player.
 - - Add `MinecraftClient.blockLightAt(pos: vector3f)`, `MinecraftClient.skyLightAt(pos: vector3f)`, `MinecraftClient.lightLevelAt(pos: vector3f)` to determine light level in the world.
 - - Add `MinecraftClient.gamePaused(): boolean` to determine if the game has been paused.
