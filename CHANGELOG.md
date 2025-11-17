@@ -32,15 +32,14 @@
 - Added a new `RenderManager` class for all types of scripting.
 - Provide generic ways to draw 3D models or quads onto the Minecraft world
 - `ctx.drawModel()`, `ctx.drawCarModel()` and `ctx.drawConnModel()` has been deprecated in favor of RenderManager.
-- **GraphicsTexture.upload()** are now more optimized, should be mostly on-par with NTE.
 
 ### Eyecandy Scripting
 - Adapt RenderManager & SoundManager, can be accessed by `ctx.renderManager()` & `ctx.soundManager()`, see above.
 - Add `EyecandyBlockEntity.pos()` and `EyecandyBlockEntity.blockPos()` to determine where the eyecandy block is placed.
 - Allow setting custom outline shape with `ctx.setOutlineShape(shape: VoxelShape)`
 - Add block use events for eyecandy
-- - Call `ctx.events().blockUse.occurred()` to check, and `ctx.events().blockUse.detail()` for event detail.
-- - **Important:** Acknowledge events with `ctx.events().processed()` afterwards at suitable interval so the internal event state is reset.
+- - Call `ctx.events().onBlockUse.occurred()` to check, and `ctx.events().onBlockUse.detail()` for event detail.
+- - **Important:** Acknowledge events with `ctx.events().handled()` afterwards at suitable interval so the internal event state is reset.
 
 ### PIDS Scripting
 - Adapt RenderManager & SoundManager, can be accessed by `ctx.renderManager()` & `ctx.soundManager()`, see above.
@@ -62,16 +61,27 @@
 ## Changes
 - **Scripting:**
 - - `StateTracker` now accepts non-string values.
+- - `GraphicsTexture.upload()` are now more optimized, should be mostly on-par with NTE.
 
 ## Fixes
 - Fix script not disposed after leaving the game
 
+## Documentations
+- Add [Scripting Guidelines](https://jcm.joban.org/latest/dev/scripting/guidelines) page
+- Add `Vector3f` to [Math Utilities](https://jcm.joban.org/latest/dev/scripting/math) page
+- `ResourceLocation` has now been renamed to `Identifier` across the documentations.
+- Remove the `wrapper` suffix for class names, as they should be transparent to developers
+- - `PIDSWrapper` has been renamed to `PIDSBlockEntity`
+- - `ArrivalsWrapper` has been renamed to `ArrivalEntries`
+- - `ArrivalWrapper` has been renamed to `ArrivalEntry`
+
 ## Important Note
-### For Minecraft 1.16.5 players
-Minecraft 1.16.5 has already been released for well over 4 years. While there are many efforts in the codebase to make JCM available for 1.16.5, it also puts a burden to maintain them. 
-- **For now** we will maintain the build for Minecraft 1.16.5, however feature parity cannot be guarenteed.
-- Players who are still using Minecraft 1.16.5 should consider upgrading to any newer version.
-- When demands have become low enough, we may consider dropping 1.16.5 builds all-together.
+### For Minecraft 1.16 players
+Minecraft 1.16 has already been released for well over 4 years. While there are many efforts in the codebase to make JCM available for 1.16, it also puts a burden to maintain them.
+- Minecraft 1.16 will no longer receive first-class support like other versions.
+- Feature parity will no longer be maintained. New script features/capabilities (Especially scripting engine related) may not be available on 1.16.
+- Players who are still using Minecraft 1.16 should consider upgrading to any newer version.
+- When demands have become low enough, we may consider dropping all 1.16 builds and CI all-together.
 
 ### For other players
 This is a beta release primarily for script developers to play around and give feedback on.  

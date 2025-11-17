@@ -15,8 +15,8 @@ public class PlayerEntityWrapper extends EntityWrapper {
         return playerEntity.getGameProfile().getName();
     }
 
-    public boolean isHoldingItem(String id) {
-        Item itm = LoaderImpl.getItemFromId(new Identifier(id));
+    public boolean isHoldingItem(Identifier id) {
+        Item itm = LoaderImpl.getItemFromId(id);
         if(itm == null) return false;
         return playerEntity.isHolding(itm);
     }
