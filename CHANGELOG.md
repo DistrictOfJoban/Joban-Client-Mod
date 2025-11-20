@@ -62,6 +62,7 @@
 - **Scripting:**
 - - `StateTracker` now accepts non-string values.
 - - `GraphicsTexture.upload()` are now more optimized, should be mostly on-par with NTE.
+- - The `Networking` class in JCM will no longer overwrite the User-Agent header if scripting restrictions is disabled.
 
 ## Fixes
 - Fix script not disposed after leaving the game

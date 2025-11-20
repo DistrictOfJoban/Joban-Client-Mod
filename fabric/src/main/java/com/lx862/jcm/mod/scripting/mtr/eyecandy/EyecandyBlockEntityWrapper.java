@@ -1,9 +1,12 @@
 package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
+import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.BlockPos;
+import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mod.block.BlockEyeCandy;
+import org.mtr.mod.block.IBlock;
 
 public class EyecandyBlockEntityWrapper {
     private final BlockEyeCandy.BlockEntity be;
@@ -52,6 +55,10 @@ public class EyecandyBlockEntityWrapper {
 
     public ScriptVector3f blockPos() {
         return new ScriptVector3f(be.getPos2());
+    }
+
+    public Direction facing() {
+        return IBlock.getStatePropertySafe(be.getCachedState2(), BlockProperties.FACING);
     }
 
     /**

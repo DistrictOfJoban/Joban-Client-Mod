@@ -1,8 +1,10 @@
 package com.lx862.mtrscripting.wrapper;
 
 import org.mtr.mapping.holder.Block;
+import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.VoxelShape;
 import org.mtr.mapping.holder.VoxelShapes;
+import org.mtr.mod.block.IBlock;
 
 public class VoxelShapeWrapper {
     private final VoxelShape impl;
@@ -21,6 +23,10 @@ public class VoxelShapeWrapper {
 
     public static VoxelShapeWrapper create(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
         return new VoxelShapeWrapper(Block.createCuboidShape(minX, minY, minZ, maxX, maxY, maxZ));
+    }
+
+    public static VoxelShapeWrapper create(double minX, double minY, double minZ, double maxX, double maxY, double maxZ, Direction facing) {
+        return new VoxelShapeWrapper(IBlock.getVoxelShapeByDirection(minX, minY, minZ, maxX, maxY, maxZ, facing));
     }
 
     public VoxelShapeWrapper combine(VoxelShapeWrapper other) {
