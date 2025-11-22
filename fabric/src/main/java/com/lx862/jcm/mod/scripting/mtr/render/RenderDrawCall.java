@@ -27,4 +27,10 @@ public abstract class RenderDrawCall<T extends RenderDrawCall> extends ScriptRes
         }
         storedMatrixTransformations.add(gh -> gh.translate(basePos.x(), basePos.y(), basePos.z()));
     }
+
+    /**
+     * Called when added by RenderManager, calls should check and throw exceptions at this point if something isn't right.
+     */
+    public void validate() {
+    }
 }

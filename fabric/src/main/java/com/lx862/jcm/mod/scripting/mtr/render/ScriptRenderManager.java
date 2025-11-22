@@ -30,6 +30,9 @@ public class ScriptRenderManager {
      * Although user may also decide not to use method chaining and manually invoke this with their PIDS draw call instead.
      * */
     public void queue(ScriptResultCall call) {
+        if(call instanceof RenderDrawCall<?>) { // HACK: Should migrate PIDSDrawCall to inherit RenderDrawCall
+            ((RenderDrawCall)call).validate();
+        }
         this.drawCalls.add(call);
     }
 

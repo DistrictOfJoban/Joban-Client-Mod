@@ -28,4 +28,11 @@ public class ModelDrawCall extends RenderDrawCall<ModelDrawCall> {
         super.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
         this.model.draw(storedMatrixTransformations, light);
     }
+
+    @Override
+    public void validate() {
+        if(this.model == null) {
+            throw new IllegalStateException("The model object is not specified!");
+        }
+    }
 }
