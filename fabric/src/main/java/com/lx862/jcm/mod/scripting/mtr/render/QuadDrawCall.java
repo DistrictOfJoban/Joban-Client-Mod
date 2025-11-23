@@ -96,6 +96,19 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
         return this;
     }
 
+    public QuadDrawCall copy() {
+        QuadDrawCall copy = new QuadDrawCall()
+                .texture(this.textureId)
+                .corner1(new ScriptVector3f(this.quadDefinition.x1, this.quadDefinition.y1, this.quadDefinition.z1))
+                .corner2(new ScriptVector3f(this.quadDefinition.x2, this.quadDefinition.y2, this.quadDefinition.z2))
+                .corner3(new ScriptVector3f(this.quadDefinition.x3, this.quadDefinition.y3, this.quadDefinition.z3))
+                .corner4(new ScriptVector3f(this.quadDefinition.x4, this.quadDefinition.y4, this.quadDefinition.z4))
+                .color(this.color)
+                .uv(this.u1, this.v1, this.u2, this.v2)
+                .renderType(this.renderType.toString());
+        return copy;
+    }
+
     @Override
     public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         super.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
@@ -103,9 +116,6 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
             graphicsHolderNew.createVertexConsumer(getRenderType(textureId));
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
             graphicsHolderNew.drawTextureInWorld(
-                    quadDefinition.x1,
-                    quadDefinition.y1,
-                    quadDefinition.z1,
                     quadDefinition.x2,
                     quadDefinition.y2,
                     quadDefinition.z2,
@@ -115,6 +125,9 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
                     quadDefinition.x4,
                     quadDefinition.y4,
                     quadDefinition.z4,
+                    quadDefinition.x1,
+                    quadDefinition.y1,
+                    quadDefinition.z1,
                     u1,
                     v1,
                     u2,

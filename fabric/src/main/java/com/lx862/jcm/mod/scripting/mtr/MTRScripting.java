@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.scripting.mtr;
 
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
+import com.lx862.jcm.mod.scripting.mtr.render.DisplayHelperCompat;
 import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.render.QuadDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.util.ModelManager;
@@ -47,6 +48,7 @@ public class MTRScripting {
             scriptable.put("QuadDrawCall", scriptable, new NativeJavaClass(scriptable, QuadDrawCall.class));
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
+            scriptable.put("DisplayHelperCompat", scriptable, new NativeJavaClass(scriptable, DisplayHelperCompat.class));
             scriptable.put("ModelManager", scriptable, new NativeJavaClass(scriptable, ModelManager.class));
         });
     }

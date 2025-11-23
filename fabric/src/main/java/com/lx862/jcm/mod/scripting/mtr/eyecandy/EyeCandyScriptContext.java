@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
 import com.lx862.jcm.mod.scripting.mtr.MTRScriptContext;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.event.EyecandyEvents;
+import com.lx862.jcm.mod.scripting.mtr.render.DisplayHelperCompat;
 import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;
 import com.lx862.mtrscripting.util.Matrices;
@@ -37,6 +38,12 @@ public class EyeCandyScriptContext extends MTRScriptContext {
 
     public void setOutlineShape(VoxelShapeWrapper voxelShapeWrapper) {
         this.outlineShape = voxelShapeWrapper;
+    }
+
+    @Deprecated
+    public void drawModel(DisplayHelperCompat displayHelperCompat, Matrices matrices) {
+        if(matrices != null) displayHelperCompat.matrices(matrices);
+        renderManager.queue(displayHelperCompat);
     }
 
     public void drawModel(ScriptedModel model, Matrices matrices) {

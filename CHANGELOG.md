@@ -48,15 +48,16 @@
 - Add `PIDSBlockEntity.isKeyBlock()` to determine if the current block is a unique block within a PIDS pair (e.g. Identify 1 side of a dual-sided PIDS)
 
 ### Misc. Scripting Additions
-- - Add `Vector3f` for performing position-related operation.
-- - Add `VanillaText` for creating and styling minecraft-based text. (Bold/Italic/Colors etc.)
-- - - Add `MinecraftClient.displayMessage(text: VanillaText, actionBar: boolean)` overload to display these text in chat or action bar, in addition to the `string` variant.
-- - - This can be considered a substitute of `ComponentUtil` in ANTE.
-- - Add `MinecraftClient.localPlayer(): PlayerEntity` to retrieve more detailed info of the client player.
-- - Add `MinecraftClient.getScoreboardScore(objective: string, playerName: string)` to obtain the scoreboard score of a player.
-- - Add `MinecraftClient.blockLightAt(pos: vector3f)`, `MinecraftClient.skyLightAt(pos: vector3f)`, `MinecraftClient.lightLevelAt(pos: vector3f)` to determine light level in the world.
-- - Add `MinecraftClient.gamePaused(): boolean` to determine if the game has been paused.
-- - Add `StateTracker.changedTo(state: any)` and `StateTracker.changedFromTo(fromState: any, toState: any)`
+- Add `display_helper.js` based on NTE's implementation. This should provide full backward compatibility for eyecandy using DisplayHelper, without manual interference needed for upgrade.
+- Add `Vector3f` for performing position-related operation.
+- Add `VanillaText` for creating and styling minecraft-based text. (Bold/Italic/Colors etc.)
+- - Add `MinecraftClient.displayMessage(text: VanillaText, actionBar: boolean)` overload to display these text in chat or action bar, in addition to the `string` variant.
+- - This can be considered a substitute of `ComponentUtil` in ANTE.
+- Add `MinecraftClient.localPlayer(): PlayerEntity` to retrieve more detailed info of the client player.
+- Add `MinecraftClient.getScoreboardScore(objective: string, playerName: string)` to obtain the scoreboard score of a player.
+- Add `MinecraftClient.blockLightAt(pos: vector3f)`, `MinecraftClient.skyLightAt(pos: vector3f)`, `MinecraftClient.lightLevelAt(pos: vector3f)` to determine light level in the world.
+- Add `MinecraftClient.gamePaused(): boolean` to determine if the game has been paused.
+- Add `StateTracker.changedTo(state: any)` and `StateTracker.changedFromTo(fromState: any, toState: any)`
 
 ## Changes
 - **Scripting:**
@@ -68,10 +69,15 @@
 - Fix script not disposed after leaving the game
 
 ## Documentations
-- Add [Scripting Guidelines](https://jcm.joban.org/latest/dev/scripting/guidelines) page
+The scripting documentation has been slightly restructured. For existing PIDS Scripting users, this may take some time to get used to!
+
+Content changes (Excluding restructuring):
+
+- Add [Scripting Guidelines](https://jcm.joban.org/latest/dev/scripting/articles/script_guidelines) page
+- Add [Migration from NTE](https://jcm.joban.org/latest/dev/scripting/articles/nte_migration) page
 - Add `Vector3f` to [Math Utilities](https://jcm.joban.org/latest/dev/scripting/math) page
 - `ResourceLocation` has now been renamed to `Identifier` across the documentations.
-- Remove the `wrapper` suffix for class names, as they should be transparent to developers
+- Remove the `wrapper` suffix for class names, as they should be transparent to script developers
 - - `PIDSWrapper` has been renamed to `PIDSBlockEntity`
 - - `ArrivalsWrapper` has been renamed to `ArrivalEntries`
 - - `ArrivalWrapper` has been renamed to `ArrivalEntry`
