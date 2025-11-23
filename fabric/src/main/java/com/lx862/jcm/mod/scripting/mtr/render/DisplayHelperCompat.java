@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DisplayHelperCompat extends RenderDrawCall<DisplayHelperCompat> {
-    private List<QuadDrawCall> quadDrawCalls;
+    private final List<QuadDrawCall> quadDrawCalls;
 
     private DisplayHelperCompat() {
         this.quadDrawCalls = new ArrayList<>();
@@ -38,6 +38,10 @@ public class DisplayHelperCompat extends RenderDrawCall<DisplayHelperCompat> {
             newDrawCalls.add(copyCall);
         }
         return new DisplayHelperCompat(newDrawCalls);
+    }
+
+    public List<RenderDrawCall<QuadDrawCall>> getDrawCalls() {
+        return new ArrayList<>(quadDrawCalls);
     }
 
     @Override

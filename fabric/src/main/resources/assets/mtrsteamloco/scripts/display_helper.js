@@ -99,3 +99,7 @@ DisplayHelper.prototype.graphicsFor = function(slotName) {
     this._graphics.setTransform(this.slotTransforms[slotName]);
     return this._graphics;
 }
+
+DisplayHelper.prototype.drawCalls = function() {
+    return this.model.getDrawCalls();
+}
