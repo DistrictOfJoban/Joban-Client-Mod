@@ -67,6 +67,8 @@
 
 ## Fixes
 - Fix script not disposed after leaving the game
+- Fix `Timing.elapsed()` only returning in-game tick values (i.e. in at least 50ms increments)
+- - This also fix `RateLimit` only allowing a max update rate of 20 times per second caused by the above.
 
 ## Documentations
 The scripting documentation has been slightly restructured. For existing PIDS Scripting users, this may take some time to get used to!

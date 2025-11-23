@@ -8,6 +8,7 @@
     "modded.mtr.BlockPIDSPoleMixin"
   ],
   "client": [
+    "modded.mtr.MainRendererMixin",
     "modded.mtr.VehicleResourceMixin",
     "modded.mtr.RenderEyeCandyMixin",
     "modded.mtr.RenderVehiclesMixin",
