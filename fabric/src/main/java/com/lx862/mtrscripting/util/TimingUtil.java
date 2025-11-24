@@ -9,24 +9,28 @@ import org.mtr.mod.InitClient;
 @SuppressWarnings("unused")
 public class TimingUtil {
     private static double totalRunningTime = 0;
-    private static double timeElapsedForScript = 0;
-    private static double frameDeltaForScript = 0;
+    private double timeElapsedForScript = 0;
+    private double frameDeltaForScript = 0;
 
     public static void update(double elapsed) {
         totalRunningTime += MinecraftClient.getInstance().isPaused() ? 0 : elapsed / 1000.0;
     }
 
-    public static void prepareForScript(ScriptInstance<?> scriptInstance) {
+    public void prepareForScript(ScriptInstance<?> scriptInstance) {
         timeElapsedForScript = totalRunningTime;
-        frameDeltaForScript = timeElapsedForScript - scriptInstance.lastExecuteTime;
+        frameDeltaForScript = totalRunningTime - scriptInstance.lastExecuteTime;
         scriptInstance.lastExecuteTime = timeElapsedForScript;
     }
 
-    public static double elapsed() {
+    public static double globalElapsed() {
+        return totalRunningTime;
+    }
+
+    public double elapsed() {
         return timeElapsedForScript;
     }
 
-    public static double delta() {
+    public double delta() {
         return frameDeltaForScript;
     }
 

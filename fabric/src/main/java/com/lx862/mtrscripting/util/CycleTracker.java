@@ -29,8 +29,8 @@ public class CycleTracker {
     private boolean firstTimeCurrentState;
 
     public void tick() {
-        double time = TimingUtil.elapsed() % cycleDuration;
-        int cycleNum = (int) (TimingUtil.elapsed() / cycleDuration);
+        double time = TimingUtil.globalElapsed() % cycleDuration;
+        int cycleNum = (int) (TimingUtil.globalElapsed() / cycleDuration);
         for (int i = offsets.length - 1; i >= 0; i--) {
             if (time >= offsets[i]) {
                 int stateNum = cycleNum * offsets.length + i;
@@ -57,7 +57,7 @@ public class CycleTracker {
     }
 
     public double stateNowDuration() {
-        return TimingUtil.elapsed() - currentStateTime;
+        return TimingUtil.globalElapsed() - currentStateTime;
     }
 
     public boolean stateNowFirst() {

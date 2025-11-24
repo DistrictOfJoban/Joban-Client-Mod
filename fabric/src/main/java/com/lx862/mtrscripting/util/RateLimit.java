@@ -12,7 +12,7 @@ public class RateLimit {
     }
 
     public boolean shouldUpdate() {
-        double now = TimingUtil.elapsed();
+        double now = TimingUtil.globalElapsed();
         if (now - lastTime > interval) {
             lastTime = now;
             return true;

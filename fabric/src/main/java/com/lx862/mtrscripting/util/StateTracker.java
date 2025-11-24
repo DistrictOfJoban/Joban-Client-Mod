@@ -15,7 +15,7 @@ public class StateTracker {
         if (!Objects.equals(newValue, currentState)) {
             lastState = currentState;
             currentState = newValue;
-            currentStateTime = TimingUtil.elapsed();
+            currentStateTime = TimingUtil.globalElapsed();
             firstTimeCurrentState = true;
         } else {
             firstTimeCurrentState = false;
@@ -31,7 +31,7 @@ public class StateTracker {
     }
 
     public double stateNowDuration() {
-        return TimingUtil.elapsed() - currentStateTime;
+        return TimingUtil.globalElapsed() - currentStateTime;
     }
 
     public boolean stateNowFirst() {
