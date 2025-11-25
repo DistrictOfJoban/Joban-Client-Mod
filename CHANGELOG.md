@@ -13,7 +13,7 @@
 ## New (Scripting Implementation)
 ### Registration
 - Eyecandy/Decoration Object scripts in the MTR 4 custom resource format can now be registered!
-- - See [documentation](https://jcm.joban.org/latest/dev/scripting/eyecandy/#registering-scripts-to-decoration-object) for details!
+- - See [documentation](https://jcm.joban.org/v2.1/dev/scripting/type/eyecandy/#registering-scripts-to-decoration-object) for details!
 - Added **Script Input** feature
 - - `scriptInput` (MTR 3/NTE/JCM) / `scripting`.`input` (MTR 4) field can now be supplied in the json entry alongside `scriptFiles` and `scriptText`.
 - - Anything within the field (JSON Object/Array/String) will be made accessible to the script via the `SCRIPT_INPUT` variable.
@@ -72,13 +72,19 @@
 - - This also fix `RateLimit` only allowing a max update rate of 20 times per second caused by the above.
 
 ## Documentations
-The scripting documentation has been slightly restructured. For existing PIDS Scripting users, this may take some time to get used to!
+As JCM v2.1 is still in beta, the documentation for the main site would continue to present v2 as the default.
 
-Content changes (Excluding restructuring):
+To view the documentation for v2.1, please use the version selector on the top left of the page to access it.
 
-- Add [Scripting Guidelines](https://jcm.joban.org/latest/dev/scripting/articles/script_guidelines) page
-- Add [Migration from NTE](https://jcm.joban.org/latest/dev/scripting/articles/nte_migration) page
-- Add `Vector3f` to [Math Utilities](https://jcm.joban.org/latest/dev/scripting/math) page
+The v2.1 scripting documentation has been slightly restructured. For existing PIDS Scripting users, this may take some time to get used to!
+
+**Content changes (Excluding restructuring):**
+
+- Add [Scripting Guidelines](https://jcm.joban.org/v2.1/dev/scripting/articles/script_guidelines) page
+- Add [Migration from NTE](https://jcm.joban.org/v2.1/dev/scripting/articles/nte_migration) page
+- Add [Script Debug Overlay](https://jcm.joban.org/v2.1/dev/scripting/articles/script_debug_overlay/) page
+- Add [Display Helper](https://jcm.joban.org/v2.1/dev/scripting/builtin/display_helper/) page (Note: This is mostly translated from NTE's documentation)
+- Add `Vector3f` to [Math Utilities](https://jcm.joban.org/v2.1/dev/scripting/math) page
 - `ResourceLocation` has now been renamed to `Identifier` across the documentations.
 - Remove the `wrapper` suffix for class names, as they should be transparent to script developers
 - - `PIDSWrapper` has been renamed to `PIDSBlockEntity`
