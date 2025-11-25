@@ -29,10 +29,10 @@ public class Events {
         });
 
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerEndClientTick(() -> {
-            if(KeyBinds.SCRIPT_DEBUG_SOURCE_PREV.wasPressed()) {
+            if(JCMClient.getConfig().debug && KeyBinds.SCRIPT_DEBUG_SOURCE_PREV.wasPressed()) {
                 ScriptDebugOverlay.previousSource();
             }
-            if(KeyBinds.SCRIPT_DEBUG_SOURCE_NEXT.wasPressed()) {
+            if(JCMClient.getConfig().debug && KeyBinds.SCRIPT_DEBUG_SOURCE_NEXT.wasPressed()) {
                 ScriptDebugOverlay.nextSource();
             }
         });
