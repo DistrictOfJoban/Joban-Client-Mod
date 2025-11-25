@@ -48,6 +48,7 @@
 - Add `PIDSBlockEntity.isKeyBlock()` to determine if the current block is a unique block within a PIDS pair (e.g. Identify 1 side of a dual-sided PIDS)
 
 ### Misc. Scripting Additions
+- Added the **Noto Sans CJK** font that were previously shipped with NTE.
 - Add `display_helper.js` based on NTE's implementation. This should provide full backward compatibility for eyecandy using DisplayHelper, without manual interference needed for upgrade.
 - Add `Vector3f` for performing position-related operation.
 - Add `VanillaText` for creating and styling minecraft-based text. (Bold/Italic/Colors etc.)
