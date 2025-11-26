@@ -88,6 +88,17 @@ public class EyecandyBlockEntityWrapper {
         return pos();
     }
 
+    public int redstoneLevel() {
+        World world = be.getWorld2();
+        if(world == null) return 0;
+        int highestRedstoneLevel = 0;
+
+        for(Direction direction : Direction.values()) {
+            highestRedstoneLevel = Math.max(highestRedstoneLevel, world.isEmittingRedstonePower(blockPos().rawBlockPos().offset(direction), direction.getOpposite()) ? 15 : 0);
+        }
+        return highestRedstoneLevel;
+    }
+
     public World getWorld() {
         return be.getWorld2();
     }
