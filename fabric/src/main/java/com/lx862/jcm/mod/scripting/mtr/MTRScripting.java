@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
  * A stub for scripting in MTR mod
  */
 public class MTRScripting {
-    public static ExecutorService scriptThread = Executors.newSingleThreadExecutor();
+    public static ExecutorService scriptThread = Executors.newFixedThreadPool(4);
     private static ScriptManager scriptManager;
 
     /**
