@@ -28,20 +28,44 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
             if(blockEntity.getWorld() != null && blockEntity.getWorld().isClient()) {
                 /* We should check with ShapeContext, but isHolding is not mapped */
                 /* Need replacing in architectury branch */
-                boolean isHoldingBrush = MinecraftClient.getInstance().getPlayerMapped() != null && !MinecraftClient.getInstance().getPlayerMapped().isHolding(Items.BRUSH.get());
+                boolean notHoldingBrush = MinecraftClient.getInstance().getPlayerMapped() != null && !MinecraftClient.getInstance().getPlayerMapped().isHolding(Items.BRUSH.get());
 
-                if(isHoldingBrush) {
+                if(notHoldingBrush) {
                     ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity) blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
                     if (scriptInstance != null && scriptInstance.getScriptContext() instanceof EyeCandyScriptContext) {
-                        VoxelShape vs = ((EyeCandyScriptContext) scriptInstance.getScriptContext()).getOutlineShape();
-                        if(vs != null) {
-                            return vs;
+                        VoxelShape shape = ((EyeCandyScriptContext) scriptInstance.getScriptContext()).getOutlineShape();
+                        if(shape != null) {
+                            return shape;
                         }
                     }
                 }
             }
         }
-        return super.getOutlineShape2(state, world, pos, context);
+        return VoxelShapes.fullCube();
+    }
+
+    @Override
+    public VoxelShape getCollisionShape2(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+        org.mtr.mapping.holder.BlockEntity blockEntity = world.getBlockEntity(pos);
+        if (blockEntity != null && blockEntity.data instanceof BlockEyeCandy.BlockEntity) {
+            if(blockEntity.getWorld() != null && blockEntity.getWorld().isClient()) {
+                /* We should check with ShapeContext, but isHolding is not mapped */
+                /* Need replacing in architectury branch */
+                boolean notHoldingBrush = MinecraftClient.getInstance().getPlayerMapped() != null && !MinecraftClient.getInstance().getPlayerMapped().isHolding(Items.BRUSH.get());
+
+                if(notHoldingBrush) {
+                    ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity) blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
+                    if (scriptInstance != null && scriptInstance.getScriptContext() instanceof EyeCandyScriptContext) {
+                        VoxelShape shape = ((EyeCandyScriptContext) scriptInstance.getScriptContext()).getCollisionShape();
+                        if(shape != null) {
+                            return shape;
+                        }
+                    }
+                }
+            }
+        }
+
+        return VoxelShapes.empty();
     }
 
     @Inject(method = "onUse2", at = @At("RETURN"), cancellable = true)

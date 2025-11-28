@@ -20,6 +20,7 @@ public class EyeCandyScriptContext extends MTRScriptContext {
     private final List<ModelDrawCall> drawCalls = new ArrayList<>();
     private final EyecandyEvents events;
     private VoxelShapeWrapper outlineShape;
+    private VoxelShapeWrapper collisionShape;
 
     public EyeCandyScriptContext(EyecandyBlockEntityWrapper blockEntity) {
         super(blockEntity.getModelId());
@@ -36,8 +37,19 @@ public class EyeCandyScriptContext extends MTRScriptContext {
         return this.outlineShape == null ? null : this.outlineShape.impl();
     }
 
+    public VoxelShape getCollisionShape() {
+        return this.collisionShape == null ? null : this.collisionShape.impl();
+    }
+
     public void setOutlineShape(VoxelShapeWrapper voxelShapeWrapper) {
         this.outlineShape = voxelShapeWrapper;
+    }
+
+    public void setCollisionShape(VoxelShapeWrapper voxelShapeWrapper) {
+        if(voxelShapeWrapper.impl().getBoundingBox().getMaxYMapped() > 1.5) {
+            throw new IllegalStateException("Collision shape must not be larger than 1.5 blocks (24 unit)!");
+        }
+        this.collisionShape = voxelShapeWrapper;
     }
 
     @Deprecated
