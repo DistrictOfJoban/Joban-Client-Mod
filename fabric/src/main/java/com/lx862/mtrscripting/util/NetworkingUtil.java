@@ -34,6 +34,8 @@ public class NetworkingUtil {
         try (InputStream is = urlConnection.getInputStream()) {
             String str = IOUtils.toString(is, StandardCharsets.UTF_8);
             return new NetworkResponse<>(str, urlConnection.getHeaderFields(), urlConnection.getResponseCode());
+        } catch (IOException e) {
+            return new NetworkResponse<>(null, null, -1, e);
         }
     }
 
@@ -43,6 +45,8 @@ public class NetworkingUtil {
         processRequestObject(requestObject, urlConnection);
         try(InputStream is = urlConnection.getInputStream()) {
             return new NetworkResponse<>(ImageIO.read(is), urlConnection.getHeaderFields(), urlConnection.getResponseCode());
+        } catch (IOException e) {
+            return new NetworkResponse<>(null, null, -1, e);
         }
     }
 
