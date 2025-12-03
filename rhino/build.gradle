@@ -4,7 +4,7 @@ plugins {
 }
 
 def useLatestRhino = (rootProject.properties.minecraft_version as String).startsWith("1.16") ? false : true
-def rhinoVersion = useLatestRhino ? "1_8_0" : "1_7_15"
+def rhinoVersion = useLatestRhino ? "1_8_1" : "1_7_15_1"
 def rhinoExist = project.file("src/main/java").exists()
 def shadowPath = ["com", "lx862", "mtrscripting", "lib", "org", "mozilla"]
 
