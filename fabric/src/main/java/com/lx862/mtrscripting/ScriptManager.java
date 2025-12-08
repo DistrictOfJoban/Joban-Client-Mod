@@ -22,15 +22,18 @@ public class ScriptManager {
     private final MTRClassShutter classShutter;
 
     private final ScriptInstanceManager instanceManager;
-    private ExecutorService scriptThread;
+    private final ExecutorService scriptThread;
+    private final ExecutorService scriptThreadMultithreaded;
 
     /**
      * Create a new script manager
-     * @param scriptThread - An ExecutorService where script execution will be passed to.
+     * @param executorService - An ExecutorService with a fixed thread poll of 1 thread, where script execution will be passed to.
+     * @param multiThreadedExecutorService - An ExecutorService that contains more than 1 thread, where script execution will be passed to.
      */
-    public ScriptManager(ExecutorService scriptThread) {
+    public ScriptManager(ExecutorService executorService, ExecutorService multiThreadedExecutorService) {
         this.instanceManager = new ScriptInstanceManager();
-        this.scriptThread = scriptThread;
+        this.scriptThread = executorService;
+        this.scriptThreadMultithreaded = multiThreadedExecutorService == null ? executorService : multiThreadedExecutorService;
         this.classShutter = new MTRClassShutter();
     }
 
@@ -60,9 +63,9 @@ public class ScriptManager {
         return this.classShutter;
     }
 
-    public ParsedScript parseScript(String scriptName, String contextName, List<ScriptContent> scripts) {
+    public ParsedScript parseScript(String scriptName, String contextName, List<ScriptContent> scripts, boolean multiThreaded) {
         try {
-            return new ParsedScript(this, scriptName, contextName, scripts);
+            return new ParsedScript(this, scriptName, contextName, scripts, multiThreaded);
         } catch (NoSuchMethodException e) {
             ScriptManager.LOGGER.error("[JCM Scripting] Fatal error: Cannot find required java method to add to script!", e);
             return null;
@@ -76,7 +79,7 @@ public class ScriptManager {
     }
 
     /** Submit a task to the script thread executor */
-    public Future<?> submitScriptTask(Runnable runnable) {
-        return scriptThread.submit(runnable);
+    public Future<?> submitScriptTask(Runnable runnable, boolean multiThreaded) {
+        return (multiThreaded ? scriptThreadMultithreaded : scriptThread).submit(runnable);
     }
 }

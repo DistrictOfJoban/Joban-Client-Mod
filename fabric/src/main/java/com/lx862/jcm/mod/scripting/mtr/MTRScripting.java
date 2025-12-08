@@ -22,14 +22,15 @@ import java.util.concurrent.Executors;
  * A stub for scripting in MTR mod
  */
 public class MTRScripting {
-    public static ExecutorService scriptThread = Executors.newFixedThreadPool(4);
+    public static ExecutorService scriptSingleThread = Executors.newFixedThreadPool(1);
+    public static ExecutorService scriptMultiThread = Executors.newFixedThreadPool(4);
     private static ScriptManager scriptManager;
 
     /**
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
-        if(scriptManager == null) scriptManager = new ScriptManager(scriptThread);
+        if(scriptManager == null) scriptManager = new ScriptManager(scriptSingleThread, scriptMultiThread);
         scriptManager.getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
 
         String mtrModVersion = null;

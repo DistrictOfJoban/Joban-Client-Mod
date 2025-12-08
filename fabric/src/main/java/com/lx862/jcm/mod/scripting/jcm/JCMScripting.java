@@ -24,7 +24,7 @@ public class JCMScripting {
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
-        if(scriptManager == null) scriptManager = new ScriptManager(MTRScripting.scriptThread);
+        if(scriptManager == null) scriptManager = new ScriptManager(MTRScripting.scriptSingleThread, MTRScripting.scriptMultiThread);
         scriptManager.getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
 
         ScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);

@@ -25,16 +25,18 @@ public class ParsedScript {
     private final ScriptManager scriptManager;
     private final Scriptable scope;
     private final TimingUtil timingUtil;
+    private final boolean multiThreaded;
     private Exception capturedScriptException = null;
     private long lastFailedTime = -1;
 
-    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scripts) throws NoSuchMethodException {
+    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scripts, boolean multiThreaded) throws NoSuchMethodException {
         this.timingUtil = new TimingUtil();
         this.displayName = displayName;
         this.scriptManager = scriptManager;
         this.createFunctions = new ArrayList<>();
         this.renderFunctions = new ArrayList<>();
         this.disposeFunctions = new ArrayList<>();
+        this.multiThreaded = multiThreaded;
 
         try {
             Context cx = Context.enter();
@@ -133,7 +135,7 @@ public class ParsedScript {
                 Context.exit();
             }
             finishCallback.run();
-        });
+        }, multiThreaded);
     }
 
     public Future<?> invokeCreateFunctions(ScriptInstance<?> instance, Runnable finishCallback) {

@@ -8,7 +8,7 @@ import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
-public abstract class RenderDrawCall<T extends RenderDrawCall> extends ScriptResultCall {
+public abstract class RenderDrawCall<T extends RenderDrawCall<?>> extends ScriptResultCall {
     protected StoredMatrixTransformations storedMatrixTransformations;
 
     public T matrices(Matrices matrices) {
@@ -31,6 +31,5 @@ public abstract class RenderDrawCall<T extends RenderDrawCall> extends ScriptRes
     /**
      * Called when added by RenderManager, calls should check and throw exceptions at this point if something isn't right.
      */
-    public void validate() {
-    }
+    public abstract void validate();
 }
