@@ -131,9 +131,6 @@ public class MTRContentResourceManager {
         final String scriptFilesKey = isParsingMTR4 ? "scriptLocations" : useSnakeCase ? "script_files" : "scriptFiles";
         final String scriptTextsKey = isParsingMTR4 ? "prependExpressions" : useSnakeCase ? "script_texts" : "scriptTexts";
         final String scriptInputKey = isParsingMTR4 ? "input" : "scriptInput";
-        final String scriptThreadedKey = isParsingMTR4 ? "multithread" : "scriptMultithreaded";
-        final boolean scriptThreaded;
-
 
         if (jsonObject.has(scriptFilesKey) || jsonObject.has(scriptTextsKey)) {
             // Parse script input and pass to the script
@@ -141,13 +138,6 @@ public class MTRContentResourceManager {
                 String str = jsonObject.get(scriptInputKey).toString();
                 Identifier scriptLocationSource = new Identifier("mtr", "internal/script_input/" + contextName.toLowerCase() + "/" + name + "/" + id);
                 scripts.add(new ScriptContent(scriptLocationSource, "const SCRIPT_INPUT = " + str + ";"));
-            }
-
-            if(jsonObject.has(scriptThreadedKey)) {
-                scriptThreaded = jsonObject.get(scriptThreadedKey).getAsBoolean();
-            } else {
-                // Default threaded for MTR 4 entry
-                scriptThreaded = isParsingMTR4;
             }
 
             if(jsonObject.has(scriptTextsKey)) {
@@ -172,11 +162,9 @@ public class MTRContentResourceManager {
                     scripts.add(new ScriptContent(scriptLocationSource, scriptText));
                 }
             }
-        } else {
-            scriptThreaded = false;
         }
 
-        return scripts.isEmpty() ? null : MTRScripting.getScriptManager().parseScript(id + " (" + name + ")", contextName, scripts, scriptThreaded);
+        return scripts.isEmpty() ? null : MTRScripting.getScriptManager().parseScript(id + " (" + name + ")", contextName, scripts);
     }
 
     public static ParsedScript getEyecandyScript(String modelId) {

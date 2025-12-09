@@ -11,6 +11,7 @@ import org.mtr.mapping.holder.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
@@ -25,18 +26,18 @@ public class ParsedScript {
     private final ScriptManager scriptManager;
     private final Scriptable scope;
     private final TimingUtil timingUtil;
-    private final boolean multiThreaded;
+    private final ExecutorService executorService;
     private Exception capturedScriptException = null;
     private long lastFailedTime = -1;
 
-    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scripts, boolean multiThreaded) throws NoSuchMethodException {
+    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scripts) throws NoSuchMethodException {
         this.timingUtil = new TimingUtil();
         this.displayName = displayName;
         this.scriptManager = scriptManager;
         this.createFunctions = new ArrayList<>();
         this.renderFunctions = new ArrayList<>();
         this.disposeFunctions = new ArrayList<>();
-        this.multiThreaded = multiThreaded;
+        this.executorService = scriptManager.getDesignatedScriptExecutor();
 
         try {
             Context cx = Context.enter();
@@ -112,7 +113,7 @@ public class ParsedScript {
             return null;
         }
 
-        return scriptManager.submitScriptTask(() -> {
+        return scriptManager.submitScriptTask(executorService, () -> {
             if(duringFailCooldown()) return;
 
             timingUtil.prepareForScript(scriptInstance);
@@ -135,7 +136,7 @@ public class ParsedScript {
                 Context.exit();
             }
             finishCallback.run();
-        }, multiThreaded);
+        });
     }
 
     public Future<?> invokeCreateFunctions(ScriptInstance<?> instance, Runnable finishCallback) {

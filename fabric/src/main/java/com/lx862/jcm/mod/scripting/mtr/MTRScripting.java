@@ -15,6 +15,8 @@ import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeJavaClass;
 import org.mtr.mod.Keys;
 import org.mtr.mod.client.MinecraftClientData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,6 +24,15 @@ import java.util.concurrent.Executors;
  * A stub for scripting in MTR mod
  */
 public class MTRScripting {
+    private static final int EXECUTOR_AMOUNT = 4;
+    private static final List<ExecutorService> scriptExecutors = new ArrayList<>();
+
+    static {
+        for(int i = 0; i < EXECUTOR_AMOUNT; i++) {
+            scriptExecutors.add(Executors.newFixedThreadPool(1));
+        }
+    }
+
     public static ExecutorService scriptSingleThread = Executors.newFixedThreadPool(1);
     public static ExecutorService scriptMultiThread = Executors.newFixedThreadPool(4);
     private static ScriptManager scriptManager;
@@ -30,7 +41,7 @@ public class MTRScripting {
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
-        if(scriptManager == null) scriptManager = new ScriptManager(scriptSingleThread, scriptMultiThread);
+        if(scriptManager == null) scriptManager = new ScriptManager(scriptExecutors);
         scriptManager.getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
 
         String mtrModVersion = null;
@@ -63,6 +74,10 @@ public class MTRScripting {
         if(clearedInstance > 0 && JCMClient.getConfig().debug) {
             JCMLogger.info("Removed {} dead MTR script instance", clearedInstance);
         }
+    }
+
+    public static List<ExecutorService> getScriptExecutors() {
+        return new ArrayList<>(scriptExecutors);
     }
 
     public static void reset() {

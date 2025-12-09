@@ -5,11 +5,7 @@
 ## Change (Scripting Implementation)
 
 ### Execution
-- Scripts are now multithreaded by default for scripts registered in MTR 4 & JCM PIDS.
-- - MTR 3 Eyecandy Entries now retains the old behaviour of executing in a single thread.
-- - Can be manually controlled with the following boolean field in the registration entry:
-  - MTR 4: `scripting.multithreaded`
-  - JCM PIDS: `scriptMultithreaded`
+- Script Execution are now changed so that the same type of script are executed orderly in the same thread (No longer parallelized per-instance). This should hopefully alleviate some multithreading issues with scripts.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

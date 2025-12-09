@@ -41,7 +41,6 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         final String name = rootJsonObject.has("name") ? rootJsonObject.get("name").getAsString() : null;
         final boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
         final Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : DEFAULT_THUMBNAIL;
-        final boolean scriptThreaded;
 
         final List<ScriptContent> scripts = new ObjectArrayList<>();
         // Parse script input and pass to the script
@@ -49,12 +48,6 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             String str = rootJsonObject.get("scriptInput").toString();
             Identifier scriptLocationSource = Constants.id("internal/pids/internal_script_input/" + id);
             scripts.add(new ScriptContent(scriptLocationSource, "const SCRIPT_INPUT = " + str + ";"));
-        }
-
-        if(rootJsonObject.has("scriptMultithreaded")) {
-            scriptThreaded = rootJsonObject.get("scriptMultithreaded").getAsBoolean();
-        } else {
-            scriptThreaded = true;
         }
 
         if(rootJsonObject.has("scriptTexts")) {
@@ -88,7 +81,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             }
         }
 
-        ParsedScript parsedScripts = JCMScripting.getScriptManager().parseScript(id + " (pids)", "PIDS", scripts, scriptThreaded);
+        ParsedScript parsedScripts = JCMScripting.getScriptManager().parseScript(id + " (pids)", "PIDS", scripts);
         return new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, parsedScripts);
     }
 
