@@ -1,7 +1,7 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.block.FareSaverBlock;
-import com.lx862.jcm.mod.data.TransactionLog;
+import com.lx862.jcm.mod.data.TransactionHistoryManager;
 import com.lx862.jcm.mod.data.TransactionEntry;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -42,13 +42,13 @@ public abstract class TicketSystemMixin {
             FareSaverBlock.discountList.remove(player.getUuid());
         }
 
-        TransactionLog.writeLog(player, new TransactionEntry(station.getName(), finalDeductedAmount, System.currentTimeMillis()));
+        TransactionHistoryManager.appendEntry(player, TransactionEntry.createNow(station.getName(), finalDeductedAmount));
     }
 
     @Inject(method = "addBalance", at = @At("TAIL"))
     private static void addBalance(World world, PlayerEntity player, int amount, CallbackInfo ci) {
         if (!world.isClient()) {
-            TransactionLog.writeLog(player, new TransactionEntry("Add Value", amount, System.currentTimeMillis()));
+            TransactionHistoryManager.appendEntry(player, TransactionEntry.createNow("Add Value", amount));
         }
     }
 }

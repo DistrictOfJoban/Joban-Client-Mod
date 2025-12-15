@@ -2,10 +2,10 @@
 
 **Note: Normal players are *strongly* advised to wait until the official release of v2.1.0.**
 
-## Change (Scripting Implementation)
-
-### Execution
-- Script Execution are now changed so that the same type of script are executed orderly in the same thread (No longer parallelized per-instance). This should hopefully alleviate some multithreading issues with scripts.
+## Changes
+- **Script Execution:**
+- - Script Execution are now changed so that the same type of script are executed orderly in the same thread (No longer parallelized per-instance). This should hopefully alleviate some multithreading issues with scripts.
+- Slightly refactor the transaction history logics, should hopefully be a *little* more robust.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

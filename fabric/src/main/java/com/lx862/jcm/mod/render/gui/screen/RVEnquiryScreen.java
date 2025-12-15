@@ -22,6 +22,7 @@ public class RVEnquiryScreen extends AnimatedScreen {
     private static final Identifier balanceTexture = Constants.id("textures/enquiry/transactions.png");
     private static final Identifier octopusCardTexture = Constants.id("textures/enquiry/octopus_card.png");
     private static final Identifier font = new Identifier("mtr", "mtr");
+    private static final SimpleDateFormat TIME_FORMATTER = new SimpleDateFormat("dd/MM/yyyy HH:mm");
     private final List<TransactionEntry> entries;
     private final BlockPos pos;
     private final long remainingBalance;
@@ -98,15 +99,13 @@ public class RVEnquiryScreen extends AnimatedScreen {
             long lastDate = 0;
 
             for (TransactionEntry transactionEntry : entries) {
-                if (transactionEntry.amount > 0) {
-                    lastDate = transactionEntry.time;
+                if (transactionEntry.amount() > 0) {
+                    lastDate = transactionEntry.time();
                 }
             }
 
             if (lastDate != 0) {
-                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-                String formattedDate = formatter.format(lastDate);
-
+                String formattedDate = TIME_FORMATTER.format(lastDate);
                 graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.last.a"), font), startX + 305, 115, 0, false, GraphicsHolder.getDefaultLight());
                 graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.last.b"), font), startX + 305, 125, 0, false, GraphicsHolder.getDefaultLight());
                 graphicsHolder.drawText(TextUtil.withFont(TextUtil.translatable(TextCategory.GUI, "rvenquiry_screen.last.c"), font), startX + 305, 135, 0, false, GraphicsHolder.getDefaultLight());
@@ -121,12 +120,12 @@ public class RVEnquiryScreen extends AnimatedScreen {
         if(i >= entries.size()) return null;
         TransactionEntry transactionEntry = entries.get(i);
         String renderTextString;
-        if (transactionEntry.amount < 0) {
-            renderTextString = String.format("%s     %s     -$%.2f", transactionEntry.getFormattedDate(), IGui.formatStationName(transactionEntry.source), Math.abs((double) transactionEntry.amount));
-        } else if (transactionEntry.amount > 0) {
-            renderTextString = String.format("%s     %s     +$%.2f", transactionEntry.getFormattedDate(), IGui.formatStationName(transactionEntry.source), (double) transactionEntry.amount);
+        if (transactionEntry.amount() < 0) {
+            renderTextString = String.format("%s     %s     -$%.2f", TIME_FORMATTER.format(transactionEntry.time()), IGui.formatStationName(transactionEntry.source()), Math.abs((double) transactionEntry.amount()));
+        } else if (transactionEntry.amount() > 0) {
+            renderTextString = String.format("%s     %s     +$%.2f", TIME_FORMATTER.format(transactionEntry.time()), IGui.formatStationName(transactionEntry.source()), (double) transactionEntry.amount());
         } else {
-            renderTextString = String.format("%s     %s     $%.2f", transactionEntry.getFormattedDate(), IGui.formatStationName(transactionEntry.source), (double) transactionEntry.amount);
+            renderTextString = String.format("%s     %s     $%.2f", TIME_FORMATTER.format(transactionEntry.time()), IGui.formatStationName(transactionEntry.source()), (double) transactionEntry.amount());
         }
         return TextUtil.literal(renderTextString);
     }

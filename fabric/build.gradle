@@ -59,7 +59,7 @@ jar {
 remapJar {
     dependsOn(shadowJar)
     mustRunAfter(shadowJar)
-    inputFile = file(shadowJar.archivePath)
+    inputFile = file(shadowJar.archiveFile)
 }
 
 tasks.register("moveBuild") {

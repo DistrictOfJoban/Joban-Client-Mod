@@ -1,14 +1,9 @@
 package com.lx862.jcm.mod.data;
 
-import com.google.gson.JsonObject;
-
-import java.text.SimpleDateFormat;
-
 public class TransactionEntry {
-    public static final SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-    public final String source;
-    public final long time;
-    public final long amount;
+    private final String source;
+    private final long time;
+    private final long amount;
 
     public TransactionEntry(String source, long amount, long time) {
         this.source = source;
@@ -16,23 +11,19 @@ public class TransactionEntry {
         this.time = time;
     }
 
-    public String getFormattedDate() {
-        return formatter.format(time);
+    public static TransactionEntry createNow(String source, long amount) {
+        return new TransactionEntry(source, amount, System.currentTimeMillis());
     }
 
-    public static TransactionEntry fromJson(JsonObject jsonObject) {
-        return new TransactionEntry(
-                jsonObject.get("source").getAsString(),
-                jsonObject.get("amount").getAsInt(),
-                jsonObject.get("time").getAsLong()
-        );
+    public String source() {
+        return this.source;
     }
 
-    public JsonObject toJson() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("source", source);
-        jsonObject.addProperty("amount", amount);
-        jsonObject.addProperty("time", time);
-        return jsonObject;
+    public long time() {
+        return this.time;
+    }
+
+    public long amount() {
+        return this.amount;
     }
 }

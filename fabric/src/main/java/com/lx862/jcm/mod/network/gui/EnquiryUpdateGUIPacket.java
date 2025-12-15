@@ -36,7 +36,7 @@ public class EnquiryUpdateGUIPacket extends PacketHandler {
 
     public EnquiryUpdateGUIPacket(EnquiryScreenType type, BlockPos pos, List<TransactionEntry> entries, int remainingBalance) {
         this.type = type;
-        this.entries = entries.stream().sorted((a, b) -> (int)(b.time - a.time)).collect(Collectors.toList());
+        this.entries = entries;
         this.entryCount = entries.size();
         this.pos = pos;
         this.remainingBalance = remainingBalance;
@@ -50,9 +50,9 @@ public class EnquiryUpdateGUIPacket extends PacketHandler {
         packetBufferSender.writeInt(entries.size());
 
         for (TransactionEntry transactionEntry : entries) {
-            packetBufferSender.writeString(transactionEntry.source);
-            packetBufferSender.writeLong(transactionEntry.amount);
-            packetBufferSender.writeLong(transactionEntry.time);
+            packetBufferSender.writeString(transactionEntry.source());
+            packetBufferSender.writeLong(transactionEntry.amount());
+            packetBufferSender.writeLong(transactionEntry.time());
         }
     }
 
