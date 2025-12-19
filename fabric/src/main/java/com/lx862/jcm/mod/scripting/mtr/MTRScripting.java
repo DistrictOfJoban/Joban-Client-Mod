@@ -33,8 +33,6 @@ public class MTRScripting {
         }
     }
 
-    public static ExecutorService scriptSingleThread = Executors.newFixedThreadPool(1);
-    public static ExecutorService scriptMultiThread = Executors.newFixedThreadPool(4);
     private static ScriptManager scriptManager;
 
     /**
@@ -74,6 +72,13 @@ public class MTRScripting {
         if(clearedInstance > 0 && JCMClient.getConfig().debug) {
             JCMLogger.info("Removed {} dead MTR script instance", clearedInstance);
         }
+    }
+
+    public static String getVehicleGroupId(String str) {
+        return str.replace("trailer", "")
+                .replace("cab_1", "")
+                .replace("cab_2", "")
+                .replace("cab_3", "");
     }
 
     public static List<ExecutorService> getScriptExecutors() {

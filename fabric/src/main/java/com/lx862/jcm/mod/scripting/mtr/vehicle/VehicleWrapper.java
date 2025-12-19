@@ -13,8 +13,8 @@ import java.util.List;
 
 public class VehicleWrapper {
     private final VehicleExtension vehicleExtension;
-    private final boolean[] doorLeftOpen;
-    private final boolean[] doorRightOpen;
+    @Deprecated private final boolean[] doorLeftOpen;
+    @Deprecated private final boolean[] doorRightOpen;
     private final List<PlatformInfo> allRoutePlatforms;
     private final List<PlatformInfo> thisRoutePlatforms;
 
@@ -23,8 +23,8 @@ public class VehicleWrapper {
         this.doorLeftOpen = new boolean[trainCars()];
         this.doorRightOpen = new boolean[trainCars()];
         for(int i = 0; i < trainCars(); i++) {
-            this.doorLeftOpen[i] = doorValue() > 0; // TODO
-            this.doorRightOpen[i] = doorValue() > 0; // TODO
+            this.doorLeftOpen[i] = doorValue() > 0;
+            this.doorRightOpen[i] = doorValue() > 0;
         }
         this.allRoutePlatforms = new ArrayList<>();
         this.thisRoutePlatforms = new ArrayList<>();

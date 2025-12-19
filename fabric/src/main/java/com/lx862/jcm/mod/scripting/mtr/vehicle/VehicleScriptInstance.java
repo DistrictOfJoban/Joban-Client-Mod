@@ -22,12 +22,14 @@ public class VehicleScriptInstance extends ScriptInstance<VehicleWrapper> {
 
     public void saveRenderCalls(ScriptRenderManager[] renderManagers) {
         for(int i = 0; i < renderManagers.length; i++) {
+            if(renderManagers[i] == null) continue;
             this.renderManagers[i] = renderManagers[i].copy();
         }
     }
 
     public void saveSoundCalls(ScriptSoundManager[] soundManagers) {
         for(int i = 0; i < soundManagers.length; i++) {
+            if(soundManagers[i] == null) continue;
             this.soundManagers[i] = soundManagers[i].copy();
         }
     }

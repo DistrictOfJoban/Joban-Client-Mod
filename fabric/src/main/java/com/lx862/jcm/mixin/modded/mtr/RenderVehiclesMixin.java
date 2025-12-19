@@ -15,10 +15,13 @@ import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.render.*;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Mixin(value = RenderVehicles.class, remap = false)
@@ -30,17 +33,25 @@ public abstract class RenderVehiclesMixin {
             Object2ObjectOpenHashMap<String, ParsedScript> scriptsInVehicle = new Object2ObjectOpenHashMap<>();
 
             for (VehicleCar vehicleCar : cars) {
-                String vehicleCarId = vehicleCar.getVehicleId();
-                ParsedScript script = MTRContentResourceManager.getVehicleScript(vehicleCarId);
-                if (script == null || scriptsInVehicle.containsKey(vehicleCarId)) continue;
-                scriptsInVehicle.put(vehicleCarId, script);
+                String vehicleGroupId = MTRScripting.getVehicleGroupId(vehicleCar.getVehicleId());
+                ParsedScript script = MTRContentResourceManager.getVehicleScript(vehicleGroupId);
+                if (script == null || scriptsInVehicle.containsKey(vehicleGroupId)) continue;
+                scriptsInVehicle.put(vehicleGroupId, script);
             }
 
-            for(Map.Entry<String, ParsedScript> scriptEntry : scriptsInVehicle.entrySet()) {
-                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntry.getKey()), () -> new VehicleScriptInstance(new VehicleScriptContext(scriptEntry.getKey(), cars.size()), vehicle, scriptEntry.getValue()));
-                if(!(scriptInstance instanceof VehicleScriptInstance)) continue;
+            VehicleWrapper wrapperObject = new VehicleWrapper(vehicle);
 
-                VehicleWrapper wrapperObject = new VehicleWrapper(vehicle);
+            for(Map.Entry<String, ParsedScript> scriptEntry : scriptsInVehicle.entrySet()) {
+                String vehicleGroupId = scriptEntry.getKey();
+                List<Integer> carsForScripts = new ArrayList<>();
+                for(int i = 0; i < cars.size(); i++) {
+                    if(MTRScripting.getVehicleGroupId(cars[i].getVehicleId()).equals(vehicleGroupId)) carsForScripts.add(i);
+                }
+                int[] carsArray = carsForScripts.stream().mapToInt(i->i).toArray();
+
+                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntry.getKey()), () -> new VehicleScriptInstance(new VehicleScriptContext(scriptEntry.getKey(), carsArray, cars.size()), vehicle, scriptEntry.getValue()));
+                if(scriptInstance == null) continue;
+
                 scriptInstance.setWrapperObject(wrapperObject);
                 scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
                     VehicleScriptContext ctx = (VehicleScriptContext) scriptInstance.getScriptContext();

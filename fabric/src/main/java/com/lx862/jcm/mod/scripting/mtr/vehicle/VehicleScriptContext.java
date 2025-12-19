@@ -10,13 +10,12 @@ import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.mapping.holder.Identifier;
 
-import java.util.Objects;
 
 public class VehicleScriptContext extends MTRScriptContext {
     private final ScriptRenderManager[] carRenderers;
     private final ScriptSoundManager[] carSoundManagers;
-    private final String vehicleId;
-    private final int carLength;
+    private final int[] myCars;
+    private final String vehicleGroupId;
 
     @Override
     public void resetForNextRun() {
@@ -28,19 +27,22 @@ public class VehicleScriptContext extends MTRScriptContext {
         }
     }
 
-    public VehicleScriptContext(String vehicleId, int carLength) {
-        super(vehicleId);
-        this.vehicleId = vehicleId;
-        this.carLength = carLength;
+    public VehicleScriptContext(String vehicleGroupId, int[] myCars, int carLength) {
+        super(vehicleGroupId);
+        this.myCars = myCars;
+        this.vehicleGroupId = vehicleGroupId;
         this.carRenderers = new ScriptRenderManager[carLength];
         this.carSoundManagers = new ScriptSoundManager[carLength];
-        for(int i = 0; i < carLength; i++) {
+
+        for(int i : myCars) {
             carRenderers[i] = new ScriptRenderManager();
             carSoundManagers[i] = new ScriptSoundManager();
         }
     }
 
     public void drawCarModel(ScriptedModel model, int carIndex, Matrices matrices) {
+        if(carRenderers[carIndex] == null) return;
+
         ModelDrawCall modelDrawCall = ModelDrawCall.create()
                 .matrices(matrices == null ? null : matrices.copy())
                 .modelObject(model);
@@ -52,16 +54,21 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public void playCarSound(Identifier sound, int carIndex, float x, float y, float z, float volume, float pitch) {
+        if(carSoundManagers[carIndex] == null) return;
         carSoundManagers[carIndex].playSound(sound, new ScriptVector3f(x, y, z), volume, pitch);
     }
 
     public void playAnnSound(Identifier sound, float volume, float pitch) {
+        if(carSoundManagers[0] == null) return;
         carSoundManagers[0].playLocalSound(sound, volume, pitch);
     }
 
-    public boolean isMyVehicle(VehicleWrapper vehicleWrapper, int carIndex) {
-        String theirVehicleId = vehicleWrapper.trainTypeId(carIndex);
-        return Objects.equals(vehicleId, theirVehicleId);
+    public String vehicleGroupId() {
+        return this.vehicleGroupId;
+    }
+
+    public int[] myCars() {
+        return this.myCars;
     }
 
     public ScriptRenderManager[] getCarRenderManager() {
