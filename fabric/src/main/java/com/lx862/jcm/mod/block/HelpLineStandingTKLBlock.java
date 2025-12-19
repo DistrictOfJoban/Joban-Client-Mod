@@ -8,8 +8,8 @@ import org.mtr.mod.block.IBlock;
 
 import java.util.List;
 
-public class HelpLineStandingTIKBlock extends Vertical3Block implements PowerableBlockBehavior {
-    public HelpLineStandingTIKBlock(BlockSettings settings) {
+public class HelpLineStandingTKLBlock extends Vertical3Block implements PowerableBlockBehavior {
+    public HelpLineStandingTKLBlock(BlockSettings settings) {
         super(settings);
     }
 
