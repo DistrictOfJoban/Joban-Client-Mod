@@ -15,7 +15,6 @@ import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.render.*;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -45,7 +44,7 @@ public abstract class RenderVehiclesMixin {
                 String vehicleGroupId = scriptEntry.getKey();
                 List<Integer> carsForScripts = new ArrayList<>();
                 for(int i = 0; i < cars.size(); i++) {
-                    if(MTRScripting.getVehicleGroupId(cars[i].getVehicleId()).equals(vehicleGroupId)) carsForScripts.add(i);
+                    if(MTRScripting.getVehicleGroupId(cars.get(i).getVehicleId()).equals(vehicleGroupId)) carsForScripts.add(i);
                 }
                 int[] carsArray = carsForScripts.stream().mapToInt(i->i).toArray();
 
