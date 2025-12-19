@@ -36,7 +36,7 @@ public final class Blocks {
     public static final BlockRegistryObject HELPLINE_HKWK = JCMRegistry.registerBlockItem("helpline_hkwk", () -> new Block(new WallAttachedHelpLineBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject HELPLINE_STANDING = JCMRegistry.registerBlockItem("helpline_standing", () -> new Block(new HelpLineStandingBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false, state -> 15).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject HELPLINE_STANDING_EAL = JCMRegistry.registerBlockItem("helpline_standing_eal", () -> new Block(new HelpLineStandingEALBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false, state -> 15).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
-    public static final BlockRegistryObject HELPLINE_STANDING_TIK = JCMRegistry.registerBlockItem("helpline_standing_tik", () -> new Block(new HelpLineStandingTIKBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false, state -> 15).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
+    public static final BlockRegistryObject HELPLINE_STANDING_TKL = JCMRegistry.registerBlockItem("helpline_standing_tkl", () -> new Block(new HelpLineStandingTIKBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false, state -> 15).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject KCR_EMG_STOP_SIGN = JCMRegistry.registerBlockItem("kcr_emg_stop_sign", () -> new Block(new KCREmergencyStopSign(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject KCR_ENQUIRY_MACHINE = JCMRegistry.registerBlockItem("kcr_enquiry_machine", () -> new Block(new KCREnquiryMachineWall(org.mtr.mod.Blocks.createDefaultBlockSettings(false, state -> 4).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject KCR_STATION_NAME_SIGN = JCMRegistry.registerBlockItem("kcr_name_sign", () -> new Block(new KCRStationNameSignBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false, state -> 15).strength(4.0f).nonOpaque(), false)), ItemGroups.MAIN);
@@ -121,7 +121,7 @@ public final class Blocks {
             HELPLINE_2,
             HELPLINE_HKWK,
             HELPLINE_STANDING,
-            HELPLINE_STANDING_TIK,
+                HELPLINE_STANDING_TKL,
             HELPLINE_STANDING_EAL,
             SIL_EMG_STOP_BUTTON,
             STATION_NAME_STANDING,

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "II ",
+    "BH ",
+    "II "
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "B": {
+      "item": "minecraft:black_dye"
+    },
+    "H": {
+      "item": "jsblock:helpline_1"
+    }
+  },
+  "result": {
+    "item": "jsblock:helpline_standing_tkl",
+    "count": 4
+  }
+}
