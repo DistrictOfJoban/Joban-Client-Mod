@@ -42,12 +42,12 @@ public class ScriptRenderManager {
         List<ScriptResultCall> pidsDrawCalls = drawCallsSaved.stream().filter(e -> e instanceof PIDSDrawCall).collect(Collectors.toList());
 
         for(ScriptResultCall drawCall : new ArrayList<>(modelDrawCalls)) {
-            drawCall.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
+            drawCall.run(world, basePos, graphicsHolder, storedMatrixTransformations.copy(), facing, light);
         }
         for(ScriptResultCall drawCall : new ArrayList<>(pidsDrawCalls)) {
             graphicsHolder.translate(0, 0, -0.02);
             graphicsHolder.push();
-            drawCall.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
+            drawCall.run(world, basePos, graphicsHolder, storedMatrixTransformations.copy(), facing, light);
             graphicsHolder.pop();
         }
     }
