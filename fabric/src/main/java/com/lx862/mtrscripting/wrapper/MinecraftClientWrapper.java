@@ -62,7 +62,7 @@ public class MinecraftClientWrapper {
         return Math.min(blockLightAt(pos), skyLightAt(pos));
     }
 
-    public PlayerEntityWrapper localPlayer() {
+    public static PlayerEntityWrapper localPlayer() {
         ClientPlayerEntity clientPlayerEntity = MinecraftClient.getInstance().getPlayerMapped();
         if(clientPlayerEntity == null) return null;
         return new PlayerEntityWrapper(PlayerEntity.cast(clientPlayerEntity));
