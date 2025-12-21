@@ -112,32 +112,35 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
     @Override
     public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         super.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
-        MainRenderer.scheduleRender(renderType, (graphicsHolderNew, offset) -> {
-            graphicsHolderNew.createVertexConsumer(getRenderType(textureId));
-            storedMatrixTransformations.transform(graphicsHolderNew, offset);
-            graphicsHolderNew.drawTextureInWorld(
-                    quadDefinition.x2,
-                    quadDefinition.y2,
-                    quadDefinition.z2,
-                    quadDefinition.x3,
-                    quadDefinition.y3,
-                    quadDefinition.z3,
-                    quadDefinition.x4,
-                    quadDefinition.y4,
-                    quadDefinition.z4,
-                    quadDefinition.x1,
-                    quadDefinition.y1,
-                    quadDefinition.z1,
-                    u1,
-                    v1,
-                    u2,
-                    v2,
-                    facing,
-                    this.color,
-                    light
-            );
-            graphicsHolderNew.pop();
-        });
+        graphicsHolder.createVertexConsumer(getRenderType(textureId));
+        graphicsHolder.drawTextureInWorld(
+                quadDefinition.x2,
+                quadDefinition.y2,
+                quadDefinition.z2,
+                quadDefinition.x3,
+                quadDefinition.y3,
+                quadDefinition.z3,
+                quadDefinition.x4,
+                quadDefinition.y4,
+                quadDefinition.z4,
+                quadDefinition.x1,
+                quadDefinition.y1,
+                quadDefinition.z1,
+                u1,
+                v1,
+                u2,
+                v2,
+                facing,
+                this.color,
+                light
+        );
+
+//        MainRenderer.scheduleRender(renderType, (graphicsHolderNew, offset) -> {
+//            graphicsHolderNew.createVertexConsumer(getRenderType(textureId));
+//            storedMatrixTransformations.transform(graphicsHolderNew, offset);
+//
+//            graphicsHolderNew.pop();
+//        });
     }
 
     private RenderLayer getRenderType(Identifier textureId) {
