@@ -60,8 +60,8 @@ public class RenderEyeCandyMixin {
             graphicsHolderNew.rotateYDegrees(blockEntity.getRotateY());
             graphicsHolderNew.rotateZDegrees(blockEntity.getRotateZ());
         });
-        eyeCandyScriptInstance.getRenderManager().invoke(world, ScriptVector3f.ZERO, graphicsHolder, storedMatrixTransformations, facing, light);
-        eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos(), graphicsHolder, storedMatrixTransformations, facing, light);
+        eyeCandyScriptInstance.getRenderManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, light);
+        eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos());
         ci.cancel();
     }
 }
