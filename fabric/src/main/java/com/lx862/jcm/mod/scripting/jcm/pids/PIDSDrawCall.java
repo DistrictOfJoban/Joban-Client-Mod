@@ -1,16 +1,13 @@
 package com.lx862.jcm.mod.scripting.jcm.pids;
 
-import com.lx862.mtrscripting.api.ScriptResultCall;
-import com.lx862.mtrscripting.util.Matrices;
-import com.lx862.mtrscripting.util.ScriptVector3f;
+import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
+import com.lx862.jcm.mod.scripting.mtr.render.RenderDrawCall;
 import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
-public abstract class PIDSDrawCall extends ScriptResultCall {
-    public StoredMatrixTransformations storedMatrixTransformations;
+public abstract class PIDSDrawCall<T extends PIDSDrawCall<?>> extends RenderDrawCall<T> {
     public double x;
     public double y;
     public double w;
@@ -19,24 +16,18 @@ public abstract class PIDSDrawCall extends ScriptResultCall {
     public PIDSDrawCall(double defaultW, double defaultH) {
         this.w = defaultW;
         this.h = defaultH;
-        this.storedMatrixTransformations = new StoredMatrixTransformations();
     }
 
-    public PIDSDrawCall pos(double x, double y) {
+    public T pos(double x, double y) {
         this.x = x;
         this.y = y;
-        return this;
+        return (T)this;
     }
 
-    public PIDSDrawCall size(double w, double h) {
+    public T size(double w, double h) {
         this.w = w;
         this.h = h;
-        return this;
-    }
-
-    public PIDSDrawCall matrices(Matrices matrices) {
-        this.storedMatrixTransformations = matrices.getStoredMatrixTransformations().copy();
-        return this;
+        return (T)this;
     }
 
     public void draw(PIDSScriptContext ctx) {
@@ -44,15 +35,17 @@ public abstract class PIDSDrawCall extends ScriptResultCall {
     }
 
     @Override
-    public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        graphicsHolder.push();
-        storedMatrixTransformations.transform(graphicsHolder, Vector3d.getZeroMapped());
-        graphicsHolder.translate(this.x, this.y, 0);
-        drawTransformed(graphicsHolder, facing);
-        graphicsHolder.pop();
+    public void run(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        super.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
+
+        storedMatrixTransformations.add(graphicsHolder1 -> {
+            graphicsHolder1.scale(PIDSPresetBase.BASE_SCALE, PIDSPresetBase.BASE_SCALE, PIDSPresetBase.BASE_SCALE);
+            graphicsHolder1.translate(this.x, this.y, 0);
+        });
+        drawTransformed(graphicsHolder, storedMatrixTransformations, facing);
     }
 
-    protected abstract void validate();
+    public abstract void validate();
 
-    protected abstract void drawTransformed(GraphicsHolder graphicsHolder, Direction facing);
+    protected abstract void drawTransformed(GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing);
 }

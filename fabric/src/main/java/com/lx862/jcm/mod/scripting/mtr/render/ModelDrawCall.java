@@ -24,8 +24,8 @@ public class ModelDrawCall extends RenderDrawCall<ModelDrawCall> {
     }
 
     @Override
-    public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        super.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
+    public void run(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        super.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
         this.model.draw(storedMatrixTransformations, light);
     }
 

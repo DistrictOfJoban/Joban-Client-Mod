@@ -5,6 +5,9 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.render.MainRenderer;
+import org.mtr.mod.render.QueuedRenderLayer;
+import org.mtr.mod.render.StoredMatrixTransformations;
 
 import static com.lx862.jcm.mod.render.RenderHelper.*;
 
@@ -59,13 +62,18 @@ public class TextureWrapper extends PIDSDrawCall {
     }
 
     @Override
-    protected void validate() {
+    public void validate() {
         if(id == null) throw new IllegalArgumentException("texture must be filled");
     }
 
     @Override
-    protected void drawTransformed(GraphicsHolder graphicsHolder, Direction facing) {
-        graphicsHolder.createVertexConsumer(RenderLayer.getText(this.id));
-        RenderHelper.drawTexture(graphicsHolder, 0, 0, 0, (float)w, (float)h, u1, v1, u2, v2, facing, ARGB_BLACK + color, MAX_RENDER_LIGHT);
+    protected void drawTransformed(GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
+        MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolderNew, offset) -> {
+//          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
+            storedMatrixTransformations.transform(graphicsHolderNew, offset);
+            graphicsHolderNew.createVertexConsumer(RenderLayer.getText(this.id));
+            RenderHelper.drawTexture(graphicsHolderNew, 0, 0, 0, (float)w, (float)h, u1, v1, u2, v2, facing, ARGB_BLACK + color, MAX_RENDER_LIGHT);
+            graphicsHolderNew.pop();
+        });
     }
 }

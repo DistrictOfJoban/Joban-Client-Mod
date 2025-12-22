@@ -14,13 +14,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ScriptRenderManager {
-    public final List<ScriptResultCall> drawCalls;
+    public final List<RenderDrawCall<?>> drawCalls;
 
     public ScriptRenderManager() {
         this.drawCalls = new ArrayList<>();
     }
 
-    public ScriptRenderManager(List<ScriptResultCall> drawCalls) {
+    public ScriptRenderManager(List<RenderDrawCall<?>> drawCalls) {
         this.drawCalls = new ArrayList<>();
         this.drawCalls.addAll(drawCalls);
     }
@@ -29,26 +29,24 @@ public class ScriptRenderManager {
      * Internally invoked by {@link PIDSScriptContext#draw(Object)}
      * Although user may also decide not to use method chaining and manually invoke this with their PIDS draw call instead.
      * */
-    public void queue(ScriptResultCall call) {
-        if(call instanceof RenderDrawCall<?>) { // HACK: Should migrate PIDSDrawCall to inherit RenderDrawCall
-            ((RenderDrawCall)call).validate();
-        }
+    public void queue(RenderDrawCall<?> call) {
+        call.validate();
         this.drawCalls.add(call);
     }
 
-    public void invoke(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        List<ScriptResultCall> drawCallsSaved = new ArrayList<>(drawCalls);
-        List<ScriptResultCall> modelDrawCalls = drawCallsSaved.stream().filter(e -> !(e instanceof PIDSDrawCall)).collect(Collectors.toList());
-        List<ScriptResultCall> pidsDrawCalls = drawCallsSaved.stream().filter(e -> e instanceof PIDSDrawCall).collect(Collectors.toList());
+    public void invoke(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        List<RenderDrawCall<?>> drawCalls = new ArrayList<>(this.drawCalls);
+        List<RenderDrawCall<?>> normalDrawCalls = drawCalls.stream().filter(e -> !(e instanceof PIDSDrawCall)).collect(Collectors.toList());
+        List<RenderDrawCall<?>> pidsDrawCalls = drawCalls.stream().filter(e -> e instanceof PIDSDrawCall).collect(Collectors.toList());
 
-        for(ScriptResultCall drawCall : new ArrayList<>(modelDrawCalls)) {
-            drawCall.run(world, basePos, graphicsHolder, storedMatrixTransformations.copy(), facing, light);
+        for(RenderDrawCall<?> drawCall : new ArrayList<>(normalDrawCalls)) {
+            drawCall.run(world, graphicsHolder, storedMatrixTransformations.copy(), facing, light);
         }
-        for(ScriptResultCall drawCall : new ArrayList<>(pidsDrawCalls)) {
-            graphicsHolder.translate(0, 0, -0.02);
-            graphicsHolder.push();
-            drawCall.run(world, basePos, graphicsHolder, storedMatrixTransformations.copy(), facing, light);
-            graphicsHolder.pop();
+
+        StoredMatrixTransformations pidsStoredMatrixTransformation = storedMatrixTransformations.copy();
+        for(RenderDrawCall<?> drawCall : new ArrayList<>(pidsDrawCalls)) {
+            pidsStoredMatrixTransformation.add(graphicsHolderNew -> graphicsHolderNew.translate(0, 0, -0.0002)); // Prevent z-fighting
+            drawCall.run(world, graphicsHolder, pidsStoredMatrixTransformation.copy(), facing, light);
         }
     }
 

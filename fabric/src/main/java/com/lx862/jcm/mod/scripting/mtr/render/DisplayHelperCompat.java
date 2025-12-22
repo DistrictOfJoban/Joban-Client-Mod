@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.scripting.mtr.render;
 
-import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
@@ -45,10 +44,10 @@ public class DisplayHelperCompat extends RenderDrawCall<DisplayHelperCompat> {
     }
 
     @Override
-    public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        super.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
+    public void run(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        super.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
         for(QuadDrawCall drawCall : quadDrawCalls) {
-            drawCall.run(world, basePos, graphicsHolder, storedMatrixTransformations, facing, light);
+            drawCall.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
         }
     }
 

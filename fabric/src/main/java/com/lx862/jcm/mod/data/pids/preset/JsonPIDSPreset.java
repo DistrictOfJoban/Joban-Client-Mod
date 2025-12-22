@@ -18,6 +18,9 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.data.IGui;
+import org.mtr.mod.render.MainRenderer;
+import org.mtr.mod.render.QueuedRenderLayer;
+import org.mtr.mod.render.StoredMatrixTransformations;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -95,36 +98,36 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
-        int headerHeight = topPadding ? HEADER_HEIGHT : 0;
-        int startX = PIDS_MARGIN;
-        int contentWidth = width - (PIDS_MARGIN * 2);
-        int contentHeight = height - headerHeight - 3;
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
+        MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolderNew, offset) -> {
+//            graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
+            storedMatrixTransformations.transform(graphicsHolderNew, offset);
+            graphicsHolderNew.scale(PIDSPresetBase.BASE_SCALE, PIDSPresetBase.BASE_SCALE, PIDSPresetBase.BASE_SCALE);
+            int headerHeight = topPadding ? HEADER_HEIGHT : 0;
+            int startX = PIDS_MARGIN;
+            int contentWidth = width - (PIDS_MARGIN * 2);
+            int contentHeight = height - headerHeight - 3;
 
-        // Draw Background
-        graphicsHolder.createVertexConsumer(RenderLayer.getText(background));
-        RenderHelper.drawTexture(graphicsHolder, background, x, y, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+            // Draw Background
+            graphicsHolderNew.createVertexConsumer(RenderLayer.getText(background));
+            RenderHelper.drawTexture(graphicsHolderNew, background, x, y, 0, width, height, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
 
-        // Debug View Texture
-//        if(JCMClient.getConfig().debug) {
-//            TextureTextRenderer.stressTest(5);
-//            drawAtlasBackground(graphicsHolder, width, height, facing);
-//        }
+            graphicsHolderNew.translate(startX, 0, -0.05);
 
-        graphicsHolder.translate(startX, 0, -0.05);
+            List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, x, y, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
+            PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
 
-        List<PIDSComponent> components = getComponents(arrivals, be.getCustomMessages(), rowHidden, x, y, contentWidth, contentHeight, be.getRowAmount(), be.platformNumberHidden());
-        PIDSContext pidsContext = new PIDSContext(world, pos, be.getCustomMessages(), arrivals, tickDelta);
-
-        // Texture
-        graphicsHolder.push();
-        for(PIDSComponent component : components) {
-            graphicsHolder.translate(0, 0, -0.02);
-            graphicsHolder.push();
-            component.render(graphicsHolder, null, facing, pidsContext);
-            graphicsHolder.pop();
-        }
-        graphicsHolder.pop();
+            // Texture
+            graphicsHolderNew.push();
+            for(PIDSComponent component : components) {
+                graphicsHolderNew.translate(0, 0, -0.02);
+                graphicsHolderNew.push();
+                component.render(graphicsHolderNew, null, facing, pidsContext);
+                graphicsHolderNew.pop();
+            }
+            graphicsHolderNew.pop();
+            graphicsHolderNew.pop();
+        });
     }
 
     public List<PIDSComponent> getComponents(ObjectArrayList<ArrivalResponse> arrivals, String[] customMessages, boolean[] rowHidden, int x, int y, int screenWidth, int screenHeight, int rows, boolean hidePlatform) {

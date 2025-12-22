@@ -9,13 +9,16 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mod.Init;
 import org.mtr.mod.InitClient;
+import org.mtr.mod.render.MainRenderer;
+import org.mtr.mod.render.QueuedRenderLayer;
+import org.mtr.mod.render.StoredMatrixTransformations;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
-public class TextWrapper extends PIDSDrawCall {
+public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     public String str;
     public Identifier fontId;
     public boolean shadow;
@@ -121,63 +124,68 @@ public class TextWrapper extends PIDSDrawCall {
     }
 
     @Override
-    protected void validate() {
+    public void validate() {
         if(str == null) throw new IllegalArgumentException("Text must be filled");
     }
 
     @Override
-    protected void drawTransformed(GraphicsHolder graphicsHolder, Direction facing) {
-        graphicsHolder.scale((float)scale, (float)scale, (float)scale);
+    protected void drawTransformed(GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
+        MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolderNew, offset) -> {
+//          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
+            storedMatrixTransformations.transform(graphicsHolderNew, offset);
+            graphicsHolderNew.scale((float)scale, (float)scale, (float)scale);
 
-        List<MutableText> texts = new ArrayList<>();
-        final MutableText originalText = getFormattedText(str);
+            List<MutableText> texts = new ArrayList<>();
+            final MutableText originalText = getFormattedText(str);
 
-        int actualW = GraphicsHolder.getTextWidth(originalText);
-        int actualH = 9;
+            int actualW = GraphicsHolder.getTextWidth(originalText);
+            int actualH = 9;
 
-        if(overflowMode == 1) { // Stretch XY
-            if(actualW > w) {
-                graphicsHolder.scale((float)(w / actualW), 1, 1);
+            if(overflowMode == 1) { // Stretch XY
+                if(actualW > w) {
+                    graphicsHolderNew.scale((float)(w / actualW), 1, 1);
+                }
+                if(actualH > h) {
+                    graphicsHolderNew.scale(1, (float)(h / actualH), 1);
+                }
+            } else if(overflowMode == 2) { // Scale XY
+                double minScale = Math.min(actualW > w ? w / actualW : 1, actualH > h ? h / actualH : 1);
+                graphicsHolderNew.translate(0, (h - (actualH * minScale)) / 2, 0); // Center it vertically
+                graphicsHolderNew.scale((float)minScale, (float)minScale, 0);
             }
-            if(actualH > h) {
-                graphicsHolder.scale(1, (float)(h / actualH), 1);
-            }
-        } else if(overflowMode == 2) { // Scale XY
-            double minScale = Math.min(actualW > w ? w / actualW : 1, actualH > h ? h / actualH : 1);
-            graphicsHolder.translate(0, (h - (actualH * minScale)) / 2, 0); // Center it vertically
-            graphicsHolder.scale((float)minScale, (float)minScale, 0);
-        }
 
-        if(overflowMode == 3) { // Wrap Text
-            StringBuilder curLine = new StringBuilder();
-            int wSoFar = 0;
-            for(int i = 0; i < str.length(); i++) {
-                char c = str.charAt(i);
-                wSoFar += GraphicsHolder.getTextWidth(String.valueOf(c));
-                if(wSoFar > w) {
+            if(overflowMode == 3) { // Wrap Text
+                StringBuilder curLine = new StringBuilder();
+                int wSoFar = 0;
+                for(int i = 0; i < str.length(); i++) {
+                    char c = str.charAt(i);
+                    wSoFar += GraphicsHolder.getTextWidth(String.valueOf(c));
+                    if(wSoFar > w) {
+                        texts.add(getFormattedText(curLine.toString()));
+                        curLine = new StringBuilder(String.valueOf(c));
+                        wSoFar = 0;
+                    } else {
+                        curLine.append(c);
+                    }
+                }
+                if(curLine.length() > 0) {
                     texts.add(getFormattedText(curLine.toString()));
-                    curLine = new StringBuilder(String.valueOf(c));
-                    wSoFar = 0;
-                } else {
-                    curLine.append(c);
+                }
+            } else {
+                texts.add(getFormattedText(str));
+            }
+
+            if(overflowMode == 4 && actualW > w) { // Marquee
+                drawMarqueeText(graphicsHolderNew, texts.get(0).getString(), color, shadow, MAX_RENDER_LIGHT);
+            } else {
+                int i = 0;
+                for(MutableText text : texts) {
+                    drawText(graphicsHolderNew, text, i*9, color, shadow, MAX_RENDER_LIGHT);
+                    i++;
                 }
             }
-            if(curLine.length() > 0) {
-                texts.add(getFormattedText(curLine.toString()));
-            }
-        } else {
-            texts.add(getFormattedText(str));
-        }
-
-        if(overflowMode == 4 && actualW > w) { // Marquee
-            drawMarqueeText(graphicsHolder, texts.get(0).getString(), color, shadow, MAX_RENDER_LIGHT);
-        } else {
-            int i = 0;
-            for(MutableText text : texts) {
-                drawText(graphicsHolder, text, i*9, color, shadow, MAX_RENDER_LIGHT);
-                i++;
-            }
-        }
+            graphicsHolderNew.pop();
+        });
     }
 
     private void drawText(GraphicsHolder graphicsHolder, MutableText text, int y, int color, boolean shadow, int light) {

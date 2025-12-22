@@ -16,6 +16,7 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.ArrivalsCacheClient;
+import org.mtr.mod.render.StoredMatrixTransformations;
 
 public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEntityRenderer<T> {
     public PIDSRenderer(Argument dispatcher) {
@@ -46,15 +47,16 @@ public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEn
 
         ObjectArrayList<ArrivalResponse> arrivals = ArrivalsCacheClient.INSTANCE.requestArrivals(platforms);
 
-        graphicsHolder.push();
-        graphicsHolder.translate(0.5, 0.5, 0.5);
-        graphicsHolder.rotateYDegrees(90 - facing.asRotation());
-        graphicsHolder.rotateZDegrees(180);
-        renderPIDS(blockEntity, pidsPreset, graphicsHolder, world, state, pos, facing, arrivals, tickDelta, rowHidden);
-        graphicsHolder.pop();
+        StoredMatrixTransformations storedMatrixTransformations = new StoredMatrixTransformations(0.5 + blockEntity.getPos2().getX(), 0.5 + blockEntity.getPos2().getY(), 0.5 + blockEntity.getPos2().getZ());
+        storedMatrixTransformations.add(graphicsHolderNew -> {
+            graphicsHolderNew.rotateYDegrees(90 - facing.asRotation());
+            graphicsHolderNew.rotateZDegrees(180);
+        });
+
+        renderPIDS(blockEntity, pidsPreset, graphicsHolder, storedMatrixTransformations, world, state, pos, facing, arrivals, tickDelta, rowHidden);
     }
 
-    public abstract void renderPIDS(T blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden);
+    public abstract void renderPIDS(T blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden);
 
     private PIDSPresetBase getPreset(PIDSBlockEntity blockEntity) {
         return PIDSManager.getPreset(blockEntity.getPresetId(), PIDSManager.getPreset(blockEntity.getDefaultPresetId()));

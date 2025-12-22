@@ -12,7 +12,7 @@ public class NonPositionedSoundCall extends SoundCall {
     }
 
     @Override
-    public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+    public void run(World world, ScriptVector3f basePos) {
         MinecraftClient.getInstance().getPlayerMapped().playSound(soundEvent, SoundCategory.valueOf(soundCategory), volume, pitch);
     }
 }

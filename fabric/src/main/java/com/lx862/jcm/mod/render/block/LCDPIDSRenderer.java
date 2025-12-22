@@ -9,6 +9,7 @@ import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.render.StoredMatrixTransformations;
 
 public class LCDPIDSRenderer extends PIDSRenderer<LCDPIDSBlockEntity> {
     public LCDPIDSRenderer(Argument dispatcher) {
@@ -16,10 +17,10 @@ public class LCDPIDSRenderer extends PIDSRenderer<LCDPIDSBlockEntity> {
     }
 
     @Override
-    public void renderPIDS(LCDPIDSBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
-        graphicsHolder.translate(-0.19, -0.125, -0.130);
-        graphicsHolder.scale(1/96F, 1/96F, 1/96F);
-
-        pidsPreset.render(blockEntity, graphicsHolder, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 133, 72);
+    public void renderPIDS(LCDPIDSBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
+        storedMatrixTransformations.add(graphicsHolder1 -> {
+            graphicsHolder1.translate(-0.19, -0.125, -0.130);
+        });
+        pidsPreset.render(blockEntity, graphicsHolder, storedMatrixTransformations, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 133, 72);
     }
 }

@@ -35,7 +35,7 @@ public class PIDSProjectorBlock extends DirectionalBlock implements BlockWithEnt
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         return IBlock.checkHoldingBrush(world, player, () -> {
             PIDSProjectorBlockEntity be = (PIDSProjectorBlockEntity) world.getBlockEntity(pos).data;
-            Networking.sendPacketToClient(player, new PIDSProjectorGUIPacket(pos, be.getCustomMessages(), be.getRowHidden(), be.platformNumberHidden(), be.getPresetId(), be.getX(), be.getY(), be.getZ(), be.getRotateX(), be.getRotateY(), be.getRotateZ(), be.getScale()));
+            Networking.sendPacketToClient(player, new PIDSProjectorGUIPacket(pos, be.getCustomMessages(), be.getRowHidden(), be.platformNumberHidden(), be.getPresetId(), be.getOffsetX(), be.getOffsetY(), be.getOffsetZ(), be.getRotateX(), be.getRotateY(), be.getRotateZ(), be.getScale()));
         });
     }
 }

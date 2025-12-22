@@ -16,8 +16,7 @@ public class PIDSScriptContext extends MTRScriptContext {
 
     public void draw(Object obj) {
         if(obj instanceof PIDSDrawCall) {
-            ((PIDSDrawCall)obj).validate();
-            renderManager().queue((PIDSDrawCall)obj);
+            renderManager().queue((PIDSDrawCall<?>)obj);
         } else {
             throw new IllegalArgumentException("1st parameter is not a DrawCall!");
         }

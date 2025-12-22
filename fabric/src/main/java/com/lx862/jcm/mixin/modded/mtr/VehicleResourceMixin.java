@@ -35,8 +35,8 @@ public abstract class VehicleResourceMixin {
                 Vector carMidPos = vehicle.getHeadPosition(); // TODO: Get middle pos of each car...
                 ScriptVector3f basePos = new ScriptVector3f((float)carMidPos.x, (float)carMidPos.y, (float)carMidPos.z);
 
-                carRenderManager.invoke(world, ScriptVector3f.ZERO, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
-                carSoundManager.invoke(world, basePos, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
+                carRenderManager.invoke(world, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
+                carSoundManager.invoke(world, basePos);
             });
             carIndex++;
         }

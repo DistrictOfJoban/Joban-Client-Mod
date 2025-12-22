@@ -82,13 +82,13 @@ public class PIDSProjectorBlockEntity extends PIDSBlockEntity {
         this.markDirty2();
     }
 
-    public double getX() { return x; }
+    public double getOffsetX() { return x; }
 
-    public double getY() {
+    public double getOffsetY() {
         return y;
     }
 
-    public double getZ() {
+    public double getOffsetZ() {
         return z;
     }
 

@@ -10,11 +10,13 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.render.StoredMatrixTransformations;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
 public abstract class PIDSPresetBase implements RenderHelper {
+    public static final float BASE_SCALE = 1/96F;
     private final String id;
     private final String name;
     private final List<String> blacklist;
@@ -57,5 +59,5 @@ public abstract class PIDSPresetBase implements RenderHelper {
     public abstract int getTextColor();
     public abstract boolean isRowHidden(int row);
 
-    public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height);
+    public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height);
 }

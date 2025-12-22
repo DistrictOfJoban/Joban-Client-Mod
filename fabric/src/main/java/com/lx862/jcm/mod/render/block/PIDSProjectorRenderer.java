@@ -9,6 +9,9 @@ import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.render.MainRenderer;
+import org.mtr.mod.render.QueuedRenderLayer;
+import org.mtr.mod.render.StoredMatrixTransformations;
 
 public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity> {
     public PIDSProjectorRenderer(Argument dispatcher) {
@@ -16,41 +19,56 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
     }
 
     @Override
-    public void renderPIDS(PIDSProjectorBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
-        graphicsHolder.rotateYDegrees(90);
-        float scale = (float)blockEntity.getScale();
+    public void renderPIDS(PIDSProjectorBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
+        float appliedScale = (float)blockEntity.getScale();
+        float offsetX = (float)(0.5 - blockEntity.getOffsetX());
+        float offsetY = (float)(0.5 + blockEntity.getOffsetY());
+        float offsetZ = (float)(-0.5 - blockEntity.getOffsetZ());
         boolean showOutline = JCMUtil.playerHoldingBrush(PlayerEntity.cast(MinecraftClient.getInstance().getPlayerMapped()));
-        graphicsHolder.translate(-0.5 + blockEntity.getX(), -0.5 - blockEntity.getY(), 0.5 + blockEntity.getZ());
 
-        graphicsHolder.rotateXDegrees((float)blockEntity.getRotateX());
-        graphicsHolder.rotateYDegrees((float)blockEntity.getRotateY());
-        graphicsHolder.rotateZDegrees((float)blockEntity.getRotateZ());
+        storedMatrixTransformations.add(graphicsHolderNew -> {
+            graphicsHolderNew.rotateYDegrees(90);
+
+            graphicsHolderNew.translate(-0.5 + blockEntity.getOffsetX(), -0.5 - blockEntity.getOffsetY(), 0.5 + blockEntity.getOffsetZ());
+            graphicsHolderNew.rotateXDegrees((float)blockEntity.getRotateX());
+            graphicsHolderNew.rotateYDegrees((float)blockEntity.getRotateY());
+            graphicsHolderNew.rotateZDegrees((float)blockEntity.getRotateZ());
+        });
 
         // Draw projection effect
         if(showOutline && blockEntity.getRotateX() == 0 && blockEntity.getRotateY() == 0 && blockEntity.getRotateZ() == 0) {
-            graphicsHolder.push();
-            graphicsHolder.createVertexConsumer(RenderLayer.getLines());
+            MainRenderer.scheduleRender(QueuedRenderLayer.LINES, (graphicsHolderNew, offset) -> {
+//              graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
+                storedMatrixTransformations.transform(graphicsHolderNew, offset);
+                graphicsHolderNew.createVertexConsumer(RenderLayer.getLines());
 
-            float offsetX = (float)(0.5 - blockEntity.getX());
-            float offsetY = (float)(0.5 + blockEntity.getY());
-            float offsetZ = (float)(-0.5 - blockEntity.getZ());
+                graphicsHolderNew.drawLineInWorld(offsetX, offsetY, offsetZ, 0, 0, 0, 0xFFFF0000);
+                graphicsHolderNew.drawLineInWorld(offsetX, offsetY, offsetZ, 0 + (1.785f * appliedScale), 0, 0, 0xFFFF0000);
 
-            graphicsHolder.drawLineInWorld(offsetX, offsetY, offsetZ, 0, 0, 0, 0xFFFF0000);
-            graphicsHolder.drawLineInWorld(offsetX, offsetY, offsetZ, 0 + (1.785f * scale), 0, 0, 0xFFFF0000);
-
-            graphicsHolder.drawLineInWorld(offsetX, offsetY, offsetZ, 0, 0 + (1 * scale), 0, 0xFFFF0000);
-            graphicsHolder.drawLineInWorld(offsetX, offsetY, offsetZ, 0 + (1.785f * scale), 0 + (1 * scale), 0, 0xFFFF0000);
-            graphicsHolder.pop();
+                graphicsHolderNew.drawLineInWorld(offsetX, offsetY, offsetZ, 0, 0 + (1 * appliedScale), 0, 0xFFFF0000);
+                graphicsHolderNew.drawLineInWorld(offsetX, offsetY, offsetZ, 0 + (1.785f * appliedScale), 0 + (1 * appliedScale), 0, 0xFFFF0000);
+                graphicsHolderNew.pop();
+            });
         }
 
-        graphicsHolder.scale(1/76F, 1/76F, 1/76F);
-        graphicsHolder.scale(scale, scale, scale);
-        pidsPreset.render(blockEntity, graphicsHolder, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 136, 76);
+        StoredMatrixTransformations newMatrices = storedMatrixTransformations.copy();
+        newMatrices.add(graphicsHolderNew -> {
+            graphicsHolderNew.scale(1.26315f, 1.26315f, 1.26315f);
+            graphicsHolderNew.scale(appliedScale, appliedScale, appliedScale);
+        });
+
+        pidsPreset.render(blockEntity, graphicsHolder, newMatrices.copy(), world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 136, 76);
 
         // Border
         if(showOutline) {
-            graphicsHolder.createVertexConsumer(RenderLayer.getBeaconBeam(Constants.id("textures/block/light_1.png"), false));
-            RenderHelper.drawTexture(graphicsHolder, -8, -1, 0.1f, 138, 78, facing, 0xFFFF0000, MAX_RENDER_LIGHT);
+            MainRenderer.scheduleRender(QueuedRenderLayer.LIGHT, (graphicsHolderNew, offset) -> {
+//            graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
+                newMatrices.transform(graphicsHolderNew, offset);
+                graphicsHolderNew.scale(PIDSPresetBase.BASE_SCALE, PIDSPresetBase.BASE_SCALE, PIDSPresetBase.BASE_SCALE);
+                graphicsHolderNew.createVertexConsumer(RenderLayer.getBeaconBeam(Constants.id("textures/block/light_1.png"), false));
+                RenderHelper.drawTexture(graphicsHolderNew, -1, -1, 0.1f, 138, 78, facing, 0xFFFF0000, MAX_RENDER_LIGHT);
+                graphicsHolderNew.pop();
+            });
         }
     }
 }

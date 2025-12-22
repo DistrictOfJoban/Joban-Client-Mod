@@ -19,7 +19,7 @@ public class PositionedSoundCall extends SoundCall {
     }
 
     @Override
-    public void run(World world, ScriptVector3f basePos, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+    public void run(World world, ScriptVector3f basePos) {
         ScriptVector3f finalPos = basePos.copy();
         finalPos.add((float)x, (float)y, (float)z);
         world.playSound(finalPos.x(), finalPos.y(), finalPos.z(), soundEvent, SoundCategory.valueOf(soundCategory), volume, pitch, false);

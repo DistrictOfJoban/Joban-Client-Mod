@@ -50,16 +50,18 @@ public class RenderEyeCandyMixin {
         Direction facing = IBlock.getStatePropertySafe(blockEntity.getWorld2(), blockPos, BlockEyeCandy.FACING);
 
         StoredMatrixTransformations blockStoredMatrixTransformations = new StoredMatrixTransformations(0.5 + (double)blockEntity.getPos2().getX(), (double)blockEntity.getPos2().getY(), 0.5 + (double)blockEntity.getPos2().getZ());
+        StoredMatrixTransformations storedMatrixTransformations = blockStoredMatrixTransformations.copy();
 
-        graphicsHolder.push();
-        graphicsHolder.translate(blockEntity.getTranslateX(), blockEntity.getTranslateY(), blockEntity.getTranslateZ());
-        graphicsHolder.rotateYDegrees(180.0F - facing.asRotation());
-        graphicsHolder.rotateXDegrees((float)Math.toDegrees(blockEntity.getRotateX()));
-        graphicsHolder.rotateYDegrees((float)Math.toDegrees(blockEntity.getRotateY()));
-        graphicsHolder.rotateZDegrees((float)Math.toDegrees(blockEntity.getRotateZ()));
-        eyeCandyScriptInstance.getRenderManager().invoke(world, ScriptVector3f.ZERO, graphicsHolder, new StoredMatrixTransformations(), facing, light);
-        eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos(), graphicsHolder, blockStoredMatrixTransformations, facing, light);
-        graphicsHolder.pop();
+        storedMatrixTransformations.add((graphicsHolderNew) -> {
+            graphicsHolderNew.translate(blockEntity.getTranslateX(), blockEntity.getTranslateY(), blockEntity.getTranslateZ());
+            graphicsHolderNew.rotateYDegrees(180.0F - facing.asRotation());
+            graphicsHolderNew.rotateXDegrees((float)Math.toDegrees(blockEntity.getRotateX()));
+            graphicsHolderNew.rotateYDegrees((float)Math.toDegrees(blockEntity.getRotateY()));
+            graphicsHolderNew.rotateZDegrees((float)Math.toDegrees(blockEntity.getRotateZ()));
+        });
+
+        eyeCandyScriptInstance.getRenderManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, light);
+        eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos());
         ci.cancel();
     }
 }
