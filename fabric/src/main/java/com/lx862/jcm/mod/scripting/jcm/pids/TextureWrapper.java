@@ -11,7 +11,7 @@ import org.mtr.mod.render.StoredMatrixTransformations;
 
 import static com.lx862.jcm.mod.render.RenderHelper.*;
 
-public class TextureWrapper extends PIDSDrawCall {
+public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
     public Identifier id;
     public int color = ARGB_WHITE;
     public float u1 = 0;

@@ -135,7 +135,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
                     u2,
                     v2,
                     facing,
-                    this.color,
+                    RenderHelper.ARGB_BLACK + this.color,
                     light
             );
             graphicsHolderNew.pop();
