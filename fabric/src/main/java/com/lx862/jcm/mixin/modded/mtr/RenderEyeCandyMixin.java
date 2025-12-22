@@ -54,10 +54,10 @@ public class RenderEyeCandyMixin {
 
         storedMatrixTransformations.add((graphicsHolderNew) -> {
             graphicsHolderNew.translate(blockEntity.getTranslateX(), blockEntity.getTranslateY(), blockEntity.getTranslateZ());
-            graphicsHolderNew.rotateYDegrees(180.0F - facing.asRotation());
-            graphicsHolderNew.rotateXDegrees((float)Math.toDegrees(blockEntity.getRotateX()));
-            graphicsHolderNew.rotateYDegrees((float)Math.toDegrees(blockEntity.getRotateY()));
-            graphicsHolderNew.rotateZDegrees((float)Math.toDegrees(blockEntity.getRotateZ()));
+            graphicsHolderNew.rotateYDegrees(180 - facing.asRotation());
+            graphicsHolderNew.rotateXRadians(blockEntity.getRotateX() + (float) Math.PI);
+            graphicsHolderNew.rotateYRadians(blockEntity.getRotateY());
+            graphicsHolderNew.rotateZRadians(blockEntity.getRotateZ());
         });
 
         eyeCandyScriptInstance.getRenderManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, light);
