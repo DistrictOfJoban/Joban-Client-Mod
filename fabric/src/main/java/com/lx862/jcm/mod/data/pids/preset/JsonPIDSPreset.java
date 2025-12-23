@@ -138,7 +138,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
         }
 
         if(showWeather) {
-            components.add(new WeatherIconComponent(x, y, 9, 9, new KVPair()
+            components.add(new WeatherIconComponent(x, y+0.5, 9, 9, new KVPair()
                     .with("weatherIconSunny", ICON_WEATHER_SUNNY)
                     .with("weatherIconRainy", ICON_WEATHER_RAINY)
                     .with("weatherIconThunder", ICON_WEATHER_THUNDER)));

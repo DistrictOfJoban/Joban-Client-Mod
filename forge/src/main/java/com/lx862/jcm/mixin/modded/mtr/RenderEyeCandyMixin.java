@@ -54,11 +54,11 @@ public class RenderEyeCandyMixin {
         StoredMatrixTransformations blockStoredMatrixTransformations = new StoredMatrixTransformations(0.5 + (double)blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), 0.5 + (double)blockEntity.getPos2().getZ());
         StoredMatrixTransformations storedMatrixTransformations = blockStoredMatrixTransformations.copy();
         storedMatrixTransformations.add((graphicsHolderNew) -> {
-            graphicsHolderNew.translate(blockEntity.getTranslateX(), blockEntity.getTranslateY(), (double)blockEntity.getTranslateZ());
-            graphicsHolderNew.rotateYDegrees(180.0F - facing.asRotation());
-            graphicsHolderNew.rotateXDegrees(blockEntity.getRotateX() + 180.0F);
-            graphicsHolderNew.rotateYDegrees(blockEntity.getRotateY());
-            graphicsHolderNew.rotateZDegrees(blockEntity.getRotateZ());
+            graphicsHolderNew.translate(blockEntity.getTranslateX(), blockEntity.getTranslateY(), blockEntity.getTranslateZ());
+            graphicsHolderNew.rotateYDegrees(180 - facing.asRotation());
+            graphicsHolderNew.rotateXRadians(blockEntity.getRotateX());
+            graphicsHolderNew.rotateYRadians(blockEntity.getRotateY());
+            graphicsHolderNew.rotateZRadians(blockEntity.getRotateZ());
         });
         eyeCandyScriptInstance.getRenderManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, light);
         eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos());

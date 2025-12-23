@@ -14,7 +14,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
     private final QuadDefinition quadDefinition;
     private Identifier textureId;
     private QueuedRenderLayer renderType;
-    private int color = RenderHelper.ARGB_WHITE;
+    private int color = 0xFFFFFF;
     private float u1 = 0;
     private float v1 = 0;
     private float u2 = 1;

@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
 
 public class ScriptManager {
     public static final Logger LOGGER = LogManager.getLogger("MTR Scripting via JCM");
-    private static final ObjectList<TriConsumer<String, Context, Scriptable>> onParseScriptCallback = new ObjectArrayList<>();
+    private final ObjectList<TriConsumer<String, Context, Scriptable>> onParseScriptCallback = new ObjectArrayList<>();
     private final MTRClassShutter classShutter;
     private final ScriptInstanceManager instanceManager;
     private final List<ExecutorService> scriptExecutors;
