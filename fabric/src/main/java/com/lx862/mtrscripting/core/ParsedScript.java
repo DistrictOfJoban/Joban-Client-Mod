@@ -2,7 +2,6 @@ package com.lx862.mtrscripting.core;
 
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.data.ScriptContent;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo;
 import com.lx862.mtrscripting.util.*;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
 import com.lx862.mtrscripting.wrapper.MinecraftClientWrapper;
@@ -88,7 +87,7 @@ public class ParsedScript {
         #if MC_VERSION < "11701"
         scope.put("Timing", scope, new NativeJavaObject(scope, timingUtil, TimingUtil.class));
         #else
-        scope.put("Timing", scope, new NativeJavaObject(scope, timingUtil, TypeInfo.OBJECT));
+        scope.put("Timing", scope, new NativeJavaObject(scope, timingUtil, com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
         #endif
         scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTracker.class));
         scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTracker.class));
