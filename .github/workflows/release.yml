@@ -44,7 +44,7 @@ jobs:
         run: |
           ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.4.2
         with:
           body_path: CHANGELOG.md
           draft: false
