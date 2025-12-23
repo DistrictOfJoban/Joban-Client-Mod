@@ -25,6 +25,7 @@ import java.util.Map;
 public class MTRContentResourceManager {
     private static final HashMap<String, ParsedScript> vehicleScripts = new HashMap<>();
     private static final HashMap<String, ParsedScript> eyecandyScripts = new HashMap<>();
+    private static final HashMap<String, String> vehicleToVehicleScripts = new HashMap<>();
     private static final JsonParser JSON_PARSER = new JsonParser();
 
     public static void reload() {
@@ -65,6 +66,7 @@ public class MTRContentResourceManager {
     }
 
     private static void readMtrCustomResources() {
+        vehicleToVehicleScripts.clear();
         ResourceManagerHelper.readAllResources(new Identifier("mtr", "mtr_custom_resources.json"), (inputStream) -> {
             try(InputStreamReader isp = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
                 final JsonObject rootObject = JSON_PARSER.parse(isp).getAsJsonObject();
@@ -81,25 +83,51 @@ public class MTRContentResourceManager {
                             JsonObject vehicleResource = map.getValue().getAsJsonObject();
                             ParsedScript parsedScript = tryParseScript(baseId, "vehicle", "Vehicle", vehicleResource, false, true);
                             if (parsedScript != null) {
-                                vehicleScripts.put(baseId + "_trailer", parsedScript);
-                                vehicleScripts.put(baseId + "_cab_1", parsedScript);
-                                vehicleScripts.put(baseId + "_cab_2", parsedScript);
-                                vehicleScripts.put(baseId + "_cab_3", parsedScript);
+                                vehicleScripts.put(baseId, parsedScript);
                             }
+                            vehicleToVehicleScripts.put(baseId + "_cab_1", baseId);
+                            vehicleToVehicleScripts.put(baseId + "_cab_2", baseId);
+                            vehicleToVehicleScripts.put(baseId + "_cab_3", baseId);
+                            vehicleToVehicleScripts.put(baseId + "_trailer", baseId);
                         }
                     } else { // MTR 4
+                        final JsonElement vehicleScriptsElement = rootObject.get("vehicleScripts");
                         final JsonArray vehicleArray = vehicleElement.getAsJsonArray();
+
+                        HashMap<String, String> vehicleToVehicleScriptId = new HashMap<>();
 
                         for(JsonElement vehicleEntry : vehicleArray) {
                             JsonObject vehicleObject = vehicleEntry.getAsJsonObject();
                             String baseId = vehicleObject.get("id").getAsString();
                             if(vehicleObject.has("scripting")) { // For MTR 4, we put all scripting related fields into a sub-entry
-                                JsonObject scriptObject = vehicleObject.get("scripting").getAsJsonObject();
-                                ParsedScript parsedScript = tryParseScript(baseId, "vehicle", "Vehicle", scriptObject, true, false);
+                                vehicleToVehicleScriptId.put(baseId, vehicleObject.get("scripting").getAsString());
+                            }
+                        }
+
+                        if(vehicleScriptsElement != null) {
+                            JsonArray vehicleScriptsArray = vehicleScriptsElement.getAsJsonArray();
+
+                            for(JsonElement entryElement : vehicleScriptsArray) {
+                                JsonObject scriptObject = entryElement.getAsJsonObject();
+                                String vehicleScriptGroupId = scriptObject.get("id").getAsString();
+
+                                ParsedScript parsedScript = tryParseScript(vehicleScriptGroupId, "vehicle", "Vehicle", scriptObject, true, false);
                                 if (parsedScript != null) {
-                                    vehicleScripts.put(baseId, parsedScript);
+                                    vehicleScripts.put(vehicleScriptGroupId, parsedScript);
                                 }
                             }
+                        }
+
+                        vehicleToVehicleScripts.putAll(vehicleToVehicleScriptId);
+                    }
+
+                    // Validation
+                    for(Map.Entry<String, String> vehicleEntry : vehicleToVehicleScripts.entrySet()) {
+                        String vehicleId = vehicleEntry.getKey();
+                        String vehicleGroupId = vehicleEntry.getValue();
+
+                        if(!vehicleScripts.containsKey(vehicleGroupId)) {
+                            JCMLogger.warn("Vehicle script \"{}\" is either missing or failed to load! (Used by vehicle {})", vehicleGroupId, vehicleId);
                         }
                     }
                 }
@@ -173,6 +201,10 @@ public class MTRContentResourceManager {
 
     public static ParsedScript getVehicleScript(String carriageId) {
         return vehicleScripts.get(carriageId);
+    }
+
+    public static String getVehicleScriptGroupId(String str) {
+        return vehicleToVehicleScripts.getOrDefault(str, str);
     }
 
     private static void logException(String action, Exception e) {

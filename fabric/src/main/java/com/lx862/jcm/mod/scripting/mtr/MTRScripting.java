@@ -74,13 +74,6 @@ public class MTRScripting {
         }
     }
 
-    public static String getVehicleGroupId(String str) {
-        return str.replace("trailer", "")
-                .replace("cab_1", "")
-                .replace("cab_2", "")
-                .replace("cab_3", "");
-    }
-
     public static List<ExecutorService> getScriptExecutors() {
         return new ArrayList<>(scriptExecutors);
     }

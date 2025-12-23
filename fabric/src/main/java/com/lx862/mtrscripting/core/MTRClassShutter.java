@@ -65,9 +65,15 @@ public class MTRClassShutter implements ClassShutter {
 
     private boolean isClassAllowed(String className) {
         if(!shutterEnabled) return true;
-        if(className.startsWith("com.lx862.mtrscripting.util")) return true;
-        if(className.startsWith("com.lx862.mtrscripting.wrapper")) return true;
-        if(className.startsWith("com.lx862.mtrscripting.lib.org.mozilla")) return true;
+        if(isClassScriptingCore(className)) return true;
+
+        if(className.startsWith("[")) { // Array
+            String type = className.substring(className.lastIndexOf("[")+1);
+            if(type.startsWith("B") || type.startsWith("C") || type.startsWith("D") || type.startsWith("F") || type.startsWith("I") || type.startsWith("J") || type.startsWith("S") || type.startsWith("Z")) return true;
+            if(type.startsWith("L")) {
+                className = type.substring(1, type.length()-1); // Omit the base type & semicolon at the end
+            }
+        }
 
         for(ClassRule cs : deniedScriptClasses) {
             if(cs.match(className)) return false;
@@ -75,6 +81,13 @@ public class MTRClassShutter implements ClassShutter {
         for(ClassRule cs : allowedScriptClasses) {
             if(cs.match(className)) return true;
         }
+        return false;
+    }
+
+    private boolean isClassScriptingCore(String className) {
+        if(className.startsWith("com.lx862.mtrscripting.util")) return true;
+        if(className.startsWith("com.lx862.mtrscripting.wrapper")) return true;
+        if(className.startsWith("com.lx862.mtrscripting.lib.org.mozilla")) return true;
         return false;
     }
 }

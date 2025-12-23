@@ -1,5 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
+import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
 import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
@@ -24,7 +25,10 @@ public abstract class VehicleResourceMixin {
     private void renderScript(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int totalCars, int light, boolean noOpenDoorways, CallbackInfo ci) {
         int carIndex = 0;
         for(VehicleCar vehicleCar : vehicle.vehicleExtraData.immutableVehicleCars) {
-            ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), vehicleCar.getVehicleId()));
+            String scriptGroupId = MTRContentResourceManager.getVehicleScriptGroupId(vehicleCar.getVehicleId());
+            if(scriptGroupId == null) continue;
+
+            ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptGroupId));
             if(!(scriptInstance instanceof VehicleScriptInstance)) return;
 
             ScriptRenderManager carRenderManager = ((VehicleScriptInstance)scriptInstance).renderManagers[carIndex];
@@ -35,8 +39,13 @@ public abstract class VehicleResourceMixin {
                 Vector carMidPos = vehicle.getHeadPosition(); // TODO: Get middle pos of each car...
                 ScriptVector3f basePos = new ScriptVector3f((float)carMidPos.x, (float)carMidPos.y, (float)carMidPos.z);
 
-                carRenderManager.invoke(world, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
-                carSoundManager.invoke(world, basePos);
+                if(carRenderManager != null) {
+                    carRenderManager.invoke(world, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
+                }
+
+                if(carSoundManager != null) {
+                    carSoundManager.invoke(world, basePos);
+                }
             });
             carIndex++;
         }
