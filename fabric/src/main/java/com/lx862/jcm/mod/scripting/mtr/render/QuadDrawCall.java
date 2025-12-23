@@ -117,6 +117,8 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
         MainRenderer.scheduleRender(renderType, (graphicsHolderNew, offset) -> {
             graphicsHolderNew.createVertexConsumer(getRenderType(textureId));
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
+            graphicsHolderNew.rotateXDegrees(-180);
+
             graphicsHolderNew.drawTextureInWorld(
                     quadDefinition.x2,
                     quadDefinition.y2,

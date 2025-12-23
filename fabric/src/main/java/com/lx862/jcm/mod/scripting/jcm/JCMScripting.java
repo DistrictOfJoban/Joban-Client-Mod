@@ -3,11 +3,11 @@ package com.lx862.jcm.mod.scripting.jcm;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
-import com.lx862.jcm.mod.scripting.jcm.pids.PIDSModelDrawCall;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextWrapper;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextureWrapper;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.render.DisplayHelperCompat;
+import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.render.QuadDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.util.ModelManager;
 import com.lx862.jcm.mod.scripting.mtr.util.TextUtil;
@@ -43,7 +43,7 @@ public class JCMScripting {
             scriptable.put("ModelManager", scriptable, new NativeJavaClass(scriptable, ModelManager.class));
 
             if (contextName.equals("PIDS")) {
-                scriptable.put("ModelDrawCall", scriptable, new NativeJavaClass(scriptable, PIDSModelDrawCall.class));
+                scriptable.put("ModelDrawCall", scriptable, new NativeJavaClass(scriptable, ModelDrawCall.class));
                 scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));
                 scriptable.put("Texture", scriptable, new NativeJavaClass(scriptable, TextureWrapper.class));
             }

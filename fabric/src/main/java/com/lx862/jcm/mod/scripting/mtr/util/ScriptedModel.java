@@ -40,7 +40,6 @@ public class ScriptedModel implements StoredModelResourceBase {
             if(optimizedModelWrapper != null) {
                 MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolder, offset) -> {
                     storedMatrixTransformations.transform(graphicsHolder, offset);
-                    graphicsHolder.rotateXDegrees(180F);
                     CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.queue(optimizedModelWrapper, graphicsHolder, light);
                     graphicsHolder.pop();
                 });
@@ -49,7 +48,6 @@ public class ScriptedModel implements StoredModelResourceBase {
             if(dynamicVehicleModel != null) {
                 MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolder, offset) -> {
                     storedMatrixTransformations.transform(graphicsHolder, offset);
-                    graphicsHolder.rotateXDegrees(180F);
                     dynamicVehicleModel.render(graphicsHolder, light, 0, 1, 1, 1, 1);
                     graphicsHolder.pop();
                 });

@@ -16,6 +16,8 @@ import java.util.Map;
 
 @SuppressWarnings("unused")
 public class NetworkingUtil {
+    private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+    private static final int DEFAULT_READ_TIMEOUT = 10000;
     private static final String USER_AGENT_STRING = "Joban Client Mod (https://jcm.joban.org)";
 
     public static NetworkResponse<?> fetchString(String urlStr) throws IOException {
@@ -42,6 +44,9 @@ public class NetworkingUtil {
     public static NetworkResponse<BufferedImage> fetchImage(String urlStr, NativeObject requestObject) throws IOException {
         URL url = new URL(urlStr);
         HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
+        urlConnection.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
+        urlConnection.setReadTimeout(DEFAULT_READ_TIMEOUT);
+
         processRequestObject(requestObject, urlConnection);
         try(InputStream is = urlConnection.getInputStream()) {
             return new NetworkResponse<>(ImageIO.read(is), urlConnection.getHeaderFields(), urlConnection.getResponseCode());
