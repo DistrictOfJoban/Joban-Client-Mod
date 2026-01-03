@@ -68,10 +68,9 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
 
     @Override
     protected void drawTransformed(GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
-        MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolderNew, offset) -> {
+        MainRenderer.scheduleRender(this.id, false, QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
-            graphicsHolderNew.createVertexConsumer(RenderLayer.getText(this.id));
             RenderHelper.drawTexture(graphicsHolderNew, 0, 0, 0, (float)w, (float)h, u1, v1, u2, v2, facing, ARGB_BLACK + color, MAX_RENDER_LIGHT);
             graphicsHolderNew.pop();
         });
