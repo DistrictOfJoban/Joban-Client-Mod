@@ -32,7 +32,7 @@ public abstract class RenderVehiclesMixin {
             Object2ObjectOpenHashMap<String, ParsedScript> scriptsInVehicle = new Object2ObjectOpenHashMap<>();
 
             for (VehicleCar vehicleCar : cars) {
-                String vehicleGroupId = MTRScripting.getVehicleGroupId(vehicleCar.getVehicleId());
+                String vehicleGroupId = MTRContentResourceManager.getVehicleScriptGroupId(vehicleCar.getVehicleId());
                 ParsedScript script = MTRContentResourceManager.getVehicleScript(vehicleGroupId);
                 if (script == null || scriptsInVehicle.containsKey(vehicleGroupId)) continue;
                 scriptsInVehicle.put(vehicleGroupId, script);
@@ -44,11 +44,11 @@ public abstract class RenderVehiclesMixin {
                 String vehicleGroupId = scriptEntry.getKey();
                 List<Integer> carsForScripts = new ArrayList<>();
                 for(int i = 0; i < cars.size(); i++) {
-                    if(MTRScripting.getVehicleGroupId(cars.get(i).getVehicleId()).equals(vehicleGroupId)) carsForScripts.add(i);
+                    if(MTRContentResourceManager.getVehicleScriptGroupId(cars.get(i).getVehicleId()).equals(vehicleGroupId)) carsForScripts.add(i);
                 }
                 int[] carsArray = carsForScripts.stream().mapToInt(i->i).toArray();
 
-                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntry.getKey()), () -> new VehicleScriptInstance(new VehicleScriptContext(scriptEntry.getKey(), carsArray, cars.size()), vehicle, scriptEntry.getValue()));
+                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), vehicleGroupId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicleGroupId, carsArray, cars.size()), vehicle, scriptEntry.getValue()));
                 if(scriptInstance == null) continue;
 
                 scriptInstance.setWrapperObject(wrapperObject);
