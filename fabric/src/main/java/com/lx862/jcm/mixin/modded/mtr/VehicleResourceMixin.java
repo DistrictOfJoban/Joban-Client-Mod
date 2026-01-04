@@ -22,32 +22,30 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = VehicleResource.class, remap = false)
 public abstract class VehicleResourceMixin {
     @Inject(method = "queue(Lorg/mtr/mod/render/StoredMatrixTransformations;Lorg/mtr/mod/data/VehicleExtension;IIIZ)V", at = @At("HEAD"))
-    private void renderScript(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int totalCars, int light, boolean noOpenDoorways, CallbackInfo ci) {
-        int carIndex = 0;
-        for(VehicleCar vehicleCar : vehicle.vehicleExtraData.immutableVehicleCars) {
-            String scriptGroupId = MTRContentResourceManager.getVehicleScriptGroupId(vehicleCar.getVehicleId());
-            if(scriptGroupId == null) continue;
+    private void renderCarScript(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int totalCars, int light, boolean noOpenDoorways, CallbackInfo ci) {
+        VehicleCar vehicleCar = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber);
+        String scriptGroupId = MTRContentResourceManager.getVehicleScriptGroupId(vehicleCar.getVehicleId());
+        if(scriptGroupId == null) return;
 
-            ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptGroupId));
-            if(!(scriptInstance instanceof VehicleScriptInstance)) return;
+        ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptGroupId));
+        if(!(scriptInstance instanceof VehicleScriptInstance)) return;
 
-            ScriptRenderManager carRenderManager = ((VehicleScriptInstance)scriptInstance).renderManagers[carIndex];
-            ScriptSoundManager carSoundManager = ((VehicleScriptInstance)scriptInstance).soundManagers[carIndex];
+        ScriptRenderManager carRenderManager = ((VehicleScriptInstance)scriptInstance).renderManagers[carNumber];
+        ScriptSoundManager carSoundManager = ((VehicleScriptInstance)scriptInstance).soundManagers[carNumber];
 
-            MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolder, vec) -> {
-                World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
-                Vector carMidPos = vehicle.getHeadPosition(); // TODO: Get middle pos of each car...
-                ScriptVector3f basePos = new ScriptVector3f((float)carMidPos.x, (float)carMidPos.y, (float)carMidPos.z);
+        StoredMatrixTransformations newTransform = storedMatrixTransformations.copy();
+        newTransform.add(gh -> gh.translate(0, -1, 0)); // Replicate behaviour from MTR 3. Not sure if we should do it here tho?
 
-                if(carRenderManager != null) {
-                    carRenderManager.invoke(world, graphicsHolder, storedMatrixTransformations.copy(), Direction.NORTH, light);
-                }
+        World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
+        Vector carMidPos = vehicle.getHeadPosition(); // TODO: Get middle pos of each car...
+        ScriptVector3f basePos = new ScriptVector3f((float)carMidPos.x, (float)carMidPos.y, (float)carMidPos.z);
 
-                if(carSoundManager != null) {
-                    carSoundManager.invoke(world, basePos);
-                }
-            });
-            carIndex++;
+        if(carRenderManager != null) {
+            carRenderManager.invoke(world, newTransform, Direction.NORTH, light);
+        }
+
+        if(carSoundManager != null) {
+            carSoundManager.invoke(world, basePos);
         }
     }
 }

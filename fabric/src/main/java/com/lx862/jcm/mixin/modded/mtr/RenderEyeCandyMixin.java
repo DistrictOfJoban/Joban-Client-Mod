@@ -60,7 +60,7 @@ public class RenderEyeCandyMixin {
             graphicsHolderNew.rotateZRadians(blockEntity.getRotateZ());
         });
 
-        eyeCandyScriptInstance.getRenderManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, light);
+        eyeCandyScriptInstance.getRenderManager().invoke(world, storedMatrixTransformations, facing, light);
         eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos());
         ci.cancel();
     }

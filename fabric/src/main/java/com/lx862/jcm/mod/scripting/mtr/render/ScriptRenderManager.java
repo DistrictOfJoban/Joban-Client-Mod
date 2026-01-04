@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ScriptRenderManager {
-    public final List<RenderDrawCall<?>> drawCalls;
+    private final List<RenderDrawCall<?>> drawCalls;
 
     public ScriptRenderManager() {
         this.drawCalls = new ArrayList<>();
@@ -34,19 +34,19 @@ public class ScriptRenderManager {
         this.drawCalls.add(call);
     }
 
-    public void invoke(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+    public void invoke(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         List<RenderDrawCall<?>> drawCalls = new ArrayList<>(this.drawCalls);
         List<RenderDrawCall<?>> normalDrawCalls = drawCalls.stream().filter(e -> !(e instanceof PIDSDrawCall)).collect(Collectors.toList());
         List<RenderDrawCall<?>> pidsDrawCalls = drawCalls.stream().filter(e -> e instanceof PIDSDrawCall).collect(Collectors.toList());
 
         for(RenderDrawCall<?> drawCall : new ArrayList<>(normalDrawCalls)) {
-            drawCall.run(world, graphicsHolder, storedMatrixTransformations.copy(), facing, light);
+            drawCall.run(world, storedMatrixTransformations.copy(), facing, light);
         }
 
         StoredMatrixTransformations pidsStoredMatrixTransformation = storedMatrixTransformations.copy();
         for(RenderDrawCall<?> drawCall : new ArrayList<>(pidsDrawCalls)) {
             pidsStoredMatrixTransformation.add(graphicsHolderNew -> graphicsHolderNew.translate(0, 0, -0.0002)); // Prevent z-fighting
-            drawCall.run(world, graphicsHolder, pidsStoredMatrixTransformation.copy(), facing, light);
+            drawCall.run(world, pidsStoredMatrixTransformation.copy(), facing, light);
         }
     }
 

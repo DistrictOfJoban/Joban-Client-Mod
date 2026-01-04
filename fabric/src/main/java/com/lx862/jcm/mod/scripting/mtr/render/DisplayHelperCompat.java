@@ -31,7 +31,7 @@ public class DisplayHelperCompat extends RenderDrawCall<DisplayHelperCompat> {
 
     public DisplayHelperCompat copy(Identifier textureId) {
         List<QuadDrawCall> newDrawCalls = new ArrayList<>();
-        for(QuadDrawCall quadDrawCall : quadDrawCalls) {
+        for(QuadDrawCall quadDrawCall : this.quadDrawCalls) {
             QuadDrawCall copyCall = quadDrawCall.copy();
             copyCall.texture(textureId);
             newDrawCalls.add(copyCall);
@@ -44,10 +44,10 @@ public class DisplayHelperCompat extends RenderDrawCall<DisplayHelperCompat> {
     }
 
     @Override
-    public void run(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        super.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
+    public void run(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        super.run(world, storedMatrixTransformations, facing, light);
         for(QuadDrawCall drawCall : quadDrawCalls) {
-            drawCall.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
+            drawCall.run(world, storedMatrixTransformations, facing, light);
         }
     }
 

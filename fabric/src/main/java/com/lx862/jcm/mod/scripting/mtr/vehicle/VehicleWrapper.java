@@ -17,6 +17,7 @@ public class VehicleWrapper {
     @Deprecated private final boolean[] doorRightOpen;
     private final List<PlatformInfo> allRoutePlatforms;
     private final List<PlatformInfo> thisRoutePlatforms;
+    private final Siding siding;
 
     public VehicleWrapper(VehicleExtension vehicleExtension) {
         this.vehicleExtension = vehicleExtension;
@@ -28,6 +29,7 @@ public class VehicleWrapper {
         }
         this.allRoutePlatforms = new ArrayList<>();
         this.thisRoutePlatforms = new ArrayList<>();
+        this.siding = MinecraftClientData.getInstance().sidingIdMap.get(vehicleExtension.vehicleExtraData.getSidingId());
 
         Depot depot = MinecraftClientData.getInstance().depotIdMap.get(vehicleExtension.vehicleExtraData.getDepotId());
 
@@ -49,6 +51,10 @@ public class VehicleWrapper {
 
             stopIdx++;
         }
+    }
+
+    public Siding siding() {
+        return this.siding;
     }
 
     public boolean shouldRender(int carIndex) {

@@ -35,17 +35,17 @@ public abstract class PIDSDrawCall<T extends PIDSDrawCall<?>> extends RenderDraw
     }
 
     @Override
-    public void run(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        super.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
+    public void run(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        super.run(world, storedMatrixTransformations, facing, light);
 
         storedMatrixTransformations.add(graphicsHolder1 -> {
             graphicsHolder1.scale(PIDSPresetBase.BASE_SCALE, PIDSPresetBase.BASE_SCALE, PIDSPresetBase.BASE_SCALE);
             graphicsHolder1.translate(this.x, this.y, 0);
         });
-        drawTransformed(graphicsHolder, storedMatrixTransformations, facing);
+        drawTransformed(storedMatrixTransformations, facing);
     }
 
     public abstract void validate();
 
-    protected abstract void drawTransformed(GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing);
+    protected abstract void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing);
 }

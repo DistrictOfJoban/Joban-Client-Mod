@@ -1,8 +1,7 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
 import com.lx862.jcm.mod.scripting.mtr.MTRScriptContext;
-import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
-import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
+import com.lx862.jcm.mod.scripting.mtr.render.*;
 import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.util.Matrices;
 import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;
@@ -17,16 +16,6 @@ public class VehicleScriptContext extends MTRScriptContext {
     private final int[] myCars;
     private final String vehicleGroupId;
 
-    @Override
-    public void resetForNextRun() {
-        for(ScriptRenderManager rm : carRenderers) {
-            rm.reset();
-        }
-        for(ScriptSoundManager sm : carSoundManagers) {
-            sm.reset();
-        }
-    }
-
     public VehicleScriptContext(String vehicleGroupId, int[] myCars, int carLength) {
         super(vehicleGroupId);
         this.myCars = myCars;
@@ -40,13 +29,20 @@ public class VehicleScriptContext extends MTRScriptContext {
         }
     }
 
+    public void drawCarModel(DisplayHelperCompat dh, int carIndex, Matrices matrices) {
+        if(carRenderers[carIndex] == null) return;
+
+        if(matrices != null) dh.matrices(matrices);
+        carRenderers[carIndex].queue(dh);
+    }
+
     public void drawCarModel(ScriptedModel model, int carIndex, Matrices matrices) {
         if(carRenderers[carIndex] == null) return;
 
         ModelDrawCall modelDrawCall = ModelDrawCall.create()
                 .matrices(matrices == null ? null : matrices.copy())
                 .modelObject(model);
-        carRenderers[carIndex].drawCalls.add(modelDrawCall);
+        carRenderers[carIndex].queue(modelDrawCall);
     }
 
     public void drawConnModel(ScriptedModel model, int carIndex, Matrices matrices) {
@@ -77,5 +73,19 @@ public class VehicleScriptContext extends MTRScriptContext {
 
     public ScriptSoundManager[] getCarSoundManagers() {
         return this.carSoundManagers;
+    }
+
+    @Override
+    public void resetForNextRun() {
+        for (ScriptRenderManager carRenderer : carRenderers) {
+            if (carRenderer != null) {
+                carRenderer.reset();
+            }
+        }
+        for(ScriptSoundManager soundManager : carSoundManagers) {
+            if (soundManager != null) {
+                soundManager.reset();
+            }
+        }
     }
 }

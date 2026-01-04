@@ -103,7 +103,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             });
 
             graphicsHolder.translate(0, 0, -0.005);
-            pidsScriptInstance.getRenderManager().invoke(world, graphicsHolder, storedMatrixTransformations, facing, MAX_RENDER_LIGHT);
+            pidsScriptInstance.getRenderManager().invoke(world, storedMatrixTransformations, facing, MAX_RENDER_LIGHT);
             pidsScriptInstance.getSoundManager().invoke(world, pidsWrapper.blockPos());
         }
     }

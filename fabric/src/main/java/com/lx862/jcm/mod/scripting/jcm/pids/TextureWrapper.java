@@ -67,7 +67,7 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
     }
 
     @Override
-    protected void drawTransformed(GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
+    protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
         MainRenderer.scheduleRender(this.id, false, QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
             storedMatrixTransformations.transform(graphicsHolderNew, offset);

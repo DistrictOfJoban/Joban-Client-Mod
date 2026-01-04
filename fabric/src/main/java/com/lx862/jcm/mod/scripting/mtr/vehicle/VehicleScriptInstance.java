@@ -36,6 +36,6 @@ public class VehicleScriptInstance extends ScriptInstance<VehicleWrapper> {
 
     public boolean shouldInvalidate() {
         boolean notInGame = MinecraftClient.getInstance().getWorldMapped() == null;
-        return notInGame || !MinecraftClientData.getInstance().vehicles.contains(vehicleExtension);
+        return notInGame || MinecraftClientData.getInstance().vehicles.stream().noneMatch(v -> v.getId() == vehicleExtension.getId());
     }
 }

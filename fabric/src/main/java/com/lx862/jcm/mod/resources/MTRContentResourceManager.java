@@ -77,18 +77,21 @@ public class MTRContentResourceManager {
                 if(vehicleElement != null) {
                     if(isVehicleLegacyResource) { // MTR 3
                         final JsonObject vehicleObject = vehicleElement.getAsJsonObject();
-
                         for (Map.Entry<String, JsonElement> map : vehicleObject.entrySet()) {
                             String baseId = "mtr_custom_train_" + map.getKey();
-                            JsonObject vehicleResource = map.getValue().getAsJsonObject();
-                            ParsedScript parsedScript = tryParseScript(baseId, "vehicle", "Vehicle", vehicleResource, false, true);
-                            if (parsedScript != null) {
-                                vehicleScripts.put(baseId, parsedScript);
+                            try {
+                                JsonObject vehicleResource = map.getValue().getAsJsonObject();
+                                ParsedScript parsedScript = tryParseScript(baseId, "vehicle", "Vehicle", vehicleResource, false, true);
+                                if (parsedScript != null) {
+                                    vehicleScripts.put(baseId, parsedScript);
+                                    vehicleToVehicleScripts.put(baseId + "_cab_1", baseId);
+                                    vehicleToVehicleScripts.put(baseId + "_cab_2", baseId);
+                                    vehicleToVehicleScripts.put(baseId + "_cab_3", baseId);
+                                    vehicleToVehicleScripts.put(baseId + "_trailer", baseId);
+                                }
+                            } catch (Exception e) {
+                                logException("parsing legacy vehicle script '" + baseId + "' in mtr_custom_resources.json", e);
                             }
-                            vehicleToVehicleScripts.put(baseId + "_cab_1", baseId);
-                            vehicleToVehicleScripts.put(baseId + "_cab_2", baseId);
-                            vehicleToVehicleScripts.put(baseId + "_cab_3", baseId);
-                            vehicleToVehicleScripts.put(baseId + "_trailer", baseId);
                         }
                     } else { // MTR 4
                         final JsonElement vehicleScriptsElement = rootObject.get("vehicleScripts");

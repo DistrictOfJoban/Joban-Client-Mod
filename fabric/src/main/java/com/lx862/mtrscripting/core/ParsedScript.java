@@ -139,7 +139,12 @@ public class ParsedScript {
             } finally {
                 Context.exit();
             }
-            finishCallback.run();
+
+            try {
+                finishCallback.run();
+            } catch (Exception e) {
+                ScriptManager.LOGGER.fatal("[JCM Scripting] Internal error during finalization work after script execution, this is a bug!", e);
+            }
         });
     }
 

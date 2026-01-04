@@ -111,8 +111,8 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
     }
 
     @Override
-    public void run(World world, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        super.run(world, graphicsHolder, storedMatrixTransformations, facing, light);
+    public void run(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        super.run(world, storedMatrixTransformations, facing, light);
 
         MainRenderer.scheduleRender(renderType, (graphicsHolderNew, offset) -> {
             graphicsHolderNew.createVertexConsumer(getRenderType(textureId));

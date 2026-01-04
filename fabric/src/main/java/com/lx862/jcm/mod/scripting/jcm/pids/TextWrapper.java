@@ -129,7 +129,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     }
 
     @Override
-    protected void drawTransformed(GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
+    protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
         MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
