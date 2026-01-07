@@ -106,7 +106,7 @@ public class ScriptResourceUtil {
     private static final Identifier NOTO_SANS_CJK_LOCATION = new Identifier("mtr", "font/noto-sans-cjk-tc-medium.otf");
     private static final Identifier NOTO_SANS_LOCATION = new Identifier("mtr", "font/noto-sans-semibold.ttf");
     private static final Identifier NOTO_SERIF_LOCATION = new Identifier("mtr", "font/noto-serif-cjk-tc-semibold.ttf");
-    private static boolean hasNotoSansCjk = false;
+    private static boolean hasNotoSansCjk = true;
     private static Font NOTO_SANS_MAYBE_CJK;
     private static Font NOTO_SERIF_CACHE;
 
@@ -117,13 +117,13 @@ public class ScriptResourceUtil {
                     try {
                         NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_CJK_LOCATION);
                     } catch (Exception ex) {
-                        ScriptManager.LOGGER.warn("[JCM Scripting] Failed to load font", ex);
+                        ScriptManager.LOGGER.error("[JCM Scripting] Failed to load font", ex);
                     }
                 } else {
                     try {
                         NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_LOCATION);
                     } catch (Exception ex) {
-                        ScriptManager.LOGGER.warn("[JCM Scripting] Failed to load font", ex);
+                        ScriptManager.LOGGER.error("[JCM Scripting] Failed to load font", ex);
                     }
                 }
             }
@@ -133,7 +133,7 @@ public class ScriptResourceUtil {
                 try {
                     NOTO_SERIF_CACHE = readFont(NOTO_SERIF_LOCATION);
                 } catch (Exception ex) {
-                    ScriptManager.LOGGER.warn("[JCM Scripting] Failed loading font", ex);
+                    ScriptManager.LOGGER.error("[JCM Scripting] Failed loading font", ex);
                     return null;
                 }
             }
