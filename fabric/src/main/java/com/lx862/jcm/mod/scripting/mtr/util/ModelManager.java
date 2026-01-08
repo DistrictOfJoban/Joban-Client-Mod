@@ -12,4 +12,14 @@ public class ModelManager {
             return null;
         }
     }
+
+    @Deprecated
+    public static ScriptedModel loadRawModel(Object o, Identifier id, Object atlasManager) {
+        return loadModel(id, true);
+    }
+
+    @Deprecated
+    public static ScriptedModel uploadVertArrays(ScriptedModel scriptedModel) {
+        return scriptedModel;
+    }
 }

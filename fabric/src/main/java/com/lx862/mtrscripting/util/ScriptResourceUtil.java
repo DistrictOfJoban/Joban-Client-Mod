@@ -64,6 +64,12 @@ public class ScriptResourceUtil {
         ScriptManager.LOGGER.info("[JCM Scripting] {}", sb.toString());
     }
 
+    @Deprecated
+    public static Object manager() {
+        return null;
+    }
+
+
     public static Identifier identifier(String textForm) {
         return new Identifier(textForm);
     }
