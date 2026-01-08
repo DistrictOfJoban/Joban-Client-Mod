@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
 import com.lx862.jcm.mixin.modded.mtr.VehicleSchemaMixin;
-import org.apache.commons.lang3.NotImplementedException;
+import com.lx862.mtrscripting.exceptions.ScriptNotImplementedException;
 import org.mtr.core.data.*;
 import org.mtr.core.tool.Utilities;
 import org.mtr.mod.client.MinecraftClientData;
@@ -48,7 +48,7 @@ public class VehicleWrapper {
     }
 
     public List<PlatformInfo> getNextRoutePlatforms() {
-        throw new NotImplementedException();
+        throw new ScriptNotImplementedException();
     }
 
     public int getThisRoutePlatformsNextIndex() {
@@ -59,7 +59,7 @@ public class VehicleWrapper {
     }
 
     public List<PlatformInfo> getDebugThisRoutePlatforms(int count) {
-        throw new NotImplementedException();
+        throw new ScriptNotImplementedException();
     }
 
     public static class OperationData {
@@ -186,7 +186,7 @@ public class VehicleWrapper {
         if(carIndex >= vehicleExtension.vehicleExtraData.immutableVehicleCars.size()) return null;
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getVehicleId();
     }
-    public String baseTrainType(int carIndex) { throw new NotImplementedException(); }
+    public String baseTrainType(int carIndex) { throw new ScriptNotImplementedException(); }
     public TransportMode transportMode() { return vehicleExtension.getTransportMode(); }
     public double spacing(int carIndex) { return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getLength(); }
     public double width(int carIndex) { return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getWidth(); }
@@ -196,7 +196,7 @@ public class VehicleWrapper {
     public double accelerationConstant() { return vehicleExtension.vehicleExtraData.getAcceleration(); }
     public boolean manualAllowed() { return vehicleExtension.vehicleExtraData.getIsManualAllowed(); }
     public double maxManualSpeed() { return vehicleExtension.vehicleExtraData.getMaxManualSpeed(); }
-    public int manualToAutomaticTime() { throw new NotImplementedException(); }
+    public int manualToAutomaticTime() { throw new ScriptNotImplementedException(); }
     public List<PathData> path() { return vehicleExtension.vehicleExtraData.immutablePath; }
     public double railProgress() { return this.getRailProgress(); }
     public double getRailProgress() { return ((VehicleSchemaMixin)vehicleExtension).getRailProgress(); }
@@ -210,7 +210,7 @@ public class VehicleWrapper {
     }
     public boolean isOnRoute() { return vehicleExtension.getIsOnRoute(); }
 
-    public boolean justOpening() { throw new NotImplementedException(); }
-    public boolean justClosing(float doorCloseTime) { throw new NotImplementedException(); }
+    public boolean justOpening() { throw new ScriptNotImplementedException(); }
+    public boolean justClosing(float doorCloseTime) { throw new ScriptNotImplementedException(); }
     public boolean isDoorOpening() { return vehicleExtension.persistentVehicleData.getAdjustedDoorMultiplier(vehicleExtension.vehicleExtraData) > 0; }
 }
