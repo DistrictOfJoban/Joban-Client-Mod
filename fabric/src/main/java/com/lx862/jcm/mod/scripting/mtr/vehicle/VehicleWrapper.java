@@ -17,7 +17,7 @@ public class VehicleWrapper {
     private final VehicleExtension vehicleExtension;
     @Deprecated public final boolean[] doorLeftOpen;
     @Deprecated public final boolean[] doorRightOpen;
-    private OperationData operationData;
+    private StopsData stopsData;
 
     public VehicleWrapper(VehicleExtension vehicleExtension) {
         this.vehicleExtension = vehicleExtension;
@@ -28,52 +28,48 @@ public class VehicleWrapper {
             this.doorRightOpen[i] = doorValue() > 0;
         }
 
-        this.operationData = new OperationData(vehicleExtension);
+        this.stopsData = new StopsData(vehicleExtension);
     }
 
-    public List<PlatformInfo> getAllPlatforms() {
-        return operationData.allRoutePlatforms;
+    public List<Stop> getAllPlatforms() {
+        return stopsData.allStops;
     }
 
     public int getAllPlatformsNextIndex() {
         int headIndex = getRailIndex(getRailProgress(), false);
-        Map.Entry<Integer, Integer> entry = operationData.pathToPlatformIndex.ceilingEntry(headIndex);
-        if(entry == null) return operationData.allRoutePlatforms.size();
+        Map.Entry<Integer, Integer> entry = stopsData.pathToStopIndex.ceilingEntry(headIndex);
+        if(entry == null) return stopsData.allStops.size();
         return entry.getValue();
     }
 
-    public List<PlatformInfo> getThisRoutePlatforms() {
-        // TODO: Segment PlatInfo into routes?
-        return operationData.thisRoutePlatforms;
+    public List<Stop> getThisRoutePlatforms() {
+        return getAllPlatforms().stream().filter(stop -> stop.route.getId() == vehicleExtension.vehicleExtraData.getThisRouteId()).toList();
     }
 
-    public List<PlatformInfo> getNextRoutePlatforms() {
-        throw new ScriptNotImplementedException();
+    public List<Stop> getNextRoutePlatforms() {
+        return getAllPlatforms().stream().filter(stop -> stop.route.getId() == vehicleExtension.vehicleExtraData.getNextRouteId()).toList();
     }
 
     public int getThisRoutePlatformsNextIndex() {
-        int headIndex = getRailIndex(getRailProgress(), false);
-        Map.Entry<Integer, Integer> entry = operationData.pathToRoutePlatformIndex.ceilingEntry(headIndex);
-        if(entry == null) return operationData.thisRoutePlatforms.size();
-        return entry.getValue();
+        List<Stop> thisRoutePlatforms = getThisRoutePlatforms();
+        int idx = thisRoutePlatforms.indexOf(thisRoutePlatforms.stream().filter(stop -> stop.distance >= railProgress()).findFirst().orElse(null));
+        if(idx != -1) return idx;
+
+        return thisRoutePlatforms.size();
     }
 
-    public List<PlatformInfo> getDebugThisRoutePlatforms(int count) {
+    public List<Stop> getDebugThisRoutePlatforms(int count) {
         throw new ScriptNotImplementedException();
     }
 
-    public static class OperationData {
-        public final List<PlatformInfo> allRoutePlatforms;
-        public final List<PlatformInfo> thisRoutePlatforms;
-        public final TreeMap<Integer, Integer> pathToPlatformIndex;
-        public final TreeMap<Integer, Integer> pathToRoutePlatformIndex;
+    public static class StopsData {
+        public final List<Stop> allStops;
+        public final TreeMap<Integer, Integer> pathToStopIndex;
         public final Siding siding;
 
-        public OperationData(VehicleExtension vehicleExtension) {
-            this.allRoutePlatforms = new ArrayList<>();
-            this.thisRoutePlatforms = new ArrayList<>();
-            this.pathToPlatformIndex = new TreeMap<>();
-            this.pathToRoutePlatformIndex = new TreeMap<>();
+        public StopsData(VehicleExtension vehicleExtension) {
+            this.allStops = new ArrayList<>();
+            this.pathToStopIndex = new TreeMap<>();
             this.siding = MinecraftClientData.getInstance().sidingIdMap.get(vehicleExtension.vehicleExtraData.getSidingId());
 
             List<SimplifiedRoute> allRoutes = new ArrayList<>();
@@ -86,11 +82,11 @@ public class VehicleWrapper {
             SimplifiedRoute nextRoute = MinecraftClientData.getInstance().simplifiedRouteIdMap.get(vehicleExtension.vehicleExtraData.getNextRouteId());
             if (nextRoute != null) allRoutes.add(nextRoute);
 
-            final SimplifiedRoute runningRoute = thisRoute == null ? nextRoute : thisRoute;
+            List<PathData> vehiclePaths = vehicleExtension.vehicleExtraData.immutablePath;
 
             int totalStopIdx = 0;
-            for (int i = 0; i < vehicleExtension.vehicleExtraData.immutablePath.size(); i++) {
-                PathData path = vehicleExtension.vehicleExtraData.immutablePath.get(i);
+            for (int i = 0; i < vehiclePaths.size(); i++) {
+                PathData path = vehiclePaths.get(i);
                 if (path.getDwellTime() < 500) continue;
 
                 SimplifiedRoute pathRoute = null;
@@ -121,43 +117,48 @@ public class VehicleWrapper {
                 Station station = MinecraftClientData.getInstance().stationIdMap.get(routePlatforms.get(pathRouteStopIdx).getStationId());
                 Platform platform = MinecraftClientData.getInstance().platformIdMap.get(routePlatforms.get(pathRouteStopIdx).getPlatformId());
 
-                double startDistance = path.getStartDistance();
-                double endDistance = path.getEndDistance();
-                PlatformInfo platInfo = new PlatformInfo(pathRoute, station, platform, null, destinationName, startDistance, endDistance, false /* TEMP*/);
+                double stopDistance = path.getEndDistance();
+                PathData nextPath = i+1 >= vehiclePaths.size() ? null : vehiclePaths.get(i+1);
+                boolean reverseAtPlatform = nextPath != null && nextPath.isOppositeRail(path);
 
-                this.pathToPlatformIndex.put(i, this.allRoutePlatforms.size());
-                this.allRoutePlatforms.add(platInfo);
-                
-                if (runningRoute != null && pathRoute.getId() == runningRoute.getId()) {
-                    pathToRoutePlatformIndex.put(i, thisRoutePlatforms.size());
-                    thisRoutePlatforms.add(platInfo);
-                }
+                Stop stop = new Stop(pathRoute, station, platform, null, destinationName, stopDistance, reverseAtPlatform);
+
+                this.pathToStopIndex.put(i, this.allStops.size());
+                this.allStops.add(stop);
 
                 totalStopIdx++;
             }
         }
     }
 
-    public static class PlatformInfo {
+    public static class Stop {
         public SimplifiedRoute route;
         public Station station;
+        public String name;
+        @Deprecated
         public Platform platform;
+        @Deprecated
         public Station destinationStation;
         public String destinationName;
-        public double startDistance;
-        public double endDistance;
+
+        public List<SimplifiedRoute> interchangeRoutes;
+        public long dwellTime; // in millisecond
+
+        public double distance;
         public boolean reverseAtPlatform;
 
-        public PlatformInfo(SimplifiedRoute route, Station station, Platform platform,
-                            Station destinationStation, String destinationName, double startDistance, double endDistance,
-                            boolean reverseAtPlatform) {
+        public Stop(SimplifiedRoute route, Station station, Platform platform,
+                    Station destinationStation, String destinationName, double distance,
+                    boolean reverseAtPlatform) {
             this.route = route;
             this.station = station;
             this.platform = platform;
+            this.interchangeRoutes = new ArrayList<>();
+            this.dwellTime = platform.getDwellTime();
+            this.name = this.station == null ? platform.getName() : station.getName();
             this.destinationStation = destinationStation;
             this.destinationName = destinationName;
-            this.startDistance = startDistance;
-            this.endDistance = endDistance;
+            this.distance = distance;
             this.reverseAtPlatform = reverseAtPlatform;
         }
     }
@@ -181,7 +182,7 @@ public class VehicleWrapper {
     public long id() {
         return this.vehicleExtension.getId();
     }
-    public Siding siding() { return this.operationData.siding; }
+    public Siding siding() { return this.stopsData.siding; }
     public String trainTypeId(int carIndex) {
         if(carIndex >= vehicleExtension.vehicleExtraData.immutableVehicleCars.size()) return null;
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getVehicleId();
