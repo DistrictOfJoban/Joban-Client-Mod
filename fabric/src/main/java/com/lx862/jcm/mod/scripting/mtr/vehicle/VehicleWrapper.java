@@ -57,11 +57,11 @@ public class VehicleWrapper {
     }
 
     public List<Stop> getThisRoutePlatforms() {
-        return getAllPlatforms().stream().filter(stop -> stop.route.getId() == vehicleExtension.vehicleExtraData.getThisRouteId()).toList();
+        return getAllPlatforms().stream().filter(stop -> stop.route.getId() == vehicleExtension.vehicleExtraData.getThisRouteId()).collect(Collectors.toList());
     }
 
     public List<Stop> getNextRoutePlatforms() {
-        return getAllPlatforms().stream().filter(stop -> stop.route.getId() == vehicleExtension.vehicleExtraData.getNextRouteId()).toList();
+        return getAllPlatforms().stream().filter(stop -> stop.route.getId() == vehicleExtension.vehicleExtraData.getNextRouteId()).collect(Collectors.toList());
     }
 
     public int getThisRoutePlatformsNextIndex() {
