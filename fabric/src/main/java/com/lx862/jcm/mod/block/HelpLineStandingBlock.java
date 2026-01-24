@@ -31,10 +31,12 @@ public class HelpLineStandingBlock extends Vertical3Block implements PowerableBl
     @Override
     public ActionResult onUse2(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         for(BlockPos bPos : getAllPos(state, world, pos)) {
-            BlockState blockState = world.getBlockState(bPos);
-            world.setBlockState(bPos, blockState.with(new Property<>(UNPOWERED.data), false));
-            updateAllRedstone(World.cast(world), bPos, new Block(this), blockState);
-            scheduleBlockTick(world, bPos, new Block(this), 20);
+            BlockState bs = world.getBlockState(bPos);
+            if(bs.getBlock().data instanceof HelpLineStandingBlock) {
+                world.setBlockState(bPos, bs.with(new Property<>(UNPOWERED.data), false));
+                updateAllRedstone(World.cast(world), bPos, new Block(this), bs);
+                scheduleBlockTick(world, bPos, new Block(this), 20);
+            }
         }
         return ActionResult.SUCCESS;
     }
