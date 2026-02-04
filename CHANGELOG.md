@@ -1,4 +1,9 @@
-# JCM v2.2.0-be for MTR 4.0.2 has been released!
+# JCM v2.2.0-beta-1 for MTR 4.0.2 has been released!
+
+## New
+- **Scripting:**
+- - Add quick reload keys (Shift+R for JCM scripts, Ctrl+R for MTR scripts), this allows reloading script without F3+T, greatly improving development time.
+- - - Requires JCM Debug Mode to be enabled!
 
 ## Changes
 

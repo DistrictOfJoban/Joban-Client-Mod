@@ -7,6 +7,9 @@ import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
+import com.lx862.jcm.mod.util.TextUtil;
+import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.TextHelper;
 
 public class Events {
     public static void register() {
@@ -34,6 +37,30 @@ public class Events {
             }
             if(JCMClient.getConfig().debug && KeyBinds.SCRIPT_DEBUG_SOURCE_NEXT.wasPressed()) {
                 ScriptDebugOverlay.nextSource();
+            }
+            if(JCMClient.getConfig().debug && KeyBinds.SCRIPT_DEBUG_RELOAD.wasPressed()) {
+                boolean isShiftPressed = MinecraftClient.getInstance().getOptionsMapped().getKeySneakMapped().isPressed();
+                boolean isCtrlPressed = MinecraftClient.getInstance().getOptionsMapped().getKeySprintMapped().isPressed();
+                if(!isShiftPressed && !isCtrlPressed) return;
+                boolean shouldReloadJCM = isShiftPressed;
+
+                if(MinecraftClient.getInstance().getPlayerMapped() != null) {
+                    MutableText prefix = TextUtil.literal("[JCM] ").formatted(TextFormatting.AQUA);
+
+                    if(shouldReloadJCM) {
+                        MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.append(prefix, TextUtil.literal("Reloading all JCM PIDS Scripts...").formatted(TextFormatting.YELLOW))), false);
+                    } else {
+                        MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.append(prefix, TextUtil.literal("Reloading all MTR Scripts...").formatted(TextFormatting.YELLOW))), false);
+                    }
+                }
+
+                if(shouldReloadJCM) {
+                    JCMScripting.reset();
+                    JCMResourceManager.reload();
+                } else {
+                    MTRScripting.reset();
+                    MTRContentResourceManager.reload();
+                }
             }
         });
 
