@@ -102,6 +102,7 @@
 	"gui.jsblock.faresaver.discount": "Discount amount",
     "gui.jsblock.keybinds.script_debug_source_previous": "Script Debug Overlay: Previous Source",
     "gui.jsblock.keybinds.script_debug_source_next": "Script Debug Overlay: Next Source",
+	"gui.jsblock.keybinds.script_debug_reload": "Reload Script (w/ sneak key: JCM, w/ sprint key: MTR)",
 	"gui.jsblock.operator_button.keys_title": "Accepted keys:",
 	"gui.jsblock.operator_button.key.drivable": "Drivable: ",
 	"gui.jsblock.operator_button.key.door": "Can open door: ",
