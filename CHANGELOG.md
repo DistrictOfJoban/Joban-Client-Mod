@@ -6,6 +6,10 @@
 - - - Requires JCM Debug Mode to be enabled!
 
 ## Changes
+- **Scripting**
+- - Add `java.text.*` package to whitelist, as it is required for AWT's AttributedString.
+
+## Changes
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
