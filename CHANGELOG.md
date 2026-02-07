@@ -8,6 +8,7 @@
 ## Changes
 - **Scripting**
 - - Add `java.text.*` package to whitelist, as it is required for AWT's AttributedString.
+- - Fix internal timer possibly rolling into the negatives after rejoining world, fixes some freezing issues for scripts using `RateLimit`.
 
 ## Changes
 
