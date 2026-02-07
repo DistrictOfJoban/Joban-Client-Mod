@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MainRendererMixin {
     @Inject(method = "getMillisElapsed", at = @At("RETURN"))
     private static void incrementTimer(CallbackInfoReturnable<?> ci) {
-        TimingUtil.update(ci.getReturnValueJ());
+        long elapsedTime = ci.getReturnValueJ();
+        if(elapsedTime > 0) { // This can be negative after rejoining world
+            TimingUtil.update(ci.getReturnValueJ());
+        }
     }
 }
