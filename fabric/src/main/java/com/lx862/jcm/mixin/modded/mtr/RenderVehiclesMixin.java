@@ -48,7 +48,7 @@ public abstract class RenderVehiclesMixin {
                 }
                 int[] carsArray = carsForScripts.stream().mapToInt(i->i).toArray();
 
-                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), vehicleGroupId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicleGroupId, carsArray, cars.size()), vehicle, scriptEntry.getValue()));
+                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), vehicleGroupId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, vehicleGroupId, carsArray, cars.size()), vehicle, scriptEntry.getValue()));
                 if(scriptInstance == null) continue;
 
                 scriptInstance.setWrapperObject(wrapperObject);

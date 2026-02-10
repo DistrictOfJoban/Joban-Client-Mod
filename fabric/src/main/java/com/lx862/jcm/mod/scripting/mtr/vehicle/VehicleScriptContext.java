@@ -8,16 +8,21 @@ import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.mapping.holder.Identifier;
+import org.mtr.mod.client.VehicleRidingMovement;
+import org.mtr.mod.data.VehicleExtension;
 
 
 public class VehicleScriptContext extends MTRScriptContext {
+    private final VehicleExtension vehicleExtension;
     private final ScriptRenderManager[] carRenderers;
     private final ScriptSoundManager[] carSoundManagers;
     private final int[] myCars;
     private final String vehicleGroupId;
+    private boolean requireFetchData;
 
-    public VehicleScriptContext(String vehicleGroupId, int[] myCars, int carLength) {
+    public VehicleScriptContext(VehicleExtension vehicleExtension, String vehicleGroupId, int[] myCars, int carLength) {
         super(vehicleGroupId);
+        this.vehicleExtension = vehicleExtension;
         this.myCars = myCars;
         this.vehicleGroupId = vehicleGroupId;
         this.carRenderers = new ScriptRenderManager[carLength];
@@ -56,7 +61,10 @@ public class VehicleScriptContext extends MTRScriptContext {
 
     public void playAnnSound(Identifier sound, float volume, float pitch) {
         if(carSoundManagers[0] == null) return;
-        carSoundManagers[0].playLocalSound(sound, volume, pitch);
+
+        if(VehicleRidingMovement.isRiding(vehicleExtension.getId())) {
+            carSoundManagers[0].playLocalSound(sound, volume, pitch);
+        }
     }
 
     public String vehicleGroupId() {
@@ -73,6 +81,14 @@ public class VehicleScriptContext extends MTRScriptContext {
 
     public ScriptSoundManager[] getCarSoundManagers() {
         return this.carSoundManagers;
+    }
+
+    public void enableDataRequesting() {
+        this.requireFetchData = true;
+    }
+
+    public boolean requireFetchData() {
+        return requireFetchData;
     }
 
     @Override

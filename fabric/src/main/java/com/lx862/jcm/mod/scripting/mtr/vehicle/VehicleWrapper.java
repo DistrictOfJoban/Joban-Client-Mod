@@ -103,7 +103,7 @@ public class VehicleWrapper {
                     double stopDistance = -1; //path.getEndDistance();
                     boolean reverseAtPlatform = false;
 
-                    Stop stop = new Stop(route, station, platform, destinationName, stopDistance, reverseAtPlatform);
+                    Stop stop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, stopDistance, reverseAtPlatform);
                     this.allStops.add(stop);
                 }
             }
@@ -124,14 +124,14 @@ public class VehicleWrapper {
         public boolean reverseAtPlatform;
 
         public Stop(SimplifiedRoute route, Station station, Platform platform,
-                    String destinationName, double distance,
+                    String name, String destinationName, double distance,
                     boolean reverseAtPlatform) {
             this.route = route;
             this.station = station;
             this.platform = platform;
             this.interchangeRoutes = new ArrayList<>();
             this.dwellTime = platform == null ? -1 : platform.getDwellTime();
-            this.name = station == null ? platform == null ? "" : platform.getName() : station.getName();
+            this.name = name;
             this.destinationName = destinationName;
             this.distance = distance;
             this.reverseAtPlatform = reverseAtPlatform;
@@ -172,7 +172,7 @@ public class VehicleWrapper {
     public double accelerationConstant() { return vehicleExtension.vehicleExtraData.getAcceleration(); }
     public boolean manualAllowed() { return vehicleExtension.vehicleExtraData.getIsManualAllowed(); }
     public double maxManualSpeed() { return vehicleExtension.vehicleExtraData.getMaxManualSpeed(); }
-    public int manualToAutomaticTime() { return siding().getManualToAutomaticTime(); }
+    public int manualToAutomaticTime() { Siding siding = siding(); return siding == null ? -1 : siding.getManualToAutomaticTime(); }
     public List<PathData> path() { return vehicleExtension.vehicleExtraData.immutablePath; }
     public double railProgress() { return ((VehicleSchemaMixin)vehicleExtension).getRailProgress(); }
     public double getRailProgress(int car) {
