@@ -8,15 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScriptSoundManager {
-    public final List<SoundCall> soundCalls;
+    private final List<SoundCall> soundCalls;
 
     public ScriptSoundManager() {
-        this.soundCalls = new ArrayList<>();
+        this(new ArrayList<>());
     }
 
     private ScriptSoundManager(List<SoundCall> soundCalls) {
-        this.soundCalls = new ArrayList<>();
-        this.soundCalls.addAll(soundCalls);
+        this.soundCalls = soundCalls;
     }
 
     public void playLocalSound(Identifier id, float volume, float pitch) {
@@ -33,13 +32,17 @@ public class ScriptSoundManager {
     }
 
     public void invoke(World world, ScriptVector3f basePos) {
-        for(SoundCall soundCall : new ArrayList<>(soundCalls)) {
+        for(SoundCall soundCall : soundCalls) {
             soundCall.run(world, basePos);
         }
     }
 
     public ScriptSoundManager copy() {
-        return new ScriptSoundManager(this.soundCalls);
+        return new ScriptSoundManager(new ArrayList<>(this.soundCalls));
+    }
+
+    public void addCallsFrom(ScriptSoundManager other) {
+        this.soundCalls.addAll(other.soundCalls);
     }
 
     public void reset() {

@@ -11,11 +11,14 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mod.client.VehicleRidingMovement;
 import org.mtr.mod.data.VehicleExtension;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class VehicleScriptContext extends MTRScriptContext {
     private final VehicleExtension vehicleExtension;
-    private final ScriptRenderManager[] carRenderers;
-    private final ScriptSoundManager[] carSoundManagers;
+    private final Map<Integer, ScriptRenderManager> carRenderers;
+    private final Map<Integer, ScriptSoundManager> carSoundManagers;
     private final int[] myCars;
     private final String vehicleGroupId;
     private boolean requireFetchData;
@@ -25,29 +28,29 @@ public class VehicleScriptContext extends MTRScriptContext {
         this.vehicleExtension = vehicleExtension;
         this.myCars = myCars;
         this.vehicleGroupId = vehicleGroupId;
-        this.carRenderers = new ScriptRenderManager[carLength];
-        this.carSoundManagers = new ScriptSoundManager[carLength];
+        this.carRenderers = new HashMap<>();
+        this.carSoundManagers = new HashMap<>();
 
         for(int i : myCars) {
-            carRenderers[i] = new ScriptRenderManager();
-            carSoundManagers[i] = new ScriptSoundManager();
+            carRenderers.put(i, new ScriptRenderManager());
+            carSoundManagers.put(i, new ScriptSoundManager());
         }
     }
 
     public void drawCarModel(DisplayHelperCompat dh, int carIndex, Matrices matrices) {
-        if(carRenderers[carIndex] == null) return;
+        if(!carRenderers.containsKey(carIndex)) return;
 
         if(matrices != null) dh.matrices(matrices);
-        carRenderers[carIndex].queue(dh);
+        carRenderers.get(carIndex).queue(dh);
     }
 
     public void drawCarModel(ScriptedModel model, int carIndex, Matrices matrices) {
-        if(carRenderers[carIndex] == null) return;
+        if(!carRenderers.containsKey(carIndex)) return;
 
         ModelDrawCall modelDrawCall = ModelDrawCall.create()
                 .matrices(matrices == null ? null : matrices.copy())
                 .modelObject(model);
-        carRenderers[carIndex].queue(modelDrawCall);
+        carRenderers.get(carIndex).queue(modelDrawCall);
     }
 
     public void drawConnModel(ScriptedModel model, int carIndex, Matrices matrices) {
@@ -55,15 +58,15 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public void playCarSound(Identifier sound, int carIndex, float x, float y, float z, float volume, float pitch) {
-        if(carSoundManagers[carIndex] == null) return;
-        carSoundManagers[carIndex].playSound(sound, new ScriptVector3f(x, y, z), volume, pitch);
+        if(!carSoundManagers.containsKey(carIndex)) return;
+        carSoundManagers.get(carIndex).playSound(sound, new ScriptVector3f(x, y, z), volume, pitch);
     }
 
     public void playAnnSound(Identifier sound, float volume, float pitch) {
-        if(carSoundManagers[0] == null) return;
+        if(!carSoundManagers.containsKey(0)) return;
 
         if(VehicleRidingMovement.isRiding(vehicleExtension.getId())) {
-            carSoundManagers[0].playLocalSound(sound, volume, pitch);
+            carSoundManagers.get(0).playLocalSound(sound, volume, pitch);
         }
     }
 
@@ -75,11 +78,11 @@ public class VehicleScriptContext extends MTRScriptContext {
         return this.myCars;
     }
 
-    public ScriptRenderManager[] getCarRenderManager() {
+    public Map<Integer, ScriptRenderManager> getCarRenderManagers() {
         return this.carRenderers;
     }
 
-    public ScriptSoundManager[] getCarSoundManagers() {
+    public Map<Integer, ScriptSoundManager> getCarSoundManagers() {
         return this.carSoundManagers;
     }
 
@@ -93,12 +96,12 @@ public class VehicleScriptContext extends MTRScriptContext {
 
     @Override
     public void resetForNextRun() {
-        for (ScriptRenderManager carRenderer : carRenderers) {
+        for (ScriptRenderManager carRenderer : carRenderers.values()) {
             if (carRenderer != null) {
                 carRenderer.reset();
             }
         }
-        for(ScriptSoundManager soundManager : carSoundManagers) {
+        for(ScriptSoundManager soundManager : carSoundManagers.values()) {
             if (soundManager != null) {
                 soundManager.reset();
             }
