@@ -4,18 +4,20 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "compat.SimpleDefaultedRegistryMixin",
+    "modded.mtr.BlockPIDSPoleMixin",
+    "modded.mtr.InitAccessorMixin",
     "modded.mtr.TicketSystemMixin",
-    "modded.mtr.BlockPIDSPoleMixin"
+    "modded.tsc.MainAccessorMixin",
+    "modded.tsc.SidingAccessorMixin"
   ],
   "client": [
+    "minecraft.NativeImageAccessor",
+    "modded.mtr.BlockEyecandyMixin",
     "modded.mtr.MainRendererMixin",
     "modded.mtr.RenderEyeCandyMixin",
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleResourceMixin",
-    "modded.mtr.VehicleSchemaMixin",
-    "modded.mtr.BlockEyecandyMixin",
-    "modded.tsc.MixinVehiclePlatformRouteInfo",
-    "minecraft.NativeImageAccessor"
+    "modded.mtr.VehicleSchemaMixin"
   ],
   "injectors": {
     "defaultRequire": 1

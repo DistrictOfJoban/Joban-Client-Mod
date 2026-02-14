@@ -2,6 +2,8 @@ package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.network.block.*;
 import com.lx862.jcm.mod.network.gui.*;
+import com.lx862.jcm.mod.network.scripting.FullStopsDataS2CPacket;
+import com.lx862.jcm.mod.network.scripting.RequestFullStopsDataC2SPacket;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.ServerPlayerEntity;
@@ -36,6 +38,10 @@ public class Networking {
         registerPacket(PIDSProjectorGUIPacket.class, PIDSProjectorGUIPacket::new);
         registerPacket(SoundLooperGUIPacket.class, SoundLooperGUIPacket::new);
         registerPacket(SubsidyMachineGUIPacket.class, SubsidyMachineGUIPacket::new);
+
+        // Scripting data
+        registerPacket(RequestFullStopsDataC2SPacket.class, RequestFullStopsDataC2SPacket::new);
+        registerPacket(FullStopsDataS2CPacket.class, FullStopsDataS2CPacket::new);
     }
 
     public static void registerClient() {

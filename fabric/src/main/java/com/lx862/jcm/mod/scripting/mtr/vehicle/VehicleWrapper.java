@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class VehicleWrapper {
-    private final VehicleExtension vehicleExtension;
-    private final StopsData stopsData;
+    protected final VehicleExtension vehicleExtension;
+    protected final StopsData stopsData;
     public final boolean[] doorLeftOpen;
     public final boolean[] doorRightOpen;
 
@@ -43,47 +43,33 @@ public class VehicleWrapper {
             this.doorRightOpen[i] = RenderVehicleHelper.canOpenDoors(new Box(1, 0, 0, 1.1, 2, 1), par, doorValue());
         }
 
-        this.stopsData = new StopsData(vehicleExtension);
+        this.stopsData = StopsData.constructData(vehicleExtension);
     }
 
-    public List<Stop> getAllPlatforms() {
+    public List<Stop> stops() {
         return stopsData.allStops;
-    }
-
-    public int getAllPlatformsNextIndex() {
-        int idx = stopsData.allStops.indexOf(stopsData.allStops.stream().filter(e -> e.platform != null && e.platform.getId() == vehicleExtension.vehicleExtraData.getThisPlatformId()).findFirst().orElse(null));
-        if(idx != -1) return idx;
-        return stopsData.allStops.size();
-    }
-
-    public List<Stop> getThisRoutePlatforms() {
-        return getAllPlatforms().stream().filter(stop -> stop.route.getId() == vehicleExtension.vehicleExtraData.getThisRouteId()).collect(Collectors.toList());
-    }
-
-    public List<Stop> getNextRoutePlatforms() {
-        return getAllPlatforms().stream().filter(stop -> stop.route.getId() == vehicleExtension.vehicleExtraData.getNextRouteId()).collect(Collectors.toList());
-    }
-
-    public int getThisRoutePlatformsNextIndex() {
-        List<Stop> thisRoutePlatforms = getThisRoutePlatforms();
-        int idx = thisRoutePlatforms.indexOf(thisRoutePlatforms.stream().filter(stop -> stop.platform != null && stop.platform.getId() == vehicleExtension.vehicleExtraData.getThisPlatformId()).findFirst().orElse(null));
-        if(idx != -1) return idx;
-
-        return thisRoutePlatforms.size();
-    }
-
-    public List<Stop> getDebugThisRoutePlatforms(int count) {
-        throw new ScriptNotImplementedException();
     }
 
     public static class StopsData {
         public final List<Stop> allStops;
         public final Siding siding;
+        public final boolean isFullData;
 
-        public StopsData(VehicleExtension vehicleExtension) {
+        public StopsData(VehicleExtension vehicleExtension, boolean isFullData) {
+            this.isFullData = isFullData;
             this.allStops = new ArrayList<>();
             this.siding = MinecraftClientData.getInstance().sidingIdMap.get(vehicleExtension.vehicleExtraData.getSidingId());
+        }
 
+        public static StopsData constructData(VehicleExtension vehicleExtension) {
+            StopsData fullStopsData = VehicleStopsDataCache.getStopData(vehicleExtension);
+            if(fullStopsData != null) return fullStopsData;
+
+            StopsData limitedStopsData = new StopsData(vehicleExtension, false);
+            return buildLimitedStopsData(limitedStopsData, vehicleExtension);
+        }
+
+        private static StopsData buildLimitedStopsData(StopsData stopsData, VehicleExtension vehicleExtension) {
             List<SimplifiedRoute> allRoutes = new ArrayList<>();
             SimplifiedRoute lastRoute = MinecraftClientData.getInstance().simplifiedRouteIdMap.get(vehicleExtension.vehicleExtraData.getPreviousRouteId());
             if (lastRoute != null) allRoutes.add(lastRoute);
@@ -94,39 +80,51 @@ public class VehicleWrapper {
             SimplifiedRoute nextRoute = MinecraftClientData.getInstance().simplifiedRouteIdMap.get(vehicleExtension.vehicleExtraData.getNextRouteId());
             if (nextRoute != null) allRoutes.add(nextRoute);
 
+            long lastPlatformId = 0;
             for(SimplifiedRoute route : allRoutes) {
                 for(SimplifiedRoutePlatform routePlatform : route.getPlatforms()) {
-                    String destinationName = routePlatform.getDestination();
-                    Station station = MinecraftClientData.getInstance().stationIdMap.get(routePlatform.getStationId());
-                    Platform platform = MinecraftClientData.getInstance().platformIdMap.get(routePlatform.getPlatformId());
+                    if(routePlatform.getPlatformId() == lastPlatformId) { // Duplicated platform, likely double-added stop from route changeover.
+                        Stop prevStop = stopsData.allStops.get(stopsData.allStops.size()-1);
+                        prevStop.nextRoute = route;
+                        prevStop.nextDestinationName = routePlatform.getDestination();
+                        prevStop.routeSwitchover = true;
+                        prevStop.reverseAtPlatform = true;
+                    } else {
+                        String destinationName = routePlatform.getDestination();
+                        Station station = MinecraftClientData.getInstance().stationIdMap.get(routePlatform.getStationId());
+                        Platform platform = MinecraftClientData.getInstance().platformIdMap.get(routePlatform.getPlatformId());
 
-                    double stopDistance = -1; //path.getEndDistance();
-                    boolean reverseAtPlatform = false;
-
-                    Stop stop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, stopDistance, reverseAtPlatform);
-                    this.allStops.add(stop);
+                        Stop stop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, -1);
+                        stopsData.allStops.add(stop);
+                        lastPlatformId = routePlatform.getPlatformId();
+                    }
                 }
             }
+            return stopsData;
         }
     }
 
     public static class Stop {
         public SimplifiedRoute route;
+        public SimplifiedRoute nextRoute;
         public Station station;
         public String name;
         public Platform platform;
         public String destinationName;
-
+        public String nextDestinationName;
         public List<SimplifiedRoute> interchangeRoutes;
         public long dwellTime; // in millisecond
-
         public double distance;
+        public boolean routeSwitchover;
+
+        @Deprecated
         public boolean reverseAtPlatform;
 
         public Stop(SimplifiedRoute route, Station station, Platform platform,
-                    String name, String destinationName, double distance,
-                    boolean reverseAtPlatform) {
+                    String name, String destinationName, double distance) {
             this.route = route;
+            this.nextRoute = null;
+            this.nextDestinationName = null;
             this.station = station;
             this.platform = platform;
             this.interchangeRoutes = new ArrayList<>();
@@ -134,7 +132,6 @@ public class VehicleWrapper {
             this.name = name;
             this.destinationName = destinationName;
             this.distance = distance;
-            this.reverseAtPlatform = reverseAtPlatform;
         }
     }
 

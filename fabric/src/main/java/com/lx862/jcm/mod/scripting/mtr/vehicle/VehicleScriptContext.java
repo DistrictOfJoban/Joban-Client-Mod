@@ -21,7 +21,7 @@ public class VehicleScriptContext extends MTRScriptContext {
     private final Map<Integer, ScriptSoundManager> carSoundManagers;
     private final int[] myCars;
     private final String vehicleGroupId;
-    private boolean requireFetchData;
+    private boolean requireFullStopsData;
 
     public VehicleScriptContext(VehicleExtension vehicleExtension, String vehicleGroupId, int[] myCars, int carLength) {
         super(vehicleGroupId);
@@ -86,12 +86,16 @@ public class VehicleScriptContext extends MTRScriptContext {
         return this.carSoundManagers;
     }
 
-    public void enableDataRequesting() {
-        this.requireFetchData = true;
+    /**
+     * Sets a flag which prompts JCM to fetch the full stops data from the server
+     * Can be invoked multiple times, though there is no effect after the first call.
+     */
+    public void requestFullStopsData() {
+        this.requireFullStopsData = true;
     }
 
-    public boolean requireFetchData() {
-        return requireFetchData;
+    public boolean requireFullStopsData() {
+        return requireFullStopsData;
     }
 
     @Override

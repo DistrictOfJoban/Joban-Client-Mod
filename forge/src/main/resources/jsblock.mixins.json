@@ -5,7 +5,10 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "modded.mtr.TicketSystemMixin",
-    "modded.mtr.BlockPIDSPoleMixin"
+    "modded.mtr.BlockPIDSPoleMixin",
+    "modded.mtr.MixinInitAccessor",
+    "modded.tsc.MixinMainAccessor",
+    "modded.tsc.SidingAccessorMixin"
   ],
   "client": [
     "modded.mtr.MainRendererMixin",
@@ -14,7 +17,6 @@
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleSchemaMixin",
     "modded.mtr.BlockEyecandyMixin",
-    "modded.tsc.MixinVehiclePlatformRouteInfo",
     "minecraft.NativeImageAccessor"
   ],
   "injectors": {
