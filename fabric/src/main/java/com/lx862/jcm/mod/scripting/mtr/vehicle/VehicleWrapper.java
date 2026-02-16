@@ -37,10 +37,10 @@ public class VehicleWrapper {
                 .collect(Collectors.toCollection(ObjectArrayList::new));
 
         for(int i = 0; i < trainCars(); i++) {
-            PositionAndRotation par = posAndRotations.get(i);
+            PositionAndRotation posAndRotation = posAndRotations.get(i);
 
-            this.doorLeftOpen[i] = RenderVehicleHelper.canOpenDoors(new Box(-1.1, 0, 0, -1, 2, 1), par, doorValue());
-            this.doorRightOpen[i] = RenderVehicleHelper.canOpenDoors(new Box(1, 0, 0, 1.1, 2, 1), par, doorValue());
+            this.doorLeftOpen[i] = RenderVehicleHelper.canOpenDoors(new Box(-1.1, 0, 0, -1, 2, 1), posAndRotation, doorValue());
+            this.doorRightOpen[i] = RenderVehicleHelper.canOpenDoors(new Box(1, 0, 0, 1.1, 2, 1), posAndRotation, doorValue());
         }
 
         this.stopsData = StopsData.constructData(vehicleExtension);
@@ -55,17 +55,19 @@ public class VehicleWrapper {
         public final Siding siding;
         public final boolean isFullData;
 
-        public StopsData(VehicleExtension vehicleExtension, boolean isFullData) {
+        public StopsData(Siding siding, boolean isFullData) {
             this.isFullData = isFullData;
             this.allStops = new ArrayList<>();
-            this.siding = MinecraftClientData.getInstance().sidingIdMap.get(vehicleExtension.vehicleExtraData.getSidingId());
+            this.siding = siding;
         }
 
         public static StopsData constructData(VehicleExtension vehicleExtension) {
-            StopsData fullStopsData = VehicleStopsDataCache.getStopData(vehicleExtension);
+            StopsData fullStopsData = VehicleDataCache.getVehicleStopsData(vehicleExtension);
             if(fullStopsData != null) return fullStopsData;
 
-            StopsData limitedStopsData = new StopsData(vehicleExtension, false);
+            long sidingId = vehicleExtension.vehicleExtraData.getSidingId();
+            Siding siding = MinecraftClientData.getInstance().sidingIdMap.get(sidingId);
+            StopsData limitedStopsData = new StopsData(siding, false);
             return buildLimitedStopsData(limitedStopsData, vehicleExtension);
         }
 

@@ -2,8 +2,10 @@ package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.network.block.*;
 import com.lx862.jcm.mod.network.gui.*;
-import com.lx862.jcm.mod.network.scripting.FullStopsDataS2CPacket;
-import com.lx862.jcm.mod.network.scripting.RequestFullStopsDataC2SPacket;
+import com.lx862.jcm.mod.network.scripting.StopsDataS2CPacket;
+import com.lx862.jcm.mod.network.scripting.MTRDataS2CPacket;
+import com.lx862.jcm.mod.network.scripting.RequestStopsDataC2SPacket;
+import com.lx862.jcm.mod.network.scripting.RequestMTRDataC2SPacket;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.ServerPlayerEntity;
@@ -40,8 +42,10 @@ public class Networking {
         registerPacket(SubsidyMachineGUIPacket.class, SubsidyMachineGUIPacket::new);
 
         // Scripting data
-        registerPacket(RequestFullStopsDataC2SPacket.class, RequestFullStopsDataC2SPacket::new);
-        registerPacket(FullStopsDataS2CPacket.class, FullStopsDataS2CPacket::new);
+        registerPacket(RequestStopsDataC2SPacket.class, RequestStopsDataC2SPacket::new);
+        registerPacket(StopsDataS2CPacket.class, StopsDataS2CPacket::new);
+        registerPacket(RequestMTRDataC2SPacket.class, RequestMTRDataC2SPacket::new);
+        registerPacket(MTRDataS2CPacket.class, MTRDataS2CPacket::new);
     }
 
     public static void registerClient() {

@@ -50,7 +50,7 @@ public abstract class RenderVehiclesMixin {
                 if(scriptInstance == null) continue;
 
                 if(((VehicleScriptContext)scriptInstance.getScriptContext()).requireFullStopsData()) {
-                    VehicleStopsDataCache.requestStopData(vehicle.getId(), vehicle.vehicleExtraData.getSidingId());
+                    VehicleDataCache.requestVehicleStopsData(vehicle.getId(), vehicle.vehicleExtraData.getSidingId());
                 }
 
                 scriptInstance.setWrapperObject(wrapperObject);

@@ -7,6 +7,7 @@ import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
+import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.TextHelper;
@@ -29,6 +30,10 @@ public class Events {
             JCMClient.getMcMetaManager().tick();
             JCMScripting.tick();
             MTRScripting.tick();
+
+            if(MinecraftClient.getInstance().getWorldMapped() == null) {
+                VehicleDataCache.clearData();
+            }
         });
 
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerEndClientTick(() -> {

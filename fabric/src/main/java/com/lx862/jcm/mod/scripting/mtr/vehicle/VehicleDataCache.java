@@ -1,8 +1,10 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
-import com.lx862.jcm.mod.network.scripting.RequestFullStopsDataC2SPacket;
+import com.lx862.jcm.mod.network.scripting.RequestStopsDataC2SPacket;
 import com.lx862.jcm.mod.registry.Networking;
+import com.lx862.jcm.mod.scripting.MTRDatasetHolder;
 import org.mtr.core.data.Platform;
+import org.mtr.core.data.Siding;
 import org.mtr.core.data.SimplifiedRoute;
 import org.mtr.core.data.Station;
 import org.mtr.mod.client.MinecraftClientData;
@@ -14,8 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class VehicleStopsDataCache {
-    private static final Map<Long, SimplifiedStopsData> cache = new HashMap<>();
+/**
+ * A custom place to store MTR data requested by scripts
+ * Required as {@link MinecraftClientData} will strip out non-nearby data.
+ */
+public class VehicleDataCache {
+    public static final MTRDatasetHolder mtrData = new MTRDatasetHolder();
+    private static final Map<Long, SimplifiedStopsData> vehicleStopsCache = new HashMap<>();
 
     /**
      * Sends a Minecraft packet to request the full stops data from the specified vehicle.
@@ -23,23 +30,24 @@ public class VehicleStopsDataCache {
      * @param vehicleId The numeric id of the vehicle
      * @param sidingId The numeric siding id of the belonging vehicle
      */
-    public static void requestStopData(long vehicleId, long sidingId) {
-        if(!cache.containsKey(vehicleId)) {
-            cache.put(vehicleId, null);
-            Networking.sendPacketToServer(new RequestFullStopsDataC2SPacket(vehicleId, sidingId));
+    public static void requestVehicleStopsData(long vehicleId, long sidingId) {
+        if(!vehicleStopsCache.containsKey(vehicleId)) {
+            vehicleStopsCache.put(vehicleId, null);
+            Networking.sendPacketToServer(new RequestStopsDataC2SPacket(vehicleId, sidingId));
         }
     }
 
-    public static VehicleWrapper.StopsData getStopData(VehicleExtension vehicleExtension) {
-        SimplifiedStopsData simplifiedStopsData = cache.get(vehicleExtension.getId());
+    public static VehicleWrapper.StopsData getVehicleStopsData(VehicleExtension vehicleExtension) {
+        SimplifiedStopsData simplifiedStopsData = vehicleStopsCache.get(vehicleExtension.getId());
         if(simplifiedStopsData == null) return null;
 
-        VehicleWrapper.StopsData stopsData = new VehicleWrapper.StopsData(vehicleExtension, true);
+        Siding siding = VehicleDataCache.mtrData.sidingIdMap.get(vehicleExtension.vehicleExtraData.getSidingId());
+        VehicleWrapper.StopsData stopsData = new VehicleWrapper.StopsData(siding, true);
 
         long lastPlatformId = 0;
         for(RouteStopsData routeStopsData : simplifiedStopsData.routeStopsData) {
             long routeId = routeStopsData.routeId;
-            SimplifiedRoute route = MinecraftClientData.getInstance().simplifiedRouteIdMap.get(routeId);
+            SimplifiedRoute route = VehicleDataCache.mtrData.routeIdMap.get(routeId);
 
             for(SimplifiedStop simplifiedStop : routeStopsData.stops) {
                 if(lastPlatformId == simplifiedStop.platformId) {
@@ -49,8 +57,8 @@ public class VehicleStopsDataCache {
                     prevStop.routeSwitchover = true;
                     prevStop.reverseAtPlatform = true;
                 } else {
-                    Station station = MinecraftClientData.getInstance().stationIdMap.get(simplifiedStop.stationId);
-                    Platform platform = MinecraftClientData.getInstance().platformIdMap.get(simplifiedStop.platformId);
+                    Station station = VehicleDataCache.mtrData.stationIdMap.get(simplifiedStop.stationId);
+                    Platform platform = VehicleDataCache.mtrData.platformIdMap.get(simplifiedStop.platformId);
 
                     VehicleWrapper.Stop stop = new VehicleWrapper.Stop(route, station, platform, station == null ? platform == null ? "" : platform.getName() : station.getName(), simplifiedStop.destination, simplifiedStop.distance);
                     stopsData.allStops.add(stop);
@@ -62,8 +70,24 @@ public class VehicleStopsDataCache {
         return stopsData;
     }
 
-    public static void putCache(long vehicleId, SimplifiedStopsData stopsData) {
-        cache.put(vehicleId, stopsData);
+    public static void clearData() {
+        vehicleStopsCache.clear();
+        mtrData.stations.clear();
+        mtrData.platforms.clear();
+        mtrData.routes.clear();
+        mtrData.sidings.clear();
+        mtrData.stationIdMap.clear();
+        mtrData.platformIdMap.clear();
+        mtrData.routeIdMap.clear();
+        mtrData.sidingIdMap.clear();
+    }
+
+    public static void putVehicleStopsDataCache(long vehicleId, SimplifiedStopsData stopsData) {
+        vehicleStopsCache.put(vehicleId, stopsData);
+    }
+
+    public static void putMTRDataCache(MTRDatasetHolder other) {
+        mtrData.addFrom(other);
     }
 
     public static class SimplifiedStopsData {

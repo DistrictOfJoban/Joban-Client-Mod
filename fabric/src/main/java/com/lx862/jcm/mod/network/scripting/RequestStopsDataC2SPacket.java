@@ -4,7 +4,7 @@ import com.lx862.jcm.mixin.modded.mtr.InitAccessorMixin;
 import com.lx862.jcm.mixin.modded.tsc.MainAccessorMixin;
 import com.lx862.jcm.mixin.modded.tsc.SidingAccessorMixin;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleStopsDataCache;
+import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import org.mtr.core.Main;
 import org.mtr.core.data.*;
 import org.mtr.core.simulation.Simulator;
@@ -20,16 +20,16 @@ import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
 import org.mtr.mod.Init;
 
-public class RequestFullStopsDataC2SPacket extends PacketHandler {
+public class RequestStopsDataC2SPacket extends PacketHandler {
     private final long vehicleId;
     private final long sidingId;
 
-    public RequestFullStopsDataC2SPacket(PacketBufferReceiver packetBufferReceiver) {
+    public RequestStopsDataC2SPacket(PacketBufferReceiver packetBufferReceiver) {
         this.vehicleId = packetBufferReceiver.readLong();
         this.sidingId = packetBufferReceiver.readLong();
     }
 
-    public RequestFullStopsDataC2SPacket(long vehicleId, long sidingId) {
+    public RequestStopsDataC2SPacket(long vehicleId, long sidingId) {
         this.vehicleId = vehicleId;
         this.sidingId = sidingId;
     }
@@ -57,10 +57,10 @@ public class RequestFullStopsDataC2SPacket extends PacketHandler {
                         for(Vehicle vehicle : vehicles) {
                             if(vehicle.getId() == vehicleId) {
                                 int routeIdx = 0;
-                                VehicleStopsDataCache.SimplifiedStopsData simplifiedStopsData = new VehicleStopsDataCache.SimplifiedStopsData();
+                                VehicleDataCache.SimplifiedStopsData simplifiedStopsData = new VehicleDataCache.SimplifiedStopsData();
 
                                 Route belongingRoute = depot.routes.get(routeIdx);
-                                VehicleStopsDataCache.RouteStopsData routeStopsData = new VehicleStopsDataCache.RouteStopsData(belongingRoute.getId());
+                                VehicleDataCache.RouteStopsData routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
                                 for(PathData pathData : vehicle.vehicleExtraData.immutablePath) {
                                     if(!pathData.getRail().isPlatform() || pathData.getDwellTime() <= 0) continue;
                                     ObjectArrayList<RoutePlatformData> routePlatforms = belongingRoute.getRoutePlatforms();
@@ -70,23 +70,23 @@ public class RequestFullStopsDataC2SPacket extends PacketHandler {
 
                                     long platformId = routePlatformData.getPlatform().getId();
                                     long stationId = routePlatformData.getPlatform().area.getId();
-                                    String destination = routePlatformData.getCustomDestination();
+                                    String destination = belongingRoute.getDestination(routePlatformIndex);
                                     double distance = pathData.getEndDistance();
 
-                                    VehicleStopsDataCache.SimplifiedStop stopObject = new VehicleStopsDataCache.SimplifiedStop(destination, platformId, stationId, distance);
+                                    VehicleDataCache.SimplifiedStop stopObject = new VehicleDataCache.SimplifiedStop(destination, stationId, platformId, distance);
                                     routeStopsData.addStop(stopObject);
                                     if(finalRouteStop) {
                                         routeIdx++;
                                         simplifiedStopsData.addRouteStopsData(routeStopsData);
                                         if(routeIdx >= depot.routes.size()) break;
                                         belongingRoute = depot.routes.get(routeIdx);
-                                        routeStopsData = new VehicleStopsDataCache.RouteStopsData(belongingRoute.getId());
+                                        routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
                                         routeStopsData.addStop(stopObject);
                                     }
                                 }
 
                                 minecraftServer.submit(() -> {
-                                    Networking.sendPacketToClient(PlayerEntity.cast(serverPlayerEntity), new FullStopsDataS2CPacket(vehicleId, simplifiedStopsData));
+                                    Networking.sendPacketToClient(PlayerEntity.cast(serverPlayerEntity), new StopsDataS2CPacket(vehicleId, sidingId, simplifiedStopsData));
                                 });
                             }
                             break;
