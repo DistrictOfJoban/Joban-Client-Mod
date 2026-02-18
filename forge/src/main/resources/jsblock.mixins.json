@@ -4,13 +4,16 @@
   "package": "com.lx862.jcm.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "modded.mtr.InitAccessorMixin",
     "modded.mtr.TicketSystemMixin",
     "modded.mtr.BlockPIDSPoleMixin",
     "modded.mtr.MixinInitAccessor",
-    "modded.tsc.MixinMainAccessor",
+    "modded.tsc.MainAccessorMixin",
     "modded.tsc.SidingAccessorMixin"
   ],
   "client": [
+    "modded.tsc.VehicleAccessorMixin",
+    "modded.mtr.VehicleExtensionMixin",
     "modded.mtr.MainRendererMixin",
     "modded.mtr.VehicleResourceMixin",
     "modded.mtr.RenderEyeCandyMixin",

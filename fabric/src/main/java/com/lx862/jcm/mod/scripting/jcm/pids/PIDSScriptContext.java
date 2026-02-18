@@ -3,15 +3,29 @@ package com.lx862.jcm.mod.scripting.jcm.pids;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.scripting.mtr.MTRScriptContext;
+import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
+import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 
 public class PIDSScriptContext extends MTRScriptContext {
+    protected final ScriptSoundManager soundManager;
+    protected final ScriptRenderManager renderManager;
 
     public PIDSScriptContext(String name) {
         super(name);
+        this.soundManager = new ScriptSoundManager();
+        this.renderManager = new ScriptRenderManager();
     }
 
     public PIDSComponent parseComponent(String str) {
         return PIDSComponent.parse(new JsonParser().parse(str).getAsJsonObject());
+    }
+
+    public ScriptRenderManager renderManager() {
+        return this.renderManager;
+    }
+
+    public ScriptSoundManager soundManager() {
+        return this.soundManager;
     }
 
     public void draw(Object obj) {
@@ -20,5 +34,11 @@ public class PIDSScriptContext extends MTRScriptContext {
         } else {
             throw new IllegalArgumentException("1st parameter is not a DrawCall!");
         }
+    }
+
+    @Override
+    public void resetForNextRun() {
+        this.renderManager.reset();
+        this.soundManager.reset();
     }
 }

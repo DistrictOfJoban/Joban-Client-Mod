@@ -106,7 +106,8 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
                 .corner4(new ScriptVector3f(this.quadDefinition.x4, this.quadDefinition.y4, this.quadDefinition.z4))
                 .color(this.color)
                 .uv(this.u1, this.v1, this.u2, this.v2)
-                .renderType(this.renderType.toString());
+                .renderType(this.renderType.toString())
+                .setMatrices(storedMatrixTransformations);
         return copy;
     }
 

@@ -10,39 +10,16 @@ import java.util.stream.Collectors;
 
 public class NTETrainWrapper extends VehicleWrapper {
 
-    public NTETrainWrapper(VehicleExtension vehicleExtension) {
-        super(vehicleExtension);
+    public NTETrainWrapper(VehicleScriptContext.DataFetchMode dataFetchMode, VehicleExtension vehicleExtension) {
+        super(dataFetchMode, vehicleExtension);
     }
 
     public List<Stop> getAllPlatforms() {
         return stops();
     }
 
-    public int getAllPlatformsNextIndex() {
-        if(stopsData.isFullData) {
-            return findNextStopIndex(railProgress(), stops());
-        } else {
-            int idx = stops().indexOf(stops().stream().filter(e -> e.platform != null && e.platform.getId() == vehicleExtension.vehicleExtraData.getThisPlatformId()).findFirst().orElse(null));
-            if(idx != -1) return idx;
-            return stops().size();
-        }
-    }
-
-    private int findNextStopIndex(double currentRailProgress, List<Stop> stops) {
-        int stopIdx = 0;
-
-        for(Stop stop : stops) {
-            if(currentRailProgress > stop.distance) stopIdx++;
-            else break;
-        }
-        return stopIdx;
-    }
-
     public List<Stop> getThisRoutePlatforms() {
-        return stops().stream().filter(stop ->
-                stop.route != null && stop.route.getId() == vehicleExtension.vehicleExtraData.getThisRouteId() ||
-                        stop.nextRoute != null && stop.nextRoute.getId() == vehicleExtension.vehicleExtraData.getThisRouteId()
-        ).collect(Collectors.toList());
+        return thisRouteStops();
     }
 
     public List<Stop> getNextRoutePlatforms() {
@@ -52,16 +29,12 @@ public class NTETrainWrapper extends VehicleWrapper {
         ).collect(Collectors.toList());
     }
 
-    public int getThisRoutePlatformsNextIndex() {
-        List<Stop> thisRoutePlatforms = getThisRoutePlatforms();
-        if(stopsData.isFullData) {
-            return findNextStopIndex(railProgress(), thisRoutePlatforms);
-        } else {
-            int idx = thisRoutePlatforms.indexOf(thisRoutePlatforms.stream().filter(stop -> stop.platform != null && stop.platform.getId() == vehicleExtension.vehicleExtraData.getThisPlatformId()).findFirst().orElse(null));
-            if(idx != -1) return idx;
+    public int getAllPlatformsNextIndex() {
+        return nextStopIndex(0);
+    }
 
-            return thisRoutePlatforms.size();
-        }
+    public int getThisRoutePlatformsNextIndex() {
+        return thisRouteNextStopIndex(0);
     }
 
     public List<Stop> getDebugThisRoutePlatforms(int count) {

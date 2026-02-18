@@ -8,7 +8,6 @@ import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleScriptInstance;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import com.lx862.mtrscripting.data.UniqueKey;
 import com.lx862.mtrscripting.util.ScriptVector3f;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mtr.core.data.VehicleCar;
 import org.mtr.core.tool.Vector;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -27,7 +26,7 @@ public abstract class VehicleResourceMixin {
     @Inject(method = "queue(Lorg/mtr/mod/render/StoredMatrixTransformations;Lorg/mtr/mod/data/VehicleExtension;IIIZ)V", at = @At("HEAD"))
     private void renderCarScript(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int totalCars, int light, boolean noOpenDoorways, CallbackInfo ci) {
         VehicleCar vehicleCar = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber);
-        String scriptGroupId = MTRContentResourceManager.getVehicleScriptGroupId(vehicleCar.getVehicleId());
+        String scriptGroupId = MTRContentResourceManager.getVehicleScriptEntryId(vehicleCar.getVehicleId());
         if(scriptGroupId == null) return;
 
         ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptGroupId));
@@ -37,6 +36,7 @@ public abstract class VehicleResourceMixin {
         ScriptSoundManager carSoundManager = ((VehicleScriptInstance)scriptInstance).soundManagers.get(carNumber);
 
         StoredMatrixTransformations newTransform = storedMatrixTransformations.copy();
+        newTransform.add(gh -> gh.rotateYDegrees(180));
         newTransform.add(gh -> gh.translate(0, -1, 0)); // Replicate behaviour from MTR 3. Not sure if we should do it here tho?
 
         World world = World.cast(MinecraftClient.getInstance().getWorldMapped());

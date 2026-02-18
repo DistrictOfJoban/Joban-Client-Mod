@@ -14,20 +14,19 @@ import org.mtr.mod.data.VehicleExtension;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class VehicleScriptContext extends MTRScriptContext {
     private final VehicleExtension vehicleExtension;
     private final Map<Integer, ScriptRenderManager> carRenderers;
     private final Map<Integer, ScriptSoundManager> carSoundManagers;
     private final int[] myCars;
-    private final String vehicleGroupId;
-    private boolean requireFullStopsData;
+    private final String scriptEntryId;
+    private DataFetchMode dataFetchMode;
 
-    public VehicleScriptContext(VehicleExtension vehicleExtension, String vehicleGroupId, int[] myCars, int carLength) {
-        super(vehicleGroupId);
+    public VehicleScriptContext(VehicleExtension vehicleExtension, String scriptEntryId, int[] myCars, int carLength) {
+        super(scriptEntryId);
         this.vehicleExtension = vehicleExtension;
         this.myCars = myCars;
-        this.vehicleGroupId = vehicleGroupId;
+        this.scriptEntryId = scriptEntryId;
         this.carRenderers = new HashMap<>();
         this.carSoundManagers = new HashMap<>();
 
@@ -70,12 +69,24 @@ public class VehicleScriptContext extends MTRScriptContext {
         }
     }
 
-    public String vehicleGroupId() {
-        return this.vehicleGroupId;
+    public String scriptEntryId() {
+        return this.scriptEntryId;
     }
 
     public int[] myCars() {
         return this.myCars;
+    }
+
+    public ScriptRenderManager carRenderManager(int car) {
+        return this.carRenderers.get(car);
+    }
+
+    public ScriptSoundManager carSoundManager(int car) {
+        return this.carSoundManagers.get(car);
+    }
+
+    public void setDataFetchMode(String enumName) {
+        this.dataFetchMode = DataFetchMode.valueOf(enumName);
     }
 
     public Map<Integer, ScriptRenderManager> getCarRenderManagers() {
@@ -86,16 +97,8 @@ public class VehicleScriptContext extends MTRScriptContext {
         return this.carSoundManagers;
     }
 
-    /**
-     * Sets a flag which prompts JCM to fetch the full stops data from the server
-     * Can be invoked multiple times, though there is no effect after the first call.
-     */
-    public void requestFullStopsData() {
-        this.requireFullStopsData = true;
-    }
-
-    public boolean requireFullStopsData() {
-        return requireFullStopsData;
+    public DataFetchMode getDataFetchMode() {
+        return dataFetchMode;
     }
 
     @Override
@@ -110,5 +113,10 @@ public class VehicleScriptContext extends MTRScriptContext {
                 soundManager.reset();
             }
         }
+    }
+
+    public enum DataFetchMode {
+        NONE,
+        ALL
     }
 }

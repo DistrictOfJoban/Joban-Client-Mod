@@ -82,8 +82,12 @@ public class VehicleDataCache {
         mtrData.sidingIdMap.clear();
     }
 
-    public static void putVehicleStopsDataCache(long vehicleId, SimplifiedStopsData stopsData) {
+    public static void putStopsDataCache(long vehicleId, SimplifiedStopsData stopsData) {
         vehicleStopsCache.put(vehicleId, stopsData);
+    }
+
+    public static void clearStopsDataCache(long vehicleId) {
+        vehicleStopsCache.remove(vehicleId);
     }
 
     public static void putMTRDataCache(MTRDatasetHolder other) {

@@ -4,6 +4,8 @@ import com.lx862.jcm.mod.scripting.mtr.MTRScriptContext;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.event.EyecandyEvents;
 import com.lx862.jcm.mod.scripting.mtr.render.DisplayHelperCompat;
 import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
+import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
+import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
 import com.lx862.jcm.mod.scripting.mtr.util.ScriptedModel;
 import com.lx862.mtrscripting.util.Matrices;
 import com.lx862.mtrscripting.util.ScriptVector3f;
@@ -21,12 +23,24 @@ public class EyeCandyScriptContext extends MTRScriptContext {
     private final EyecandyEvents events;
     private VoxelShapeWrapper outlineShape;
     private VoxelShapeWrapper collisionShape;
+    protected final ScriptSoundManager soundManager;
+    protected final ScriptRenderManager renderManager;
 
     public EyeCandyScriptContext(EyecandyBlockEntityWrapper blockEntity) {
         super(blockEntity.getModelId());
         this.blockEntity = blockEntity;
         this.events = new EyecandyEvents();
         this.outlineShape = null;
+        this.soundManager = new ScriptSoundManager();
+        this.renderManager = new ScriptRenderManager();
+    }
+
+    public ScriptRenderManager renderManager() {
+        return this.renderManager;
+    }
+
+    public ScriptSoundManager soundManager() {
+        return this.soundManager;
     }
 
     public EyecandyEvents events() {
@@ -67,5 +81,11 @@ public class EyeCandyScriptContext extends MTRScriptContext {
 
     public void playSound(Identifier id, float volume, float pitch) {
         soundManager().playSound(id, ScriptVector3f.ZERO, volume, pitch);
+    }
+
+    @Override
+    public void resetForNextRun() {
+        this.renderManager.reset();
+        this.soundManager.reset();
     }
 }

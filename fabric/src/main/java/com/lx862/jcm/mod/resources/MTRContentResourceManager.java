@@ -206,7 +206,7 @@ public class MTRContentResourceManager {
         return vehicleScripts.get(carriageId);
     }
 
-    public static String getVehicleScriptGroupId(String str) {
+    public static String getVehicleScriptEntryId(String str) {
         return vehicleToVehicleScripts.getOrDefault(str, str);
     }
 

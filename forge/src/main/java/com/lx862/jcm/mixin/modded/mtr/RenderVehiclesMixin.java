@@ -2,9 +2,7 @@ package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
-import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleScriptContext;
-import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleScriptInstance;
-import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleWrapper;
+import com.lx862.jcm.mod.scripting.mtr.vehicle.*;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.UniqueKey;
 import org.mtr.core.data.VehicleCar;
@@ -32,24 +30,25 @@ public abstract class RenderVehiclesMixin {
             Object2ObjectOpenHashMap<String, ParsedScript> scriptsInVehicle = new Object2ObjectOpenHashMap<>();
 
             for (VehicleCar vehicleCar : cars) {
-                String vehicleGroupId = MTRContentResourceManager.getVehicleScriptGroupId(vehicleCar.getVehicleId());
-                ParsedScript script = MTRContentResourceManager.getVehicleScript(vehicleGroupId);
-                if (script == null || scriptsInVehicle.containsKey(vehicleGroupId)) continue;
-                scriptsInVehicle.put(vehicleGroupId, script);
+                String scriptEntryId = MTRContentResourceManager.getVehicleScriptEntryId(vehicleCar.getVehicleId());
+                ParsedScript script = MTRContentResourceManager.getVehicleScript(scriptEntryId);
+                if (script == null || scriptsInVehicle.containsKey(scriptEntryId)) continue;
+                scriptsInVehicle.put(scriptEntryId, script);
             }
-
-            VehicleWrapper wrapperObject = new VehicleWrapper(vehicle);
 
             for(Map.Entry<String, ParsedScript> scriptEntry : scriptsInVehicle.entrySet()) {
                 String vehicleGroupId = scriptEntry.getKey();
                 List<Integer> carsForScripts = new ArrayList<>();
                 for(int i = 0; i < cars.size(); i++) {
-                    if(MTRContentResourceManager.getVehicleScriptGroupId(cars.get(i).getVehicleId()).equals(vehicleGroupId)) carsForScripts.add(i);
+                    if(MTRContentResourceManager.getVehicleScriptEntryId(cars.get(i).getVehicleId()).equals(vehicleGroupId)) carsForScripts.add(i);
                 }
                 int[] carsArray = carsForScripts.stream().mapToInt(i->i).toArray();
 
                 VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), vehicleGroupId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, vehicleGroupId, carsArray, cars.size()), vehicle, scriptEntry.getValue()));
                 if(scriptInstance == null) continue;
+
+                VehicleScriptContext.DataFetchMode dataFetchMode = ((VehicleScriptContext)scriptInstance.getScriptContext()).getDataFetchMode();
+                VehicleWrapper wrapperObject = new NTETrainWrapper(dataFetchMode, vehicle);
 
                 scriptInstance.setWrapperObject(wrapperObject);
                 scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {

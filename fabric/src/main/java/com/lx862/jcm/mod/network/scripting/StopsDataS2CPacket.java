@@ -68,7 +68,7 @@ public class StopsDataS2CPacket extends PacketHandler {
     public void runClient() {
         if(JCMClient.getConfig().debug) JCMLogger.info("Received Vehicle Stops Data:\n" + simplifiedStopsData.toString());
 
-        VehicleDataCache.putVehicleStopsDataCache(vehicleId, simplifiedStopsData);
+        VehicleDataCache.putStopsDataCache(vehicleId, simplifiedStopsData);
 
         /* Second round of data fetching: Collect detailed information of station, route, platform and sidings */
         List<Long> stationIds = new ArrayList<>();
@@ -91,7 +91,9 @@ public class StopsDataS2CPacket extends PacketHandler {
         platformIds.removeIf(e -> VehicleDataCache.mtrData.platforms.stream().anyMatch(obj -> e == obj.getId()));
         sidingIds.removeIf(e -> VehicleDataCache.mtrData.sidings.stream().anyMatch(obj -> e == obj.getId()));
 
-        // Send the request!
+        // Don't bother if we don't need any data
+        if(stationIds.size() + sidingIds.size() + routeIds.size() + platformIds.size() == 0) return;
+
         Networking.sendPacketToServer(new RequestMTRDataC2SPacket(stationIds, sidingIds, routeIds, platformIds));
     }
 }

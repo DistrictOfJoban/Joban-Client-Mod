@@ -18,6 +18,11 @@ public abstract class RenderDrawCall<T extends RenderDrawCall<?>> implements Scr
         return (T)this;
     }
 
+    protected T setMatrices(StoredMatrixTransformations m) {
+        this.storedMatrixTransformations = m;
+        return (T)this;
+    }
+
     public void run(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         if (this.storedMatrixTransformations != null) {
             storedMatrixTransformations.add(this.storedMatrixTransformations);
