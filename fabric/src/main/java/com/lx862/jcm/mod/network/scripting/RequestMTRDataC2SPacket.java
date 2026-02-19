@@ -4,6 +4,7 @@ import com.lx862.jcm.mixin.modded.mtr.InitAccessorMixin;
 import com.lx862.jcm.mixin.modded.tsc.MainAccessorMixin;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.scripting.MTRDatasetHolder;
+import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import org.mtr.core.Main;
 import org.mtr.core.data.*;
 import org.mtr.core.simulation.Simulator;
@@ -32,17 +33,22 @@ public class RequestMTRDataC2SPacket extends PacketHandler {
         int sidingLength = packetBufferReceiver.readInt();
         int routeLength = packetBufferReceiver.readInt();
         int platformLength = packetBufferReceiver.readInt();
+        VehicleDataCache.mtrDataByteCounter += (4 * 4);
         for(int i = 0; i < stationLength; i++) {
             this.stationIds.add(packetBufferReceiver.readLong());
+            VehicleDataCache.mtrDataByteCounter += 8;
         }
         for(int i = 0; i < sidingLength; i++) {
             this.sidingIds.add(packetBufferReceiver.readLong());
+            VehicleDataCache.mtrDataByteCounter += 8;
         }
         for(int i = 0; i < routeLength; i++) {
             this.routeIds.add(packetBufferReceiver.readLong());
+            VehicleDataCache.mtrDataByteCounter += 8;
         }
         for(int i = 0; i < platformLength; i++) {
             this.platformIds.add(packetBufferReceiver.readLong());
+            VehicleDataCache.mtrDataByteCounter += 8;
         }
     }
 

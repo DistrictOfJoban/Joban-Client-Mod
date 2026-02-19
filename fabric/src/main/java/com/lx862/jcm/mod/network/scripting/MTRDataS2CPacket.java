@@ -13,6 +13,8 @@ public class MTRDataS2CPacket extends PacketHandler {
 
     public MTRDataS2CPacket(PacketBufferReceiver packetBufferReceiver) {
         String jsonString = packetBufferReceiver.readString();
+        VehicleDataCache.mtrDataByteCounter += 4;
+        VehicleDataCache.mtrDataByteCounter += jsonString.length() * 2;
         this.MTRDatasetHolder = new MTRDatasetHolder(jsonString);
     }
 

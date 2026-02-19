@@ -40,8 +40,8 @@ public class VehicleWrapper {
         for(int i = 0; i < trainCars(); i++) {
             PositionAndRotation posAndRotation = posAndRotations.get(i);
 
-            this.doorLeftOpen[i] = RenderVehicleHelper.canOpenDoors(new Box(-1.1, 0, 0, -1, 2, 1), posAndRotation, doorValue());
-            this.doorRightOpen[i] = RenderVehicleHelper.canOpenDoors(new Box(1, 0, 0, 1.1, 2, 1), posAndRotation, doorValue());
+            this.doorLeftOpen[i] = vehicleExtension.persistentVehicleData.getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(-1.1, 0, 0, -1, 2, 1), posAndRotation, doorValue());
+            this.doorRightOpen[i] = vehicleExtension.persistentVehicleData.getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(1, 0, 0, 1.1, 2, 1), posAndRotation, doorValue());
         }
 
         this.stopsData = StopsData.constructData(dataFetchMode, vehicleExtension);
@@ -54,7 +54,9 @@ public class VehicleWrapper {
     public List<Stop> thisRouteStops() {
         long routeId = vehicleExtension.vehicleExtraData.getThisRouteId();
         if(fullStopData()) {
-            SimplifiedRoute route = stops().get(nextStopIndex()).route;
+            int nextStopIndex = nextStopIndex();
+            if(nextStopIndex >= stops().size()) return new ArrayList<>(0);
+            SimplifiedRoute route = stops().get(nextStopIndex).route;
             if(route != null) {
                 routeId = route.getId();
             }
@@ -86,8 +88,8 @@ public class VehicleWrapper {
     /* Private API */
     protected List<Stop> filterStopsForRoute(long routeId) {
         return stopsData.allStops.stream().filter(e ->
-                e.route.getId() == routeId ||
-                        (e.nextRoute != null && e.nextRoute.getId() == routeId)
+                (e.route != null && e.route.getId() == routeId) ||
+                (e.nextRoute != null && e.nextRoute.getId() == routeId)
         ).collect(Collectors.toList());
     }
 

@@ -24,6 +24,10 @@ public class VehicleDataCache {
     public static final MTRDatasetHolder mtrData = new MTRDatasetHolder();
     private static final Map<Long, SimplifiedStopsData> vehicleStopsCache = new HashMap<>();
 
+    /* Data transfer counter to diagnose network usage in Debug Overlay */
+    public static long stopsDataByteCounter;
+    public static long mtrDataByteCounter;
+
     /**
      * Sends a Minecraft packet to request the full stops data from the specified vehicle.
      * Packet only sent on first invocation of the vehicleId
@@ -71,6 +75,8 @@ public class VehicleDataCache {
     }
 
     public static void clearData() {
+        stopsDataByteCounter = 0;
+        mtrDataByteCounter = 0;
         vehicleStopsCache.clear();
         mtrData.stations.clear();
         mtrData.platforms.clear();

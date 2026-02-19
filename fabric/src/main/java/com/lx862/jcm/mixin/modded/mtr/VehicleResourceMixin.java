@@ -36,7 +36,6 @@ public abstract class VehicleResourceMixin {
         ScriptSoundManager carSoundManager = ((VehicleScriptInstance)scriptInstance).soundManagers.get(carNumber);
 
         StoredMatrixTransformations newTransform = storedMatrixTransformations.copy();
-        newTransform.add(gh -> gh.rotateYDegrees(180));
         newTransform.add(gh -> gh.translate(0, -1, 0)); // Replicate behaviour from MTR 3. Not sure if we should do it here tho?
 
         World world = World.cast(MinecraftClient.getInstance().getWorldMapped());

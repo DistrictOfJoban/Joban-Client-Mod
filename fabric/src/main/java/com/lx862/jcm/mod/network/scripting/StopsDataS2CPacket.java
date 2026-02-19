@@ -18,20 +18,28 @@ public class StopsDataS2CPacket extends PacketHandler {
 
     public StopsDataS2CPacket(PacketBufferReceiver packetBufferReceiver) {
         this.vehicleId = packetBufferReceiver.readLong();
+        VehicleDataCache.stopsDataByteCounter += 8;
         this.sidingId = packetBufferReceiver.readLong();
+        VehicleDataCache.stopsDataByteCounter += 8;
         long routeAmount = packetBufferReceiver.readInt();
+        VehicleDataCache.stopsDataByteCounter += 4;
 
         this.simplifiedStopsData = new VehicleDataCache.SimplifiedStopsData();
         for(int i = 0; i < routeAmount; i++) {
             long routeId = packetBufferReceiver.readLong();
+            VehicleDataCache.stopsDataByteCounter += 8;
             VehicleDataCache.RouteStopsData routeStopsData = new VehicleDataCache.RouteStopsData(routeId);
             int routeStopAmount = packetBufferReceiver.readInt();
+            VehicleDataCache.stopsDataByteCounter += 4;
 
             for(int j = 0; j < routeStopAmount; j++) {
                 long stationId = packetBufferReceiver.readLong();
                 long platformId = packetBufferReceiver.readLong();
                 double distance = packetBufferReceiver.readDouble();
+                VehicleDataCache.stopsDataByteCounter += (8*3);
                 String destination = packetBufferReceiver.readString();
+                VehicleDataCache.stopsDataByteCounter += 4; // int to store string length
+                VehicleDataCache.stopsDataByteCounter += destination.length() * 2L; // 2 byte chars
                 VehicleDataCache.SimplifiedStop simplifiedStop = new VehicleDataCache.SimplifiedStop(destination, stationId, platformId, distance);
                 routeStopsData.addStop(simplifiedStop);
             }

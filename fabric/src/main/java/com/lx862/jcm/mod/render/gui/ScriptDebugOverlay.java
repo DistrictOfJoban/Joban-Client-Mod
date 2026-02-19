@@ -6,6 +6,7 @@ import com.lx862.jcm.mod.data.Pair;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
+import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.core.ScriptInstance;
@@ -57,9 +58,20 @@ public class ScriptDebugOverlay {
             textX += 5;
         }
 
-        Map<String, List<Pair<UniqueKey, ScriptInstance>>> nameToInstances = getInstancesGroupedByName(debugSources.get(sourceIndex));
+        graphicsHolder.translate(10, 0, 0);
 
-        graphicsHolder.translate(10, 10, 0);
+        ScriptDebugSource selectedSource = debugSources.get(sourceIndex);
+        // Show network stats for debug
+        if(selectedSource.sourceName.equals("MTR")) {
+            graphicsHolder.translate(0, 10, 0);
+            graphicsHolder.drawText(String.format("Stops data transferred: %.2f KB", VehicleDataCache.stopsDataByteCounter / 1024d), 0, 0, COLOR_YELLOW, true, RenderHelper.MAX_RENDER_LIGHT);
+            graphicsHolder.translate(0, 10, 0);
+            graphicsHolder.drawText(String.format("MTR data transferred: %.2f KB", VehicleDataCache.mtrDataByteCounter / 1024d), 0, 0, COLOR_YELLOW, true, RenderHelper.MAX_RENDER_LIGHT);
+        }
+
+        Map<String, List<Pair<UniqueKey, ScriptInstance>>> nameToInstances = getInstancesGroupedByName(selectedSource);
+
+        graphicsHolder.translate(0, 10, 0);
 
         for(Map.Entry<String, List<Pair<UniqueKey, ScriptInstance>>> group : nameToInstances.entrySet()) {
             MutableText title = TextUtil.literal(group.getKey()).formatted(TextFormatting.UNDERLINE);

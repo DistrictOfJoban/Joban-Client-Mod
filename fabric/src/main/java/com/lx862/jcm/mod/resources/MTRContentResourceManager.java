@@ -97,13 +97,13 @@ public class MTRContentResourceManager {
                         final JsonElement vehicleScriptsElement = rootObject.get("vehicleScripts");
                         final JsonArray vehicleArray = vehicleElement.getAsJsonArray();
 
-                        HashMap<String, String> vehicleToVehicleScriptId = new HashMap<>();
+                        Map<String, String> entryToScriptId = new HashMap<>();
 
                         for(JsonElement vehicleEntry : vehicleArray) {
                             JsonObject vehicleObject = vehicleEntry.getAsJsonObject();
                             String baseId = vehicleObject.get("id").getAsString();
                             if(vehicleObject.has("scripting")) { // For MTR 4, we put all scripting related fields into a sub-entry
-                                vehicleToVehicleScriptId.put(baseId, vehicleObject.get("scripting").getAsString());
+                                entryToScriptId.put(baseId, vehicleObject.get("scripting").getAsString());
                             }
                         }
 
@@ -112,16 +112,16 @@ public class MTRContentResourceManager {
 
                             for(JsonElement entryElement : vehicleScriptsArray) {
                                 JsonObject scriptObject = entryElement.getAsJsonObject();
-                                String vehicleScriptGroupId = scriptObject.get("id").getAsString();
+                                String vehicleScriptEntryId = scriptObject.get("id").getAsString();
 
-                                ParsedScript parsedScript = tryParseScript(vehicleScriptGroupId, "vehicle", "Vehicle", scriptObject, true, false);
+                                ParsedScript parsedScript = tryParseScript(vehicleScriptEntryId, "vehicle", "Vehicle", scriptObject, true, false);
                                 if (parsedScript != null) {
-                                    vehicleScripts.put(vehicleScriptGroupId, parsedScript);
+                                    vehicleScripts.put(vehicleScriptEntryId, parsedScript);
                                 }
                             }
                         }
 
-                        vehicleToVehicleScripts.putAll(vehicleToVehicleScriptId);
+                        vehicleToVehicleScripts.putAll(entryToScriptId);
                     }
 
                     // Validation
