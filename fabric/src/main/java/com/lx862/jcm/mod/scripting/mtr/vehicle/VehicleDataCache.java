@@ -60,12 +60,13 @@ public class VehicleDataCache {
                     prevStop.nextDestinationName = simplifiedStop.destination;
                     prevStop.routeSwitchover = true;
                     prevStop.reverseAtPlatform = true;
+                    stopsData.addStop(prevStop, true);
                 } else {
                     Station station = VehicleDataCache.mtrData.stationIdMap.get(simplifiedStop.stationId);
                     Platform platform = VehicleDataCache.mtrData.platformIdMap.get(simplifiedStop.platformId);
 
                     VehicleWrapper.Stop stop = new VehicleWrapper.Stop(route, station, platform, station == null ? platform == null ? "" : platform.getName() : station.getName(), simplifiedStop.destination, simplifiedStop.distance);
-                    stopsData.allStops.add(stop);
+                    stopsData.addStop(stop, false);
                     lastPlatformId = simplifiedStop.platformId;
                 }
             }

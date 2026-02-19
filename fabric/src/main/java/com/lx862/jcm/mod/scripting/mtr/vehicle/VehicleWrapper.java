@@ -14,7 +14,9 @@ import org.mtr.mod.render.PositionAndRotation;
 import org.mtr.mod.render.RenderVehicleHelper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class VehicleWrapper {
@@ -62,7 +64,7 @@ public class VehicleWrapper {
             }
         }
 
-        return filterStopsForRoute(routeId);
+        return getRouteStops(routeId);
     }
 
     public int nextStopIndex() {
@@ -86,11 +88,9 @@ public class VehicleWrapper {
     }
 
     /* Private API */
-    protected List<Stop> filterStopsForRoute(long routeId) {
-        return stopsData.allStops.stream().filter(e ->
-                (e.route != null && e.route.getId() == routeId) ||
-                (e.nextRoute != null && e.nextRoute.getId() == routeId)
-        ).collect(Collectors.toList());
+    protected List<Stop> getRouteStops(long routeId) {
+        List<Stop> stops = stopsData.routeStops.get(routeId);
+        return stops == null ? new ArrayList<>(0) : stops;
     }
 
     protected int findNextStopIndex(double tolerance, double currentRailProgress, List<Stop> stops) {
@@ -111,13 +111,26 @@ public class VehicleWrapper {
 
     public static class StopsData {
         public final List<Stop> allStops;
+        public final Map<Long, List<Stop>> routeStops;
         public final Siding siding;
         public final boolean isFullData;
 
         public StopsData(Siding siding, boolean isFullData) {
             this.isFullData = isFullData;
             this.allStops = new ArrayList<>();
+            this.routeStops = new HashMap<>();
             this.siding = siding;
+        }
+
+        public void addStop(Stop stop, boolean addToNextRoute) {
+            if(!addToNextRoute) {
+                this.allStops.add(stop);
+                if(stop.route != null) {
+                    routeStops.computeIfAbsent(stop.route.getId(), k -> new ArrayList<>()).add(stop);
+                }
+            } else {
+                routeStops.computeIfAbsent(stop.nextRoute.getId(), k -> new ArrayList<>()).add(stop);
+            }
         }
 
         public static StopsData constructData(VehicleScriptContext.DataFetchMode dataFetchMode, VehicleExtension vehicle) {
@@ -154,13 +167,14 @@ public class VehicleWrapper {
                         prevStop.nextDestinationName = routePlatform.getDestination();
                         prevStop.routeSwitchover = true;
                         prevStop.reverseAtPlatform = true;
+                        stopsData.addStop(prevStop, true);
                     } else {
                         String destinationName = routePlatform.getDestination();
                         Station station = MinecraftClientData.getInstance().stationIdMap.get(routePlatform.getStationId());
                         Platform platform = MinecraftClientData.getInstance().platformIdMap.get(routePlatform.getPlatformId());
 
                         Stop stop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, -1);
-                        stopsData.allStops.add(stop);
+                        stopsData.addStop(stop, false);
 
                         lastPlatformId = routePlatform.getPlatformId();
                     }
@@ -178,14 +192,13 @@ public class VehicleWrapper {
         public Platform platform;
         public String destinationName;
         public String nextDestinationName;
-        public List<SimplifiedRoute> interchangeRoutes;
         public long dwellTimeMs;
         public double distance;
         public boolean routeSwitchover;
         @Deprecated
-        public long dwellTime;
+        public long dwellTime; // Use dwellTimeMs instead
         @Deprecated
-        public boolean reverseAtPlatform;
+        public boolean reverseAtPlatform; // Identical to routeSwitchover
 
         public Stop(SimplifiedRoute route, Station station, Platform platform,
                     String name, String destinationName, double distance) {
@@ -194,7 +207,6 @@ public class VehicleWrapper {
             this.nextDestinationName = null;
             this.station = station;
             this.platform = platform;
-            this.interchangeRoutes = new ArrayList<>();
             this.dwellTime = platform == null ? -1 : platform.getDwellTime() / 500;
             this.dwellTimeMs = platform == null ? -1 : platform.getDwellTime();
             this.name = name;
@@ -203,43 +215,74 @@ public class VehicleWrapper {
         }
     }
 
+    /* Start getters */
     @Deprecated
     public boolean shouldRender() {
         return true;
     }
-
     @Deprecated
     public boolean shouldRenderDetail() {
         return true;
     }
-
     public boolean isClientPlayerRiding() {
         return VehicleRidingMovement.isRiding(vehicleExtension.getId());
     }
-
-    public VehicleExtension vehicle() { return this.vehicleExtension; }
-    public VehicleExtension mtrTrain() { return vehicle(); }
+    public VehicleExtension vehicle() {
+        return this.vehicleExtension;
+    }
+    public VehicleExtension mtrTrain() {
+        return vehicle();
+    }
     public long id() {
         return this.vehicleExtension.getId();
     }
-    public Siding siding() { return this.stopsData.siding; }
+    public Siding siding() {
+        return this.stopsData.siding;
+    }
     public String trainTypeId(int carIndex) {
         if(carIndex >= vehicleExtension.vehicleExtraData.immutableVehicleCars.size()) return null;
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getVehicleId();
     }
-    public String baseTrainType(int carIndex) { throw new ScriptNotImplementedException(); }
-    public TransportMode transportMode() { return vehicleExtension.getTransportMode(); }
-    public double spacing(int carIndex) { return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getLength(); }
-    public double width(int carIndex) { return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getWidth(); }
+    public String baseTrainType(int carIndex) {
+        throw new ScriptNotImplementedException();
+    }
+    public TransportMode transportMode() {
+        return vehicleExtension.getTransportMode();
+    }
+    public double spacing(int carIndex) {
+        return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getLength();
+    }
+    public double width(int carIndex) {
+        return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getWidth();
+    }
     public int trainCars() {
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.size();
     }
-    public double accelerationConstant() { return vehicleExtension.vehicleExtraData.getAcceleration(); }
-    public boolean manualAllowed() { return vehicleExtension.vehicleExtraData.getIsManualAllowed(); }
-    public double maxManualSpeed() { return vehicleExtension.vehicleExtraData.getMaxManualSpeed(); }
-    public int manualToAutomaticTime() { Siding siding = siding(); return siding == null ? -1 : siding.getManualToAutomaticTime(); }
-    public List<PathData> path() { return vehicleExtension.vehicleExtraData.immutablePath; }
-    public double railProgress() { return ((VehicleSchemaMixin)vehicleExtension).getRailProgress(); }
+    @Deprecated
+    public double accelerationConstant() {
+        return (maxAcceleration() * 1000 * 1000) / (1/400d);
+    }
+    public double maxAcceleration() {
+        return vehicleExtension.vehicleExtraData.getAcceleration();
+    }
+    public double maxDeceleration() {
+        return vehicleExtension.vehicleExtraData.getDeceleration();
+    }
+    public boolean manualAllowed() {
+        return vehicleExtension.vehicleExtraData.getIsManualAllowed();
+    }
+    public double maxManualSpeed() {
+        return vehicleExtension.vehicleExtraData.getMaxManualSpeed();
+    }
+    public int manualToAutomaticTime() {
+        Siding siding = siding(); return siding == null ? -1 : siding.getManualToAutomaticTime();
+    }
+    public List<PathData> path() {
+        return vehicleExtension.vehicleExtraData.immutablePath;
+    }
+    public double railProgress() {
+        return ((VehicleSchemaMixin)vehicleExtension).getRailProgress();
+    }
     public double getRailProgress(int car) {
         double progress = railProgress();
         for(int i = 0; i < Math.min(vehicleExtension.vehicleExtraData.immutableVehicleCars.size(), car); i++) {
@@ -247,27 +290,46 @@ public class VehicleWrapper {
         }
         return progress;
     }
-    public int getRailIndex(double railProgress, boolean roundDown) { return Utilities.getIndexFromConditionalList(vehicleExtension.vehicleExtraData.immutablePath, railProgress - 1.0F); }
-    public double getRailSpeed(int pathIndex) { return vehicleExtension.vehicleExtraData.immutablePath.get(pathIndex).getSpeedLimitMetersPerMillisecond(); }
-    public double speed() { return vehicleExtension.getSpeed(); }
-    public double doorValue() { return vehicleExtension.persistentVehicleData.getDoorValue(); }
-    public boolean isCurrentlyManual() { return vehicleExtension.vehicleExtraData.getIsCurrentlyManual(); }
+    public int getRailIndex(double railProgress, boolean roundDown) {
+        return Utilities.getIndexFromConditionalList(vehicleExtension.vehicleExtraData.immutablePath, railProgress);
+    }
+    public double getRailSpeed(int pathIndex) {
+        return vehicleExtension.vehicleExtraData.immutablePath.get(pathIndex).getSpeedLimitKilometersPerHour() / 3.6 / 20;
+    }
+    @Deprecated
+    public double speed() {
+        return speedMs() * (1/20d);
+    }
+    public double speedMs() {
+        return vehicleExtension.getSpeed() * 1000;
+    }
+    public double speedKmh() {
+        return speedMs() * 3.6;
+    }
+    public double doorValue() {
+        return vehicleExtension.persistentVehicleData.getDoorValue();
+    }
+    public boolean isCurrentlyManual() {
+        return vehicleExtension.vehicleExtraData.getIsCurrentlyManual();
+    }
     public boolean isReversed() {
         return vehicleExtension.getReversed();
     }
-    public boolean isOnRoute() { return vehicleExtension.getIsOnRoute(); }
-
-    public boolean justOpening() { throw new ScriptNotImplementedException(); }
-    public boolean justClosing(float doorCloseTime) { throw new ScriptNotImplementedException(); }
-    public boolean isDoorOpening() { return vehicleExtension.persistentVehicleData.getAdjustedDoorMultiplier(vehicleExtension.vehicleExtraData) > 0; }
-
-    public long elapsedDwellTime() { return ((VehicleAccessorMixin)vehicleExtension).getElapsedDwellTime(); }
+    public boolean isOnRoute() {
+        return vehicleExtension.getIsOnRoute();
+    }
+    public boolean isDoorOpening() {
+        return vehicleExtension.persistentVehicleData.getAdjustedDoorMultiplier(vehicleExtension.vehicleExtraData) > 0;
+    }
+    public long elapsedDwellTime() {
+        return ((VehicleAccessorMixin)vehicleExtension).getElapsedDwellTime();
+    }
     public long totalDwellTime() {
         int railIndex = getRailIndex(railProgress(), false);
         if(railIndex < vehicleExtension.vehicleExtraData.immutablePath.size()) {
-            PathData pd = vehicleExtension.vehicleExtraData.immutablePath.get(railIndex);
-            if(pd != null) {
-                return pd.getDwellTime();
+            PathData path = vehicleExtension.vehicleExtraData.immutablePath.get(railIndex);
+            if(path != null) {
+                return path.getDwellTime();
             }
         }
         return -1;
