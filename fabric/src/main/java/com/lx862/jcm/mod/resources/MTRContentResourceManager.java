@@ -14,6 +14,7 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 import org.mtr.mod.Init;
+import org.mtr.mod.client.CustomResourceLoader;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -23,17 +24,21 @@ import java.util.Map;
 
 /** Temporary class to hold resource handling regarding MTR/NTE contents, until they are upstreamed */
 public class MTRContentResourceManager {
-    private static final HashMap<String, ParsedScript> vehicleScripts = new HashMap<>();
-    private static final HashMap<String, ParsedScript> eyecandyScripts = new HashMap<>();
-    private static final HashMap<String, String> vehicleToVehicleScripts = new HashMap<>();
+    private static final Map<String, ParsedScript> vehicleScripts = new HashMap<>();
+    private static final Map<String, ParsedScript> eyecandyScripts = new HashMap<>();
+    private static final Map<String, String> vehicleScriptIds = new HashMap<>();
+    private static final Map<String, String> eyecandyScriptIds = new HashMap<>();
     private static final JsonParser JSON_PARSER = new JsonParser();
 
     public static void reload() {
         JCMLogger.info("Loading scripts on-behalf of MTR...");
         eyecandyScripts.clear();
         vehicleScripts.clear();
+        vehicleScriptIds.clear();
+        eyecandyScriptIds.clear();
         readNteEyecandy();
-        readMtrCustomResources();
+        readMtrCustomResources(false);
+        readMtrCustomResources(true);
     }
 
     /**
@@ -48,6 +53,7 @@ public class MTRContentResourceManager {
                     if(rootObject.has("model")) {
                         String id = FilenameUtils.getBaseName(identifier.getPath());
                         ParsedScript ps = tryParseScript(id, "eyecandy", "Block", rootObject, false, false);
+                        eyecandyScriptIds.put(id, id);
                         eyecandyScripts.put(id, ps);
                     } else {
                         for (Map.Entry<String, JsonElement> entry : rootObject.entrySet()) {
@@ -55,6 +61,7 @@ public class MTRContentResourceManager {
                             final JsonObject entryObject = entry.getValue().getAsJsonObject();
 
                             ParsedScript ps = tryParseScript(id, "eyecandy", "Block", entryObject, false, false);
+                            eyecandyScriptIds.put(id, id);
                             eyecandyScripts.put(id, ps);
                         }
                     }
@@ -65,9 +72,8 @@ public class MTRContentResourceManager {
         });
     }
 
-    private static void readMtrCustomResources() {
-        vehicleToVehicleScripts.clear();
-        ResourceManagerHelper.readAllResources(new Identifier("mtr", "mtr_custom_resources.json"), (inputStream) -> {
+    private static void readMtrCustomResources(boolean pendingMigration) {
+        ResourceManagerHelper.readAllResources(new Identifier(Init.MOD_ID, pendingMigration ? CustomResourceLoader.CUSTOM_RESOURCES_PENDING_MIGRATION_ID + ".json" : CustomResourceLoader.CUSTOM_RESOURCES_ID + ".json"), (inputStream) -> {
             try(InputStreamReader isp = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
                 final JsonObject rootObject = JSON_PARSER.parse(isp).getAsJsonObject();
                 final boolean isVehicleLegacyResource = rootObject.has("custom_trains"); // Whether train format are in MTR 3
@@ -84,17 +90,17 @@ public class MTRContentResourceManager {
                                 ParsedScript parsedScript = tryParseScript(baseId, "vehicle", "Vehicle", vehicleResource, false, true);
                                 if (parsedScript != null) {
                                     vehicleScripts.put(baseId, parsedScript);
-                                    vehicleToVehicleScripts.put(baseId + "_cab_1", baseId);
-                                    vehicleToVehicleScripts.put(baseId + "_cab_2", baseId);
-                                    vehicleToVehicleScripts.put(baseId + "_cab_3", baseId);
-                                    vehicleToVehicleScripts.put(baseId + "_trailer", baseId);
+                                    vehicleScriptIds.put(baseId + "_cab_1", baseId);
+                                    vehicleScriptIds.put(baseId + "_cab_2", baseId);
+                                    vehicleScriptIds.put(baseId + "_cab_3", baseId);
+                                    vehicleScriptIds.put(baseId + "_trailer", baseId);
                                 }
                             } catch (Exception e) {
                                 logException("parsing legacy vehicle script '" + baseId + "' in mtr_custom_resources.json", e);
                             }
                         }
                     } else { // MTR 4
-                        final JsonElement vehicleScriptsElement = rootObject.get("vehicleScripts");
+                        final JsonElement scriptsElement = rootObject.get("vehicleScripts");
                         final JsonArray vehicleArray = vehicleElement.getAsJsonArray();
 
                         Map<String, String> entryToScriptId = new HashMap<>();
@@ -102,52 +108,74 @@ public class MTRContentResourceManager {
                         for(JsonElement vehicleEntry : vehicleArray) {
                             JsonObject vehicleObject = vehicleEntry.getAsJsonObject();
                             String baseId = vehicleObject.get("id").getAsString();
-                            if(vehicleObject.has("scripting")) { // For MTR 4, we put all scripting related fields into a sub-entry
-                                entryToScriptId.put(baseId, vehicleObject.get("scripting").getAsString());
+                            if(vehicleObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
+                                entryToScriptId.put(baseId, vehicleObject.get("scriptId").getAsString());
                             }
                         }
 
-                        if(vehicleScriptsElement != null) {
-                            JsonArray vehicleScriptsArray = vehicleScriptsElement.getAsJsonArray();
+                        if(scriptsElement != null) {
+                            JsonArray scriptArray = scriptsElement.getAsJsonArray();
 
-                            for(JsonElement entryElement : vehicleScriptsArray) {
+                            for(JsonElement entryElement : scriptArray) {
                                 JsonObject scriptObject = entryElement.getAsJsonObject();
-                                String vehicleScriptEntryId = scriptObject.get("id").getAsString();
+                                String scriptEntryId = scriptObject.get("id").getAsString();
 
-                                ParsedScript parsedScript = tryParseScript(vehicleScriptEntryId, "vehicle", "Vehicle", scriptObject, true, false);
+                                ParsedScript parsedScript = tryParseScript(scriptEntryId, "vehicle", "Vehicle", scriptObject, true, false);
                                 if (parsedScript != null) {
-                                    vehicleScripts.put(vehicleScriptEntryId, parsedScript);
+                                    vehicleScripts.put(scriptEntryId, parsedScript);
                                 }
                             }
                         }
 
-                        vehicleToVehicleScripts.putAll(entryToScriptId);
+                        vehicleScriptIds.putAll(entryToScriptId);
                     }
 
                     // Validation
-                    for(Map.Entry<String, String> vehicleEntry : vehicleToVehicleScripts.entrySet()) {
-                        String vehicleId = vehicleEntry.getKey();
-                        String vehicleGroupId = vehicleEntry.getValue();
+                    for(Map.Entry<String, String> vehicleEntry : vehicleScriptIds.entrySet()) {
+                        String entryId = vehicleEntry.getKey();
+                        String scriptEntryId = vehicleEntry.getValue();
 
-                        if(!vehicleScripts.containsKey(vehicleGroupId)) {
-                            JCMLogger.warn("Vehicle script \"{}\" is either missing or failed to load! (Used by vehicle {})", vehicleGroupId, vehicleId);
+                        if(!vehicleScripts.containsKey(scriptEntryId)) {
+                            JCMLogger.warn("Vehicle script \"{}\" is either missing or failed to load! (Used by vehicle {})", scriptEntryId, entryId);
                         }
                     }
                 }
 
+                // Parse MTR 4 Eyecandy
                 if(objectsElement != null) { // Only MTR 4 specifies eyecandy in mtr_custom_resources
+                    final JsonElement scriptsElement = rootObject.get("objectScripts");
                     JsonArray eyecandyObjects = objectsElement.getAsJsonArray();
                     for(JsonElement jsonElement : eyecandyObjects) {
                         final JsonObject entryObject = jsonElement.getAsJsonObject();
                         final String id = entryObject.get("id").getAsString();
-                        if(entryObject.has("scripting")) { // For MTR 4, we put all scripting related fields into a sub-entry
-                            JsonObject scriptObject = entryObject.get("scripting").getAsJsonObject();
+                        if(entryObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
+                            String scriptId = entryObject.get("scriptId").getAsString();
+                            eyecandyScriptIds.put(id, scriptId);
+                        }
+                    }
+
+                    if(scriptsElement != null) {
+                        JsonArray scriptArray = scriptsElement.getAsJsonArray();
+                        for(JsonElement entryElement : scriptArray) {
+                            JsonObject scriptObject = entryElement.getAsJsonObject();
+                            String scriptEntryId = scriptObject.get("id").getAsString();
+
                             try {
-                                ParsedScript parsedScript = tryParseScript(id, "eyecandy", "Block", scriptObject, true, false);
-                                if(parsedScript != null) eyecandyScripts.put(id, parsedScript);
+                                ParsedScript parsedScript = tryParseScript(scriptEntryId, "eyecandy", "Block", scriptObject, true, false);
+                                if(parsedScript != null) eyecandyScripts.put(scriptEntryId, parsedScript);
                             } catch (Exception e) {
-                                logException("parsing object '" + id + "' in mtr_custom_resources.json", e);
+                                logException("parsing object '" + scriptEntryId + "' in mtr_custom_resources.json", e);
                             }
+                        }
+                    }
+
+                    // Validation
+                    for(Map.Entry<String, String> scriptEntry : eyecandyScriptIds.entrySet()) {
+                        String entryId = scriptEntry.getKey();
+                        String scriptEntryId = scriptEntry.getValue();
+
+                        if(!eyecandyScriptIds.containsKey(scriptEntryId)) {
+                            JCMLogger.warn("Eyecandy script \"{}\" is either missing or failed to load! (Used by entry {})", scriptEntryId, entryId);
                         }
                     }
                 }
@@ -199,15 +227,15 @@ public class MTRContentResourceManager {
     }
 
     public static ParsedScript getEyecandyScript(String modelId) {
-        return eyecandyScripts.get(modelId);
+        return eyecandyScripts.get(eyecandyScriptIds.getOrDefault(modelId, modelId));
     }
 
-    public static ParsedScript getVehicleScript(String carriageId) {
-        return vehicleScripts.get(carriageId);
+    public static ParsedScript getVehicleScript(String scriptEntryId) {
+        return vehicleScripts.get(scriptEntryId);
     }
 
     public static String getVehicleScriptEntryId(String str) {
-        return vehicleToVehicleScripts.getOrDefault(str, str);
+        return vehicleScriptIds.getOrDefault(str, str);
     }
 
     private static void logException(String action, Exception e) {

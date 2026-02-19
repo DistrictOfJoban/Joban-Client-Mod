@@ -37,19 +37,21 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public void drawCarModel(DisplayHelperCompat dh, int carIndex, Matrices matrices) {
-        if(!carRenderers.containsKey(carIndex)) return;
+        ScriptRenderManager renderManager = carRenderManager(carIndex);
+        if(renderManager == null) return;
 
         if(matrices != null) dh.matrices(matrices);
-        carRenderers.get(carIndex).queue(dh);
+        renderManager.queue(dh);
     }
 
     public void drawCarModel(ScriptedModel model, int carIndex, Matrices matrices) {
-        if(!carRenderers.containsKey(carIndex)) return;
+        ScriptRenderManager renderManager = carRenderManager(carIndex);
+        if(renderManager == null) return;
 
         ModelDrawCall modelDrawCall = ModelDrawCall.create()
                 .matrices(matrices == null ? null : matrices.copy())
                 .modelObject(model);
-        carRenderers.get(carIndex).queue(modelDrawCall);
+        renderManager.queue(modelDrawCall);
     }
 
     public void drawConnModel(ScriptedModel model, int carIndex, Matrices matrices) {
