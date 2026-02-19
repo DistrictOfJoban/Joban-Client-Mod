@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.scripting.mtr.render;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.*;
-import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.data.IGui;
 import org.mtr.mod.render.MainRenderer;
 import org.mtr.mod.render.MoreRenderLayers;
 import org.mtr.mod.render.QueuedRenderLayer;
@@ -120,6 +120,8 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
             graphicsHolderNew.rotateXDegrees(-180);
 
+            boolean renderTypeIsInterior = this.renderType == QueuedRenderLayer.INTERIOR || this.renderType == QueuedRenderLayer.INTERIOR_TRANSLUCENT;
+
             graphicsHolderNew.drawTextureInWorld(
                     quadDefinition.x2,
                     quadDefinition.y2,
@@ -139,7 +141,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
                     v2,
                     facing,
                     RenderHelper.ARGB_BLACK + this.color,
-                    light
+                    renderTypeIsInterior ? IGui.MAX_LIGHT_INTERIOR : light
             );
             graphicsHolderNew.pop();
         });

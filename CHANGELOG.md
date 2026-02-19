@@ -1,16 +1,14 @@
-# JCM v2.2.0-beta-1 for MTR 4.0.2 has been released!
+# JCM v2.2.0-beta-1 for MTR 4.0.3 has been released!
 
 ## New
-- **Scripting:**
-- - Add quick reload keys (Shift+R for JCM scripts, Ctrl+R for MTR scripts), this allows reloading script without F3+T, greatly improving development time.
-- - - Requires JCM Debug Mode to be enabled!
+- **Scripting**
 
 ## Changes
 - **Scripting**
-- - Add `java.text.*` package to whitelist, as it is required for AWT's AttributedString.
-- - Fix internal timer possibly rolling into the negatives after rejoining world, fixes some freezing issues for scripts using `RateLimit`.
 
-## Changes
+## Fixes
+- **Scripting**
+- - Fix QuadDrawCall `INTERIOR` / `INTERIOR_TRANSLUCENT` render type not applying full brightness.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
