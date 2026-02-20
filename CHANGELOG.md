@@ -19,6 +19,7 @@
 ## Fixes
 - **Scripting**
 - - Fix QuadDrawCall `INTERIOR` / `INTERIOR_TRANSLUCENT` render type not applying full brightness.
+- - Fix counter-intuitive `Matrices` push/poping logic, which breaks many rendering stuff when used. 
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

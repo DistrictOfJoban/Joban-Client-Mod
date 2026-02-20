@@ -11,7 +11,7 @@ public abstract class RenderDrawCall<T extends RenderDrawCall<?>> implements Scr
 
     public T matrices(Matrices matrices) {
         if(matrices != null) {
-            this.storedMatrixTransformations = matrices.getStoredMatrixTransformations().copy();
+            this.storedMatrixTransformations = matrices.compileStoredMatrixTransformations();
         } else {
             this.storedMatrixTransformations = null;
         }

@@ -1,71 +1,77 @@
 package com.lx862.mtrscripting.util;
 
-import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.render.StoredMatrixTransformations;
+
+import java.util.Stack;
+import java.util.stream.Collectors;
 
 /** This is a wrapper for storedMatrixTransformations for scripting purposes */
 @SuppressWarnings("unused")
 public class Matrices {
-    private final StoredMatrixTransformations storedMatrixTransformations;
+    private final Stack<StoredMatrixTransformations> storedMatrixTransformations;
 
     public Matrices() {
-        this.storedMatrixTransformations = new StoredMatrixTransformations();
+        this.storedMatrixTransformations = new Stack<>();
+        this.storedMatrixTransformations.add(new StoredMatrixTransformations());
     }
 
-    private Matrices(StoredMatrixTransformations storedMatrixTransformations) {
-        this.storedMatrixTransformations = storedMatrixTransformations;
+    private Matrices(Stack<StoredMatrixTransformations> storedMatrixTransformations) {
+        this.storedMatrixTransformations = new Stack<>();
+        this.storedMatrixTransformations.addAll(storedMatrixTransformations.stream().map(StoredMatrixTransformations::copy).collect(Collectors.toList()));
     }
 
     public void pushPose() {
-        this.storedMatrixTransformations.add(GraphicsHolder::push);
+        this.storedMatrixTransformations.push(new StoredMatrixTransformations());
     }
 
     public void translate(float x, float y, float z) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.translate(x, y, z));
+        this.storedMatrixTransformations.peek().add(graphicsHolder -> graphicsHolder.translate(x, y, z));
     }
 
     public void rotateX(float xRad) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateXRadians(xRad));
+        this.storedMatrixTransformations.peek().add(graphicsHolder -> graphicsHolder.rotateXRadians(xRad));
     }
 
     public void rotateY(float yRad) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateYRadians(yRad));
+        this.storedMatrixTransformations.peek().add(graphicsHolder -> graphicsHolder.rotateYRadians(yRad));
     }
 
     public void rotateZ(float zRad) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateZRadians(zRad));
+        this.storedMatrixTransformations.peek().add(graphicsHolder -> graphicsHolder.rotateZRadians(zRad));
     }
 
     public void rotateXDegrees(float xDeg) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateXDegrees(xDeg));
+        this.storedMatrixTransformations.peek().add(graphicsHolder -> graphicsHolder.rotateXDegrees(xDeg));
     }
 
     public void rotateYDegrees(float yDeg) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateYDegrees(yDeg));
+        this.storedMatrixTransformations.peek().add(graphicsHolder -> graphicsHolder.rotateYDegrees(yDeg));
     }
 
     public void rotateZDegrees(float zDeg) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateZDegrees(zDeg));
+        this.storedMatrixTransformations.peek().add(graphicsHolder -> graphicsHolder.rotateZDegrees(zDeg));
     }
 
     public void scale(float x, float y, float z) {
-        this.storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.scale(x, y, z));
+        this.storedMatrixTransformations.peek().add(graphicsHolder -> graphicsHolder.scale(x, y, z));
     }
 
     public void popPose() {
-        this.storedMatrixTransformations.add(GraphicsHolder::pop);
+        this.storedMatrixTransformations.pop();
     }
 
     public void popPushPose() {
-        this.storedMatrixTransformations.add(GraphicsHolder::pop);
-        this.storedMatrixTransformations.add(GraphicsHolder::push);
+        popPose();
+        pushPose();
     }
 
     public Matrices copy() {
-        return new Matrices(this.storedMatrixTransformations.copy());
+        return new Matrices(this.storedMatrixTransformations);
     }
 
-    public StoredMatrixTransformations getStoredMatrixTransformations() {
-        return storedMatrixTransformations;
+    public StoredMatrixTransformations compileStoredMatrixTransformations() {
+        StoredMatrixTransformations compiled = new StoredMatrixTransformations();
+        storedMatrixTransformations.forEach(compiled::add);
+        return compiled;
     }
 }
