@@ -25,7 +25,9 @@ public abstract class RenderDrawCall<T extends RenderDrawCall<?>> implements Scr
 
     public void run(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         if (this.storedMatrixTransformations != null) {
+            storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateXDegrees(180));
             storedMatrixTransformations.add(this.storedMatrixTransformations);
+            storedMatrixTransformations.add(graphicsHolder -> graphicsHolder.rotateXDegrees(-180));
         }
     }
 }

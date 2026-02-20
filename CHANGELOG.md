@@ -13,6 +13,8 @@
 - - - In previous versions of JCM, model loading in scripts are very limited, and can only load a single OBJ file. JCM v2.2 revises model loading to allow part of a model to be loaded, and allow limited amount of preprocessing before uploading the final model.
 - - - This introduces the distinction between `RawModel` (A model part) and `ModelCluster` (The finalized, uploaded model). Those who had been using NTE should feel home to this changes.
 - - - `ModelManager.loadModel` now only returns `RawModel`. To effectively use it, you have to obtain a `ModelCluster` by using `ModelManager.upload(model: RawModel)`.
+- - **Breaking Changes: Matrices**
+- - - All Matrices created by scripts are now flipped 180 degree along the X-axis when applying.
 
 ## Fixes
 - **Scripting**
