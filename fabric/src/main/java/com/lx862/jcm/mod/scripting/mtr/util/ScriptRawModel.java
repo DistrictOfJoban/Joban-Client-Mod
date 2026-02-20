@@ -15,7 +15,7 @@ public class ScriptRawModel {
 
     public ScriptRawModel(OptimizedModel.ObjModel... models) {
         this();
-        this.models.addAll(List.of(models));
+        this.models.addAll(new ObjectArrayList<>(models));
     }
 
     public void append(ScriptRawModel other) {
