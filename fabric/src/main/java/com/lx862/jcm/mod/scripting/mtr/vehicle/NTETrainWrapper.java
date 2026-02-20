@@ -6,7 +6,6 @@ import org.mtr.mod.data.VehicleExtension;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class NTETrainWrapper extends VehicleWrapper {
 
@@ -19,14 +18,11 @@ public class NTETrainWrapper extends VehicleWrapper {
     }
 
     public List<Stop> getThisRoutePlatforms() {
-        return thisRouteStops();
+        return thisRouteStops(0);
     }
 
     public List<Stop> getNextRoutePlatforms() {
-        return stops().stream().filter(stop ->
-                stop.route != null && stop.route.getId() == vehicleExtension.vehicleExtraData.getNextRouteId() ||
-                        stop.nextRoute != null && stop.nextRoute.getId() == vehicleExtension.vehicleExtraData.getNextRouteId()
-        ).collect(Collectors.toList());
+        return getRouteStops(vehicleExtension.vehicleExtraData.getNextRouteId());
     }
 
     public int getAllPlatformsNextIndex() {
@@ -54,5 +50,27 @@ public class NTETrainWrapper extends VehicleWrapper {
         }
 
         return stops;
+    }
+
+    /* Start getters */
+    @Deprecated
+    public boolean shouldRender() {
+        return true;
+    }
+    @Deprecated
+    public boolean shouldRenderDetail() {
+        return true;
+    }
+    @Deprecated
+    public VehicleExtension mtrTrain() {
+        return vehicle();
+    }
+    @Deprecated
+    public double speed() {
+        return speedMs() * (1/20d);
+    }
+    @Deprecated
+    public double accelerationConstant() {
+        return (serviceAcceleration() * 1000 * 1000) / (1/400d);
     }
 }

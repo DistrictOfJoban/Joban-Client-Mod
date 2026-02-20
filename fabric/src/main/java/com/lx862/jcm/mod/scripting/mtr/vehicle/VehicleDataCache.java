@@ -3,10 +3,7 @@ package com.lx862.jcm.mod.scripting.mtr.vehicle;
 import com.lx862.jcm.mod.network.scripting.RequestStopsDataC2SPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.scripting.MTRDatasetHolder;
-import org.mtr.core.data.Platform;
-import org.mtr.core.data.Siding;
-import org.mtr.core.data.SimplifiedRoute;
-import org.mtr.core.data.Station;
+import org.mtr.core.data.*;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.VehicleExtension;
 
@@ -53,22 +50,36 @@ public class VehicleDataCache {
             long routeId = routeStopsData.routeId;
             SimplifiedRoute route = VehicleDataCache.mtrData.routeIdMap.get(routeId);
 
+            int stopIdx = 0;
             for(SimplifiedStop simplifiedStop : routeStopsData.stops) {
+                Station station = VehicleDataCache.mtrData.stationIdMap.get(simplifiedStop.stationId);
+                Platform platform = VehicleDataCache.mtrData.platformIdMap.get(simplifiedStop.platformId);
+                VehicleWrapper.Stop stop = new VehicleWrapper.Stop(route, station, platform, station == null ? platform == null ? "" : platform.getName() : station.getName(), simplifiedStop.destination, simplifiedStop.distance);
+
+                if(route != null) {
+                    List<SimplifiedRoutePlatform> platforms = route.getPlatforms();
+                    if(stopIdx < platforms.size()) {
+                        SimplifiedRoutePlatform simplifiedRoutePlatform = platforms.get(stopIdx);
+                        simplifiedRoutePlatform.forEach((color, name) -> {
+                            name.forEach(routeName -> {
+                                stop.routeInterchanges.add(new VehicleWrapper.Stop.RouteInterchange(color, routeName));
+                            });
+                        });
+                    }
+                }
+
                 if(lastPlatformId == simplifiedStop.platformId) {
                     VehicleWrapper.Stop prevStop = stopsData.allStops.get(stopsData.allStops.size()-1);
-                    prevStop.nextRoute = route;
-                    prevStop.nextDestinationName = simplifiedStop.destination;
                     prevStop.routeSwitchover = true;
                     prevStop.reverseAtPlatform = true;
-                    stopsData.addStop(prevStop, true);
+                    stopsData.allStopsNextRoute.set(stopsData.allStopsNextRoute.size()-1, stop);
                 } else {
-                    Station station = VehicleDataCache.mtrData.stationIdMap.get(simplifiedStop.stationId);
-                    Platform platform = VehicleDataCache.mtrData.platformIdMap.get(simplifiedStop.platformId);
-
-                    VehicleWrapper.Stop stop = new VehicleWrapper.Stop(route, station, platform, station == null ? platform == null ? "" : platform.getName() : station.getName(), simplifiedStop.destination, simplifiedStop.distance);
-                    stopsData.addStop(stop, false);
-                    lastPlatformId = simplifiedStop.platformId;
+                    stopsData.allStops.add(stop);
+                    stopsData.allStopsNextRoute.add(stop);
                 }
+                stopsData.routeStops.computeIfAbsent(routeId, (k) -> new ArrayList<>()).add(stop);
+                lastPlatformId = simplifiedStop.platformId;
+                stopIdx++;
             }
         }
 

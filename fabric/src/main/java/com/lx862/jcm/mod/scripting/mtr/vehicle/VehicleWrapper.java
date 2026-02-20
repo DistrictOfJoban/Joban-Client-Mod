@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
 import com.lx862.jcm.mixin.modded.mtr.VehicleSchemaMixin;
 import com.lx862.jcm.mixin.modded.tsc.VehicleAccessorMixin;
-import com.lx862.mtrscripting.exceptions.ScriptNotImplementedException;
 import org.mtr.core.data.*;
 import org.mtr.core.tool.Utilities;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -50,13 +49,21 @@ public class VehicleWrapper {
     }
 
     public List<Stop> stops() {
-        return stopsData.allStops;
+        return stops(false);
+    }
+
+    public List<Stop> stops(boolean preferNextRouteStop) {
+        return preferNextRouteStop ? stopsData.allStopsNextRoute : stopsData.allStops;
     }
 
     public List<Stop> thisRouteStops() {
+        return thisRouteStops(0.5);
+    }
+
+    public List<Stop> thisRouteStops(double overrunTolerance) {
         long routeId = vehicleExtension.vehicleExtraData.getThisRouteId();
         if(fullStopData()) {
-            int nextStopIndex = nextStopIndex();
+            int nextStopIndex = nextStopIndex(overrunTolerance);
             if(nextStopIndex >= stops().size()) return new ArrayList<>(0);
             SimplifiedRoute route = stops().get(nextStopIndex).route;
             if(route != null) {
@@ -71,16 +78,16 @@ public class VehicleWrapper {
         return nextStopIndex(0.5);
     }
 
-    public int nextStopIndex(double tolerance) {
-        return findNextStopIndex(tolerance, railProgress(), stops());
+    public int nextStopIndex(double overrunTolerance) {
+        return findNextStopIndex(overrunTolerance, railProgress(), stops());
     }
 
     public int thisRouteNextStopIndex() {
         return thisRouteNextStopIndex(0.5);
     }
 
-    public int thisRouteNextStopIndex(double tolerance) {
-        return findNextStopIndex(tolerance, railProgress(), thisRouteStops());
+    public int thisRouteNextStopIndex(double overrunTolerance) {
+        return findNextStopIndex(overrunTolerance, railProgress(), thisRouteStops(overrunTolerance));
     }
 
     public boolean fullStopData() {
@@ -93,12 +100,12 @@ public class VehicleWrapper {
         return stops == null ? new ArrayList<>(0) : stops;
     }
 
-    protected int findNextStopIndex(double tolerance, double currentRailProgress, List<Stop> stops) {
+    protected int findNextStopIndex(double overrunTolerance, double currentRailProgress, List<Stop> stops) {
         if(stopsData.isFullData) {
             int stopIdx = 0;
 
             for(Stop stop : stops) {
-                if(currentRailProgress > stop.distance + tolerance) stopIdx++;
+                if(currentRailProgress > stop.distance + overrunTolerance) stopIdx++;
                 else break;
             }
             return stopIdx;
@@ -111,6 +118,7 @@ public class VehicleWrapper {
 
     public static class StopsData {
         public final List<Stop> allStops;
+        public final List<Stop> allStopsNextRoute;
         public final Map<Long, List<Stop>> routeStops;
         public final Siding siding;
         public final boolean isFullData;
@@ -118,19 +126,9 @@ public class VehicleWrapper {
         public StopsData(Siding siding, boolean isFullData) {
             this.isFullData = isFullData;
             this.allStops = new ArrayList<>();
+            this.allStopsNextRoute = new ArrayList<>();
             this.routeStops = new HashMap<>();
             this.siding = siding;
-        }
-
-        public void addStop(Stop stop, boolean addToNextRoute) {
-            if(!addToNextRoute) {
-                this.allStops.add(stop);
-                if(stop.route != null) {
-                    routeStops.computeIfAbsent(stop.route.getId(), k -> new ArrayList<>()).add(stop);
-                }
-            } else {
-                routeStops.computeIfAbsent(stop.nextRoute.getId(), k -> new ArrayList<>()).add(stop);
-            }
         }
 
         public static StopsData constructData(VehicleScriptContext.DataFetchMode dataFetchMode, VehicleExtension vehicle) {
@@ -161,23 +159,28 @@ public class VehicleWrapper {
             long lastPlatformId = 0;
             for(SimplifiedRoute route : allRoutes) {
                 for(SimplifiedRoutePlatform routePlatform : route.getPlatforms()) {
+                    String destinationName = routePlatform.getDestination();
+                    Station station = MinecraftClientData.getInstance().stationIdMap.get(routePlatform.getStationId());
+                    Platform platform = MinecraftClientData.getInstance().platformIdMap.get(routePlatform.getPlatformId());
+
+                    Stop stop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, -1);
+                    routePlatform.forEach((color, routes) -> {
+                        routes.forEach(routeName -> {
+                            stop.routeInterchanges.add(new Stop.RouteInterchange(color, routeName));
+                        });
+                    });
+
                     if(routePlatform.getPlatformId() == lastPlatformId) { // Duplicated platform, likely double-added stop from route changeover.
                         Stop prevStop = stopsData.allStops.get(stopsData.allStops.size()-1);
-                        prevStop.nextRoute = route;
-                        prevStop.nextDestinationName = routePlatform.getDestination();
                         prevStop.routeSwitchover = true;
                         prevStop.reverseAtPlatform = true;
-                        stopsData.addStop(prevStop, true);
+                        stopsData.allStopsNextRoute.set(stopsData.allStopsNextRoute.size()-1, stop);
                     } else {
-                        String destinationName = routePlatform.getDestination();
-                        Station station = MinecraftClientData.getInstance().stationIdMap.get(routePlatform.getStationId());
-                        Platform platform = MinecraftClientData.getInstance().platformIdMap.get(routePlatform.getPlatformId());
-
-                        Stop stop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, -1);
-                        stopsData.addStop(stop, false);
-
-                        lastPlatformId = routePlatform.getPlatformId();
+                        stopsData.allStops.add(stop);
+                        stopsData.allStopsNextRoute.add(stop);
                     }
+                    stopsData.routeStops.computeIfAbsent(route.getId(), (k) -> new ArrayList<>()).add(stop);
+                    lastPlatformId = routePlatform.getPlatformId();
                 }
             }
             return stopsData;
@@ -186,12 +189,11 @@ public class VehicleWrapper {
 
     public static class Stop {
         public SimplifiedRoute route;
-        public SimplifiedRoute nextRoute;
         public Station station;
         public String name;
         public Platform platform;
         public String destinationName;
-        public String nextDestinationName;
+        public List<RouteInterchange> routeInterchanges;
         public long dwellTimeMs;
         public double distance;
         public boolean routeSwitchover;
@@ -203,35 +205,33 @@ public class VehicleWrapper {
         public Stop(SimplifiedRoute route, Station station, Platform platform,
                     String name, String destinationName, double distance) {
             this.route = route;
-            this.nextRoute = null;
-            this.nextDestinationName = null;
             this.station = station;
             this.platform = platform;
             this.dwellTime = platform == null ? -1 : platform.getDwellTime() / 500;
             this.dwellTimeMs = platform == null ? -1 : platform.getDwellTime();
+            this.routeInterchanges = new ArrayList<>();
             this.name = name;
             this.destinationName = destinationName;
             this.distance = distance;
         }
+
+        public static class RouteInterchange {
+            public final int color;
+            public final String name;
+
+            public RouteInterchange(int color, String name) {
+                this.color = color;
+                this.name = name;
+            }
+        }
     }
 
     /* Start getters */
-    @Deprecated
-    public boolean shouldRender() {
-        return true;
-    }
-    @Deprecated
-    public boolean shouldRenderDetail() {
-        return true;
-    }
     public boolean isClientPlayerRiding() {
         return VehicleRidingMovement.isRiding(vehicleExtension.getId());
     }
     public VehicleExtension vehicle() {
         return this.vehicleExtension;
-    }
-    public VehicleExtension mtrTrain() {
-        return vehicle();
     }
     public long id() {
         return this.vehicleExtension.getId();
@@ -242,9 +242,6 @@ public class VehicleWrapper {
     public String trainTypeId(int carIndex) {
         if(carIndex >= vehicleExtension.vehicleExtraData.immutableVehicleCars.size()) return null;
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getVehicleId();
-    }
-    public String baseTrainType(int carIndex) {
-        throw new ScriptNotImplementedException();
     }
     public TransportMode transportMode() {
         return vehicleExtension.getTransportMode();
@@ -258,14 +255,10 @@ public class VehicleWrapper {
     public int trainCars() {
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.size();
     }
-    @Deprecated
-    public double accelerationConstant() {
-        return (maxAcceleration() * 1000 * 1000) / (1/400d);
-    }
-    public double maxAcceleration() {
+    public double serviceAcceleration() {
         return vehicleExtension.vehicleExtraData.getAcceleration();
     }
-    public double maxDeceleration() {
+    public double serviceDeceleration() {
         return vehicleExtension.vehicleExtraData.getDeceleration();
     }
     public boolean manualAllowed() {
@@ -295,10 +288,6 @@ public class VehicleWrapper {
     }
     public double getRailSpeed(int pathIndex) {
         return vehicleExtension.vehicleExtraData.immutablePath.get(pathIndex).getSpeedLimitKilometersPerHour() / 3.6 / 20;
-    }
-    @Deprecated
-    public double speed() {
-        return speedMs() * (1/20d);
     }
     public double speedMs() {
         return vehicleExtension.getSpeed() * 1000;
