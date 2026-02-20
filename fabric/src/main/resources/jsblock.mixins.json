@@ -12,14 +12,14 @@
   ],
   "client": [
     "minecraft.NativeImageAccessor",
-    "modded.tsc.VehicleAccessorMixin",
     "modded.mtr.BlockEyecandyMixin",
     "modded.mtr.MainRendererMixin",
     "modded.mtr.RenderEyeCandyMixin",
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleExtensionMixin",
     "modded.mtr.VehicleResourceMixin",
-    "modded.mtr.VehicleSchemaMixin"
+    "modded.mtr.VehicleSchemaMixin",
+    "modded.tsc.VehicleAccessorMixin"
   ],
   "injectors": {
     "defaultRequire": 1
