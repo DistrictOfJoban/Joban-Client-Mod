@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.util;
 
+import org.mtr.core.tool.Vector;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mapping.holder.Vector3f;
@@ -22,6 +23,10 @@ public class ScriptVector3f {
 
     public ScriptVector3f(Vector3f impl) {
         this(new Vector3d(impl));
+    }
+
+    public ScriptVector3f(Vector tscVector) {
+        this(new Vector3d(tscVector.x(), tscVector.y(), tscVector.z()));
     }
 
     public ScriptVector3f(BlockPos blockPos) {
