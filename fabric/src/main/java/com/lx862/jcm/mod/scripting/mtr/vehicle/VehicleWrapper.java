@@ -284,7 +284,7 @@ public class VehicleWrapper {
         return progress;
     }
     public int getRailIndex(double railProgress, boolean roundDown) {
-        return Utilities.getIndexFromConditionalList(vehicleExtension.vehicleExtraData.immutablePath, railProgress);
+        return Utilities.getIndexFromConditionalList(vehicleExtension.vehicleExtraData.immutablePath, railProgress - (roundDown ? 1.0F : 0));
     }
     public double getRailSpeed(int pathIndex) {
         return vehicleExtension.vehicleExtraData.immutablePath.get(pathIndex).getSpeedLimitKilometersPerHour() / 3.6 / 20;
@@ -314,7 +314,7 @@ public class VehicleWrapper {
         return ((VehicleAccessorMixin)vehicleExtension).getElapsedDwellTime();
     }
     public long totalDwellTime() {
-        int railIndex = getRailIndex(railProgress(), false);
+        int railIndex = getRailIndex(railProgress(), true);
         if(railIndex < vehicleExtension.vehicleExtraData.immutablePath.size()) {
             PathData path = vehicleExtension.vehicleExtraData.immutablePath.get(railIndex);
             if(path != null) {
