@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
+import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.ScriptContent;
@@ -36,6 +37,7 @@ public class MTRContentResourceManager {
         vehicleScripts.clear();
         vehicleScriptIds.clear();
         eyecandyScriptIds.clear();
+        VehicleDataCache.clearData();
         readNteEyecandy();
         readMtrCustomResources(false);
         readMtrCustomResources(true);
