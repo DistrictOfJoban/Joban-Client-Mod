@@ -36,10 +36,10 @@ public class MTRDatasetHolder {
         Data instance = MinecraftClientData.getInstance();
 
         JsonReader jsonReader = new JsonReader(Utilities.parseJson(json));
-        jsonReader.iterateReaderArray("stations", () -> {}, rb -> stations.add(new Station(rb, instance)));
-        jsonReader.iterateReaderArray("platforms", () -> {}, rb -> platforms.add(new Platform(rb, instance)));
-        jsonReader.iterateReaderArray("sidings", () -> {}, rb -> sidings.add(new Siding(rb, instance)));
-        jsonReader.iterateReaderArray("routes", () -> {}, rb -> routes.add(new SimplifiedRoute(rb)));
+        jsonReader.iterateReaderArray("stations", () -> {}, reader -> stations.add(new Station(reader, instance)));
+        jsonReader.iterateReaderArray("platforms", () -> {}, reader -> platforms.add(new Platform(reader, instance)));
+        jsonReader.iterateReaderArray("routes", () -> {}, reader -> routes.add(new SimplifiedRoute(reader)));
+        jsonReader.iterateReaderArray("sidings", () -> {}, reader -> sidings.add(new Siding(reader, instance)));
         refreshIdCache();
     }
 
@@ -77,7 +77,6 @@ public class MTRDatasetHolder {
         JsonArray platformsArray = new JsonArray();
         JsonArray routesArray = new JsonArray();
         JsonArray sidingsArray = new JsonArray();
-        JsonArray depotsArray = new JsonArray();
 
         this.stations.forEach(e -> addJsonObject(e, stationsArray));
         this.platforms.forEach(e -> addJsonObject(e, platformsArray));
@@ -88,7 +87,6 @@ public class MTRDatasetHolder {
         rootObject.add("platforms", platformsArray);
         rootObject.add("routes", routesArray);
         rootObject.add("sidings", sidingsArray);
-        rootObject.add("depots", depotsArray);
 
         return rootObject.toString();
     }

@@ -5,6 +5,7 @@ import com.lx862.jcm.mixin.modded.tsc.MainAccessorMixin;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.scripting.MTRDatasetHolder;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
+import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.core.Main;
 import org.mtr.core.data.*;
 import org.mtr.core.simulation.Simulator;
@@ -81,25 +82,29 @@ public class RequestMTRDataC2SPacket extends PacketHandler {
         for(Simulator simulator : simulators) {
             if(simulator.dimension.equals(tscDimensionId)) {
                 simulator.run(() -> {
-                    MTRDatasetHolder dataInstance = new MTRDatasetHolder();
-                    for(long id : stationIds) {
-                        dataInstance.addStation(simulator.stationIdMap.get(id));
-                    }
-                    for(long id : sidingIds) {
-                        dataInstance.addSiding(simulator.sidingIdMap.get(id));
-                    }
-                    for(long id : routeIds) {
-                        ObjectArrayList<SimplifiedRoute> list = new ObjectArrayList<>();
-                        SimplifiedRoute.addToList(list, simulator.routeIdMap.get(id));
-                        dataInstance.addRoute(list.get(0));
-                    }
-                    for(long id : platformIds) {
-                        dataInstance.addPlatform(simulator.platformIdMap.get(id));
-                    }
+                    try {
+                        MTRDatasetHolder dataInstance = new MTRDatasetHolder();
+                        for(long id : stationIds) {
+                            dataInstance.addStation(simulator.stationIdMap.get(id));
+                        }
+                        for(long id : sidingIds) {
+                            dataInstance.addSiding(simulator.sidingIdMap.get(id));
+                        }
+                        for(long id : routeIds) {
+                            ObjectArrayList<SimplifiedRoute> list = new ObjectArrayList<>();
+                            SimplifiedRoute.addToList(list, simulator.routeIdMap.get(id));
+                            dataInstance.addRoute(list.get(0));
+                        }
+                        for(long id : platformIds) {
+                            dataInstance.addPlatform(simulator.platformIdMap.get(id));
+                        }
 
-                    minecraftServer.submit(() -> {
-                        Networking.sendPacketToClient(PlayerEntity.cast(serverPlayerEntity), new MTRDataS2CPacket(dataInstance));
-                    });
+                        minecraftServer.submit(() -> {
+                            Networking.sendPacketToClient(PlayerEntity.cast(serverPlayerEntity), new MTRDataS2CPacket(dataInstance));
+                        });
+                    } catch (Exception e) {
+                        JCMLogger.error("RequestMTRDataC2SPacket failed!", e);
+                    }
                 });
                 break;
             }
