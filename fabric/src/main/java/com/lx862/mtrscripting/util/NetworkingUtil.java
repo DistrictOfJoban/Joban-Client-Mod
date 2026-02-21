@@ -46,6 +46,8 @@ public class NetworkingUtil {
     public static NetworkResponse<?> fetchString(String urlStr, NativeObject requestObject) throws IOException {
         URL url = new URL(urlStr);
         HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
+        urlConnection.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
+        urlConnection.setReadTimeout(DEFAULT_READ_TIMEOUT);
         processRequestObject(requestObject, urlConnection);
 
         try (InputStream is = urlConnection.getInputStream()) {
