@@ -102,7 +102,6 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                     });
                                     break;
                                 }
-                                break;
                             }
                             if(!vehicleFound) {
                                 JCMLogger.warn("[JCM] RequestStopsDataC2SPacket: Failed to find vehicle from siding!");
