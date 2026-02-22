@@ -51,15 +51,21 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
         for(Simulator simulator : simulators) {
             if(simulator.dimension.equals(tscDimensionId)) {
                 simulator.run(() -> {
+                    JCMLogger.info("[JCM] RequestStopsDataC2SPacket: Start compiling stops data in " + tscDimensionId);
                     try {
                         Siding siding = simulator.sidingIdMap.get(sidingId);
                         if(siding != null) {
                             Depot depot = siding.area;
-                            if(depot == null) return;
-                            
+                            if(depot == null) {
+                                JCMLogger.warn("[JCM] RequestStopsDataC2SPacket: Failed to find depot from siding!");
+                                return;
+                            }
+
+                            boolean vehicleFound = false;
                             ObjectArraySet<Vehicle> vehicles = ((SidingAccessorMixin)(Object)siding).getVehicles();
                             for(Vehicle vehicle : vehicles) {
                                 if(vehicle.getId() == vehicleId) {
+                                    vehicleFound = true;
                                     int routeIdx = 0;
                                     VehicleDataCache.SimplifiedStopsData simplifiedStopsData = new VehicleDataCache.SimplifiedStopsData();
 
@@ -89,13 +95,20 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                         }
                                     }
 
+                                    JCMLogger.info("[JCM] RequestStopsDataC2SPacket: Submitting Response Packet");
                                     minecraftServer.submit(() -> {
                                         Networking.sendPacketToClient(PlayerEntity.cast(serverPlayerEntity), new StopsDataS2CPacket(vehicleId, sidingId, simplifiedStopsData));
+                                        JCMLogger.info("[JCM] RequestStopsDataC2SPacket: Request Packet Sent, Goodbye!");
                                     });
                                     break;
                                 }
                                 break;
                             }
+                            if(!vehicleFound) {
+                                JCMLogger.warn("[JCM] RequestStopsDataC2SPacket: Failed to find depot from siding!");
+                            }
+                        } else {
+                            JCMLogger.warn("[JCM] RequestStopsDataC2SPacket: Failed to find requested siding!");
                         }
                     } catch (Exception e) {
                         JCMLogger.error("RequestStopsDataC2SPacket failed!", e);
