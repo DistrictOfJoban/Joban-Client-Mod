@@ -93,7 +93,7 @@ public class RequestMTRDataC2SPacket extends PacketHandler {
                         for(long id : routeIds) {
                             ObjectArrayList<SimplifiedRoute> list = new ObjectArrayList<>();
                             SimplifiedRoute.addToList(list, simulator.routeIdMap.get(id));
-                            if(list.isEmpty()) dataInstance.addRoute(list.get(0));
+                            if(!list.isEmpty()) dataInstance.addRoute(list.get(0));
                         }
                         for(long id : platformIds) {
                             dataInstance.addPlatform(simulator.platformIdMap.get(id));
