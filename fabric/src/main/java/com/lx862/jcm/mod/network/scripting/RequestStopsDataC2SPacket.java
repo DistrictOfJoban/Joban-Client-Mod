@@ -55,6 +55,8 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                         Siding siding = simulator.sidingIdMap.get(sidingId);
                         if(siding != null) {
                             Depot depot = siding.area;
+                            if(depot == null) return;
+                            
                             ObjectArraySet<Vehicle> vehicles = ((SidingAccessorMixin)(Object)siding).getVehicles();
                             for(Vehicle vehicle : vehicles) {
                                 if(vehicle.getId() == vehicleId) {
