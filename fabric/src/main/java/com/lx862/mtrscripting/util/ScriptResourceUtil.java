@@ -112,28 +112,17 @@ public class ScriptResourceUtil {
     private static final Identifier NOTO_SANS_CJK_LOCATION = new Identifier("mtr", "font/noto-sans-cjk-tc-medium.otf");
     private static final Identifier NOTO_SANS_LOCATION = new Identifier("mtr", "font/noto-sans-semibold.ttf");
     private static final Identifier NOTO_SERIF_LOCATION = new Identifier("mtr", "font/noto-serif-cjk-tc-semibold.ttf");
-    private static boolean hasNotoSansCjk = true;
-    private static Font NOTO_SANS_MAYBE_CJK;
+    private static Font NOTO_SANS_CACHE;
+    private static Font NOTO_SANS_CJK_CACHE;
     private static Font NOTO_SERIF_CACHE;
 
     public static Font getSystemFont(String fontName) {
         if(fontName.equals("Noto Sans")) {
-            if (NOTO_SANS_MAYBE_CJK == null) {
-                if (hasNotoSansCjk) {
-                    try {
-                        NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_CJK_LOCATION);
-                    } catch (Exception ex) {
-                        ScriptManager.LOGGER.error("[JCM Scripting] Failed to load font", ex);
-                    }
-                } else {
-                    try {
-                        NOTO_SANS_MAYBE_CJK = readFont(NOTO_SANS_LOCATION);
-                    } catch (Exception ex) {
-                        ScriptManager.LOGGER.error("[JCM Scripting] Failed to load font", ex);
-                    }
-                }
+            Font cjkFont = getSystemFont("Noto Sans CJK TC Medium");
+            if (cjkFont == null) {
+                return getSystemFont("Noto Sans SemiBold");
             }
-            return NOTO_SANS_MAYBE_CJK;
+            return cjkFont;
         } else if(fontName.equals("Noto Serif")) {
             if(NOTO_SERIF_CACHE == null) {
                 try {
@@ -144,6 +133,24 @@ public class ScriptResourceUtil {
                 }
             }
             return NOTO_SERIF_CACHE;
+        } else if(fontName.equals("Noto Sans CJK TC Medium")) {
+            if(NOTO_SANS_CJK_CACHE == null) {
+                try {
+                    NOTO_SANS_CJK_CACHE = readFont(NOTO_SANS_CJK_LOCATION);
+                } catch (Exception ex) {
+                    ScriptManager.LOGGER.error("[JCM Scripting] Failed to load font", ex);
+                }
+            }
+            return NOTO_SANS_CJK_CACHE;
+        } else if(fontName.equals("Noto Sans SemiBold")) {
+            if(NOTO_SANS_CACHE == null) {
+                try {
+                    NOTO_SANS_CACHE = readFont(NOTO_SANS_LOCATION);
+                } catch (Exception ex) {
+                    ScriptManager.LOGGER.error("[JCM Scripting] Failed to load font", ex);
+                }
+            }
+            return NOTO_SANS_CACHE;
         } else {
             return new Font(fontName, Font.PLAIN, 1);
         }
