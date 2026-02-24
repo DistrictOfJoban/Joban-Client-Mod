@@ -236,8 +236,14 @@ public class VehicleWrapper {
     }
 
     /* Start getters */
-    public boolean shouldRender() {
+    public boolean rendered() {
         return anyVehicleCarVisible;
+    }
+    public boolean anyCarRendered(int... cars) {
+        for(int car : cars) {
+            if(vehicleExtension.persistentVehicleData.rayTracing[car]) return true;
+        }
+        return false;
     }
     public boolean isClientPlayerRiding() {
         return VehicleRidingMovement.isRiding(vehicleExtension.getId());
