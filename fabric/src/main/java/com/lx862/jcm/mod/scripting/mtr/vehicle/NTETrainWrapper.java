@@ -54,10 +54,6 @@ public class NTETrainWrapper extends VehicleWrapper {
 
     /* Start getters */
     @Deprecated
-    public boolean shouldRender() {
-        return true;
-    }
-    @Deprecated
     public boolean shouldRenderDetail() {
         return true;
     }

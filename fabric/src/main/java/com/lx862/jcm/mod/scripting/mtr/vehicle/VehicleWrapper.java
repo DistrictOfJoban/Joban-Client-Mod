@@ -23,11 +23,20 @@ public class VehicleWrapper {
     protected final StopsData stopsData;
     public final boolean[] doorLeftOpen;
     public final boolean[] doorRightOpen;
+    private final boolean anyVehicleCarVisible;
 
     public VehicleWrapper(VehicleScriptContext.DataFetchMode dataFetchMode, VehicleExtension vehicleExtension) {
         this.vehicleExtension = vehicleExtension;
         this.doorLeftOpen = new boolean[trainCars()];
         this.doorRightOpen = new boolean[trainCars()];
+        boolean anyVehicleCarVisible = false;
+        for(boolean rayTracingVisible : vehicleExtension.persistentVehicleData.rayTracing) {
+            if(rayTracingVisible) {
+                anyVehicleCarVisible = true;
+                break;
+            }
+        }
+        this.anyVehicleCarVisible = anyVehicleCarVisible;
         final ObjectArrayList<PositionAndRotation> posAndRotations = vehicleExtension.getSmoothedVehicleCarsAndPositions(0).stream()
                 .map(vehicleCarAndPosition -> {
                     final ObjectArrayList<PositionAndRotation> bogiePositions = vehicleCarAndPosition.right()
@@ -227,6 +236,9 @@ public class VehicleWrapper {
     }
 
     /* Start getters */
+    public boolean shouldRender() {
+        return anyVehicleCarVisible;
+    }
     public boolean isClientPlayerRiding() {
         return VehicleRidingMovement.isRiding(vehicleExtension.getId());
     }
