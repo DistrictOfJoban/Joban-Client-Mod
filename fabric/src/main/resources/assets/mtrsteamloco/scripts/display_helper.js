@@ -6,7 +6,10 @@ function DisplayHelper(cfg) {
     this.texture = null;
     this.ownsTexture = false;
     if (cfg.version === 1) {
-        let renderType = cfg.renderType || "light";
+        let renderType = (cfg.renderType || "light")
+            .replace("lighttranslucent", "light_translucent")
+            .replace("exteriortranslucent", "exterior_translucent")
+            .replace("interiortranslucent", "interior_translucent");
         let dhCompat = DisplayHelperCompat.create();
 
         for (let slotCfg of cfg.slots) {
