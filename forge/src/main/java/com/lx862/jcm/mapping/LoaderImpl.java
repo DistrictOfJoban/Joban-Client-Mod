@@ -22,10 +22,7 @@ public class LoaderImpl {
     }
 
     public static Item getItemFromId(Identifier id) {
-        #if MC_VERSION < "11701"
-            final Optional<net.minecraft.item.Item> itm;
-            itm = net.minecraft.util.registry.Registry.ITEM.getOptional(id.data);
-        #elif MC_VERSION < "11903"
+        #if MC_VERSION < "11903"
             final Optional<net.minecraft.world.item.Item> itm;
             itm = net.minecraft.core.Registry.ITEM.getOptional(id.data);
         #else
@@ -36,9 +33,7 @@ public class LoaderImpl {
     }
 
     public static Identifier getIdFromItem(Item itm) {
-        #if MC_VERSION < "11701"
-            return new Identifier(net.minecraft.util.registry.Registry.ITEM.getKey(itm.data));
-        #elif MC_VERSION < "11903"
+        #if MC_VERSION < "11903"
             return new Identifier(net.minecraft.core.Registry.ITEM.getKey(itm.data));
         #else
             return new Identifier(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(itm.data));

@@ -10,18 +10,6 @@ import org.mtr.mapping.mapper.ScreenExtension;
 public class LoaderImplClient {
     public static void openURLScreen(ScreenExtension parentScreen, String url) {
         MinecraftClient mc = MinecraftClient.getInstance();
-
-        #if MC_VERSION <= "11605"
-            mc.openScreen(
-                    new Screen(new net.minecraft.client.gui.screen.ConfirmOpenLinkScreen((confirmed) -> {
-                        if(confirmed) {
-                            Util.getOperatingSystem().open(url);
-                        }
-                        mc.openScreen(new Screen(parentScreen));
-                    }, url, true)
-                )
-            );
-        #else
         mc.openScreen(
                 new Screen(new net.minecraft.client.gui.screens.ConfirmLinkScreen((confirmed) -> {
                     if(confirmed) {
@@ -31,7 +19,6 @@ public class LoaderImplClient {
                 }, url, true)
             )
         );
-        #endif
     }
 
     public static long getNativeImagePointer(NativeImage nativeImage) {

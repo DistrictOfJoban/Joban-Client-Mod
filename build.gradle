@@ -56,7 +56,6 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 
 	ext { // Expose to subproject
 		java_version =
-			(merged_mc_version as int) <= 11605 ? 8 :
 			(merged_mc_version as int) <= 11701 ? 16 :
 			(merged_mc_version as int) <= 12004 ? 17 :
 			21

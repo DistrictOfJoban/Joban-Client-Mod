@@ -24,5 +24,8 @@
 - - Fix counter-intuitive `Matrices` push/poping logic, which breaks many rendering stuff when used.
 - - Fix `Networking.fetchString()` being possible to hang indefinitely.
 
+## Removal
+- Minecraft 1.16 support has been fully dropped in the v2.2 series. Please update to a newer Minecraft version shall you wish to use JCM v2.2.
+
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

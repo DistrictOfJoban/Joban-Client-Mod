@@ -84,11 +84,7 @@ public class ParsedScript {
         scope.put("Resources", scope, new NativeJavaClass(scope, ScriptResourceUtil.class));
         scope.put("GraphicsTexture", scope, new NativeJavaClass(scope, GraphicsTexture.class));
 
-        #if MC_VERSION < "11701"
-        scope.put("Timing", scope, new NativeJavaObject(scope, timingUtil, TimingUtil.class));
-        #else
         scope.put("Timing", scope, new NativeJavaObject(scope, timingUtil, com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
-        #endif
         scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTracker.class));
         scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTracker.class));
         scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimit.class));
