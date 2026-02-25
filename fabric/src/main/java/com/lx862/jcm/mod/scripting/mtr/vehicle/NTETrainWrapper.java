@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
-import com.lx862.jcm.mixin.modded.mtr.VehicleSchemaMixin;
 import org.mtr.core.data.PathData;
 import org.mtr.core.data.Siding;
 import org.mtr.core.data.SimplifiedRoute;
@@ -59,11 +58,11 @@ public class NTETrainWrapper extends VehicleWrapper {
     /* Start getters */
     @Deprecated
     public long id() {
-        return this.vehicleExtension.getId();
+        return getId();
     }
     @Deprecated
     public Siding siding() {
-        return this.stopsData.siding;
+        return getSiding();
     }
     @Deprecated
     public TransportMode transportMode() {
@@ -71,7 +70,7 @@ public class NTETrainWrapper extends VehicleWrapper {
     }
     @Deprecated
     public int trainCars() {
-        return getCars();
+        return getCarCount();
     }
     @Deprecated
     public boolean shouldRender() {

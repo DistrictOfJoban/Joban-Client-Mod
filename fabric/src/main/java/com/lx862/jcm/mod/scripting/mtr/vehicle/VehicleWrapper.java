@@ -27,8 +27,8 @@ public class VehicleWrapper {
 
     public VehicleWrapper(VehicleScriptContext.DataFetchMode dataFetchMode, VehicleExtension vehicleExtension) {
         this.vehicleExtension = vehicleExtension;
-        this.doorLeftOpen = new boolean[getCars()];
-        this.doorRightOpen = new boolean[getCars()];
+        this.doorLeftOpen = new boolean[getCarCount()];
+        this.doorRightOpen = new boolean[getCarCount()];
         boolean anyVehicleCarVisible = false;
         for(boolean rayTracingVisible : vehicleExtension.persistentVehicleData.rayTracing) {
             if(rayTracingVisible) {
@@ -47,7 +47,7 @@ public class VehicleWrapper {
                 })
                 .collect(Collectors.toCollection(ObjectArrayList::new));
 
-        for(int i = 0; i < getCars(); i++) {
+        for(int i = 0; i < getCarCount(); i++) {
             PositionAndRotation posAndRotation = posAndRotations.get(i);
 
             this.doorLeftOpen[i] = vehicleExtension.persistentVehicleData.getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(-1.1, 0, 0, -1, 2, 1), posAndRotation, getDoorValue());
@@ -293,7 +293,7 @@ public class VehicleWrapper {
     public TransportMode getTransportMode() {
         return vehicleExtension.getTransportMode();
     }
-    public int getCars() {
+    public int getCarCount() {
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.size();
     }
     public double getServiceAcceleration() {
