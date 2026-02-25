@@ -62,25 +62,28 @@ public class VehicleWrapper {
     }
 
     public List<Stop> stops(boolean preferNextRouteStop) {
-        return preferNextRouteStop ? stopsData.allStopsNextRoute : stopsData.allStops;
+        return mapStops(stopsData.allStops, preferNextRouteStop);
     }
 
     public List<Stop> thisRouteStops() {
-        return thisRouteStops(0.5);
+        return thisRouteStops(false);
     }
 
-    public List<Stop> thisRouteStops(double overrunTolerance) {
-        long routeId = vehicleExtension.vehicleExtraData.getThisRouteId();
-        if(fullStopData()) {
-            int nextStopIndex = nextStopIndex(overrunTolerance);
-            if(nextStopIndex >= stops().size()) return new ArrayList<>(0);
-            SimplifiedRoute route = stops().get(nextStopIndex).route;
-            if(route != null) {
-                routeId = route.getId();
-            }
-        }
+    public List<Stop> thisRouteStops(boolean preferNextRouteStop) {
+        long routeId = getThisRouteId();
+        return mapStops(getRouteStops(routeId), preferNextRouteStop);
+    }
 
-        return getRouteStops(routeId);
+    public List<Stop> getNextRouteStops() {
+        return getNextRouteStops(true);
+    }
+
+    public List<Stop> getNextRouteStops(boolean preferNextRouteStop) {
+        long thisRouteId = getThisRouteId();
+        int routeIndex = stopsData.routeToRun.indexOf(thisRouteId);
+        int nextRouteIndex = routeIndex+1;
+        if(nextRouteIndex >= stopsData.routeToRun.size()) return new ArrayList<>();
+        return mapStops(getRouteStops(stopsData.routeToRun.get(nextRouteIndex)), preferNextRouteStop);
     }
 
     public int nextStopIndex() {
@@ -96,7 +99,7 @@ public class VehicleWrapper {
     }
 
     public int thisRouteNextStopIndex(double overrunTolerance) {
-        return findNextStopIndex(overrunTolerance, railProgress(), thisRouteStops(overrunTolerance));
+        return findNextStopIndex(overrunTolerance, railProgress(), thisRouteStops());
     }
 
     public boolean fullStopData() {
@@ -104,6 +107,25 @@ public class VehicleWrapper {
     }
 
     /* Private API */
+    protected List<Stop> mapStops(List<Stop> stops, boolean preferNextRouteStop) {
+        if(!preferNextRouteStop) return stops;
+        return stops.stream().map(e -> e.asNextRoute != null ? e.asNextRoute : e).collect(Collectors.toList());
+    }
+
+    protected long getThisRouteId() {
+        long routeId = vehicleExtension.vehicleExtraData.getThisRouteId();
+        if(fullStopData()) {
+            int nextStopIndex = nextStopIndex(0);
+            if(nextStopIndex < stops().size()) {
+                SimplifiedRoute route = stops().get(nextStopIndex).route;
+                if(route != null) {
+                    routeId = route.getId();
+                }
+            }
+        }
+        return routeId;
+    }
+
     protected List<Stop> getRouteStops(long routeId) {
         List<Stop> stops = stopsData.routeStops.get(routeId);
         return stops == null ? new ArrayList<>(0) : stops;
@@ -129,6 +151,7 @@ public class VehicleWrapper {
         public final List<Stop> allStops;
         public final List<Stop> allStopsNextRoute;
         public final Map<Long, List<Stop>> routeStops;
+        public final List<Long> routeToRun;
         public final Siding siding;
         public final boolean isFullData;
 
@@ -136,6 +159,7 @@ public class VehicleWrapper {
             this.isFullData = isFullData;
             this.allStops = new ArrayList<>();
             this.allStopsNextRoute = new ArrayList<>();
+            this.routeToRun = new ArrayList<>();
             this.routeStops = new HashMap<>();
             this.siding = siding;
         }
@@ -167,28 +191,27 @@ public class VehicleWrapper {
 
             long lastPlatformId = 0;
             for(SimplifiedRoute route : allRoutes) {
+                stopsData.routeToRun.add(route.getId());
                 for(SimplifiedRoutePlatform routePlatform : route.getPlatforms()) {
                     String destinationName = routePlatform.getDestination();
                     Station station = MinecraftClientData.getInstance().stationIdMap.get(routePlatform.getStationId());
                     Platform platform = MinecraftClientData.getInstance().platformIdMap.get(routePlatform.getPlatformId());
 
-                    Stop stop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, -1);
+                    Stop thisStop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, -1);
                     routePlatform.forEach((color, routes) -> {
                         routes.forEach(routeName -> {
-                            stop.routeInterchanges.add(new Stop.RouteInterchange(color, routeName));
+                            thisStop.routeInterchanges.add(new Stop.RouteInterchange(color, routeName));
                         });
                     });
 
                     if(routePlatform.getPlatformId() == lastPlatformId) { // Duplicated platform, likely double-added stop from route changeover.
                         Stop prevStop = stopsData.allStops.get(stopsData.allStops.size()-1);
-                        prevStop.routeSwitchover = true;
                         prevStop.reverseAtPlatform = true;
-                        stopsData.allStopsNextRoute.set(stopsData.allStopsNextRoute.size()-1, stop);
+                        prevStop.asNextRoute = thisStop;
                     } else {
-                        stopsData.allStops.add(stop);
-                        stopsData.allStopsNextRoute.add(stop);
+                        stopsData.allStops.add(thisStop);
                     }
-                    stopsData.routeStops.computeIfAbsent(route.getId(), (k) -> new ArrayList<>()).add(stop);
+                    stopsData.routeStops.computeIfAbsent(route.getId(), (k) -> new ArrayList<>()).add(thisStop);
                     lastPlatformId = routePlatform.getPlatformId();
                 }
             }
@@ -205,7 +228,7 @@ public class VehicleWrapper {
         public List<RouteInterchange> routeInterchanges;
         public long dwellTimeMs;
         public double distance;
-        public boolean routeSwitchover;
+        public Stop asNextRoute;
         @Deprecated
         public long dwellTime; // Use dwellTimeMs instead
         @Deprecated

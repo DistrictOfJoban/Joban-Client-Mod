@@ -18,11 +18,11 @@ public class NTETrainWrapper extends VehicleWrapper {
     }
 
     public List<Stop> getThisRoutePlatforms() {
-        return thisRouteStops(0);
+        return thisRouteStops();
     }
 
     public List<Stop> getNextRoutePlatforms() {
-        return getRouteStops(vehicleExtension.vehicleExtraData.getNextRouteId());
+        return getNextRouteStops();
     }
 
     public int getAllPlatformsNextIndex() {
