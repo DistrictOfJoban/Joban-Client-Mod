@@ -40,10 +40,10 @@ public class MTRDatasetHolder {
         jsonReader.iterateReaderArray("platforms", () -> {}, reader -> platforms.add(new Platform(reader, instance)));
         jsonReader.iterateReaderArray("routes", () -> {}, reader -> routes.add(new SimplifiedRoute(reader)));
         jsonReader.iterateReaderArray("sidings", () -> {}, reader -> sidings.add(new Siding(reader, instance)));
-        refreshIdCache();
+        generateIdMapCache();
     }
 
-    private void refreshIdCache() {
+    public void generateIdMapCache() {
         stationIdMap.clear();
         platformIdMap.clear();
         routeIdMap.clear();
@@ -96,7 +96,7 @@ public class MTRDatasetHolder {
         this.platforms.addAll(other.platforms);
         this.routes.addAll(other.routes);
         this.sidings.addAll(other.sidings);
-        refreshIdCache();
+        generateIdMapCache();
     }
 
     private void addJsonObject(SerializedDataBase dataBase, JsonArray array) {

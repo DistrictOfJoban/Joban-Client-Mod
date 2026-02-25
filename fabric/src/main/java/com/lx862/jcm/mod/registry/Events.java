@@ -30,6 +30,7 @@ public class Events {
             JCMClient.getMcMetaManager().tick();
             JCMScripting.tick();
             MTRScripting.tick();
+            VehicleDataCache.tick();
 
             if(MinecraftClient.getInstance().getWorldMapped() == null) {
                 VehicleDataCache.clearData();

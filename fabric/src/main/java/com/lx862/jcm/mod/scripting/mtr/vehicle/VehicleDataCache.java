@@ -111,6 +111,45 @@ public class VehicleDataCache {
         mtrData.addFrom(other);
     }
 
+    public static void tick() {
+        boolean needRegenerateCache = false;
+        for(int i = 0; i < mtrData.stations.size(); i++) {
+            Station data = mtrData.stations.get(i);
+            Station mtrData = MinecraftClientData.getInstance().stationIdMap.get(data.getId());
+            if(mtrData != null && !mtrData.equals(data)) {
+                VehicleDataCache.mtrData.stations.set(i, mtrData);
+                needRegenerateCache = true;
+            }
+        }
+        for(int i = 0; i < mtrData.routes.size(); i++) {
+            SimplifiedRoute data = mtrData.routes.get(i);
+            SimplifiedRoute mtrData = MinecraftClientData.getInstance().simplifiedRouteIdMap.get(data.getId());
+            if(mtrData != null && !mtrData.equals(data)) {
+                VehicleDataCache.mtrData.routes.set(i, mtrData);
+                needRegenerateCache = true;
+            }
+        }
+        for(int i = 0; i < mtrData.platforms.size(); i++) {
+            Platform data = mtrData.platforms.get(i);
+            Platform mtrData = MinecraftClientData.getInstance().platformIdMap.get(data.getId());
+            if(mtrData != null && !mtrData.equals(data)) {
+                VehicleDataCache.mtrData.platforms.set(i, mtrData);
+                needRegenerateCache = true;
+            }
+        }
+        for(int i = 0; i < mtrData.sidings.size(); i++) {
+            Siding data = mtrData.sidings.get(i);
+            Siding mtrData = MinecraftClientData.getInstance().sidingIdMap.get(data.getId());
+            if(mtrData != null && !mtrData.equals(data)) {
+                VehicleDataCache.mtrData.sidings.set(i, mtrData);
+                needRegenerateCache = true;
+            }
+        }
+        if(needRegenerateCache) {
+            mtrData.generateIdMapCache();
+        }
+    }
+
     public static class SimplifiedStopsData {
         public final List<RouteStopsData> routeStopsData = new ArrayList<>();
 
