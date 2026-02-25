@@ -20,11 +20,21 @@ public class PIDSScriptContext extends MTRScriptContext {
         return PIDSComponent.parse(new JsonParser().parse(str).getAsJsonObject());
     }
 
+    @Deprecated
     public ScriptRenderManager renderManager() {
+        return getRenderManager();
+    }
+
+    @Deprecated
+    public ScriptSoundManager soundManager() {
+        return getSoundManager();
+    }
+
+    public ScriptRenderManager getRenderManager() {
         return this.renderManager;
     }
 
-    public ScriptSoundManager soundManager() {
+    public ScriptSoundManager getSoundManager() {
         return this.soundManager;
     }
 

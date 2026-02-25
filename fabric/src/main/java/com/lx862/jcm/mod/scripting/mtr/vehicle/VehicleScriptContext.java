@@ -37,7 +37,7 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public void drawCarModel(DisplayHelperCompat dh, int carIndex, Matrices matrices) {
-        ScriptRenderManager renderManager = carRenderManager(carIndex);
+        ScriptRenderManager renderManager = getCarRenderManager(carIndex);
         if(renderManager == null) return;
 
         if(matrices != null) dh.matrices(matrices);
@@ -45,7 +45,7 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public void drawCarModel(ScriptModelCluster model, int carIndex, Matrices matrices) {
-        ScriptRenderManager renderManager = carRenderManager(carIndex);
+        ScriptRenderManager renderManager = getCarRenderManager(carIndex);
         if(renderManager == null) return;
 
         ModelDrawCall modelDrawCall = ModelDrawCall.create()
@@ -71,24 +71,20 @@ public class VehicleScriptContext extends MTRScriptContext {
         }
     }
 
-    public String scriptEntryId() {
+    public String getScriptEntryId() {
         return this.scriptEntryId;
     }
 
-    public int[] myCars() {
+    public int[] getMyCars() {
         return this.myCars;
     }
 
-    public ScriptRenderManager carRenderManager(int car) {
+    public ScriptRenderManager getCarRenderManager(int car) {
         return this.carRenderers.get(car);
     }
 
-    public ScriptSoundManager carSoundManager(int car) {
+    public ScriptSoundManager getCarSoundManager(int car) {
         return this.carSoundManagers.get(car);
-    }
-
-    public void setDataFetchMode(String enumName) {
-        this.dataFetchMode = DataFetchMode.valueOf(enumName);
     }
 
     public Map<Integer, ScriptRenderManager> getCarRenderManagers() {
@@ -101,6 +97,10 @@ public class VehicleScriptContext extends MTRScriptContext {
 
     public DataFetchMode getDataFetchMode() {
         return dataFetchMode;
+    }
+
+    public void setDataFetchMode(String enumName) {
+        this.dataFetchMode = DataFetchMode.valueOf(enumName);
     }
 
     @Override

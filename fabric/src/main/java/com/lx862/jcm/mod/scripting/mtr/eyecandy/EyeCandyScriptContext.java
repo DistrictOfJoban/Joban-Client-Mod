@@ -35,11 +35,21 @@ public class EyeCandyScriptContext extends MTRScriptContext {
         this.renderManager = new ScriptRenderManager();
     }
 
+    @Deprecated
     public ScriptRenderManager renderManager() {
+        return getRenderManager();
+    }
+
+    @Deprecated
+    public ScriptSoundManager soundManager() {
+        return getSoundManager();
+    }
+
+    public ScriptRenderManager getRenderManager() {
         return this.renderManager;
     }
 
-    public ScriptSoundManager soundManager() {
+    public ScriptSoundManager getSoundManager() {
         return this.soundManager;
     }
 

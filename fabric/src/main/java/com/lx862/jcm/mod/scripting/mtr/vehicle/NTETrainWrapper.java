@@ -1,6 +1,10 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
+import com.lx862.jcm.mixin.modded.mtr.VehicleSchemaMixin;
+import org.mtr.core.data.PathData;
+import org.mtr.core.data.Siding;
 import org.mtr.core.data.SimplifiedRoute;
+import org.mtr.core.data.TransportMode;
 import org.mtr.core.serializer.JsonReader;
 import org.mtr.mod.data.VehicleExtension;
 
@@ -14,11 +18,11 @@ public class NTETrainWrapper extends VehicleWrapper {
     }
 
     public List<Stop> getAllPlatforms() {
-        return stops();
+        return getStops();
     }
 
     public List<Stop> getThisRoutePlatforms() {
-        return thisRouteStops();
+        return getThisRouteStops();
     }
 
     public List<Stop> getNextRoutePlatforms() {
@@ -26,11 +30,11 @@ public class NTETrainWrapper extends VehicleWrapper {
     }
 
     public int getAllPlatformsNextIndex() {
-        return nextStopIndex(0);
+        return getNextStopIndex(0);
     }
 
     public int getThisRoutePlatformsNextIndex() {
-        return thisRouteNextStopIndex(0);
+        return getThisRouteNextStopIndex(0);
     }
 
     public List<Stop> getDebugThisRoutePlatforms(int count) {
@@ -54,6 +58,22 @@ public class NTETrainWrapper extends VehicleWrapper {
 
     /* Start getters */
     @Deprecated
+    public long id() {
+        return this.vehicleExtension.getId();
+    }
+    @Deprecated
+    public Siding siding() {
+        return this.stopsData.siding;
+    }
+    @Deprecated
+    public TransportMode transportMode() {
+        return getTransportMode();
+    }
+    @Deprecated
+    public int trainCars() {
+        return getCars();
+    }
+    @Deprecated
     public boolean shouldRender() {
         return true;
     }
@@ -62,15 +82,47 @@ public class NTETrainWrapper extends VehicleWrapper {
         return true;
     }
     @Deprecated
+    public String trainTypeId() {
+        return getVehicleId(0);
+    }
+    @Deprecated
     public VehicleExtension mtrTrain() {
-        return vehicle();
+        return getMtrVehicle();
     }
     @Deprecated
     public double speed() {
-        return speedMs() * (1/20d);
+        return getSpeedMs() * (1/20d);
+    }
+    @Deprecated
+    public double spacing() {
+        return getLength(0);
+    }
+    @Deprecated
+    public double width() {
+        return getWidth(0);
     }
     @Deprecated
     public double accelerationConstant() {
-        return (serviceAcceleration() * 1000 * 1000) / (1/400d);
+        return (getServiceAcceleration() * 1000 * 1000) / (1/400d);
+    }
+    @Deprecated
+    public double railProgress() {
+        return getRailProgress();
+    }
+    @Deprecated
+    public List<PathData> path() {
+        return getPathData();
+    }
+    @Deprecated
+    public boolean manualAllowed() {
+        return isManualAllowed();
+    }
+    @Deprecated
+    public double doorValue() {
+        return getDoorValue();
+    }
+    @Deprecated
+    public int manualToAutomaticTime() {
+        return getManualToAutomaticTime();
     }
 }

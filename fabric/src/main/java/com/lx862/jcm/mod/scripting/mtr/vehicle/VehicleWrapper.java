@@ -27,8 +27,8 @@ public class VehicleWrapper {
 
     public VehicleWrapper(VehicleScriptContext.DataFetchMode dataFetchMode, VehicleExtension vehicleExtension) {
         this.vehicleExtension = vehicleExtension;
-        this.doorLeftOpen = new boolean[trainCars()];
-        this.doorRightOpen = new boolean[trainCars()];
+        this.doorLeftOpen = new boolean[getCars()];
+        this.doorRightOpen = new boolean[getCars()];
         boolean anyVehicleCarVisible = false;
         for(boolean rayTracingVisible : vehicleExtension.persistentVehicleData.rayTracing) {
             if(rayTracingVisible) {
@@ -47,29 +47,29 @@ public class VehicleWrapper {
                 })
                 .collect(Collectors.toCollection(ObjectArrayList::new));
 
-        for(int i = 0; i < trainCars(); i++) {
+        for(int i = 0; i < getCars(); i++) {
             PositionAndRotation posAndRotation = posAndRotations.get(i);
 
-            this.doorLeftOpen[i] = vehicleExtension.persistentVehicleData.getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(-1.1, 0, 0, -1, 2, 1), posAndRotation, doorValue());
-            this.doorRightOpen[i] = vehicleExtension.persistentVehicleData.getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(1, 0, 0, 1.1, 2, 1), posAndRotation, doorValue());
+            this.doorLeftOpen[i] = vehicleExtension.persistentVehicleData.getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(-1.1, 0, 0, -1, 2, 1), posAndRotation, getDoorValue());
+            this.doorRightOpen[i] = vehicleExtension.persistentVehicleData.getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(1, 0, 0, 1.1, 2, 1), posAndRotation, getDoorValue());
         }
 
         this.stopsData = StopsData.constructData(dataFetchMode, vehicleExtension);
     }
 
-    public List<Stop> stops() {
-        return stops(false);
+    public List<Stop> getStops() {
+        return getStops(false);
     }
 
-    public List<Stop> stops(boolean preferNextRouteStop) {
+    public List<Stop> getStops(boolean preferNextRouteStop) {
         return mapStops(stopsData.allStops, preferNextRouteStop);
     }
 
-    public List<Stop> thisRouteStops() {
-        return thisRouteStops(false);
+    public List<Stop> getThisRouteStops() {
+        return getThisRouteStops(false);
     }
 
-    public List<Stop> thisRouteStops(boolean preferNextRouteStop) {
+    public List<Stop> getThisRouteStops(boolean preferNextRouteStop) {
         long routeId = getThisRouteId();
         return mapStops(getRouteStops(routeId), preferNextRouteStop);
     }
@@ -86,23 +86,23 @@ public class VehicleWrapper {
         return mapStops(getRouteStops(stopsData.routeToRun.get(nextRouteIndex)), preferNextRouteStop);
     }
 
-    public int nextStopIndex() {
-        return nextStopIndex(0.5);
+    public int getNextStopIndex() {
+        return getNextStopIndex(0.5);
     }
 
-    public int nextStopIndex(double overrunTolerance) {
-        return findNextStopIndex(overrunTolerance, railProgress(), stops());
+    public int getNextStopIndex(double overrunTolerance) {
+        return findNextStopIndex(overrunTolerance, getRailProgress(), getStops());
     }
 
-    public int thisRouteNextStopIndex() {
-        return thisRouteNextStopIndex(0.5);
+    public int getThisRouteNextStopIndex() {
+        return getThisRouteNextStopIndex(0.5);
     }
 
-    public int thisRouteNextStopIndex(double overrunTolerance) {
-        return findNextStopIndex(overrunTolerance, railProgress(), thisRouteStops());
+    public int getThisRouteNextStopIndex(double overrunTolerance) {
+        return findNextStopIndex(overrunTolerance, getRailProgress(), getThisRouteStops());
     }
 
-    public boolean fullStopData() {
+    public boolean isFullStopData() {
         return stopsData.isFullData;
     }
 
@@ -114,10 +114,10 @@ public class VehicleWrapper {
 
     protected long getThisRouteId() {
         long routeId = vehicleExtension.vehicleExtraData.getThisRouteId();
-        if(fullStopData()) {
-            int nextStopIndex = nextStopIndex(0);
-            if(nextStopIndex < stops().size()) {
-                SimplifiedRoute route = stops().get(nextStopIndex).route;
+        if(isFullStopData()) {
+            int nextStopIndex = getNextStopIndex(0);
+            if(nextStopIndex < getStops().size()) {
+                SimplifiedRoute route = getStops().get(nextStopIndex).route;
                 if(route != null) {
                     routeId = route.getId();
                 }
@@ -141,9 +141,9 @@ public class VehicleWrapper {
             }
             return stopIdx;
         } else {
-            int idx = stops.indexOf(stops().stream().filter(e -> e.platform != null && e.platform.getId() == vehicleExtension.vehicleExtraData.getThisPlatformId()).findFirst().orElse(null));
+            int idx = stops.indexOf(getStops().stream().filter(e -> e.platform != null && e.platform.getId() == vehicleExtension.vehicleExtraData.getThisPlatformId()).findFirst().orElse(null));
             if(idx != -1) return idx;
-            return stops().size();
+            return getStops().size();
         }
     }
 
@@ -259,10 +259,10 @@ public class VehicleWrapper {
     }
 
     /* Start getters */
-    public boolean rendered() {
+    public boolean isRendered() {
         return anyVehicleCarVisible;
     }
-    public boolean anyCarRendered(int... cars) {
+    public boolean isCarRendered(int... cars) {
         for(int car : cars) {
             if(vehicleExtension.persistentVehicleData.rayTracing[car]) return true;
         }
@@ -271,54 +271,55 @@ public class VehicleWrapper {
     public boolean isClientPlayerRiding() {
         return VehicleRidingMovement.isRiding(vehicleExtension.getId());
     }
-    public VehicleExtension vehicle() {
+    public VehicleExtension getMtrVehicle() {
         return this.vehicleExtension;
     }
-    public long id() {
+    public long getId() {
         return this.vehicleExtension.getId();
     }
-    public Siding siding() {
+    public Siding getSiding() {
         return this.stopsData.siding;
     }
-    public String trainTypeId(int carIndex) {
+    public String getVehicleId(int carIndex) {
         if(carIndex >= vehicleExtension.vehicleExtraData.immutableVehicleCars.size()) return null;
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getVehicleId();
     }
-    public TransportMode transportMode() {
-        return vehicleExtension.getTransportMode();
-    }
-    public double spacing(int carIndex) {
+    public double getLength(int carIndex) {
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getLength();
     }
-    public double width(int carIndex) {
+    public double getWidth(int carIndex) {
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getWidth();
     }
-    public int trainCars() {
+    public TransportMode getTransportMode() {
+        return vehicleExtension.getTransportMode();
+    }
+    public int getCars() {
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.size();
     }
-    public double serviceAcceleration() {
+    public double getServiceAcceleration() {
         return vehicleExtension.vehicleExtraData.getAcceleration();
     }
-    public double serviceDeceleration() {
+    public double getServiceDeceleration() {
         return vehicleExtension.vehicleExtraData.getDeceleration();
     }
-    public boolean manualAllowed() {
-        return vehicleExtension.vehicleExtraData.getIsManualAllowed();
-    }
-    public double maxManualSpeed() {
+    public double getMaxManualSpeed() {
         return vehicleExtension.vehicleExtraData.getMaxManualSpeed();
     }
-    public int manualToAutomaticTime() {
-        Siding siding = siding(); return siding == null ? -1 : siding.getManualToAutomaticTime();
+    public boolean isManualAllowed() {
+        return vehicleExtension.vehicleExtraData.getIsManualAllowed();
     }
-    public List<PathData> path() {
+    public int getManualToAutomaticTime() {
+        Siding siding = getSiding();
+        return siding == null ? -1 : siding.getManualToAutomaticTime();
+    }
+    public List<PathData> getPathData() {
         return vehicleExtension.vehicleExtraData.immutablePath;
     }
-    public double railProgress() {
+    public double getRailProgress() {
         return ((VehicleSchemaMixin)vehicleExtension).getRailProgress();
     }
     public double getRailProgress(int car) {
-        double progress = railProgress();
+        double progress = getRailProgress();
         for(int i = 0; i < Math.min(vehicleExtension.vehicleExtraData.immutableVehicleCars.size(), car); i++) {
             progress -= vehicleExtension.vehicleExtraData.immutableVehicleCars.get(i).getLength();
         }
@@ -330,13 +331,13 @@ public class VehicleWrapper {
     public double getRailSpeed(int pathIndex) {
         return vehicleExtension.vehicleExtraData.immutablePath.get(pathIndex).getSpeedLimitKilometersPerHour() / 3.6 / 20;
     }
-    public double speedMs() {
+    public double getSpeedMs() {
         return vehicleExtension.getSpeed() * 1000;
     }
-    public double speedKmh() {
-        return speedMs() * 3.6;
+    public double getSpeedKmh() {
+        return getSpeedMs() * 3.6;
     }
-    public double doorValue() {
+    public double getDoorValue() {
         return vehicleExtension.persistentVehicleData.getDoorValue();
     }
     public boolean isCurrentlyManual() {
@@ -351,11 +352,11 @@ public class VehicleWrapper {
     public boolean isDoorOpening() {
         return vehicleExtension.persistentVehicleData.getAdjustedDoorMultiplier(vehicleExtension.vehicleExtraData) > 0;
     }
-    public long elapsedDwellTime() {
+    public long getElapsedDwellTime() {
         return ((VehicleAccessorMixin)vehicleExtension).getElapsedDwellTime();
     }
-    public long totalDwellTime() {
-        int railIndex = getRailIndex(railProgress(), true);
+    public long getTotalDwellTime() {
+        int railIndex = getRailIndex(getRailProgress(), true);
         if(railIndex < vehicleExtension.vehicleExtraData.immutablePath.size()) {
             PathData path = vehicleExtension.vehicleExtraData.immutablePath.get(railIndex);
             if(path != null) {
