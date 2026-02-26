@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class VehicleWrapper {
     protected final VehicleExtension vehicleExtension;
     protected final StopsData stopsData;
+    protected final ObjectArrayList<PositionAndRotation> posAndRotations;
     public final boolean[] doorLeftOpen;
     public final boolean[] doorRightOpen;
     private final boolean anyVehicleCarVisible;
@@ -37,7 +38,7 @@ public class VehicleWrapper {
             }
         }
         this.anyVehicleCarVisible = anyVehicleCarVisible;
-        final ObjectArrayList<PositionAndRotation> posAndRotations = vehicleExtension.getSmoothedVehicleCarsAndPositions(0).stream()
+        posAndRotations = vehicleExtension.getSmoothedVehicleCarsAndPositions(0).stream()
                 .map(vehicleCarAndPosition -> {
                     final ObjectArrayList<PositionAndRotation> bogiePositions = vehicleCarAndPosition.right()
                             .stream()
@@ -49,9 +50,11 @@ public class VehicleWrapper {
 
         for(int i = 0; i < getCarCount(); i++) {
             PositionAndRotation posAndRotation = posAndRotations.get(i);
+            double halfWidth = getWidth(i) / 2;
+            double halfLength = getLength(i) / 2;
 
-            this.doorLeftOpen[i] = vehicleExtension.persistentVehicleData.getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(-1.1, 0, 0, -1, 2, 1), posAndRotation, getDoorValue());
-            this.doorRightOpen[i] = vehicleExtension.persistentVehicleData.getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(1, 0, 0, 1.1, 2, 1), posAndRotation, getDoorValue());
+            this.doorLeftOpen[i] = getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(-halfWidth - 0.1, -1, -halfLength, -halfWidth, 1, halfLength), posAndRotation, getDoorValue());
+            this.doorRightOpen[i] = getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(halfWidth, -1, -halfLength, halfWidth + 0.1, 1, halfLength), posAndRotation, getDoorValue());
         }
 
         this.stopsData = StopsData.constructData(dataFetchMode, vehicleExtension);

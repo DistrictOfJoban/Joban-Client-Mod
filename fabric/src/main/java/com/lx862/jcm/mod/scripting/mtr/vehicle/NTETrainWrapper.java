@@ -1,19 +1,31 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
+import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.core.data.PathData;
 import org.mtr.core.data.Siding;
 import org.mtr.core.data.SimplifiedRoute;
 import org.mtr.core.data.TransportMode;
 import org.mtr.core.serializer.JsonReader;
 import org.mtr.mod.data.VehicleExtension;
+import org.mtr.mod.render.PositionAndRotation;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class NTETrainWrapper extends VehicleWrapper {
+    public final ScriptVector3f[] lastCarPosition;
+    public final ScriptVector3f[] lastCarRotation;
 
     public NTETrainWrapper(VehicleScriptContext.DataFetchMode dataFetchMode, VehicleExtension vehicleExtension) {
         super(dataFetchMode, vehicleExtension);
+        int carCount = getCarCount();
+        this.lastCarPosition = new ScriptVector3f[carCount];
+        this.lastCarRotation = new ScriptVector3f[carCount];
+        for(int i = 0; i < carCount; i++) {
+            PositionAndRotation posAndRotation = posAndRotations.get(i);
+            lastCarPosition[i] = new ScriptVector3f(posAndRotation.position);
+            lastCarRotation[i] = new ScriptVector3f((float)posAndRotation.pitch, (float)(Math.PI + posAndRotation.yaw), 0);
+        }
     }
 
     public List<Stop> getAllPlatforms() {
