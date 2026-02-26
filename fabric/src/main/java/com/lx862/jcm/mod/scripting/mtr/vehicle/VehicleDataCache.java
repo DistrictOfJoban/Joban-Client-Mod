@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.network.scripting.RequestStopsDataC2SPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.scripting.MTRDatasetHolder;
 import org.mtr.core.data.*;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.VehicleExtension;
 
@@ -38,7 +39,7 @@ public class VehicleDataCache {
         }
     }
 
-    public static VehicleWrapper.StopsData getVehicleStopsData(VehicleExtension vehicleExtension) {
+    public static VehicleWrapper.StopsData buildVehicleStopsData(VehicleExtension vehicleExtension) {
         SimplifiedStopsData simplifiedStopsData = vehicleStopsCache.get(vehicleExtension.getId());
         if(simplifiedStopsData == null) return null;
 
@@ -67,6 +68,17 @@ public class VehicleDataCache {
                             });
                         });
                     }
+                }
+                if(station != null) {
+                    station.getInterchangeStationNameToColorToRouteNamesMap(true).forEach((stationName, interchanges) -> {
+                        if(!stationName.equals(station.getName())) {
+                            interchanges.forEach((color, routeNames) -> {
+                                routeNames.forEach(routeName -> {
+                                    thisStop.connectingInterchanges.computeIfAbsent(stationName, k -> new ObjectArrayList<>()).add(new VehicleWrapper.Stop.RouteInterchange(color, routeName));
+                                });
+                            });
+                        }
+                    });
                 }
 
                 if(lastPlatformId == simplifiedStop.platformId) {

@@ -169,7 +169,7 @@ public class VehicleWrapper {
                 VehicleDataCache.requestVehicleStopsData(vehicle.getId(), vehicle.vehicleExtraData.getSidingId());
             }
 
-            StopsData fullStopsData = VehicleDataCache.getVehicleStopsData(vehicle);
+            StopsData fullStopsData = VehicleDataCache.buildVehicleStopsData(vehicle);
             if(dataFetchMode == VehicleScriptContext.DataFetchMode.ALL && fullStopsData != null) return fullStopsData;
 
             long sidingId = vehicle.vehicleExtraData.getSidingId();
@@ -198,11 +198,24 @@ public class VehicleWrapper {
                     Platform platform = MinecraftClientData.getInstance().platformIdMap.get(routePlatform.getPlatformId());
 
                     Stop thisStop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, -1);
+                    // In-station interchange
                     routePlatform.forEach((color, routes) -> {
                         routes.forEach(routeName -> {
                             thisStop.routeInterchanges.add(new Stop.RouteInterchange(color, routeName));
                         });
                     });
+                    // Connecting station interchange
+                    if(station != null) {
+                        station.getInterchangeStationNameToColorToRouteNamesMap(true).forEach((stationName, interchanges) -> {
+                            if(!stationName.equals(station.getName())) {
+                                interchanges.forEach((color, routeNames) -> {
+                                    routeNames.forEach(routeName -> {
+                                        thisStop.connectingInterchanges.computeIfAbsent(stationName, k -> new ObjectArrayList<>()).add(new Stop.RouteInterchange(color, routeName));
+                                    });
+                                });
+                            }
+                        });
+                    }
 
                     if(routePlatform.getPlatformId() == lastPlatformId) { // Duplicated platform, likely double-added stop from route changeover.
                         Stop prevStop = stopsData.allStops.get(stopsData.allStops.size()-1);
@@ -226,6 +239,7 @@ public class VehicleWrapper {
         public Platform platform;
         public String destinationName;
         public List<RouteInterchange> routeInterchanges;
+        public Map<String, ObjectArrayList<RouteInterchange>> connectingInterchanges;
         public long dwellTimeMs;
         public double distance;
         public Stop asNextRoute;
@@ -242,6 +256,7 @@ public class VehicleWrapper {
             this.dwellTime = platform == null ? -1 : platform.getDwellTime() / 500;
             this.dwellTimeMs = platform == null ? -1 : platform.getDwellTime();
             this.routeInterchanges = new ArrayList<>();
+            this.connectingInterchanges = new HashMap<>();
             this.name = name;
             this.destinationName = destinationName;
             this.distance = distance;
