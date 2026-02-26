@@ -66,7 +66,6 @@ public class MTRClassShutter implements ClassShutter {
 
     private boolean isClassAllowed(String className) {
         if(!shutterEnabled) return true;
-        if(isClassScriptingCore(className)) return true;
 
         if(className.startsWith("[")) { // Array
             String type = className.substring(className.lastIndexOf("[")+1);
@@ -75,6 +74,8 @@ public class MTRClassShutter implements ClassShutter {
                 className = type.substring(1, type.length()-1); // Omit the base type & semicolon at the end
             }
         }
+
+        if(isClassScriptingCore(className)) return true;
 
         for(ClassRule cs : deniedScriptClasses) {
             if(cs.match(className)) return false;
