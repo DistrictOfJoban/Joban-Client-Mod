@@ -29,7 +29,7 @@ tasks.register('setupRhino') {
         srcDestination.mkdirs()
 
         copy {
-            from extractedSrc.toPath().resolve(useLatestRhino ? "rhino/src/main/java/org/mozilla" : "src/org/mozilla/").toFile()
+            from extractedSrc.toPath().resolve("rhino/src/main/java/org/mozilla").toFile()
             into srcDestination
             filter {
                 String line -> line.replaceAll('org/mozilla/', "${shadowPath.join("/")}/").replaceAll("org\\.mozilla", "${shadowPath.join(".")}")
