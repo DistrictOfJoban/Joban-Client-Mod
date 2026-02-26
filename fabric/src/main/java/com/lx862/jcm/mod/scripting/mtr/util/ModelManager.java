@@ -14,12 +14,12 @@ import java.util.Map;
 public class ModelManager {
     @Deprecated
     public static ScriptRawModel loadRawModel(Object o, Identifier id, Object atlasManager) {
-        return loadModel(id, true);
+        return loadModel(id, false);
     }
 
     @Deprecated
     public static Map<String, ScriptRawModel> loadPartedRawModel(Object o, Identifier id, Object atlasManager) {
-        return loadModelParts(id, true);
+        return loadModelParts(id, false);
     }
 
     public static ScriptRawModel loadModel(Identifier id, boolean flipV) {

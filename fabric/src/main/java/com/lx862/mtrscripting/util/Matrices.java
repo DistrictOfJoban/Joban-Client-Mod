@@ -52,6 +52,15 @@ public class Matrices {
         this.storedMatrixTransformations.peek().add(graphicsHolder -> graphicsHolder.rotateZDegrees(zDeg));
     }
 
+    public void rotate(float x, float y, float z, float radian) {
+        float mX = x * radian;
+        float mY = y * radian;
+        float mZ = z * radian;
+        rotateX(mX);
+        rotateY(mY);
+        rotateZ(mZ);
+    }
+
     public void scale(float x, float y, float z) {
         this.storedMatrixTransformations.peek().add(graphicsHolder -> graphicsHolder.scale(x, y, z));
     }

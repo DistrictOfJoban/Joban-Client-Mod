@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr.util;
 
+import com.lx862.jcm.mixin.modded.mtr.ObjModelAccessor;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.mapper.OptimizedModel;
@@ -8,9 +9,11 @@ import java.util.List;
 
 public class ScriptRawModel {
     public final List<OptimizedModel.ObjModel> models;
+    public String renderType;
 
     public ScriptRawModel() {
         this.models = new ObjectArrayList<>();
+        this.renderType = "EXTERIOR";
     }
 
     public ScriptRawModel(OptimizedModel.ObjModel... models) {
@@ -45,5 +48,17 @@ public class ScriptRawModel {
 
     public void applyMirror(boolean x, boolean y, boolean z) {
         this.models.forEach((rawModel) -> rawModel.applyMirror(x, y, z));
+    }
+
+    public void applyUVMirror(boolean u, boolean v) {
+        this.models.forEach(model -> {
+            ((ObjModelAccessor)(Object)model).getRawMeshes().forEach(rawMesh -> {
+                rawMesh.applyUVMirror(u, v);
+            });
+        });
+    }
+
+    public void setAllRenderType(String renderType) {
+        this.renderType = renderType;
     }
 }

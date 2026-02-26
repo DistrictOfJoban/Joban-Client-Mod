@@ -11,6 +11,7 @@ import org.mtr.mod.resource.OptimizedModelWrapper;
 import org.mtr.mod.resource.RenderStage;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class ScriptModelCluster {
@@ -19,7 +20,7 @@ public class ScriptModelCluster {
     public ScriptModelCluster(ScriptRawModel rawModel) {
         CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.beginReload();
         List<OptimizedModel.ObjModel> models = rawModel.models;
-        models.forEach(e -> e.addTransformation(RenderStage.EXTERIOR.shaderType, 0, 0, 0, false));
+        models.forEach(e -> e.addTransformation(stringToRenderStage(rawModel.renderType).shaderType, 0, 0, 0, false));
         this.model = OptimizedModelWrapper.fromObjModels(new ObjectArrayList<>(models.stream().map(OptimizedModelWrapper.ObjModelWrapper::new).collect(Collectors.toList())));
         CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.finishReload();
     }
@@ -38,5 +39,14 @@ public class ScriptModelCluster {
 
     public void close() {
 
+    }
+
+    private static RenderStage stringToRenderStage(String s) {
+        s = s
+                .replace("exteriortranslucent", "interior_translucent")
+                .replace("interiortranslucent", "interior_translucent")
+                .replace("lighttranslucent", "always_on_light")
+                .toUpperCase(Locale.ROOT);
+        return RenderStage.valueOf(s);
     }
 }

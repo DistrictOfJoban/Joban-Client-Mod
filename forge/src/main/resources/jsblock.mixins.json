@@ -4,23 +4,25 @@
   "package": "com.lx862.jcm.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "modded.mtr.InitAccessorMixin",
     "modded.mtr.TicketSystemMixin",
     "modded.mtr.BlockPIDSPoleMixin",
-    "modded.mtr.MixinInitAccessor",
+    "modded.mtr.InitAccessorMixin",
+    "modded.mtr.TicketSystemMixin",
     "modded.tsc.MainAccessorMixin",
     "modded.tsc.SidingAccessorMixin"
   ],
   "client": [
-    "modded.tsc.VehicleAccessorMixin",
-    "modded.mtr.VehicleExtensionMixin",
+    "minecraft.NativeImageAccessor",
+    "modded.mtr.BlockEyecandyMixin",
+    "modded.mtr.LegacyVehicleResourceSchemaMixin",
     "modded.mtr.MainRendererMixin",
-    "modded.mtr.VehicleResourceMixin",
+    "modded.mtr.ObjModelAccessor",
     "modded.mtr.RenderEyeCandyMixin",
     "modded.mtr.RenderVehiclesMixin",
+    "modded.mtr.VehicleExtensionMixin",
+    "modded.mtr.VehicleResourceMixin",
     "modded.mtr.VehicleSchemaMixin",
-    "modded.mtr.BlockEyecandyMixin",
-    "minecraft.NativeImageAccessor"
+    "modded.tsc.VehicleAccessorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -13,7 +13,9 @@
   "client": [
     "minecraft.NativeImageAccessor",
     "modded.mtr.BlockEyecandyMixin",
+    "modded.mtr.LegacyVehicleResourceSchemaMixin",
     "modded.mtr.MainRendererMixin",
+    "modded.mtr.ObjModelAccessor",
     "modded.mtr.RenderEyeCandyMixin",
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleExtensionMixin",
