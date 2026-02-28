@@ -243,7 +243,7 @@ public class VehicleWrapper {
         public String destinationName;
         public List<RouteInterchange> routeInterchanges;
         public Map<String, ObjectArrayList<RouteInterchange>> connectingInterchanges;
-        public long dwellTimeMs;
+        public long dwellTimeMillis;
         public double distance;
         public Stop asNextRoute;
         @Deprecated
@@ -257,7 +257,7 @@ public class VehicleWrapper {
             this.station = station;
             this.platform = platform;
             this.dwellTime = platform == null ? -1 : platform.getDwellTime() / 500;
-            this.dwellTimeMs = platform == null ? -1 : platform.getDwellTime();
+            this.dwellTimeMillis = platform == null ? -1 : platform.getDwellTime();
             this.routeInterchanges = new ArrayList<>();
             this.connectingInterchanges = new HashMap<>();
             this.name = name;
