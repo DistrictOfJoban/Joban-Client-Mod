@@ -222,8 +222,9 @@ public class VehicleWrapper {
 
                     if(routePlatform.getPlatformId() == lastPlatformId) { // Duplicated platform, likely double-added stop from route changeover.
                         Stop prevStop = stopsData.allStops.get(stopsData.allStops.size()-1);
-                        prevStop.reverseAtPlatform = true;
                         prevStop.asNextRoute = thisStop;
+                        prevStop.reverseAtPlatform = true;
+                        prevStop.isRouteSwitchoverStop = true;
                     } else {
                         stopsData.allStops.add(thisStop);
                     }
@@ -246,6 +247,7 @@ public class VehicleWrapper {
         public long dwellTimeMillis;
         public double distance;
         public Stop asNextRoute;
+        public boolean isRouteSwitchoverStop;
         @Deprecated
         public long dwellTime; // Use dwellTimeMs instead
         @Deprecated
@@ -370,9 +372,6 @@ public class VehicleWrapper {
     public boolean isDoorOpening() {
         return vehicleExtension.persistentVehicleData.getAdjustedDoorMultiplier(vehicleExtension.vehicleExtraData) > 0;
     }
-    public long getElapsedDwellTime() {
-        return ((VehicleAccessorMixin)vehicleExtension).getElapsedDwellTime();
-    }
     public long getTotalDwellTime() {
         int railIndex = getRailIndex(getRailProgress(), true);
         if(railIndex < vehicleExtension.vehicleExtraData.immutablePath.size()) {
@@ -382,5 +381,9 @@ public class VehicleWrapper {
             }
         }
         return -1;
+    }
+    /** NOTE: Elapsed Dwell Time is not counted on the client-side, it purely relies on the synced value from the server, which isn't real-time. */
+    public long getElapsedDwellTime() {
+        return ((VehicleAccessorMixin)vehicleExtension).getElapsedDwellTime();
     }
 }

@@ -85,6 +85,7 @@ public class VehicleDataCache {
                     VehicleWrapper.Stop prevStop = stopsData.allStops.get(stopsData.allStops.size()-1);
                     prevStop.asNextRoute = thisStop;
                     prevStop.reverseAtPlatform = true;
+                    prevStop.isRouteSwitchoverStop = true;
                 } else {
                     stopsData.allStops.add(thisStop);
                 }
