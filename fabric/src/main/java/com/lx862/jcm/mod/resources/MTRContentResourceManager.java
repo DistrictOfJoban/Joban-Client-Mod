@@ -105,13 +105,11 @@ public class MTRContentResourceManager {
                         final JsonElement scriptsElement = rootObject.get("vehicleScripts");
                         final JsonArray vehicleArray = vehicleElement.getAsJsonArray();
 
-                        Map<String, String> entryToScriptId = new HashMap<>();
-
                         for(JsonElement vehicleEntry : vehicleArray) {
                             JsonObject vehicleObject = vehicleEntry.getAsJsonObject();
                             String baseId = vehicleObject.get("id").getAsString();
                             if(vehicleObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
-                                entryToScriptId.put(baseId, vehicleObject.get("scriptId").getAsString());
+                                vehicleScriptIds.put(baseId, vehicleObject.get("scriptId").getAsString());
                             }
                         }
 
@@ -121,15 +119,18 @@ public class MTRContentResourceManager {
                             for(JsonElement entryElement : scriptArray) {
                                 JsonObject scriptObject = entryElement.getAsJsonObject();
                                 String scriptEntryId = scriptObject.get("id").getAsString();
+                                boolean entryReferenced = vehicleScriptIds.values().stream().anyMatch(e -> e.equals(scriptEntryId));
 
-                                ParsedScript parsedScript = tryParseScript(scriptEntryId, "vehicle", "Vehicle", scriptObject, true, false);
-                                if (parsedScript != null) {
-                                    vehicleScripts.put(scriptEntryId, parsedScript);
+                                if(entryReferenced) {
+                                    ParsedScript parsedScript = tryParseScript(scriptEntryId, "vehicle", "Vehicle", scriptObject, true, false);
+                                    if (parsedScript != null) {
+                                        vehicleScripts.put(scriptEntryId, parsedScript);
+                                    }
+                                } else {
+                                    JCMLogger.warn("Skip parsing vehicle scripts \"{}\", which is not referenced by any vehicle!", scriptEntryId);
                                 }
                             }
                         }
-
-                        vehicleScriptIds.putAll(entryToScriptId);
                     }
 
                     // Validation
@@ -161,12 +162,13 @@ public class MTRContentResourceManager {
                         for(JsonElement entryElement : scriptArray) {
                             JsonObject scriptObject = entryElement.getAsJsonObject();
                             String scriptEntryId = scriptObject.get("id").getAsString();
+                            boolean entryReferenced = eyecandyScriptIds.values().stream().anyMatch(e -> e.equals(scriptEntryId));
 
-                            try {
+                            if(entryReferenced) {
                                 ParsedScript parsedScript = tryParseScript(scriptEntryId, "eyecandy", "Block", scriptObject, true, false);
                                 if(parsedScript != null) eyecandyScripts.put(scriptEntryId, parsedScript);
-                            } catch (Exception e) {
-                                logException("parsing object '" + scriptEntryId + "' in mtr_custom_resources.json", e);
+                            } else {
+                                JCMLogger.warn("Skip parsing eyecandy scripts \"{}\", which is not referenced by any eyecandy object!", scriptEntryId);
                             }
                         }
                     }
@@ -216,7 +218,7 @@ public class MTRContentResourceManager {
                     Identifier scriptLocationSource = new Identifier(scriptFilesArray.get(i).getAsString());
                     String scriptText = ResourceManagerHelper.readResource(scriptLocationSource);
                     if(scriptText.isEmpty()) {
-                        JCMLogger.warn("Script {}:{} is either missing, or the file content is empty!", scriptLocationSource.getNamespace(), scriptLocationSource.getPath());
+                        JCMLogger.warn("Script {}:{} is missing (or empty)!", scriptLocationSource.getNamespace(), scriptLocationSource.getPath());
                         continue;
                     }
 
