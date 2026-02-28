@@ -36,17 +36,9 @@ public class ScriptRenderManager {
 
     public void invoke(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         List<RenderDrawCall<?>> drawCalls = new ArrayList<>(this.drawCalls);
-        List<RenderDrawCall<?>> normalDrawCalls = drawCalls.stream().filter(e -> !(e instanceof PIDSDrawCall)).collect(Collectors.toList());
-        List<RenderDrawCall<?>> pidsDrawCalls = drawCalls.stream().filter(e -> e instanceof PIDSDrawCall).collect(Collectors.toList());
 
-        for(RenderDrawCall<?> drawCall : new ArrayList<>(normalDrawCalls)) {
+        for(RenderDrawCall<?> drawCall : drawCalls) {
             drawCall.run(world, storedMatrixTransformations.copy(), facing, light);
-        }
-
-        StoredMatrixTransformations pidsStoredMatrixTransformation = storedMatrixTransformations.copy();
-        for(RenderDrawCall<?> drawCall : new ArrayList<>(pidsDrawCalls)) {
-            pidsStoredMatrixTransformation.add(graphicsHolderNew -> graphicsHolderNew.translate(0, 0, -0.0002)); // Prevent z-fighting
-            drawCall.run(world, pidsStoredMatrixTransformation.copy(), facing, light);
         }
     }
 
