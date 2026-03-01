@@ -62,9 +62,6 @@ public class ParsedScript {
                 tryAndAddFunction("create", scope, createFunctions);
                 tryAndAddFunction("render", scope, renderFunctions);
                 tryAndAddFunction("dispose", scope, disposeFunctions);
-                tryAndAddFunction("create" + contextName, scope, createFunctions);
-                tryAndAddFunction("render" + contextName, scope, renderFunctions);
-                tryAndAddFunction("dispose" + contextName, scope, disposeFunctions);
 
                 ScriptManager.LOGGER.info("[JCM Scripting] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
             }

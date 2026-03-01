@@ -3,6 +3,7 @@
 ## New
 - **Scripting**
 - - something something vehicle scripting
+- - Add async variant of `Networking.fetchString() and Networking.fetchImage()`
 
 ## Changes
 - **Scripting**
@@ -17,6 +18,8 @@
 - - - `ModelManager.loadModel` now only returns `RawModel`. To effectively use it in rendering functions, you have to obtain a `ModelCluster` by using `ModelManager.upload(model: RawModel)`.
 - - **Breaking Changes: Matrices**
 - - - All Matrices created by scripts are now flipped 180 degree along the X-axis when applying.
+- - For `Resources.getSystemFont`, the font name `Noto Sans CJK TC Medium` can now be used instead of `Noto Sans` for Noto Sans CJK (Deprecated in JCM v2.2)
+- - - Added font name `Noto Sans SemiBold`, which returns MTR's Noto Sans SemiBold font (Non-CJK variant).
 
 ## Fixes
 - **Scripting**

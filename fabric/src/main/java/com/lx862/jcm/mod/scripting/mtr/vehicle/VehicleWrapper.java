@@ -2,6 +2,8 @@ package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
 import com.lx862.jcm.mixin.modded.mtr.VehicleSchemaMixin;
 import com.lx862.jcm.mixin.modded.tsc.VehicleAccessorMixin;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.core.data.*;
 import org.mtr.core.tool.Utilities;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -85,7 +87,7 @@ public class VehicleWrapper {
         long thisRouteId = getThisRouteId();
         int routeIndex = stopsData.routeToRun.indexOf(thisRouteId);
         int nextRouteIndex = routeIndex+1;
-        if(nextRouteIndex >= stopsData.routeToRun.size()) return new ArrayList<>();
+        if(nextRouteIndex >= stopsData.routeToRun.size()) return List.of();
         return mapStops(getRouteStops(stopsData.routeToRun.get(nextRouteIndex)), preferNextRouteStop);
     }
 
@@ -131,7 +133,7 @@ public class VehicleWrapper {
 
     protected List<Stop> getRouteStops(long routeId) {
         List<Stop> stops = stopsData.routeStops.get(routeId);
-        return stops == null ? new ArrayList<>(0) : stops;
+        return stops == null ? List.of() : stops;
     }
 
     protected int findNextStopIndex(double overrunTolerance, double currentRailProgress, List<Stop> stops) {
@@ -151,19 +153,19 @@ public class VehicleWrapper {
     }
 
     public static class StopsData {
-        public final List<Stop> allStops;
-        public final List<Stop> allStopsNextRoute;
-        public final Map<Long, List<Stop>> routeStops;
-        public final List<Long> routeToRun;
+        public final ObjectArrayList<Stop> allStops;
+        public final ObjectArrayList<Stop> allStopsNextRoute;
+        public final Long2ObjectOpenHashMap<List<Stop>> routeStops;
+        public final LongArrayList routeToRun;
         public final Siding siding;
         public final boolean isFullData;
 
         public StopsData(Siding siding, boolean isFullData) {
             this.isFullData = isFullData;
-            this.allStops = new ArrayList<>();
-            this.allStopsNextRoute = new ArrayList<>();
-            this.routeToRun = new ArrayList<>();
-            this.routeStops = new HashMap<>();
+            this.allStops = new ObjectArrayList<>();
+            this.allStopsNextRoute = new ObjectArrayList<>();
+            this.routeToRun = new LongArrayList();
+            this.routeStops = new Long2ObjectOpenHashMap<>();
             this.siding = siding;
         }
 
