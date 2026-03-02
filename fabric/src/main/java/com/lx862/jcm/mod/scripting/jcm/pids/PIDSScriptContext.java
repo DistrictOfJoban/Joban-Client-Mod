@@ -50,7 +50,8 @@ public class PIDSScriptContext extends MTRScriptContext {
     }
 
     public void draw(Object obj) {
-        if(obj instanceof PIDSDrawCall<?> pidsDrawCall) {
+        if(obj instanceof PIDSDrawCall) {
+            PIDSDrawCall<?> pidsDrawCall = (PIDSDrawCall<?>) obj;
             if(autoZOrdering) {
                 pidsDrawCall.incrementZOrder(currentZOrder, zOrderStep);
                 currentZOrder++;
