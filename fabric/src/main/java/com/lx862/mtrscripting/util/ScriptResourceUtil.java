@@ -61,7 +61,7 @@ public class ScriptResourceUtil {
                 sb.append(obj);
             }
         }
-        ScriptManager.LOGGER.info("[JCM Scripting] {}", sb.toString());
+        ConsoleJS.log(sb.toString());
     }
 
     @Deprecated
