@@ -1,6 +1,6 @@
 package com.lx862.mtrscripting.core;
 
-import com.lx862.jcm.mod.config.ClientConfig;
+import com.lx862.jcm.mod.config.legacy.LegacyClientConfig;
 import com.lx862.mtrscripting.api.ClassRule;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.ClassShutter;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -61,7 +61,7 @@ public class MTRClassShutter implements ClassShutter {
 
     @Override
     public boolean visibleToScripts(String fullClassName) {
-        return !fullClassName.equals(MTRClassShutter.class.getName()) && !fullClassName.equals(ClientConfig.class.getName()) && isClassAllowed(fullClassName);
+        return !fullClassName.equals(MTRClassShutter.class.getName()) && !fullClassName.equals(LegacyClientConfig.class.getName()) && isClassAllowed(fullClassName);
     }
 
     private boolean isClassAllowed(String className) {

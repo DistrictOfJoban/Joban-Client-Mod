@@ -1,6 +1,6 @@
 package com.lx862.mtrscripting.util;
 
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.RhinoException;
@@ -93,7 +93,7 @@ public class ConsoleJS {
     }
 
     public static void debug(String... str) {
-        if(JCMClient.getConfig().debug) {
+        if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             String s = String.join(" ", str);
             ScriptManager.LOGGER.error("{} {}", buildLogPrefix(), s);
         }
@@ -102,7 +102,7 @@ public class ConsoleJS {
     private static String buildLogPrefix() {
         StringBuilder sb = new StringBuilder("[JCM Scripting]");
 
-        if(JCMClient.getConfig().showScriptLogSource) {
+        if(JCMClientConfig.INSTANCE.scripting.showLogSource.value()) {
             String source = "";
             int lineNo = 0;
 

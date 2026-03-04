@@ -1,6 +1,6 @@
 package com.lx862.mtrscripting.util;
 
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import org.apache.commons.io.IOUtils;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeObject;
 
@@ -132,7 +132,7 @@ public class NetworkingUtil {
         }
 
         // Override User-Agent if scripting restrictions not disabled
-        if(!JCMClient.getConfig().disableScriptingRestriction) {
+        if(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value()) {
             connection.setRequestProperty("User-Agent", USER_AGENT_STRING);
         }
 

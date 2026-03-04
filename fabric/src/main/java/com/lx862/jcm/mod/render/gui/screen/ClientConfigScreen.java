@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
 import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
@@ -12,6 +12,7 @@ import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
+import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.CheckboxWidgetExtension;
@@ -36,7 +37,8 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private final CheckboxWidgetExtension useNewTextRendererButton;
     private final CheckboxWidgetExtension debugModeButton;
     private final CheckboxWidgetExtension disableScriptingClassRestrictionButton;
-    private final ButtonWidgetExtension textAtlasButton;
+    private final CheckboxWidgetExtension scriptDebugModeButton;
+    private final CheckboxWidgetExtension scriptShowLogSourceButton;
 
     private boolean discardConfig = false;
 
@@ -47,32 +49,34 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         listViewWidget = new ListViewWidget();
 
         this.disableRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClient.getConfig().disableRendering = bool;
+            JCMClientConfig.INSTANCE.disableRendering.setOverride(bool);
         });
 
         this.useNewTextRendererButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClient.getConfig().useNewTextRenderer = bool;
+            JCMClientConfig.INSTANCE.useAlternateTextRenderer.setOverride(bool);
         });
 
         this.debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClient.getConfig().debug = bool;
+            JCMClientConfig.INSTANCE.debugMode.setOverride(bool);
         });
 
         this.disableScriptingClassRestrictionButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
             if(bool) {
                 MinecraftClient.getInstance().openScreen(new Screen(
-                        new ScriptRestrictionWarningScreen(() -> JCMClient.getConfig().disableScriptingRestriction = true).withPreviousScreen(new Screen(this))
+                        new ScriptRestrictionWarningScreen(() -> JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.setOverride(true)).withPreviousScreen(new Screen(this))
                 ));
             } else {
-                JCMClient.getConfig().disableScriptingRestriction = false;
+                JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.setOverride(false);
             }
         });
 
-        this.textAtlasButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "config.listview.widget.open"), (buttonWidget -> {
-            MinecraftClient.getInstance().openScreen(new Screen(
-                    new TextureTextAtlasScreen().withPreviousScreen(new Screen(this))
-            ));
-        }));
+        this.scriptDebugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+            JCMClientConfig.INSTANCE.scripting.scriptDebugMode.setOverride(bool);
+        });
+
+        this.scriptShowLogSourceButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+            JCMClientConfig.INSTANCE.scripting.showLogSource.setOverride(bool);
+        });
     }
 
     @Override
@@ -107,10 +111,12 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     }
 
     private void setEntryStateFromClientConfig() {
-        disableRenderingButton.setChecked(JCMClient.getConfig().disableRendering);
-        useNewTextRendererButton.setChecked(JCMClient.getConfig().useNewTextRenderer);
-        debugModeButton.setChecked(JCMClient.getConfig().debug);
-        disableScriptingClassRestrictionButton.setChecked(JCMClient.getConfig().disableScriptingRestriction);
+        disableRenderingButton.setChecked(JCMClientConfig.INSTANCE.disableRendering.value());
+        useNewTextRendererButton.setChecked(JCMClientConfig.INSTANCE.useAlternateTextRenderer.value());
+        debugModeButton.setChecked(JCMClientConfig.INSTANCE.debugMode.value());
+        disableScriptingClassRestrictionButton.setChecked(JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
+        scriptDebugModeButton.setChecked(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
+        scriptShowLogSourceButton.setChecked(JCMClientConfig.INSTANCE.scripting.showLogSource.value());
     }
 
     private void addConfigEntries() {
@@ -122,25 +128,20 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_rendering"), new MappedWidget(disableRenderingButton));
         addChild(new ClickableWidget(disableRenderingButton));
 
-        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting_class_restriction"), new MappedWidget(disableScriptingClassRestrictionButton));
-        addChild(new ClickableWidget(disableScriptingClassRestrictionButton));
-
-        /*  New Text Renderer is deprecated, we shouldn't offer player to switch to it anymore if it isn't enabled */
-        if(JCMClient.getConfig().useNewTextRenderer) {
-            listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.experimental"));
-            listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.new_text_rendering"), new MappedWidget(useNewTextRendererButton));
-            addChild(new ClickableWidget(useNewTextRendererButton));
-        }
-
         // Debug
-        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.debug"));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.debug_mode"), new MappedWidget(debugModeButton));
         addChild(new ClickableWidget(debugModeButton));
 
-        if(JCMClient.getConfig().useNewTextRenderer) {
-            listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.open_atlas_screen"), new MappedWidget(textAtlasButton));
-            addChild(new ClickableWidget(textAtlasButton));
-        }
+        listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.scripting"));
+
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting_class_restriction"), new MappedWidget(disableScriptingClassRestrictionButton));
+        addChild(new ClickableWidget(disableScriptingClassRestrictionButton));
+
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.script_debug_mode"), new MappedWidget(scriptDebugModeButton));
+        addChild(new ClickableWidget(scriptDebugModeButton));
+
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.script_show_log_source"), new MappedWidget(scriptShowLogSourceButton));
+        addChild(new ClickableWidget(scriptShowLogSourceButton));
     }
 
 
@@ -163,7 +164,9 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         });
 
         ButtonWidgetExtension resetButton = new ButtonWidgetExtension(0, 0, 0, 20, TextUtil.translatable(TextCategory.GUI, "config.reset"), (btn) -> {
-            JCMClient.getConfig().reset();
+            for(TrackedValue value : JCMClientConfig.INSTANCE.values()) {
+                value.setValue(value.getDefaultValue());
+            }
             setEntryStateFromClientConfig();
         });
 
@@ -207,12 +210,23 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     public void onClose2() {
         if(!closing) {
             if (!discardConfig) {
-                JCMClient.getConfig().write();
-                JCMScripting.getScriptManager().getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
-                MTRScripting.getScriptManager().getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
+                // Apply and clear all overriden value (Pending changes)
+                for(TrackedValue value : JCMClientConfig.INSTANCE.values()) {
+                    if(value.isBeingOverridden()) {
+                        value.setValue(value.value());
+                        value.removeOverride();
+                    }
+                }
+
+                JCMScripting.getScriptManager().getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
+                MTRScripting.getScriptManager().getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
             } else {
-                // Don't save our change to disk, and read it from disk, effectively discarding the config
-                JCMClient.getConfig().read();
+                // Discard all overriden values (pending changes)
+                for(TrackedValue value : JCMClientConfig.INSTANCE.values()) {
+                    if(value.isBeingOverridden()) {
+                        value.removeOverride();
+                    }
+                }
             }
         }
 

@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.config;
+package com.lx862.jcm.mod.config.legacy;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -10,25 +10,24 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 
-public abstract class Config {
+@Deprecated
+public abstract class LegacyConfig {
     private final Path configPath;
 
-    public Config(Path configPath) {
+    public LegacyConfig(Path configPath) {
         this.configPath = configPath;
     }
 
-    public void read() {
-        if(!Files.exists(configPath)) {
-            write();
-            read();
-        } else {
+    public void migrate() {
+        if(Files.exists(configPath)) {
             try {
                 JsonObject jsonObject = new JsonParser().parse(String.join("", Files.readAllLines(configPath))).getAsJsonObject();
                 fromJson(jsonObject);
             } catch (Exception e) {
                 JCMLogger.error("Error reading the config file: ", e);
-                write();
-                JCMLogger.warn("Failed to read config file, config may be left at it's default state.");
+            } finally {
+                JCMLogger.error("Config migrated, deleting legacy config file.");
+                selfDestruct();
             }
         }
     }
@@ -40,6 +39,10 @@ public abstract class Config {
         } catch (IOException e) {
             JCMLogger.error("", e);
         }
+    }
+
+    public void selfDestruct() {
+        configPath.toFile().delete();
     }
 
     public final void reset() {

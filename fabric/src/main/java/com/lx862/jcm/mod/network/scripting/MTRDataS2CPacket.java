@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.network.scripting;
 
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.scripting.MTRDatasetHolder;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -29,7 +29,7 @@ public class MTRDataS2CPacket extends PacketHandler {
 
     @Override
     public void runClient() {
-        if(JCMClient.getConfig().debug) JCMLogger.info("Received MTR Data via script:\n" + MTRDatasetHolder);
+        if(JCMClientConfig.INSTANCE.debugMode.value()) JCMLogger.info("Received MTR Data via script:\n" + MTRDatasetHolder);
         VehicleDataCache.putMTRDataCache(this.MTRDatasetHolder);
     }
 }

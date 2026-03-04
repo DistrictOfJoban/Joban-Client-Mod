@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.network.scripting;
 
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -74,7 +74,7 @@ public class StopsDataS2CPacket extends PacketHandler {
 
     @Override
     public void runClient() {
-        if(JCMClient.getConfig().debug) JCMLogger.info("Received Vehicle Stops Data:\n" + simplifiedStopsData.toString());
+        if(JCMClientConfig.INSTANCE.debugMode.value()) JCMLogger.info("Received Vehicle Stops Data:\n" + simplifiedStopsData.toString());
 
         VehicleDataCache.putStopsDataCache(vehicleId, simplifiedStopsData);
 

@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr;
 
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.core.ScriptContext;
 
 public abstract class MTRScriptContext extends ScriptContext {
@@ -10,6 +10,6 @@ public abstract class MTRScriptContext extends ScriptContext {
     }
 
     public boolean debugModeEnabled() {
-        return JCMClient.getConfig().debug;
+        return JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value();
     }
 }

@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr;
 
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
 import com.lx862.jcm.mod.scripting.mtr.render.DisplayHelperCompat;
 import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
@@ -40,7 +40,7 @@ public class MTRScripting {
      */
     public static void register() {
         if(scriptManager == null) scriptManager = new ScriptManager(scriptExecutors);
-        scriptManager.getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
+        scriptManager.getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
 
         String mtrModVersion = null;
         try {
@@ -69,7 +69,7 @@ public class MTRScripting {
 
     public static void tick() {
         int clearedInstance = scriptManager.getInstanceManager().clearDeadInstance();
-        if(clearedInstance > 0 && JCMClient.getConfig().debug) {
+        if(clearedInstance > 0 && JCMClientConfig.INSTANCE.debugMode.value()) {
             JCMLogger.info("Removed {} dead MTR script instance", clearedInstance);
         }
     }

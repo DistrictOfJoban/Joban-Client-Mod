@@ -38,10 +38,12 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 	dependencies {
 		implementation 'com.google.code.findbugs:jsr305:+'
 		shadowImplementation project(":rhino")
+		implementation "folk.sisby:kaleido-config:${rootProject.properties.kaleido_version}"
 	}
 
 	repositories {
 		maven { url "https://jitpack.io" }
+		maven { url 'https://repo.sleeping.town/' }
 	}
 
 	shadowJar {

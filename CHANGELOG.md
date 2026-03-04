@@ -28,6 +28,10 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - - All Matrices created by scripts are now flipped 180 degree along the X-axis when applying.
 - For `Resources.getSystemFont`, the font name `Noto Sans CJK TC Medium` can now be used instead of `Noto Sans` for Noto Sans CJK (Deprecated in JCM v2.2)
 - - Added font name `Noto Sans SemiBold`, which returns MTR's Noto Sans SemiBold font (Non-CJK variant).
+- The JCM config has been remade
+- - Added **Script Debug Mode** (Script-specific debug mode), and **Show log source**
+- - Existing config are migrated over to the new config. If you have enabled **Debug Mode** previously, Script Debug Mode will also be enabled by default.
+- - New config file is located under `.minecraft/config/jsblock/client.json`
 
 ## Fixes
 - Fix QuadDrawCall `INTERIOR` / `INTERIOR_TRANSLUCENT` render type not applying full brightness.

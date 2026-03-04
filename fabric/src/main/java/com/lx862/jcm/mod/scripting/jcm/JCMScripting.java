@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.scripting.jcm;
 
 import com.lx862.jcm.mod.Constants;
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextWrapper;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextureWrapper;
@@ -26,7 +26,7 @@ public class JCMScripting {
      */
     public static void register() {
         if(scriptManager == null) scriptManager = new ScriptManager(MTRScripting.getScriptExecutors());
-        scriptManager.getClassShutter().setEnabled(!JCMClient.getConfig().disableScriptingRestriction);
+        scriptManager.getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
 
         ScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);
         ScriptDebugOverlay.registerDebugSource("JCM", scriptManager);
@@ -56,7 +56,7 @@ public class JCMScripting {
 
     public static void tick() {
         int clearedInstance = scriptManager.getInstanceManager().clearDeadInstance();
-        if(clearedInstance > 0 && JCMClient.getConfig().debug) {
+        if(clearedInstance > 0 && JCMClientConfig.INSTANCE.debugMode.value()) {
             JCMLogger.info("Removed {} dead JCM script instance", clearedInstance);
         }
     }

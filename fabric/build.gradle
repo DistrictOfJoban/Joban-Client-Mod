@@ -26,6 +26,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
     modApi "com.terraformersmc:modmenu:${mod_menu_version}"
     annotationProcessor "systems.manifold:manifold-preprocessor:${manifold_preprocessor}"
+    include "folk.sisby:kaleido-config:${rootProject.properties.kaleido_version}"
 }
 
 tasks.withType(JavaCompile).configureEach {

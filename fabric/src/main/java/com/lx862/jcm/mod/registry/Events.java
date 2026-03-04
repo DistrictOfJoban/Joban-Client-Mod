@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
 import com.lx862.jcm.mod.resources.JCMResourceManager;
@@ -38,13 +39,13 @@ public class Events {
         });
 
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerEndClientTick(() -> {
-            if(JCMClient.getConfig().debug && KeyBinds.SCRIPT_DEBUG_SOURCE_PREV.wasPressed()) {
+            if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value() && KeyBinds.SCRIPT_DEBUG_SOURCE_PREV.wasPressed()) {
                 ScriptDebugOverlay.previousSource();
             }
-            if(JCMClient.getConfig().debug && KeyBinds.SCRIPT_DEBUG_SOURCE_NEXT.wasPressed()) {
+            if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value() && KeyBinds.SCRIPT_DEBUG_SOURCE_NEXT.wasPressed()) {
                 ScriptDebugOverlay.nextSource();
             }
-            if(JCMClient.getConfig().debug && KeyBinds.SCRIPT_DEBUG_RELOAD.wasPressed()) {
+            if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value() && KeyBinds.SCRIPT_DEBUG_RELOAD.wasPressed()) {
                 boolean isShiftPressed = MinecraftClient.getInstance().getOptionsMapped().getKeySneakMapped().isPressed();
                 boolean isCtrlPressed = MinecraftClient.getInstance().getOptionsMapped().getKeySprintMapped().isPressed();
                 if(!isShiftPressed && !isCtrlPressed) return;

@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -243,7 +243,7 @@ public class MTRContentResourceManager {
     }
 
     private static void logException(String action, Exception e) {
-        if(JCMClient.getConfig().debug) {
+        if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             JCMLogger.error("Error while " + action + "!", e);
         } else {
             JCMLogger.error("Error while " + action + ": " + e.getMessage());

@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.render.block;
 
 import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -25,7 +26,7 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
         try {
             World world = blockEntity.getWorld2();
             BlockPos pos = blockEntity.getPos2();
-            if(JCMClient.getConfig().disableRendering || world == null) return;
+            if(JCMClientConfig.INSTANCE.disableRendering.value() || world == null) return;
 
             if(world.getBlockState(pos).isAir()) return;
             BlockState state = world.getBlockState(pos);

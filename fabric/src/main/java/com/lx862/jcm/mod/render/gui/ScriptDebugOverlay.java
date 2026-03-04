@@ -1,11 +1,9 @@
 package com.lx862.jcm.mod.render.gui;
 
 import com.google.common.base.Splitter;
-import com.lx862.jcm.mod.JCMClient;
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.Pair;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
-import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.lx862.mtrscripting.ScriptManager;
@@ -36,7 +34,7 @@ public class ScriptDebugOverlay {
     }
 
     public static void render(GraphicsHolder graphicsHolder) {
-        if(!JCMClient.getConfig().debug) return;
+        if(!JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) return;
         if(MinecraftClient.getInstance().getCurrentScreenMapped() != null) return;
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
 

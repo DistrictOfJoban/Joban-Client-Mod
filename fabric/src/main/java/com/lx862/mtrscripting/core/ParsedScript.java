@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.core;
 
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.util.*;
@@ -63,7 +64,9 @@ public class ParsedScript {
                 tryAndAddFunction("render", scope, renderFunctions);
                 tryAndAddFunction("dispose", scope, disposeFunctions);
 
-                ScriptManager.LOGGER.info("[JCM Scripting] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
+                if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
+                    ScriptManager.LOGGER.info("[JCM Scripting] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
+                }
             }
         } finally {
             ScriptResourceUtil.activeContext = null;

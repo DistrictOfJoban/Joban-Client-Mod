@@ -1,7 +1,9 @@
 package com.lx862.jcm.mapping;
 
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.mtr.mapping.holder.*;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -10,6 +12,10 @@ import java.util.Optional;
 public class LoaderImpl {
     public static boolean isRainingAt(World world, BlockPos pos) {
         return world.data.isRainingAt(pos.data);
+    }
+
+    public static Path getConfigPath() {
+        return FMLPaths.CONFIGDIR.get();
     }
 
     /** Get a block settings forcing it to be solid, as we don't want water to break our block. */
