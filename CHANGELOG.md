@@ -31,7 +31,7 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - The JCM config has been remade
 - - Added **Script Debug Mode** (Script-specific debug mode), and **Show log source**
 - - Existing config are migrated over to the new config. If you have enabled **Debug Mode** previously, Script Debug Mode will also be enabled by default.
-- - New config file is located under `.minecraft/config/jsblock/client.json`
+- - New config file is located under `.minecraft/config/jsblock/client.toml`
 
 ## Fixes
 - Fix QuadDrawCall `INTERIOR` / `INTERIOR_TRANSLUCENT` render type not applying full brightness.

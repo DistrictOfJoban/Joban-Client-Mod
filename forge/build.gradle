@@ -15,6 +15,8 @@ minecraft {
     }
 }
 
+jarJar.enable()
+
 sourceSets.main.resources { srcDir "src/generated/resources" }
 
 dependencies {
@@ -22,7 +24,7 @@ dependencies {
     implementation fg.deobf("maven.modrinth:minecraft-transit-railway:FORGE-${rootProject.mtr_version}+${rootProject.minecraft_version}")
     annotationProcessor "org.spongepowered:mixin:+:processor"
     annotationProcessor 'systems.manifold:manifold-preprocessor:+'
-    jarJar "folk.sisby:kaleido-config:${rootProject.properties.kaleido_version}"
+    jarJar(group: 'folk.sisby', name: 'kaleido-config', version: "[0.3.3,1.0)")
 }
 
 mixin {
