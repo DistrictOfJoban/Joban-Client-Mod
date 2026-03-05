@@ -15,7 +15,11 @@ minecraft {
     }
 }
 
-jarJar.enable()
+jar {
+    archiveClassifier = 'slim'
+}
+
+//jarJar.enable()
 
 sourceSets.main.resources { srcDir "src/generated/resources" }
 
@@ -24,7 +28,7 @@ dependencies {
     implementation fg.deobf("maven.modrinth:minecraft-transit-railway:FORGE-${rootProject.mtr_version}+${rootProject.minecraft_version}")
     annotationProcessor "org.spongepowered:mixin:+:processor"
     annotationProcessor 'systems.manifold:manifold-preprocessor:+'
-    jarJar(group: 'folk.sisby', name: 'kaleido-config', version: "[0.3.3,1.0)")
+//    jarJar(group: 'folk.sisby', name: 'kaleido-config', version: "[0.3.3,1.0)")
 }
 
 mixin {
@@ -42,14 +46,20 @@ java {
 }
 
 artifacts {
-    archives jar
+    archives shadowJar
+}
+
+shadowJar {
+    archiveClassifier = ''
+    configurations = [project.configurations.shadowImplementation]
+    finalizedBy 'reobfShadowJar'
 }
 
 reobf {
-    shadowJar {}
+    shadowJar { }
 }
 
-assemble.dependsOn(shadowJar)
+assemble.dependsOn shadowJar
 
 tasks.register("moveBuild") {
     doLast {
@@ -57,9 +67,8 @@ tasks.register("moveBuild") {
             include "**/*forge*"
         }
         copy {
-            from "build/libs/JCM-forge-${version}-all.jar"
+            from "build/libs/JCM-forge-${version}.jar"
             into "../build"
-            rename { fileName -> fileName.replace("-all", "") }
         }
     }
 }

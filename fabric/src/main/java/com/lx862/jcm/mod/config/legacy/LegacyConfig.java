@@ -26,7 +26,7 @@ public abstract class LegacyConfig {
             } catch (Exception e) {
                 JCMLogger.error("Error reading the config file: ", e);
             } finally {
-                JCMLogger.error("Config migrated, deleting legacy config file.");
+                JCMLogger.info("Config migrated, deleting legacy config file.");
                 selfDestruct();
             }
         }
