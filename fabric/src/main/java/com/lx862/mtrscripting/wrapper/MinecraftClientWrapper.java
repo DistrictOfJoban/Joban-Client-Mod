@@ -80,6 +80,10 @@ public class MinecraftClientWrapper {
         return MinecraftClient.getInstance().isPaused();
     }
 
+    public static void stopSound(Identifier id, String soundCategory) {
+        MinecraftClient.getInstance().getSoundManager().stopSounds(id, SoundCategory.valueOf(soundCategory));
+    }
+
     public static void displayMessage(String message, boolean actionBar) {
         displayMessage(Text.cast(TextHelper.literal(message)), actionBar);
     }
