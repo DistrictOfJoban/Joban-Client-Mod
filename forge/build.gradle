@@ -19,7 +19,7 @@ jar {
     archiveClassifier = 'slim'
 }
 
-//jarJar.enable()
+jarJar.enable()
 
 sourceSets.main.resources { srcDir "src/generated/resources" }
 
@@ -28,7 +28,7 @@ dependencies {
     implementation fg.deobf("maven.modrinth:minecraft-transit-railway:FORGE-${rootProject.mtr_version}+${rootProject.minecraft_version}")
     annotationProcessor "org.spongepowered:mixin:+:processor"
     annotationProcessor 'systems.manifold:manifold-preprocessor:+'
-//    jarJar(group: 'folk.sisby', name: 'kaleido-config', version: "[0.3.3,1.0)")
+    jarJar(group: 'folk.sisby', name: 'kaleido-config', version: "[0.3.3,1.0)")
 }
 
 mixin {
@@ -45,21 +45,25 @@ java {
     withSourcesJar()
 }
 
-artifacts {
-    archives shadowJar
-}
-
 shadowJar {
-    archiveClassifier = ''
+    archiveClassifier = 'shadowed'
     configurations = [project.configurations.shadowImplementation]
-    finalizedBy 'reobfShadowJar'
 }
 
 reobf {
     shadowJar { }
 }
 
-assemble.dependsOn shadowJar
+tasks.named('jarJar') {
+    archiveClassifier = ''
+    dependsOn('reobfShadowJar')
+    from(provider { zipTree(tasks.shadowJar.archiveFile) })
+
+    // JarJar automatically includes the 'jar' task output.
+    // Since we are manually adding the 'shadowJar' output (which includes the 'jar' content),
+    // we will have duplicate files. We tell Gradle to prefer the Shadow version.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
 
 tasks.register("moveBuild") {
     doLast {
