@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.network.scripting;
 
 import com.lx862.jcm.mixin.modded.mtr.InitAccessorMixin;
 import com.lx862.jcm.mixin.modded.tsc.MainAccessorMixin;
+import com.lx862.jcm.mod.config.JCMServerConfig;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.scripting.MTRDatasetHolder;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
@@ -74,6 +75,13 @@ public class RequestMTRDataC2SPacket extends PacketHandler {
 
     @Override
     public void runServer(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
+        if(JCMServerConfig.INSTANCE.disableScriptDataFetching.value()) {
+            if(JCMServerConfig.INSTANCE.debugMode.value()) {
+                JCMLogger.info("[JCM] Refusing to provide MTR data for {} as it is disabled in server config.", serverPlayerEntity.getGameProfile().getName());
+            }
+            return;
+        }
+
         Main tscInstance = InitAccessorMixin.getMain();
         World playerWorld = serverPlayerEntity.getEntityWorld();
         String tscDimensionId = Init.getWorldId(playerWorld);

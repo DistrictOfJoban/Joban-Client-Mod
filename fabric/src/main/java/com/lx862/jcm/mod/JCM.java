@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod;
 
+import com.lx862.jcm.mod.config.JCMServerConfig;
 import com.lx862.jcm.mod.registry.JCMRegistry;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mod.Keys;
@@ -11,6 +12,7 @@ public class JCM {
         } catch (Exception e) {
             JCMLogger.warn("Cannot obtain MTR Version, countdown to disaster...");
         }
+        JCMServerConfig.init();
         JCMRegistry.register();
     }
 }

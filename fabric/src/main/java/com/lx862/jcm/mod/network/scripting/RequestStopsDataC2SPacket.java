@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.network.scripting;
 import com.lx862.jcm.mixin.modded.mtr.InitAccessorMixin;
 import com.lx862.jcm.mixin.modded.tsc.MainAccessorMixin;
 import com.lx862.jcm.mixin.modded.tsc.SidingAccessorMixin;
+import com.lx862.jcm.mod.config.JCMServerConfig;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -43,6 +44,13 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
 
     @Override
     public void runServer(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
+        if(JCMServerConfig.INSTANCE.disableScriptStopsFetching.value()) {
+            if(JCMServerConfig.INSTANCE.debugMode.value()) {
+                JCMLogger.info("[JCM] Refusing to provide stop data for {} as it is disabled in server config.", serverPlayerEntity.getGameProfile().getName());
+            }
+            return;
+        }
+
         Main tscInstance = InitAccessorMixin.getMain();
         World playerWorld = serverPlayerEntity.getEntityWorld();
         String tscDimensionId = Init.getWorldId(playerWorld);
@@ -51,13 +59,19 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
         for(Simulator simulator : simulators) {
             if(simulator.dimension.equals(tscDimensionId)) {
                 simulator.run(() -> {
-                    JCMLogger.info("[JCM] RequestStopsDataC2SPacket: Start compiling stops data in " + tscDimensionId);
+                    boolean debugLogging = JCMServerConfig.INSTANCE.debugMode.value();
+                    if(debugLogging) {
+                        JCMLogger.info("[JCM] RequestStopsDataC2SPacket: Start compiling stops data in " + tscDimensionId);
+                    }
+
                     try {
                         Siding siding = simulator.sidingIdMap.get(sidingId);
                         if(siding != null) {
                             Depot depot = siding.area;
                             if(depot == null) {
-                                JCMLogger.warn("[JCM] RequestStopsDataC2SPacket: Failed to find depot from siding!");
+                                if(debugLogging) {
+                                    JCMLogger.warn("[JCM] RequestStopsDataC2SPacket: Failed to find depot from siding!");
+                                }
                                 return;
                             }
 
@@ -94,11 +108,14 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                             routeStopsData.addStop(stopObject);
                                         }
                                     }
-
-                                    JCMLogger.info("[JCM] RequestStopsDataC2SPacket: Submitting Response Packet");
+                                    if(debugLogging) {
+                                        JCMLogger.info("[JCM] RequestStopsDataC2SPacket: Submitting Response Packet");
+                                    }
                                     minecraftServer.submit(() -> {
                                         Networking.sendPacketToClient(PlayerEntity.cast(serverPlayerEntity), new StopsDataS2CPacket(vehicleId, sidingId, simplifiedStopsData));
-                                        JCMLogger.info("[JCM] RequestStopsDataC2SPacket: Request Packet Sent, Goodbye!");
+                                        if(debugLogging) {
+                                            JCMLogger.info("[JCM] RequestStopsDataC2SPacket: Request Packet Sent to {}, Goodbye!", serverPlayerEntity.getGameProfile().getName());
+                                        }
                                     });
                                     break;
                                 }
