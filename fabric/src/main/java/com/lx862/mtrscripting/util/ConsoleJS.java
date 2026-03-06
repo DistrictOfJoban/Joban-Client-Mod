@@ -103,16 +103,14 @@ public class ConsoleJS {
         StringBuilder sb = new StringBuilder("[JCM Scripting]");
 
         if(JCMClientConfig.INSTANCE.scripting.showLogSource.value()) {
-            String source = "";
-            int lineNo = 0;
+            String source;
+            int lineNo;
 
             try {
                 throw Context.throwAsScriptRuntimeEx(DUMMY_EXCEPTION);
-            } catch (Exception ex) {
-                if(ex instanceof RhinoException e) {
-                    source = e.sourceName();
-                    lineNo = e.lineNumber();
-                }
+            } catch (RhinoException ex) {
+                source = ex.sourceName();
+                lineNo = ex.lineNumber();
             }
 
             sb.append(" (").append(source).append("#").append(lineNo).append(")");
