@@ -4,7 +4,6 @@
   "package": "com.lx862.jcm.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "modded.mtr.TicketSystemMixin",
     "modded.mtr.BlockPIDSPoleMixin",
     "modded.mtr.InitAccessorMixin",
     "modded.mtr.TicketSystemMixin",
@@ -14,15 +13,16 @@
   "client": [
     "minecraft.NativeImageAccessor",
     "modded.mtr.BlockEyecandyMixin",
+    "modded.mtr.CustomResourceToolsMixin",
     "modded.mtr.LegacyVehicleResourceSchemaMixin",
     "modded.mtr.MainRendererMixin",
     "modded.mtr.ObjModelAccessor",
+    "modded.mtr.ObjModelLoaderMixin",
     "modded.mtr.RenderEyeCandyMixin",
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleExtensionMixin",
     "modded.mtr.VehicleResourceMixin",
     "modded.mtr.VehicleSchemaMixin",
-    "modded.mtr.ObjModelLoaderMixin",
     "modded.tsc.VehicleAccessorMixin"
   ],
   "injectors": {

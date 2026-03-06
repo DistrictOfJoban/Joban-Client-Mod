@@ -3,7 +3,12 @@
 Unless otherwise noted, all changes below pertains to the Scripting feature in JCM.
 
 ## New
-- something something vehicle scripting
+- **(Non-scripting)** To improve compatibility with NTE, JCM now ships with several patches for MTR in order to replicate NTE behaviors.
+- - OBJ model material now recognizes `exteriortranslucent`, `lighttranslucent` and `interiortranslucent` again, which is used by NTE but does not get parsed correctly in MTR 4.
+- - For OBJ texture with path traversal (Like `../` / `..\`), it is once again recognized, solving some missing texture issues when loading NTE packs.
+- [[[something something vehicle scripting]]]
+- The **Rhino** JavaScript Engine has been updated to **1.9**, bringing some performance improvements and more modern JS features.
+- - See the [Rhino Compatibility Table](https://mozilla.github.io/rhino/compat/engines.html) for a list of supported features.
 - Add async variant of `Networking.fetchString() and Networking.fetchImage()`
 - **Add Console API**
 - - Provide a slightly more rich API for logging, similar to the web's console API seen in browsers. (console.log, console.warn etc.)
@@ -11,8 +16,6 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - - The source/line no. of the print/console log statements may be viewed by enabling **View Script Log Source** in JCM's settings.
 
 ## Changes
-- For Minecraft 1.17+, the **Rhino** JavaScript Engine has been updated to **1.9**, bringing some performance improvements and more modern JS features.
-- - See the [Rhino Compatibility Table](https://mozilla.github.io/rhino/compat/engines.html) for a list of supported features.
 - For script contexts (`ctx` parameter), functions now conforms to the `get`/`set` prefix.
 - - `ctx.renderManager()` -> `ctx.getRenderManager()`
 - - `ctx.soundManager()` -> `ctx.getSoundManager()`
@@ -31,14 +34,12 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - The JCM config has been remade
 - - Added **Script Debug Mode** (Script-specific debug mode), and **Show log source**
 - - Existing config are migrated over to the new config. If you have enabled **Debug Mode** previously, Script Debug Mode will also be enabled by default.
-- - New config file is located under `.minecraft/config/jsblock/client.toml`
+- - New config file is located under `.minecraft/config/jsblock/client.toml` (Not relevant to most users)
 
 ## Fixes
 - Fix QuadDrawCall `INTERIOR` / `INTERIOR_TRANSLUCENT` render type not applying full brightness.
 - Fix counter-intuitive `Matrices` push/poping logic, which breaks many rendering stuff when used.
 - Fix `Networking.fetchString()` being possible to hang indefinitely.
-- To ease compatibility with NTE, several patches has been applied on behalf of MTR to replicate NTE behaviors.
-- - OBJ model material now recognizes `exteriortranslucent`, `lighttranslucent` and `interiortranslucent` again, which is used by NTE but does not get parsed correctly in MTR 4.
 
 ## Removal
 - JCM build for Minecraft 1.16 has been fully dropped in the v2.2 series. Please update to a newer Minecraft version shall you wish to use JCM v2.2.
