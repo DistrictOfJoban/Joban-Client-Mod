@@ -22,6 +22,7 @@
     "modded.mtr.VehicleExtensionMixin",
     "modded.mtr.VehicleResourceMixin",
     "modded.mtr.VehicleSchemaMixin",
+    "modded.mtr.ObjModelLoaderMixin",
     "modded.tsc.VehicleAccessorMixin"
   ],
   "injectors": {

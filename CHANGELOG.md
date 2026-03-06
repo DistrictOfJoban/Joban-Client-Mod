@@ -37,6 +37,8 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - Fix QuadDrawCall `INTERIOR` / `INTERIOR_TRANSLUCENT` render type not applying full brightness.
 - Fix counter-intuitive `Matrices` push/poping logic, which breaks many rendering stuff when used.
 - Fix `Networking.fetchString()` being possible to hang indefinitely.
+- To ease compatibility with NTE, several patches has been applied on behalf of MTR to replicate NTE behaviors.
+- - OBJ model material now recognizes `exteriortranslucent`, `lighttranslucent` and `interiortranslucent` again, which is used by NTE but does not get parsed correctly in MTR 4.
 
 ## Removal
 - JCM build for Minecraft 1.16 has been fully dropped in the v2.2 series. Please update to a newer Minecraft version shall you wish to use JCM v2.2.
