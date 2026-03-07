@@ -146,8 +146,11 @@ public class VehicleWrapper {
             }
             return stopIdx;
         } else {
-            int idx = stops.indexOf(getStops().stream().filter(e -> e.platform != null && e.platform.getId() == vehicleExtension.vehicleExtraData.getThisPlatformId()).findFirst().orElse(null));
-            if(idx != -1) return idx;
+            Stop nextStop = getStops().stream().filter(e -> e.platform != null && e.platform.getId() == vehicleExtension.vehicleExtraData.getThisPlatformId()).findFirst().orElse(null);
+            if(nextStop != null) {
+                int idx = stops.indexOf(nextStop);
+                if(idx != -1) return idx;
+            }
             return getStops().size();
         }
     }
