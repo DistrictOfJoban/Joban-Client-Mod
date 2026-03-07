@@ -7,6 +7,7 @@ import com.lx862.mtrscripting.data.ParticleData;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import com.mojang.text2speech.Narrator;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.MinecraftClientHelper;
 import org.mtr.mapping.mapper.ScoreboardHelper;
 import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mapping.mapper.WorldHelper;
@@ -91,6 +92,10 @@ public class MinecraftClientWrapper {
 
     public static void displayMessage(VanillaTextWrapper vanillaTextWrapper, boolean actionBar) {
         displayMessage(Text.cast(vanillaTextWrapper.impl()), actionBar);
+    }
+
+    public static int renderDistance() {
+        return MinecraftClientHelper.getRenderDistance();
     }
 
     public static void spawnParticleInWorld(Identifier particleId, ScriptVector3f pos, ScriptVector3f velocity) {
