@@ -46,6 +46,7 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - Fix QuadDrawCall `INTERIOR` / `INTERIOR_TRANSLUCENT` render type not applying full brightness.
 - Fix counter-intuitive `Matrices` push/poping logic, which breaks many rendering stuff when used.
 - Fix `Networking.fetchString()` being possible to hang indefinitely.
+- Fix **GraphicsTexture** still being slower than NTE. Now, the speed should be more comparable.
 
 ## Removal
 - JCM build for Minecraft 1.16 has been fully dropped in the v2.2 series. Please update to a newer Minecraft version shall you wish to use JCM v2.2.

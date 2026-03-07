@@ -50,7 +50,7 @@ public class GraphicsTexture implements Closeable {
     }
 
     public void upload() {
-        int[] imgData = ((DataBufferInt)bufferedImage.getData().getDataBuffer()).getData();
+        int[] imgData = ((DataBufferInt)bufferedImage.getRaster().getDataBuffer()).getData();
         IntBuffer imgBuffer = IntBuffer.wrap(imgData);
         long nativeImagePointer = LoaderImplClient.getNativeImagePointer(dynamicTexture.getImage());
         ByteBuffer target = MemoryUtil.memByteBuffer(nativeImagePointer, width * height * 4);
