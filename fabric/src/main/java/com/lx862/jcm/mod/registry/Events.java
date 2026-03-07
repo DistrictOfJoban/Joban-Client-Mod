@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.registry;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.JCMServerStats;
+import com.lx862.jcm.mod.extra.JCMPatchForMTR;
 import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
 import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
@@ -21,6 +22,9 @@ public class Events {
 
     public static void registerClient() {
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerResourceReloadEvent(() -> {
+            // Ideally MTR should do it, but we're not hooked into MTR's resource loading, often-times we are the one to go first
+            JCMPatchForMTR.reloadOptimizedRenderingShader();
+
             JCMScripting.reset();
             MTRScripting.reset();
             JCMResourceManager.reload();

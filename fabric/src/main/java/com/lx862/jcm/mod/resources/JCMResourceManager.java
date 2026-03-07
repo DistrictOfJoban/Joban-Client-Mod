@@ -11,6 +11,7 @@ import com.lx862.jcm.mod.util.JCMLogger;
 import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
+import org.mtr.mod.client.CustomResourceLoader;
 
 public class JCMResourceManager {
     private static final Identifier CUSTOM_RESOURCE_PATH = Constants.id("joban_custom_resources.json");
@@ -23,6 +24,7 @@ public class JCMResourceManager {
     }
 
     private static void parseCustomResources() {
+        CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.beginReload();
         ResourceManagerHelper.readAllResources(CUSTOM_RESOURCE_PATH, (inputStream -> {
             try {
                 String str = IOUtils.toString(inputStream, Charsets.UTF_8);
@@ -32,5 +34,6 @@ public class JCMResourceManager {
                 JCMLogger.error("Failed to parse custom resource file!", e);
             }
         }));
+        CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.finishReload();
     }
 }

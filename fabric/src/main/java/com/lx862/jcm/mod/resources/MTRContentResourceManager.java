@@ -40,6 +40,7 @@ public class MTRContentResourceManager {
         eyecandyScriptIds.clear();
         VehicleDataCache.clearData();
 
+        CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.beginReload();
         ConsoleJS consoleJS = new ConsoleJS();
         if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             consoleJS.time("MTR Script Load Time");
@@ -50,6 +51,7 @@ public class MTRContentResourceManager {
         if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             consoleJS.timeEnd("MTR Script Load Time");
         }
+        CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.finishReload();
     }
 
     /**

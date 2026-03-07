@@ -18,11 +18,9 @@ public class ScriptModelCluster {
     private final OptimizedModelWrapper model;
 
     public ScriptModelCluster(ScriptRawModel rawModel) {
-        CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.beginReload();
         List<OptimizedModel.ObjModel> models = rawModel.models;
         models.forEach(e -> e.addTransformation(stringToRenderStage(rawModel.renderType).shaderType, 0, 0, 0, false));
         this.model = OptimizedModelWrapper.fromObjModels(new ObjectArrayList<>(models.stream().map(OptimizedModelWrapper.ObjModelWrapper::new).collect(Collectors.toList())));
-        CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.finishReload();
     }
 
     public void draw(StoredMatrixTransformations storedMatrixTransformations, int light) {
