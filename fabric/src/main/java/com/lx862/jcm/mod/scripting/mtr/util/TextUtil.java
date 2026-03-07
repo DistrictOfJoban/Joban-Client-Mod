@@ -32,7 +32,7 @@ public class TextUtil {
     }
 
     public static String getNonCjkAndExtraParts(String src) {
-        String extraParts = getExtraMatching(src, false).trim();
+        String extraParts = getExtraMatching(src, true).trim();
         return getCjkMatching(src, false).trim() + (extraParts.isEmpty() ? "" : "|" + extraParts);
     }
 
@@ -57,7 +57,7 @@ public class TextUtil {
         if (src.contains("||")) {
             return src.split("\\|\\|", 2)[extra ? 1 : 0].trim();
         } else {
-            return "";
+            return extra ? "" : src;
         }
     }
 

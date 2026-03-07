@@ -32,6 +32,9 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - - All Matrices created by scripts are now flipped 180 degree along the X-axis when applying.
 - For `Resources.getSystemFont`, the font name `Noto Sans CJK TC Medium` can now be used instead of `Noto Sans` for Noto Sans CJK (Deprecated in JCM v2.2)
 - - Added font name `Noto Sans SemiBold`, which returns MTR's Noto Sans SemiBold font (Non-CJK variant).
+- **Breaking Changes: TextUtil**
+- - `TextUtil.getNonExtraParts()` now returns the original string if no extra part is found, instead of an empty string.
+- - `TextUtil.getNonCjkAndExtraParts()` now actually returns the Non-CJK + extra part as documented, instead of "Non-extra Non-CJK part + Non-extra part".
 - The JCM config has been remade
 - - Added **Script Debug Mode** (Script-specific debug mode), and **Show log source**
 - - Existing config are migrated over to the new config. If you have enabled **Debug Mode** previously, Script Debug Mode will also be enabled by default.
