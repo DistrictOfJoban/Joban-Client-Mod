@@ -10,6 +10,7 @@ import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.ScriptContent;
+import com.lx862.mtrscripting.util.ConsoleJS;
 import org.apache.commons.io.FilenameUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.Identifier;
@@ -38,9 +39,17 @@ public class MTRContentResourceManager {
         vehicleScriptIds.clear();
         eyecandyScriptIds.clear();
         VehicleDataCache.clearData();
+
+        ConsoleJS consoleJS = new ConsoleJS();
+        if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
+            consoleJS.time("MTR Script Load Time");
+        }
         readNteEyecandy();
         readMtrCustomResources(false);
         readMtrCustomResources(true);
+        if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
+            consoleJS.timeEnd("MTR Script Load Time");
+        }
     }
 
     /**

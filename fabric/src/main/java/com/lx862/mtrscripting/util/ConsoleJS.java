@@ -113,7 +113,9 @@ public class ConsoleJS {
                 lineNo = ex.lineNumber();
             }
 
-            sb.append(" (").append(source).append("#").append(lineNo).append(")");
+            if(source != null) { // Not executing script, likely invoked by JCM itself, no source to append.
+                sb.append(" (").append(source).append("#").append(lineNo).append(")");
+            }
         }
         return sb.toString();
     }
