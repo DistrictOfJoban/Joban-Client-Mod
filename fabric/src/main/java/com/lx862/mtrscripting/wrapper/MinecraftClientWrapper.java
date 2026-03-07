@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.wrapper;
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/MinecraftClientUtil.java */
 
 import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.mtrscripting.data.ParticleData;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import com.mojang.text2speech.Narrator;
 import org.mtr.mapping.holder.*;
@@ -90,6 +91,23 @@ public class MinecraftClientWrapper {
 
     public static void displayMessage(VanillaTextWrapper vanillaTextWrapper, boolean actionBar) {
         displayMessage(Text.cast(vanillaTextWrapper.impl()), actionBar);
+    }
+
+    public static void spawnParticleInWorld(Identifier particleId, ScriptVector3f pos, ScriptVector3f velocity) {
+        spawnParticleInWorld(particleId, pos, velocity, false);
+    }
+
+    public static void spawnParticleInWorld(Identifier particleId, ScriptVector3f pos, ScriptVector3f velocity, boolean alwaysSpawn) {
+        if(MinecraftClient.getInstance().getWorldMapped() != null) {
+            ParticleEffect particleEffect = ParticleData.getData(particleId);
+            if(particleEffect != null) {
+                MinecraftClient.getInstance().submit(() -> {
+                    MinecraftClient.getInstance().getWorldMapped().addParticle(ParticleEffect.cast(particleEffect), alwaysSpawn, pos.x(), pos.y(), pos.z(), velocity.x(), velocity.y(), velocity.z());
+                });
+            } else {
+                throw new IllegalArgumentException("Unknown particle " + particleId + "!");
+            }
+        }
     }
 
     private static void displayMessage(Text text, boolean actionBar) {

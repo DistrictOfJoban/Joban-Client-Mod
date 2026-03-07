@@ -2,6 +2,7 @@ package com.lx862.mtrscripting;
 
 import com.lx862.mtrscripting.core.MTRClassShutter;
 import com.lx862.mtrscripting.core.ParsedScript;
+import com.lx862.mtrscripting.data.ParticleData;
 import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
@@ -33,6 +34,7 @@ public class ScriptManager {
         this.instanceManager = new ScriptInstanceManager();
         this.scriptExecutors = scriptExecutors;
         this.classShutter = new MTRClassShutter();
+        ParticleData.init();
     }
 
     public ScriptInstanceManager getInstanceManager() {

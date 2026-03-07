@@ -14,6 +14,7 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - - Provide a slightly more rich API for logging, similar to the web's console API seen in browsers. (console.log, console.warn etc.)
 - - The `print` function will be retained, redirects to `console.log` under the hood.
 - - The source/line no. of the print/console log statements may be viewed by enabling **View Script Log Source** in JCM's settings.
+- Add `MinecraftClient#spawnParticleInWorld()` to spawn vanilla particles in the current world via scripts.
 
 ## Changes
 - For script contexts (`ctx` parameter), functions now conforms to the `get`/`set` prefix.
