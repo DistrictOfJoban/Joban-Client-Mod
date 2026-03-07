@@ -82,32 +82,34 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                     vehicleFound = true;
                                     int routeIdx = 0;
                                     VehicleDataCache.SimplifiedStopsData simplifiedStopsData = new VehicleDataCache.SimplifiedStopsData();
+                                    if(!depot.routes.isEmpty()) {
+                                        Route belongingRoute = depot.routes.get(routeIdx);
+                                        VehicleDataCache.RouteStopsData routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
+                                        for(PathData pathData : vehicle.vehicleExtraData.immutablePath) {
+                                            if(!pathData.getRail().isPlatform() || pathData.getDwellTime() <= 0) continue;
+                                            ObjectArrayList<RoutePlatformData> routePlatforms = belongingRoute.getRoutePlatforms();
+                                            int routePlatformIndex = routeStopsData.stops.size();
+                                            boolean finalRouteStop = routePlatformIndex == routePlatforms.size()-1;
+                                            RoutePlatformData routePlatformData = routePlatforms.get(routePlatformIndex);
 
-                                    Route belongingRoute = depot.routes.get(routeIdx);
-                                    VehicleDataCache.RouteStopsData routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
-                                    for(PathData pathData : vehicle.vehicleExtraData.immutablePath) {
-                                        if(!pathData.getRail().isPlatform() || pathData.getDwellTime() <= 0) continue;
-                                        ObjectArrayList<RoutePlatformData> routePlatforms = belongingRoute.getRoutePlatforms();
-                                        int routePlatformIndex = routeStopsData.stops.size();
-                                        boolean finalRouteStop = routePlatformIndex == routePlatforms.size()-1;
-                                        RoutePlatformData routePlatformData = routePlatforms.get(routePlatformIndex);
+                                            long platformId = routePlatformData.getPlatform().getId();
+                                            long stationId = routePlatformData.getPlatform().area.getId();
+                                            String destination = belongingRoute.getDestination(routePlatformIndex);
+                                            double distance = pathData.getEndDistance();
 
-                                        long platformId = routePlatformData.getPlatform().getId();
-                                        long stationId = routePlatformData.getPlatform().area.getId();
-                                        String destination = belongingRoute.getDestination(routePlatformIndex);
-                                        double distance = pathData.getEndDistance();
-
-                                        VehicleDataCache.SimplifiedStop stopObject = new VehicleDataCache.SimplifiedStop(destination, stationId, platformId, distance);
-                                        routeStopsData.addStop(stopObject);
-                                        if(finalRouteStop) {
-                                            routeIdx++;
-                                            simplifiedStopsData.addRouteStopsData(routeStopsData);
-                                            if(routeIdx >= depot.routes.size()) break;
-                                            belongingRoute = depot.routes.get(routeIdx);
-                                            routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
+                                            VehicleDataCache.SimplifiedStop stopObject = new VehicleDataCache.SimplifiedStop(destination, stationId, platformId, distance);
                                             routeStopsData.addStop(stopObject);
+                                            if(finalRouteStop) {
+                                                routeIdx++;
+                                                simplifiedStopsData.addRouteStopsData(routeStopsData);
+                                                if(routeIdx >= depot.routes.size()) break;
+                                                belongingRoute = depot.routes.get(routeIdx);
+                                                routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
+                                                routeStopsData.addStop(stopObject);
+                                            }
                                         }
                                     }
+                                    
                                     if(debugLogging) {
                                         JCMLogger.info("[JCM] RequestStopsDataC2SPacket: Submitting Response Packet");
                                     }
