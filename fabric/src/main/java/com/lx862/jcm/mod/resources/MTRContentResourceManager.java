@@ -98,13 +98,21 @@ public class MTRContentResourceManager {
                             String baseId = "mtr_custom_train_" + map.getKey();
                             try {
                                 JsonObject vehicleResource = map.getValue().getAsJsonObject();
-                                ParsedScript parsedScript = tryParseScript(baseId, "vehicle", "Vehicle", vehicleResource, false, true);
-                                if (parsedScript != null) {
-                                    vehicleScripts.put(baseId, parsedScript);
-                                    vehicleScriptIds.put(baseId + "_cab_1", baseId);
-                                    vehicleScriptIds.put(baseId + "_cab_2", baseId);
-                                    vehicleScriptIds.put(baseId + "_cab_3", baseId);
-                                    vehicleScriptIds.put(baseId + "_trailer", baseId);
+                                if(vehicleResource.has("script_id")) { // Referencing a (presumably already-parsed) script entry defined in MTR 4 format
+                                    String scriptIdOverride = vehicleResource.get("script_id").getAsString();
+                                    vehicleScriptIds.put(baseId + "_cab_1", scriptIdOverride);
+                                    vehicleScriptIds.put(baseId + "_cab_2", scriptIdOverride);
+                                    vehicleScriptIds.put(baseId + "_cab_3", scriptIdOverride);
+                                    vehicleScriptIds.put(baseId + "_trailer", scriptIdOverride);
+                                } else {
+                                    ParsedScript parsedScript = tryParseScript(baseId, "vehicle", "Vehicle", vehicleResource, false, true);
+                                    if (parsedScript != null) {
+                                        vehicleScripts.put(baseId, parsedScript);
+                                        vehicleScriptIds.put(baseId + "_cab_1", baseId);
+                                        vehicleScriptIds.put(baseId + "_cab_2", baseId);
+                                        vehicleScriptIds.put(baseId + "_cab_3", baseId);
+                                        vehicleScriptIds.put(baseId + "_trailer", baseId);
+                                    }
                                 }
                             } catch (Exception e) {
                                 logException("parsing legacy vehicle script '" + baseId + "' in mtr_custom_resources.json", e);
@@ -128,9 +136,10 @@ public class MTRContentResourceManager {
                             for(JsonElement entryElement : scriptArray) {
                                 JsonObject scriptObject = entryElement.getAsJsonObject();
                                 String scriptEntryId = scriptObject.get("id").getAsString();
+                                boolean forceLoad = scriptObject.get("forceLoad").getAsBoolean();
                                 boolean entryReferenced = vehicleScriptIds.values().stream().anyMatch(e -> e.equals(scriptEntryId));
 
-                                if(entryReferenced) {
+                                if(entryReferenced || forceLoad) {
                                     ParsedScript parsedScript = tryParseScript(scriptEntryId, "vehicle", "Vehicle", scriptObject, true, false);
                                     if (parsedScript != null) {
                                         vehicleScripts.put(scriptEntryId, parsedScript);
