@@ -136,7 +136,7 @@ public class MTRContentResourceManager {
                             for(JsonElement entryElement : scriptArray) {
                                 JsonObject scriptObject = entryElement.getAsJsonObject();
                                 String scriptEntryId = scriptObject.get("id").getAsString();
-                                boolean forceLoad = scriptObject.get("forceLoad").getAsBoolean();
+                                boolean forceLoad = scriptObject.has("forceLoad") && scriptObject.get("forceLoad").getAsBoolean();
                                 boolean entryReferenced = vehicleScriptIds.values().stream().anyMatch(e -> e.equals(scriptEntryId));
 
                                 if(entryReferenced || forceLoad) {
