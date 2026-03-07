@@ -17,11 +17,12 @@ public interface CustomResourceToolsMixin {
         if (resource.contains(":")) { // Assume it is already an identifier
             cir.setReturnValue(CustomResourceTools.formatIdentifierWithDefault(resource, extension));
         } else {
+            Identifier basePathId = new Identifier(basePath);
             String relative = resource.toLowerCase(Locale.ROOT).replace('\\', '/');
 
-            String resolvedPath = FileSystems.getDefault().getPath(basePath).getParent().resolve(relative)
+            String resolvedPath = FileSystems.getDefault().getPath(basePathId.getPath()).getParent().resolve(relative)
                     .normalize().toString().replace('\\', '/');
-            cir.setReturnValue(CustomResourceTools.formatIdentifier(resolvedPath, extension));
+            cir.setReturnValue(CustomResourceTools.formatIdentifier(basePathId.getNamespace() + ":" + resolvedPath, extension));
         }
     }
 }
