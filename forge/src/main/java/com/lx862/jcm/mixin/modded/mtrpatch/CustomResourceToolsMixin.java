@@ -14,4 +14,9 @@ public interface CustomResourceToolsMixin {
     private static void jsblock$relativePathWithPathTraversal(String basePath, String resource, String extension, CallbackInfoReturnable<Identifier> cir) {
         cir.setReturnValue(JCMPatchForMTR.resolveRelativePath(basePath, resource, extension));
     }
+
+    @Inject(method = "colorStringToInt", at = @At("HEAD"), cancellable = true)
+    private static void jsblock$fastParseInt(String color, CallbackInfoReturnable<Integer> cir) {
+        if(color.isEmpty()) cir.setReturnValue(0);
+    }
 }

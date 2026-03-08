@@ -23,10 +23,13 @@
     "modded.mtr.VehicleSchemaMixin",
     "modded.mtrpatch.CustomResourceLoaderMixin",
     "modded.mtrpatch.CustomResourceToolsMixin",
+    "modded.mtrpatch.MainRendererMixin",
     "modded.mtrpatch.ObjModelLoaderMixin",
-    "modded.mtrpatch.OptimizedRendererWrapperAccessorMixin",
     "modded.mtrpatch.OptimizedRendererAccessorMixin",
     "modded.mtrpatch.OptimizedRendererMixin",
+    "modded.mtrpatch.OptimizedRendererWrapperAccessorMixin",
+    "modded.mtrpatch.SignResourceMixin",
+    "modded.mtrpatch.RawMeshMixin",
     "modded.tsc.VehicleAccessorMixin"
   ],
   "injectors": {

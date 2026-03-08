@@ -5,6 +5,7 @@ import com.lx862.jcm.mixin.modded.mtrpatch.OptimizedRendererWrapperAccessorMixin
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.OptimizedModel;
 import org.mtr.mapping.mapper.OptimizedRenderer;
+import org.mtr.mapping.render.shader.ModShaderHandler;
 import org.mtr.mapping.render.shader.ShaderManager;
 import org.mtr.mod.client.CustomResourceLoader;
 import org.mtr.mod.resource.CustomResourceTools;
@@ -13,6 +14,8 @@ import java.nio.file.FileSystems;
 import java.util.Locale;
 
 public class JCMPatchForMTR {
+    private static boolean cachedRenderingShadow = false;
+
     /**
      * Reload optimized rendering shaders.<br>
      * This was originally a part of {@link OptimizedRenderer#beginReload()}, however reloading shaders is quite heavy and memory intensive.<br>
@@ -60,5 +63,13 @@ public class JCMPatchForMTR {
                 return OptimizedModel.ShaderType.TRANSLUCENT_BRIGHT;
         }
         return null;
+    }
+
+    public static void updateRenderingShadow() {
+        cachedRenderingShadow = ModShaderHandler.renderingShadows();
+    }
+
+    public static boolean isRenderingShadow() {
+        return cachedRenderingShadow;
     }
 }

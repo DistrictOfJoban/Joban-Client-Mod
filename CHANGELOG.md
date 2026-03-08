@@ -6,7 +6,8 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - **(Non-scripting)** To improve compatibility with NTE, JCM now ships with several patches for MTR in order to replicate NTE behaviors.
 - - OBJ model material now recognizes `exteriortranslucent`, `lighttranslucent` and `interiortranslucent` again, which is used by NTE but does not get parsed correctly in MTR 4.
 - - For OBJ texture with path traversal (Like `../` / `..\`), it is once again recognized, solving some missing texture issues when loading NTE packs.
-- - Slightly improve model loading speed and memory usage for MTR.
+- - Minor frame-rate boost
+- - Improve model loading speed and memory usage for MTR.
 - [[[something something vehicle scripting]]]
 - The **Rhino** JavaScript Engine has been updated to **1.9**, bringing some performance improvements and more modern JS features.
 - - See the [Rhino Compatibility Table](https://mozilla.github.io/rhino/compat/engines.html) for a list of supported features.
