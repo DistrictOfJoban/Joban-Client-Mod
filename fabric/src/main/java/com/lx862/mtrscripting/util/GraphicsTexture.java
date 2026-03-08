@@ -1,21 +1,18 @@
 package com.lx862.mtrscripting.util;
 
 import com.lx862.jcm.mapping.LoaderImplClient;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import org.lwjgl.opengl.GL33;
 import org.lwjgl.system.MemoryUtil;
 import org.mtr.mapping.holder.*;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
 import java.io.Closeable;
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.UUID;
-
-import static com.lx862.jcm.mod.render.text.TextureTextRenderer.toAbgr;
 
 @SuppressWarnings("unused")
 public class GraphicsTexture implements Closeable {
@@ -31,6 +28,14 @@ public class GraphicsTexture implements Closeable {
         this.width = width;
         this.height = height;
         dynamicTexture = new NativeImageBackedTexture(new NativeImage(width, height, false));
+
+        MinecraftClient.getInstance().execute(() -> {
+            int prevTextureBinding = GL33.glGetInteger(GL33.GL_TEXTURE_BINDING_2D);
+            dynamicTexture.bindTexture();
+            GL33.glTexParameteriv(GL33.GL_TEXTURE_2D, GL33.GL_TEXTURE_SWIZZLE_RGBA,
+                    new int[] { GL33.GL_BLUE, GL33.GL_GREEN, GL33.GL_RED, GL33.GL_ALPHA });
+            GlStateManager._bindTexture(prevTextureBinding);
+        });
         identifier = new Identifier("mtrscripting", String.format("dynamic/graphics/%s", UUID.randomUUID()));
         MinecraftClient.getInstance().execute(() -> {
             MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, new AbstractTexture(dynamicTexture.data));
@@ -51,17 +56,9 @@ public class GraphicsTexture implements Closeable {
 
     public void upload() {
         int[] imgData = ((DataBufferInt)bufferedImage.getRaster().getDataBuffer()).getData();
-        IntBuffer imgBuffer = IntBuffer.wrap(imgData);
         long nativeImagePointer = LoaderImplClient.getNativeImagePointer(dynamicTexture.getImage());
-        ByteBuffer target = MemoryUtil.memByteBuffer(nativeImagePointer, width * height * 4);
-        for (int i = 0; i < width * height; i++) {
-            // ARGB to RGBA
-            int pixel = imgBuffer.get();
-            target.put((byte)((pixel >> 16) & 0xFF));
-            target.put((byte)((pixel >> 8) & 0xFF));
-            target.put((byte)(pixel & 0xFF));
-            target.put((byte)((pixel >> 24) & 0xFF));
-        }
+        IntBuffer target = MemoryUtil.memByteBuffer(nativeImagePointer, width * height * 4).asIntBuffer();
+        target.put(imgData);
 
         RenderSystem.recordRenderCall(dynamicTexture::upload);
     }
