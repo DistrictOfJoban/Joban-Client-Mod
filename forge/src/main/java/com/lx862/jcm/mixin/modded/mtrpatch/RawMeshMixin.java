@@ -1,7 +1,7 @@
 package com.lx862.jcm.mixin.modded.mtrpatch;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+//import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+//import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -30,10 +30,11 @@ public class RawMeshMixin {
     /**
      * Vertex distinction was done in OptimizedModel. Doing it again in upload() would waste time.
      */
-    @WrapOperation(method = "upload(Lorg/mtr/mapping/render/model/Mesh;Lorg/mtr/mapping/render/vertex/VertexAttributeMapping;)V", at = @At(value = "INVOKE", target = "Lorg/mtr/mapping/render/model/RawMesh;distinct()V"))
-    private void skipRawMeshDistinct(RawMesh instance, Operation<Void> original) {
-        // Do not invoke original call
-    }
+    // TODO: MixinExtras on Forge... or don't bother for now
+//    @WrapOperation(method = "upload(Lorg/mtr/mapping/render/model/Mesh;Lorg/mtr/mapping/render/vertex/VertexAttributeMapping;)V", at = @At(value = "INVOKE", target = "Lorg/mtr/mapping/render/model/RawMesh;distinct()V"))
+//    private void skipRawMeshDistinct(RawMesh instance, Operation<Void> original) {
+//        // Do not invoke original call
+//    }
 
     @Inject(method = "distinct", at = @At("HEAD"), cancellable = true)
     private void fastDistinct(CallbackInfo ci) {
