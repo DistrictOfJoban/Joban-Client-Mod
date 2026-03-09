@@ -21,16 +21,6 @@ public class Events {
     }
 
     public static void registerClient() {
-        JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerResourceReloadEvent(() -> {
-            // Ideally MTR should do it, but we're not hooked into MTR's resource loading, often-times we are the one to go first
-            JCMPatchForMTR.reloadOptimizedRenderingShader();
-
-            JCMScripting.reset();
-            MTRScripting.reset();
-            JCMResourceManager.reload();
-            MTRContentResourceManager.reload();
-        });
-
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerStartClientTick(() -> {
             JCMClient.getMcMetaManager().tick();
             JCMScripting.tick();
@@ -78,5 +68,12 @@ public class Events {
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerGuiRendering(graphicsHolder -> {
             ScriptDebugOverlay.render(graphicsHolder);
         });
+    }
+
+    public static void onClientReloadResource() {
+        JCMScripting.reset();
+        MTRScripting.reset();
+        JCMResourceManager.reload();
+        MTRContentResourceManager.reload();
     }
 }
