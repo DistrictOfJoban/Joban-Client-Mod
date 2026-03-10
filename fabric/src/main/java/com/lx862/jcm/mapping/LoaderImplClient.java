@@ -1,8 +1,12 @@
 package com.lx862.jcm.mapping;
 
 import com.lx862.jcm.mixin.minecraft.NativeImageAccessor;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ScreenExtension;
+
+import java.util.List;
 
 /**
  * Fabric implementation via Yarn mapping
@@ -37,5 +41,13 @@ public class LoaderImplClient {
 
     public static long getNativeImagePointer(NativeImage nativeImage) {
         return ((NativeImageAccessor)(Object)nativeImage.data).getPointer();
+    }
+
+    public static List<PlayerEntity> getWorldPlayers(ClientWorld world) {
+        List<PlayerEntity> players = new ObjectArrayList<>();
+        for(AbstractClientPlayerEntity entity : world.data.getPlayers()) {
+            players.add(new PlayerEntity(entity));
+        }
+        return players;
     }
 }

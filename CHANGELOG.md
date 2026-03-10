@@ -27,6 +27,7 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - - The source/line no. of the print/console log statements may be viewed by enabling **View Script Log Source** in JCM's settings.
 - Add `MinecraftClient#spawnParticleInWorld()` to spawn vanilla particles in the current world via scripts.
 - Add `MinecraftClient#renderDistance()` to obtain the currently configured world render distance.
+- Add `MinecraftClient#getWorldPlayers()` to obtain all player's `PlayerEntity` within the current render distance.
 
 ## Changes
 - For script contexts (`ctx` parameter), functions now conforms to the `get`/`set` prefix.

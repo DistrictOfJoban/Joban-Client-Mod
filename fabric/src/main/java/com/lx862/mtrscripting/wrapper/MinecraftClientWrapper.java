@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.wrapper;
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/MinecraftClientUtil.java */
 
 import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.mtrscripting.data.ParticleData;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import com.mojang.text2speech.Narrator;
@@ -11,6 +12,8 @@ import org.mtr.mapping.mapper.MinecraftClientHelper;
 import org.mtr.mapping.mapper.ScoreboardHelper;
 import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mapping.mapper.WorldHelper;
+
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class MinecraftClientWrapper {
@@ -68,6 +71,16 @@ public class MinecraftClientWrapper {
         ClientPlayerEntity clientPlayerEntity = MinecraftClient.getInstance().getPlayerMapped();
         if(clientPlayerEntity == null) return null;
         return new PlayerEntityWrapper(PlayerEntity.cast(clientPlayerEntity));
+    }
+
+    public static List<PlayerEntityWrapper> getWorldPlayers() {
+        ClientPlayerEntity clientPlayerEntity = MinecraftClient.getInstance().getPlayerMapped();
+        if(clientPlayerEntity == null) return null;
+
+        int maxDistance = (renderDistance() + 2) * 16;
+        return LoaderImplClient.getWorldPlayers(MinecraftClient.getInstance().getWorldMapped()).stream().filter(e -> {
+            return e.getPos().distanceTo(clientPlayerEntity.getPos()) <= maxDistance;
+        }).map(e -> new PlayerEntityWrapper(PlayerEntity.cast(e))).toList();
     }
 
     public static Integer getScoreboardScore(String objectiveName, String playerName) {
