@@ -24,12 +24,13 @@
     "modded.mtrpatch.CustomResourceLoaderMixin",
     "modded.mtrpatch.CustomResourceToolsMixin",
     "modded.mtrpatch.MainRendererMixin",
+    "modded.mtrpatch.ObjectResourceSchemaMixin",
     "modded.mtrpatch.ObjModelLoaderMixin",
     "modded.mtrpatch.OptimizedRendererAccessorMixin",
     "modded.mtrpatch.OptimizedRendererMixin",
     "modded.mtrpatch.OptimizedRendererWrapperAccessorMixin",
-    "modded.mtrpatch.SignResourceMixin",
     "modded.mtrpatch.RawMeshMixin",
+    "modded.mtrpatch.SignResourceMixin",
     "modded.tsc.VehicleAccessorMixin"
   ],
   "injectors": {

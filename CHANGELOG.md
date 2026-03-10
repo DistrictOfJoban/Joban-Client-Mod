@@ -2,12 +2,21 @@
 
 Unless otherwise noted, all changes below pertains to the Scripting feature in JCM.
 
+## New (Non-Scripting)
+During the development of JCM v2.2, several issues (Related to performance/legacy NTE compatibility) in the main mod were found.
+
+To ensure player gets the best in-game playing experience, I have decided to integrate these fixes within JCM for now, which I will collectively call them the **MTR Patch**.
+
+This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, while serving as a "playground" for these patches, so hopefully errors could be caught before they are merged into the main mod.
+
+**Applied patch as follows:**
+- Fix: Legacy NTE Eyecandy object now recognizes the "translation"/"rotation"/"scale"/"mirror" fields, which is used by NTE but does not get parsed in MTR 4.
+- Fix: OBJ model material now recognizes `exteriortranslucent`, `lighttranslucent` and `interiortranslucent` again, which is used by NTE but does not get parsed correctly in MTR 4.
+- Fix: For OBJ texture with path traversal (Like `../` / `..\`), it is once again recognized, solving some missing texture issues when loading NTE packs.
+- Enhancements: Improve model loading speed and memory usage for MTR.
+- Enhancements: Minor frame-rate boost in complex world.
+
 ## New
-- **(Non-scripting)** To improve compatibility with NTE, JCM now ships with several patches for MTR in order to replicate NTE behaviors.
-- - OBJ model material now recognizes `exteriortranslucent`, `lighttranslucent` and `interiortranslucent` again, which is used by NTE but does not get parsed correctly in MTR 4.
-- - For OBJ texture with path traversal (Like `../` / `..\`), it is once again recognized, solving some missing texture issues when loading NTE packs.
-- - Minor frame-rate boost
-- - Improve model loading speed and memory usage for MTR.
 - [[[something something vehicle scripting]]]
 - The **Rhino** JavaScript Engine has been updated to **1.9**, bringing some performance improvements and more modern JS features.
 - - See the [Rhino Compatibility Table](https://mozilla.github.io/rhino/compat/engines.html) for a list of supported features.
