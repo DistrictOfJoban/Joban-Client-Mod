@@ -54,6 +54,7 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - - New config file is located under `.minecraft/config/jsblock/client.toml` (Not relevant to most users)
 
 ## Fixes
+- Fix Eyecandy icon not being rendered when holding brush for scripted object.
 - Fix QuadDrawCall `INTERIOR` / `INTERIOR_TRANSLUCENT` render type not applying full brightness.
 - Fix counter-intuitive `Matrices` push/poping logic, which breaks many rendering stuff when used.
 - Fix `Networking.fetchString()` being possible to hang indefinitely.
