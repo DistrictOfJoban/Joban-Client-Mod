@@ -50,4 +50,8 @@ public class LoaderImplClient {
         }
         return players;
     }
+
+    public static Vector3d getEntityVelocity(Entity entity) {
+        return new Vector3d(entity.data.getVelocity());
+    }
 }

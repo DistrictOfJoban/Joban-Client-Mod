@@ -15,6 +15,18 @@ public class PlayerEntityWrapper extends EntityWrapper {
         return playerEntity.getGameProfile().getName();
     }
 
+    public boolean isSneaking() {
+        return playerEntity.isSneaking();
+    }
+
+    public boolean isSprinting() {
+        return playerEntity.isSprinting();
+    }
+
+    public boolean isSwimming() {
+        return playerEntity.isSwimming();
+    }
+
     public boolean isHoldingItem(Identifier id) {
         Item itm = LoaderImpl.getItemFromId(id);
         if(itm == null) return false;
