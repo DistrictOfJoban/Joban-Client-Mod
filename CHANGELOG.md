@@ -25,9 +25,9 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - - Provide a slightly more rich API for logging, similar to the web's console API seen in browsers. (console.log, console.warn etc.)
 - - The `print` function will be retained, redirects to `console.log` under the hood.
 - - The source/line no. of the print/console log statements may be viewed by enabling **View Script Log Source** in JCM's settings.
-- Add `MinecraftClient#spawnParticleInWorld()` to spawn vanilla particles in the current world via scripts.
-- Add `MinecraftClient#renderDistance()` to obtain the currently configured world render distance.
-- Add `MinecraftClient#getWorldPlayers()` to obtain all player's `PlayerEntity` within the current render distance.
+- Add `MinecraftClient.spawnParticleInWorld()` to spawn vanilla particles in the current world via scripts.
+- Add `MinecraftClient.renderDistance()` to obtain the currently configured world render distance.
+- Add `MinecraftClient.getWorldPlayers()` to obtain all player's `PlayerEntity` within the current render distance.
 - Add more methods to get more detail for entities/players.
 
 ## Changes
@@ -63,6 +63,7 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - Fix QuadDrawCall `INTERIOR` / `INTERIOR_TRANSLUCENT` render type not applying full brightness.
 - Fix counter-intuitive `Matrices` push/poping logic, which breaks many rendering stuff when used.
 - Fix `Networking.fetchString()` being possible to hang indefinitely.
+- Fix `Files.saveData()` not working with non-existent subdirectories.
 - Fix **GraphicsTexture** still being slower than NTE. Now, the speed should be more comparable.
 
 ## Removal
