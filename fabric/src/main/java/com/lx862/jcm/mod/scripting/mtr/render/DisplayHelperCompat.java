@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.scripting.mtr.render;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.World;
-import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
 import java.util.ArrayList;
@@ -29,7 +28,16 @@ public class DisplayHelperCompat extends RenderDrawCall<DisplayHelperCompat> {
         return this;
     }
 
-    public DisplayHelperCompat copy(Identifier textureId) {
+    public DisplayHelperCompat copy() {
+        DisplayHelperCompat dhCompat = new DisplayHelperCompat(this.quadDrawCalls);
+        if(this.storedMatrixTransformations != null) dhCompat.setMatrices(this.storedMatrixTransformations.copy());
+        return dhCompat;
+    }
+
+    /**
+     * For interval invocation by display_helper.js only
+     */
+    public DisplayHelperCompat copyWithTexture(Identifier textureId) {
         List<QuadDrawCall> newDrawCalls = new ArrayList<>();
         for(QuadDrawCall quadDrawCall : this.quadDrawCalls) {
             QuadDrawCall copyCall = quadDrawCall.copy();

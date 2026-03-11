@@ -74,7 +74,7 @@ DisplayHelper.prototype.create = function(sharedTexture) {
             instance._graphics.setTransform(instance.emptyTransform);
         }
 
-        instance.model = this.baseModel.copy(instance.texture.identifier);
+        instance.model = this.baseModel.copyWithTexture(instance.texture.identifier);
     } else {
         throw new Error("Unknown version: " + cfg.version);
     }

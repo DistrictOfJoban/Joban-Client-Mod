@@ -36,12 +36,13 @@ public class VehicleScriptContext extends MTRScriptContext {
         }
     }
 
-    public void drawCarModel(DisplayHelperCompat dh, int carIndex, Matrices matrices) {
+    public void drawCarModel(DisplayHelperCompat dhDrawCall, int carIndex, Matrices matrices) {
         ScriptRenderManager renderManager = getCarRenderManager(carIndex);
         if(renderManager == null) return;
 
-        if(matrices != null) dh.matrices(matrices);
-        renderManager.queue(dh);
+        DisplayHelperCompat newDhDrawCall = dhDrawCall.copy();
+        newDhDrawCall.matrices(matrices);
+        renderManager.queue(newDhDrawCall);
     }
 
     public void drawCarModel(ScriptModelCluster model, int carIndex, Matrices matrices) {
@@ -49,7 +50,7 @@ public class VehicleScriptContext extends MTRScriptContext {
         if(renderManager == null) return;
 
         ModelDrawCall modelDrawCall = ModelDrawCall.create()
-                .matrices(matrices == null ? null : matrices.copy())
+                .matrices(matrices)
                 .modelObject(model);
         renderManager.queue(modelDrawCall);
     }

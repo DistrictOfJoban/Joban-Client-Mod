@@ -77,9 +77,10 @@ public class EyeCandyScriptContext extends MTRScriptContext {
     }
 
     @Deprecated
-    public void drawModel(DisplayHelperCompat displayHelperCompat, Matrices matrices) {
-        if(matrices != null) displayHelperCompat.matrices(matrices);
-        renderManager.queue(displayHelperCompat);
+    public void drawModel(DisplayHelperCompat dhDrawCall, Matrices matrices) {
+        DisplayHelperCompat newDhDrawCall = dhDrawCall.copy();
+        newDhDrawCall.matrices(matrices);
+        renderManager.queue(newDhDrawCall);
     }
 
     public void drawModel(ScriptModelCluster model, Matrices matrices) {
