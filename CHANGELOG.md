@@ -49,6 +49,10 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - **Breaking Changes: TextUtil**
 - - `TextUtil.getNonExtraParts()` now returns the original string if no extra part is found, instead of an empty string.
 - - `TextUtil.getNonCjkAndExtraParts()` now actually returns the Non-CJK + extra part as documented, instead of "Non-extra Non-CJK part + Non-extra part".
+- **Breaking Changes: FileUtils**
+- - `Files.readData()` and `Files.readData()` now returns a `FileEntry` instead of a string, which is a new type representing a file, and contains methods to read the file in different format.
+- - - `FileEntry` allows reading a file as a String (`asString()`), a BufferedImage (`asBufferedImage()`), or as raw bytes (`asRawBytes()`).
+- - - `FileEntry.saveData()` now allows BufferedImage as an argument.
 - The JCM config has been remade
 - - Added **Script Debug Mode** (Script-specific debug mode), and **Show log source**
 - - Existing config are migrated over to the new config. If you have enabled **Debug Mode** previously, Script Debug Mode will also be enabled by default.
