@@ -57,6 +57,9 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - - Added **Script Debug Mode** (Script-specific debug mode), and **Show log source**
 - - Existing config are migrated over to the new config. If you have enabled **Debug Mode** previously, Script Debug Mode will also be enabled by default.
 - - New config file is located under `.minecraft/config/jsblock/client.toml` (Not relevant to most users)
+- **(Non-Scripting)** All Eyecandy/Decoration Block objects is changed to always render, even when off-screen.
+- - This is to facilitate scripted eyecandy blocks to ensure they can be run correctly.
+- - A slight performance reduction is expected, though the impact is estimated to not be huge.
 
 ## Fixes
 - Fix Eyecandy icon not being rendered when holding brush for scripted object.

@@ -17,6 +17,7 @@
     "modded.mtr.MainRendererMixin",
     "modded.mtr.ObjModelAccessor",
     "modded.mtr.RenderEyeCandyMixin",
+    "modded.mtr.BlockEntityRendererMixin",
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleExtensionMixin",
     "modded.mtr.VehicleResourceMixin",
