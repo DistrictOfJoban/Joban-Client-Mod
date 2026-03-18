@@ -248,7 +248,7 @@ public class VehicleWrapper {
         public Platform platform;
         public String destinationName;
         public List<RouteInterchange> routeInterchanges;
-        public Map<String, ObjectArrayList<RouteInterchange>> connectingInterchanges;
+        public Map<String, List<RouteInterchange>> connectingInterchanges;
         public long dwellTimeMillis;
         public double distance;
         public Stop asNextRoute;

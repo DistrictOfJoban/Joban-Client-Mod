@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting;
 
+import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleWrapper;
 import org.mtr.core.data.Data;
 import org.mtr.core.data.Platform;
 import org.mtr.core.data.Siding;
@@ -23,6 +24,7 @@ public class MTRDatasetHolder {
     public final List<Platform> platforms = new ArrayList<>();
     public final List<SimplifiedRoute> routes = new ArrayList<>();
     public final List<Siding> sidings = new ArrayList<>();
+    public final Map<Long, Map<String, List<VehicleWrapper.Stop.RouteInterchange>>> connectingStationInterchangeMap = new HashMap<>();
 
     public final Map<Long, Station> stationIdMap = new HashMap<>();
     public final Map<Long, Platform> platformIdMap = new HashMap<>();
@@ -37,6 +39,25 @@ public class MTRDatasetHolder {
 
         JsonReader jsonReader = new JsonReader(Utilities.parseJson(json));
         jsonReader.iterateReaderArray("stations", () -> {}, reader -> stations.add(new Station(reader, instance)));
+        jsonReader.iterateReaderArray("connectingStationInterchanges", () -> {}, reader -> {
+            long stationId = reader.getLong("id", 0);
+
+            Map<String, List<VehicleWrapper.Stop.RouteInterchange>> interchangeForStations = new HashMap<>();
+            reader.iterateReaderArray("connectingStations", () -> {}, elementReader -> {
+                List<VehicleWrapper.Stop.RouteInterchange> routeInterchanges = new ArrayList<>();
+                String stationName = elementReader.getString("name", "");
+                elementReader.iterateReaderArray("interchanges", () -> {}, interchangeReader -> {
+                    String routeName = interchangeReader.getString("name", "");
+                    int color = elementReader.getInt("color", 0);
+                    VehicleWrapper.Stop.RouteInterchange routeInterchange = new VehicleWrapper.Stop.RouteInterchange(color, routeName);
+                    routeInterchanges.add(routeInterchange);
+                });
+
+                interchangeForStations.put(stationName, routeInterchanges);
+            });
+
+            connectingStationInterchangeMap.put(stationId, interchangeForStations);
+        });
         jsonReader.iterateReaderArray("platforms", () -> {}, reader -> platforms.add(new Platform(reader, instance)));
         jsonReader.iterateReaderArray("routes", () -> {}, reader -> routes.add(new SimplifiedRoute(reader)));
         jsonReader.iterateReaderArray("sidings", () -> {}, reader -> sidings.add(new Siding(reader, instance)));
@@ -56,7 +77,26 @@ public class MTRDatasetHolder {
     }
 
     public void addStation(Station station) {
-        if(station != null && !this.stations.contains(station)) this.stations.add(station);
+        if(station != null && !this.stations.contains(station)) {
+            this.stations.add(station);
+
+            Map<String, List<VehicleWrapper.Stop.RouteInterchange>> connectingStations = new HashMap<>();
+            station.getInterchangeStationNameToColorToRouteNamesMap(true).forEach((stationName, routeInterchanges) -> {
+                // Same-station interchange already exists within the Station object, so we exclude same station interchange to save some data transfer.
+                if(stationName.equals(station.getName())) return;
+
+                List<VehicleWrapper.Stop.RouteInterchange> interchanges = new ArrayList<>();
+                routeInterchanges.forEach((color, routes) -> {
+                    routes.forEach(routeName -> {
+                        interchanges.add(new VehicleWrapper.Stop.RouteInterchange(color, routeName));
+                    });
+                });
+                connectingStations.put(stationName, interchanges);
+            });
+            if(!connectingStations.isEmpty()) {
+                this.connectingStationInterchangeMap.put(station.getId(), connectingStations);
+            }
+        }
     }
 
     public void addPlatform(Platform platform) {
@@ -77,16 +117,41 @@ public class MTRDatasetHolder {
         JsonArray platformsArray = new JsonArray();
         JsonArray routesArray = new JsonArray();
         JsonArray sidingsArray = new JsonArray();
+        JsonArray connectingStationInterchangeArray = new JsonArray();
 
         this.stations.forEach(e -> addJsonObject(e, stationsArray));
         this.platforms.forEach(e -> addJsonObject(e, platformsArray));
         this.routes.forEach(e -> addJsonObject(e, routesArray));
         this.sidings.forEach(e -> addJsonObject(e, sidingsArray));
 
+        this.connectingStationInterchangeMap.forEach((stationId, connectingStations) -> {
+            JsonObject connectingStationInterchanges = new JsonObject();
+            connectingStationInterchanges.addProperty("id", stationId);
+
+            JsonArray connectingStationsArray = new JsonArray();
+            connectingStations.forEach((stationName, interchanges) -> {
+                JsonObject stationInterchanges = new JsonObject();
+                stationInterchanges.addProperty("name", stationName);
+                JsonArray interchangeArray = new JsonArray();
+                interchanges.forEach(routeInterchange -> {
+                    JsonObject interchangeObject = new JsonObject();
+                    interchangeObject.addProperty("name", routeInterchange.name);
+                    interchangeObject.addProperty("color", routeInterchange.color);
+                    interchangeArray.add(interchangeObject);
+                });
+                stationInterchanges.add("interchanges", interchangeArray);
+
+                connectingStationsArray.add(stationInterchanges);
+            });
+            connectingStationInterchanges.add("connectingStations", connectingStationsArray);
+            connectingStationInterchangeArray.add(connectingStationInterchanges);
+        });
+
         rootObject.add("stations", stationsArray);
         rootObject.add("platforms", platformsArray);
         rootObject.add("routes", routesArray);
         rootObject.add("sidings", sidingsArray);
+        rootObject.add("connectingStationInterchanges", connectingStationInterchangeArray);
 
         return rootObject.toString();
     }
@@ -96,6 +161,7 @@ public class MTRDatasetHolder {
         this.platforms.addAll(other.platforms);
         this.routes.addAll(other.routes);
         this.sidings.addAll(other.sidings);
+        this.connectingStationInterchangeMap.putAll(other.connectingStationInterchangeMap);
         generateIdMapCache();
     }
 
