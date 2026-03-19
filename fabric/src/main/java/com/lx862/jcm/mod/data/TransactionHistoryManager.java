@@ -7,7 +7,6 @@ import org.mtr.mapping.holder.MinecraftServer;
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.WorldSavePath;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -30,10 +29,10 @@ public class TransactionHistoryManager {
             Path savePath = getSavePath(player.getServer(), player.getUuidAsString());
             savePath.getParent().toFile().mkdirs();
 
-            Collections.sort(entries, (a, b) -> (int)(b.time() - a.time()));
+            entries.sort((a, b) -> Long.compare(b.time(), a.time()));
 
             while(entries.size() > MAX_ENTRY_LIMIT) { // Clamp
-                entries.remove(0);
+                entries.remove(entries.size()-1);
             }
 
             // Write to json
@@ -68,7 +67,8 @@ public class TransactionHistoryManager {
             JCMLogger.error("Failed to read transaction record from JSON file!", e);
             saveLogs(new ArrayList<>(), player); // Wipe the entry
         }
-        Collections.sort(entries, (a, b) -> (int)(b.time() - a.time()));
+
+        entries.sort((a, b) -> Long.compare(b.time(), a.time()));
         return entries;
     }
 
