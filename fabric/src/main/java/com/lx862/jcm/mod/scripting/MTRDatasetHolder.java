@@ -48,7 +48,7 @@ public class MTRDatasetHolder {
                 String stationName = elementReader.getString("name", "");
                 elementReader.iterateReaderArray("interchanges", () -> {}, interchangeReader -> {
                     String routeName = interchangeReader.getString("name", "");
-                    int color = elementReader.getInt("color", 0);
+                    int color = interchangeReader.getInt("color", 0);
                     VehicleWrapper.Stop.RouteInterchange routeInterchange = new VehicleWrapper.Stop.RouteInterchange(color, routeName);
                     routeInterchanges.add(routeInterchange);
                 });
