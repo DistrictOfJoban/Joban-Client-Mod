@@ -32,13 +32,13 @@ public class FilesUtil {
 
     public static void saveData(String content, String... paths) throws IOException {
         Path p = resolvePathSafe(dataPath, paths);
-        Files.createDirectories(p);
+        Files.createDirectories(p.getParent());
         FileUtils.writeStringToFile(p.toFile(), content, Charsets.UTF_8);
     }
 
     public static void saveData(BufferedImage image, String... paths) throws IOException {
         Path p = resolvePathSafe(dataPath, paths);
-        Files.createDirectories(p);
+        Files.createDirectories(p.getParent());
         ImageIO.write(image, "PNG", p.toFile());
     }
 
