@@ -41,11 +41,11 @@ public class NTETrainWrapper extends VehicleWrapper {
     }
 
     public int getAllPlatformsNextIndex() {
-        return getNextStopIndex(0);
+        return getNextStopIndex(getStops(), 0);
     }
 
     public int getThisRoutePlatformsNextIndex() {
-        return getThisRouteNextStopIndex(0);
+        return getNextStopIndex(getThisRouteStops(), 0);
     }
 
     public List<Stop> getDebugThisRoutePlatforms(int count) {
