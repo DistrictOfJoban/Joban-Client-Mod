@@ -3,7 +3,7 @@
 Unless otherwise noted, all changes below pertains to the Scripting feature in JCM.
 
 ## New (Non-Scripting)
-During the development of JCM v2.2, several issues (Related to performance/legacy NTE compatibility) in the main mod were found.
+During the development of JCM v2.2, several improvement area (Related to UX/performance/legacy NTE compatibility) in the main mod were identified.
 
 To ensure player gets the best in-game playing experience, I have decided to integrate these fixes within JCM for now, which I will collectively call them the **MTR Patch**.
 
@@ -15,6 +15,10 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - Fix: For OBJ texture with path traversal (Like `../` / `..\`), it is once again recognized, solving some missing texture issues when loading NTE packs.
 - Enhancements: Improve model loading speed and memory usage for MTR.
 - Enhancements: Minor frame-rate boost in complex world.
+- Enhancements: Add car auto-filling in siding screen
+- - For supported vehicles, you can now hold SHIFT when adding vehicle cars to automatically fill out the entire siding length, with Cab, Trailer and Reversed Cab of the same train type being filled.
+- - Vehicles ending with id `cab_1`, `cab_2` and `trailer` are supported.
+- - Similarly, you can hold SHIFT when deleting cars from siding to clear all cars.
 
 ## New
 - [[[something something vehicle scripting]]]
@@ -50,7 +54,7 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - - `TextUtil.getNonExtraParts()` now returns the original string if no extra part is found, instead of an empty string.
 - - `TextUtil.getNonCjkAndExtraParts()` now actually returns the Non-CJK + extra part as documented, instead of "Non-extra Non-CJK part + Non-extra part".
 - **Breaking Changes: FileUtils**
-- - `Files.readData()` and `Files.readData()` now returns a `FileEntry` instead of a string, which is a new type representing a file, and contains methods to read the file in different format.
+- - `Files.readData()` and `Files.read()` now returns a `FileEntry` instead of a string, which is a new type representing a file, and contains methods to read the file in different format.
 - - - `FileEntry` allows reading a file as a String (`asString()`), a BufferedImage (`asBufferedImage()`), or as raw bytes (`asRawBytes()`).
 - - - `FileEntry.saveData()` now allows BufferedImage as an argument.
 - The JCM config has been remade

@@ -31,6 +31,7 @@
     "modded.mtrpatch.OptimizedRendererMixin",
     "modded.mtrpatch.OptimizedRendererWrapperAccessorMixin",
     "modded.mtrpatch.SignResourceMixin",
+    "modded.mtrpatch.VehicleSelectorScreenMixin",
     "modded.tsc.VehicleAccessorMixin"
   ],
   "injectors": {

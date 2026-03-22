@@ -12,12 +12,12 @@
   ],
   "client": [
     "minecraft.NativeImageAccessor",
+    "modded.mtr.BlockEntityRendererMixin",
     "modded.mtr.BlockEyecandyMixin",
     "modded.mtr.LegacyVehicleResourceSchemaMixin",
     "modded.mtr.MainRendererMixin",
     "modded.mtr.ObjModelAccessor",
     "modded.mtr.RenderEyeCandyMixin",
-    "modded.mtr.BlockEntityRendererMixin",
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleExtensionMixin",
     "modded.mtr.VehicleResourceMixin",
@@ -32,6 +32,7 @@
     "modded.mtrpatch.OptimizedRendererWrapperAccessorMixin",
     "modded.mtrpatch.RawMeshMixin",
     "modded.mtrpatch.SignResourceMixin",
+    "modded.mtrpatch.VehicleSelectorScreenMixin",
     "modded.tsc.VehicleAccessorMixin"
   ],
   "injectors": {
