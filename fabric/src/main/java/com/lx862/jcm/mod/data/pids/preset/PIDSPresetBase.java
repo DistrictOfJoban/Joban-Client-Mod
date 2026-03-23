@@ -59,5 +59,5 @@ public abstract class PIDSPresetBase implements RenderHelper {
     public abstract int getTextColor();
     public abstract boolean isRowHidden(int row);
 
-    public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height);
+    public abstract void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height, int light);
 }

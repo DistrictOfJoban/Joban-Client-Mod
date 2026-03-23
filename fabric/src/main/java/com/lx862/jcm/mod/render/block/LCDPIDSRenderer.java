@@ -17,10 +17,10 @@ public class LCDPIDSRenderer extends PIDSRenderer<LCDPIDSBlockEntity> {
     }
 
     @Override
-    public void renderPIDS(LCDPIDSBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
+    public void renderPIDS(LCDPIDSBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden, int light) {
         storedMatrixTransformations.add(graphicsHolder1 -> {
             graphicsHolder1.translate(-0.19, -0.125, -0.130);
         });
-        pidsPreset.render(blockEntity, graphicsHolder, storedMatrixTransformations, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 133, 72);
+        pidsPreset.render(blockEntity, graphicsHolder, storedMatrixTransformations, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 133, 72, light);
     }
 }

@@ -64,6 +64,7 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 ## Fixes
 - Fix Eyecandy icon not being rendered when holding brush for scripted object.
 - Fix QuadDrawCall `INTERIOR` / `INTERIOR_TRANSLUCENT` render type not applying full brightness.
+- Fix models & QuadDrawCall being rendered in full brightness in Scripted PIDS Preset
 - Fix counter-intuitive `Matrices` push/poping logic, which breaks many rendering stuff when used.
 - Fix `Networking.fetchString()` being possible to hang indefinitely.
 - Fix `Files.saveData()` not working with non-existent subdirectories.

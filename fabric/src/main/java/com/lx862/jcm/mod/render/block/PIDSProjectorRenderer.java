@@ -19,7 +19,7 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
     }
 
     @Override
-    public void renderPIDS(PIDSProjectorBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden) {
+    public void renderPIDS(PIDSProjectorBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden, int light) {
         float appliedScale = (float)blockEntity.getScale();
         float offsetX = (float)(0.5 - blockEntity.getOffsetX());
         float offsetY = (float)(0.5 + blockEntity.getOffsetY());
@@ -57,7 +57,7 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
             graphicsHolderNew.scale(appliedScale, appliedScale, appliedScale);
         });
 
-        pidsPreset.render(blockEntity, graphicsHolder, newMatrices.copy(), world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 136, 76);
+        pidsPreset.render(blockEntity, graphicsHolder, newMatrices.copy(), world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 136, 76, light);
 
         // Border
         if(showOutline) {
