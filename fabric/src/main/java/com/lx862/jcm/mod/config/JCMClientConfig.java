@@ -19,6 +19,10 @@ public class JCMClientConfig extends ReflectiveConfig {
     @Comment("Used to avoid distraction when locating specific blocks beneath the rail, and for performance debugging.")
     public final TrackedValue<Boolean> disableRailRendering = value(false);
 
+    @Comment("Do not show the vehicles you are currently riding.")
+    @Comment("Useful for cab-view video recording, where the appearance of the vehicle model may be an obstruction.")
+    public final TrackedValue<Boolean> hideRidingVehicle = value(false);
+
     @Comment("Reveal additional debug logs to aid troubleshooting")
     public final TrackedValue<Boolean> debugMode = value(false);
 

@@ -1,5 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.*;
@@ -7,11 +8,15 @@ import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.UniqueKey;
 import org.mtr.core.data.VehicleCar;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectImmutableList;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import org.mtr.mapping.holder.*;
 import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.mod.client.VehicleRidingMovement;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.render.*;
+import org.mtr.mod.resource.VehicleResource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,9 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 @Mixin(value = RenderVehicles.class, remap = false)
-public abstract class RenderVehiclesMixin {
+public class RenderVehiclesMixin {
     @Inject(method = "render(JLorg/mtr/mapping/holder/Vector3d;)V", at = @At(value = "INVOKE", target = "Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArraySet;forEach(Ljava/util/function/Consumer;)V"))
-    private static void renderScript(long millisElapsed, Vector3d cameraShakeOffset, CallbackInfo ci) {
+    private static void jsblock$executeScript(long millisElapsed, Vector3d cameraShakeOffset, CallbackInfo ci) {
         for(VehicleExtension vehicle : MinecraftClientData.getInstance().vehicles) {
             ObjectImmutableList<VehicleCar> cars = vehicle.vehicleExtraData.immutableVehicleCars;
             Object2ObjectOpenHashMap<String, ParsedScript> scriptsInVehicle = new Object2ObjectOpenHashMap<>();
@@ -59,5 +64,15 @@ public abstract class RenderVehiclesMixin {
                 });
             }
         }
+    }
+
+    @Inject(method = "lambda$render$5", at = @At("HEAD"), cancellable = true)
+    private static void jsblock$hideRidingTrainBogie(Vector3d offsetVector, Double offsetRotation, PositionAndRotation ridingCarPositionAndRotation, Vector3d cameraShakeOffset, VehicleResource vehicleResource, VehicleExtension vehicle, PositionAndRotation absoluteVehicleCarPositionAndRotation, int carNumber, int[] scrollingDisplayIndexTracker, boolean fromResourcePackCreator, int bogieIndex, PositionAndRotation absoluteBogiePositionAndRotation, CallbackInfo ci) {
+        if(JCMClientConfig.INSTANCE.hideRidingVehicle.value() && VehicleRidingMovement.isRiding(vehicle.getId())) ci.cancel();
+    }
+
+    @Inject(method = "lambda$render$12", at = @At("HEAD"), cancellable = true)
+    private static void jsblock$hideRidingTrainModel(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int[] scrollingDisplayIndexTracker, PositionAndRotation absoluteVehicleCarPositionAndRotation, ObjectArrayList openDoorways, boolean fromResourcePackCreator, ObjectArrayList previousGangwayPositionsList, ObjectArrayList previousBarrierPositionsList, VehicleResource vehicleResource, PositionAndRotation vehicleCarRenderingPositionAndRotation, Vector3d offsetVector, ObjectObjectImmutablePair vehicleCarDetails, double oscillationAmount, int modelIndex, DynamicVehicleModel model, CallbackInfo ci) {
+        if(JCMClientConfig.INSTANCE.hideRidingVehicle.value() && VehicleRidingMovement.isRiding(vehicle.getId())) ci.cancel();
     }
 }

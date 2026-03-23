@@ -35,6 +35,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private final ListViewWidget listViewWidget;
     private final CheckboxWidgetExtension disableRenderingButton;
     private final CheckboxWidgetExtension disableRailRenderingButton;
+    private final CheckboxWidgetExtension hideRidingVehicleButton;
     private final CheckboxWidgetExtension useNewTextRendererButton;
     private final CheckboxWidgetExtension debugModeButton;
     private final CheckboxWidgetExtension disableScriptingClassRestrictionButton;
@@ -55,6 +56,10 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
         this.disableRailRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
             JCMClientConfig.INSTANCE.disableRailRendering.setOverride(bool);
+        });
+
+        this.hideRidingVehicleButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+            JCMClientConfig.INSTANCE.hideRidingVehicle.setOverride(bool);
         });
 
         this.useNewTextRendererButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
@@ -118,6 +123,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private void setEntryStateFromClientConfig() {
         disableRenderingButton.setChecked(JCMClientConfig.INSTANCE.disableRendering.value());
         disableRailRenderingButton.setChecked(JCMClientConfig.INSTANCE.disableRailRendering.value());
+        hideRidingVehicleButton.setChecked(JCMClientConfig.INSTANCE.hideRidingVehicle.value());
         useNewTextRendererButton.setChecked(JCMClientConfig.INSTANCE.useAlternateTextRenderer.value());
         debugModeButton.setChecked(JCMClientConfig.INSTANCE.debugMode.value());
         disableScriptingClassRestrictionButton.setChecked(JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
@@ -136,6 +142,9 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_rail_rendering"), new MappedWidget(disableRailRenderingButton));
         addChild(new ClickableWidget(disableRailRenderingButton));
+
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.hide_riding_vehicle"), new MappedWidget(hideRidingVehicleButton));
+        addChild(new ClickableWidget(hideRidingVehicleButton));
 
         // Debug
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.debug_mode"), new MappedWidget(debugModeButton));

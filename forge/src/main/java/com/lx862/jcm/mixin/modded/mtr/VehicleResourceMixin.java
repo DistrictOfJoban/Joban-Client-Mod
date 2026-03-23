@@ -1,5 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
 import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
@@ -13,6 +14,7 @@ import org.mtr.core.tool.Vector;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import org.mtr.mapping.holder.*;
+import org.mtr.mod.client.VehicleRidingMovement;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.render.*;
 import org.mtr.mod.resource.VehicleResource;
@@ -23,8 +25,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = VehicleResource.class, remap = false)
 public abstract class VehicleResourceMixin {
-    @Inject(method = "queue(Lorg/mtr/mod/render/StoredMatrixTransformations;Lorg/mtr/mod/data/VehicleExtension;IIIZ)V", at = @At("HEAD"))
-    private void renderCarScript(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int totalCars, int light, boolean noOpenDoorways, CallbackInfo ci) {
+    @Inject(method = "queue(Lorg/mtr/mod/render/StoredMatrixTransformations;Lorg/mtr/mod/data/VehicleExtension;IIIZ)V", at = @At("HEAD"), cancellable = true)
+    private void jsblock$renderScriptResult(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int totalCars, int light, boolean noOpenDoorways, CallbackInfo ci) {
+        // If hide riding vehicle and is current vehicle, both cancel the rendering, and cancel our script result rendering
+        if(JCMClientConfig.INSTANCE.hideRidingVehicle.value() && VehicleRidingMovement.isRiding(vehicle.getId())) {
+            ci.cancel();
+            return;
+        }
+
         VehicleCar vehicleCar = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber);
         String scriptGroupId = MTRContentResourceManager.getVehicleScriptEntryId(vehicleCar.getVehicleId());
         if(scriptGroupId == null) return;
@@ -36,7 +44,6 @@ public abstract class VehicleResourceMixin {
         ScriptSoundManager carSoundManager = ((VehicleScriptInstance)scriptInstance).soundManagers.get(carNumber);
 
         StoredMatrixTransformations newTransform = storedMatrixTransformations.copy();
-        newTransform.add(gh -> gh.rotateYDegrees(180));
         newTransform.add(gh -> gh.translate(0, -1, 0)); // Replicate behaviour from MTR 3. Not sure if we should do it here tho?
 
         World world = World.cast(MinecraftClient.getInstance().getWorldMapped());

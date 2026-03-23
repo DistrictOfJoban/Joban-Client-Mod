@@ -59,9 +59,11 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - - `Files.readData()` and `Files.read()` now returns a `FileEntry` instead of a string, which is a new type representing a file, and contains methods to read the file in different format.
 - - - `FileEntry` allows reading a file as a String (`asString()`), a BufferedImage (`asBufferedImage()`), or as raw bytes (`asRawBytes()`).
 - - - `FileEntry.saveData()` now allows BufferedImage as an argument.
-- (Non-Scripting) The JCM config has been remade
-- - Added **Script Debug Mode** (Script-specific debug mode), and **Show log source**
-- - Add config to disable MTR Rail Rendering entirely 
+- (Non-Scripting) The JCM config has been remade, with several more options added:
+- - Add **Script Debug Mode** for JS scripts-specific debugging. (**Debug Mode** is now reserved for debug within JCM itself)
+- - Add **Show log source** for JS scripts, to trace where print/log statements originates from.
+- - Add **Disable MTR Rail Rendering** for performance diagnosing & providing a clearer view without rails.
+- - Add **Hide currently riding vehicles** for recording purposes, similar to NTE. (e.g. Cab-view recording)
 - - Existing config are migrated over to the new config. If you have enabled **Debug Mode** previously, Script Debug Mode will also be enabled by default.
 - - New config file is located under `.minecraft/config/jsblock/client.toml` (Not relevant to most users)
 - **(Non-Scripting)** All Eyecandy/Decoration Block objects is changed to always render, even when off-screen.
