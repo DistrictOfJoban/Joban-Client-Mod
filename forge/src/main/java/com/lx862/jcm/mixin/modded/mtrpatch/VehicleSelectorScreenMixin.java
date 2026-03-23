@@ -1,7 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtrpatch;
 
 import com.lx862.jcm.mod.util.TextUtil;
-import org.jetbrains.annotations.Nullable;
 import org.mtr.core.data.Siding;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongCollection;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectImmutableList;
@@ -53,12 +52,12 @@ public abstract class VehicleSelectorScreenMixin extends DashboardListSelectorSc
     @Unique
     private static int oldListSize = 0;
 
-    public VehicleSelectorScreenMixin(ObjectImmutableList<DashboardListItem> allData, LongCollection selectedIds, boolean isSingleSelect, boolean canRepeat, @Nullable ScreenExtension previousScreenExtension) {
+    public VehicleSelectorScreenMixin(ObjectImmutableList<DashboardListItem> allData, LongCollection selectedIds, boolean isSingleSelect, boolean canRepeat, ScreenExtension previousScreenExtension) {
         super(allData, selectedIds, isSingleSelect, canRepeat, previousScreenExtension);
     }
 
-    @Inject(method = "<init>", at = @At("HEAD"))
-    private static void jsblock$populateIds(Siding siding, ScreenExtension previousScreenExtension, CallbackInfo ci) {
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void jsblock$populateIds(Siding siding, ScreenExtension previousScreenExtension, CallbackInfo ci) {
         oldListSize = 0;
         listIdToVehicleResource.clear();
         final long[] id = {0};
