@@ -92,6 +92,7 @@
 	"gui.jsblock.config.listview.title.custom_font": "Use custom font",
 	"gui.jsblock.config.listview.title.debug_mode": "Enable debug mode",
 	"gui.jsblock.config.listview.title.disable_rendering": "Disable rendering",
+	"gui.jsblock.config.listview.title.disable_rail_rendering": "Disable MTR rail rendering",
 	"gui.jsblock.config.listview.title.disable_scripting_class_restriction": "Disable scripting class restriction",
 	"gui.jsblock.config.listview.title.new_text_rendering": "Enable new experiment text rendering",
 	"gui.jsblock.config.listview.title.open_atlas_screen": "View texture text atlas",

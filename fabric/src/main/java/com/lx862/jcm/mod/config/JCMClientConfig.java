@@ -15,6 +15,10 @@ public class JCMClientConfig extends ReflectiveConfig {
     @Comment("Only disable if you know what you are doing! This is a common issue causing JCM blocks to appear non-functional.")
     public final TrackedValue<Boolean> disableRendering = value(false);
 
+    @Comment("Disable rendering of MTR's rail")
+    @Comment("Used to avoid distraction when locating specific blocks beneath the rail, and for performance debugging.")
+    public final TrackedValue<Boolean> disableRailRendering = value(false);
+
     @Comment("Reveal additional debug logs to aid troubleshooting")
     public final TrackedValue<Boolean> debugMode = value(false);
 
