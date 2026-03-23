@@ -30,6 +30,7 @@ public class MTRContentResourceManager {
     private static final Map<String, ParsedScript> eyecandyScripts = new HashMap<>();
     private static final Map<String, String> vehicleScriptIds = new HashMap<>();
     private static final Map<String, String> eyecandyScriptIds = new HashMap<>();
+    private static final List<String> vehiclesWithDisplayCubeHidden = new ObjectArrayList<>();
     private static final JsonParser JSON_PARSER = new JsonParser();
 
     public static void reload() {
@@ -38,6 +39,7 @@ public class MTRContentResourceManager {
         vehicleScripts.clear();
         vehicleScriptIds.clear();
         eyecandyScriptIds.clear();
+        vehiclesWithDisplayCubeHidden.clear();
         VehicleDataCache.clearData();
 
         CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.beginReload();
@@ -116,6 +118,15 @@ public class MTRContentResourceManager {
                                         vehicleScriptIds.put(baseId + "_trailer", baseId);
                                     }
                                 }
+
+                                // Allow hiding display cube, so scripts can render their own, even with MTR's built-in model
+                                boolean shouldHideDisplayCube = vehicleResource.has("hide_display_cube") && vehicleResource.get("hide_display_cube").getAsBoolean();
+                                if(shouldHideDisplayCube) {
+                                    vehiclesWithDisplayCubeHidden.add(baseId + "_cab_1");
+                                    vehiclesWithDisplayCubeHidden.add(baseId + "_cab_2");
+                                    vehiclesWithDisplayCubeHidden.add(baseId + "_cab_3");
+                                    vehiclesWithDisplayCubeHidden.add(baseId + "_trailer");
+                                }
                             } catch (Exception e) {
                                 logException("parsing legacy vehicle script '" + baseId + "' in mtr_custom_resources.json", e);
                             }
@@ -129,6 +140,11 @@ public class MTRContentResourceManager {
                             String baseId = vehicleObject.get("id").getAsString();
                             if(vehicleObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
                                 vehicleScriptIds.put(baseId, vehicleObject.get("scriptId").getAsString());
+                            }
+
+                            boolean shouldHideDisplayCube = vehicleObject.has("hideDisplayParts") && vehicleObject.get("hideDisplayParts").getAsBoolean();
+                            if(shouldHideDisplayCube) {
+                                vehiclesWithDisplayCubeHidden.add(baseId);
                             }
                         }
 
@@ -260,6 +276,10 @@ public class MTRContentResourceManager {
 
     public static String getVehicleScriptEntryId(String str) {
         return vehicleScriptIds.getOrDefault(str, str);
+    }
+
+    public static boolean shouldHideDisplayParts(String vehicleId) {
+        return vehiclesWithDisplayCubeHidden.contains(vehicleId);
     }
 
     private static void logException(String action, Exception e) {
