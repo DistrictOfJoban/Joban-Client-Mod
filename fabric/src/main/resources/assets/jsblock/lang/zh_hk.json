@@ -92,6 +92,7 @@
 	"gui.jsblock.config.listview.title.custom_font": "使用自訂字體",
 	"gui.jsblock.config.listview.title.debug_mode": "除錯模式",
 	"gui.jsblock.config.listview.title.disable_rendering": "停用渲染",
+	"gui.jsblock.config.listview.title.disable_rail_rendering": "停用MTR軌道渲染",
 	"gui.jsblock.config.listview.title.disable_scripting_class_restriction": "放寬指令碼限制",
 	"gui.jsblock.config.listview.title.new_text_rendering": "使用新字體渲染 (或會發生不穩定情況)",
 	"gui.jsblock.config.listview.title.open_atlas_screen": "查看新字體渲染的材質",

@@ -53,10 +53,10 @@ public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEn
             graphicsHolderNew.rotateZDegrees(180);
         });
 
-        renderPIDS(blockEntity, pidsPreset, graphicsHolder, storedMatrixTransformations, world, state, pos, facing, arrivals, tickDelta, rowHidden);
+        renderPIDS(blockEntity, pidsPreset, graphicsHolder, storedMatrixTransformations, world, state, pos, facing, arrivals, tickDelta, rowHidden, light);
     }
 
-    public abstract void renderPIDS(T blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden);
+    public abstract void renderPIDS(T blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden, int light);
 
     private PIDSPresetBase getPreset(PIDSBlockEntity blockEntity) {
         return PIDSManager.getPreset(blockEntity.getPresetId(), PIDSManager.getPreset(blockEntity.getDefaultPresetId()));

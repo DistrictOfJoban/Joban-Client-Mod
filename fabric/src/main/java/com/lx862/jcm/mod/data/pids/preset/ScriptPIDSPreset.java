@@ -87,7 +87,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height) {
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height, int light) {
         PIDSWrapper pidsWrapper = new PIDSWrapper(be, arrivals, width, height);
         ScriptInstance<PIDSWrapper> scriptInstance = JCMScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("pids", getId(), pos.getX(), pos.getY(), pos.getZ()), () -> new PIDSScriptInstance(be, parsedScripts, pidsWrapper));
 
@@ -103,7 +103,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             });
 
             graphicsHolder.translate(0, 0, -0.005);
-            pidsScriptInstance.getRenderManager().invoke(world, storedMatrixTransformations, facing, MAX_RENDER_LIGHT);
+            pidsScriptInstance.getRenderManager().invoke(world, storedMatrixTransformations, facing, light);
             pidsScriptInstance.getSoundManager().invoke(world, pidsWrapper.blockPos());
         }
     }

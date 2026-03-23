@@ -17,6 +17,7 @@
     "modded.mtr.LegacyVehicleResourceSchemaMixin",
     "modded.mtr.MainRendererMixin",
     "modded.mtr.ObjModelAccessor",
+    "modded.mtr.RenderRailsMixin",
     "modded.mtr.RenderEyeCandyMixin",
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleExtensionMixin",
