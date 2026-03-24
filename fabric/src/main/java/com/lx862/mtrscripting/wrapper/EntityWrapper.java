@@ -30,9 +30,9 @@ public class EntityWrapper {
     }
 
     public ScriptVector3f smoothPos() {
-        ScriptVector3f v3f = new ScriptVector3f(this.entity.getCameraPosVec(MinecraftClient.getInstance().getTickDelta()));
-        v3f.sub(new ScriptVector3f(0, entity.getStandingEyeHeight(), 0));
-        return v3f;
+        ScriptVector3f vec = new ScriptVector3f(this.entity.getCameraPosVec(MinecraftClient.getInstance().isPaused() ? 0 : MinecraftClient.getInstance().getTickDelta()));
+        vec.sub(new ScriptVector3f(0, entity.getStandingEyeHeight(), 0));
+        return vec;
     }
 
     public ScriptVector3f blockPos() {
@@ -40,11 +40,11 @@ public class EntityWrapper {
     }
 
     public float yaw() {
-        return entity.getYaw(MinecraftClient.getInstance().getTickDelta());
+        return entity.getYaw(MinecraftClient.getInstance().isPaused() ? 0 : MinecraftClient.getInstance().getTickDelta());
     }
 
     public float pitch() {
-        return entity.getPitch(MinecraftClient.getInstance().getTickDelta());
+        return entity.getPitch(MinecraftClient.getInstance().isPaused() ? 0 : MinecraftClient.getInstance().getTickDelta());
     }
 
     public float bodyYaw() {
