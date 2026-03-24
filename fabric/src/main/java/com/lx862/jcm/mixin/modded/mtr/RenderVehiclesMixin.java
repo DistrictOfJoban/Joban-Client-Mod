@@ -42,20 +42,25 @@ public class RenderVehiclesMixin {
             }
 
             for(Map.Entry<String, ParsedScript> scriptEntry : scriptsInVehicle.entrySet()) {
-                String vehicleGroupId = scriptEntry.getKey();
+                String scriptEntryId = scriptEntry.getKey();
                 List<Integer> carsForScripts = new ArrayList<>();
                 for(int i = 0; i < cars.size(); i++) {
-                    if(MTRContentResourceManager.getVehicleScriptEntryId(cars.get(i).getVehicleId()).equals(vehicleGroupId)) carsForScripts.add(i);
+                    if(MTRContentResourceManager.getVehicleScriptEntryId(cars.get(i).getVehicleId()).equals(scriptEntryId)) carsForScripts.add(i);
                 }
                 int[] carsArray = carsForScripts.stream().mapToInt(i->i).toArray();
+                boolean requireDataPrefetching = MTRContentResourceManager.shouldPrefetchVehicleData(scriptEntryId);
 
-                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), vehicleGroupId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, vehicleGroupId, carsArray, cars.size()), vehicle, scriptEntry.getValue()));
+                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntryId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, scriptEntryId, carsArray, requireDataPrefetching), vehicle, scriptEntry.getValue()));
                 if(scriptInstance == null) continue;
 
                 VehicleScriptContext.DataFetchMode dataFetchMode = ((VehicleScriptContext)scriptInstance.getScriptContext()).getDataFetchMode();
                 VehicleWrapper wrapperObject = new NTETrainWrapper(dataFetchMode, vehicle);
-
                 scriptInstance.setWrapperObject(wrapperObject);
+
+                if(dataFetchMode == VehicleScriptContext.DataFetchMode.MANDATORY && !wrapperObject.isStopsDataFullyFetched()) {
+                    continue;
+                }
+
                 scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
                     VehicleScriptContext ctx = (VehicleScriptContext) scriptInstance.getScriptContext();
                     scriptInstance.captureRenderCalls(ctx.getCarRenderManagers());

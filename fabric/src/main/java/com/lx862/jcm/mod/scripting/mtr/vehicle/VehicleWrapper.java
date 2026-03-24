@@ -87,13 +87,24 @@ public class VehicleWrapper {
         return findNextStopIndex(overrunTolerance, getRailProgress(), stops);
     }
 
-    public boolean isFullStopData() {
+    public boolean isStopsDataFetched() {
         return stopsData.isFullData;
+    }
+
+    /** Whether stops data (Including MTR data) are fully fetched.
+    HACK for existing MTR 3 scripts, not for use by scripts. */
+    public boolean isStopsDataFullyFetched() {
+        if(!isStopsDataFetched()) return false;
+
+        for(Stop stop : stopsData.allStops) {
+            if(stop.platform == null) return false; // Use platform as a measure, since that will never be null if fetched.
+        }
+        return true;
     }
 
     protected long getThisRouteId() {
         long routeId = vehicleExtension.vehicleExtraData.getThisRouteId();
-        if(isFullStopData()) {
+        if(isStopsDataFetched()) {
             int nextStopIndex = getNextStopIndex(getStops(), 0);
             if(nextStopIndex < getStops().size()) {
                 SimplifiedRoute route = getStops().get(nextStopIndex).route;
@@ -147,12 +158,14 @@ public class VehicleWrapper {
         }
 
         public static StopsData constructData(VehicleScriptContext.DataFetchMode dataFetchMode, VehicleExtension vehicle) {
-            if(dataFetchMode == VehicleScriptContext.DataFetchMode.ALL) {
+            if(dataFetchMode != VehicleScriptContext.DataFetchMode.SKIP) {
                 VehicleDataCache.requestVehicleStopsData(vehicle.getId(), vehicle.vehicleExtraData.getSidingId());
             }
 
             StopsData fullStopsData = VehicleDataCache.buildVehicleStopsData(vehicle);
-            if(dataFetchMode == VehicleScriptContext.DataFetchMode.ALL && fullStopsData != null) return fullStopsData;
+            if(dataFetchMode != VehicleScriptContext.DataFetchMode.SKIP && fullStopsData != null) {
+                return fullStopsData;
+            }
 
             long sidingId = vehicle.vehicleExtraData.getSidingId();
             Siding siding = MinecraftClientData.getInstance().sidingIdMap.get(sidingId);

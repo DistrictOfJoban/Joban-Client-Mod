@@ -26,12 +26,15 @@ import java.util.Map;
 
 /** Temporary class to hold resource handling regarding MTR/NTE contents, until they are upstreamed */
 public class MTRContentResourceManager {
+    private static final JsonParser JSON_PARSER = new JsonParser();
+
     private static final Map<String, ParsedScript> vehicleScripts = new HashMap<>();
     private static final Map<String, ParsedScript> eyecandyScripts = new HashMap<>();
     private static final Map<String, String> vehicleScriptIds = new HashMap<>();
     private static final Map<String, String> eyecandyScriptIds = new HashMap<>();
+
+    private static final List<String> vehicleScriptsForPrefetching = new ObjectArrayList<>();
     private static final List<String> vehiclesWithDisplayCubeHidden = new ObjectArrayList<>();
-    private static final JsonParser JSON_PARSER = new JsonParser();
 
     public static void reload() {
         JCMLogger.info("Loading scripts on-behalf of MTR...");
@@ -40,6 +43,7 @@ public class MTRContentResourceManager {
         vehicleScriptIds.clear();
         eyecandyScriptIds.clear();
         vehiclesWithDisplayCubeHidden.clear();
+        vehicleScriptsForPrefetching.clear();
         VehicleDataCache.clearData();
 
         CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.beginReload();
@@ -112,6 +116,7 @@ public class MTRContentResourceManager {
                                     ParsedScript parsedScript = tryParseScript(baseId, "vehicle", "Vehicle", vehicleResource, false, true);
                                     if (parsedScript != null) {
                                         vehicleScripts.put(baseId, parsedScript);
+                                        vehicleScriptsForPrefetching.add(baseId);
                                         vehicleScriptIds.put(baseId + "_cab_1", baseId);
                                         vehicleScriptIds.put(baseId + "_cab_2", baseId);
                                         vehicleScriptIds.put(baseId + "_cab_3", baseId);
@@ -280,6 +285,10 @@ public class MTRContentResourceManager {
 
     public static boolean shouldHideDisplayParts(String vehicleId) {
         return vehiclesWithDisplayCubeHidden.contains(vehicleId);
+    }
+
+    public static boolean shouldPrefetchVehicleData(String vehicleScriptId) {
+        return vehicleScriptsForPrefetching.contains(vehicleScriptId);
     }
 
     private static void logException(String action, Exception e) {

@@ -22,7 +22,7 @@ public class VehicleScriptContext extends MTRScriptContext {
     private final String scriptEntryId;
     private DataFetchMode dataFetchMode;
 
-    public VehicleScriptContext(VehicleExtension vehicleExtension, String scriptEntryId, int[] myCars, int carLength) {
+    public VehicleScriptContext(VehicleExtension vehicleExtension, String scriptEntryId, int[] myCars, boolean fetchDataBeforeExecute) {
         super(scriptEntryId);
         this.vehicleExtension = vehicleExtension;
         this.myCars = myCars;
@@ -33,6 +33,10 @@ public class VehicleScriptContext extends MTRScriptContext {
         for(int i : myCars) {
             carRenderers.put(i, new ScriptRenderManager());
             carSoundManagers.put(i, new ScriptSoundManager());
+        }
+
+        if(fetchDataBeforeExecute) {
+            dataFetchMode = DataFetchMode.MANDATORY;
         }
     }
 
@@ -119,7 +123,8 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public enum DataFetchMode {
-        NONE,
+        SKIP,
+        MANDATORY,
         ALL
     }
 }
