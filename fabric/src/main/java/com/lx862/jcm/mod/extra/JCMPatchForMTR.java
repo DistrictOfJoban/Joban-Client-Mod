@@ -14,6 +14,8 @@ import java.nio.file.FileSystems;
 import java.util.Locale;
 
 public class JCMPatchForMTR {
+    public static final String[] mtr3GangwayTextures = {"a_train", "e44", "k_train_ael", "k_train", "k_train_tcl", "m_train", "r211", "s_train", "sp1900"};
+    public static final String[] mtr3BarrierTextures = {"london_underground_d78", "mlr", "r179"};
     private static boolean cachedRenderingShadow = false;
 
     /**

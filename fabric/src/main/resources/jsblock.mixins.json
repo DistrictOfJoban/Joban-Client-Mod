@@ -27,6 +27,7 @@
     "modded.mtrpatch.CustomResourceLoaderMixin",
     "modded.mtrpatch.CustomResourceToolsMixin",
     "modded.mtrpatch.MainRendererMixin",
+    "modded.mtrpatch.ModelPropertiesSchemaMixin",
     "modded.mtrpatch.ObjectResourceSchemaMixin",
     "modded.mtrpatch.ObjModelLoaderMixin",
     "modded.mtrpatch.OptimizedRendererAccessorMixin",
