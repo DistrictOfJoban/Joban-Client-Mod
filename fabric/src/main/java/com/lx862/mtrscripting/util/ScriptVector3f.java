@@ -42,44 +42,54 @@ public class ScriptVector3f {
         return new ScriptVector3f(newImpl);
     }
 
-    public void normalize() {
+    public ScriptVector3f normalize() {
         impl = impl.normalize();
+        return this;
     }
 
-    public void add(float x, float y, float z) {
+    public ScriptVector3f add(float x, float y, float z) {
         impl = impl.add(x, y, z);
+        return this;
     }
 
-    public void add(ScriptVector3f other) {
+    public ScriptVector3f add(ScriptVector3f other) {
         impl = impl.add(other.impl);
+        return this;
     }
 
-    public void sub(ScriptVector3f other) {
+    public ScriptVector3f sub(ScriptVector3f other) {
         impl = impl.subtract(other.impl);
+        return this;
     }
 
-    public void mul(float x, float y, float z) {
+    public ScriptVector3f mul(float x, float y, float z) {
         impl = impl.multiply(x, y, z);
+        return this;
     }
 
-    public void mul(float n) {
+    public ScriptVector3f mul(float n) {
         impl = impl.multiply(n);
+        return this;
     }
 
-    public void rotX(float rad) {
+    public ScriptVector3f rotX(float rad) {
         impl = impl.rotateX(rad);
+        return this;
     }
 
-    public void rotY(float rad) {
+    public ScriptVector3f rotY(float rad) {
         impl = impl.rotateY(rad);
+        return this;
     }
 
-    public void rotZ(float rad) {
+    public ScriptVector3f rotZ(float rad) {
         impl = impl.rotateZ(rad);
+        return this;
     }
 
-    public void cross(ScriptVector3f other) {
+    public ScriptVector3f cross(ScriptVector3f other) {
         impl = impl.crossProduct(other.impl);
+        return this;
     }
 
     public double distance(ScriptVector3f other) {

@@ -43,10 +43,11 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - For script contexts (`ctx` parameter), functions now conforms to the `get`/`set` prefix.
 - - `ctx.renderManager()` -> `ctx.getRenderManager()`
 - - `ctx.soundManager()` -> `ctx.getSoundManager()`
+- Scripts in `mtr_custom_resources_pending_migration.json` will now also be recognized by JCM.
+- `Vector3f` now allows method chaining.
 - - The existing non-get functions will be retained for backward compatibility reasons.
 - **Breaking Changes: MTR 4 Eyecandy registration**
 - - To conform better to the newly added vehicle scripting, the `scripting` object will no longer be read for eyecandy objects in the MTR 4 format. Please see [documentation LINK ME] for the new registration format.
-- Scripts in `mtr_custom_resources_pending_migration.json` will now also be recognized by JCM.
 - **Breaking Changes: Model Loading**
 - - In previous versions of JCM, model loading in scripts are very limited, and can only load a single OBJ file. JCM v2.2 revises model loading to allow part of a model to be loaded, and allow limited amount of preprocessing before uploading the final model.
 - - This introduces the distinction between `RawModel` (A model part) and `ModelCluster` (The finalized model uploaded to the GPU). Those who had been using NTE should feel home to these changes.
