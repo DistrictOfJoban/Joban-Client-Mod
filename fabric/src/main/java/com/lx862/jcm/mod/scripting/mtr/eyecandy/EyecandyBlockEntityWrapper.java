@@ -2,9 +2,7 @@ package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.mtrscripting.util.ScriptVector3f;
-import org.mtr.mapping.holder.BlockPos;
-import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.World;
+import org.mtr.mapping.holder.*;
 import org.mtr.mod.block.BlockEyeCandy;
 import org.mtr.mod.block.IBlock;
 
@@ -59,6 +57,15 @@ public class EyecandyBlockEntityWrapper {
 
     public Direction facing() {
         return IBlock.getStatePropertySafe(be.getCachedState2(), BlockProperties.FACING);
+    }
+
+    public boolean isCrossHairSelection() {
+        HitResult hitResult = MinecraftClient.getInstance().getCrosshairTargetMapped();
+
+        if(BlockHitResult.isInstance(hitResult)) {
+            return BlockHitResult.cast(hitResult).getBlockPos().equals(be.getPos2());
+        }
+        return false;
     }
 
     /**

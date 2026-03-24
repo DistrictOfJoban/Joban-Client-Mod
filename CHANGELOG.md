@@ -32,6 +32,8 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - Add `MinecraftClient.spawnParticleInWorld()` to spawn vanilla particles in the current world via scripts.
 - Add `MinecraftClient.renderDistance()` to obtain the currently configured world render distance.
 - Add `MinecraftClient.getWorldPlayers()` to obtain all player's `PlayerEntity` within the current render distance.
+- Add `EyecandyBlockEntity.isCrossHairSelection()` to indicate whether the player is looking at the the eyecandy.
+- - Can be used to provide tooltips or additional information if needed.
 - Add `hide_display_cube` / `hideDisplayParts` (MTR 3 / MTR 4) vehicle properties to hide the displays, e.g those in built-in models.
 - - Used to allow scripting to override built-in displays such as destination displays.
 - Add more methods to get more detail for entities/players.
