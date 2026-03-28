@@ -59,7 +59,7 @@ public class EyecandyBlockEntityWrapper {
         return IBlock.getStatePropertySafe(be.getCachedState2(), BlockProperties.FACING);
     }
 
-    public boolean isCrossHairSelection() {
+    public boolean isCrosshairTarget() {
         HitResult hitResult = MinecraftClient.getInstance().getCrosshairTargetMapped();
 
         if(BlockHitResult.isInstance(hitResult)) {
