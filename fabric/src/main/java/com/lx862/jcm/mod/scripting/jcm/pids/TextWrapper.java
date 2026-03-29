@@ -28,11 +28,15 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     public int overflowMode;
     public int alignment;
     public int color;
+    private double marqueeProgressOverride;
+    private double marqueeDurationOverride;
 
     protected TextWrapper() {
         super(100, 25);
         this.alignment = -1;
         this.scale = 1;
+        this.marqueeDurationOverride = -1;
+        this.marqueeProgressOverride = -1;
         this.fontId = new Identifier(Init.MOD_ID, "mtr");
     }
 
@@ -90,7 +94,17 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     }
 
     public TextWrapper marquee() {
+        return marquee(-1);
+    }
+
+    public TextWrapper marquee(double durationTickOverride) {
         this.overflowMode = 4;
+        this.marqueeDurationOverride = durationTickOverride;
+        return this;
+    }
+
+    public TextWrapper withMarqueeProgress(double marqueeProgressOverride) {
+        this.marqueeProgressOverride = marqueeProgressOverride;
         return this;
     }
 
@@ -176,7 +190,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
             }
 
             if(overflowMode == 4 && actualW > w) { // Marquee
-                drawMarqueeText(graphicsHolderNew, texts.get(0).getString(), color, shadow, MAX_RENDER_LIGHT);
+                drawMarqueeText(graphicsHolderNew, texts.get(0).getString(), color, shadow, MAX_RENDER_LIGHT, marqueeDurationOverride, marqueeProgressOverride);
             } else {
                 int i = 0;
                 for(MutableText text : texts) {
@@ -199,7 +213,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         graphicsHolder.drawText(text, startX, y, color, shadow, light);
     }
 
-    private void drawMarqueeText(GraphicsHolder graphicsHolder, String str, int color, boolean shadow, int light) {
+    private void drawMarqueeText(GraphicsHolder graphicsHolder, String str, int color, boolean shadow, int light, double durationOverride, double progressOverride) {
         int[] textWidths = new int[str.length()];
         /* textWidth accounts for the duration where the text starts to disappear by clipping to the left edge */
         double textWidth = 0;
@@ -212,8 +226,8 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
 
         /* + w accounts for the duration where the text starts to appear from the right edge */
         int fullWidth = (int)(textWidth + (int)w);
-        int cycleDuration = str.length() * 10;
-        double marqueeProgress = (InitClient.getGameTick() % cycleDuration) / cycleDuration;
+        double cycleDuration = durationOverride != -1 ? (durationOverride * 20) : str.length() * 10;
+        double marqueeProgress = progressOverride != -1 ? progressOverride : (InitClient.getGameTick() % cycleDuration) / cycleDuration;
 
         double wSoFar = w - (fullWidth * marqueeProgress);
         for(int i = 0; i < str.length(); i++) {
