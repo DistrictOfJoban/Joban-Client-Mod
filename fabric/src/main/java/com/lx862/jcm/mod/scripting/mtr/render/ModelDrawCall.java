@@ -1,12 +1,12 @@
 package com.lx862.jcm.mod.scripting.mtr.render;
 
-import com.lx862.jcm.mod.scripting.mtr.util.ScriptModelCluster;
+import com.lx862.jcm.mod.scripting.mtr.util.ModelJS;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
 public class ModelDrawCall extends RenderDrawCall<ModelDrawCall> {
-    private ScriptModelCluster model;
+    private ModelJS model;
 
     public static ModelDrawCall create() {
         return new ModelDrawCall();
@@ -16,7 +16,7 @@ public class ModelDrawCall extends RenderDrawCall<ModelDrawCall> {
         return create();
     }
 
-    public ModelDrawCall modelObject(ScriptModelCluster model) {
+    public ModelDrawCall modelObject(ModelJS model) {
         this.model = model;
         return this;
     }

@@ -13,35 +13,35 @@ import java.util.Map;
 
 public class ModelManager {
     @Deprecated
-    public static ScriptRawModel loadRawModel(Object o, Identifier id, Object atlasManager) {
+    public static ModelDataJS loadRawModel(Object o, Identifier id, Object atlasManager) {
         return loadModel(id, false);
     }
 
     @Deprecated
-    public static Map<String, ScriptRawModel> loadPartedRawModel(Object o, Identifier id, Object atlasManager) {
+    public static Map<String, ModelDataJS> loadPartedRawModel(Object o, Identifier id, Object atlasManager) {
         return loadModelParts(id, false);
     }
 
-    public static ScriptRawModel loadModel(Identifier id, boolean flipV) {
+    public static ModelDataJS loadModel(Identifier id, boolean flipV) {
         try {
-            ScriptRawModel rawModel = new ScriptRawModel();
-            Map<String, ScriptRawModel> rawModels = loadModelParts(id, flipV);
-            rawModels.values().forEach(rawModel::append);
-            return rawModel;
+            ModelDataJS modelData = new ModelDataJS();
+            Map<String, ModelDataJS> modelDataParts = loadModelParts(id, flipV);
+            modelDataParts.values().forEach(modelData::append);
+            return modelData;
         } catch (Exception e) {
             ScriptManager.LOGGER.error("", e);
             return null;
         }
     }
 
-    public static Map<String, ScriptRawModel> loadModelParts(Identifier modelLocation, boolean flipTextureV) {
+    public static Map<String, ModelDataJS> loadModelParts(Identifier modelLocation, boolean flipTextureV) {
         String idStr = modelLocation.getNamespace() + ":" + modelLocation.getPath();
 
         final boolean isObj = idStr.endsWith(".obj");
         final Identifier textureId = CustomResourceTools.formatIdentifierWithDefault("", "png");
 
         if (isObj) {
-            Map<String, ScriptRawModel> rawModels = new Object2ObjectOpenHashMap<>();
+            Map<String, ModelDataJS> rawModels = new Object2ObjectOpenHashMap<>();
             Map<String, OptimizedModel.ObjModel> models = OptimizedModel.ObjModel.loadModel(
                     ResourceManagerHelper.readResource(CustomResourceTools.formatIdentifierWithDefault(idStr, "obj")),
                     mtlString -> ResourceManagerHelper.readResource(CustomResourceTools.getResourceFromSamePath(idStr, mtlString, "mtl")),
@@ -49,7 +49,7 @@ public class ModelManager {
                     null, true, flipTextureV
             );
             for(Map.Entry<String, OptimizedModel.ObjModel> modelEntry : models.entrySet()) {
-                rawModels.put(modelEntry.getKey(), new ScriptRawModel(modelEntry.getValue()));
+                rawModels.put(modelEntry.getKey(), new ModelDataJS(modelEntry.getValue()));
             }
             return rawModels;
         } else {
@@ -57,16 +57,16 @@ public class ModelManager {
         }
     }
 
-    public static ScriptRawModel loadModelPart(String modelName, Identifier modelLocation, boolean flipTextureV) {
+    public static ModelDataJS loadModelPart(String modelName, Identifier modelLocation, boolean flipTextureV) {
         return loadModelParts(modelLocation, flipTextureV).get(modelName);
     }
 
     @Deprecated
-    public static ScriptModelCluster uploadVertArrays(ScriptRawModel scriptRawModel) {
-        return upload(scriptRawModel);
+    public static ModelJS uploadVertArrays(ModelDataJS modelData) {
+        return upload(modelData);
     }
 
-    public static ScriptModelCluster upload(ScriptRawModel scriptRawModel) {
-        return new ScriptModelCluster(scriptRawModel);
+    public static ModelJS upload(ModelDataJS modelData) {
+        return new ModelJS(modelData);
     }
 }

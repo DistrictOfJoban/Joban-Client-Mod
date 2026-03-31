@@ -6,7 +6,7 @@ import com.lx862.jcm.mod.scripting.mtr.render.DisplayHelperCompat;
 import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
 import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
-import com.lx862.jcm.mod.scripting.mtr.util.ScriptModelCluster;
+import com.lx862.jcm.mod.scripting.mtr.util.ModelJS;
 import com.lx862.mtrscripting.util.Matrices;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import com.lx862.mtrscripting.wrapper.VoxelShapeWrapper;
@@ -83,7 +83,7 @@ public class EyeCandyScriptContext extends MTRScriptContext {
         renderManager.queue(newDhDrawCall);
     }
 
-    public void drawModel(ScriptModelCluster model, Matrices matrices) {
+    public void drawModel(ModelJS model, Matrices matrices) {
         ModelDrawCall modelDrawCall = ModelDrawCall.create()
                 .modelObject(model)
                 .matrices(matrices);

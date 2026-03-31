@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.scripting.mtr.vehicle;
 import com.lx862.jcm.mod.scripting.mtr.MTRScriptContext;
 import com.lx862.jcm.mod.scripting.mtr.render.*;
 import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
-import com.lx862.jcm.mod.scripting.mtr.util.ScriptModelCluster;
+import com.lx862.jcm.mod.scripting.mtr.util.ModelJS;
 import com.lx862.mtrscripting.util.Matrices;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.apache.commons.lang3.NotImplementedException;
@@ -49,7 +49,7 @@ public class VehicleScriptContext extends MTRScriptContext {
         renderManager.queue(newDhDrawCall);
     }
 
-    public void drawCarModel(ScriptModelCluster model, int carIndex, Matrices matrices) {
+    public void drawCarModel(ModelJS model, int carIndex, Matrices matrices) {
         ScriptRenderManager renderManager = getCarRenderManager(carIndex);
         if(renderManager == null) return;
 
@@ -59,7 +59,7 @@ public class VehicleScriptContext extends MTRScriptContext {
         renderManager.queue(modelDrawCall);
     }
 
-    public void drawConnModel(ScriptModelCluster model, int carIndex, Matrices matrices) {
+    public void drawConnModel(ModelJS model, int carIndex, Matrices matrices) {
         throw new NotImplementedException("Not implemented");
     }
 

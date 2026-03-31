@@ -14,10 +14,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-public class ScriptModelCluster {
+public class ModelJS {
     private final OptimizedModelWrapper model;
 
-    public ScriptModelCluster(ScriptRawModel rawModel) {
+    public ModelJS(ModelDataJS rawModel) {
         List<OptimizedModel.ObjModel> models = rawModel.models;
         models.forEach(e -> e.addTransformation(stringToRenderStage(rawModel.renderType).shaderType, 0, 0, 0, false));
         this.model = OptimizedModelWrapper.fromObjModels(new ObjectArrayList<>(models.stream().map(OptimizedModelWrapper.ObjModelWrapper::new).collect(Collectors.toList())));

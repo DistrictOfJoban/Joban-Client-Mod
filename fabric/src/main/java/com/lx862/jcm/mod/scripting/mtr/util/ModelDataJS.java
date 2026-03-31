@@ -7,42 +7,42 @@ import org.mtr.mapping.mapper.OptimizedModel;
 
 import java.util.List;
 
-public class ScriptRawModel {
+public class ModelDataJS {
     public final List<OptimizedModel.ObjModel> models;
     public String renderType;
 
-    public ScriptRawModel() {
+    public ModelDataJS() {
         this.models = new ObjectArrayList<>();
         this.renderType = "EXTERIOR";
     }
 
-    public ScriptRawModel(OptimizedModel.ObjModel... models) {
+    public ModelDataJS(OptimizedModel.ObjModel... models) {
         this();
         this.models.addAll(new ObjectArrayList<>(models));
     }
 
-    public void append(ScriptRawModel other) {
+    public void append(ModelDataJS other) {
         this.models.addAll(other.models);
     }
 
-    public void applyTranslation(double x, double y, double z) {
+    public void applyTranslation(float x, float y, float z) {
         this.models.forEach((rawModel) -> rawModel.applyTranslation(x, y, z));
     }
 
     @Deprecated
-    public void applyRotation(ScriptVector3f vector3f, double angle) {
-        double fX = angle * vector3f.x();
-        double fY = angle * vector3f.y();
-        double fZ = angle * vector3f.z();
+    public void applyRotation(ScriptVector3f vector3f, float angle) {
+        float fX = angle * vector3f.x();
+        float fY = angle * vector3f.y();
+        float fZ = angle * vector3f.z();
 
         applyRotation(fX, fY, fZ);
     }
 
-    public void applyRotation(double x, double y, double z) {
+    public void applyRotation(float x, float y, float z) {
         this.models.forEach((rawModel) -> rawModel.applyRotation(x, y, z));
     }
 
-    public void applyScale(double x, double y, double z) {
+    public void applyScale(float x, float y, float z) {
         this.models.forEach((rawModel) -> rawModel.applyScale(x, y, z));
     }
 
