@@ -64,6 +64,7 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - - This has all been unified to `DataReader`, a new class which represents *a sequence of byte data*. It offers option such as `asString()`, `asBufferedImage()`, `asFont()`, `asByteArray()` and `asRawInputStream()`, allowing developers to read them into a variety of formats.
 - - `Resources.read()` and `Networking.fetch()` has been added which returns the `DataReader` variant.
 - - `Resources.readString()`, `Resources.readBufferedImage()`, `Resources.readFont()`, `Networking.fetchString` and `Networking.fetchImage` has been deprecated in favor of the DataReader functions.
+- - Add `Resources.exist()` to determine if a file exist in a resource pack.
 - **Breaking Changes: FileUtils**
 - - `Files.readData()` and `Files.read()` now returns a `DataReader` instead of a string (See above)
 - `Files.saveData()` now allows BufferedImage as an argument for data to save.

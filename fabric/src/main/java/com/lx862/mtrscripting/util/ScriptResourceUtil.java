@@ -140,6 +140,12 @@ public class ScriptResourceUtil {
         }
     }
 
+    public static boolean exist(Identifier id) {
+        boolean[] resourceFound = new boolean[]{false};
+        ResourceManagerHelper.readResource(id, is -> resourceFound[0] = true);
+        return resourceFound[0];
+    }
+
     private static final Identifier NOTO_SANS_CJK_LOCATION = new Identifier("mtr", "font/noto-sans-cjk-tc-medium.otf");
     private static final Identifier NOTO_SANS_LOCATION = new Identifier("mtr", "font/noto-sans-semibold.ttf");
     private static final Identifier NOTO_SERIF_LOCATION = new Identifier("mtr", "font/noto-serif-cjk-tc-semibold.ttf");
