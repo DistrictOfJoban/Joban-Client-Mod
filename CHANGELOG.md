@@ -59,10 +59,14 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - **Breaking Changes: TextUtil**
 - - `TextUtil.getNonExtraParts()` now returns the original string if no extra part is found, instead of an empty string.
 - - `TextUtil.getNonCjkAndExtraParts()` now actually returns the Non-CJK + extra part as documented, instead of "Non-extra Non-CJK part + Non-extra part".
+- **Data Loading Rework**
+- - Previously, multiple functions exists for reading string/images in `Resources` and `Networking`, while the `Files` API is only capable of reading string.
+- - This has all been unified to `DataReader`, a new class which represents *a sequence of byte data*. It offers option such as `asString()`, `asBufferedImage()`, `asFont()`, `asByteArray()` and `asRawInputStream()`, allowing developers to read them into a variety of formats.
+- - `Resources.read()` and `Networking.fetch()` has been added which returns the `DataReader` variant.
+- - `Resources.readString()`, `Resources.readBufferedImage()`, `Resources.readFont()`, `Networking.fetchString` and `Networking.fetchImage` has been deprecated in favor of the DataReader functions.
 - **Breaking Changes: FileUtils**
-- - `Files.readData()` and `Files.read()` now returns a `FileEntry` instead of a string, which is a new type representing a file, and contains methods to read the file in different format.
-- - - `FileEntry` allows reading a file as a String (`asString()`), a BufferedImage (`asBufferedImage()`), or as raw bytes (`asRawBytes()`).
-- - - `FileEntry.saveData()` now allows BufferedImage as an argument.
+- - `Files.readData()` and `Files.read()` now returns a `DataReader` instead of a string (See above)
+- `Files.saveData()` now allows BufferedImage as an argument for data to save.
 - (Non-Scripting) The JCM config has been remade, with several more options added:
 - - Add **Script Debug Mode** for JS scripts-specific debugging. (**Debug Mode** is now reserved for debug within JCM itself)
 - - Add **Show log source** for JS scripts, to trace where print/log statements originates from.

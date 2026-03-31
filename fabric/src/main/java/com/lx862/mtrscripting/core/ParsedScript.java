@@ -91,7 +91,7 @@ public class ParsedScript {
         scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTracker.class));
         scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimit.class));
         scope.put("Networking", scope, new NativeJavaClass(scope, NetworkingUtil.class));
-        scope.put("Files", scope, new NativeJavaClass(scope, FilesUtil.class));
+        scope.put("Files", scope, new NativeJavaClass(scope, FilesJS.class));
 
         scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
         scope.put("Vector3f", scope, new NativeJavaClass(scope, ScriptVector3f.class));

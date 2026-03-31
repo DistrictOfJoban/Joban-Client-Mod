@@ -2,25 +2,23 @@ package com.lx862.mtrscripting.util;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/ScriptResourceUtil.java#L44 */
 
-import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.api.ScriptingAPI;
 import com.lx862.mtrscripting.ScriptManager;
 
-import org.apache.commons.io.IOUtils;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
 import java.text.AttributedString;
 import java.util.Locale;
@@ -69,7 +67,6 @@ public class ScriptResourceUtil {
         return null;
     }
 
-
     public static Identifier identifier(String textForm) {
         return new Identifier(textForm);
     }
@@ -93,20 +90,54 @@ public class ScriptResourceUtil {
         return resolveRelativePath(id, textForm);
     }
 
-    public static void readStream(Identifier identifier, Consumer<InputStream> inputStreamConsumer) {
-        ResourceManagerHelper.readResource(identifier, inputStreamConsumer);
+    @Deprecated
+    public static InputStream readStream(Identifier identifier) throws IOException {
+        DataReaderJS dataReader = read(identifier);
+        if(dataReader != null) {
+            return dataReader.asInputStream();
+        } else {
+            return null;
+        }
     }
 
+    @Deprecated
     public static String readString(Identifier identifier) {
-        String[] string = new String[]{null};
-        ResourceManagerHelper.readResource(identifier, (inputStream) -> {
+        DataReaderJS dataReader = read(identifier);
+        if(dataReader == null) return null;
+        return dataReader.asString();
+    }
+
+    @Deprecated
+    public static BufferedImage readBufferedImage(Identifier id) {
+        DataReaderJS dataReader = read(id);
+        if(dataReader == null) return null;
+        return dataReader.asBufferedImage();
+    }
+
+    @Deprecated
+    public static Font readFont(Identifier id) {
+        DataReaderJS dataReader = read(id);
+        if(dataReader == null) return null;
+        return dataReader.asFont();
+    }
+
+    public static DataReaderJS read(Identifier identifier) {
+        // HACK: MC Mappings always uses a callback for the InputStream and auto-closes it after, so we can't pass it around later on
+        // For now, we just save the full file bytes, then wrap it in another ByteArrayInputStream...
+        byte[][] fileBytes = new byte[][]{null};
+        ResourceManagerHelper.readResource(identifier, is -> {
             try {
-                string[0] = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-            } catch (Exception e) {
-                JCMLogger.error("", e);
+                fileBytes[0] = is.readAllBytes();
+            } catch (IOException e) {
+                ScriptManager.LOGGER.error("[JCM Scripting] Error while reading data {}", identifier);
             }
         });
-        return string[0];
+
+        if(fileBytes[0] != null) {
+            return new DataReaderJS(() -> new ByteArrayInputStream(fileBytes[0]));
+        } else {
+            return null;
+        }
     }
 
     private static final Identifier NOTO_SANS_CJK_LOCATION = new Identifier("mtr", "font/noto-sans-cjk-tc-medium.otf");
@@ -182,31 +213,6 @@ public class ScriptResourceUtil {
             }
         }
         return result;
-    }
-
-    public static BufferedImage readBufferedImage(Identifier identifier) {
-        final BufferedImage[] result = new BufferedImage[]{null};
-        ResourceManagerHelper.readResource(identifier, (is) -> {
-            try {
-                result[0] = ImageIO.read(is);
-            } catch (IOException e) {
-                ScriptManager.LOGGER.error("[JCM Scripting] Failed to read image:", e);
-            }
-        });
-        return GraphicsTexture.createArgbBufferedImage(result[0]);
-    }
-
-    public static Font readFont(Identifier identifier) {
-        final Font[] result = new Font[]{null};
-        ResourceManagerHelper.readResource(identifier, (is) -> {
-            try {
-                result[0] = Font.createFont(Font.TRUETYPE_FONT, is);
-            } catch (IOException | FontFormatException e) {
-                ScriptManager.LOGGER.error("[JCM Scripting] Failed to read font:", e);
-            }
-        });
-
-        return result[0];
     }
 
     public static String getAddonVersion(String modid) {

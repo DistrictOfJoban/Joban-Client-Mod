@@ -6,6 +6,7 @@ import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeObject;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,10 +21,31 @@ public class NetworkingUtil {
     private static final int DEFAULT_READ_TIMEOUT = 10000;
     private static final String USER_AGENT_STRING = "Joban Client Mod (https://jcm.joban.org)";
 
+    public static NetworkResponse<DataReaderJS> fetch(String urlStr) throws IOException {
+        return fetch(urlStr, null);
+    }
+
+    public static NetworkResponse<DataReaderJS> fetch(String urlStr, NativeObject requestObject) throws IOException {
+        URL url = new URL(urlStr);
+        HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
+        urlConnection.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
+        urlConnection.setReadTimeout(DEFAULT_READ_TIMEOUT);
+        processRequestObject(requestObject, urlConnection);
+
+        try(InputStream is = urlConnection.getInputStream()) {
+            byte[] data = is.readAllBytes();
+            return new NetworkResponse<>(new DataReaderJS(() -> new ByteArrayInputStream(data)), urlConnection.getHeaderFields(), urlConnection.getResponseCode());
+        } catch (IOException e) {
+            return new NetworkResponse<>(null, null, -1, e);
+        }
+    }
+
+    @Deprecated
     public static NetworkResponse<?> fetchString(String urlStr) throws IOException {
         return fetchString(urlStr, null);
     }
 
+    @Deprecated
     public static NetworkResponse<?> fetchString(String urlStr, NativeObject requestObject) throws IOException {
         URL url = new URL(urlStr);
         HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
@@ -39,10 +61,12 @@ public class NetworkingUtil {
         }
     }
 
+    @Deprecated
     public static NetworkResponse<BufferedImage> fetchImage(String urlStr) throws IOException {
         return fetchImage(urlStr, null);
     }
 
+    @Deprecated
     public static NetworkResponse<BufferedImage> fetchImage(String urlStr, NativeObject requestObject) throws IOException {
         URL url = new URL(urlStr);
         HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
