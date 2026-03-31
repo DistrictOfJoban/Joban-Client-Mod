@@ -13,31 +13,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class NetworkingUtil {
     private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
     private static final int DEFAULT_READ_TIMEOUT = 10000;
     private static final String USER_AGENT_STRING = "Joban Client Mod (https://jcm.joban.org)";
-    private static final ExecutorService networkThreads = Executors.newFixedThreadPool(1);
-
-    public static void fetchStringAsync(String urlStr, Consumer<NetworkResponse<?>> callback) {
-        fetchStringAsync(urlStr, null, callback);
-    }
-
-    public static void fetchStringAsync(String urlStr, NativeObject requestObject, Consumer<NetworkResponse<?>> callback) {
-        networkThreads.submit(() -> {
-            try {
-                NetworkResponse<?> result = fetchString(urlStr, requestObject);
-                callback.accept(result);
-            } catch (IOException e) {
-                callback.accept(new NetworkResponse<>(null, null, -1, e));
-            }
-        });
-    }
 
     public static NetworkResponse<?> fetchString(String urlStr) throws IOException {
         return fetchString(urlStr, null);
@@ -56,21 +37,6 @@ public class NetworkingUtil {
         } catch (IOException e) {
             return new NetworkResponse<>(null, null, -1, e);
         }
-    }
-
-    public static void fetchImageAsync(String urlStr, Consumer<NetworkResponse<?>> callback) {
-        fetchImageAsync(urlStr, null, callback);
-    }
-
-    public static void fetchImageAsync(String urlStr, NativeObject requestObject, Consumer<NetworkResponse<?>> callback) {
-        networkThreads.submit(() -> {
-            try {
-                NetworkResponse<?> result = fetchImage(urlStr, requestObject);
-                callback.accept(result);
-            } catch (IOException e) {
-                callback.accept(new NetworkResponse<>(null, null, -1, e));
-            }
-        });
     }
 
     public static NetworkResponse<BufferedImage> fetchImage(String urlStr) throws IOException {

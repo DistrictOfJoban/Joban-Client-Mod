@@ -84,6 +84,7 @@ public class ParsedScript {
         scope.put("console", scope, new NativeJavaObject(scope, new ConsoleJS(), com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
         scope.put("Resources", scope, new NativeJavaClass(scope, ScriptResourceUtil.class));
         scope.put("GraphicsTexture", scope, new NativeJavaClass(scope, GraphicsTexture.class));
+        scope.put("BackgroundWorker", scope, new NativeJavaClass(scope, BackgroundWorkerJS.class));
 
         scope.put("Timing", scope, new NativeJavaObject(scope, timingUtil, com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
         scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTracker.class));

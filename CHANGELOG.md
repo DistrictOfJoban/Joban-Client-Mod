@@ -25,7 +25,7 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - [[[something something vehicle scripting]]]
 - The **Rhino** JavaScript Engine has been updated to **1.9**, bringing some performance improvements and more modern JS features.
 - - See the [Rhino Compatibility Table](https://mozilla.github.io/rhino/compat/engines.html) for a list of supported features.
-- Add async variant of `Networking.fetchString() and Networking.fetchImage()`
+- Add `BackgroundWorker` to allow script to run task without blocking the main thread.
 - **Add Console API**
 - - Provide a slightly more rich API for logging, similar to the web's console API seen in browsers. (console.log, console.warn etc.)
 - - The `print` function will be retained, redirects to `console.log` under the hood.
