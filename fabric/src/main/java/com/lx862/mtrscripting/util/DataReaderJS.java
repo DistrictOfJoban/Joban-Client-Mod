@@ -2,6 +2,8 @@ package com.lx862.mtrscripting.util;
 
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.ScriptManager;
+import com.lx862.mtrscripting.util.video.Video;
+import com.lx862.mtrscripting.util.video.VideoDecoder;
 import org.apache.commons.io.IOUtils;
 
 import javax.imageio.ImageIO;
@@ -54,6 +56,10 @@ public class DataReaderJS {
             ScriptManager.LOGGER.error("[JCM Scripting] Failed to read raw bytes:", e);
             return null;
         }
+    }
+
+    public Video asVideo(String mimeType) {
+        return VideoDecoder.decode(asByteArray(), mimeType);
     }
 
     public void openInputStream(Consumer<InputStream> inputStreamConsumer) throws IOException {
