@@ -5,11 +5,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.config.JCMClientConfig;
-import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
+import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.ScriptContent;
+import com.lx862.mtrscripting.mod.MTRScripting;
 import com.lx862.mtrscripting.util.ConsoleJS;
 import org.apache.commons.io.FilenameUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -240,14 +241,14 @@ public class MTRContentResourceManager {
             // Parse script input and pass to the script
             if(jsonObject.has(scriptInputKey)) {
                 String str = jsonObject.get(scriptInputKey).toString();
-                Identifier scriptLocationSource = new Identifier("mtr", "internal/script_input/" + contextName.toLowerCase() + "/" + name + "/" + id);
+                Identifier scriptLocationSource = MTRScripting.id("internal/script_input/" + contextName.toLowerCase() + "/" + name + "/" + id);
                 scripts.add(new ScriptContent(scriptLocationSource, "const SCRIPT_INPUT = " + str + ";"));
             }
 
             if(jsonObject.has(scriptTextsKey)) {
                 JsonArray scriptTextArray = jsonObject.get(scriptTextsKey).getAsJsonArray();
                 for(int i = 0; i < scriptTextArray.size(); i++) {
-                    Identifier scriptLocationSource = new Identifier("mtr", "internal/script_texts/" + contextName.toLowerCase() + "/" + name + "/" + id + "/line" + i);
+                    Identifier scriptLocationSource = MTRScripting.id("internal/script_texts/" + contextName.toLowerCase() + "/" + name + "/" + id + "/line" + i);
                     String scriptText = scriptTextArray.get(i).getAsString();
                     scripts.add(new ScriptContent(scriptLocationSource, scriptText));
                 }
@@ -268,7 +269,7 @@ public class MTRContentResourceManager {
             }
         }
 
-        return scripts.isEmpty() ? null : MTRScripting.getScriptManager().parseScript(id + " (" + name + ")", contextName, scripts);
+        return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + name + ")", contextName, scripts);
     }
 
     public static ParsedScript getEyecandyScript(String modelId) {

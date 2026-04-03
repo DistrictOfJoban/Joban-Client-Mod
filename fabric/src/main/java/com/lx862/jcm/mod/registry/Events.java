@@ -3,12 +3,11 @@ package com.lx862.jcm.mod.registry;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.JCMServerStats;
-import com.lx862.jcm.mod.extra.JCMPatchForMTR;
 import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
 import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
-import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
+import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
@@ -24,7 +23,7 @@ public class Events {
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerStartClientTick(() -> {
             JCMClient.getMcMetaManager().tick();
             JCMScripting.tick();
-            MTRScripting.tick();
+            MTRContentScripting.tick();
             VehicleDataCache.tick();
 
             if(MinecraftClient.getInstance().getWorldMapped() == null) {
@@ -59,7 +58,7 @@ public class Events {
                     JCMScripting.reset();
                     JCMResourceManager.reload();
                 } else {
-                    MTRScripting.reset();
+                    MTRContentScripting.reset();
                     MTRContentResourceManager.reload();
                 }
             }
@@ -72,7 +71,7 @@ public class Events {
 
     public static void onClientReloadResource() {
         JCMScripting.reset();
-        MTRScripting.reset();
+        MTRContentScripting.reset();
         JCMResourceManager.reload();
         MTRContentResourceManager.reload();
     }

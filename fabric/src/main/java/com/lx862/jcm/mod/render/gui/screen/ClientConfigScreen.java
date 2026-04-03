@@ -8,7 +8,7 @@ import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
 import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
-import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
+import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -237,7 +237,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
                 }
 
                 JCMScripting.getScriptManager().getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
-                MTRScripting.getScriptManager().getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
+                MTRContentScripting.getScriptManager().getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
             } else {
                 // Discard all overriden values (pending changes)
                 for(TrackedValue value : JCMClientConfig.INSTANCE.values()) {

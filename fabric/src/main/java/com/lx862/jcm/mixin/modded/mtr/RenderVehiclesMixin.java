@@ -2,7 +2,7 @@ package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
-import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
+import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.*;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.data.UniqueKey;
@@ -50,7 +50,7 @@ public class RenderVehiclesMixin {
                 int[] carsArray = carsForScripts.stream().mapToInt(i->i).toArray();
                 boolean requireDataPrefetching = MTRContentResourceManager.shouldPrefetchVehicleData(scriptEntryId);
 
-                VehicleScriptInstance scriptInstance = (VehicleScriptInstance)MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntryId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, scriptEntryId, carsArray, requireDataPrefetching), vehicle, scriptEntry.getValue()));
+                VehicleScriptInstance scriptInstance = (VehicleScriptInstance) MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntryId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, scriptEntryId, carsArray, requireDataPrefetching), vehicle, scriptEntry.getValue()));
                 if(scriptInstance == null) continue;
 
                 VehicleScriptContext.DataFetchMode dataFetchMode = ((VehicleScriptContext)scriptInstance.getScriptContext()).getDataFetchMode();

@@ -5,7 +5,7 @@ import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextWrapper;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextureWrapper;
-import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
+import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
 import com.lx862.jcm.mod.scripting.mtr.render.DisplayHelperCompat;
 import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.render.QuadDrawCall;
@@ -25,7 +25,7 @@ public class JCMScripting {
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
-        if(scriptManager == null) scriptManager = new ScriptManager(MTRScripting.getScriptExecutors());
+        if(scriptManager == null) scriptManager = new ScriptManager(MTRContentScripting.getScriptExecutors());
         scriptManager.getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
 
         ScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);
