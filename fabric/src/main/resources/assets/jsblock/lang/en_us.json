@@ -93,6 +93,7 @@
 	"gui.jsblock.config.listview.title.debug_mode": "Enable debug mode",
 	"gui.jsblock.config.listview.title.disable_rendering": "Disable JCM Blocks rendering",
 	"gui.jsblock.config.listview.title.disable_rail_rendering": "Disable MTR rail rendering",
+	"gui.jsblock.config.listview.title.disable_scripting": "Disable scripting (Require Restart)",
 	"gui.jsblock.config.listview.title.disable_scripting_class_restriction": "Disable scripting class restriction",
 	"gui.jsblock.config.listview.title.hide_riding_vehicle": "Hide currently riding vehicle",
 	"gui.jsblock.config.listview.title.new_text_rendering": "Enable new experiment text rendering",

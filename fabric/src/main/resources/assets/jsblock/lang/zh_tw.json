@@ -93,6 +93,7 @@
 	"gui.jsblock.config.listview.title.debug_mode": "除錯模式",
 	"gui.jsblock.config.listview.title.disable_rendering": "停用常磐裝飾方塊渲染",
 	"gui.jsblock.config.listview.title.disable_rail_rendering": "停用MTR軌道渲染",
+	"gui.jsblock.config.listview.title.disable_scripting": "停用指令碼功能 (需要重啓)",
 	"gui.jsblock.config.listview.title.disable_scripting_class_restriction": "放寬指令碼限制",
 	"gui.jsblock.config.listview.title.hide_riding_vehicle": "隱藏正在乘坐的車輛",
 	"gui.jsblock.config.listview.title.new_text_rendering": "使用新字體渲染 (或會發生不穩定情況)",

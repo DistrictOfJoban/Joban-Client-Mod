@@ -81,6 +81,7 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
   - `Files.readData()` and `Files.read()` now returns a `DataReader` instead of a string (See above)
 - `Files.saveData()` now allows BufferedImage as an argument for data to save.
 - (Non-Scripting) The JCM config has been remade, with several more options added:
+  - Add **Disable Scripting** to disable parsing JS scripts. Used for performance debugging / low-end devices.
   - Add **Script Debug Mode** for JS scripts-specific debugging. (**Debug Mode** is now reserved for debug within JCM itself)
   - Add **Show log source** for JS scripts, to trace where print/log statements originates from.
   - Add **Disable MTR Rail Rendering** for performance diagnosing & providing a clearer view without rails.

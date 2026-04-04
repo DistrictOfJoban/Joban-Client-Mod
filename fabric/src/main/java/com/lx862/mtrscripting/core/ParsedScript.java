@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.core;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.ScriptManager;
 import com.lx862.mtrscripting.data.ScriptContent;
+import com.lx862.mtrscripting.mod.MTRScripting;
 import com.lx862.mtrscripting.util.*;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
 import com.lx862.mtrscripting.wrapper.MinecraftClientWrapper;
@@ -65,7 +66,7 @@ public class ParsedScript {
                 tryAndAddFunction("dispose", scope, disposeFunctions);
 
                 if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
-                    ScriptManager.LOGGER.info("[JCM Scripting] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
+                    MTRScripting.LOGGER.info("[JCM Scripting] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
                 }
             }
         } finally {
@@ -131,7 +132,7 @@ public class ParsedScript {
                 }
                 scriptInstance.setLastExecutionDurationMs(System.nanoTime() - startTime);
             } catch (Exception e) {
-                ScriptManager.LOGGER.error("[JCM Scripting] Error executing script {}!", displayName, e);
+                MTRScripting.LOGGER.error("[JCM Scripting] Error executing script {}!", displayName, e);
                 lastFailedTime = System.currentTimeMillis();
                 capturedScriptException = e;
             } finally {
@@ -141,7 +142,7 @@ public class ParsedScript {
             try {
                 finishCallback.run();
             } catch (Exception e) {
-                ScriptManager.LOGGER.fatal("[JCM Scripting] Internal error during finalization work after script execution, this is a bug!", e);
+                MTRScripting.LOGGER.fatal("[JCM Scripting] Internal error during finalization work after script execution, this is a bug!", e);
             }
         });
     }

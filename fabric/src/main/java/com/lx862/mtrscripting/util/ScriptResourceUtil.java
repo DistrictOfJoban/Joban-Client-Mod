@@ -3,10 +3,10 @@ package com.lx862.mtrscripting.util;
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/ScriptResourceUtil.java#L44 */
 
 import com.lx862.mtrscripting.api.ScriptingAPI;
-import com.lx862.mtrscripting.ScriptManager;
 
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
+import com.lx862.mtrscripting.mod.MTRScripting;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 
@@ -18,12 +18,10 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
 import java.text.AttributedString;
 import java.util.Locale;
 import java.util.Stack;
-import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class ScriptResourceUtil {
@@ -129,7 +127,7 @@ public class ScriptResourceUtil {
             try {
                 fileBytes[0] = is.readAllBytes();
             } catch (IOException e) {
-                ScriptManager.LOGGER.error("[JCM Scripting] Error while reading data {}", identifier);
+                MTRScripting.LOGGER.error("[JCM Scripting] Error while reading data {}", identifier);
             }
         });
 
@@ -165,7 +163,7 @@ public class ScriptResourceUtil {
                 try {
                     NOTO_SERIF_CACHE = readFont(NOTO_SERIF_LOCATION);
                 } catch (Exception ex) {
-                    ScriptManager.LOGGER.error("[JCM Scripting] Failed loading font", ex);
+                    MTRScripting.LOGGER.error("[JCM Scripting] Failed loading font", ex);
                     return null;
                 }
             }
@@ -175,7 +173,7 @@ public class ScriptResourceUtil {
                 try {
                     NOTO_SANS_CJK_CACHE = readFont(NOTO_SANS_CJK_LOCATION);
                 } catch (Exception ex) {
-                    ScriptManager.LOGGER.error("[JCM Scripting] Failed to load font", ex);
+                    MTRScripting.LOGGER.error("[JCM Scripting] Failed to load font", ex);
                 }
             }
             return NOTO_SANS_CJK_CACHE;
@@ -184,7 +182,7 @@ public class ScriptResourceUtil {
                 try {
                     NOTO_SANS_CACHE = readFont(NOTO_SANS_LOCATION);
                 } catch (Exception ex) {
-                    ScriptManager.LOGGER.error("[JCM Scripting] Failed to load font", ex);
+                    MTRScripting.LOGGER.error("[JCM Scripting] Failed to load font", ex);
                 }
             }
             return NOTO_SANS_CACHE;

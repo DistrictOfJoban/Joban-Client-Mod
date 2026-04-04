@@ -35,6 +35,10 @@ public class JCMClientConfig extends ReflectiveConfig {
     public final Scripting scripting = new Scripting();
 
     public static class Scripting extends Section {
+        @Comment("If true, do not parse any scripts, effectively disabling the scripting feature.")
+        @ChangeWarning(folk.sisby.kaleido.lib.quiltconfig.api.metadata.ChangeWarning.Type.RequiresRestart)
+        public final TrackedValue<Boolean> skipScriptParsing = value(false);
+
         @Comment("Enable script debug mode to troubleshoot script errors, quick reload and more.")
         public final TrackedValue<Boolean> scriptDebugMode = value(false);
 

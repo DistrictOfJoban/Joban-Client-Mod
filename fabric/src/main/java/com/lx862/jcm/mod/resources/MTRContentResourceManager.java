@@ -47,18 +47,22 @@ public class MTRContentResourceManager {
         vehicleScriptsForPrefetching.clear();
         VehicleDataCache.clearData();
 
-        CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.beginReload();
-        ConsoleJS consoleJS = new ConsoleJS();
-        if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
-            consoleJS.time("MTR Script Load Time");
+        if(JCMClientConfig.INSTANCE.scripting.skipScriptParsing.value()) {
+            MTRScripting.LOGGER.info("[MTR Scripting via JCM] Scripting has been disabled, not parsing any scripts.");
+        } else {
+            CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.beginReload();
+            ConsoleJS consoleJS = new ConsoleJS();
+            if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
+                consoleJS.time("MTR Script Load Time");
+            }
+            readNteEyecandy();
+            readMtrCustomResources(false);
+            readMtrCustomResources(true);
+            if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
+                consoleJS.timeEnd("MTR Script Load Time");
+            }
+            CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.finishReload();
         }
-        readNteEyecandy();
-        readMtrCustomResources(false);
-        readMtrCustomResources(true);
-        if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
-            consoleJS.timeEnd("MTR Script Load Time");
-        }
-        CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.finishReload();
     }
 
     /**

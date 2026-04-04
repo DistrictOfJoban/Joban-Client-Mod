@@ -6,10 +6,9 @@ import com.lx862.mtrscripting.data.ParticleData;
 import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
+import com.lx862.mtrscripting.mod.MTRScripting;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.List;
@@ -17,7 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 public class ScriptManager {
-    public static final Logger LOGGER = LogManager.getLogger("MTR Scripting via JCM");
     private final ObjectList<TriConsumer<String, Context, Scriptable>> onParseScriptCallback = new ObjectArrayList<>();
     private final MTRClassShutter classShutter;
     private final ScriptInstanceManager instanceManager;
@@ -67,7 +65,7 @@ public class ScriptManager {
         try {
             return new ParsedScript(this, scriptName, contextName, scripts);
         } catch (NoSuchMethodException e) {
-            ScriptManager.LOGGER.error("[JCM Scripting] Fatal error: Cannot find required java method to add to script!", e);
+            MTRScripting.LOGGER.error("[JCM Scripting] Fatal error: Cannot find required java method to add to script!", e);
             return null;
         }
     }

@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.scripting.mtr.util;
 
-import com.lx862.mtrscripting.ScriptManager;
+import com.lx862.mtrscripting.mod.MTRScripting;
 import org.apache.commons.lang3.StringUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.mapping.holder.Identifier;
@@ -29,7 +29,7 @@ public class ModelManager {
             modelDataParts.values().forEach(modelData::append);
             return modelData;
         } catch (Exception e) {
-            ScriptManager.LOGGER.error("", e);
+            MTRScripting.LOGGER.error("", e);
             return null;
         }
     }

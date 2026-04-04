@@ -1,7 +1,7 @@
 package com.lx862.mtrscripting.util;
 
 import com.lx862.jcm.mod.util.JCMLogger;
-import com.lx862.mtrscripting.ScriptManager;
+import com.lx862.mtrscripting.mod.MTRScripting;
 import com.lx862.mtrscripting.util.video.Video;
 import com.lx862.mtrscripting.util.video.VideoDecoder;
 import org.apache.commons.io.IOUtils;
@@ -35,7 +35,7 @@ public class DataReaderJS {
             BufferedImage image = ImageIO.read(is);
             return GraphicsTexture.createArgbBufferedImage(image);
         } catch (IOException e) {
-            ScriptManager.LOGGER.error("[JCM Scripting] Failed to read image:", e);
+            MTRScripting.LOGGER.error("[JCM Scripting] Failed to read image:", e);
             return null;
         }
     }
@@ -44,7 +44,7 @@ public class DataReaderJS {
         try(InputStream is = asInputStream()) {
             return Font.createFont(Font.TRUETYPE_FONT, is);
         } catch (Exception e) {
-            ScriptManager.LOGGER.error("[JCM Scripting] Failed to read font:", e);
+            MTRScripting.LOGGER.error("[JCM Scripting] Failed to read font:", e);
             return null;
         }
     }
@@ -53,7 +53,7 @@ public class DataReaderJS {
         try (InputStream is = asInputStream()) {
             return is.readAllBytes();
         } catch (Exception e) {
-            ScriptManager.LOGGER.error("[JCM Scripting] Failed to read raw bytes:", e);
+            MTRScripting.LOGGER.error("[JCM Scripting] Failed to read raw bytes:", e);
             return null;
         }
     }

@@ -38,6 +38,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private final CheckboxWidgetExtension hideRidingVehicleButton;
     private final CheckboxWidgetExtension useNewTextRendererButton;
     private final CheckboxWidgetExtension debugModeButton;
+    private final CheckboxWidgetExtension disableScriptingButton;
     private final CheckboxWidgetExtension disableScriptingClassRestrictionButton;
     private final CheckboxWidgetExtension scriptDebugModeButton;
     private final CheckboxWidgetExtension scriptShowLogSourceButton;
@@ -68,6 +69,10 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
         this.debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
             JCMClientConfig.INSTANCE.debugMode.setOverride(bool);
+        });
+
+        this.disableScriptingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+            JCMClientConfig.INSTANCE.scripting.skipScriptParsing.setOverride(bool);
         });
 
         this.disableScriptingClassRestrictionButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
@@ -126,6 +131,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         hideRidingVehicleButton.setChecked(JCMClientConfig.INSTANCE.hideRidingVehicle.value());
         useNewTextRendererButton.setChecked(JCMClientConfig.INSTANCE.useAlternateTextRenderer.value());
         debugModeButton.setChecked(JCMClientConfig.INSTANCE.debugMode.value());
+        disableScriptingButton.setChecked(JCMClientConfig.INSTANCE.scripting.skipScriptParsing.value());
         disableScriptingClassRestrictionButton.setChecked(JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
         scriptDebugModeButton.setChecked(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
         scriptShowLogSourceButton.setChecked(JCMClientConfig.INSTANCE.scripting.showLogSource.value());
@@ -151,6 +157,9 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         addChild(new ClickableWidget(debugModeButton));
 
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.scripting"));
+
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting"), new MappedWidget(disableScriptingButton));
+        addChild(new ClickableWidget(disableScriptingButton));
 
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting_class_restriction"), new MappedWidget(disableScriptingClassRestrictionButton));
         addChild(new ClickableWidget(disableScriptingClassRestrictionButton));
