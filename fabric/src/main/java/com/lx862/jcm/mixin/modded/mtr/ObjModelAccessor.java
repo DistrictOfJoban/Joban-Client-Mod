@@ -11,7 +11,9 @@ import java.util.List;
 @Mixin(value = OptimizedModel.ObjModel.class, remap = false)
 public interface ObjModelAccessor {
     @Invoker("<init>")
-    OptimizedModel.ObjModel createNew(List<RawMesh> rawMeshes, boolean flipTextureV, float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
+    static OptimizedModel.ObjModel createNew(List<RawMesh> rawMeshes, boolean flipTextureV, float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+        throw new AssertionError();
+    }
 
     @Accessor
     List<RawMesh> getRawMeshes();

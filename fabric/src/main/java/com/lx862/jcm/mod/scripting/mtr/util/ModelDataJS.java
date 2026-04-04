@@ -70,7 +70,7 @@ public class ModelDataJS {
                 e -> {
                     ObjModelAccessor accessor = ((ObjModelAccessor) (Object) e);
                     List<RawMesh> meshes = accessor.getRawMeshes().stream().map(f -> new RawMesh(f.materialProperties.shaderType, f)).toList();
-                    return accessor.createNew(meshes, false, e.getMinX(), e.getMinY(), e.getMinZ(), e.getMaxX(), e.getMaxY(), e.getMaxZ());
+                    return ObjModelAccessor.createNew(meshes, false, e.getMinX(), e.getMinY(), e.getMinZ(), e.getMaxX(), e.getMaxY(), e.getMaxZ());
                 }).toList();
 
         return new ModelDataJS(newModels);
