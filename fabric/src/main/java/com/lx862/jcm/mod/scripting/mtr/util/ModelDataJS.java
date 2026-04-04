@@ -4,7 +4,9 @@ import com.lx862.jcm.mixin.modded.mtr.ObjModelAccessor;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.mapper.OptimizedModel;
+import org.mtr.mapping.render.model.RawMesh;
 
+import java.util.Collection;
 import java.util.List;
 
 public class ModelDataJS {
@@ -19,6 +21,11 @@ public class ModelDataJS {
     public ModelDataJS(OptimizedModel.ObjModel... models) {
         this();
         this.models.addAll(new ObjectArrayList<>(models));
+    }
+
+    public ModelDataJS(Collection<OptimizedModel.ObjModel> models) {
+        this();
+        this.models.addAll(models);
     }
 
     public void append(ModelDataJS other) {
@@ -56,6 +63,17 @@ public class ModelDataJS {
                 rawMesh.applyUVMirror(u, v);
             });
         });
+    }
+
+    public ModelDataJS copy() {
+        List<OptimizedModel.ObjModel> newModels = models.stream().map(
+                e -> {
+                    ObjModelAccessor accessor = ((ObjModelAccessor) (Object) e);
+                    List<RawMesh> meshes = accessor.getRawMeshes().stream().map(f -> new RawMesh(f.materialProperties.shaderType, f)).toList();
+                    return accessor.createNew(meshes, false, e.getMinX(), e.getMinY(), e.getMinZ(), e.getMaxX(), e.getMaxY(), e.getMaxZ());
+                }).toList();
+
+        return new ModelDataJS(newModels);
     }
 
     public void setAllRenderType(String renderType) {
