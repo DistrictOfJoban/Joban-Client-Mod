@@ -1,6 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
-import com.lx862.jcm.mod.scripting.mtr.MTRScripting;
+import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptContext;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.event.BlockUseEvent;
 import com.lx862.mtrscripting.core.ScriptInstance;
@@ -31,7 +31,7 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
                 boolean notHoldingBrush = MinecraftClient.getInstance().getPlayerMapped() != null && !MinecraftClient.getInstance().getPlayerMapped().isHolding(Items.BRUSH.get());
 
                 if(notHoldingBrush) {
-                    ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity) blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
+                    ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity) blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
                     if (scriptInstance != null && scriptInstance.getScriptContext() instanceof EyeCandyScriptContext) {
                         VoxelShape shape = ((EyeCandyScriptContext) scriptInstance.getScriptContext()).getOutlineShape();
                         if(shape != null) {
@@ -54,7 +54,7 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
                 boolean notHoldingBrush = MinecraftClient.getInstance().getPlayerMapped() != null && !MinecraftClient.getInstance().getPlayerMapped().isHolding(Items.BRUSH.get());
 
                 if(notHoldingBrush) {
-                    ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity) blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
+                    ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity) blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
                     if (scriptInstance != null && scriptInstance.getScriptContext() instanceof EyeCandyScriptContext) {
                         VoxelShape shape = ((EyeCandyScriptContext) scriptInstance.getScriptContext()).getCollisionShape();
                         if(shape != null) {
@@ -77,7 +77,7 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
             if(!player.isHolding(Items.BRUSH.get())) {
                 org.mtr.mapping.holder.BlockEntity blockEntity = world.getBlockEntity(pos);
                 if (blockEntity != null && blockEntity.data instanceof BlockEyeCandy.BlockEntity) {
-                    ScriptInstance<?> scriptInstance = MTRScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity)blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
+                    ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity)blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
                     if(scriptInstance != null && scriptInstance.getScriptContext() instanceof EyeCandyScriptContext) {
                         ((EyeCandyScriptContext)scriptInstance.getScriptContext()).events().onBlockUse.trigger(new BlockUseEvent(player, player.getStackInHand(hand)));
                         cir.setReturnValue(ActionResult.SUCCESS);
