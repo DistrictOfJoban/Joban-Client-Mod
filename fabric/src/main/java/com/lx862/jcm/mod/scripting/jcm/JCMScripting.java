@@ -9,6 +9,7 @@ import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
 import com.lx862.jcm.mod.scripting.mtr.render.DisplayHelperCompat;
 import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
 import com.lx862.jcm.mod.scripting.mtr.render.QuadDrawCall;
+import com.lx862.jcm.mod.scripting.mtr.util.DynamicModelHolderJS;
 import com.lx862.jcm.mod.scripting.mtr.util.ModelManager;
 import com.lx862.jcm.mod.scripting.mtr.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
@@ -41,6 +42,7 @@ public class JCMScripting {
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
             scriptable.put("DisplayHelperCompat", scriptable, new NativeJavaClass(scriptable, DisplayHelperCompat.class));
             scriptable.put("ModelManager", scriptable, new NativeJavaClass(scriptable, ModelManager.class));
+            scriptable.put("DynamicModelHolder", scriptable, new NativeJavaClass(scriptable, DynamicModelHolderJS.class));
 
             if (contextName.equals("PIDS")) {
                 scriptable.put("ModelDrawCall", scriptable, new NativeJavaClass(scriptable, ModelDrawCall.class));
