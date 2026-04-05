@@ -1,9 +1,12 @@
 package com.lx862.jcm.mod.scripting.mtr.util;
 
 import com.lx862.jcm.mixin.modded.mtr.ObjModelAccessor;
+import com.lx862.jcm.mixin.modded.mtr.RawMeshAccessor;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.OptimizedModel;
+import org.mtr.mapping.render.batch.MaterialProperties;
 import org.mtr.mapping.render.model.RawMesh;
 
 import java.util.Collection;
@@ -74,6 +77,45 @@ public class ModelDataJS {
                 }).toList();
 
         return new ModelDataJS(newModels);
+    }
+
+    public ModelDataJS copyForMaterialChanges() {
+        List<OptimizedModel.ObjModel> newModels = models.stream().map(
+                e -> {
+                    ObjModelAccessor accessor = ((ObjModelAccessor) (Object) e);
+                    List<RawMesh> meshes = accessor.getRawMeshes().stream().map(f -> {
+                        MaterialProperties newProp = new MaterialProperties(f.materialProperties.shaderType, f.materialProperties.getTexture(), f.materialProperties.vertexAttributeState.color);
+                        RawMesh newMesh = new RawMesh(newProp);
+                        /* Change the list reference */
+                        ((RawMeshAccessor)(Object)newMesh).setVertices(f.vertices);
+                        ((RawMeshAccessor)(Object)newMesh).setFaces(f.faces);
+
+                        return newMesh;
+                    }).toList();
+                    return ObjModelAccessor.createNew(meshes, false, e.getMinX(), e.getMinY(), e.getMinZ(), e.getMaxX(), e.getMaxY(), e.getMaxZ());
+                }).toList();
+
+        return new ModelDataJS(newModels);
+    }
+
+    public void replaceTexture(String oldTexture, Identifier newTexture) {
+        models.stream().forEach(e -> {
+            ((ObjModelAccessor) (Object) e).getRawMeshes().stream().forEach(f -> {
+                Identifier id = f.materialProperties.getTexture();
+                if (id == null) return;
+
+                String oldPath = id.getPath();
+                if (oldPath.substring(oldPath.lastIndexOf("/") + 1).equals(oldTexture)) {
+                    f.materialProperties.setTexture(newTexture);
+                }
+            });
+        });
+    }
+
+    public void replaceAllTexture(Identifier id) {
+        models.stream().forEach(e -> {
+            ((ObjModelAccessor) (Object) e).getRawMeshes().stream().forEach(f -> f.materialProperties.setTexture(id));
+        });
     }
 
     public void setAllRenderType(String renderType) {
