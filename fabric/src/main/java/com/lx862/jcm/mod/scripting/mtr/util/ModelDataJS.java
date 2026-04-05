@@ -36,7 +36,7 @@ public class ModelDataJS {
     }
 
     public void applyTranslation(float x, float y, float z) {
-        this.models.forEach((rawModel) -> rawModel.applyTranslation(x, y, z));
+        this.models.forEach((rawModel) -> rawModel.applyTranslation(-x, -y, -z));
     }
 
     @Deprecated
