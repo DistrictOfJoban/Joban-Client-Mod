@@ -9,40 +9,58 @@ import org.mtr.mod.block.IBlock;
 public class EyecandyBlockEntityWrapper {
     private final BlockEyeCandy.BlockEntity be;
 
+    /* Note: Field access for backward compatibility only, you should use the getter functions. */
+    public final String prefabId;
+    public final float translateX;
+    public final float translateY;
+    public final float translateZ;
+    public final float rotateX;
+    public final float rotateY;
+    public final float rotateZ;
+    public final boolean fullLight;
+
     public EyecandyBlockEntityWrapper(BlockEyeCandy.BlockEntity be) {
         this.be = be;
+        this.prefabId = be.getModelId();
+        this.translateX = be.getTranslateX();
+        this.translateY = be.getTranslateY();
+        this.translateZ = be.getTranslateZ();
+        this.rotateX = be.getRotateX();
+        this.rotateY = be.getRotateY();
+        this.rotateZ = be.getRotateZ();
+        this.fullLight = be.getFullBrightness();
     }
 
     public String getModelId() {
-        return be.getModelId();
+        return this.prefabId;
     }
 
     public float getTranslateX() {
-        return be.getTranslateX();
+        return this.translateX;
     }
 
     public float getTranslateY() {
-        return be.getTranslateY();
+        return this.translateY;
     }
 
     public float getTranslateZ() {
-        return be.getTranslateZ();
+        return this.translateZ;
     }
 
     public float getRotateX() {
-        return be.getRotateX();
+        return this.rotateX;
     }
 
     public float getRotateY() {
-        return be.getRotateY();
+        return this.rotateY;
     }
 
     public float getRotateZ() {
-        return be.getRotateZ();
+        return this.rotateZ;
     }
 
     public boolean getFullBrightness() {
-        return be.getFullBrightness();
+        return this.fullLight;
     }
 
     public ScriptVector3f pos() {
