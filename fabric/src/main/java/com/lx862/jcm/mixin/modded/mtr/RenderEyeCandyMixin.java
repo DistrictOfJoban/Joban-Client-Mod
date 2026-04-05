@@ -53,7 +53,7 @@ public class RenderEyeCandyMixin {
 
         storedMatrixTransformations.add((graphicsHolderNew) -> {
             graphicsHolderNew.translate(blockEntity.getTranslateX(), blockEntity.getTranslateY(), blockEntity.getTranslateZ());
-            graphicsHolderNew.rotateYDegrees(180 - facing.asRotation());
+            graphicsHolderNew.rotateYRadians(-(float)Math.toRadians(facing.asRotation()) + (float)Math.PI);
             graphicsHolderNew.rotateXRadians(blockEntity.getRotateX() + (float)Math.PI);
             graphicsHolderNew.rotateYRadians(blockEntity.getRotateY());
             graphicsHolderNew.rotateZRadians(blockEntity.getRotateZ());

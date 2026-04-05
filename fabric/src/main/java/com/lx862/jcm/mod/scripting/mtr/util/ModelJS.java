@@ -5,6 +5,7 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.OptimizedModel;
 import org.mtr.mapping.mapper.OptimizedRenderer;
+import org.mtr.mapping.render.batch.MaterialProperties;
 import org.mtr.mapping.render.object.VertexArray;
 import org.mtr.mod.client.CustomResourceLoader;
 import org.mtr.mod.render.MainRenderer;
@@ -24,6 +25,10 @@ public class ModelJS {
         List<OptimizedModel.ObjModel> models = rawModel.models;
         models.forEach(e -> e.addTransformation(stringToRenderStage(rawModel.renderType).shaderType, 0, 0, 0, false));
         this.model = OptimizedModelWrapper.fromObjModels(new ObjectArrayList<>(models.stream().map(OptimizedModelWrapper.ObjModelWrapper::new).collect(Collectors.toList())));
+    }
+
+    private ModelJS(OptimizedModelWrapper model) {
+        this.model = model;
     }
 
     public void replaceTexture(String oldTexture, Identifier newTexture) {
