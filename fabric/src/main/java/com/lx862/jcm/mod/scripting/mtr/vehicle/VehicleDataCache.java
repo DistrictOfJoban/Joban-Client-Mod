@@ -51,11 +51,14 @@ public class VehicleDataCache {
             SimplifiedRoute route = VehicleDataCache.mtrData.routeIdMap.get(routeId);
             stopsData.routeToRun.add(routeId);
 
+            Station destinationStation = VehicleDataCache.mtrData.stationIdMap.get(routeStopsData.stops.get(routeStopsData.stops.size()-1).stationId);
+
             int stopIdx = 0;
             for(SimplifiedStop simplifiedStop : routeStopsData.stops) {
                 Station station = VehicleDataCache.mtrData.stationIdMap.get(simplifiedStop.stationId);
                 Platform platform = VehicleDataCache.mtrData.platformIdMap.get(simplifiedStop.platformId);
                 VehicleWrapper.Stop thisStop = new VehicleWrapper.Stop(route, station, platform, station == null ? platform == null ? "" : platform.getName() : station.getName(), simplifiedStop.destination, simplifiedStop.distance);
+                thisStop.destinationStation = destinationStation;
 
                 if(route != null) {
                     List<SimplifiedRoutePlatform> platforms = route.getPlatforms();

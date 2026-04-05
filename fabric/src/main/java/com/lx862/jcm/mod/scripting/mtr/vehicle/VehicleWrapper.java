@@ -187,12 +187,17 @@ public class VehicleWrapper {
             long lastPlatformId = 0;
             for(SimplifiedRoute route : allRoutes) {
                 stopsData.routeToRun.add(route.getId());
-                for(SimplifiedRoutePlatform routePlatform : route.getPlatforms()) {
+
+                List<SimplifiedRoutePlatform> routePlatforms = route.getPlatforms();
+                Station destinationStation = MinecraftClientData.getInstance().stationIdMap.get(routePlatforms.get(routePlatforms.size()-1).getStationId());
+
+                for(SimplifiedRoutePlatform routePlatform : routePlatforms) {
                     String destinationName = routePlatform.getDestination();
                     Station station = MinecraftClientData.getInstance().stationIdMap.get(routePlatform.getStationId());
                     Platform platform = MinecraftClientData.getInstance().platformIdMap.get(routePlatform.getPlatformId());
 
                     Stop thisStop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, -1);
+                    thisStop.destinationStation = destinationStation;
                     // In-station interchange
                     routePlatform.forEach((color, routes) -> {
                         routes.forEach(routeName -> {
@@ -240,6 +245,8 @@ public class VehicleWrapper {
         public double distance;
         public Stop roundUpRoute;
         public boolean isRouteSwitchoverStop;
+        @Deprecated
+        public Station destinationStation; // Manually obtain the Station of the last stop instead
         @Deprecated
         public long dwellTime; // Use dwellTimeMs instead
         @Deprecated
