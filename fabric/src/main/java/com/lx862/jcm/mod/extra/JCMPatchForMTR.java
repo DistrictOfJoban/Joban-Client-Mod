@@ -3,7 +3,6 @@ package com.lx862.jcm.mod.extra;
 import com.lx862.jcm.mixin.modded.mtrpatch.OptimizedRendererAccessorMixin;
 import com.lx862.jcm.mixin.modded.mtrpatch.OptimizedRendererWrapperAccessorMixin;
 import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.mapper.OptimizedModel;
 import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mapping.render.shader.ModShaderHandler;
 import org.mtr.mapping.render.shader.ShaderManager;
@@ -48,23 +47,6 @@ public class JCMPatchForMTR {
                     .normalize().toString().replace('\\', '/');
             return CustomResourceTools.formatIdentifier(basePathId.getNamespace() + ":" + resolvedPath, extension);
         }
-    }
-
-    /**
-     * MTR doesn't recognize several legacy NTE OBJ material names, this method resolves the legacy name and return an appropriate ShaderType.
-     * @param type Legacy NTE OBJ material name
-     * @return ShaderType if legacy NTE material is matched. Null otherwise.
-     */
-    public static OptimizedModel.ShaderType getNTEShaderTypeMigration(String type) {
-        switch(type.toLowerCase(Locale.ENGLISH)) {
-            case "exteriortranslucent":
-                return OptimizedModel.ShaderType.TRANSLUCENT;
-            case "lighttranslucent":
-                return OptimizedModel.ShaderType.TRANSLUCENT_GLOWING;
-            case "interiortranslucent":
-                return OptimizedModel.ShaderType.TRANSLUCENT_BRIGHT;
-        }
-        return null;
     }
 
     public static void updateRenderingShadow() {

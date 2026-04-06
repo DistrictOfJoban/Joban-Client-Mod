@@ -12,7 +12,6 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 **Applied patch as follows:**
 - MTR 3 / NTE Compatibility Improvements:
   - Fix: NTE Eyecandy object now recognizes the "translation"/"rotation"/"scale"/"mirror" fields, which is used by NTE but does not get parsed correctly in MTR 4.
-  - Fix: OBJ model material now recognizes `exteriortranslucent`, `lighttranslucent` and `interiortranslucent` again, which is used by NTE but does not get parsed correctly in MTR 4.
   - Fix: For OBJ texture with path traversal (Like `../` / `..\`), it is once again recognized, solving some missing texture issues when loading NTE packs.
   - Fix: Automatically migrate gangways/barrier in MTR 3, fixing some missing gangway texture issues for legacy trains.
 - Enhancements: Improve model loading speed and memory usage for MTR.
