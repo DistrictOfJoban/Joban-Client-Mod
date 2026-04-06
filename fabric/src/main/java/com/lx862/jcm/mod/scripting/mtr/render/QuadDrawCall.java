@@ -12,6 +12,7 @@ import org.mtr.mod.render.StoredMatrixTransformations;
 public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
     private static final Identifier WHITE_TEXTURE = new Identifier("mtr", "textures/block/white.png");
     private final QuadDefinition quadDefinition;
+    private Direction normalOverride = null;
     private Identifier textureId;
     private QueuedRenderLayer renderType;
     private int color = 0xFFFFFF;
@@ -92,6 +93,11 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
         return this;
     }
 
+    public QuadDrawCall normal(int x, int y, int z) {
+        this.normalOverride = Direction.fromVector(x, y, z);
+        return this;
+    }
+
     public QuadDrawCall renderType(String renderType) {
         this.renderType = QueuedRenderLayer.valueOf(renderType);
         return this;
@@ -108,6 +114,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
                 .uv(this.u1, this.v1, this.u2, this.v2)
                 .renderType(this.renderType.toString())
                 .setMatrices(storedMatrixTransformations);
+        copy.normalOverride = this.normalOverride;
         return copy;
     }
 
@@ -139,7 +146,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
                     v1,
                     u2,
                     v2,
-                    facing,
+                    this.normalOverride != null ? this.normalOverride : facing,
                     RenderHelper.ARGB_BLACK + this.color,
                     renderTypeIsInterior ? IGui.MAX_LIGHT_INTERIOR : light
             );

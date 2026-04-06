@@ -6,7 +6,7 @@ function DisplayHelper(cfg) {
     this.texture = null;
     this.ownsTexture = false;
     if (cfg.version === 1) {
-        let renderType = (cfg.renderType || "light")
+        let renderType = (cfg.renderType || "interior")
             .replace("lighttranslucent", "light_translucent")
             .replace("exteriortranslucent", "exterior_translucent")
             .replace("interiortranslucent", "interior_translucent");
@@ -39,7 +39,8 @@ function DisplayHelper(cfg) {
                         .corner2(new Vector3f(posCfg[1][0] + offset[0], posCfg[1][1] + offset[1], posCfg[1][2] + offset[2]))
                         .corner3(new Vector3f(posCfg[2][0] + offset[0], posCfg[2][1] + offset[1], posCfg[2][2] + offset[2]))
                         .corner4(new Vector3f(posCfg[3][0] + offset[0], posCfg[3][1] + offset[1], posCfg[3][2] + offset[2]))
-                        .uv(quadUV[0], quadUV[1], quadUV[2], quadUV[3]);
+                        .uv(quadUV[0], quadUV[1], quadUV[2], quadUV[3])
+                        .normal(0, 1, 0);
                     dhCompat.addQuad(quadDrawCall);
                 }
             }
