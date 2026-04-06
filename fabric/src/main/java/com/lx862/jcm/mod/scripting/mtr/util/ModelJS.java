@@ -31,6 +31,19 @@ public class ModelJS {
         this.model = model;
     }
 
+    public ModelJS copyForMaterialChanges() {
+        OptimizedModel optimizedModel = ((OptimizedModelWrapperAccessor)(Object)model).getOptimizedModel();
+        List<VertexArray> vertexArrays =
+                ((OptimizedModelAccessor)(Object)optimizedModel).getUploadedParts().stream().map(e -> {
+                    MaterialProperties newProp = new MaterialProperties(e.materialProperties.shaderType, e.materialProperties.getTexture(), e.materialProperties.vertexAttributeState.color);
+                    return new VertexArray(e, newProp);
+                }).toList();
+
+        OptimizedModel newModel = new OptimizedModel(vertexArrays);
+        OptimizedModelWrapper wrapper = OptimizedModelWrapperAccessor.createNew(newModel);
+        return new ModelJS(wrapper);
+    }
+
     public void replaceTexture(String oldTexture, Identifier newTexture) {
         OptimizedModel optimizedModel = ((OptimizedModelWrapperAccessor)(Object)model).getOptimizedModel();
         List<VertexArray> vertexArrays = ((OptimizedModelAccessor)(Object)optimizedModel).getUploadedParts();

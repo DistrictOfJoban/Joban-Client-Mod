@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class VehicleWrapper {
+    private static final int FULL_NOTCH_LEVEL = 5;
     protected final VehicleExtension vehicleExtension;
     protected final StopsData stopsData;
     protected final ObjectArrayList<PositionAndRotation> posAndRotations;
@@ -350,6 +351,12 @@ public class VehicleWrapper {
     }
     public double getRailSpeed(int pathIndex) {
         return vehicleExtension.vehicleExtraData.immutablePath.get(pathIndex).getSpeedLimitKilometersPerHour() / 3.6 / 20;
+    }
+    public int getNotchLevel() {
+        return vehicleExtension.vehicleExtraData.getPowerLevel();
+    }
+    public double getNotchPosition() {
+        return (double)getNotchLevel() / FULL_NOTCH_LEVEL;
     }
     public double getSpeedMs() {
         return vehicleExtension.getSpeed() * 1000;
