@@ -123,7 +123,9 @@ public class VehicleWrapper {
     }
 
     protected int findNextStopIndex(double overrunTolerance, double currentRailProgress, List<Stop> stops) {
-        if(stopsData.isFullData) {
+        boolean distanceAvailable = !stops.isEmpty() && stops.get(0).distance >= 0;
+
+        if(distanceAvailable) {
             int stopIdx = 0;
 
             for(Stop stop : stops) {
@@ -132,12 +134,13 @@ public class VehicleWrapper {
             }
             return stopIdx;
         } else {
-            Stop nextStop = getStops().stream().filter(e -> e.platform != null && e.platform.getId() == vehicleExtension.vehicleExtraData.getThisPlatformId()).findFirst().orElse(null);
+            long nextPlatId = vehicleExtension.vehicleExtraData.getThisPlatformId();
+            Stop nextStop = stops.stream().filter(e -> e.platform != null && e.platform.getId() == nextPlatId).findFirst().orElse(null);
             if(nextStop != null) {
                 int idx = stops.indexOf(nextStop);
                 if(idx != -1) return idx;
             }
-            return getStops().size();
+            return stops.size();
         }
     }
 
