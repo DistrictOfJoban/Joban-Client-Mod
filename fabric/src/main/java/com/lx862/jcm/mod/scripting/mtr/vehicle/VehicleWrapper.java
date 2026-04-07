@@ -358,6 +358,9 @@ public class VehicleWrapper {
     public int getNotchLevel() {
         return vehicleExtension.vehicleExtraData.getPowerLevel();
     }
+    public long getDepartureIndex() {
+        return vehicleExtension.getDepartureIndex();
+    }
     public double getNotchPosition() {
         return (double)getNotchLevel() / FULL_NOTCH_LEVEL;
     }
