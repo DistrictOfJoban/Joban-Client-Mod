@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = RenderEyeCandy.class, remap = false)
 public class RenderEyeCandyMixin {
-    @Inject(method = "render(Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;FLorg/mtr/mapping/mapper/GraphicsHolder;II)V", at = @At(value = "INVOKE", target = "Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;getModelId()Ljava/lang/String;"), cancellable = true)
+    @Inject(method = "render(Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;FLorg/mtr/mapping/mapper/GraphicsHolder;II)V", at = @At(value = "INVOKE", target = "Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;getModelId()Ljava/lang/String;"))
     public void renderScript(BlockEyeCandy.BlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int overlay, CallbackInfo ci) {
         World world = blockEntity.getWorld2();
         if(world == null) return;
@@ -61,6 +61,5 @@ public class RenderEyeCandyMixin {
 
         eyeCandyScriptInstance.getRenderManager().invoke(world, storedMatrixTransformations, facing, light);
         eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos());
-        ci.cancel();
     }
 }

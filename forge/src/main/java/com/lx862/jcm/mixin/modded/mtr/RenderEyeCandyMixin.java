@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = RenderEyeCandy.class, remap = false)
 public class RenderEyeCandyMixin {
-    @Inject(method = "render(Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;FLorg/mtr/mapping/mapper/GraphicsHolder;II)V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "render(Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;FLorg/mtr/mapping/mapper/GraphicsHolder;II)V", at = @At(value = "INVOKE", target = "Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;getModelId()Ljava/lang/String;"))
     public void renderScript(BlockEyeCandy.BlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int overlay, CallbackInfo ci) {
         World world = blockEntity.getWorld2();
         if(world == null) return;
@@ -32,7 +32,7 @@ public class RenderEyeCandyMixin {
         if(script == null) return;
         EyecandyBlockEntityWrapper beWrapper = new EyecandyBlockEntityWrapper(blockEntity);
 
-        ScriptInstance<EyecandyBlockEntityWrapper> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("mtr", "eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(beWrapper), beWrapper, script));
+        ScriptInstance<EyecandyBlockEntityWrapper> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(beWrapper), beWrapper, script));
         if(!(scriptInstance instanceof EyeCandyScriptInstance)) return;
 
         EyeCandyScriptInstance eyeCandyScriptInstance = (EyeCandyScriptInstance) scriptInstance;
@@ -48,17 +48,18 @@ public class RenderEyeCandyMixin {
         BlockPos blockPos = blockEntity.getPos2();
         Direction facing = IBlock.getStatePropertySafe(blockEntity.getWorld2(), blockPos, BlockEyeCandy.FACING);
 
-        StoredMatrixTransformations blockStoredMatrixTransformations = new StoredMatrixTransformations(0.5 + (double)blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), 0.5 + (double)blockEntity.getPos2().getZ());
+        StoredMatrixTransformations blockStoredMatrixTransformations = new StoredMatrixTransformations(0.5 + (double)blockEntity.getPos2().getX(), (double)blockEntity.getPos2().getY(), 0.5 + (double)blockEntity.getPos2().getZ());
         StoredMatrixTransformations storedMatrixTransformations = blockStoredMatrixTransformations.copy();
+
         storedMatrixTransformations.add((graphicsHolderNew) -> {
             graphicsHolderNew.translate(blockEntity.getTranslateX(), blockEntity.getTranslateY(), blockEntity.getTranslateZ());
             graphicsHolderNew.rotateYRadians(-(float)Math.toRadians(facing.asRotation()) + (float)Math.PI);
-            graphicsHolderNew.rotateXRadians(blockEntity.getRotateX());
+            graphicsHolderNew.rotateXRadians(blockEntity.getRotateX() + (float)Math.PI);
             graphicsHolderNew.rotateYRadians(blockEntity.getRotateY());
             graphicsHolderNew.rotateZRadians(blockEntity.getRotateZ());
         });
+
         eyeCandyScriptInstance.getRenderManager().invoke(world, storedMatrixTransformations, facing, light);
         eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos());
-        ci.cancel();
     }
 }
