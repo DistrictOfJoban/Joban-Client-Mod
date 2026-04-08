@@ -82,7 +82,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             }
         }
 
-        ParsedScript parsedScripts = JCMScripting.getScriptManager().parseScript(id + " (pids)", "PIDS", scripts);
+        ParsedScript parsedScripts = JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts);
         return new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, parsedScripts);
     }
 

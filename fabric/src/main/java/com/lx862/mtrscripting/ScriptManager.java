@@ -61,9 +61,9 @@ public class ScriptManager {
         return this.classShutter;
     }
 
-    public ParsedScript parseScript(String scriptName, String contextName, List<ScriptContent> scripts) {
+    public ParsedScript parseScript(String displayName, String contextName, List<ScriptContent> scripts) {
         try {
-            return new ParsedScript(this, scriptName, contextName, scripts);
+            return new ParsedScript(this, displayName, contextName, scripts);
         } catch (NoSuchMethodException e) {
             MTRScripting.LOGGER.error("[JCM Scripting] Fatal error: Cannot find required java method to add to script!", e);
             return null;

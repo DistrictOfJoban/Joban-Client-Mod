@@ -14,8 +14,9 @@ import com.lx862.mtrscripting.mod.MTRScripting;
 import com.lx862.mtrscripting.util.ConsoleJS;
 import org.apache.commons.io.FilenameUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import org.mtr.mapping.holder.Identifier;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
+import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mod.Init;
 import org.mtr.mod.client.CustomResourceLoader;
 
@@ -77,20 +78,24 @@ public class MTRContentResourceManager {
                     if(rootObject.has("model")) {
                         String id = FilenameUtils.getBaseName(identifier.getPath());
                         ParsedScript ps = tryParseScript(id, "eyecandy", "Block", rootObject, false, false);
-                        eyecandyScriptIds.put(id, id);
-                        eyecandyScripts.put(id, ps);
+                        if(ps != null) {
+                            eyecandyScriptIds.put(id, id);
+                            eyecandyScripts.put(id, ps);
+                        }
                     } else {
                         for (Map.Entry<String, JsonElement> entry : rootObject.entrySet()) {
                             final String id = entry.getKey();
                             final JsonObject entryObject = entry.getValue().getAsJsonObject();
 
                             ParsedScript ps = tryParseScript(id, "eyecandy", "Block", entryObject, false, false);
-                            eyecandyScriptIds.put(id, id);
-                            eyecandyScripts.put(id, ps);
+                            if(ps != null) {
+                                eyecandyScriptIds.put(id, id);
+                                eyecandyScripts.put(id, ps);
+                            }
                         }
                     }
                 } catch (Exception e) {
-                    logException("parsing NTE Eyecandy scripts", e);
+                    logError("parsing NTE Eyecandy scripts", e);
                 }
             }
         });
@@ -138,7 +143,7 @@ public class MTRContentResourceManager {
                                     vehiclesWithDisplayCubeHidden.add(baseId + "_trailer");
                                 }
                             } catch (Exception e) {
-                                logException("parsing legacy vehicle script '" + baseId + "' in mtr_custom_resources.json", e);
+                                logError("parsing legacy vehicle script '" + baseId + "' in mtr_custom_resources.json", e);
                             }
                         }
                     } else { // MTR 4
@@ -230,12 +235,12 @@ public class MTRContentResourceManager {
                     }
                 }
             } catch (Exception e) {
-                logException("parsing scripts in mtr_custom_resources.json", e);
+                logError("parsing scripts in mtr_custom_resources.json", e);
             }
         });
     }
 
-    private static ParsedScript tryParseScript(String id, String name, String contextName, JsonObject jsonObject, boolean isParsingMTR4, boolean useSnakeCase) {
+    private static ParsedScript tryParseScript(String id, String scriptType, String contextName, JsonObject jsonObject, boolean isParsingMTR4, boolean useSnakeCase) {
         final List<ScriptContent> scripts = new ObjectArrayList<>();
         final String scriptFilesKey = isParsingMTR4 ? "scriptLocations" : useSnakeCase ? "script_files" : "scriptFiles";
         final String scriptTextsKey = isParsingMTR4 ? "prependExpressions" : useSnakeCase ? "script_texts" : "scriptTexts";
@@ -245,14 +250,14 @@ public class MTRContentResourceManager {
             // Parse script input and pass to the script
             if(jsonObject.has(scriptInputKey)) {
                 String str = jsonObject.get(scriptInputKey).toString();
-                Identifier scriptLocationSource = MTRScripting.id("internal/script_input/" + contextName.toLowerCase() + "/" + name + "/" + id);
+                Identifier scriptLocationSource = MTRScripting.id("internal/script_input/" + scriptType + "/" + id);
                 scripts.add(new ScriptContent(scriptLocationSource, "const SCRIPT_INPUT = " + str + ";"));
             }
 
             if(jsonObject.has(scriptTextsKey)) {
                 JsonArray scriptTextArray = jsonObject.get(scriptTextsKey).getAsJsonArray();
                 for(int i = 0; i < scriptTextArray.size(); i++) {
-                    Identifier scriptLocationSource = MTRScripting.id("internal/script_texts/" + contextName.toLowerCase() + "/" + name + "/" + id + "/line" + i);
+                    Identifier scriptLocationSource = MTRScripting.id("internal/script_texts/" + scriptType + "/" + id + "/line" + i);
                     String scriptText = scriptTextArray.get(i).getAsString();
                     scripts.add(new ScriptContent(scriptLocationSource, scriptText));
                 }
@@ -273,7 +278,12 @@ public class MTRContentResourceManager {
             }
         }
 
-        return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + name + ")", contextName, scripts);
+        try {
+            return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, scripts);
+        } catch (Exception e) {
+            logError("parsing " + scriptType + " script with id " + id, e);
+            return null;
+        }
     }
 
     public static ParsedScript getEyecandyScript(String modelId) {
@@ -296,9 +306,13 @@ public class MTRContentResourceManager {
         return vehicleScriptsForPrefetching.contains(vehicleScriptId);
     }
 
-    private static void logException(String action, Exception e) {
+    private static void logError(String action, Exception e) {
         if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             JCMLogger.error("Error while " + action + "!", e);
+            if(MinecraftClient.getInstance().getPlayerMapped() != null) {
+                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("Error while " + action + "!"), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+            }
         } else {
             JCMLogger.error("Error while " + action + ": " + e.getMessage());
             JCMLogger.error("(Enable debug mode to see more information)");

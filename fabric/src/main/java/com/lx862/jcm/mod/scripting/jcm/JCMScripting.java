@@ -44,7 +44,7 @@ public class JCMScripting {
             scriptable.put("ModelManager", scriptable, new NativeJavaClass(scriptable, ModelManagerJS.class));
             scriptable.put("DynamicModelHolder", scriptable, new NativeJavaClass(scriptable, DynamicModelHolderJS.class));
 
-            if (contextName.equals("PIDS")) {
+            if (contextName.equals("pids")) {
                 scriptable.put("ModelDrawCall", scriptable, new NativeJavaClass(scriptable, ModelDrawCall.class));
                 scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));
                 scriptable.put("Texture", scriptable, new NativeJavaClass(scriptable, TextureWrapper.class));
