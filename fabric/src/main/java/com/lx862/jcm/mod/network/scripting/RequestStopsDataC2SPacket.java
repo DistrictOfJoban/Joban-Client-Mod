@@ -93,7 +93,7 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                             RoutePlatformData routePlatformData = routePlatforms.get(routePlatformIndex);
 
                                             long platformId = routePlatformData.getPlatform().getId();
-                                            long stationId = routePlatformData.getPlatform().area.getId();
+                                            long stationId = routePlatformData.getPlatform().area == null ? 0 : routePlatformData.getPlatform().area.getId();
                                             String destination = belongingRoute.getDestination(routePlatformIndex);
                                             double distance = pathData.getEndDistance();
 
