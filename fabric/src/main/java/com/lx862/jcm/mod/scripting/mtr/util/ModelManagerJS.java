@@ -11,7 +11,7 @@ import org.mtr.mod.resource.OptimizedModelWrapper;
 
 import java.util.Map;
 
-public class ModelManager {
+public class ModelManagerJS {
     @Deprecated
     public static ModelDataJS loadRawModel(Object o, Identifier id, Object atlasManager) {
         return loadModel(id, false);
