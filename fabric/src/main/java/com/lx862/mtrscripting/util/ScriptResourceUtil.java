@@ -197,22 +197,28 @@ public class ScriptResourceUtil {
         return FONT_CONTEXT;
     }
 
-    public static AttributedString ensureStrFonts(String text, Font font) {
+    public static AttributedString ensureStrFonts(String text, Font primaryFont, Font... fallbackFonts) {
         AttributedString result = new AttributedString(text);
         if (text.isEmpty()) return result;
-        result.addAttribute(TextAttribute.FONT, font, 0, text.length());
+        result.addAttribute(TextAttribute.FONT, primaryFont, 0, text.length());
         for (int characterIndex = 0; characterIndex < text.length(); characterIndex++) {
             final char character = text.charAt(characterIndex);
-            if (!font.canDisplay(character)) {
+            if (!primaryFont.canDisplay(character)) {
                 Font defaultFont = null;
+                for(final Font testFont : fallbackFonts) {
+                    if (testFont.canDisplay(character)) {
+                        defaultFont = testFont;
+                        break;
+                    }
+                }
+                // Still no hope, find all system fonts...
                 for (final Font testFont : GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts()) {
                     if (testFont.canDisplay(character)) {
                         defaultFont = testFont;
                         break;
                     }
                 }
-                final Font newFont = (defaultFont == null ? new Font(null) : defaultFont)
-                        .deriveFont(font.getStyle(), font.getSize2D());
+                final Font newFont = (defaultFont == null ? new Font(null) : defaultFont).deriveFont(primaryFont.getStyle(), primaryFont.getSize2D());
                 result.addAttribute(TextAttribute.FONT, newFont, characterIndex, characterIndex + 1);
             }
         }

@@ -13,7 +13,6 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - MTR 3 / NTE Compatibility Improvements:
   - Fix: NTE Eyecandy object now recognizes the "translation"/"rotation"/"scale"/"mirror" fields, which is used by NTE but does not get parsed correctly in MTR 4.
   - Fix: For OBJ texture with path traversal (Like `../` / `..\`), it is once again recognized, solving some missing texture issues when loading NTE packs.
-  - Fix: Automatically migrate gangways/barrier in MTR 3, fixing some missing gangway texture issues for legacy trains.
 - Enhancements: Improve model loading speed and memory usage for MTR.
 - Enhancements: Minor frame-rate boost in complex world.
 - Enhancements: Add car auto-filling in siding screen
@@ -35,6 +34,7 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
   - Provide a slightly more rich API for logging, similar to the web's console API seen in browsers. (console.log, console.warn etc.)
   - The `print` function will be retained, redirects to `console.log` under the hood.
   - The source/line no. of the print/console log statements may be viewed by enabling **View Script Log Source** in JCM's settings.
+- `Resources.ensureStrFonts()` now allows you to append an unlimited amount of AWT fallback fonts.
 - Add `MinecraftClient.spawnParticleInWorld()` to spawn vanilla particles in the current world via scripts.
 - Add `MinecraftClient.renderDistance()` to obtain the currently configured world render distance.
 - Add `MinecraftClient.getWorldPlayers()` to obtain all player's `PlayerEntity` within the current render distance.
