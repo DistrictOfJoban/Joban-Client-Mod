@@ -26,7 +26,7 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
 - - Backward compatibility with existing resource packs is on a best-effort basis. Some loads, some doesn't.
 - - API for NTE remains largely unchanged, with some new MTR 4 APIs developers can opt into.
 - - Mixed vehicle car operations is supported, alongside sharing script entries across multiple cars.
-- - See the [Vehicle Scripting](https://jcm.joban.org/v2.2/dev/scripting/type/vehicle/) documentation for details.
+- - See the [Vehicle Scripting](https://jcm.joban.org/v2.2/dev/scripting/type/vehicle/) documentation for details, or try loading an MTR 3 scripted vehicle and see what needs to be ported.
 - The **Rhino** JavaScript Engine has been updated to **1.9**, bringing some performance improvements and more modern JS features.
   - See the [Rhino Compatibility Table](https://mozilla.github.io/rhino/compat/engines.html) for a list of supported features.
 - Add `BackgroundWorker` to allow script to run task without blocking the main thread.
