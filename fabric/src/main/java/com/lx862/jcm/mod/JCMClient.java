@@ -7,6 +7,7 @@ import com.lx862.jcm.mod.render.gui.screen.ClientConfigScreen;
 import com.lx862.jcm.mod.resources.mcmeta.McMetaManager;
 import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
 import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
+import com.lx862.mtrscripting.mod.MTRScripting;
 import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.holder.ScreenAbstractMapping;
 
@@ -14,6 +15,7 @@ public class JCMClient {
     private static final McMetaManager mcMetaManager = new McMetaManager();
 
     public static void initializeClient() {
+        MTRScripting.init();
         new LegacyClientConfig().migrate();
         JCMClientConfig.init();
         JCMRegistryClient.register();
