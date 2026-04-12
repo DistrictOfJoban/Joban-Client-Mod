@@ -1,11 +1,11 @@
-# JCM v2.2.0-beta-1 for MTR 4.0.3 has been released!
+# JCM v2.2.0-beta-1 for MTR 4.0.4 has been released!
 
 Unless otherwise noted, all changes below pertains to the Scripting feature in JCM.
 
 ## New (Non-Scripting)
 During the development of JCM v2.2, several improvement area (Related to UX/performance/legacy NTE compatibility) in the main MTR mod were identified.
 
-To ensure player gets the best in-game playing experience, I have decided to integrate these fixes within JCM for now, which I will collectively call them the **MTR Patch**.
+To ensure player gets the best in-game playing experience, several patches for MTR were integrate to JCM, which I will collectively call them the **MTR Patch**.
 
 This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, while serving as a "playground" for these patches, so hopefully errors could be caught before they are merged into the main mod.
 
@@ -87,9 +87,6 @@ This allows faster delivery of bug-fixes/optimizations/improvements to MTR 4, wh
   - Add **Hide currently riding vehicles** for recording purposes, similar to NTE. (e.g. Cab-view recording)
   - Existing config are migrated over to the new config. If you have enabled **Debug Mode** previously, Script Debug Mode will also be enabled by default.
   - New config file is located under `.minecraft/config/jsblock/client.toml` (Not relevant to most users)
-- **(Non-Scripting)** All Eyecandy/Decoration Block objects is changed to always render, even when off-screen.
-  - This is to facilitate scripted eyecandy blocks to ensure they can be run correctly.
-  - A slight performance reduction is expected, though the impact is estimated to not be huge.
 
 ## Fixes
 - (Non-scripting) Fix fare/ticket transaction log potentially erroring out, causing players to be stuck in a gate.
