@@ -105,7 +105,10 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                                 if(routeIdx >= depot.routes.size()) break;
                                                 belongingRoute = depot.routes.get(routeIdx);
                                                 routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
-                                                routeStopsData.addStop(stopObject);
+                                                // Next route also has the same RoutePlatform assigned
+                                                if(!belongingRoute.getRoutePlatforms().isEmpty() && belongingRoute.getRoutePlatforms().get(0).getPlatform().getId() == platformId) {
+                                                    routeStopsData.addStop(stopObject);
+                                                }
                                             }
                                         }
                                     }
