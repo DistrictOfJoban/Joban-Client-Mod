@@ -8,6 +8,7 @@ import com.lx862.jcm.mod.resources.JCMResourceManager;
 import com.lx862.jcm.mod.resources.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
 import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
+import com.lx862.jcm.mod.scripting.mtr.util.ModelManagerJS;
 import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
@@ -72,6 +73,7 @@ public class Events {
     public static void onClientReloadResource() {
         JCMScripting.reset();
         MTRContentScripting.reset();
+        ModelManagerJS.reset();
         JCMResourceManager.reload();
         MTRContentResourceManager.reload();
     }

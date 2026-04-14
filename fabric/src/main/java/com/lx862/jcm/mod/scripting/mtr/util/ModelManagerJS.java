@@ -69,7 +69,7 @@ public class ModelManagerJS {
     }
 
     public static ModelDataJS loadModelPart(String modelName, Identifier modelLocation) {
-        return loadModelParts(modelLocation, true).get(modelName);
+        return loadModelPart(modelName, modelLocation, true);
     }
 
     public static ModelDataJS loadModelPart(String modelName, Identifier modelLocation, boolean flipTextureV) {
