@@ -22,8 +22,6 @@ import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
 import org.mtr.mod.Init;
 
-import java.util.List;
-
 public class RequestStopsDataC2SPacket extends PacketHandler {
     private final long vehicleId;
     private final long sidingId;
@@ -97,7 +95,7 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                             long platformId = routePlatformData.getPlatform().getId();
                                             long stationId = routePlatformData.getPlatform().area == null ? 0 : routePlatformData.getPlatform().area.getId();
                                             String destination = belongingRoute.getDestination(routePlatformIndex);
-                                            String customDestination = getCustomDestination(belongingRoute.getRoutePlatforms(), routePlatformIndex);
+                                            String customDestination = routePlatformData.getCustomDestination();
                                             double distance = pathData.getEndDistance();
 
                                             VehicleDataCache.SimplifiedStop stopObject = new VehicleDataCache.SimplifiedStop(destination, customDestination, stationId, platformId, distance);
@@ -141,19 +139,5 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                 break;
             }
         }
-    }
-
-    private static String getCustomDestination(List<RoutePlatformData> routePlatformData, int index) {
-        for(int i = Math.min(routePlatformData.size() - 1, index); i >= 0; --i) {
-            String customDestination = (routePlatformData.get(i)).getCustomDestination();
-            if (Route.destinationIsReset(customDestination)) {
-                break;
-            }
-
-            if (!customDestination.isEmpty()) {
-                return customDestination;
-            }
-        }
-        return "";
     }
 }
