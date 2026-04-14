@@ -62,22 +62,4 @@ public class RawMeshMixin {
         faces.clear();
         faces.addAll(distinctFaces);
     }
-
-    /**
-     * Not going through the stream api for iteration is slightly faster.
-     */
-    @Inject(method = "addVertex", at = @At("HEAD"), cancellable = true)
-    private void fastAddVertex(Vertex vertex, CallbackInfo ci) {
-        vertices.add(vertex);
-        int verticesSize = vertices.size();
-        if(verticesSize % 4 == 0) {
-            int[] faceArray = new int[4];
-            for(int i = 0; i < 4; i++) {
-                int idx = (verticesSize-4)+i;
-                faceArray[i] = idx;
-            }
-            faces.add(new Face(faceArray));
-        }
-        ci.cancel();
-    }
 }
