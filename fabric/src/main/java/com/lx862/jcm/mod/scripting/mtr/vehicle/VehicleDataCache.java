@@ -57,7 +57,7 @@ public class VehicleDataCache {
             for(SimplifiedStop simplifiedStop : routeStopsData.stops) {
                 Station station = VehicleDataCache.mtrData.stationIdMap.get(simplifiedStop.stationId);
                 Platform platform = VehicleDataCache.mtrData.platformIdMap.get(simplifiedStop.platformId);
-                VehicleWrapper.Stop thisStop = new VehicleWrapper.Stop(route, station, platform, station == null ? platform == null ? "" : platform.getName() : station.getName(), simplifiedStop.destination, simplifiedStop.distance);
+                VehicleWrapper.Stop thisStop = new VehicleWrapper.Stop(route, station, platform, station == null ? platform == null ? "" : platform.getName() : station.getName(), simplifiedStop.destination, simplifiedStop.customDestination, simplifiedStop.distance);
                 thisStop.destinationStation = destinationStation;
 
                 if(route != null) {
@@ -194,12 +194,14 @@ public class VehicleDataCache {
         public final long platformId;
         public final double distance;
         public final String destination;
+        public final String customDestination;
 
-        public SimplifiedStop(String destination, long stationId, long platformId, double distance) {
+        public SimplifiedStop(String destination, String customDestination, long stationId, long platformId, double distance) {
             this.stationId = stationId;
             this.platformId = platformId;
             this.distance = distance;
             this.destination = destination;
+            this.customDestination = customDestination;
         }
 
         @Override

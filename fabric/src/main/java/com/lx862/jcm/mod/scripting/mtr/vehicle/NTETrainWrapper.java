@@ -61,7 +61,7 @@ public class NTETrainWrapper extends VehicleWrapper {
         List<Stop> stops = new ArrayList<>();
         for(int i = 0; i < count; i++) {
             String name = String.format("车站 %d|Station %d||S%02d", i + 1, i + 1, i + 1);
-            stops.add(new Stop(debugRoute, null, null, name, destinationName, i * 1000));
+            stops.add(new Stop(debugRoute, null, null, name, destinationName, "", i * 1000));
         }
 
         return stops;
