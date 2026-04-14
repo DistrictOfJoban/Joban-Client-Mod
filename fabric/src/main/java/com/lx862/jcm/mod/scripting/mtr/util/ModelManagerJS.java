@@ -22,10 +22,14 @@ public class ModelManagerJS {
         return loadModelParts(id, false);
     }
 
-    public static ModelDataJS loadModel(Identifier id, boolean flipV) {
+    public static ModelDataJS loadModel(Identifier id) {
+        return loadModel(id, true);
+    }
+
+    public static ModelDataJS loadModel(Identifier id, boolean flipTextureV) {
         try {
             ModelDataJS modelData = new ModelDataJS();
-            Map<String, ModelDataJS> modelDataParts = loadModelParts(id, flipV);
+            Map<String, ModelDataJS> modelDataParts = loadModelParts(id, flipTextureV);
             modelDataParts.values().forEach(modelData::append);
             return modelData;
         } catch (Exception e) {
@@ -55,6 +59,10 @@ public class ModelManagerJS {
         } else {
             throw new IllegalArgumentException("Unsupported model format " + idStr + ".");
         }
+    }
+
+    public static ModelDataJS loadModelPart(String modelName, Identifier modelLocation) {
+        return loadModelParts(modelLocation, true).get(modelName);
     }
 
     public static ModelDataJS loadModelPart(String modelName, Identifier modelLocation, boolean flipTextureV) {
