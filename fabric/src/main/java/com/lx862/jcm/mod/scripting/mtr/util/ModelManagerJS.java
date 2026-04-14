@@ -9,9 +9,13 @@ import org.mtr.mapping.mapper.ResourceManagerHelper;
 import org.mtr.mod.resource.CustomResourceTools;
 import org.mtr.mod.resource.OptimizedModelWrapper;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class ModelManagerJS {
+    private static final Map<Identifier, ModelDataJS> modelDataCache = new HashMap<>();
+    private static final Map<ModelDataJS, ModelJS> modelCache = new HashMap<>();
+
     @Deprecated
     public static ModelDataJS loadRawModel(Object o, Identifier id, Object atlasManager) {
         return loadModel(id, false);
@@ -27,10 +31,13 @@ public class ModelManagerJS {
     }
 
     public static ModelDataJS loadModel(Identifier id, boolean flipTextureV) {
+        if(modelDataCache.containsKey(id)) return modelDataCache.get(id);
+
         try {
             ModelDataJS modelData = new ModelDataJS();
             Map<String, ModelDataJS> modelDataParts = loadModelParts(id, flipTextureV);
             modelDataParts.values().forEach(modelData::append);
+            modelDataCache.put(id, modelData);
             return modelData;
         } catch (Exception e) {
             MTRScripting.LOGGER.error("", e);
@@ -75,6 +82,15 @@ public class ModelManagerJS {
     }
 
     public static ModelJS upload(ModelDataJS modelData) {
-        return new ModelJS(modelData);
+        if(modelCache.containsKey(modelData)) return modelCache.get(modelData);
+        ModelJS uploadedModel = new ModelJS(modelData);
+        modelCache.put(modelData, uploadedModel);
+        return uploadedModel;
+    }
+
+    public static void reset() {
+        modelCache.values().forEach(ModelJS::close);
+        modelCache.clear();
+        modelDataCache.clear();
     }
 }
