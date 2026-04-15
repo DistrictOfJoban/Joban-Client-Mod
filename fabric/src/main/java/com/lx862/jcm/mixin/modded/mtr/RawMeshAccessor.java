@@ -1,5 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
+import org.mtr.mapping.render.batch.MaterialProperties;
 import org.mtr.mapping.render.model.Face;
 import org.mtr.mapping.render.model.RawMesh;
 import org.mtr.mapping.render.vertex.Vertex;
@@ -11,6 +12,10 @@ import java.util.List;
 
 @Mixin(value = RawMesh.class, remap = false)
 public interface RawMeshAccessor {
+    @Accessor("materialProperties")
+    @Mutable
+    void setMaterialProperties(MaterialProperties properties);
+
     @Accessor("vertices")
     @Mutable
     void setVertices(List<Vertex> vertices);

@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
-import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
-import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
+import com.lx862.mtrscripting.util.render.ScriptRenderManager;
+import com.lx862.mtrscripting.util.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.core.ParsedScript;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import org.mtr.mapping.holder.MinecraftClient;

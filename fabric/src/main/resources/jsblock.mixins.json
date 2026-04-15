@@ -26,6 +26,7 @@
     "modded.mtr.VehicleExtensionMixin",
     "modded.mtr.VehicleResourceMixin",
     "modded.mtr.VehicleSchemaMixin",
+    "modded.mtr.VertexAttributeStateAccessor",
     "modded.mtrpatch.CustomResourceLoaderMixin",
     "modded.mtrpatch.CustomResourceToolsMixin",
     "modded.mtrpatch.MainRendererMixin",

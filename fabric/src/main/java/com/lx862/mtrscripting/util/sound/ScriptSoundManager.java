@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting.mtr.sound;
+package com.lx862.mtrscripting.util.sound;
 
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.Identifier;

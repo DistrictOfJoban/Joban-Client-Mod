@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting.mtr.render;
+package com.lx862.mtrscripting.util.render;
 
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.mtrscripting.util.ScriptVector3f;

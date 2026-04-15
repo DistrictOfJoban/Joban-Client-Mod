@@ -1,17 +1,12 @@
-package com.lx862.jcm.mod.scripting.mtr.render;
+package com.lx862.mtrscripting.util.render;
 
-import com.lx862.jcm.mod.scripting.jcm.pids.PIDSDrawCall;
 import com.lx862.jcm.mod.scripting.jcm.pids.PIDSScriptContext;
-import com.lx862.mtrscripting.api.ScriptResultCall;
-import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
-import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ScriptRenderManager {
     private final List<RenderDrawCall<?>> drawCalls;

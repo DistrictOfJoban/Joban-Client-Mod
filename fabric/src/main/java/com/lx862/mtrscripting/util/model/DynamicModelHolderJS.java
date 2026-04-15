@@ -1,4 +1,4 @@
-package com.lx862.jcm.mod.scripting.mtr.util;
+package com.lx862.mtrscripting.util.model;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.mtr.mod.client.CustomResourceLoader;
@@ -6,7 +6,7 @@ import org.mtr.mod.client.CustomResourceLoader;
 public class DynamicModelHolderJS {
     private ModelJS uploadedModel;
 
-    public void uploadLater(ModelDataJS modelData) {
+    public void uploadLater(RawModelJS modelData) {
         if(modelData == null) throw new IllegalArgumentException("modelData cannot be null!");
 
         RenderSystem.recordRenderCall(() -> {

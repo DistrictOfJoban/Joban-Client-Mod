@@ -6,12 +6,9 @@ function DisplayHelper(cfg) {
     this.texture = null;
     this.ownsTexture = false;
     if (cfg.version === 1) {
-        let renderType = (cfg.renderType || "interior")
-            .replace("lighttranslucent", "light_translucent")
-            .replace("exteriortranslucent", "exterior_translucent")
-            .replace("interiortranslucent", "interior_translucent");
-        let dhCompat = DisplayHelperCompat.create();
-
+        let renderType = cfg.renderType || "interior";
+        let meshBuilder = new RawMeshBuilder(4, renderType, Resources.id("minecraft:textures/misc/white.png"));
+//        meshBuilder.color(255, 255, 255, 255);
         for (let slotCfg of cfg.slots) {
             let realUV = Array(4);
             realUV[0] = [slotCfg.texArea[0] / cfg.texSize[0],
@@ -23,29 +20,24 @@ function DisplayHelper(cfg) {
             realUV[3] = [(slotCfg.texArea[0] + slotCfg.texArea[2]) / cfg.texSize[0],
                 slotCfg.texArea[1] / cfg.texSize[1]];
 
-            let quadUV = [
-                slotCfg.texArea[0] / cfg.texSize[0], // u1
-                slotCfg.texArea[1] / cfg.texSize[1], // v1
-                (slotCfg.texArea[0]+slotCfg.texArea[2]) / cfg.texSize[0], // u2
-                (slotCfg.texArea[1]+slotCfg.texArea[3]) / cfg.texSize[1], // v2
-            ];
-
             if (slotCfg.offsets === void 0) slotCfg.offset = [[0, 0, 0]];
             for (let offset of slotCfg.offsets) {
                 for (let posCfg of slotCfg.pos) {
-                    let quadDrawCall = QuadDrawCall.create()
-                        .renderType(renderType.toUpperCase())
-                        .corner1(new Vector3f(posCfg[0][0] + offset[0], posCfg[0][1] + offset[1], posCfg[0][2] + offset[2]))
-                        .corner2(new Vector3f(posCfg[1][0] + offset[0], posCfg[1][1] + offset[1], posCfg[1][2] + offset[2]))
-                        .corner3(new Vector3f(posCfg[2][0] + offset[0], posCfg[2][1] + offset[1], posCfg[2][2] + offset[2]))
-                        .corner4(new Vector3f(posCfg[3][0] + offset[0], posCfg[3][1] + offset[1], posCfg[3][2] + offset[2]))
-                        .uv(quadUV[0], quadUV[1], quadUV[2], quadUV[3])
-                        .normal(0, 1, 0);
-                    dhCompat.addQuad(quadDrawCall);
+                    for (let i = 0; i < 4; i++) {
+                        meshBuilder
+                            .vertex(posCfg[i][0] + offset[0], posCfg[i][1] + offset[1], posCfg[i][2] + offset[2])
+                            .normal(0, 1, 0)
+                            .uv(realUV[i][0], realUV[i][1])
+                            .endVertex();
+                    }
                 }
             }
         }
-        this.baseModel = dhCompat;
+
+        let rawModel = new RawModel();
+        rawModel.append(meshBuilder.getMesh());
+        rawModel.triangulate();
+        this.baseModel = ModelManager.upload(rawModel);
     } else {
         throw new Error("Unknown version: " + cfg.version);
     }
@@ -75,7 +67,8 @@ DisplayHelper.prototype.create = function(sharedTexture) {
             instance._graphics.setTransform(instance.emptyTransform);
         }
 
-        instance.model = this.baseModel.copyWithTexture(instance.texture.identifier);
+        instance.model = this.baseModel.copyForMaterialChanges();
+        instance.model.replaceAllTexture(instance.texture.identifier);
     } else {
         throw new Error("Unknown version: " + cfg.version);
     }
@@ -102,8 +95,4 @@ DisplayHelper.prototype.graphics = function() {
 DisplayHelper.prototype.graphicsFor = function(slotName) {
     this._graphics.setTransform(this.slotTransforms[slotName]);
     return this._graphics;
-}
-
-DisplayHelper.prototype.drawCalls = function() {
-    return this.model.getDrawCalls();
 }

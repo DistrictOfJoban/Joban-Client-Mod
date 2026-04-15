@@ -2,11 +2,10 @@ package com.lx862.jcm.mod.scripting.mtr.eyecandy;
 
 import com.lx862.jcm.mod.scripting.mtr.MTRScriptContext;
 import com.lx862.jcm.mod.scripting.mtr.eyecandy.event.EyecandyEvents;
-import com.lx862.jcm.mod.scripting.mtr.render.DisplayHelperCompat;
-import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
-import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
-import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
-import com.lx862.jcm.mod.scripting.mtr.util.ModelJS;
+import com.lx862.mtrscripting.util.render.ModelDrawCall;
+import com.lx862.mtrscripting.util.render.ScriptRenderManager;
+import com.lx862.mtrscripting.util.sound.ScriptSoundManager;
+import com.lx862.mtrscripting.util.model.ModelJS;
 import com.lx862.mtrscripting.util.Matrices;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import com.lx862.mtrscripting.wrapper.VoxelShapeWrapper;
@@ -74,13 +73,6 @@ public class EyeCandyScriptContext extends MTRScriptContext {
             throw new IllegalStateException("Collision shape must not be larger than 1.5 blocks (24 unit)!");
         }
         this.collisionShape = voxelShapeWrapper;
-    }
-
-    @Deprecated
-    public void drawModel(DisplayHelperCompat dhDrawCall, Matrices matrices) {
-        DisplayHelperCompat newDhDrawCall = dhDrawCall.copy();
-        newDhDrawCall.matrices(matrices);
-        renderManager.queue(newDhDrawCall);
     }
 
     public void drawModel(ModelJS model, Matrices matrices) {

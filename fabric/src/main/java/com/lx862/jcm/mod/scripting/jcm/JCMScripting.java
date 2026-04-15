@@ -6,11 +6,6 @@ import com.lx862.jcm.mod.render.gui.ScriptDebugOverlay;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextWrapper;
 import com.lx862.jcm.mod.scripting.jcm.pids.TextureWrapper;
 import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
-import com.lx862.jcm.mod.scripting.mtr.render.DisplayHelperCompat;
-import com.lx862.jcm.mod.scripting.mtr.render.ModelDrawCall;
-import com.lx862.jcm.mod.scripting.mtr.render.QuadDrawCall;
-import com.lx862.jcm.mod.scripting.mtr.util.DynamicModelHolderJS;
-import com.lx862.jcm.mod.scripting.mtr.util.ModelManagerJS;
 import com.lx862.jcm.mod.scripting.mtr.util.TextUtil;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.ScriptManager;
@@ -37,15 +32,10 @@ public class JCMScripting {
         scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.jcm.mod.scripting.mtr.*"));
 
         scriptManager.onParseScript((contextName, context, scriptable) -> {
-            scriptable.put("QuadDrawCall", scriptable, new NativeJavaClass(scriptable, QuadDrawCall.class));
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
-            scriptable.put("DisplayHelperCompat", scriptable, new NativeJavaClass(scriptable, DisplayHelperCompat.class));
-            scriptable.put("ModelManager", scriptable, new NativeJavaClass(scriptable, ModelManagerJS.class));
-            scriptable.put("DynamicModelHolder", scriptable, new NativeJavaClass(scriptable, DynamicModelHolderJS.class));
 
             if (contextName.equals("pids")) {
-                scriptable.put("ModelDrawCall", scriptable, new NativeJavaClass(scriptable, ModelDrawCall.class));
                 scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));
                 scriptable.put("Texture", scriptable, new NativeJavaClass(scriptable, TextureWrapper.class));
             }

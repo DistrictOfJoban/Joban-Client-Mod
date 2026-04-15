@@ -1,11 +1,12 @@
 package com.lx862.jcm.mod.scripting.mtr.vehicle;
 
 import com.lx862.jcm.mod.scripting.mtr.MTRScriptContext;
-import com.lx862.jcm.mod.scripting.mtr.render.*;
-import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
-import com.lx862.jcm.mod.scripting.mtr.util.ModelJS;
+import com.lx862.mtrscripting.util.sound.ScriptSoundManager;
+import com.lx862.mtrscripting.util.model.ModelJS;
 import com.lx862.mtrscripting.util.Matrices;
 import com.lx862.mtrscripting.util.ScriptVector3f;
+import com.lx862.mtrscripting.util.render.ModelDrawCall;
+import com.lx862.mtrscripting.util.render.ScriptRenderManager;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mod.client.VehicleRidingMovement;
@@ -38,15 +39,6 @@ public class VehicleScriptContext extends MTRScriptContext {
         if(fetchDataBeforeExecute) {
             dataFetchMode = DataFetchMode.MANDATORY;
         }
-    }
-
-    public void drawCarModel(DisplayHelperCompat dhDrawCall, int carIndex, Matrices matrices) {
-        ScriptRenderManager renderManager = getCarRenderManager(carIndex);
-        if(renderManager == null) return;
-
-        DisplayHelperCompat newDhDrawCall = dhDrawCall.copy();
-        newDhDrawCall.matrices(matrices);
-        renderManager.queue(newDhDrawCall);
     }
 
     public void drawCarModel(ModelJS model, int carIndex, Matrices matrices) {

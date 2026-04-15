@@ -1,6 +1,6 @@
-package com.lx862.jcm.mod.scripting.mtr.render;
+package com.lx862.mtrscripting.util.render;
 
-import com.lx862.jcm.mod.scripting.mtr.util.ModelJS;
+import com.lx862.mtrscripting.util.model.ModelJS;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mod.render.StoredMatrixTransformations;

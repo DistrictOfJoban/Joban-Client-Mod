@@ -6,6 +6,12 @@ import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.mod.MTRScripting;
 import com.lx862.mtrscripting.util.*;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
+import com.lx862.mtrscripting.util.model.DynamicModelHolderJS;
+import com.lx862.mtrscripting.util.model.ModelManagerJS;
+import com.lx862.mtrscripting.util.model.RawMeshBuilderJS;
+import com.lx862.mtrscripting.util.model.RawModelJS;
+import com.lx862.mtrscripting.util.render.ModelDrawCall;
+import com.lx862.mtrscripting.util.render.QuadDrawCall;
 import com.lx862.mtrscripting.wrapper.MinecraftClientWrapper;
 import com.lx862.mtrscripting.wrapper.VanillaTextWrapper;
 import com.lx862.mtrscripting.wrapper.VoxelShapeWrapper;
@@ -99,6 +105,13 @@ public class ParsedScript {
         scope.put("VoxelShape", scope, new NativeJavaClass(scope, VoxelShapeWrapper.class));
         scope.put("VanillaText", scope, new NativeJavaClass(scope, VanillaTextWrapper.class));
         scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientWrapper.class));
+
+        scope.put("ModelDrawCall", scope, new NativeJavaClass(scope, ModelDrawCall.class));
+        scope.put("QuadDrawCall", scope, new NativeJavaClass(scope, QuadDrawCall.class));
+        scope.put("ModelManager", scope, new NativeJavaClass(scope, ModelManagerJS.class));
+        scope.put("RawModel", scope, new NativeJavaClass(scope, RawModelJS.class));
+        scope.put("RawMeshBuilder", scope, new NativeJavaClass(scope, RawMeshBuilderJS.class));
+        scope.put("DynamicModelHolder", scope, new NativeJavaClass(scope, DynamicModelHolderJS.class));
     }
 
     private void tryAndAddFunction(String name, Scriptable scope, List<Function> listToAdd) {

@@ -3,8 +3,8 @@ package com.lx862.jcm.mod.scripting.jcm.pids;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
 import com.lx862.jcm.mod.scripting.mtr.MTRScriptContext;
-import com.lx862.jcm.mod.scripting.mtr.render.ScriptRenderManager;
-import com.lx862.jcm.mod.scripting.mtr.sound.ScriptSoundManager;
+import com.lx862.mtrscripting.util.render.ScriptRenderManager;
+import com.lx862.mtrscripting.util.sound.ScriptSoundManager;
 
 public class PIDSScriptContext extends MTRScriptContext {
     protected final ScriptSoundManager soundManager;
