@@ -23,7 +23,7 @@ public class ConsoleJS {
         if(timers.containsKey(label)) {
             warn("Timer \"" + label + "\" already exists.");
         } else {
-            timers.put(label, TimingUtil.nanoTime());
+            timers.put(label, TimingJS.nanoTime());
         }
     }
 
@@ -32,7 +32,7 @@ public class ConsoleJS {
     }
 
     public void timeLog(String label) {
-        long timeNow = TimingUtil.nanoTime();
+        long timeNow = TimingJS.nanoTime();
         if(timers.containsKey(label)) {
             log(label + ": " + ((timeNow - timers.getLong(label)) / 1000 / 1000) + "ms");
         } else {
@@ -45,7 +45,7 @@ public class ConsoleJS {
     }
 
     public void timeEnd(String label) {
-        long timeNow = TimingUtil.nanoTime();
+        long timeNow = TimingJS.nanoTime();
         if(timers.containsKey(label)) {
             log(label + ": " + ((timeNow - timers.getLong(label)) / 1000 / 1000) + "ms - timer ended");
             timers.removeLong(label);

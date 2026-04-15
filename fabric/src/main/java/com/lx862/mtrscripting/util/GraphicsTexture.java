@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.util;
 
 import com.lx862.jcm.mapping.LoaderImplClient;
+import com.lx862.mtrscripting.mod.MTRScripting;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.opengl.GL33;
@@ -36,7 +37,7 @@ public class GraphicsTexture implements Closeable {
                     new int[] { GL33.GL_BLUE, GL33.GL_GREEN, GL33.GL_RED, GL33.GL_ALPHA });
             GlStateManager._bindTexture(prevTextureBinding);
         });
-        identifier = new Identifier("mtrscripting", String.format("dynamic/graphics/%s", UUID.randomUUID()));
+        identifier = MTRScripting.id(String.format("dynamic/graphics/%s", UUID.randomUUID()));
         MinecraftClient.getInstance().execute(() -> {
             MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, new AbstractTexture(dynamicTexture.data));
         });

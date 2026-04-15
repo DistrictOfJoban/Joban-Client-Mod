@@ -2,12 +2,11 @@ package com.lx862.mtrscripting.util;
 
 import com.lx862.mtrscripting.core.ScriptInstance;
 import org.mtr.mapping.holder.MinecraftClient;
-import org.mtr.mod.InitClient;
 
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/TimingUtil.java */
 
 @SuppressWarnings("unused")
-public class TimingUtil {
+public class TimingJS {
     private static double totalRunningTime = 0;
     private double timeElapsedForScript = 0;
     private double frameDeltaForScript = 0;

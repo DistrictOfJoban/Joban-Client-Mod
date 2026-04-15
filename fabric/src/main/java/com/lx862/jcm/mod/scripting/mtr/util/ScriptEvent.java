@@ -1,9 +1,9 @@
 package com.lx862.jcm.mod.scripting.mtr.util;
 
-import com.lx862.mtrscripting.util.StateTracker;
+import com.lx862.mtrscripting.util.StateTrackerJS;
 
 public class ScriptEvent<T> {
-    private final StateTracker stateTracker = new StateTracker();
+    private final StateTrackerJS stateTracker = new StateTrackerJS();
 
     public void trigger(T object) {
         stateTracker.setState(object);

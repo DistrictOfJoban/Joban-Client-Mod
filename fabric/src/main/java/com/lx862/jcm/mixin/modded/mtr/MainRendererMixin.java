@@ -1,6 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
-import com.lx862.mtrscripting.util.TimingUtil;
+import com.lx862.mtrscripting.util.TimingJS;
 import org.mtr.mod.render.MainRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,7 +13,7 @@ public class MainRendererMixin {
     private static void incrementTimer(CallbackInfoReturnable<?> ci) {
         long elapsedTime = ci.getReturnValueJ();
         if(elapsedTime > 0) { // This can be negative after rejoining world
-            TimingUtil.update(ci.getReturnValueJ());
+            TimingJS.update(ci.getReturnValueJ());
         }
     }
 }

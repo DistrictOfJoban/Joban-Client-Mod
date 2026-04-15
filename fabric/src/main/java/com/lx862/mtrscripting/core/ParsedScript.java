@@ -33,13 +33,13 @@ public class ParsedScript {
     private final List<Function> disposeFunctions;
     private final ScriptManager scriptManager;
     private final Scriptable scope;
-    private final TimingUtil timingUtil;
+    private final TimingJS timingUtil;
     private final ExecutorService executorService;
     private Exception capturedScriptException = null;
     private long lastFailedTime = -1;
 
     public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scripts) throws NoSuchMethodException {
-        this.timingUtil = new TimingUtil();
+        this.timingUtil = new TimingJS();
         this.displayName = displayName;
         this.scriptManager = scriptManager;
         this.createFunctions = new ArrayList<>();
@@ -94,10 +94,10 @@ public class ParsedScript {
         scope.put("BackgroundWorker", scope, new NativeJavaClass(scope, BackgroundWorkerJS.class));
 
         scope.put("Timing", scope, new NativeJavaObject(scope, timingUtil, com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
-        scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTracker.class));
-        scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTracker.class));
-        scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimit.class));
-        scope.put("Networking", scope, new NativeJavaClass(scope, NetworkingUtil.class));
+        scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTrackerJS.class));
+        scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTrackerJS.class));
+        scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimitJS.class));
+        scope.put("Networking", scope, new NativeJavaClass(scope, NetworkingJS.class));
         scope.put("Files", scope, new NativeJavaClass(scope, FilesJS.class));
 
         scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));

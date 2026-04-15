@@ -3,12 +3,12 @@ package com.lx862.mtrscripting.util;
 /* From https://github.com/zbx1425/mtr-nte/blob/master/common/src/main/java/cn/zbx1425/mtrsteamloco/render/scripting/util/CycleTracker.java */
 
 @SuppressWarnings("unused")
-public class CycleTracker {
+public class CycleTrackerJS {
     private final String[] states;
     private final float[] offsets;
     private final float cycleDuration;
 
-    public CycleTracker(Object[] params) {
+    public CycleTrackerJS(Object[] params) {
         if (params.length % 2 != 0) throw new IllegalArgumentException();
         float offset = 0;
         states = new String[params.length / 2];
@@ -29,8 +29,8 @@ public class CycleTracker {
     private boolean firstTimeCurrentState;
 
     public void tick() {
-        double time = TimingUtil.globalElapsed() % cycleDuration;
-        int cycleNum = (int) (TimingUtil.globalElapsed() / cycleDuration);
+        double time = TimingJS.globalElapsed() % cycleDuration;
+        int cycleNum = (int) (TimingJS.globalElapsed() / cycleDuration);
         for (int i = offsets.length - 1; i >= 0; i--) {
             if (time >= offsets[i]) {
                 int stateNum = cycleNum * offsets.length + i;
@@ -57,7 +57,7 @@ public class CycleTracker {
     }
 
     public double stateNowDuration() {
-        return TimingUtil.globalElapsed() - currentStateTime;
+        return TimingJS.globalElapsed() - currentStateTime;
     }
 
     public boolean stateNowFirst() {

@@ -5,7 +5,7 @@ package com.lx862.mtrscripting.util;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class StateTracker {
+public class StateTrackerJS {
     private Object lastState;
     private Object currentState;
     private double currentStateTime;
@@ -15,7 +15,7 @@ public class StateTracker {
         if (!Objects.equals(newValue, currentState)) {
             lastState = currentState;
             currentState = newValue;
-            currentStateTime = TimingUtil.globalElapsed();
+            currentStateTime = TimingJS.globalElapsed();
             firstTimeCurrentState = true;
         } else {
             firstTimeCurrentState = false;
@@ -31,7 +31,7 @@ public class StateTracker {
     }
 
     public double stateNowDuration() {
-        return TimingUtil.globalElapsed() - currentStateTime;
+        return TimingJS.globalElapsed() - currentStateTime;
     }
 
     public boolean stateNowFirst() {

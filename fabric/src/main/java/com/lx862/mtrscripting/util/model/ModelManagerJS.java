@@ -17,12 +17,12 @@ public class ModelManagerJS {
     private static final Map<RawModelJS, ModelJS> modelCache = new HashMap<>();
 
     @Deprecated
-    public static RawModelJS loadRawModel(Object o, Identifier id, Object atlasManager) {
+    public static RawModelJS loadRawModel(Object resourceManager, Identifier id, Object atlasManager) {
         return loadModel(id, false);
     }
 
     @Deprecated
-    public static Map<String, RawModelJS> loadPartedRawModel(Object o, Identifier id, Object atlasManager) {
+    public static Map<String, RawModelJS> loadPartedRawModel(Object resourceManager, Identifier id, Object atlasManager) {
         return loadModelParts(id, false);
     }
 
