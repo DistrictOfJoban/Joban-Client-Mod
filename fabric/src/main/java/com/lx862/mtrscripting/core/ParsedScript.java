@@ -12,6 +12,7 @@ import com.lx862.mtrscripting.util.model.RawMeshBuilderJS;
 import com.lx862.mtrscripting.util.model.RawModelJS;
 import com.lx862.mtrscripting.util.render.ModelDrawCall;
 import com.lx862.mtrscripting.util.render.QuadDrawCall;
+import com.lx862.mtrscripting.util.sound.TickableSoundInstanceJS;
 import com.lx862.mtrscripting.wrapper.MinecraftClientWrapper;
 import com.lx862.mtrscripting.wrapper.VanillaTextWrapper;
 import com.lx862.mtrscripting.wrapper.VoxelShapeWrapper;
@@ -107,6 +108,7 @@ public class ParsedScript {
         scope.put("VoxelShape", scope, new NativeJavaClass(scope, VoxelShapeWrapper.class));
         scope.put("VanillaText", scope, new NativeJavaClass(scope, VanillaTextWrapper.class));
         scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientWrapper.class));
+        scope.put("TickableSoundInstance", scope, new NativeJavaClass(scope, TickableSoundInstanceJS.class));
 
         scope.put("ModelDrawCall", scope, new NativeJavaClass(scope, ModelDrawCall.class));
         scope.put("QuadDrawCall", scope, new NativeJavaClass(scope, QuadDrawCall.class));
@@ -163,10 +165,7 @@ public class ParsedScript {
     }
 
     public Future<?> invokeCreateFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
-        return invokeFunctions(instance, createFunctions, () -> {
-            instance.setCreateFunctionInvoked();
-            finishCallback.run();
-        });
+        return invokeFunctions(instance, createFunctions, finishCallback);
     }
 
     public void invokeRenderFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
@@ -177,6 +176,7 @@ public class ParsedScript {
             instance.scriptTask = invokeFunctions(instance, renderFunctions, finishCallback);
         } else {
             instance.scriptTask = invokeCreateFunctions(instance, () -> {});
+            instance.setCreateFunctionInvoked();
         }
     }
 

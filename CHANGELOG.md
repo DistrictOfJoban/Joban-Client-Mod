@@ -10,6 +10,8 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - Add `RawMeshBuilder` and `RawMesh`, both are *mostly* API-compatible with NTE.
 - Add `generateNormal()`, `distinct()` and `triangulate()` to `RawModel`.
 - Add `customDestination` to `Stop`, which exposes the raw custom destination value.
+- Add `TickableSoundInstance`, allowing sound parameters (e.g. volume/pitch) to be continuously adjusted throughout the playback, as well as the ability to stop the sound midway.
+  - `MinecraftClient.stopSound()` has been removed, you should use a TickableSoundInstance instead and stop with `SoundManager`.
 
 ## Changes
 - `ModelData` has been renamed back to `RawModel`

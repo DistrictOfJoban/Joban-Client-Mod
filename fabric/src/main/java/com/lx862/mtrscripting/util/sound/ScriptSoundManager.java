@@ -2,6 +2,8 @@ package com.lx862.mtrscripting.util.sound;
 
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.mapping.holder.Identifier;
+import org.mtr.mapping.holder.MinecraftClient;
+import org.mtr.mapping.holder.SoundInstance;
 import org.mtr.mapping.holder.World;
 
 import java.util.ArrayList;
@@ -24,6 +26,18 @@ public class ScriptSoundManager {
 
     public void playSound(Identifier id, ScriptVector3f pos, float volume, float pitch) {
         queue(new PositionedSoundCall(id, pos.x(), pos.y(), pos.z(), volume, pitch));
+    }
+
+    public void play(TickableSoundInstanceJS soundInstance) {
+        MinecraftClient.getInstance().submit(() -> {
+            MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(soundInstance));
+        });
+    }
+
+    public void stop(TickableSoundInstanceJS soundInstance) {
+        MinecraftClient.getInstance().submit(() -> {
+            MinecraftClient.getInstance().getSoundManager().stop(new SoundInstance(soundInstance));
+        });
     }
 
     public void queue(SoundCall soundCall) {
