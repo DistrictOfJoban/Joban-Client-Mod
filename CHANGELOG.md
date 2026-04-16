@@ -15,9 +15,9 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 
 ## Changes
 - `ModelData` has been renamed back to `RawModel`
-- Expose the `RawModel` alias to scripts, allowing a `RawModel` to be easily constructed without referencing package name.
-- DisplayHelper is no longer driven by `QuadDrawCall`, this fixes an issue where the display may appear dimmer as intended.
-- **Breaking: The `DisplayHelper.drawCall()` method of drawing is removed, a DisplayHelper now contains a true 3D Model, you should use ModelDrawCall or drawModel functions.**
+- Expose the `RawModel` alias to scripts, allowing a `RawModel` to be constructed without referencing package name. (Same as NTE)
+- DisplayHelper is now driven by `RawMeshBuilder` instead of `QuadDrawCall`, this fixes an issue where the display may appear dimmer as intended.
+- **Breaking: The `DisplayHelper.drawCall()` method of drawing is removed, a DisplayHelper now contains a true 3D Model, you should use the drawModel/drawCarModel functions to render it out.**
 
 ## Fixes
 - Address a known issue in beta.1, where the stops data are incorrectly fetched across routes.
