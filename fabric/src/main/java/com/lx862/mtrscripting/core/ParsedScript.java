@@ -34,6 +34,7 @@ public class ParsedScript {
     private final ScriptManager scriptManager;
     private final Scriptable scope;
     private final TimingJS timingUtil;
+    private final BackgroundWorkerJS backgroundWorker;
     private final ExecutorService executorService;
     private Exception capturedScriptException = null;
     private long lastFailedTime = -1;
@@ -46,6 +47,7 @@ public class ParsedScript {
         this.renderFunctions = new ArrayList<>();
         this.disposeFunctions = new ArrayList<>();
         this.executorService = scriptManager.getDesignatedScriptExecutor();
+        this.backgroundWorker = scriptManager.backgroundWorker;
 
         try {
             Context cx = Context.enter();
@@ -91,7 +93,7 @@ public class ParsedScript {
         scope.put("console", scope, new NativeJavaObject(scope, new ConsoleJS(), com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
         scope.put("Resources", scope, new NativeJavaClass(scope, ScriptResourceUtil.class));
         scope.put("GraphicsTexture", scope, new NativeJavaClass(scope, GraphicsTexture.class));
-        scope.put("BackgroundWorker", scope, new NativeJavaClass(scope, BackgroundWorkerJS.class));
+        scope.put("BackgroundWorker", scope, new NativeJavaObject(scope, backgroundWorker, com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
 
         scope.put("Timing", scope, new NativeJavaObject(scope, timingUtil, com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
         scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTrackerJS.class));

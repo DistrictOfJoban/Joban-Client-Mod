@@ -18,7 +18,8 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
 - **Breaking: The `DisplayHelper.drawCall()` method of drawing is removed, a DisplayHelper now contains a true 3D Model, you should use ModelDrawCall or drawModel functions.**
 
 ## Fixes
-- Address a known issue in beta.1, where the stops data are incorrectly fetched.
+- Address a known issue in beta.1, where the stops data are incorrectly fetched across routes.
+- Fix **BackgroundWorker** not getting interrupted on script reload, allowing submitted task to continue indefinitely.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

@@ -7,6 +7,7 @@ import com.lx862.mtrscripting.data.ScriptContent;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
 import com.lx862.mtrscripting.mod.MTRScripting;
+import com.lx862.mtrscripting.util.BackgroundWorkerJS;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import org.apache.logging.log4j.util.TriConsumer;
@@ -20,6 +21,7 @@ public class ScriptManager {
     private final MTRClassShutter classShutter;
     private final ScriptInstanceManager instanceManager;
     private final List<ExecutorService> scriptExecutors;
+    public final BackgroundWorkerJS backgroundWorker;
 
     private int nextScriptExecutor = 0;
 
@@ -29,9 +31,10 @@ public class ScriptManager {
      */
     public ScriptManager(List<ExecutorService> scriptExecutors) {
         if(scriptExecutors == null || scriptExecutors.isEmpty()) throw new IllegalArgumentException("At least 1 script executors must be passed to ScriptManager!");
-        this.instanceManager = new ScriptInstanceManager();
         this.scriptExecutors = scriptExecutors;
+        this.instanceManager = new ScriptInstanceManager();
         this.classShutter = new MTRClassShutter();
+        this.backgroundWorker = new BackgroundWorkerJS();
         ParticleData.init();
     }
 
@@ -80,6 +83,7 @@ public class ScriptManager {
      * This should be called on resource reload */
     public void reset() {
         instanceManager.reset();
+        backgroundWorker.reset();
     }
 
     /** Submit a task to the script thread executor */
