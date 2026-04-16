@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.extra;
 
 import com.lx862.jcm.mixin.modded.mtrpatch.OptimizedRendererAccessorMixin;
 import com.lx862.jcm.mixin.modded.mtrpatch.OptimizedRendererWrapperAccessorMixin;
+import it.unimi.dsi.fastutil.longs.Long2IntArrayMap;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mapping.render.shader.ModShaderHandler;
@@ -13,7 +14,9 @@ import java.nio.file.FileSystems;
 import java.util.Locale;
 
 public class JCMPatchForMTR {
+    public static Identifier LIFT_DING_SOUND = new Identifier("minecraft:block.note_block.pling");
     private static boolean cachedRenderingShadow = false;
+    private static Long2IntArrayMap liftInstructions = new Long2IntArrayMap();
 
     /**
      * Reload optimized rendering shaders.<br>
@@ -53,5 +56,12 @@ public class JCMPatchForMTR {
 
     public static boolean isRenderingShadow() {
         return cachedRenderingShadow;
+    }
+
+    public static boolean liftJustArrived(long liftId, int currentInstructionSize) {
+        long lastValue = liftInstructions.getOrDefault(liftId, currentInstructionSize);
+        boolean liftJustArrived = currentInstructionSize == 0 && lastValue == 1;
+        liftInstructions.put(liftId, currentInstructionSize);
+        return liftJustArrived;
     }
 }

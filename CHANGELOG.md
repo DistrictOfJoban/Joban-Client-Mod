@@ -1,12 +1,14 @@
 # JCM v2.2.0-beta-2 for MTR 4.0.4 has been released!
 
-This enhances compatibility with NTE scripts and fix some issues.
+This release brings back the MTR 3 lift arrival sound (The ding sound), enhance compatibility with NTE scripts and fix some issue.
 
 **Client & Server Update is required**
 
 Unless otherwise noted, all changes below pertains to the Scripting feature in JCM.
 
 ## Additions
+- **(Non-scripting) MTR Patch**
+  - Revive the **lift ding** sound feature from MTR 3, now they should function mostly equivalently.
 - Add `RawMeshBuilder` and `RawMesh`, both are *mostly* API-compatible with NTE.
 - Add `generateNormal()`, `distinct()` and `triangulate()` to `RawModel`.
 - Add `customDestination` to `Stop`, which exposes the raw custom destination value.

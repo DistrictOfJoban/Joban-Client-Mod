@@ -29,6 +29,8 @@
     "modded.mtr.VertexAttributeStateAccessor",
     "modded.mtrpatch.CustomResourceLoaderMixin",
     "modded.mtrpatch.CustomResourceToolsMixin",
+    "modded.mtrpatch.LiftMixin",
+    "modded.mtrpatch.LiftTrackFloorScreenMixin",
     "modded.mtrpatch.MainRendererMixin",
     "modded.mtrpatch.ObjectResourceSchemaMixin",
     "modded.mtrpatch.OptimizedRendererAccessorMixin",
