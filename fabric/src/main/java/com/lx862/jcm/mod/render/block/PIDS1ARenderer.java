@@ -17,10 +17,10 @@ public class PIDS1ARenderer extends PIDSRenderer<PIDS1ABlockEntity> {
     }
 
     @Override
-    public void renderPIDS(PIDS1ABlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden, int light) {
+    public void renderPIDS(PIDS1ABlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList targetPlatformIds, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden, int light) {
         storedMatrixTransformations.add(graphicsHolderNew -> {
             graphicsHolderNew.translate(-0.47, -0.155, -0.130);
         });
-        pidsPreset.render(blockEntity, graphicsHolder, storedMatrixTransformations, world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 186, 60, light);
+        pidsPreset.render(blockEntity, graphicsHolder, storedMatrixTransformations, world, blockEntity.getPos2(), facing, targetPlatformIds, arrivals, rowHidden, tickDelta, 0, 0, 186, 60, light);
     }
 }

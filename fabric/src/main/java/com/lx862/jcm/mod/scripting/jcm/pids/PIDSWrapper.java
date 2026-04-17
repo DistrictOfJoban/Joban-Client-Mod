@@ -4,24 +4,31 @@ import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.core.data.Station;
 import org.mtr.core.operation.ArrivalResponse;
+import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mod.InitClient;
 
 public class PIDSWrapper {
     private final PIDSBlockEntity be;
     private final ArrivalsWrapper arrivalsWrapper;
+    private final LongImmutableList targetPlatformIds;
     public final String type;
     public final int rows;
     public final int width;
     public final int height;
 
-    public PIDSWrapper(PIDSBlockEntity be, ObjectArrayList<ArrivalResponse> arrivalsResponse, int width, int height) {
+    public PIDSWrapper(PIDSBlockEntity be, LongImmutableList targetPlatformIds, ObjectArrayList<ArrivalResponse> arrivalsResponse, int width, int height) {
         this.be = be;
         this.type = be.getPIDSType();
         this.width = width;
         this.height = height;
         this.rows = be.getRowAmount();
+        this.targetPlatformIds = targetPlatformIds;
         this.arrivalsWrapper = new ArrivalsWrapper(arrivalsResponse);
+    }
+
+    public LongImmutableList getTargetPlatformIds() {
+        return targetPlatformIds;
     }
 
     public ScriptVector3f blockPos() {

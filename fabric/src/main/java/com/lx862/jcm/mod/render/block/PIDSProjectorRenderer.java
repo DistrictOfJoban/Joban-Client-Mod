@@ -6,6 +6,7 @@ import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.JCMUtil;
 import org.mtr.core.operation.ArrivalResponse;
+import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
@@ -19,7 +20,7 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
     }
 
     @Override
-    public void renderPIDS(PIDSProjectorBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden, int light) {
+    public void renderPIDS(PIDSProjectorBlockEntity blockEntity, PIDSPresetBase pidsPreset, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockState state, BlockPos pos, Direction facing, LongImmutableList targetPlatformIds, ObjectArrayList<ArrivalResponse> arrivals, float tickDelta, boolean[] rowHidden, int light) {
         float appliedScale = (float)blockEntity.getScale();
         float offsetX = (float)(0.5 - blockEntity.getOffsetX());
         float offsetY = (float)(0.5 + blockEntity.getOffsetY());
@@ -57,7 +58,7 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
             graphicsHolderNew.scale(appliedScale, appliedScale, appliedScale);
         });
 
-        pidsPreset.render(blockEntity, graphicsHolder, newMatrices.copy(), world, blockEntity.getPos2(), facing, arrivals, rowHidden, tickDelta, 0, 0, 136, 76, light);
+        pidsPreset.render(blockEntity, graphicsHolder, newMatrices.copy(), world, blockEntity.getPos2(), facing, targetPlatformIds, arrivals, rowHidden, tickDelta, 0, 0, 136, 76, light);
 
         // Border
         if(showOutline) {

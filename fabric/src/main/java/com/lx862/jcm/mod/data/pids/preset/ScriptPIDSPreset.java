@@ -15,6 +15,7 @@ import com.lx862.mtrscripting.data.UniqueKey;
 import com.lx862.mtrscripting.core.ScriptInstance;
 import com.lx862.mtrscripting.util.ScriptVector3f;
 import org.mtr.core.operation.ArrivalResponse;
+import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.Direction;
@@ -87,8 +88,8 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     }
 
     @Override
-    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height, int light) {
-        PIDSWrapper pidsWrapper = new PIDSWrapper(be, arrivals, width, height);
+    public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, LongImmutableList targetPlatformIds, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height, int light) {
+        PIDSWrapper pidsWrapper = new PIDSWrapper(be, targetPlatformIds, arrivals, width, height);
         ScriptInstance<PIDSWrapper> scriptInstance = JCMScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("pids", getId(), pos.getX(), pos.getY(), pos.getZ()), () -> new PIDSScriptInstance(be, parsedScripts, pidsWrapper));
 
         if(scriptInstance instanceof PIDSScriptInstance) {
