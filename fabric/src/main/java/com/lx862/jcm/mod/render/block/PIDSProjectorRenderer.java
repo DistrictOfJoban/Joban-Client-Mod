@@ -72,4 +72,10 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
             });
         }
     }
+
+    @Override
+    public boolean rendersOutsideBoundingBox2(PIDSProjectorBlockEntity blockEntity) {
+        // Most other PIDS have a known size which usually only ranges to ~2 blocks, PIDS Projector is an exception, devs can create whatever they want
+        return true;
+    }
 }
