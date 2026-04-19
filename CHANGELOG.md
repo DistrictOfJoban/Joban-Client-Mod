@@ -4,11 +4,8 @@ This release brings back the MTR 3 lift arrival sound (The ding sound), enhance 
 
 **Client & Server Update is required**
 
-Unless otherwise noted, all changes below pertains to the Scripting feature in JCM.
-
 ## Additions
-- **(Non-scripting) MTR Patch**
-  - Revive the **lift ding** sound feature from MTR 3, now they should function mostly equivalently.
+- - **(Non-scripting)** Revive the **lift ding** sound feature from MTR 3, now they should function mostly equivalently.
 - Add `RawMeshBuilder` and `RawMesh`, both are *mostly* API-compatible with NTE.
 - Add `generateNormal()`, `distinct()` and `triangulate()` to `RawModel`.
 - Add `customDestination` to `Stop`, which exposes the raw custom destination value.
@@ -18,8 +15,7 @@ Unless otherwise noted, all changes below pertains to the Scripting feature in J
   - Add `PIDSBlockEntity.getTargetPlatformIds()` to obtain the detected/selected platform id for ETA monitoring.
 
 ## Changes
-- `ModelData` has been renamed back to `RawModel`
-- Expose the `RawModel` alias to scripts, allowing a `RawModel` to be constructed without referencing package name. (Same as NTE)
+- `ModelData` has been renamed to `RawModel`
 - DisplayHelper is now driven by `RawMeshBuilder` instead of `QuadDrawCall`, this fixes an issue where the display may appear dimmer as intended.
 - **Breaking: The `DisplayHelper.drawCall()` method of drawing is removed, a DisplayHelper now contains a true 3D Model, you should use the drawModel/drawCarModel functions to render it out.**
 - **PIDS Projector** is no longer culled, as it may result in large displays being cut-off.
