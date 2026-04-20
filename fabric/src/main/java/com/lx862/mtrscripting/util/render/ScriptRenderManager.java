@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.util.render;
 
-import com.lx862.jcm.mod.scripting.jcm.pids.PIDSScriptContext;
+import com.lx862.mtrscripting.util.Matrices;
+import com.lx862.mtrscripting.util.model.ModelJS;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mod.render.StoredMatrixTransformations;
@@ -20,13 +21,18 @@ public class ScriptRenderManager {
         this.drawCalls.addAll(drawCalls);
     }
 
-    /**
-     * Internally invoked by {@link PIDSScriptContext#draw(Object)}
-     * Although user may also decide not to use method chaining and manually invoke this with their PIDS draw call instead.
-     * */
-    public void queue(RenderDrawCall<?> call) {
-        call.validate();
-        this.drawCalls.add(call);
+    public void drawModel(ModelJS model, Matrices matrices) {
+        draw(new ModelDrawCall().modelObject(model).matrices(matrices));
+    }
+
+    public void draw(RenderDrawCall<?> drawCall) {
+        drawCall.validate();
+        this.drawCalls.add(drawCall);
+    }
+
+    @Deprecated
+    public void queue(RenderDrawCall<?> drawCall) {
+        this.draw(drawCall);
     }
 
     public void invoke(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {

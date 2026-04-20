@@ -56,7 +56,7 @@ public class PIDSScriptContext extends MTRScriptContext {
                 pidsDrawCall.incrementZOrder(currentZOrder, zOrderStep);
                 currentZOrder++;
             }
-            renderManager().queue(pidsDrawCall);
+            renderManager().draw(pidsDrawCall);
         } else {
             throw new IllegalArgumentException("1st parameter is not a PIDSDrawCall!");
         }

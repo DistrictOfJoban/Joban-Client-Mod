@@ -79,7 +79,7 @@ public class EyeCandyScriptContext extends MTRScriptContext {
         ModelDrawCall modelDrawCall = ModelDrawCall.create()
                 .modelObject(model)
                 .matrices(matrices);
-        renderManager().queue(modelDrawCall);
+        renderManager().draw(modelDrawCall);
     }
 
     public void playSound(Identifier id, float volume, float pitch) {

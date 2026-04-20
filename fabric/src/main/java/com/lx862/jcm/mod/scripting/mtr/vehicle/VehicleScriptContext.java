@@ -48,7 +48,7 @@ public class VehicleScriptContext extends MTRScriptContext {
         ModelDrawCall modelDrawCall = ModelDrawCall.create()
                 .matrices(matrices)
                 .modelObject(model);
-        renderManager.queue(modelDrawCall);
+        renderManager.draw(modelDrawCall);
     }
 
     public void drawConnModel(ModelJS model, int carIndex, Matrices matrices) {
