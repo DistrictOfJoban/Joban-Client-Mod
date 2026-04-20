@@ -1,28 +1,10 @@
-# JCM v2.2.0-beta-2 for MTR 4.0.4 has been released!
-
-This release brings back the MTR 3 lift arrival sound (The ding sound), enhance compatibility with NTE scripts and fix some issue.
-
-**Client & Server Update is required**
+# JCM v2.2.0-beta.3 for MTR 4.0.4 has been released!
 
 ## Additions
-- - **(Non-scripting)** Revive the **lift ding** sound feature from MTR 3, now they should function mostly equivalently.
-- Add `RawMeshBuilder` and `RawMesh`, both are *mostly* API-compatible with NTE.
-- Add `generateNormal()`, `distinct()` and `triangulate()` to `RawModel`.
-- Add `customDestination` to `Stop`, which exposes the raw custom destination value.
-- Add `TickableSoundInstance`, allowing sound parameters (e.g. volume/pitch) to be continuously adjusted throughout the playback, as well as the ability to stop the sound midway.
-  - `MinecraftClient.stopSound()` has been removed, you should use a TickableSoundInstance instead and stop with `SoundManager`.
-- **PIDS Scripting**
-  - Add `PIDSBlockEntity.getTargetPlatformIds()` to obtain the detected/selected platform id for ETA monitoring.
+- Add `RenderManager.drawModel(model: Model, matrices: Matrices?)` as an alternative way to draw model with RenderManager.
 
 ## Changes
-- `ModelData` has been renamed to `RawModel`
-- DisplayHelper is now driven by `RawMeshBuilder` instead of `QuadDrawCall`, this fixes an issue where the display may appear dimmer as intended.
-- **Breaking: The `DisplayHelper.drawCall()` method of drawing is removed, a DisplayHelper now contains a true 3D Model, you should use the drawModel/drawCarModel functions to render it out.**
-- **PIDS Projector** is no longer culled, as it may result in large displays being cut-off.
-
-## Fixes
-- Address a known issue in beta.1, where the stops data are incorrectly fetched across routes.
-- Fix **BackgroundWorker** not getting interrupted on script reload, allowing submitted task to continue indefinitely.
+- Scripted PIDS now also shows an in-game error in the chat, with script debug mode enabled.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

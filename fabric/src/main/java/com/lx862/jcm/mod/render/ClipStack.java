@@ -1,18 +1,18 @@
 package com.lx862.jcm.mod.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
 import org.mtr.mapping.holder.MinecraftClient;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Keep track of applied OpenGL Scissors, this should be the primary way to apply clipping to the GUI.<br>
  * Use {@link ClipStack#push(int, int, int, int)} to apply a new clip, and {@link ClipStack#pop()} after finish clipping.
  */
 public class ClipStack {
-    private static final ObjectList<Rectangle> stacks = new ObjectArrayList<>();
+    private static final List<Rectangle> stacks = new ArrayList<>();
 
     /**
      * Push and apply a new clipping area.<br>

@@ -1,8 +1,8 @@
 package com.lx862.jcm.mod.network.scripting;
 
 import com.lx862.jcm.mod.config.JCMClientConfig;
-import com.lx862.jcm.mod.scripting.MTRDatasetHolder;
-import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
+import com.lx862.mtrscripting.mod.impl.mtr.MTRDatasetHolder;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;

@@ -1,11 +1,14 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.config.JCMClientConfig;
-import com.lx862.jcm.mod.resources.MTRContentResourceManager;
-import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
-import com.lx862.jcm.mod.scripting.mtr.vehicle.*;
-import com.lx862.mtrscripting.core.ParsedScript;
-import com.lx862.mtrscripting.data.UniqueKey;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.NTETrainWrapper;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptContext;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptInstance;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper;
+import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
+import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
+import com.lx862.mtrscripting.core.primitive.ParsedScript;
+import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import org.mtr.core.data.VehicleCar;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -53,7 +56,7 @@ public class RenderVehiclesMixin {
                 VehicleScriptInstance scriptInstance = (VehicleScriptInstance) MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntryId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, scriptEntryId, carsArray, requireDataPrefetching), vehicle, scriptEntry.getValue()));
                 if(scriptInstance == null) continue;
 
-                VehicleScriptContext.DataFetchMode dataFetchMode = ((VehicleScriptContext)scriptInstance.getScriptContext()).getDataFetchMode();
+                VehicleScriptContext.DataFetchMode dataFetchMode = ((VehicleScriptContext)scriptInstance.getContextObject()).getDataFetchMode();
                 VehicleWrapper wrapperObject = new NTETrainWrapper(dataFetchMode, vehicle);
                 scriptInstance.setWrapperObject(wrapperObject);
 
@@ -62,7 +65,7 @@ public class RenderVehiclesMixin {
                 }
 
                 scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
-                    VehicleScriptContext ctx = (VehicleScriptContext) scriptInstance.getScriptContext();
+                    VehicleScriptContext ctx = (VehicleScriptContext) scriptInstance.getContextObject();
                     scriptInstance.captureRenderCalls(ctx.getCarRenderManagers());
                     scriptInstance.captureSoundCalls(ctx.getCarSoundManagers());
                     ctx.resetForNextRun();

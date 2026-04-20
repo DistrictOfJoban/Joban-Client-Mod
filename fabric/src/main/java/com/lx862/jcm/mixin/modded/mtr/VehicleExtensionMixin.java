@@ -1,6 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
-import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleDataCache;
 import org.mtr.core.data.Vehicle;
 import org.mtr.mod.data.VehicleExtension;
 import org.spongepowered.asm.mixin.Mixin;

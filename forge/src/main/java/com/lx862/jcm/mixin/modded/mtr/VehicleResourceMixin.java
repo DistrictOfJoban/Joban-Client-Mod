@@ -1,14 +1,14 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.config.JCMClientConfig;
-import com.lx862.jcm.mod.resources.MTRContentResourceManager;
-import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
-import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleScriptInstance;
-import com.lx862.mtrscripting.core.ScriptInstance;
-import com.lx862.mtrscripting.data.UniqueKey;
-import com.lx862.mtrscripting.util.ScriptVector3f;
-import com.lx862.mtrscripting.util.render.ScriptRenderManager;
-import com.lx862.mtrscripting.util.sound.ScriptSoundManager;
+import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
+import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptInstance;
+import com.lx862.mtrscripting.core.primitive.ScriptInstance;
+import com.lx862.mtrscripting.core.primitive.UniqueKey;
+import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
+import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
 import org.mtr.core.data.VehicleCar;
 import org.mtr.core.tool.Vector;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;

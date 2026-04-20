@@ -14,7 +14,7 @@ public class MainForge {
         JCM.initialize();
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
             ForgeConfig.registerConfig();
-            JCMClient.initializeClient();
+            JCMClient.initialize();
         });
         MinecraftForge.EVENT_BUS.register(new MigrateMapping());
     }

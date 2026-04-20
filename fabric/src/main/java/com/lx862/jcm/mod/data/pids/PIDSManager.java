@@ -6,13 +6,14 @@ import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.data.pids.preset.ScriptPIDSPreset;
 import com.lx862.jcm.mod.util.JCMLogger;
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class PIDSManager {
-    private static final Object2ObjectArrayMap<String, PIDSPresetBase> presetList = new Object2ObjectArrayMap<>();
+    private static final Map<String, PIDSPresetBase> presetList = new HashMap<>();
 
     public static void loadJson(JsonObject customResourceJson) {
         customResourceJson.get("pids_images").getAsJsonArray().forEach(e -> {

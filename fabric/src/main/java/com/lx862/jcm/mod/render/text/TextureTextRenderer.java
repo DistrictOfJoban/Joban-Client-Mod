@@ -6,8 +6,6 @@ import com.lx862.jcm.mod.render.text.font.FontSet;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
@@ -22,6 +20,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.text.AttributedString;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,7 +37,7 @@ public class TextureTextRenderer implements RenderHelper {
     private static final int DEFAULT_ATLAS_WIDTH = 1024;
     private static final int DEFAULT_ATLAS_HEIGHT = 1024;
     private static final int MAX_ATLAS_SIZE = RenderSystem.maxSupportedTextureSize();
-    private static final ObjectList<TextSlot> textSlots = new ObjectArrayList<>();
+    private static final List<TextSlot> textSlots = new ArrayList<>();
     private static NativeImageBackedTexture nativeImageBackedTexture = null;
     private static BufferedImage bufferedImageForTextGen = null;
     public static final int RENDERED_TEXT_SIZE = 9;

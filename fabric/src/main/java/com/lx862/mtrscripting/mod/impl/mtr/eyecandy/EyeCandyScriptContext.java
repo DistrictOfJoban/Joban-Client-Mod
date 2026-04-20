@@ -1,0 +1,98 @@
+package com.lx862.mtrscripting.mod.impl.mtr.eyecandy;
+
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import com.lx862.mtrscripting.core.annotation.ValueNullable;
+import com.lx862.mtrscripting.mod.impl.mtr.MTRScriptContext;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.event.EyecandyEvents;
+import com.lx862.mtrscripting.core.util.render.ModelDrawCall;
+import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
+import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
+import com.lx862.mtrscripting.core.util.model.ModelJS;
+import com.lx862.mtrscripting.core.util.Matrices;
+import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.core.integration.VoxelShapeWrapper;
+import org.mtr.mapping.holder.Identifier;
+import org.mtr.mapping.holder.VoxelShape;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@SuppressWarnings("unused")
+public class EyeCandyScriptContext extends MTRScriptContext {
+    private final EyecandyBlockEntityWrapper blockEntity;
+    private final List<ModelDrawCall> drawCalls = new ArrayList<>();
+    private final EyecandyEvents events;
+    private VoxelShapeWrapper outlineShape;
+    private VoxelShapeWrapper collisionShape;
+    protected final ScriptSoundManager soundManager;
+    protected final ScriptRenderManager renderManager;
+
+    public EyeCandyScriptContext(EyecandyBlockEntityWrapper blockEntity) {
+        super(blockEntity.getModelId());
+        this.blockEntity = blockEntity;
+        this.events = new EyecandyEvents();
+        this.outlineShape = null;
+        this.soundManager = new ScriptSoundManager();
+        this.renderManager = new ScriptRenderManager();
+    }
+
+    @Deprecated
+    public ScriptRenderManager renderManager() {
+        return getRenderManager();
+    }
+
+    @Deprecated
+    public ScriptSoundManager soundManager() {
+        return getSoundManager();
+    }
+
+    public ScriptRenderManager getRenderManager() {
+        return this.renderManager;
+    }
+
+    public ScriptSoundManager getSoundManager() {
+        return this.soundManager;
+    }
+
+    public EyecandyEvents events() {
+        return events;
+    }
+
+    @ApiInternal
+    public VoxelShape getOutlineShape() {
+        return this.outlineShape == null ? null : this.outlineShape.impl();
+    }
+
+    @ApiInternal
+    public VoxelShape getCollisionShape() {
+        return this.collisionShape == null ? null : this.collisionShape.impl();
+    }
+
+    public void setOutlineShape(VoxelShapeWrapper voxelShapeWrapper) {
+        this.outlineShape = voxelShapeWrapper;
+    }
+
+    public void setCollisionShape(VoxelShapeWrapper voxelShapeWrapper) {
+        if(voxelShapeWrapper.impl().getBoundingBox().getMaxYMapped() > 1.5) {
+            throw new IllegalStateException("Collision shape must not be larger than 1.5 blocks (24 unit)!");
+        }
+        this.collisionShape = voxelShapeWrapper;
+    }
+
+    public void drawModel(ModelJS model, @ValueNullable Matrices matrices) {
+        ModelDrawCall modelDrawCall = ModelDrawCall.create()
+                .modelObject(model)
+                .matrices(matrices);
+        renderManager().draw(modelDrawCall);
+    }
+
+    public void playSound(Identifier id, float volume, float pitch) {
+        soundManager().playSound(id, ScriptVector3f.ZERO, volume, pitch);
+    }
+
+    @Override
+    public void resetForNextRun() {
+        this.renderManager.reset();
+        this.soundManager.reset();
+    }
+}

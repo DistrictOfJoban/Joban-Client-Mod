@@ -1,11 +1,11 @@
 package com.lx862.jcm.mapping;
 
 import com.lx862.jcm.mixin.minecraft.NativeImageAccessor;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ScreenExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,7 +44,7 @@ public class LoaderImplClient {
     }
 
     public static List<PlayerEntity> getWorldPlayers(ClientWorld world) {
-        List<PlayerEntity> players = new ObjectArrayList<>();
+        List<PlayerEntity> players = new ArrayList<>();
         for(AbstractClientPlayerEntity entity : world.data.getPlayers()) {
             players.add(new PlayerEntity(entity));
         }

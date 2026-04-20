@@ -1,6 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
-import com.lx862.mtrscripting.util.TimingJS;
+import com.lx862.mtrscripting.core.util.TimingJS;
 import org.mtr.mod.render.MainRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

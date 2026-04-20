@@ -1,10 +1,10 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
-import com.lx862.jcm.mod.scripting.mtr.MTRContentScripting;
-import com.lx862.jcm.mod.scripting.mtr.eyecandy.EyeCandyScriptContext;
-import com.lx862.jcm.mod.scripting.mtr.eyecandy.event.BlockUseEvent;
-import com.lx862.mtrscripting.core.ScriptInstance;
-import com.lx862.mtrscripting.data.UniqueKey;
+import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.EyeCandyScriptContext;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.event.BlockUseEvent;
+import com.lx862.mtrscripting.core.primitive.ScriptInstance;
+import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import org.mtr.mapping.holder.*;
 import org.mtr.mod.Items;
 import org.mtr.mod.block.BlockEyeCandy;
@@ -32,8 +32,8 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
 
                 if(notHoldingBrush) {
                     ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity) blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
-                    if (scriptInstance != null && scriptInstance.getScriptContext() instanceof EyeCandyScriptContext) {
-                        VoxelShape shape = ((EyeCandyScriptContext) scriptInstance.getScriptContext()).getOutlineShape();
+                    if (scriptInstance != null && scriptInstance.getContextObject() instanceof EyeCandyScriptContext) {
+                        VoxelShape shape = ((EyeCandyScriptContext) scriptInstance.getContextObject()).getOutlineShape();
                         if(shape != null) {
                             return shape;
                         }
@@ -55,8 +55,8 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
 
                 if(notHoldingBrush) {
                     ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity) blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
-                    if (scriptInstance != null && scriptInstance.getScriptContext() instanceof EyeCandyScriptContext) {
-                        VoxelShape shape = ((EyeCandyScriptContext) scriptInstance.getScriptContext()).getCollisionShape();
+                    if (scriptInstance != null && scriptInstance.getContextObject() instanceof EyeCandyScriptContext) {
+                        VoxelShape shape = ((EyeCandyScriptContext) scriptInstance.getContextObject()).getCollisionShape();
                         if(shape != null) {
                             return shape;
                         }
@@ -78,8 +78,8 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
                 org.mtr.mapping.holder.BlockEntity blockEntity = world.getBlockEntity(pos);
                 if (blockEntity != null && blockEntity.data instanceof BlockEyeCandy.BlockEntity) {
                     ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity)blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
-                    if(scriptInstance != null && scriptInstance.getScriptContext() instanceof EyeCandyScriptContext) {
-                        ((EyeCandyScriptContext)scriptInstance.getScriptContext()).events().onBlockUse.trigger(new BlockUseEvent(player, player.getStackInHand(hand)));
+                    if(scriptInstance != null && scriptInstance.getContextObject() instanceof EyeCandyScriptContext) {
+                        ((EyeCandyScriptContext)scriptInstance.getContextObject()).events().onBlockUse.trigger(new BlockUseEvent(player, player.getStackInHand(hand)));
                         cir.setReturnValue(ActionResult.SUCCESS);
                     }
                 }

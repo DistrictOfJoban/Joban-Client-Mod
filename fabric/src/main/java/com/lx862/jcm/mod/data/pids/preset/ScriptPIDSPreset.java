@@ -4,25 +4,23 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
-import com.lx862.jcm.mod.scripting.jcm.JCMScripting;
-import com.lx862.jcm.mod.scripting.jcm.pids.PIDSScriptContext;
-import com.lx862.jcm.mod.scripting.jcm.pids.PIDSScriptInstance;
-import com.lx862.jcm.mod.scripting.jcm.pids.PIDSWrapper;
+import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.jcm.mod.scripting.JCMScripting;
+import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
+import com.lx862.jcm.mod.scripting.pids.PIDSScriptInstance;
+import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
 import com.lx862.jcm.mod.util.JCMLogger;
-import com.lx862.mtrscripting.core.ParsedScript;
-import com.lx862.mtrscripting.data.ScriptContent;
-import com.lx862.mtrscripting.data.UniqueKey;
-import com.lx862.mtrscripting.core.ScriptInstance;
-import com.lx862.mtrscripting.util.ScriptVector3f;
+import com.lx862.mtrscripting.core.primitive.ParsedScript;
+import com.lx862.mtrscripting.core.primitive.ScriptContent;
+import com.lx862.mtrscripting.core.primitive.UniqueKey;
+import com.lx862.mtrscripting.core.primitive.ScriptInstance;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import org.mtr.mapping.holder.BlockPos;
-import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.World;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
+import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
 import javax.annotation.Nullable;
@@ -83,8 +81,13 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             }
         }
 
-        ParsedScript parsedScripts = JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts);
-        return new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, parsedScripts);
+        try {
+            ParsedScript script = scripts.isEmpty() ? null : JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts);
+            return script == null ? null : new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, script);
+        } catch (Exception e) {
+            logError("parsing PIDS script with id " + id, e);
+            return null;
+        }
     }
 
     @Override
@@ -94,7 +97,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;
-            PIDSScriptContext scriptContext = (PIDSScriptContext)scriptInstance.getScriptContext();
+            PIDSScriptContext scriptContext = (PIDSScriptContext)scriptInstance.getContextObject();
 
             scriptInstance.setWrapperObject(pidsWrapper);
             scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
@@ -117,5 +120,18 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     @Override
     public boolean isRowHidden(int row) {
         return false;
+    }
+
+    public static void logError(String action, Exception e) {
+        if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
+            JCMLogger.error("[JCM] Error while " + action + "!", e);
+            if(MinecraftClient.getInstance().getPlayerMapped() != null) {
+                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("[JCM] Error while " + action + "!"), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+            }
+        } else {
+            JCMLogger.error("[JCM] Error while " + action + ": " + e.getMessage());
+            JCMLogger.error("(Enable debug mode to see more information)");
+        }
     }
 }

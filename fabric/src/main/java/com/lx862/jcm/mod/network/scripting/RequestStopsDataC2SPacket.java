@@ -5,7 +5,7 @@ import com.lx862.jcm.mixin.modded.tsc.MainAccessorMixin;
 import com.lx862.jcm.mixin.modded.tsc.SidingAccessorMixin;
 import com.lx862.jcm.mod.config.JCMServerConfig;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.scripting.mtr.vehicle.VehicleDataCache;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.core.Main;
 import org.mtr.core.data.*;
