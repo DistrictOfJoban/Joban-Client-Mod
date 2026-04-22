@@ -21,9 +21,6 @@ public class JCMScripting {
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
-        MTRScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);
-        MTRScriptDebugOverlay.registerDebugSource("JCM", scriptManager);
-
         scriptManager = new ScriptManager(JCMLogger.LOGGER, MTRContentScripting.getScriptExecutors());
         scriptManager.getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
         scriptManager.getClassShutter().allowClass(ClassRule.parse("org.mtr.*"));
@@ -39,6 +36,9 @@ public class JCMScripting {
                 scriptable.put("Texture", scriptable, new NativeJavaClass(scriptable, TextureWrapper.class));
             }
         });
+
+        MTRScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);
+        MTRScriptDebugOverlay.registerDebugSource("JCM", scriptManager);
     }
 
     public static ScriptManager getScriptManager() {

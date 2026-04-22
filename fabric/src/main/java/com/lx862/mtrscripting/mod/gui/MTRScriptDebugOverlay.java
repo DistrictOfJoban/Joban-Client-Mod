@@ -27,6 +27,7 @@ public class MTRScriptDebugOverlay {
     private static int sourceIndex;
 
     public static void registerDebugSource(String sourceName, ScriptManager scriptManager) {
+        if(scriptManager == null) throw new IllegalArgumentException("scriptManager must not be null!");
         debugSources.add(new ScriptDebugSource(sourceName, scriptManager));
     }
 

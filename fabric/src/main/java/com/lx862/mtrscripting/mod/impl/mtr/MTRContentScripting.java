@@ -43,8 +43,6 @@ public class MTRContentScripting {
             mtrModVersion = (String) Keys.class.getField("MOD_VERSION").get(null);
         } catch (ReflectiveOperationException ignored) {
         }
-        MTRScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
-        MTRScriptDebugOverlay.registerDebugSource("MTR", scriptManager);
 
         scriptManager.getClassShutter().allowClass(ClassRule.parse("org.mtr.*"));
         scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.mtrscripting.mod.impl.mtr.*"));
@@ -53,6 +51,9 @@ public class MTRContentScripting {
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
         });
+
+        MTRScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
+        MTRScriptDebugOverlay.registerDebugSource("MTR", scriptManager);
     }
 
     public static ScriptManager getScriptManager() {
