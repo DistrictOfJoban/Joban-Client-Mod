@@ -41,7 +41,7 @@ public abstract class PIDSRenderer<T extends PIDSBlockEntity> extends JCMBlockEn
             platforms = new LongImmutableList(blockEntity.getPlatformIds());
         } else {
             LongArrayList closestPlatforms = new LongArrayList();
-            InitClient.findClosePlatform(pos, 5, e -> closestPlatforms.add(e.getId()));
+            InitClient.findClosePlatform(pos.down(4), 5, e -> closestPlatforms.add(e.getId()));
             platforms = new LongImmutableList(closestPlatforms);
         }
 

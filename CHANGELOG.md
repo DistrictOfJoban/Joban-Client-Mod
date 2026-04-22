@@ -6,5 +6,8 @@
 ## Changes
 - Scripted PIDS now also shows an in-game error in the chat, with script debug mode enabled.
 
+## Fixes
+- **(Non-scripting)** Fix JCM PIDS auto platform detection range, now the platform detected should behave the same as MTR PIDS.
+
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
