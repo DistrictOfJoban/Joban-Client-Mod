@@ -2,6 +2,7 @@
 
 ## Additions
 - Add `RenderManager.drawModel(model: Model, matrices: Matrices?)` as an alternative way to draw model with RenderManager.
+- Add more overload for `GraphicsTexture.upload()`, allowing for uploading selected portion of image to conserve performance.
 
 ## Changes
 - Scripted PIDS now also shows an in-game error in the chat, with script debug mode enabled.

@@ -66,6 +66,20 @@ public class GraphicsTexture implements Closeable {
         RenderSystem.recordRenderCall(dynamicTexture::upload);
     }
 
+    public void upload(int x, int y, int width, int height) {
+        upload(x, y, x, y, width, height);
+    }
+
+    public void upload(int offsetX, int offsetY, int contentOffsetX, int contentOffsetY, int width, int height) {
+        RenderSystem.recordRenderCall(() -> {
+            NativeImage nativeImage = dynamicTexture.getImage();
+            if(nativeImage != null) {
+                dynamicTexture.bindTexture();
+                nativeImage.upload(0, offsetX, offsetY, contentOffsetX, contentOffsetX, width, height, false, false, false, false);
+            }
+        });
+    }
+
     @Override
     public void close() {
         MinecraftClient.getInstance().execute(() -> {
