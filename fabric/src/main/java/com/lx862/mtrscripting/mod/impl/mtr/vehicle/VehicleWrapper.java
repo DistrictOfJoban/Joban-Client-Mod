@@ -2,6 +2,8 @@ package com.lx862.mtrscripting.mod.impl.mtr.vehicle;
 
 import com.lx862.jcm.mixin.modded.mtr.VehicleSchemaMixin;
 import com.lx862.jcm.mixin.modded.tsc.VehicleAccessorMixin;
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.core.data.*;
@@ -144,6 +146,7 @@ public class VehicleWrapper {
         }
     }
 
+    @ApiInternal
     public static class StopsData {
         public final ObjectArrayList<Stop> allStops;
         public final ObjectArrayList<Stop> allStopsNextRoute;
@@ -238,12 +241,12 @@ public class VehicleWrapper {
     }
 
     public static class Stop {
-        public SimplifiedRoute route;
-        public Station station;
+        public @ValueNullable SimplifiedRoute route;
+        public @ValueNullable Station station;
         public String name;
-        public Platform platform;
+        public @ValueNullable Platform platform;
         public String destinationName;
-        public String customDestination;
+        public @ValueNullable String customDestination;
         public List<RouteInterchange> routeInterchanges;
         public Map<String, List<RouteInterchange>> connectingInterchanges;
         public long dwellTimeMillis;
@@ -251,12 +254,14 @@ public class VehicleWrapper {
         public Stop roundUpRoute;
         public boolean isRouteSwitchoverStop;
         @Deprecated
+        @ValueNullable
         public Station destinationStation; // Manually obtain the Station of the last stop instead
         @Deprecated
         public long dwellTime; // Use dwellTimeMs instead
         @Deprecated
         public boolean reverseAtPlatform; // Identical to routeSwitchover
 
+        @ApiInternal
         public Stop(SimplifiedRoute route, Station station, Platform platform,
                     String name, String destinationName, String customDestination, double distance) {
             this.route = route;
@@ -277,6 +282,7 @@ public class VehicleWrapper {
             public final int color;
             public final String name;
 
+            @ApiInternal
             public RouteInterchange(int color, String name) {
                 this.color = color;
                 this.name = name;
@@ -303,10 +309,10 @@ public class VehicleWrapper {
     public long getId() {
         return this.vehicleExtension.getId();
     }
-    public Siding getSiding() {
+    public @ValueNullable Siding getSiding() {
         return this.stopsData.siding;
     }
-    public String getVehicleId(int carIndex) {
+    public @ValueNullable String getVehicleId(int carIndex) {
         if(carIndex >= vehicleExtension.vehicleExtraData.immutableVehicleCars.size()) return null;
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.get(carIndex).getVehicleId();
     }

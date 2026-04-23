@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.core.util.render;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.Matrices;
 import com.lx862.mtrscripting.core.util.model.ModelJS;
 import org.mtr.mapping.holder.Direction;
@@ -24,7 +25,7 @@ public class ScriptRenderManager {
         this.drawCalls.addAll(drawCalls);
     }
 
-    public void drawModel(ModelJS model, Matrices matrices) {
+    public void drawModel(ModelJS model, @ValueNullable Matrices matrices) {
         draw(new ModelDrawCall().modelObject(model).matrices(matrices));
     }
 

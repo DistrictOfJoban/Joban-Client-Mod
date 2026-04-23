@@ -19,17 +19,17 @@ import java.util.List;
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
 public class TextWrapper extends PIDSDrawCall<TextWrapper> {
-    public String str;
-    public Identifier fontId;
-    public boolean shadow;
-    public boolean styleItalic;
-    public boolean styleBold;
-    public double scale;
-    public int overflowMode;
-    public int alignment;
-    public int color;
-    private double marqueeProgressOverride;
-    private double marqueeDurationOverride;
+    protected String textContent;
+    protected Identifier fontId;
+    protected boolean shadow;
+    protected boolean styleItalic;
+    protected boolean styleBold;
+    protected double scale;
+    protected int overflowMode;
+    protected int alignment;
+    protected int color;
+    protected double marqueeProgressOverride;
+    protected double marqueeDurationOverride;
 
     protected TextWrapper() {
         super(100, 25);
@@ -49,7 +49,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     }
 
     public TextWrapper text(String str) {
-        this.str = str;
+        this.textContent = str;
         return this;
     }
 
@@ -139,7 +139,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
 
     @Override
     public void validate() {
-        if(str == null) throw new IllegalArgumentException("Text must be filled");
+        if(textContent == null) throw new IllegalArgumentException("Text must be filled");
     }
 
     @Override
@@ -150,7 +150,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
             graphicsHolderNew.scale((float)scale, (float)scale, (float)scale);
 
             List<MutableText> texts = new ArrayList<>();
-            final MutableText originalText = getFormattedText(str);
+            final MutableText originalText = getFormattedText(textContent);
 
             int actualW = GraphicsHolder.getTextWidth(originalText);
             int actualH = 9;
@@ -171,8 +171,8 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
             if(overflowMode == 3) { // Wrap Text
                 StringBuilder curLine = new StringBuilder();
                 int wSoFar = 0;
-                for(int i = 0; i < str.length(); i++) {
-                    char c = str.charAt(i);
+                for(int i = 0; i < textContent.length(); i++) {
+                    char c = textContent.charAt(i);
                     wSoFar += GraphicsHolder.getTextWidth(String.valueOf(c));
                     if(wSoFar > w) {
                         texts.add(getFormattedText(curLine.toString()));
@@ -186,7 +186,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
                     texts.add(getFormattedText(curLine.toString()));
                 }
             } else {
-                texts.add(getFormattedText(str));
+                texts.add(getFormattedText(textContent));
             }
 
             if(overflowMode == 4 && actualW > w) { // Marquee

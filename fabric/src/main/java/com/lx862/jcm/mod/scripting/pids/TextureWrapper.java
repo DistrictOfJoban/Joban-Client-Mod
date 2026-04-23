@@ -10,14 +10,14 @@ import org.mtr.mod.render.StoredMatrixTransformations;
 import static com.lx862.jcm.mod.render.RenderHelper.*;
 
 public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
-    public Identifier id;
-    public int color = ARGB_WHITE;
-    public float u1 = 0;
-    public float v1 = 0;
-    public float u2 = 1;
-    public float v2 = 1;
+    protected Identifier id;
+    protected int color = ARGB_WHITE;
+    protected float u1 = 0;
+    protected float v1 = 0;
+    protected float u2 = 1;
+    protected float v2 = 1;
 
-    public TextureWrapper() {
+    protected TextureWrapper() {
         super(20, 20);
     }
 

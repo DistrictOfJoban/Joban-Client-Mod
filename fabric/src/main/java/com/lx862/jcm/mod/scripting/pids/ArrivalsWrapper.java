@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.pids;
 
+import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -7,7 +8,7 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.function.Consumer;
 
 public class ArrivalsWrapper {
-    public final ObjectArrayList<ArrivalWrapper> arrivals;
+    private final ObjectArrayList<ArrivalWrapper> arrivals;
 
     public ArrivalsWrapper(ObjectArrayList<ArrivalResponse> arrivalsResponse) {
         this.arrivals = new ObjectArrayList<>();
@@ -16,7 +17,7 @@ public class ArrivalsWrapper {
         }
     }
 
-    public ArrivalWrapper get(int i) {
+    public @ValueNullable ArrivalWrapper get(int i) {
         return i >= arrivals.size() ? null : arrivals.get(i);
     }
 

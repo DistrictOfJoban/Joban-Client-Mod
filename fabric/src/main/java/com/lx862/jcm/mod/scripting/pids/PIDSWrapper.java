@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.mtr.core.data.Station;
 import org.mtr.core.operation.ArrivalResponse;
@@ -48,7 +49,7 @@ public class PIDSWrapper {
         }
     }
 
-    public String getCustomMessage(int i) {
+    public @ValueNullable String getCustomMessage(int i) {
         String[] customMessages = be.getCustomMessages();
         return i >= customMessages.length ? null : customMessages[i];
     }
@@ -57,7 +58,7 @@ public class PIDSWrapper {
         return be.platformNumberHidden();
     }
 
-    public Station station() {
+    public @ValueNullable Station station() {
         return InitClient.findStation(be.getPos2());
     }
 

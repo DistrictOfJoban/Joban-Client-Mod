@@ -27,6 +27,7 @@ public class EyeCandyScriptContext extends MTRScriptContext {
     protected final ScriptSoundManager soundManager;
     protected final ScriptRenderManager renderManager;
 
+    @ApiInternal
     public EyeCandyScriptContext(EyecandyBlockEntityWrapper blockEntity) {
         super(blockEntity.getModelId());
         this.blockEntity = blockEntity;

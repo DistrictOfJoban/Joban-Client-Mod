@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.pids;
 
+import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import org.mtr.core.data.Platform;
 import org.mtr.core.data.Route;
 import org.mtr.core.data.SimplifiedRoute;
@@ -57,7 +58,7 @@ public class ArrivalWrapper {
         return arrivalResponse.getIsTerminating();
     }
 
-    public SimplifiedRoute route() {
+    public @ValueNullable SimplifiedRoute route() {
         for(SimplifiedRoute route : MinecraftClientData.getInstance().simplifiedRoutes) {
             if(route.getId() == routeId()) {
                 return route;
@@ -86,7 +87,7 @@ public class ArrivalWrapper {
         return arrivalResponse.getCircularState();
     }
 
-    public Platform platform() {
+    public @ValueNullable Platform platform() {
         return MinecraftClientData.getInstance().platformIdMap.get(platformId());
     }
 

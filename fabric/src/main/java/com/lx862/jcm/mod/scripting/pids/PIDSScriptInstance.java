@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
@@ -9,6 +10,7 @@ import org.mtr.mapping.holder.MinecraftClient;
 
 import java.util.Objects;
 
+@ApiInternal
 public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> {
     private final PIDSBlockEntity blockEntity;
     private ScriptSoundManager soundManager;

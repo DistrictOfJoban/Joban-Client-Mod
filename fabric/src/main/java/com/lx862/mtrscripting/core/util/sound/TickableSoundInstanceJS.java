@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.core.util.sound;
 
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.MovingSoundInstanceExtension;
@@ -7,7 +8,7 @@ import org.mtr.mapping.mapper.SoundHelper;
 
 public class TickableSoundInstanceJS extends MovingSoundInstanceExtension {
 
-    private TickableSoundInstanceJS(Identifier soundId, String category) {
+    protected TickableSoundInstanceJS(Identifier soundId, String category) {
         this(SoundHelper.createSoundEvent(soundId), SoundCategory.valueOf(category));
     }
 
@@ -55,11 +56,13 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension {
         return MinecraftClient.getInstance().getSoundManager().isPlaying(new SoundInstance(this));
     }
 
+    @ApiInternal
     @Override
     public boolean shouldAlwaysPlay2() {
         return true;
     }
 
+    @ApiInternal
     @Override
     public void tick2() {
     }

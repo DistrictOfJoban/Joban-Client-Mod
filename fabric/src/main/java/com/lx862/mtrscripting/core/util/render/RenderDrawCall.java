@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.core.util.render;
 
+import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.api.ScriptResultCall;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.Matrices;
@@ -10,7 +11,7 @@ import org.mtr.mod.render.StoredMatrixTransformations;
 public abstract class RenderDrawCall<T extends RenderDrawCall<?>> implements ScriptResultCall {
     protected StoredMatrixTransformations storedMatrixTransformations;
 
-    public T matrices(Matrices matrices) {
+    public T matrices(@ValueNullable Matrices matrices) {
         if(matrices != null) {
             this.storedMatrixTransformations = matrices.compileStoredMatrixTransformations();
         } else {
@@ -19,6 +20,7 @@ public abstract class RenderDrawCall<T extends RenderDrawCall<?>> implements Scr
         return (T)this;
     }
 
+    @ApiInternal
     protected T setMatrices(StoredMatrixTransformations m) {
         this.storedMatrixTransformations = m;
         return (T)this;

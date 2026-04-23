@@ -24,6 +24,7 @@ public class RawModelJS {
         this.renderType = "EXTERIOR";
     }
 
+    @ApiInternal
     public RawModelJS(OptimizedModel.ObjModel... rawModel) {
         this();
         for(OptimizedModel.ObjModel model : rawModel) {
@@ -34,6 +35,7 @@ public class RawModelJS {
         }
     }
 
+    @ApiInternal
     public RawModelJS(RawModel model) {
         this.rawModel = model;
     }

@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.render.RenderDrawCall;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
@@ -59,7 +60,9 @@ public abstract class PIDSDrawCall<T extends PIDSDrawCall<?>> extends RenderDraw
         drawTransformed(storedMatrixTransformations, facing);
     }
 
+    @ApiInternal
     public abstract void validate();
 
+    @ApiInternal
     protected abstract void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing);
 }

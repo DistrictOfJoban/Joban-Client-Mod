@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.mod.impl.mtr.util;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.StateTrackerJS;
 
 public class ScriptEvent<T> {
@@ -19,7 +20,7 @@ public class ScriptEvent<T> {
         return stateTracker.stateNowFirst() && stateTracker.stateNow() != null;
     }
 
-    public T detail() {
+    public @ValueNullable T detail() {
         return (T)stateTracker.stateNow();
     }
 

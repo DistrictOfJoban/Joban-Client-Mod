@@ -74,6 +74,7 @@ public class ScriptResourceUtil {
         activeScope = null;
     }
 
+    @ApiInternal
     public static void executeScript(Context rhinoCtx, Scriptable scope, Identifier scriptLocation, String script) {
         scriptLocationStack.push(scriptLocation);
         rhinoCtx.evaluateString(scope, script, scriptLocation.getNamespace() + ":" + scriptLocation.getPath(), 1, null);
@@ -131,7 +132,7 @@ public class ScriptResourceUtil {
     }
 
     @Deprecated
-    public static InputStream readStream(Identifier identifier) throws IOException {
+    public static @ValueNullable InputStream readStream(Identifier identifier) throws IOException {
         DataReaderJS dataReader = read(identifier);
         if(dataReader != null) {
             return dataReader.asInputStream();
@@ -141,27 +142,27 @@ public class ScriptResourceUtil {
     }
 
     @Deprecated
-    public static String readString(Identifier identifier) {
+    public static @ValueNullable String readString(Identifier identifier) {
         DataReaderJS dataReader = read(identifier);
         if(dataReader == null) return null;
         return dataReader.asString();
     }
 
     @Deprecated
-    public static BufferedImage readBufferedImage(Identifier id) {
+    public static @ValueNullable BufferedImage readBufferedImage(Identifier id) {
         DataReaderJS dataReader = read(id);
         if(dataReader == null) return null;
         return dataReader.asBufferedImage();
     }
 
     @Deprecated
-    public static Font readFont(Identifier id) {
+    public static @ValueNullable Font readFont(Identifier id) {
         DataReaderJS dataReader = read(id);
         if(dataReader == null) return null;
         return dataReader.asFont();
     }
 
-    public static DataReaderJS read(Identifier identifier) {
+    public static @ValueNullable DataReaderJS read(Identifier identifier) {
         // HACK: MC Mappings always uses a callback for the InputStream and auto-closes it after, so we can't pass it around later on
         // For now, we just save the full file bytes, then wrap it in another ByteArrayInputStream...
         byte[][] fileBytes = new byte[][]{null};

@@ -16,9 +16,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * A stub for scripting in MTR mod
- */
 public class MTRContentScripting {
     private static final int EXECUTOR_AMOUNT = 4;
     private static final List<ExecutorService> scriptExecutors = new ArrayList<>();

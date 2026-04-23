@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.mod.impl.mtr.vehicle;
 
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRScriptContext;
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
@@ -23,6 +24,7 @@ public class VehicleScriptContext extends MTRScriptContext {
     private final String scriptEntryId;
     private DataFetchMode dataFetchMode;
 
+    @ApiInternal
     public VehicleScriptContext(VehicleExtension vehicleExtension, String scriptEntryId, int[] myCars, boolean fetchDataBeforeExecute) {
         super(scriptEntryId);
         this.vehicleExtension = vehicleExtension;
@@ -47,6 +49,7 @@ public class VehicleScriptContext extends MTRScriptContext {
         renderManager.drawModel(model, matrices);
     }
 
+    @Deprecated
     public void drawConnModel(ModelJS model, int carIndex, @ValueNullable Matrices matrices) {
         throw new NotImplementedException("Not implemented");
     }
@@ -72,11 +75,11 @@ public class VehicleScriptContext extends MTRScriptContext {
         return this.myCars;
     }
 
-    public ScriptRenderManager getCarRenderManager(int car) {
+    public @ValueNullable ScriptRenderManager getCarRenderManager(int car) {
         return this.carRenderers.get(car);
     }
 
-    public ScriptSoundManager getCarSoundManager(int car) {
+    public @ValueNullable ScriptSoundManager getCarSoundManager(int car) {
         return this.carSoundManagers.get(car);
     }
 
@@ -88,6 +91,7 @@ public class VehicleScriptContext extends MTRScriptContext {
         return this.carSoundManagers;
     }
 
+    @ApiInternal
     public DataFetchMode getDataFetchMode() {
         return dataFetchMode;
     }

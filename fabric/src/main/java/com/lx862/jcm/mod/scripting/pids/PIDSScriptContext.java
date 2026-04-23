@@ -7,11 +7,11 @@ import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
 
 public class PIDSScriptContext extends MTRScriptContext {
-    protected final ScriptSoundManager soundManager;
-    protected final ScriptRenderManager renderManager;
     private int currentZOrder = 0;
     private double zOrderStep = 0.0002;
     private boolean autoZOrdering = true;
+    protected final ScriptSoundManager soundManager;
+    protected final ScriptRenderManager renderManager;
 
     public PIDSScriptContext(String name) {
         super(name);
