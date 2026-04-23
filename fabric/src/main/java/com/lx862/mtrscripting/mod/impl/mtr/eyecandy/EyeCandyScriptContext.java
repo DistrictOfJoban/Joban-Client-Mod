@@ -2,6 +2,7 @@ package com.lx862.mtrscripting.mod.impl.mtr.eyecandy;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
+import com.lx862.mtrscripting.core.util.model.DynamicModelHolderJS;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRScriptContext;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.event.EyecandyEvents;
 import com.lx862.mtrscripting.core.util.render.ModelDrawCall;
@@ -81,10 +82,11 @@ public class EyeCandyScriptContext extends MTRScriptContext {
     }
 
     public void drawModel(ModelJS model, @ValueNullable Matrices matrices) {
-        ModelDrawCall modelDrawCall = ModelDrawCall.create()
-                .modelObject(model)
-                .matrices(matrices);
-        renderManager().draw(modelDrawCall);
+        renderManager().drawModel(model, matrices);
+    }
+
+    public void drawModel(DynamicModelHolderJS dynamicModelHolder, @ValueNullable Matrices matrices) {
+        renderManager().drawModel(dynamicModelHolder, matrices);
     }
 
     public void playSound(Identifier id, float volume, float pitch) {

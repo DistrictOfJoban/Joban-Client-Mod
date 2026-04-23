@@ -2,6 +2,7 @@ package com.lx862.mtrscripting.mod.impl.mtr.vehicle;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
+import com.lx862.mtrscripting.core.util.model.DynamicModelHolderJS;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRScriptContext;
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.core.util.model.ModelJS;
@@ -49,8 +50,19 @@ public class VehicleScriptContext extends MTRScriptContext {
         renderManager.drawModel(model, matrices);
     }
 
+    public void drawCarModel(DynamicModelHolderJS modelHolder, int carIndex, @ValueNullable Matrices matrices) {
+        ScriptRenderManager renderManager = getCarRenderManager(carIndex);
+        if(renderManager == null) return;
+        renderManager.drawModel(modelHolder, matrices);
+    }
+
     @Deprecated
     public void drawConnModel(ModelJS model, int carIndex, @ValueNullable Matrices matrices) {
+        throw new NotImplementedException("Not implemented");
+    }
+
+    @Deprecated
+    public void drawConnModel(DynamicModelHolderJS model, int carIndex, @ValueNullable Matrices matrices) {
         throw new NotImplementedException("Not implemented");
     }
 

@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.core.util.render;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.Matrices;
+import com.lx862.mtrscripting.core.util.model.DynamicModelHolderJS;
 import com.lx862.mtrscripting.core.util.model.ModelJS;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
@@ -23,6 +24,10 @@ public class ScriptRenderManager {
     protected ScriptRenderManager(List<RenderDrawCall<?>> drawCalls) {
         this.drawCalls = new ArrayList<>();
         this.drawCalls.addAll(drawCalls);
+    }
+
+    public void drawModel(DynamicModelHolderJS modelHolder, @ValueNullable Matrices matrices) {
+        draw(new DynamicModelDrawCall().modelHolder(modelHolder).matrices(matrices));
     }
 
     public void drawModel(ModelJS model, @ValueNullable Matrices matrices) {
