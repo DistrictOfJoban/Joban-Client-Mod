@@ -58,11 +58,7 @@ public class GraphicsTexture implements Closeable {
     }
 
     public void upload() {
-        int[] imgData = ((DataBufferInt)bufferedImage.getRaster().getDataBuffer()).getData();
-        long nativeImagePointer = LoaderImplClient.getNativeImagePointer(dynamicTexture.getImage());
-        IntBuffer target = MemoryUtil.memByteBuffer(nativeImagePointer, width * height * 4).asIntBuffer();
-        target.put(imgData);
-
+        copyBuffer();
         RenderSystem.recordRenderCall(dynamicTexture::upload);
     }
 
@@ -70,14 +66,22 @@ public class GraphicsTexture implements Closeable {
         upload(x, y, x, y, width, height);
     }
 
-    public void upload(int offsetX, int offsetY, int contentOffsetX, int contentOffsetY, int width, int height) {
+    public void upload(int dstOffsetX, int dstOffsetY, int srcOffsetX, int srcOffsetY, int width, int height) {
+        copyBuffer();
         RenderSystem.recordRenderCall(() -> {
             NativeImage nativeImage = dynamicTexture.getImage();
             if(nativeImage != null) {
                 dynamicTexture.bindTexture();
-                nativeImage.upload(0, offsetX, offsetY, contentOffsetX, contentOffsetX, width, height, false, false, false, false);
+                nativeImage.upload(0, dstOffsetX, dstOffsetY, srcOffsetX, srcOffsetX, width, height, false, false, false, false);
             }
         });
+    }
+
+    private void copyBuffer() {
+        int[] imgData = ((DataBufferInt)bufferedImage.getRaster().getDataBuffer()).getData();
+        long nativeImagePointer = LoaderImplClient.getNativeImagePointer(dynamicTexture.getImage());
+        IntBuffer target = MemoryUtil.memByteBuffer(nativeImagePointer, width * height * 4).asIntBuffer();
+        target.put(imgData);
     }
 
     @Override
