@@ -2,7 +2,6 @@ package com.lx862.mtrscripting.mod.impl.mtr.eyecandy;
 
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
-import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.mtr.mapping.holder.*;
 import org.mtr.mod.block.BlockEyeCandy;
@@ -13,7 +12,6 @@ public class EyecandyBlockEntityWrapper {
 
     /* Note: Field access for backward compatibility only, you should use the getter functions. */
     @Deprecated
-    @ValueNullable
     public final String prefabId;
     @Deprecated
     public final float translateX;
@@ -42,7 +40,7 @@ public class EyecandyBlockEntityWrapper {
         this.fullLight = be.getFullBrightness();
     }
 
-    public @ValueNullable String getModelId() {
+    public String getModelId() {
         return this.prefabId;
     }
 
