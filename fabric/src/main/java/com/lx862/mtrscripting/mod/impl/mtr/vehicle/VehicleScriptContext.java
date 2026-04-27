@@ -32,16 +32,15 @@ public class VehicleScriptContext extends MTRScriptContext {
         this.scriptEntryId = scriptEntryId;
         this.scriptCallsHolder = new VehicleScriptCallsHolder.Committer();
 
+        var vehiclePositions = vehicleExtension.getSmoothedVehicleCarsAndPositions(0);
+
         for(int i : myCars) {
             scriptCallsHolder.carRenderManagers.put(i, new ScriptRenderManager());
             scriptCallsHolder.carSoundManagers.put(i, new ScriptSoundManager());
 
             List<ScriptRenderManager> carBogieRenderManagers = new ArrayList<>();
-            var bogiePoses = vehicleExtension.getSmoothedVehicleCarsAndPositions(0).get(i).right();
-            if(bogiePoses.size() == 1) {
-                carBogieRenderManagers.add(new ScriptRenderManager());
-            } else if(bogiePoses.size() >= 2) {
-                carBogieRenderManagers.add(new ScriptRenderManager());
+            var bogiePoses = vehiclePositions.get(i).right();
+            for(int j = 0; j < bogiePoses.size(); j++) {
                 carBogieRenderManagers.add(new ScriptRenderManager());
             }
             scriptCallsHolder.carBogieRenderers.put(i, carBogieRenderManagers);
