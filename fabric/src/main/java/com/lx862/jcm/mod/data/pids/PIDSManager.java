@@ -37,10 +37,12 @@ public class PIDSManager {
                     preset = JsonPIDSPreset.parse(e.getAsJsonObject());
                 }
 
-                if(presetList.containsKey(preset.getId()) && !preset.builtin) {
-                    JCMLogger.error("Custom preset \"{}\" already added!", presetId);
-                } else {
-                    presetList.put(preset.getId(), preset);
+                if(preset != null) {
+                    if(presetList.containsKey(preset.getId()) && !preset.builtin) {
+                        JCMLogger.error("Custom preset \"{}\" already added!", presetId);
+                    } else {
+                        presetList.put(preset.getId(), preset);
+                    }
                 }
             } catch (Exception ex) {
                 JCMLogger.error("Failed to parse PIDS Preset \"" + presetId + "\"!", ex);
