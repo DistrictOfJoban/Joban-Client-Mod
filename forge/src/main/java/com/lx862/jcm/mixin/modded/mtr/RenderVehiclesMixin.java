@@ -66,8 +66,7 @@ public class RenderVehiclesMixin {
 
                 scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
                     VehicleScriptContext ctx = (VehicleScriptContext) scriptInstance.getContextObject();
-                    scriptInstance.captureRenderCalls(ctx.getCarRenderManagers());
-                    scriptInstance.captureSoundCalls(ctx.getCarSoundManagers());
+                    scriptInstance.capturedScriptCalls.capture(ctx.getScriptCallsHolder());
                     ctx.resetForNextRun();
                 });
             }

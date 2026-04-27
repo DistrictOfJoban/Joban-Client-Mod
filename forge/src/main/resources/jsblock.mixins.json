@@ -21,7 +21,6 @@
     "modded.mtr.OptimizedModelWrapperAccessor",
     "modded.mtr.RawMeshAccessor",
     "modded.mtr.RenderEyeCandyMixin",
-    "modded.mtr.RenderRailsMixin",
     "modded.mtr.RenderVehiclesMixin",
     "modded.mtr.VehicleExtensionMixin",
     "modded.mtr.VehicleResourceMixin",
@@ -37,6 +36,8 @@
     "modded.mtrpatch.OptimizedRendererMixin",
     "modded.mtrpatch.OptimizedRendererWrapperAccessorMixin",
     "modded.mtrpatch.RawMeshMixin",
+    "modded.mtrpatch.RenderRailsMixin",
+    "modded.mtrpatch.RenderVehiclesMixin",
     "modded.mtrpatch.SignResourceMixin",
     "modded.mtrpatch.VehicleSelectorScreenMixin",
     "modded.tsc.VehicleAccessorMixin"

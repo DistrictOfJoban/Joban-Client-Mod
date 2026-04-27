@@ -1,4 +1,4 @@
-package com.lx862.jcm.mixin.modded.mtr;
+package com.lx862.jcm.mixin.modded.mtrpatch;
 
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import org.mtr.core.data.Rail;

@@ -3,6 +3,7 @@
 ## Additions
 - Add `RenderManager.drawModel(model: Model | DynamicModelHolder, matrices: Matrices?)` as an alternative way to draw model with RenderManager.
 - Add `VehicleScriptContext.drawCarModel` / `EyecandyScriptContext.drawModel` with `DynamicModelHolder` overload instead of `Model`.
+- Add `VehicleScriptContext.getCarBogieRenderManager()` for rendering with transformation of the bogie.
 - Add more overload for `GraphicsTexture.upload()`, allowing for uploading selected portion of image to conserve performance.
 
 ## Changes

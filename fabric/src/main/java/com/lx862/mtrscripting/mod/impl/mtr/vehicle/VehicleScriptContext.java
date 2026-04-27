@@ -14,13 +14,12 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mod.client.VehicleRidingMovement;
 import org.mtr.mod.data.VehicleExtension;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VehicleScriptContext extends MTRScriptContext {
     private final VehicleExtension vehicleExtension;
-    private final Map<Integer, ScriptRenderManager> carRenderers;
-    private final Map<Integer, ScriptSoundManager> carSoundManagers;
+    private final VehicleScriptCallsHolder.Committer scriptCallsHolder;
     private final int[] myCars;
     private final String scriptEntryId;
     private DataFetchMode dataFetchMode;
@@ -31,12 +30,21 @@ public class VehicleScriptContext extends MTRScriptContext {
         this.vehicleExtension = vehicleExtension;
         this.myCars = myCars;
         this.scriptEntryId = scriptEntryId;
-        this.carRenderers = new HashMap<>();
-        this.carSoundManagers = new HashMap<>();
+        this.scriptCallsHolder = new VehicleScriptCallsHolder.Committer();
 
         for(int i : myCars) {
-            carRenderers.put(i, new ScriptRenderManager());
-            carSoundManagers.put(i, new ScriptSoundManager());
+            scriptCallsHolder.carRenderManagers.put(i, new ScriptRenderManager());
+            scriptCallsHolder.carSoundManagers.put(i, new ScriptSoundManager());
+
+            List<ScriptRenderManager> carBogieRenderManagers = new ArrayList<>();
+            var bogiePoses = vehicleExtension.getSmoothedVehicleCarsAndPositions(0).get(i).right();
+            if(bogiePoses.size() == 1) {
+                carBogieRenderManagers.add(new ScriptRenderManager());
+            } else if(bogiePoses.size() >= 2) {
+                carBogieRenderManagers.add(new ScriptRenderManager());
+                carBogieRenderManagers.add(new ScriptRenderManager());
+            }
+            scriptCallsHolder.carBogieRenderers.put(i, carBogieRenderManagers);
         }
 
         if(fetchDataBeforeExecute) {
@@ -67,15 +75,15 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public void playCarSound(Identifier sound, int carIndex, float x, float y, float z, float volume, float pitch) {
-        if(!carSoundManagers.containsKey(carIndex)) return;
-        carSoundManagers.get(carIndex).playSound(sound, new ScriptVector3f(x, y, z), volume, pitch);
+        if(!scriptCallsHolder.carSoundManagers.containsKey(carIndex)) return;
+        scriptCallsHolder.carSoundManagers.get(carIndex).playSound(sound, new ScriptVector3f(x, y, z), volume, pitch);
     }
 
     public void playAnnSound(Identifier sound, float volume, float pitch) {
-        if(!carSoundManagers.containsKey(0)) return;
+        if(!scriptCallsHolder.carSoundManagers.containsKey(0)) return;
 
         if(VehicleRidingMovement.isRiding(vehicleExtension.getId())) {
-            carSoundManagers.get(0).playLocalSound(sound, volume, pitch);
+            scriptCallsHolder.carSoundManagers.get(0).playLocalSound(sound, volume, pitch);
         }
     }
 
@@ -88,19 +96,21 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public @ValueNullable ScriptRenderManager getCarRenderManager(int car) {
-        return this.carRenderers.get(car);
+        return scriptCallsHolder.carRenderManagers.get(car);
     }
 
     public @ValueNullable ScriptSoundManager getCarSoundManager(int car) {
-        return this.carSoundManagers.get(car);
+        return scriptCallsHolder.carSoundManagers.get(car);
     }
 
-    public Map<Integer, ScriptRenderManager> getCarRenderManagers() {
-        return this.carRenderers;
+    public @ValueNullable ScriptRenderManager getCarBogieRenderManager(int car, int bogieIndex) {
+        List<ScriptRenderManager> bogieRenderManagers = scriptCallsHolder.carBogieRenderers.get(car);
+        return bogieRenderManagers == null ? null : bogieIndex >= bogieRenderManagers.size() ? null :  bogieRenderManagers.get(bogieIndex);
     }
 
-    public Map<Integer, ScriptSoundManager> getCarSoundManagers() {
-        return this.carSoundManagers;
+    @ApiInternal
+    public VehicleScriptCallsHolder.Committer getScriptCallsHolder() {
+        return scriptCallsHolder;
     }
 
     @ApiInternal
@@ -114,16 +124,7 @@ public class VehicleScriptContext extends MTRScriptContext {
 
     @Override
     public void resetForNextRun() {
-        for (ScriptRenderManager carRenderer : carRenderers.values()) {
-            if (carRenderer != null) {
-                carRenderer.reset();
-            }
-        }
-        for(ScriptSoundManager soundManager : carSoundManagers.values()) {
-            if (soundManager != null) {
-                soundManager.reset();
-            }
-        }
+        scriptCallsHolder.reset();
     }
 
     public enum DataFetchMode {

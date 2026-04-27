@@ -40,8 +40,8 @@ public abstract class VehicleResourceMixin {
         ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptGroupId));
         if(!(scriptInstance instanceof VehicleScriptInstance)) return;
 
-        ScriptRenderManager carRenderManager = ((VehicleScriptInstance)scriptInstance).renderManagers.get(carNumber);
-        ScriptSoundManager carSoundManager = ((VehicleScriptInstance)scriptInstance).soundManagers.get(carNumber);
+        ScriptRenderManager carRenderManager = ((VehicleScriptInstance)scriptInstance).capturedScriptCalls.carRenderManagers.get(carNumber);
+        ScriptSoundManager carSoundManager = ((VehicleScriptInstance)scriptInstance).capturedScriptCalls.carSoundManagers.get(carNumber);
 
         StoredMatrixTransformations newTransform = storedMatrixTransformations.copy();
         newTransform.add(gh -> gh.translate(0, -1, 0)); // Replicate behaviour from MTR 3. Not sure if we should do it here tho?
