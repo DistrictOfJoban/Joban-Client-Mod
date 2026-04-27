@@ -8,6 +8,7 @@ import org.mtr.mapping.holder.Vector3f;
 import org.mtr.mapping.render.batch.MaterialProperties;
 import org.mtr.mapping.render.model.Face;
 import org.mtr.mapping.render.model.RawMesh;
+import org.mtr.mapping.render.model.RawModel;
 import org.mtr.mapping.render.vertex.Vertex;
 
 import java.util.stream.IntStream;
@@ -26,6 +27,12 @@ public class RawMeshBuilderJS {
 
     public RawMesh getMesh() {
         return mesh;
+    }
+
+    public RawModel asRawModel() {
+        RawModel rawModel = new RawModel();
+        rawModel.append(getMesh());
+        return rawModel;
     }
 
     public RawMeshBuilderJS reset() {

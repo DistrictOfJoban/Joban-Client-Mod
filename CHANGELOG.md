@@ -7,6 +7,8 @@
 - Allow passing in a `DynamicModelHolder` for all places where a `Model` is accepted as a parameter for rendering.
   - The need to use this over `getUploadedModel` is explained in the [documentation](https://jcm.joban.org/dev/scripting/model/#dynamicmodelholder). (*Avoid using getUploadedModel() for rendering*)
 - Add `VehicleScriptContext.getCarBogieRenderManager()` for rendering with transformation of the bogie.
+- Add `RawMeshBuilder.asRawModel(): RawModel` as a quick way to obtain an instance of `RawModel`.
+  - Equivalent to `new RawModel()` and `RawModel.append(rawMesh: RawMesh)`.
 - Add more overload for `GraphicsTexture.upload()`, allowing for uploading selected portion of image to conserve performance.
 
 ## Changes
