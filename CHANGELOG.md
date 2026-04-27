@@ -1,8 +1,11 @@
 # JCM v2.2.0-beta.3 for MTR 4.0.4 has been released!
 
 ## Additions
-- Add `RenderManager.drawModel(model: Model | DynamicModelHolder, matrices: Matrices?)` as an alternative way to draw model with RenderManager.
-- Add `VehicleScriptContext.drawCarModel` / `EyecandyScriptContext.drawModel` with `DynamicModelHolder` overload instead of `Model`.
+- Add `RenderManager.drawModel(model: Model | DynamicModelHolder, matrices: Matrices?)` as an easy way to draw a model.
+  - This ought to replace `ModelDrawCall` and all variants of `drawModel`/`drawXXXModel` in favor of a unified RenderManager.
+  - Of course compatibility is still retained, no code has been removed.
+- Allow passing in a `DynamicModelHolder` for all places where a `Model` is accepted as a parameter for rendering.
+  - The need to use this over `getUploadedModel` is explained in the [documentation](https://jcm.joban.org/dev/scripting/model/#dynamicmodelholder). (*Avoid using getUploadedModel() for rendering*)
 - Add `VehicleScriptContext.getCarBogieRenderManager()` for rendering with transformation of the bogie.
 - Add more overload for `GraphicsTexture.upload()`, allowing for uploading selected portion of image to conserve performance.
 

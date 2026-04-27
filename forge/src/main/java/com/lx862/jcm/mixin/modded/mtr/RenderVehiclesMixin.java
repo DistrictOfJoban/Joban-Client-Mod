@@ -1,6 +1,7 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
-import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.mtrscripting.core.primitive.ScriptInstance;
+import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.NTETrainWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptContext;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptInstance;
@@ -11,12 +12,9 @@ import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import org.mtr.core.data.VehicleCar;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectImmutableList;
-import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import org.mtr.mapping.holder.*;
 import org.mtr.mod.client.MinecraftClientData;
-import org.mtr.mod.client.VehicleRidingMovement;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.render.*;
 import org.mtr.mod.resource.VehicleResource;
@@ -24,6 +22,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,13 +72,19 @@ public class RenderVehiclesMixin {
         }
     }
 
-    @Inject(method = "lambda$render$5", at = @At("HEAD"), cancellable = true)
-    private static void jsblock$hideRidingTrainBogie(Vector3d offsetVector, Double offsetRotation, PositionAndRotation ridingCarPositionAndRotation, Vector3d cameraShakeOffset, VehicleResource vehicleResource, VehicleExtension vehicle, PositionAndRotation absoluteVehicleCarPositionAndRotation, int carNumber, int[] scrollingDisplayIndexTracker, boolean fromResourcePackCreator, int bogieIndex, PositionAndRotation absoluteBogiePositionAndRotation, CallbackInfo ci) {
-        if(JCMClientConfig.INSTANCE.hideRidingVehicle.value() && VehicleRidingMovement.isRiding(vehicle.getId())) ci.cancel();
-    }
+    @Inject(method = "lambda$render$5", at = @At("TAIL"), locals = LocalCapture.CAPTURE_FAILSOFT)
+    private static void jsblock$drawBogieScript(Vector3d offsetVector, Double offsetRotation, PositionAndRotation ridingCarPositionAndRotation, Vector3d cameraShakeOffset, VehicleResource vehicleResource, VehicleExtension vehicle, PositionAndRotation absoluteVehicleCarPositionAndRotation, int carNumber, int[] scrollingDisplayIndexTracker, boolean fromResourcePackCreator, int bogieIndex, PositionAndRotation absoluteBogiePositionAndRotation, CallbackInfo ci, PositionAndRotation bogieRenderingPositionAndRotation, StoredMatrixTransformations storedMatrixTransformations) {
+        VehicleCar vehicleCar = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber);
+        String scriptGroupId = MTRContentResourceManager.getVehicleScriptEntryId(vehicleCar.getVehicleId());
+        if(scriptGroupId == null) return;
 
-    @Inject(method = "lambda$render$12", at = @At("HEAD"), cancellable = true)
-    private static void jsblock$hideRidingTrainModel(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int[] scrollingDisplayIndexTracker, PositionAndRotation absoluteVehicleCarPositionAndRotation, ObjectArrayList openDoorways, boolean fromResourcePackCreator, ObjectArrayList previousGangwayPositionsList, ObjectArrayList previousBarrierPositionsList, VehicleResource vehicleResource, PositionAndRotation vehicleCarRenderingPositionAndRotation, Vector3d offsetVector, ObjectObjectImmutablePair vehicleCarDetails, double oscillationAmount, int modelIndex, DynamicVehicleModel model, CallbackInfo ci) {
-        if(JCMClientConfig.INSTANCE.hideRidingVehicle.value() && VehicleRidingMovement.isRiding(vehicle.getId())) ci.cancel();
+        ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptGroupId));
+        if(!(scriptInstance instanceof VehicleScriptInstance)) return;
+
+        World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
+        List<ScriptRenderManager> bogieRenderManagers = ((VehicleScriptInstance)scriptInstance).capturedScriptCalls.carBogieRenderers.get(carNumber);
+        if(bogieRenderManagers != null && bogieIndex < bogieRenderManagers.size()) {
+            bogieRenderManagers.get(bogieIndex).invoke(world, storedMatrixTransformations.copy(), Direction.NORTH, absoluteVehicleCarPositionAndRotation.light);
+        }
     }
 }

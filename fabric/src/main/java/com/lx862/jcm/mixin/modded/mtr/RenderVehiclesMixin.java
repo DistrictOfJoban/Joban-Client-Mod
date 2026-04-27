@@ -82,9 +82,9 @@ public class RenderVehiclesMixin {
         if(!(scriptInstance instanceof VehicleScriptInstance)) return;
 
         World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
-        List<ScriptRenderManager> carBogieRms = ((VehicleScriptInstance)scriptInstance).capturedScriptCalls.carBogieRenderers.get(carNumber);
-        if(bogieIndex < carBogieRms.size()) {
-            carBogieRms.get(bogieIndex).invoke(world, storedMatrixTransformations.copy(), Direction.NORTH, absoluteVehicleCarPositionAndRotation.light);
+        List<ScriptRenderManager> bogieRenderManagers = ((VehicleScriptInstance)scriptInstance).capturedScriptCalls.carBogieRenderers.get(carNumber);
+        if(bogieRenderManagers != null && bogieIndex < bogieRenderManagers.size()) {
+            bogieRenderManagers.get(bogieIndex).invoke(world, storedMatrixTransformations.copy(), Direction.NORTH, absoluteVehicleCarPositionAndRotation.light);
         }
     }
 }
