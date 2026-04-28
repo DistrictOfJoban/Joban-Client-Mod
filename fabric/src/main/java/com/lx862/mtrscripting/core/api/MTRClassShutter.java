@@ -23,7 +23,8 @@ public class MTRClassShutter implements ClassShutter {
             ClassRule.parse("java.awt.*"),
             ClassRule.parse("java.time.*"),
             ClassRule.parse("java.lang.*"),
-            ClassRule.parse("java.math.*"),
+            ClassRule.parse("java.math.BigDecimal"),
+            ClassRule.parse("java.math.BigInteger"),
             ClassRule.parse("java.util.*"),
             ClassRule.parse("java.text.*"),
             ClassRule.parse("javax.imageio.*"),
@@ -33,11 +34,26 @@ public class MTRClassShutter implements ClassShutter {
             ClassRule.parse("java.io.Closeable"),
             ClassRule.parse("java.io.InputStream"),
             ClassRule.parse("java.io.OutputStream"),
-            ClassRule.parse("jdk.*")
+            ClassRule.parse("jdk.*"),
+            // Scripting Core
+            ClassRule.parse("com.lx862.mtrscripting.core.util.*"),
+            ClassRule.parse("com.lx862.mtrscripting.core.integration.*"),
+            // Rhino JS Engine
+            ClassRule.parse("com.lx862.mtrscripting.lib.org.mozilla.*")
         );
         denyClass(
+            ClassRule.parse("java.lang.invoke.*"),
             ClassRule.parse("java.lang.reflect.*"),
-            ClassRule.parse("jdk.internal.*")
+            ClassRule.parse("java.lang.Process"),
+            ClassRule.parse("java.lang.ProcessBuilder"),
+            ClassRule.parse("java.lang.Class"),
+            ClassRule.parse("java.lang.ClassLoader"),
+            ClassRule.parse("java.lang.Shutdown"),
+            ClassRule.parse("java.lang.SecurityManager"),
+            ClassRule.parse("java.util.jar.*"),
+            ClassRule.parse("java.util.zip.*"),
+            ClassRule.parse("jdk.internal.*"),
+            ClassRule.parse("jdk.nashorn.*")
         );
     }
 
@@ -75,21 +91,14 @@ public class MTRClassShutter implements ClassShutter {
             }
         }
 
-        if(isClassScriptingCore(className)) return true;
-
-        for(ClassRule cs : deniedScriptClasses) {
-            if(cs.match(className)) return false;
+        for(ClassRule allowedClassRule : allowedScriptClasses) {
+            if(allowedClassRule.match(className)) {
+                for(ClassRule deniedClassRule : deniedScriptClasses) {
+                    if(deniedClassRule.match(className)) return false;
+                }
+                return true;
+            }
         }
-        for(ClassRule cs : allowedScriptClasses) {
-            if(cs.match(className)) return true;
-        }
-        return false;
-    }
-
-    private boolean isClassScriptingCore(String className) {
-        if(className.startsWith("com.lx862.mtrscripting.core.util")) return true;
-        if(className.startsWith("com.lx862.mtrscripting.core.integration")) return true;
-        if(className.startsWith("com.lx862.mtrscripting.lib.org.mozilla")) return true;
         return false;
     }
 }
