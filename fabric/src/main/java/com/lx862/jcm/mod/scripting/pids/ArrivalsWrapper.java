@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.pids;
 
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
@@ -10,6 +11,7 @@ import java.util.function.Consumer;
 public class ArrivalsWrapper {
     private final ObjectArrayList<ArrivalWrapper> arrivals;
 
+    @ApiInternal
     public ArrivalsWrapper(ObjectArrayList<ArrivalResponse> arrivalsResponse) {
         this.arrivals = new ObjectArrayList<>();
         for(ArrivalResponse arrivalResponse : arrivalsResponse) {

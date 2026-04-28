@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.mtr.core.data.Station;
@@ -18,6 +19,7 @@ public class PIDSWrapper {
     public final int width;
     public final int height;
 
+    @ApiInternal
     public PIDSWrapper(PIDSBlockEntity be, LongImmutableList targetPlatformIds, ObjectArrayList<ArrivalResponse> arrivalsResponse, int width, int height) {
         this.be = be;
         this.type = be.getPIDSType();

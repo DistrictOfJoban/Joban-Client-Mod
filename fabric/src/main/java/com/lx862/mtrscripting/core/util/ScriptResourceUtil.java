@@ -83,7 +83,7 @@ public class ScriptResourceUtil {
 
     public static void includeScript(Object pathOrIdentifier) {
         if (activeContext == null) throw new RuntimeException(
-            "Cannot use include in functions, as by that time scripts are no longer processed."
+            "Cannot use include() in Runtime Stage, as all scripts has been parsed and finalized at this point!"
         );
         Identifier identifier;
         if (pathOrIdentifier instanceof Identifier) {
@@ -259,8 +259,8 @@ public class ScriptResourceUtil {
         return result;
     }
 
-    public static String getAddonVersion(String modid) {
-        return MTRScriptingAPI.getAddonVersion(modid);
+    public static String getAddonVersion(String modId) {
+        return MTRScriptingAPI.getAddonVersion(modId);
     }
 
     @Deprecated
@@ -270,6 +270,7 @@ public class ScriptResourceUtil {
 
     @Deprecated
     public static String getNTEVersion() {
+        // TODO: Return the real Minecraft version?
         return "0.5.2+1.19.2"; // Hardcoded for backward compat
     }
 

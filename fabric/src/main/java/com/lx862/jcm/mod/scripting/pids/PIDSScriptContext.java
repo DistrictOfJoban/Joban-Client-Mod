@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.scripting.pids;
 
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.data.pids.preset.components.base.PIDSComponent;
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRScriptContext;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
@@ -13,12 +14,14 @@ public class PIDSScriptContext extends MTRScriptContext {
     protected final ScriptSoundManager soundManager;
     protected final ScriptRenderManager renderManager;
 
+    @ApiInternal
     public PIDSScriptContext(String name) {
         super(name);
         this.soundManager = new ScriptSoundManager();
         this.renderManager = new ScriptRenderManager();
     }
 
+    @ApiInternal
     public PIDSComponent parseComponent(String str) {
         return PIDSComponent.parse(new JsonParser().parse(str).getAsJsonObject());
     }

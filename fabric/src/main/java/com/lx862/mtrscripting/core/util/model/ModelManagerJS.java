@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.core.util.model;
 
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.mod.MTRScriptingMod;
 import org.apache.commons.lang3.StringUtils;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ModelManagerJS {
-    private static final Map<Identifier, RawModelJS> modelDataCache = new HashMap<>();
+    private static final Map<Identifier, RawModelJS> rawModelCache = new HashMap<>();
     private static final Map<RawModelJS, ModelJS> modelCache = new HashMap<>();
 
     private ModelManagerJS() {
@@ -40,14 +41,14 @@ public class ModelManagerJS {
     }
 
     public static RawModelJS loadModel(Identifier id, boolean flipTextureV) {
-        if(modelDataCache.containsKey(id)) return modelDataCache.get(id);
+        if(rawModelCache.containsKey(id)) return rawModelCache.get(id);
 
         try {
-            RawModelJS modelData = new RawModelJS();
+            RawModelJS rawModel = new RawModelJS();
             Map<String, RawModelJS> modelDataParts = loadModelParts(id, flipTextureV);
-            modelDataParts.values().forEach(modelData::append);
-            modelDataCache.put(id, modelData);
-            return modelData;
+            modelDataParts.values().forEach(rawModel::append);
+            rawModelCache.put(id, rawModel);
+            return rawModel;
         } catch (Exception e) {
             MTRScriptingMod.LOGGER.error("", e);
             return null;
@@ -57,10 +58,10 @@ public class ModelManagerJS {
     public static Map<String, RawModelJS> loadModelParts(Identifier modelLocation, boolean flipTextureV) {
         String idStr = modelLocation.getNamespace() + ":" + modelLocation.getPath();
 
-        final boolean isObj = idStr.endsWith(".obj");
+        final boolean isSupportedFormat = idStr.endsWith(".obj");
         final Identifier textureId = CustomResourceTools.formatIdentifierWithDefault("", "png");
 
-        if (isObj) {
+        if (isSupportedFormat) {
             Map<String, RawModelJS> rawModels = new Object2ObjectOpenHashMap<>();
             Map<String, OptimizedModel.ObjModel> models = OptimizedModel.ObjModel.loadModel(
                     ResourceManagerHelper.readResource(CustomResourceTools.formatIdentifierWithDefault(idStr, "obj")),
@@ -92,9 +93,10 @@ public class ModelManagerJS {
         return uploadedModel;
     }
 
+    @ApiInternal
     public static void reset() {
         modelCache.values().forEach(ModelJS::close);
         modelCache.clear();
-        modelDataCache.clear();
+        rawModelCache.clear();
     }
 }

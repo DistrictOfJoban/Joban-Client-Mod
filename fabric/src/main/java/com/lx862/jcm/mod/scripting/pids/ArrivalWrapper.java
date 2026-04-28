@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.pids;
 
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import org.mtr.core.data.Platform;
 import org.mtr.core.data.Route;
@@ -16,6 +17,7 @@ public class ArrivalWrapper {
     public final ArrivalResponse arrivalResponse;
     private final List<CarDetails> cars;
 
+    @ApiInternal
     public ArrivalWrapper(ArrivalResponse arrivalResponse) {
         this.arrivalResponse = arrivalResponse;
         this.cars = new ArrayList<>();
