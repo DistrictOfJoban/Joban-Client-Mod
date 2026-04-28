@@ -15,14 +15,6 @@ public class JCMClientConfig extends ReflectiveConfig {
     @Comment("Only disable if you know what you are doing! This is a common issue causing JCM blocks to appear non-functional.")
     public final TrackedValue<Boolean> disableRendering = value(false);
 
-    @Comment("Disable rendering of MTR's rail")
-    @Comment("Used to avoid distraction when locating specific blocks beneath the rail, and for performance debugging.")
-    public final TrackedValue<Boolean> disableRailRendering = value(false);
-
-    @Comment("Do not show the vehicles you are currently riding.")
-    @Comment("Useful for cab-view video recording, where the appearance of the vehicle model may be an obstruction.")
-    public final TrackedValue<Boolean> hideRidingVehicle = value(false);
-
     @Comment("Reveal additional debug logs to aid troubleshooting")
     public final TrackedValue<Boolean> debugMode = value(false);
 
@@ -33,6 +25,9 @@ public class JCMClientConfig extends ReflectiveConfig {
 
     @Comment("Config related to the scripting feature in JCM")
     public final Scripting scripting = new Scripting();
+
+    @Comment("Config related to MTR modifications made by JCM")
+    public final MTRPatch mtrPatch = new MTRPatch();
 
     public static class Scripting extends Section {
         @Comment("If true, do not parse any scripts, effectively disabling the scripting feature.")
@@ -48,6 +43,20 @@ public class JCMClientConfig extends ReflectiveConfig {
 
         @Comment("When using print() statement or the Console API in scripts, also output the script file & line the print statement is triggered at.")
         public final TrackedValue<Boolean> showLogSource = value(false);
+    }
+
+    @DisplayName("MTR Enhancements")
+    public static class MTRPatch extends Section {
+        @Comment("Disable rendering of MTR's rail")
+        @Comment("Used to avoid distraction when locating specific blocks beneath the rail, and for performance debugging.")
+        public final TrackedValue<Boolean> disableRailRendering = value(false);
+
+        @Comment("Do not show the vehicles you are currently riding.")
+        @Comment("Useful for cab-view video recording, where the appearance of the vehicle model may be an obstruction.")
+        public final TrackedValue<Boolean> hideRidingVehicle = value(false);
+
+        @Comment("Whether to show platform/siding tooltip when hovered in MTR Dashboard.")
+        public final TrackedValue<Boolean> showDashboardTooltip = value(true);
     }
 
     public static void init() {

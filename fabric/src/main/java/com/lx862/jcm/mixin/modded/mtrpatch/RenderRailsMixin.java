@@ -14,6 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class RenderRailsMixin {
     @Inject(method = "lambda$render$5", at = @At("HEAD"), cancellable = true)
     private static void jsblock$cancelRailRendering(boolean holdingRailRelated, ObjectArraySet hoverRails, ClientWorld clientWorld, Rail rail, CallbackInfo ci) {
-        if(JCMClientConfig.INSTANCE.disableRailRendering.value()) ci.cancel();
+        if(JCMClientConfig.INSTANCE.mtrPatch.disableRailRendering.value()) ci.cancel();
     }
 }

@@ -40,6 +40,7 @@
     "modded.mtrpatch.RenderVehiclesMixin",
     "modded.mtrpatch.SignResourceMixin",
     "modded.mtrpatch.VehicleSelectorScreenMixin",
+    "modded.mtrpatch.WidgetMapMixin",
     "modded.tsc.VehicleAccessorMixin"
   ],
   "injectors": {

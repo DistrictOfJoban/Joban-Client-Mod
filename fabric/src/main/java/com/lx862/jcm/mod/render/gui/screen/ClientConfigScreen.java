@@ -24,6 +24,10 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
 public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/gui/config_screen/bg.png");
@@ -42,6 +46,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private final CheckboxWidgetExtension disableScriptingClassRestrictionButton;
     private final CheckboxWidgetExtension scriptDebugModeButton;
     private final CheckboxWidgetExtension scriptShowLogSourceButton;
+    private final Map<CheckboxWidgetExtension, TrackedValue<Boolean>> linkedConfig;
 
     private boolean discardConfig = false;
 
@@ -50,48 +55,40 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         super(true);
         bottomRowWidget = new WidgetSet(20);
         listViewWidget = new ListViewWidget();
+        linkedConfig = new HashMap<>();
 
-        this.disableRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClientConfig.INSTANCE.disableRendering.setOverride(bool);
-        });
-
-        this.disableRailRenderingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClientConfig.INSTANCE.disableRailRendering.setOverride(bool);
-        });
-
-        this.hideRidingVehicleButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClientConfig.INSTANCE.hideRidingVehicle.setOverride(bool);
-        });
-
-        this.useNewTextRendererButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClientConfig.INSTANCE.useAlternateTextRenderer.setOverride(bool);
-        });
-
-        this.debugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClientConfig.INSTANCE.debugMode.setOverride(bool);
-        });
-
-        this.disableScriptingButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClientConfig.INSTANCE.scripting.skipScriptParsing.setOverride(bool);
-        });
-
-        this.disableScriptingClassRestrictionButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
+        this.disableRenderingButton = checkboxForConfig(JCMClientConfig.INSTANCE.disableRendering);
+        this.disableRailRenderingButton = checkboxForConfig(JCMClientConfig.INSTANCE.mtrPatch.disableRailRendering);
+        this.hideRidingVehicleButton = checkboxForConfig(JCMClientConfig.INSTANCE.mtrPatch.hideRidingVehicle);
+        this.useNewTextRendererButton = checkboxForConfig(JCMClientConfig.INSTANCE.useAlternateTextRenderer);
+        this.debugModeButton = checkboxForConfig(JCMClientConfig.INSTANCE.debugMode);
+        this.disableScriptingButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.skipScriptParsing);
+        this.disableScriptingClassRestrictionButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions, (bool, trackedValue) -> {
             if(bool) {
-                MinecraftClient.getInstance().openScreen(new Screen(
-                        new ScriptRestrictionWarningScreen(() -> JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.setOverride(true)).withPreviousScreen(new Screen(this))
-                ));
+                MinecraftClient.getInstance().openScreen(new Screen(new ScriptRestrictionWarningScreen(() -> trackedValue.setOverride(true)).withPreviousScreen(new Screen(this))));
             } else {
                 JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.setOverride(false);
             }
         });
 
-        this.scriptDebugModeButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClientConfig.INSTANCE.scripting.scriptDebugMode.setOverride(bool);
-        });
+        this.scriptDebugModeButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.scriptDebugMode);
+        this.scriptShowLogSourceButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.showLogSource);
+    }
 
-        this.scriptShowLogSourceButton = new CheckboxWidgetExtension(0, 0, 20, 20, false, bool -> {
-            JCMClientConfig.INSTANCE.scripting.showLogSource.setOverride(bool);
+    private CheckboxWidgetExtension checkboxForConfig(TrackedValue<Boolean> trackedValue) {
+        return checkboxForConfig(trackedValue, null);
+    }
+
+    private CheckboxWidgetExtension checkboxForConfig(TrackedValue<Boolean> trackedValue, BiConsumer<Boolean, TrackedValue<Boolean>> customCallback) {
+        CheckboxWidgetExtension checkboxWidgetExtension = new CheckboxWidgetExtension(0, 0, 20, 20, false, (bl) -> {
+            if(customCallback == null) {
+                trackedValue.setOverride(bl);
+            } else {
+                customCallback.accept(bl, trackedValue);
+            }
         });
+        linkedConfig.put(checkboxWidgetExtension, trackedValue);
+        return checkboxWidgetExtension;
     }
 
     @Override
@@ -126,49 +123,29 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     }
 
     private void setEntryStateFromClientConfig() {
-        disableRenderingButton.setChecked(JCMClientConfig.INSTANCE.disableRendering.value());
-        disableRailRenderingButton.setChecked(JCMClientConfig.INSTANCE.disableRailRendering.value());
-        hideRidingVehicleButton.setChecked(JCMClientConfig.INSTANCE.hideRidingVehicle.value());
-        useNewTextRendererButton.setChecked(JCMClientConfig.INSTANCE.useAlternateTextRenderer.value());
-        debugModeButton.setChecked(JCMClientConfig.INSTANCE.debugMode.value());
-        disableScriptingButton.setChecked(JCMClientConfig.INSTANCE.scripting.skipScriptParsing.value());
-        disableScriptingClassRestrictionButton.setChecked(JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
-        scriptDebugModeButton.setChecked(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
-        scriptShowLogSourceButton.setChecked(JCMClientConfig.INSTANCE.scripting.showLogSource.value());
+        linkedConfig.forEach((checkbox, trackedValue) -> {
+            checkbox.setChecked(trackedValue.value());
+        });
     }
 
     private void addConfigEntries() {
         setEntryStateFromClientConfig();
 
+        linkedConfig.keySet().forEach(btn -> addChild(new ClickableWidget(btn)));
+
         // General
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.general"));
-
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_rendering"), new MappedWidget(disableRenderingButton));
-        addChild(new ClickableWidget(disableRenderingButton));
-
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_rail_rendering"), new MappedWidget(disableRailRenderingButton));
-        addChild(new ClickableWidget(disableRailRenderingButton));
-
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.hide_riding_vehicle"), new MappedWidget(hideRidingVehicleButton));
-        addChild(new ClickableWidget(hideRidingVehicleButton));
 
         // Debug
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.debug_mode"), new MappedWidget(debugModeButton));
-        addChild(new ClickableWidget(debugModeButton));
-
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.scripting"));
-
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting"), new MappedWidget(disableScriptingButton));
-        addChild(new ClickableWidget(disableScriptingButton));
-
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting_class_restriction"), new MappedWidget(disableScriptingClassRestrictionButton));
-        addChild(new ClickableWidget(disableScriptingClassRestrictionButton));
-
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.script_debug_mode"), new MappedWidget(scriptDebugModeButton));
-        addChild(new ClickableWidget(scriptDebugModeButton));
-
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.script_show_log_source"), new MappedWidget(scriptShowLogSourceButton));
-        addChild(new ClickableWidget(scriptShowLogSourceButton));
     }
 
 

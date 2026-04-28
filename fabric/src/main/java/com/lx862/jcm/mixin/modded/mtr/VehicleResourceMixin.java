@@ -28,7 +28,7 @@ public abstract class VehicleResourceMixin {
     @Inject(method = "queue(Lorg/mtr/mod/render/StoredMatrixTransformations;Lorg/mtr/mod/data/VehicleExtension;IIIZ)V", at = @At("HEAD"), cancellable = true)
     private void jsblock$drawCarScript(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int totalCars, int light, boolean noOpenDoorways, CallbackInfo ci) {
         // If hide riding vehicle and is current vehicle, both cancel the rendering, and cancel our script result rendering
-        if(JCMClientConfig.INSTANCE.hideRidingVehicle.value() && VehicleRidingMovement.isRiding(vehicle.getId())) {
+        if(JCMClientConfig.INSTANCE.mtrPatch.hideRidingVehicle.value() && VehicleRidingMovement.isRiding(vehicle.getId())) {
             ci.cancel();
             return;
         }

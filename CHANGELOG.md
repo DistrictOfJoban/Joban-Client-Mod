@@ -1,6 +1,7 @@
 # JCM v2.2.0-beta.3 for MTR 4.0.4 has been released!
 
 ## Additions
+- **(Non-scripting, MC 1.19.4 or above)** Add mouse hover tooltips in the MTR Dashboard, showing more details about a platform/siding.
 - Add `RenderManager.drawModel(model: Model | DynamicModelHolder, matrices: Matrices?)` as an easy way to draw a model.
   - This ought to replace `ModelDrawCall` and all variants of `drawModel`/`drawXXXModel` in favor of a unified RenderManager.
   - Of course compatibility is still retained, no code has been removed.
