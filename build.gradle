@@ -57,6 +57,7 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 	def merged_mc_version = "$mc_major$mc_main$mc_minor"
 
 	ext { // Expose to subproject
+		merged_mc_version_int = merged_mc_version as int
 		java_version =
 			(merged_mc_version as int) <= 11701 ? 16 :
 			(merged_mc_version as int) <= 12004 ? 17 :

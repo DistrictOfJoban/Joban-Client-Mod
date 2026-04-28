@@ -28,10 +28,13 @@ dependencies {
     implementation fg.deobf("maven.modrinth:minecraft-transit-railway:FORGE-${rootProject.mtr_version}+${rootProject.minecraft_version}")
     annotationProcessor "org.spongepowered:mixin:+:processor"
     annotationProcessor 'systems.manifold:manifold-preprocessor:+'
-    // 1.17 doesn't support JIJ, so shadow it for now until we drop 1.17 (If and when we're gonna do that that is)
-    // jarJar(group: 'folk.sisby', name: 'kaleido-config', version: "[0.3.3,1.0)")
 
-    shadowImplementation(group: 'folk.sisby', name: 'kaleido-config', version: "[0.3.3,1.0)")
+    if(project.merged_mc_version_int >= 11802) {
+        jarJar(group: 'folk.sisby', name: 'kaleido-config', version: "[0.3.3,1.0)")
+    } else {
+        // 1.17 doesn't support JIJ, so shadow it for now until we drop 1.17 (If and when we're gonna do that that is)
+        shadowImplementation(group: 'folk.sisby', name: 'kaleido-config', version: "[0.3.3,1.0)")
+    }
 }
 
 mixin {
