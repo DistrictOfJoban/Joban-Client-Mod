@@ -18,7 +18,6 @@ public class JCMResourceManager {
 
     public static void reload() {
         JCMClient.getMcMetaManager().reset();
-        TextRenderingManager.initialize();
         PIDSManager.reset();
         parseCustomResources();
     }

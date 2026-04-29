@@ -18,11 +18,6 @@ public class JCMClientConfig extends ReflectiveConfig {
     @Comment("Reveal additional debug logs to aid troubleshooting")
     public final TrackedValue<Boolean> debugMode = value(false);
 
-    @ChangeWarning(folk.sisby.kaleido.lib.quiltconfig.api.metadata.ChangeWarning.Type.Unsafe)
-    @Comment("Enable the (now disused) alternate text renderer, which first draws a string onto a texture and render a single quad out to improve performance.")
-    @Comment("This has been phased out due to instability and has not been tested since, use at your own risk!")
-    public final TrackedValue<Boolean> useAlternateTextRenderer = value(false);
-
     @Comment("Config related to the scripting feature in JCM")
     public final Scripting scripting = new Scripting();
 

@@ -2,7 +2,6 @@ package com.lx862.jcm.mod.data.pids.preset;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -50,11 +49,6 @@ public abstract class PIDSPresetBase implements RenderHelper {
 
     public boolean typeAllowed(String pidsType) {
         return !blacklist.contains(pidsType);
-    }
-
-    public void drawAtlasBackground(GraphicsHolder graphicsHolder, int width, int height, Direction facing) {
-        TextRenderingManager.bind(graphicsHolder);
-        RenderHelper.drawTexture(graphicsHolder,0, height, 0, width, width, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
     }
 
     public abstract int getTextColor();

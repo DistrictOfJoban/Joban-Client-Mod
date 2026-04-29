@@ -47,8 +47,6 @@ public abstract class TextComponent extends PIDSComponent {
     }
 
     protected void drawText(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, TextInfo text) {
-        TextRenderingManager.bind(graphicsHolder);
-
         TextInfo finalText = text.withColor(textColor + ARGB_BLACK).withFont(font).withTextAlignment(textAlignment);
         graphicsHolder.push();
         graphicsHolder.translate(x, y, 0);
@@ -61,11 +59,7 @@ public abstract class TextComponent extends PIDSComponent {
         }
 
         if(guiDrawing != null) {
-            if(JCMClientConfig.INSTANCE.useAlternateTextRenderer.value()) {
-                TextRenderingManager.draw(graphicsHolder, guiDrawing, finalText, x, y); //HACK: GuiDrawing does not obey graphicsholder.translate
-            } else {
-                TextRenderingManager.draw(graphicsHolder, guiDrawing, finalText, 0, 0);
-            }
+            TextRenderingManager.draw(graphicsHolder, guiDrawing, finalText, 0, 0);
         } else {
             TextRenderingManager.draw(graphicsHolder, finalText, facing, 0, 0);
         }

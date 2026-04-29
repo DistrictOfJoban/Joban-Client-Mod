@@ -26,9 +26,7 @@ import java.util.stream.Collectors;
 
 /**
  * <h2>Textured Text Renderer</h2>
- * <p>Draws a string to a texture atlas, which can then be drawn with 1 quad via UV selecting.</p>
- * <p>Under the vanilla rendering routine, this should offer substantial frame-rates improvement over the vanilla text renderer, at the cost of needing to constantly manage the atlas and being more memory intensive/less robust.</p>
- * <p>Call {@link TextRenderingManager#bind(GraphicsHolder)} to bind the texture, then call it's relevant draw method</p>
+ * <p>DEAD CODE, DO NOT USE</p>
  */
 public class TextureTextRenderer implements RenderHelper {
     /**
@@ -49,10 +47,12 @@ public class TextureTextRenderer implements RenderHelper {
     private static boolean initialized;
 
     public static void initialize() {
-        if(initialized) close();
-        JCMLogger.debug("Initializing TextureTextRenderer");
-        initTextureAtlas(DEFAULT_ATLAS_WIDTH, DEFAULT_ATLAS_HEIGHT);
-        initialized = true;
+        throw new IllegalArgumentException("Deprecated");
+
+//        if(initialized) close();
+//        JCMLogger.debug("Initializing TextureTextRenderer");
+//        initTextureAtlas(DEFAULT_ATLAS_WIDTH, DEFAULT_ATLAS_HEIGHT);
+//        initialized = true;
     }
 
     public static void close() {
@@ -315,28 +315,6 @@ public class TextureTextRenderer implements RenderHelper {
         }
 
         RenderHelper.drawTexture(graphicsHolder, x, y - 0.75F, 0, (int)textSlot.getRenderedWidth(), RENDERED_TEXT_SIZE, u1, v1, u2, v2, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
-    }
-
-    public static void stressTest(int updateFrequency) {
-        if(InitClient.getGameTick() % updateFrequency == 0) {
-            String[] strArr = new String[]{
-                    "Central", "610 Tuen Mun Ferry Pier", "Admiralty", "Kennedy Town",
-                    "Minecraft!", "$050302", "33:44",
-                    "October", "November", "December", "3 min", "^_^",
-                    "Fabric modloader", "Joban Client Mod", "Minecraft Transit Railway 3", "Text Renderer",
-                    "Block Entity", "SIGKILL", "Lorem ipsum",
-                    "Minceraft", "JCM", "Minecraft Transit Railway 4", "Text Rendering",
-                    "Block Entity Renderer", "main", "Fish.",
-                    "The quick brown fox jumps over the lazy dog", "woem!", "git", "Stress Test In Progress", "[07L]",};
-            double colorRand = Math.random();
-            String text = strArr[(int)(Math.random() * strArr.length)];
-
-            if(colorRand > 0.5) {
-                addText(new TextInfo(text).withColor(ARGB_BLACK));
-            } else {
-                addText(new TextInfo(text).withColor(ARGB_WHITE));
-            }
-        }
     }
 
     public static Rectangle2D getTextBound(TextInfo textInfo) {

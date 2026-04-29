@@ -53,7 +53,6 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
         long seconds = dwellLeft / 1000;
         long mins = seconds / 60;
 
-        TextRenderingManager.bind(graphicsHolder);
         TextRenderingManager.draw(graphicsHolder, new TextInfo(String.format("%d:%02d", mins % 10, seconds % 60)).withColor(0xFFEE2233).withFont("jsblock:deptimer"), facing, 0, 0);
         graphicsHolder.pop();
     }

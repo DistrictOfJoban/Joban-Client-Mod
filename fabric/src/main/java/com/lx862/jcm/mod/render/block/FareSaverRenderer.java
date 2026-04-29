@@ -32,8 +32,6 @@ public class FareSaverRenderer extends JCMBlockEntityRenderer<FareSaverBlockEnti
         graphicsHolder.rotateZDegrees(TEXT_TILT_ANGLE);
         graphicsHolder.translate(5.8, 14, -9.15);
 
-        TextRenderingManager.bind(graphicsHolder);
-
         graphicsHolder.push();
         TextInfo textInfo = new TextInfo(discountText)
                 .withFont("mtr:mtr")

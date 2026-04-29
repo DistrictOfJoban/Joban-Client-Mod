@@ -40,7 +40,6 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private final CheckboxWidgetExtension disableRenderingButton;
     private final CheckboxWidgetExtension disableRailRenderingButton;
     private final CheckboxWidgetExtension hideRidingVehicleButton;
-    private final CheckboxWidgetExtension useNewTextRendererButton;
     private final CheckboxWidgetExtension debugModeButton;
     private final CheckboxWidgetExtension disableScriptingButton;
     private final CheckboxWidgetExtension disableScriptingClassRestrictionButton;
@@ -60,7 +59,6 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         this.disableRenderingButton = checkboxForConfig(JCMClientConfig.INSTANCE.disableRendering);
         this.disableRailRenderingButton = checkboxForConfig(JCMClientConfig.INSTANCE.mtrPatch.disableRailRendering);
         this.hideRidingVehicleButton = checkboxForConfig(JCMClientConfig.INSTANCE.mtrPatch.hideRidingVehicle);
-        this.useNewTextRendererButton = checkboxForConfig(JCMClientConfig.INSTANCE.useAlternateTextRenderer);
         this.debugModeButton = checkboxForConfig(JCMClientConfig.INSTANCE.debugMode);
         this.disableScriptingButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.skipScriptParsing);
         this.disableScriptingClassRestrictionButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions, (bool, trackedValue) -> {
@@ -141,6 +139,8 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
         // Debug
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.debug_mode"), new MappedWidget(debugModeButton));
+
+        // Scripting
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "config.listview.category.scripting"));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting"), new MappedWidget(disableScriptingButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting_class_restriction"), new MappedWidget(disableScriptingClassRestrictionButton));
