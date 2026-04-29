@@ -16,6 +16,7 @@
 - Scripted PIDS now also shows an in-game error in the chat, with script debug mode enabled.
 
 ## Fixes
+- Fix Forge version crashing with some mods sharing the same config library as JCM. 
 - **(Non-scripting)** Fix JCM PIDS auto platform detection range, now the platform detected should behave the same as MTR PIDS.
 
 **Download:**  
