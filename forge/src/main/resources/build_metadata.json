@@ -1,0 +1,4 @@
+{
+  "version": "${version}",
+  "minecraftVersion": "${mc_version}"
+}

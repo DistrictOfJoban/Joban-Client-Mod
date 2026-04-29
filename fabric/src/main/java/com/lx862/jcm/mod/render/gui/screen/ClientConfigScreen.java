@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.render.gui.screen;
 
-import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.JCM;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 
 public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private static final Identifier TEXTURE_BACKGROUND = new Identifier("jsblock:textures/gui/config_screen/bg.png");
@@ -96,7 +95,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
     @Override
     public MutableText getScreenSubtitle() {
-        return TextUtil.translatable(TextCategory.GUI, "config.version", Constants.MOD_VERSION);
+        return TextUtil.translatable(TextCategory.GUI, "config.version", JCM.buildMetadata.version);
     }
 
     @Override

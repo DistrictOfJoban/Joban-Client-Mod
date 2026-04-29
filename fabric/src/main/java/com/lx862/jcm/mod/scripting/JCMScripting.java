@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.scripting;
 
-import com.lx862.jcm.mod.Constants;
+import com.lx862.jcm.mod.JCM;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.mod.gui.MTRScriptDebugOverlay;
 import com.lx862.jcm.mod.scripting.pids.TextWrapper;
@@ -37,7 +37,7 @@ public class JCMScripting {
             }
         });
 
-        MTRScriptingAPI.registerAddonVersion("jcm", Constants.MOD_VERSION);
+        MTRScriptingAPI.registerAddonVersion("jcm", JCM.buildMetadata.version);
         MTRScriptDebugOverlay.registerDebugSource("JCM", scriptManager);
     }
 

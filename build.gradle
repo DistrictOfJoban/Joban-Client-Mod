@@ -104,6 +104,13 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 			)
 		}
 
+		filesMatching("build_metadata.json") {
+			expand(
+				"version": rootProject.properties.mod_version,
+				"mc_version": rootProject.properties.minecraft_version
+			)
+		}
+
 		filesMatching("**/font/*.json") {
 			expand (
 				"legacy_unicode": project.lg_unicode,

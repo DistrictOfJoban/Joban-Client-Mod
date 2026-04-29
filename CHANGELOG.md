@@ -13,6 +13,7 @@
 - Add more overload for `GraphicsTexture.upload()`, allowing for uploading selected portion of image to conserve performance.
 
 ## Changes
+- `Resources.getNTEVersion()` now returns the current Minecraft version in use, instead of hard-coded to "1.19.2".
 - Scripted PIDS now also shows an in-game error in the chat, with script debug mode enabled.
 
 ## Fixes

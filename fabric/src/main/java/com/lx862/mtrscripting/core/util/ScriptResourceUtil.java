@@ -24,6 +24,7 @@
 
 package com.lx862.mtrscripting.core.util;
 
+import com.lx862.jcm.mod.JCM;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
@@ -270,8 +271,7 @@ public class ScriptResourceUtil {
 
     @Deprecated
     public static String getNTEVersion() {
-        // TODO: Return the real Minecraft version?
-        return "0.5.2+1.19.2"; // Hardcoded for backward compat
+        return "0.5.2+" + JCM.buildMetadata.minecraftVersion; // Hardcoded for backward compat
     }
 
     @Deprecated
