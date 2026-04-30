@@ -67,12 +67,18 @@ public class GraphicsTexture implements Closeable {
     }
 
     public void upload(int dstOffsetX, int dstOffsetY, int srcOffsetX, int srcOffsetY, int width, int height) {
+        if(srcOffsetX + width > this.width) {
+            throw new IllegalArgumentException("offsetX + width should not be larger than the total image size! Have you subtracted width from offset?");
+        }
+        if(srcOffsetY + height > this.height) {
+            throw new IllegalArgumentException("offsetY + height should not be larger than the total image size! Have you subtracted height from offset?");
+        }
         copyBuffer();
         RenderSystem.recordRenderCall(() -> {
             NativeImage nativeImage = dynamicTexture.getImage();
             if(nativeImage != null) {
                 dynamicTexture.bindTexture();
-                nativeImage.upload(0, dstOffsetX, dstOffsetY, srcOffsetX, srcOffsetX, width, height, false, false, false, false);
+                nativeImage.upload(0, dstOffsetX, dstOffsetY, srcOffsetX, srcOffsetY, width, height, false, false, false, false);
             }
         });
     }
