@@ -107,7 +107,8 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
 		filesMatching("build_metadata.json") {
 			expand(
 				"version": rootProject.properties.mod_version,
-				"mc_version": rootProject.properties.minecraft_version
+				"full_version": project.full_mod_version,
+				"mc_version": rootProject.properties.minecraft_version,
 			)
 		}
 

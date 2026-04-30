@@ -6,8 +6,8 @@ license = "MIT"
 modId = "jsblock"
 version = "${mod_version}"
 displayName = "Joban Client Mod"
-authors = "LX86"
-description = "Addon for Minecraft Transit Railway 4, providing more railway facilities."
+authors = "AmberFrost"
+description = "Railway facilities & technical addon for Minecraft Transit Railway 4.0."
 logoFile = "icon.png"
 
 [[dependencies.jsblock]]

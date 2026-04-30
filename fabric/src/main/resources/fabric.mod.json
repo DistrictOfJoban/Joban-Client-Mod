@@ -3,7 +3,7 @@
 	"id": "jsblock",
 	"version": "${version}",
 	"name": "Joban Client Mod",
-	"description": "Railway facilities addon for MTR 4 mod",
+	"description": "Railway facilities & technical addon for Minecraft Transit Railway 4.0.",
 	"authors": [
 		"AmberFrost"
 	],

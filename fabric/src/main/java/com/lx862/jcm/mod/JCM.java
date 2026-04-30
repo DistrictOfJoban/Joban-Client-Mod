@@ -21,9 +21,12 @@ public class JCM {
 
     public static void initialize() {
         try {
-            JCMLogger.info("Joban Client Mod v{} @ MTR {}", buildMetadata.version, Keys.class.getField("MOD_VERSION").get(null));
-            if(buildMetadata.getReleaseType() != BuildMetadata.ReleaseType.RELEASE) {
-                JCMLogger.info("Non-stable release, please expect and report any issues/bugs!");
+            JCMLogger.info("Joban Client Mod v{} @ MTR {}", buildMetadata.fullVersion, Keys.class.getField("MOD_VERSION").get(null));
+            if(buildMetadata.getReleaseType() == BuildMetadata.ReleaseType.BETA) {
+                JCMLogger.info("This is a beta release, please expect and report any issues/bugs!");
+            }
+            if(buildMetadata.getReleaseType() == BuildMetadata.ReleaseType.NIGHTLY) {
+                JCMLogger.info("This is a development/nightly build and not an official release, instabilities may occur!");
             }
         } catch (Exception e) {
             JCMLogger.warn("Cannot obtain MTR Version, countdown to disaster...");

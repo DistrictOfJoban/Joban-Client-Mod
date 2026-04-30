@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 
 public class BuildMetadata {
     public String version;
+    public String fullVersion;
     public String minecraftVersion;
 
     private BuildMetadata() {
@@ -24,7 +25,7 @@ public class BuildMetadata {
     }
 
     public ReleaseType getReleaseType() {
-        return version.contains(".artifacts_") ? ReleaseType.NIGHTLY : version.contains("-beta.") ? ReleaseType.BETA : ReleaseType.RELEASE;
+        return fullVersion.contains(".artifacts_") ? ReleaseType.NIGHTLY : fullVersion.contains("-beta.") ? ReleaseType.BETA : ReleaseType.RELEASE;
     }
 
     public enum ReleaseType {
