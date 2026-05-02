@@ -37,12 +37,13 @@ public class WidgetMapMixin {
 
         for (Route route : MinecraftClientData.getDashboardInstance().routes) {
             if (route.getRoutePlatforms().stream().anyMatch(e -> e.getPlatform().getId() == platform.getId())) {
+                MutableText bulletPoint = TextUtil.literal("- ").formatted(TextFormatting.WHITE);
                 MutableText routeText = TextUtil.literal(route.getName().replace("|", " "));
                 TextHelper.setStyle(routeText, Style.getEmptyMapped().withColor(TextColor.fromRgb(ARGB_BLACK | route.getColor())));
                 if(route.getHidden()) {
                     TextHelper.append(routeText, TextUtil.literal(" (Hidden)").formatted(TextFormatting.GRAY));
                 }
-                tooltipComponents.add(routeText);
+                tooltipComponents.add(TextHelper.append(bulletPoint, routeText));
             }
         }
 
