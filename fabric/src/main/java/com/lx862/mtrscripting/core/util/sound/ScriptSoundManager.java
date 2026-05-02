@@ -29,12 +29,16 @@ public class ScriptSoundManager {
     }
 
     public void play(TickableSoundInstanceJS soundInstance) {
+        if(soundInstance.isInstanceInUse()) return; // Don't allow playing twice
+
+        soundInstance.setInstanceInUse(true);
         MinecraftClient.getInstance().submit(() -> {
             MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(soundInstance));
         });
     }
 
     public void stop(TickableSoundInstanceJS soundInstance) {
+        soundInstance.setInstanceInUse(false);
         MinecraftClient.getInstance().submit(() -> {
             MinecraftClient.getInstance().getSoundManager().stop(new SoundInstance(soundInstance));
         });

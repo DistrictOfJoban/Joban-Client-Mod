@@ -7,6 +7,7 @@ import org.mtr.mapping.mapper.MovingSoundInstanceExtension;
 import org.mtr.mapping.mapper.SoundHelper;
 
 public class TickableSoundInstanceJS extends MovingSoundInstanceExtension {
+    private boolean instanceInUse = false;
 
     protected TickableSoundInstanceJS(Identifier soundId, String category) {
         this(SoundHelper.createSoundEvent(soundId), SoundCategory.valueOf(category));
@@ -54,6 +55,16 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension {
 
     public boolean isPlaying() {
         return MinecraftClient.getInstance().getSoundManager().isPlaying(new SoundInstance(this));
+    }
+
+    @ApiInternal
+    public void setInstanceInUse(boolean isPlaying) {
+        this.instanceInUse = isPlaying;
+    }
+
+    @ApiInternal
+    public boolean isInstanceInUse() {
+        return this.instanceInUse;
     }
 
     @ApiInternal
