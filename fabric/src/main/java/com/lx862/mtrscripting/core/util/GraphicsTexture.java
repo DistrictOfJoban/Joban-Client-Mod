@@ -58,7 +58,7 @@ public class GraphicsTexture implements Closeable {
     }
 
     public void upload() {
-        copyBuffer();
+        copyBuffer(0, 0, this.width, this.height);
         RenderSystem.recordRenderCall(dynamicTexture::upload);
     }
 
@@ -66,6 +66,7 @@ public class GraphicsTexture implements Closeable {
         upload(x, y, x, y, width, height);
     }
 
+    @ApiInternal
     public void upload(int dstOffsetX, int dstOffsetY, int srcOffsetX, int srcOffsetY, int width, int height) {
         if(srcOffsetX + width > this.width) {
             throw new IllegalArgumentException("offsetX + width should not be larger than the total image size! Have you subtracted width from offset?");
@@ -73,7 +74,7 @@ public class GraphicsTexture implements Closeable {
         if(srcOffsetY + height > this.height) {
             throw new IllegalArgumentException("offsetY + height should not be larger than the total image size! Have you subtracted height from offset?");
         }
-        copyBuffer();
+        copyBuffer(dstOffsetX, dstOffsetY, width, height);
         RenderSystem.recordRenderCall(() -> {
             NativeImage nativeImage = dynamicTexture.getImage();
             if(nativeImage != null) {
@@ -83,11 +84,15 @@ public class GraphicsTexture implements Closeable {
         });
     }
 
-    private void copyBuffer() {
+    private void copyBuffer(int x, int y, int width, int height) {
         int[] imgData = ((DataBufferInt)bufferedImage.getRaster().getDataBuffer()).getData();
         long nativeImagePointer = LoaderImplClient.getNativeImagePointer(dynamicTexture.getImage());
-        IntBuffer target = MemoryUtil.memByteBuffer(nativeImagePointer, width * height * 4).asIntBuffer();
-        target.put(imgData);
+        IntBuffer target = MemoryUtil.memByteBuffer(nativeImagePointer, this.width * this.height * 4).asIntBuffer();
+        for(int i = y; i < y+height; i++) {
+            int startSrc = (i * this.width) + x;
+            target.position((i * this.width) + x);
+            target.put(imgData, startSrc, width);
+        }
     }
 
     @Override
