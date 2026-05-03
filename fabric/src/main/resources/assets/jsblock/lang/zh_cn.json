@@ -71,6 +71,7 @@
 	"block.jsblock.thales_ticket_barrier_entrance": "Thales 闸机 (入口)",
 	"block.jsblock.thales_ticket_barrier_exit": "Thales 闸机 (出口)",
 	"block.jsblock.tml_emg_stop_button": "紧急停车按钮 (立柱, 屯马线)",
+	"block.jsblock.tml_emg_stop_button_wall": "紧急停车按钮 (挂墙式, 屯马线)",
 	"block.jsblock.train_model_e44": "列车模型 (E44)",
 	"block.jsblock.water_machine": "饮水机",
     "category.jsblock.keybinding": "常磐装饰模组按键绑定",

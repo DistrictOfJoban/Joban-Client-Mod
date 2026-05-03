@@ -71,6 +71,7 @@
 	"block.jsblock.thales_ticket_barrier_entrance": "Thales 閘機 (入口)",
 	"block.jsblock.thales_ticket_barrier_exit": "Thales 閘機 (出口)",
 	"block.jsblock.tml_emg_stop_button": "緊急停車按鈕 (立柱, 屯馬綫)",
+	"block.jsblock.tml_emg_stop_button_wall": "緊急停車掣 (掛墻式, 屯馬綫)",
 	"block.jsblock.train_model_e44": "列車模型 (E44)",
 	"block.jsblock.water_machine": "飲水機",
     "category.jsblock.keybinding": "常磐裝飾模組按鍵綁定",

@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.registry;
 
+import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.render.block.*;
 import com.lx862.jcm.mod.util.JCMLogger;
 
@@ -25,5 +26,6 @@ public final class BlockEntityRenderers {
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.RV_PIDS_SIL_1, RVPIDSSILRenderer::new);
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.RV_PIDS_SIL_2, RVPIDSSILRenderer::new);
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.STATION_NAME_STANDING, StationNameStandingRenderer::new);
+        JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.TML_EMG_STOP_BUTTON_WALL, (dispatcher) -> new ComplexModelRenderer<>(Constants.id("models/complex/esb_tml/esb_tml.obj"), dispatcher));
     }
 }

@@ -81,6 +81,11 @@ public class ModelJS {
         }
     }
 
+    @ApiInternal
+    public OptimizedModelWrapper getUnderlyingModel() {
+        return this.model;
+    }
+
     public void close() {
         OptimizedModel optimizedModel = ((OptimizedModelWrapperAccessor)(Object)model).getOptimizedModel();
         List<VertexArray> vertexArrays = ((OptimizedModelAccessor)(Object)optimizedModel).getUploadedParts();

@@ -71,6 +71,7 @@
 	"block.jsblock.thales_ticket_barrier_entrance": "Thales Ticket Barrier (Entrance)",
 	"block.jsblock.thales_ticket_barrier_exit": "Thales Ticket Barrier (Exit)",
 	"block.jsblock.tml_emg_stop_button": "Emergency Train Stop Button (Standing, TML)",
+	"block.jsblock.tml_emg_stop_button_wall": "Emergency Train Stop Button (Wall mounted, TML)",
 	"block.jsblock.train_model_e44": "Train Model (E44)",
 	"block.jsblock.water_machine": "Water Machine",
     "category.jsblock.keybinding": "Joban Client Mod Keybinds",
@@ -248,7 +249,8 @@
 	"lore.jsblock.thales_ticket_barrier_bare": "A variant of a ticket barrier that is manufactured by Thales.",
 	"lore.jsblock.thales_ticket_barrier_entrance": "A variant of a ticket barrier that is manufactured by Thales.",
 	"lore.jsblock.thales_ticket_barrier_exit": "A variant of a ticket barrier that is manufactured by Thales.",
-	"lore.jsblock.tml_emg_stop_button": "A decorative emergency stop button that is seen in MTR Tuen Ma Line stations.",
+	"lore.jsblock.tml_emg_stop_button": "A decorative standing emergency stop button that is seen in MTR Tuen Ma Line stations.",
+	"lore.jsblock.tml_emg_stop_button_wall": "A decorative wall-mounted emergency stop button that is seen in MTR Tuen Ma Line stations.",
 	"lore.jsblock.train_model_e44": "A miniature train model of a KCR E44 set.",
 	"lore.jsblock.water_machine": "A machine that refills water bottle."
 }

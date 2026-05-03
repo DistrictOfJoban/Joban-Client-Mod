@@ -1,0 +1,12 @@
+# Blender 5.1.1 MTL File: 'None'
+# www.blender.org
+
+newmtl m_ad0e1065-7511-4b21-f8fd-b8dd45ab5288
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 1
+map_Kd texture_esb_tml.png
+map_d texture_esb_tml.png

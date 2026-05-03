@@ -6,7 +6,6 @@ import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
-import com.lx862.jcm.mod.render.text.TextRenderingManager;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
@@ -19,10 +18,11 @@ public class JCMResourceManager {
     public static void reload() {
         JCMClient.getMcMetaManager().reset();
         PIDSManager.reset();
-        parseCustomResources();
+        ComplexModelStorage.reset();
+        loadCustomResources();
     }
 
-    private static void parseCustomResources() {
+    private static void loadCustomResources() {
         CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.beginReload();
         ResourceManagerHelper.readAllResources(CUSTOM_RESOURCE_PATH, (inputStream -> {
             try {
@@ -33,6 +33,7 @@ public class JCMResourceManager {
                 JCMLogger.error("Failed to parse custom resource file!", e);
             }
         }));
+        ComplexModelStorage.beginReload();
         CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.finishReload();
     }
 }

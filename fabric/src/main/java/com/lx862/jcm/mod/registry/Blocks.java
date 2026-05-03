@@ -83,6 +83,7 @@ public final class Blocks {
     public static final BlockRegistryObject THALES_TICKET_BARRIER_EXIT = JCMRegistry.registerBlockItem("thales_ticket_barrier_exit", () -> new Block(new ThalesTicketBarrier(false)), ItemGroups.MAIN);
     public static final BlockRegistryObject THALES_TICKET_BARRIER_BARE = JCMRegistry.registerBlockItem("thales_ticket_barrier_bare", () -> new Block(new ThalesTicketBarrierBareBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject TML_EMG_STOP_BUTTON = JCMRegistry.registerBlockItem("tml_emg_stop_button", () -> new Block(new TMLEmergencyButtonBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false, state -> 15).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
+    public static final BlockRegistryObject TML_EMG_STOP_BUTTON_WALL = JCMRegistry.registerBlockItem("tml_emg_stop_button_wall", () -> new Block(new TMLEmergencyButtonWallBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject TRAIN_MODEL_E44 = JCMRegistry.registerBlockItem("train_model_e44", () -> new Block(new MTRTrainModelBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(0.5f))), ItemGroups.MAIN);
     public static final BlockRegistryObject WATER_MACHINE = JCMRegistry.registerBlockItem("water_machine", () -> new Block(new WaterMachineBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
 
@@ -121,11 +122,12 @@ public final class Blocks {
             HELPLINE_2,
             HELPLINE_HKWK,
             HELPLINE_STANDING,
-                HELPLINE_STANDING_TKL,
+            HELPLINE_STANDING_TKL,
             HELPLINE_STANDING_EAL,
             SIL_EMG_STOP_BUTTON,
             STATION_NAME_STANDING,
             TML_EMG_STOP_BUTTON,
+            TML_EMG_STOP_BUTTON_WALL,
             THALES_TICKET_BARRIER_ENTRANCE,
             THALES_TICKET_BARRIER_EXIT,
             MTR_TRESPASS_SIGN,
