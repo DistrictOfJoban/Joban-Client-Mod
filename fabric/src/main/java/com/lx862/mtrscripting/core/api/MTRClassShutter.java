@@ -50,6 +50,7 @@ public class MTRClassShutter implements ClassShutter {
             ClassRule.parse("java.lang.ClassLoader"),
             ClassRule.parse("java.lang.Shutdown"),
             ClassRule.parse("java.lang.SecurityManager"),
+            ClassRule.parse("java.lang.System"),
             ClassRule.parse("java.util.jar.*"),
             ClassRule.parse("java.util.zip.*"),
             ClassRule.parse("jdk.internal.*"),
