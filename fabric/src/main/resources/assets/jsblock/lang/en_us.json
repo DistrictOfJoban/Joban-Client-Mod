@@ -73,6 +73,7 @@
 	"block.jsblock.tml_emg_stop_button": "Emergency Train Stop Button (Standing, TML)",
 	"block.jsblock.tml_emg_stop_button_wall": "Emergency Train Stop Button (Wall mounted, TML)",
 	"block.jsblock.train_model_e44": "Train Model (E44)",
+	"block.jsblock.url_emg_stop_button_wall": "Emergency Train Stop Button (Wall mounted, URL)",
 	"block.jsblock.water_machine": "Water Machine",
     "category.jsblock.keybinding": "Joban Client Mod Keybinds",
 	"gui.jsblock.block_config.discard": "Discard Settings",
@@ -252,5 +253,6 @@
 	"lore.jsblock.tml_emg_stop_button": "A decorative standing emergency stop button that is seen in MTR Tuen Ma Line stations.",
 	"lore.jsblock.tml_emg_stop_button_wall": "A decorative wall-mounted emergency stop button that is seen in MTR Tuen Ma Line stations.",
 	"lore.jsblock.train_model_e44": "A miniature train model of a KCR E44 set.",
+	"lore.jsblock.url_emg_stop_button_wall": "A decorative wall-mounted emergency stop button that is seen in MTR Urban Lines stations.",
 	"lore.jsblock.water_machine": "A machine that refills water bottle."
 }

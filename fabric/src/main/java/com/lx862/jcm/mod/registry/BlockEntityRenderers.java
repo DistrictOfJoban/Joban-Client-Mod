@@ -27,5 +27,6 @@ public final class BlockEntityRenderers {
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.RV_PIDS_SIL_2, RVPIDSSILRenderer::new);
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.STATION_NAME_STANDING, StationNameStandingRenderer::new);
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.TML_EMG_STOP_BUTTON_WALL, (dispatcher) -> new ComplexModelRenderer<>(Constants.id("models/complex/esb_tml/esb_tml.obj"), dispatcher));
+        JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.URL_EMG_STOP_BUTTON_WALL, (dispatcher) -> new ComplexModelRenderer<>(Constants.id("models/complex/esb_url/esb_url.obj"), dispatcher));
     }
 }
