@@ -39,6 +39,7 @@ public class ScriptSoundManager {
 
     public void stop(TickableSoundInstanceJS soundInstance) {
         soundInstance.setInstanceInUse(false);
+        soundInstance.setLoopable(false); // Prevent looping sound from repeating again
         MinecraftClient.getInstance().submit(() -> {
             MinecraftClient.getInstance().getSoundManager().stop(new SoundInstance(soundInstance));
         });
