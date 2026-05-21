@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.core.util.sound;
 
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.core.util.render.RenderDrawCall;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.SoundInstance;
@@ -51,6 +52,8 @@ public class ScriptSoundManager {
     }
 
     public void invoke(World world, ScriptVector3f basePos) {
+        List<SoundCall> soundCalls = new ArrayList<>(this.soundCalls);
+
         for(SoundCall soundCall : soundCalls) {
             soundCall.run(world, basePos);
         }
