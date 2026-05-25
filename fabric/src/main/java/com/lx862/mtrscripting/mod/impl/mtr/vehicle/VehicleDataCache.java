@@ -57,7 +57,7 @@ public class VehicleDataCache {
             for(SimplifiedStop simplifiedStop : routeStopsData.stops) {
                 Station station = VehicleDataCache.mtrData.stationIdMap.get(simplifiedStop.stationId);
                 Platform platform = VehicleDataCache.mtrData.platformIdMap.get(simplifiedStop.platformId);
-                VehicleWrapper.Stop thisStop = new VehicleWrapper.Stop(route, station, platform, station == null ? platform == null ? "" : platform.getName() : station.getName(), simplifiedStop.destination, simplifiedStop.customDestination, simplifiedStop.distance);
+                VehicleWrapper.Stop thisStop = new VehicleWrapper.Stop(route, station, platform, station == null ? platform == null ? "" : platform.getName() : station.getName(), simplifiedStop.destination, simplifiedStop.customDestination, simplifiedStop.distance, simplifiedStop.turnbackPlatform);
                 thisStop.destinationStation = destinationStation;
 
                 if(route != null) {
@@ -195,18 +195,20 @@ public class VehicleDataCache {
         public final double distance;
         public final String destination;
         public final String customDestination;
+        public final boolean turnbackPlatform;
 
-        public SimplifiedStop(String destination, String customDestination, long stationId, long platformId, double distance) {
+        public SimplifiedStop(String destination, String customDestination, long stationId, long platformId, double distance, boolean turnbackPlatform) {
             this.stationId = stationId;
             this.platformId = platformId;
             this.distance = distance;
             this.destination = destination;
             this.customDestination = customDestination;
+            this.turnbackPlatform = turnbackPlatform;
         }
 
         @Override
         public String toString() {
-            return String.format("SimplifiedStop[stationId=%d,platformId=%d,distance=%f,destination=%s]", stationId, platformId, distance, destination);
+            return String.format("SimplifiedStop[stationId=%d,platformId=%d,distance=%f,destination=%s,turnbackPlatform=%s]", stationId, platformId, distance, destination, turnbackPlatform);
         }
     }
 }

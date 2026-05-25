@@ -203,7 +203,7 @@ public class VehicleWrapper {
                     Station station = MinecraftClientData.getInstance().stationIdMap.get(routePlatform.getStationId());
                     Platform platform = MinecraftClientData.getInstance().platformIdMap.get(routePlatform.getPlatformId());
 
-                    Stop thisStop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, "", -1);
+                    Stop thisStop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, "", -1, false);
                     thisStop.destinationStation = destinationStation;
                     // In-station interchange
                     routePlatform.forEach((color, routes) -> {
@@ -260,10 +260,11 @@ public class VehicleWrapper {
         public long dwellTime; // Use dwellTimeMs instead
         @Deprecated
         public boolean reverseAtPlatform; // Identical to routeSwitchover
+        public boolean turnbackPlatform;
 
         @ApiInternal
         public Stop(SimplifiedRoute route, Station station, Platform platform,
-                    String name, String destinationName, String customDestination, double distance) {
+                    String name, String destinationName, String customDestination, double distance, boolean turnbackPlatform) {
             this.route = route;
             this.station = station;
             this.platform = platform;
@@ -276,6 +277,7 @@ public class VehicleWrapper {
             this.customDestination = customDestination.isEmpty() ? null : customDestination;
             this.distance = distance;
             this.roundUpRoute = this;
+            this.turnbackPlatform = turnbackPlatform;
         }
 
         public static class RouteInterchange {

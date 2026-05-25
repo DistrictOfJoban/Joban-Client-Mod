@@ -43,7 +43,9 @@ public class StopsDataS2CPacket extends PacketHandler {
                 String customDestination = packetBufferReceiver.readString();
                 VehicleDataCache.stopsDataByteCounter += 4; // int to store string length
                 VehicleDataCache.stopsDataByteCounter += customDestination.length() * 2L; // 2 byte chars
-                VehicleDataCache.SimplifiedStop simplifiedStop = new VehicleDataCache.SimplifiedStop(destination, customDestination, stationId, platformId, distance);
+                boolean turnbackPlatform = packetBufferReceiver.readBoolean();
+                VehicleDataCache.stopsDataByteCounter += 1; // 1 byte for boolean
+                VehicleDataCache.SimplifiedStop simplifiedStop = new VehicleDataCache.SimplifiedStop(destination, customDestination, stationId, platformId, distance, turnbackPlatform);
                 routeStopsData.addStop(simplifiedStop);
             }
             this.simplifiedStopsData.addRouteStopsData(routeStopsData);
@@ -72,6 +74,7 @@ public class StopsDataS2CPacket extends PacketHandler {
                 packetBufferSender.writeDouble(stop.distance);
                 packetBufferSender.writeString(stop.destination);
                 packetBufferSender.writeString(stop.customDestination);
+                packetBufferSender.writeBoolean(stop.turnbackPlatform);
             }
         }
     }

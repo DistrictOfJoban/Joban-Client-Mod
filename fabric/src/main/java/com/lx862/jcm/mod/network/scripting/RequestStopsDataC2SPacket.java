@@ -85,8 +85,11 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                     if(!depot.routes.isEmpty()) {
                                         Route belongingRoute = depot.routes.get(routeIdx);
                                         VehicleDataCache.RouteStopsData routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
-                                        for(PathData pathData : vehicle.vehicleExtraData.immutablePath) {
-                                            if(!pathData.getRail().isPlatform() || pathData.getDwellTime() <= 0) continue;
+                                        ObjectImmutableList<PathData> vehiclePath = vehicle.vehicleExtraData.immutablePath;
+
+                                        for(int i = 0; i < vehiclePath.size(); i++) {
+                                            PathData currentPath = vehiclePath.get(i);
+                                            if(!currentPath.getRail().isPlatform() || currentPath.getDwellTime() <= 0) continue;
                                             ObjectArrayList<RoutePlatformData> routePlatforms = belongingRoute.getRoutePlatforms();
                                             int routePlatformIndex = routeStopsData.stops.size();
                                             boolean finalRouteStop = routePlatformIndex == routePlatforms.size()-1;
@@ -96,9 +99,10 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                             long stationId = routePlatformData.getPlatform().area == null ? 0 : routePlatformData.getPlatform().area.getId();
                                             String destination = belongingRoute.getDestination(routePlatformIndex);
                                             String customDestination = routePlatformData.getCustomDestination();
-                                            double distance = pathData.getEndDistance();
+                                            double distance = currentPath.getEndDistance();
+                                            boolean turnbackPlatform = (i+1 < vehiclePath.size()) && vehiclePath.get(i+1).isOppositeRail(currentPath);
 
-                                            VehicleDataCache.SimplifiedStop stopObject = new VehicleDataCache.SimplifiedStop(destination, customDestination, stationId, platformId, distance);
+                                            VehicleDataCache.SimplifiedStop stopObject = new VehicleDataCache.SimplifiedStop(destination, customDestination, stationId, platformId, distance, turnbackPlatform);
                                             routeStopsData.addStop(stopObject);
                                             if(finalRouteStop) {
                                                 routeIdx++;
