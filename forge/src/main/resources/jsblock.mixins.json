@@ -35,6 +35,7 @@
     "modded.mtrpatch.OptimizedRendererAccessorMixin",
     "modded.mtrpatch.OptimizedRendererMixin",
     "modded.mtrpatch.OptimizedRendererWrapperAccessorMixin",
+    "modded.mtrpatch.RailMathAccessor",
     "modded.mtrpatch.RawMeshMixin",
     "modded.mtrpatch.RenderRailsMixin",
     "modded.mtrpatch.RenderVehiclesMixin",
