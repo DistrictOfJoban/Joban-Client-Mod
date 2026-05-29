@@ -10,13 +10,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = CustomResourceTools.class, remap = false)
 public interface CustomResourceToolsMixin {
-    @Inject(method = "getResourceFromSamePath", at = @At("HEAD"), cancellable = true)
-    private static void jsblock$relativePathWithPathTraversal(String basePath, String resource, String extension, CallbackInfoReturnable<Identifier> cir) {
-        cir.setReturnValue(JCMPatchForMTR.resolveRelativePath(basePath, resource, extension));
-    }
-
-    @Inject(method = "colorStringToInt", at = @At("HEAD"), cancellable = true)
-    private static void jsblock$fastParseInt(String color, CallbackInfoReturnable<Integer> cir) {
-        if(color.isEmpty()) cir.setReturnValue(0);
-    }
+    // Forge MixinExtra version is not high enough
+//    @Inject(method = "getResourceFromSamePath", at = @At("HEAD"), cancellable = true)
+//    private static void jsblock$relativePathWithPathTraversal(String basePath, String resource, String extension, CallbackInfoReturnable<Identifier> cir) {
+//        cir.setReturnValue(JCMPatchForMTR.resolveRelativePath(basePath, resource, extension));
+//    }
+//
+//    @Inject(method = "colorStringToInt", at = @At("HEAD"), cancellable = true)
+//    private static void jsblock$fastParseInt(String color, CallbackInfoReturnable<Integer> cir) {
+//        if(color.isEmpty()) cir.setReturnValue(0);
+//    }
 }
