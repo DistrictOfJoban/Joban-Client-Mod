@@ -8,6 +8,7 @@ import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mapping.render.shader.ModShaderHandler;
 import org.mtr.mapping.render.shader.ShaderManager;
 import org.mtr.mod.client.CustomResourceLoader;
+import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.resource.CustomResourceTools;
 
 import java.nio.file.FileSystems;
@@ -15,6 +16,7 @@ import java.util.Locale;
 
 public class JCMPatchForMTR {
     public static Identifier LIFT_DING_SOUND = new Identifier("minecraft:block.note_block.pling");
+    private final static int RAIL_CULLING_AREA_LIMIT = Integer.MAX_VALUE / 2;
     private static boolean cachedRenderingShadow = false;
     private static Long2IntArrayMap liftInstructions = new Long2IntArrayMap();
 
@@ -63,5 +65,19 @@ public class JCMPatchForMTR {
         boolean liftJustArrived = currentInstructionSize == 0 && lastValue == 1;
         liftInstructions.put(liftId, currentInstructionSize);
         return liftJustArrived;
+    }
+
+    public static boolean shouldSkipCullingTask(MinecraftClientData.RailWrapper railWrapper) {
+        double lowX = railWrapper.startVector.x;
+        double lowY = railWrapper.startVector.y;
+        double lowZ = railWrapper.startVector.z;
+        double highX = railWrapper.endVector.x;
+        double highY = railWrapper.endVector.y;
+        double highZ = railWrapper.endVector.z;
+        // Exceeds max limit, not gonna bother checking
+        if(Math.max(0, highX - lowX) * Math.max(0, highY - lowY) * Math.max(0, highZ - lowZ) > RAIL_CULLING_AREA_LIMIT) {
+            return true;
+        }
+        return false;
     }
 }
