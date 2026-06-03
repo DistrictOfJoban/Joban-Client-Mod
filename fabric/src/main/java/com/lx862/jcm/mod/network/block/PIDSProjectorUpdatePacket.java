@@ -1,7 +1,9 @@
 package com.lx862.jcm.mod.network.block;
 
 import com.lx862.jcm.mod.block.entity.PIDSProjectorBlockEntity;
+import com.lx862.jcm.mod.network.PacketValidator;
 import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.tool.PacketBufferReceiver;
@@ -56,6 +58,11 @@ public class PIDSProjectorUpdatePacket extends PIDSUpdatePacket {
         BlockEntity be = BlockUtil.getBlockEntityOrNull(world, blockPos);
 
         if(be != null && be.data instanceof PIDSProjectorBlockEntity) {
+            if(!PacketValidator.canConfigureBlock(serverPlayerEntity)) {
+                JCMLogger.warn("Player {} attempted to configure PIDS Projector at {} {} {} without permission.", serverPlayerEntity.getGameProfile().getName(), blockPos.getX(), blockPos.getY(), blockPos.getZ());
+                return;
+            }
+
             ((PIDSProjectorBlockEntity)be.data).setData(customMessages, filteredPlatforms, rowHidden, hidePlatformNumber, presetId, x, y, z, rotateX, rotateY, rotateZ, scale);
         }
     }

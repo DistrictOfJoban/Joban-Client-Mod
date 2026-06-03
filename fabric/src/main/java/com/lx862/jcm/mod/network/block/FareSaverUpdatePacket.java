@@ -2,7 +2,9 @@ package com.lx862.jcm.mod.network.block;
 
 import com.lx862.jcm.mod.block.base.JCMBlock;
 import com.lx862.jcm.mod.block.entity.FareSaverBlockEntity;
+import com.lx862.jcm.mod.network.PacketValidator;
 import com.lx862.jcm.mod.util.BlockUtil;
+import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;
@@ -37,6 +39,10 @@ public class FareSaverUpdatePacket extends PacketHandler {
         World world = serverPlayerEntity.getEntityWorld();
         BlockState state = BlockUtil.getBlockState(world, blockPos);
         if(state == null || !(state.getBlock().data instanceof JCMBlock)) return;
+        if(!PacketValidator.canConfigureBlock(serverPlayerEntity)) {
+            JCMLogger.warn("Player {} attempted to configure Fare Saver at {} {} {} without permission.", serverPlayerEntity.getGameProfile().getName(), blockPos.getX(), blockPos.getY(), blockPos.getZ());
+            return;
+        }
 
         ((JCMBlock)state.getBlock().data).loopStructure(state, world, blockPos, (bs, be) -> {
             if(be.data instanceof FareSaverBlockEntity) {
