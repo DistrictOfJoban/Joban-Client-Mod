@@ -92,7 +92,9 @@ public class ScriptResourceUtil {
         } else {
             identifier = idRelative(pathOrIdentifier.toString());
         }
-        executeScript(activeContext, activeScope, identifier, ResourceManagerHelper.readResource(identifier));
+        DataReaderJS scriptFile = read(identifier);
+        if(scriptFile == null) throw new IllegalStateException(String.format("Failed to include script %s:%s as it is not found.", identifier.getNamespace(), identifier.getPath()));
+        executeScript(activeContext, activeScope, identifier, scriptFile.asString());
     }
 
     public static void print(@ValueNullable Object... objs) {

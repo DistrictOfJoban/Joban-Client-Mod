@@ -7,6 +7,8 @@ This is a minor release. Server owners are advised to update to this version.
 - MTR Patch: Lower culling boundary calculation precision to help with lag spikes when creating large rail.
 
 ## Changes
+- Scripting:
+  - The `include()` script function will now hard fail if the script file to be included is not found.
 - Add some extra permission guarding against block configuration packet.
 
 **Download:**  
