@@ -28,6 +28,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     protected int overflowMode;
     protected int alignment;
     protected int color;
+    protected double lineHeight;
     protected double marqueeProgressOverride;
     protected double marqueeDurationOverride;
 
@@ -35,6 +36,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         super(100, 25);
         this.alignment = -1;
         this.scale = 1;
+        this.lineHeight = 1;
         this.marqueeDurationOverride = -1;
         this.marqueeProgressOverride = -1;
         this.fontId = new Identifier(Init.MOD_ID, "mtr");
@@ -90,6 +92,11 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
 
     public TextWrapper wrapText() {
         this.overflowMode = 3;
+        return this;
+    }
+
+    public TextWrapper lineHeight(double lineHeightFactor) {
+        this.lineHeight = lineHeightFactor;
         return this;
     }
 
@@ -194,7 +201,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
             } else {
                 int i = 0;
                 for(MutableText text : texts) {
-                    drawText(graphicsHolderNew, text, i*9, color, shadow, MAX_RENDER_LIGHT);
+                    drawText(graphicsHolderNew, text, (int)(i*(9*lineHeight)), color, shadow, MAX_RENDER_LIGHT);
                     i++;
                 }
             }
