@@ -12,6 +12,7 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.MinecraftClientHelper;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.render.RenderRails;
 import org.spongepowered.asm.mixin.Mixin;
@@ -66,9 +67,23 @@ public class RenderRailsMixin {
     }
 
     @Inject(method = "lambda$render$1", at = @At("HEAD"), cancellable = true)
-    private static void jsblock$skipLargeCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
-        if(JCMPatchForMTR.shouldSkipCullingTask(railWrapper)) {
-            cir.setReturnValue(() -> railWrapper.shouldRender = true);
-        }
+    private static void jsblock$improveRailCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
+        Box railCullingBoundary = JCMPatchForMTR.clampBoundingBoxToRenderDistance(
+                new Vector3d(camera.getX(), camera.getY(), camera.getZ()),
+                MinecraftClientHelper.getRenderDistance(),
+                railWrapper.startVector.x, railWrapper.startVector.y, railWrapper.startVector.z,
+                railWrapper.endVector.x, railWrapper.endVector.y, railWrapper.endVector.z
+        );
+
+        boolean shouldRender = !JCMPatchForMTR.shouldSkipCullingTask(
+                railCullingBoundary.getMinXMapped(), railCullingBoundary.getMinYMapped(), railCullingBoundary.getMinZMapped(),
+                railCullingBoundary.getMaxXMapped(), railCullingBoundary.getMaxYMapped(), railCullingBoundary.getMaxZMapped()
+        ) && occlusionCullingInstance.isAABBVisible(
+                new Vec3d(railCullingBoundary.getMinXMapped(), railCullingBoundary.getMinYMapped(), railCullingBoundary.getMinZMapped()),
+                new Vec3d(railCullingBoundary.getMaxXMapped(), railCullingBoundary.getMaxYMapped(), railCullingBoundary.getMaxZMapped()),
+                camera
+        );
+
+        cir.setReturnValue(() -> railWrapper.shouldRender = shouldRender);
     }
 }

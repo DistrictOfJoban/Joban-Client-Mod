@@ -1,10 +1,12 @@
-# JCM v2.2.1 for MTR 4.0.5 has been released!
+# JCM v2.2.1 for MTR 4.0.4 has been released!
 
 This is a minor release. Server owners are advised to update to this version.
 
 ## Additions
-- MTR Patch: Skip rail culling for very large rail, to avoid visibility issue.
-- MTR Patch: Lower culling boundary calculation precision to help with lag spikes when creating large rail.
+- MTR Patch: Rail Improvements
+  - Improve culling performance and avoid errors for large rail
+  - Lower rail culling precision to help with lag spikes when creating large rail.
+  - Improve rail render distance check, which should result in smoother rail visibility.
 
 ## Changes
 - Scripting:

@@ -1,5 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtrpatch;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.extra.JCMPatchForMTR;
 import org.mtr.core.data.Rail;
@@ -12,6 +13,7 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.MinecraftClientHelper;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.render.RenderRails;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,6 +21,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -66,9 +69,31 @@ public class RenderRailsMixin {
     }
 
     @Inject(method = "lambda$render$1", at = @At("HEAD"), cancellable = true)
-    private static void jsblock$skipLargeCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
-        if(JCMPatchForMTR.shouldSkipCullingTask(railWrapper)) {
-            cir.setReturnValue(() -> railWrapper.shouldRender = true);
-        }
+    private static void jsblock$improveRailCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
+        Box railCullingBoundary = JCMPatchForMTR.clampBoundingBoxToRenderDistance(
+                new Vector3d(camera.getX(), camera.getY(), camera.getZ()),
+                MinecraftClientHelper.getRenderDistance(),
+                railWrapper.startVector.x, railWrapper.startVector.y, railWrapper.startVector.z,
+                railWrapper.endVector.x, railWrapper.endVector.y, railWrapper.endVector.z
+        );
+
+        boolean shouldRender = !JCMPatchForMTR.shouldSkipCullingTask(
+                railCullingBoundary.getMinXMapped(), railCullingBoundary.getMinYMapped(), railCullingBoundary.getMinZMapped(),
+                railCullingBoundary.getMaxXMapped(), railCullingBoundary.getMaxYMapped(), railCullingBoundary.getMaxZMapped()
+        ) && occlusionCullingInstance.isAABBVisible(
+                new Vec3d(railCullingBoundary.getMinXMapped(), railCullingBoundary.getMinYMapped(), railCullingBoundary.getMinZMapped()),
+                new Vec3d(railCullingBoundary.getMaxXMapped(), railCullingBoundary.getMaxYMapped(), railCullingBoundary.getMaxZMapped()),
+                camera
+        );
+
+        cir.setReturnValue(() -> railWrapper.shouldRender = shouldRender);
+    }
+
+    @ModifyVariable(method = "lambda$renderWithinRenderDistance$22", at = @At("STORE"), ordinal = 1)
+    private static int returnBetterDistance(int distance, @Local(argsOnly = true, ordinal = 0) double x1, @Local(argsOnly = true, ordinal = 1) double z1) {
+        Vector3d cameraPos = MinecraftClient.getInstance().getCameraEntityMapped().getPos();
+        Vector3d posForComparison = new Vector3d(cameraPos.getXMapped(), 0, cameraPos.getZMapped()); // MC does not have vertical render distance, it renders all the way down. Thus Y should not be accounted for distance check.
+
+        return (int)(new Vector3d(x1, 0, z1).distanceTo(posForComparison));
     }
 }
