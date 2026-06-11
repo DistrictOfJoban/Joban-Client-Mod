@@ -29,18 +29,20 @@ public class GraphicsTexture implements Closeable {
     public GraphicsTexture(int width, int height) {
         this.width = width;
         this.height = height;
-        dynamicTexture = new NativeImageBackedTexture(new NativeImage(width, height, false));
+        this.dynamicTexture = new NativeImageBackedTexture(new NativeImage(width, height, false));
+        this.identifier = MTRScriptingMod.id(String.format("dynamic/graphics/%s", UUID.randomUUID()));
 
         MinecraftClient.getInstance().execute(() -> {
+            // Use GL Swizzle to remap color. MC's NativeImage is BGRA
             int prevTextureBinding = GL33.glGetInteger(GL33.GL_TEXTURE_BINDING_2D);
-            dynamicTexture.bindTexture();
+            this.dynamicTexture.bindTexture();
             GL33.glTexParameteriv(GL33.GL_TEXTURE_2D, GL33.GL_TEXTURE_SWIZZLE_RGBA,
                     new int[] { GL33.GL_BLUE, GL33.GL_GREEN, GL33.GL_RED, GL33.GL_ALPHA });
+            GL33.glGenerateMipmap(GL33.GL_TEXTURE_2D);
             GlStateManager._bindTexture(prevTextureBinding);
-        });
-        identifier = MTRScriptingMod.id(String.format("dynamic/graphics/%s", UUID.randomUUID()));
-        MinecraftClient.getInstance().execute(() -> {
-            MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, new AbstractTexture(dynamicTexture.data));
+
+            // Register the texture to MC!
+            MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, new AbstractTexture(this.dynamicTexture.data));
         });
         bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         graphics = bufferedImage.createGraphics();
@@ -57,8 +59,11 @@ public class GraphicsTexture implements Closeable {
         return newImage;
     }
 
+    /**
+     * Upload the full image
+     */
     public void upload() {
-        copyBuffer(0, 0, this.width, this.height);
+        copyBuffer(this.bufferedImage, this.dynamicTexture, 0, 0, this.width, this.height, this.width, this.height);
         RenderSystem.recordRenderCall(dynamicTexture::upload);
     }
 
@@ -66,32 +71,36 @@ public class GraphicsTexture implements Closeable {
         upload(x, y, x, y, width, height);
     }
 
-    @ApiInternal
-    public void upload(int dstOffsetX, int dstOffsetY, int srcOffsetX, int srcOffsetY, int width, int height) {
-        if(srcOffsetX + width > this.width) {
+    public void upload(int dstOffsetX, int dstOffsetY, int srcOffsetX, int srcOffsetY, int uploadWidth, int uploadHeight) {
+        upload(this.bufferedImage, dstOffsetX, dstOffsetY, srcOffsetX, srcOffsetY, uploadWidth, uploadHeight);
+    }
+
+    public void upload(BufferedImage sourceImage, int dstOffsetX, int dstOffsetY, int srcOffsetX, int srcOffsetY, int uploadWidth, int uploadHeight) {
+        if(srcOffsetX + uploadWidth > this.width) {
             throw new IllegalArgumentException("offsetX + width should not be larger than the total image size! Have you subtracted width from offset?");
         }
-        if(srcOffsetY + height > this.height) {
+        if(srcOffsetY + uploadHeight > this.height) {
             throw new IllegalArgumentException("offsetY + height should not be larger than the total image size! Have you subtracted height from offset?");
         }
-        copyBuffer(dstOffsetX, dstOffsetY, width, height);
+        copyBuffer(sourceImage, this.dynamicTexture, dstOffsetX, dstOffsetY, uploadWidth, uploadHeight, this.width, this.height);
         RenderSystem.recordRenderCall(() -> {
             NativeImage nativeImage = dynamicTexture.getImage();
             if(nativeImage != null) {
                 dynamicTexture.bindTexture();
-                nativeImage.upload(0, dstOffsetX, dstOffsetY, srcOffsetX, srcOffsetY, width, height, false, false, false, false);
+                nativeImage.upload(0, dstOffsetX, dstOffsetY, srcOffsetX, srcOffsetY, uploadWidth, uploadHeight, false, false, false, false);
             }
         });
     }
 
-    private void copyBuffer(int x, int y, int width, int height) {
-        int[] imgData = ((DataBufferInt)bufferedImage.getRaster().getDataBuffer()).getData();
-        long nativeImagePointer = LoaderImplClient.getNativeImagePointer(dynamicTexture.getImage());
-        IntBuffer target = MemoryUtil.memByteBuffer(nativeImagePointer, this.width * this.height * 4).asIntBuffer();
+    private static void copyBuffer(BufferedImage source, NativeImageBackedTexture destination, int x, int y, int width, int height, int imgWidth, int imgHeight) {
+        int[] sourceData = ((DataBufferInt)source.getRaster().getDataBuffer()).getData();
+        NativeImage destImg = destination.getImage();
+        long destImgPointer = LoaderImplClient.getNativeImagePointer(destination.getImage());
+        IntBuffer buffer = MemoryUtil.memByteBuffer(destImgPointer, imgWidth * imgHeight * 4).asIntBuffer();
         for(int i = y; i < y+height; i++) {
-            int startSrc = (i * this.width) + x;
-            target.position((i * this.width) + x);
-            target.put(imgData, startSrc, width);
+            int startSrc = (i * imgWidth) + x;
+            buffer.position((i * imgWidth) + x);
+            buffer.put(sourceData, startSrc, width);
         }
     }
 

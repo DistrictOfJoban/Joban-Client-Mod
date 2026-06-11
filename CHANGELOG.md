@@ -11,6 +11,7 @@ This is a minor release. Server owners are advised to update to this version.
 ## Changes
 - Scripting:
   - The `include()` script function will now hard fail if the script file to be included is not found.
+  - Add overload for `GraphicsTexture.upload()` with BufferedImage argument.
 - Add some extra permission guarding against block configuration packet.
 
 **Download:**  
