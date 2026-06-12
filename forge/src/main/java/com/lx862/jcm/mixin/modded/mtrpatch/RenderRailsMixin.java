@@ -78,7 +78,7 @@ public class RenderRailsMixin {
         boolean shouldRender = !JCMPatchForMTR.shouldSkipCullingTask(
                 railCullingBoundary.getMinXMapped(), railCullingBoundary.getMinYMapped(), railCullingBoundary.getMinZMapped(),
                 railCullingBoundary.getMaxXMapped(), railCullingBoundary.getMaxYMapped(), railCullingBoundary.getMaxZMapped()
-        ) && occlusionCullingInstance.isAABBVisible(
+        ) || occlusionCullingInstance.isAABBVisible(
                 new Vec3d(railCullingBoundary.getMinXMapped(), railCullingBoundary.getMinYMapped(), railCullingBoundary.getMinZMapped()),
                 new Vec3d(railCullingBoundary.getMaxXMapped(), railCullingBoundary.getMaxYMapped(), railCullingBoundary.getMaxZMapped()),
                 camera
