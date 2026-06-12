@@ -1,6 +1,5 @@
 package com.lx862.jcm.mixin.modded.mtrpatch;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.extra.JCMPatchForMTR;
 import org.mtr.core.data.Rail;
@@ -87,13 +86,5 @@ public class RenderRailsMixin {
         );
 
         cir.setReturnValue(() -> railWrapper.shouldRender = shouldRender);
-    }
-
-    @ModifyVariable(method = "lambda$renderWithinRenderDistance$22", at = @At("STORE"), ordinal = 1)
-    private static int returnBetterDistance(int distance, @Local(argsOnly = true, ordinal = 0) double x1, @Local(argsOnly = true, ordinal = 1) double z1) {
-        Vector3d cameraPos = MinecraftClient.getInstance().getCameraEntityMapped().getPos();
-        Vector3d posForComparison = new Vector3d(cameraPos.getXMapped(), 0, cameraPos.getZMapped()); // MC does not have vertical render distance, it renders all the way down. Thus Y should not be accounted for distance check.
-
-        return (int)(new Vector3d(x1, 0, z1).distanceTo(posForComparison));
     }
 }

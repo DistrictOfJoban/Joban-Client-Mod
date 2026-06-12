@@ -40,7 +40,6 @@
     "modded.mtrpatch.RawMeshMixin",
     "modded.mtrpatch.RenderRailsMixin",
     "modded.mtrpatch.RenderVehiclesMixin",
-    "modded.mtrpatch.SignResourceMixin",
     "modded.mtrpatch.VehicleSelectorScreenMixin",
     "modded.mtrpatch.WidgetMapMixin",
     "modded.tsc.VehicleAccessorMixin"
