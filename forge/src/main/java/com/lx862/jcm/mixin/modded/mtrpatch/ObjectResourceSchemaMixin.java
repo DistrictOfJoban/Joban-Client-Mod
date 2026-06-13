@@ -36,7 +36,7 @@ public class ObjectResourceSchemaMixin {
             jsblock$rotationArray.add(-d);
         });
         readerBase.iterateDoubleArray("scale", () -> {}, (d) -> {
-            jsblock$scaleArray.add(-d);
+            jsblock$scaleArray.add(d);
         });
         readerBase.iterateBooleanArray("mirror", () -> {}, (bl) -> {
             jsblock$mirrorArray.add(bl);
