@@ -155,7 +155,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
         MainRenderer.scheduleRender(this.renderLayer, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
-            this.storedMatrixTransformations.transform(graphicsHolderNew, offset);
+            storedMatrixTransformations.transform(graphicsHolderNew, offset);
             graphicsHolderNew.scale((float)this.scale, (float)this.scale, (float)this.scale);
 
             List<MutableText> texts = new ArrayList<>();

@@ -81,7 +81,7 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
     protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
         MainRenderer.scheduleRender(this.textureId, false, this.renderType, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
-            this.storedMatrixTransformations.transform(graphicsHolderNew, offset);
+            storedMatrixTransformations.transform(graphicsHolderNew, offset);
             RenderHelper.drawTexture(graphicsHolderNew, 0, 0, 0, (float)this.w, (float)this.h, this.u1, this.v1, this.u2, this.v2, facing, ARGB_BLACK + this.color, MAX_RENDER_LIGHT);
             graphicsHolderNew.pop();
         });
