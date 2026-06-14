@@ -52,6 +52,10 @@ public class JCMClientConfig extends ReflectiveConfig {
 
         @Comment("Whether to show platform/siding tooltip when hovered in MTR Dashboard.")
         public final TrackedValue<Boolean> showDashboardTooltip = value(true);
+
+        @Comment("Rail Culling Improvements")
+        @ChangeWarning(folk.sisby.kaleido.lib.quiltconfig.api.metadata.ChangeWarning.Type.Experimental)
+        public final TrackedValue<Boolean> railCullingImprovement = value(false);
     }
 
     public static void init() {

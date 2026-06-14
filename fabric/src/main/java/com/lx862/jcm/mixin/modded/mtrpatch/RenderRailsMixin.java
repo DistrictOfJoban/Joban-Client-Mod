@@ -20,7 +20,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -69,6 +68,9 @@ public class RenderRailsMixin {
 
     @Inject(method = "lambda$render$1", at = @At("HEAD"), cancellable = true)
     private static void jsblock$improveRailCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
+        boolean overrideDefaultBehaviour = JCMClientConfig.INSTANCE.mtrPatch.railCullingImprovement.value();
+        if(!overrideDefaultBehaviour) return;
+
         Box railCullingBoundary = JCMPatchForMTR.clampBoundingBoxToRenderDistance(
                 new Vector3d(camera.getX(), camera.getY(), camera.getZ()),
                 MinecraftClientHelper.getRenderDistance(),
