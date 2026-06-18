@@ -63,7 +63,7 @@ public class GraphicsTexture implements Closeable {
      * Upload the full image
      */
     public void upload() {
-        copyBuffer(this.bufferedImage, this.dynamicTexture, 0, 0, this.width, this.height, this.width, this.height);
+        copyBuffer(this.bufferedImage, this.dynamicTexture, 0, 0, 0, 0, this.width, this.height, this.width, this.height, this.width, this.height);
         RenderSystem.recordRenderCall(dynamicTexture::upload);
     }
 
@@ -76,31 +76,50 @@ public class GraphicsTexture implements Closeable {
     }
 
     public void upload(BufferedImage sourceImage, int dstOffsetX, int dstOffsetY, int srcOffsetX, int srcOffsetY, int uploadWidth, int uploadHeight) {
-        if(srcOffsetX + uploadWidth > this.width) {
-            throw new IllegalArgumentException("offsetX + width should not be larger than the total image size! Have you subtracted width from offset?");
+        int srcImgWidth = sourceImage.getWidth();
+        int srcImgHeight = sourceImage.getHeight();
+        if(dstOffsetX + uploadWidth > this.width) {
+            throw new IllegalArgumentException("Destination offsetX + width should not be larger than the destination image size! Have you subtracted width from offset?");
         }
-        if(srcOffsetY + uploadHeight > this.height) {
-            throw new IllegalArgumentException("offsetY + height should not be larger than the total image size! Have you subtracted height from offset?");
+        if(dstOffsetY + uploadHeight > this.height) {
+            throw new IllegalArgumentException("Destination offsetY + height should not be larger than the destination image size! Have you subtracted height from offset?");
         }
-        copyBuffer(sourceImage, this.dynamicTexture, dstOffsetX, dstOffsetY, uploadWidth, uploadHeight, this.width, this.height);
+        if (srcOffsetX + uploadWidth > srcImgWidth) {
+            throw new IllegalArgumentException("Source offsetX + width should not be larger than the source image size!");
+        }
+        if (srcOffsetY + uploadHeight > srcImgHeight) {
+            throw new IllegalArgumentException("Source offsetY + height should not be larger than the source image size!");
+        }
+        copyBuffer(sourceImage, this.dynamicTexture, dstOffsetX, dstOffsetY, srcOffsetX, srcOffsetY, uploadWidth, uploadHeight, this.width, this.height, srcImgWidth, srcImgHeight);
         RenderSystem.recordRenderCall(() -> {
             NativeImage nativeImage = dynamicTexture.getImage();
             if(nativeImage != null) {
                 dynamicTexture.bindTexture();
-                nativeImage.upload(0, dstOffsetX, dstOffsetY, srcOffsetX, srcOffsetY, uploadWidth, uploadHeight, false, false, false, false);
+                nativeImage.upload(0, dstOffsetX, dstOffsetY, dstOffsetX, dstOffsetY, uploadWidth, uploadHeight, false, false, false, false);
             }
         });
     }
 
-    private static void copyBuffer(BufferedImage source, NativeImageBackedTexture destination, int x, int y, int width, int height, int imgWidth, int imgHeight) {
+    private static void copyBuffer(
+            BufferedImage source,
+            NativeImageBackedTexture destination,
+            int dstX, int dstY,
+            int srcX, int srcY,
+            int width, int height,
+            int dstImgWidth, int dstImgHeight,
+            int srcImgWidth, int srcImgHeight
+    ) {
         int[] sourceData = ((DataBufferInt)source.getRaster().getDataBuffer()).getData();
         NativeImage destImg = destination.getImage();
         long destImgPointer = LoaderImplClient.getNativeImagePointer(destination.getImage());
-        IntBuffer buffer = MemoryUtil.memByteBuffer(destImgPointer, imgWidth * imgHeight * 4).asIntBuffer();
-        for(int i = y; i < y+height; i++) {
-            int startSrc = (i * imgWidth) + x;
-            buffer.position((i * imgWidth) + x);
-            buffer.put(sourceData, startSrc, width);
+        IntBuffer buffer = MemoryUtil.memByteBuffer(destImgPointer, dstImgWidth * dstImgHeight * 4).asIntBuffer();
+        int srcPixelStart = srcY * srcImgWidth + srcX;
+        int dstPixelStart = dstY * dstImgWidth + dstX;
+        for(int i = 0; i < height; i++) {
+            buffer.position(dstPixelStart);
+            buffer.put(sourceData, srcPixelStart, width);
+            srcPixelStart += srcImgWidth;  // To next line
+            dstPixelStart += dstImgWidth;  // To next line
         }
     }
 
