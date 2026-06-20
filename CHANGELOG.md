@@ -1,6 +1,9 @@
 # JCM v2.2.2 for MTR 4.0.5 has been released!
 
-This is a minor client-only scripting bugfix release.
+This is a minor client-only release for scripting-related features. Players are advised to update to this version for the best experience.
+
+## Addition
+- Add `EntityWrapper.displayName(): string`
 
 ## Fixes
 - Fix missed guarding of more advanced `GraphicsTexture.upload()` overload (Thanks **Forest_E233**!)
