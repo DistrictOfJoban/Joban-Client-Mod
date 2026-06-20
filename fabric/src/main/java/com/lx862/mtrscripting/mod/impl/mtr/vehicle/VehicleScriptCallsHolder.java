@@ -48,13 +48,13 @@ public class VehicleScriptCallsHolder {
                 Captured.this.carBogieRenderers.put(carIndex, renderManagers.stream().map(ScriptRenderManager::copy).toList());
             });
             committer.carSoundManagers.forEach((carIndex, sm) -> {
-                if(!this.carSoundManagers.containsKey(carIndex)) {
-                    this.carSoundManagers.put(carIndex, sm);
+                if(!Captured.this.carSoundManagers.containsKey(carIndex)) {
+                    Captured.this.carSoundManagers.put(carIndex, sm.copy());
                 } else {
                     // HACK: We use different injection point for commiting and initiating vehicle script execution.
                     // Sometimes the script would be executed multiple times without committing, resulting in previous unexecuted sound calls being dropped.
                     // Should look into it at some point, though for now let's just keep a list of all historic sound calls.
-                    this.carSoundManagers.get(carIndex).addCallsFrom(sm);
+                    Captured.this.carSoundManagers.get(carIndex).addCallsFrom(sm.copy());
                 }
             });
         }

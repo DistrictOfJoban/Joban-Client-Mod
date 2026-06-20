@@ -1,7 +1,6 @@
 package com.lx862.mtrscripting.core.util.sound;
 
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
-import com.lx862.mtrscripting.core.util.render.RenderDrawCall;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.SoundInstance;
@@ -57,6 +56,8 @@ public class ScriptSoundManager {
         for(SoundCall soundCall : soundCalls) {
             soundCall.run(world, basePos);
         }
+        // Unlike render calls, sounds are one-shot, no need to keep them afterwords.
+        reset();
     }
 
     public ScriptSoundManager copy() {

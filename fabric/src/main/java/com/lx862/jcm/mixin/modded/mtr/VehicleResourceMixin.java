@@ -70,7 +70,6 @@ public abstract class VehicleResourceMixin {
 
         if(carSoundManager != null) {
             carSoundManager.invoke(world, soundPos);
-            carSoundManager.reset();
         }
     }
 }
