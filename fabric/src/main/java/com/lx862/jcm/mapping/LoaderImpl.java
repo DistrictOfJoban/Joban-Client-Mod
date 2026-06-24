@@ -1,6 +1,8 @@
 package com.lx862.jcm.mapping;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
 import org.mtr.mapping.holder.*;
 
 import java.nio.file.Path;
@@ -43,5 +45,17 @@ public class LoaderImpl {
         #else
             return new Identifier(net.minecraft.registry.Registries.ITEM.getId(itm.data));
         #endif
+    }
+
+    public static void withClipboardContentText(Style style, String content) {
+        style.data.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content));
+    }
+
+    public static void withURLContentText(Style style, String urlContent) {
+        style.data.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, urlContent));
+    }
+
+    public static void withHoverContentText(Style style, MutableText content) {
+        style.data.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, content.data));
     }
 }

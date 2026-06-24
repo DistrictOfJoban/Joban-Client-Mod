@@ -2,6 +2,9 @@
 
 Another minor client-only release to fix issues caused by scripting. Players are advised to update to this version for the best experience.
 
+## Additions
+- Add `VanillaText.clickToCopyText()`, `VanillaText.clickToOpenURL()` and `VanillaText.withHoverText()` for more text customizations.
+
 ## Fixes
 - Fix scripted trains opening nearby PSD/APG for the entire carriage even without a nearby doorway.
 

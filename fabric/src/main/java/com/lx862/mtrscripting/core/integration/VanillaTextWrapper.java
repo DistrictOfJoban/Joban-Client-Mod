@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.core.integration;
 
+import com.lx862.jcm.mapping.LoaderImpl;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.TextHelper;
@@ -53,6 +54,26 @@ public class VanillaTextWrapper {
         TextFormatting textFormatting = TextFormatting.byName(colorName);
         if(textFormatting == null) throw new IllegalArgumentException("Color " + colorName + " is not a valid text color!");
         this.style = this.style.withColor(textFormatting);
+        return this;
+    }
+
+    public VanillaTextWrapper clickToCopyText(String content) {
+        LoaderImpl.withClipboardContentText(style, content);
+        return this;
+    }
+
+    public VanillaTextWrapper clickToOpenURL(String urlContent) {
+        LoaderImpl.withURLContentText(style, urlContent);
+        return this;
+    }
+
+    public VanillaTextWrapper withHoverText(String content) {
+        LoaderImpl.withHoverContentText(style, TextHelper.literal(content));
+        return this;
+    }
+
+    public VanillaTextWrapper withHoverText(MutableText content) {
+        LoaderImpl.withHoverContentText(style, content);
         return this;
     }
 

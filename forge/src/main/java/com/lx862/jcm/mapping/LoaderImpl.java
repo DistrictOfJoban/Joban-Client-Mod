@@ -1,5 +1,7 @@
 package com.lx862.jcm.mapping;
 
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.mtr.mapping.holder.*;
 
@@ -44,5 +46,17 @@ public class LoaderImpl {
         #else
             return new Identifier(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(itm.data));
         #endif
+    }
+
+    public static void withClipboardContentText(Style style, String content) {
+        style.data.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content));
+    }
+
+    public static void withURLContentText(Style style, String urlContent) {
+        style.data.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, urlContent));
+    }
+
+    public static void withHoverContentText(Style style, MutableText content) {
+        style.data.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, content.data));
     }
 }
