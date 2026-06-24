@@ -2,6 +2,7 @@ package com.lx862.mtrscripting.mod.impl.mtr.vehicle;
 
 import com.lx862.jcm.mixin.modded.mtr.VehicleSchemaMixin;
 import com.lx862.jcm.mixin.modded.tsc.VehicleAccessorMixin;
+import com.lx862.jcm.mod.util.MTRUtil;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -14,7 +15,6 @@ import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.client.VehicleRidingMovement;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.render.PositionAndRotation;
-import org.mtr.mod.render.RenderVehicleHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,8 +58,8 @@ public class VehicleWrapper {
             double halfWidth = getWidth(i) / 2;
             double halfLength = getLength(i) / 2;
 
-            this.doorLeftOpen[i] = getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(-halfWidth - 0.1, -1, -halfLength, -halfWidth, 1, halfLength), posAndRotation, getDoorValue());
-            this.doorRightOpen[i] = getDoorValue() > 0 && RenderVehicleHelper.canOpenDoors(new Box(halfWidth, -1, -halfLength, halfWidth + 0.1, 1, halfLength), posAndRotation, getDoorValue());
+            this.doorLeftOpen[i] = getDoorValue() > 0 && MTRUtil.canOpenDoors(new Box(-halfWidth - 0.1, -1, -halfLength, -halfWidth, 1, halfLength), posAndRotation);
+            this.doorRightOpen[i] = getDoorValue() > 0 && MTRUtil.canOpenDoors(new Box(halfWidth, -1, -halfLength, halfWidth + 0.1, 1, halfLength), posAndRotation);
         }
 
         this.stopsData = StopsData.constructData(dataFetchMode, vehicleExtension);
