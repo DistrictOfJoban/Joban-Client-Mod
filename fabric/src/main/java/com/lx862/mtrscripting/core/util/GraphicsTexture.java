@@ -38,7 +38,6 @@ public class GraphicsTexture implements Closeable {
             this.dynamicTexture.bindTexture();
             GL33.glTexParameteriv(GL33.GL_TEXTURE_2D, GL33.GL_TEXTURE_SWIZZLE_RGBA,
                     new int[] { GL33.GL_BLUE, GL33.GL_GREEN, GL33.GL_RED, GL33.GL_ALPHA });
-            GL33.glGenerateMipmap(GL33.GL_TEXTURE_2D);
             GlStateManager._bindTexture(prevTextureBinding);
 
             // Register the texture to MC!
