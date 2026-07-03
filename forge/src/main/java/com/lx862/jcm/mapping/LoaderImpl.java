@@ -48,15 +48,15 @@ public class LoaderImpl {
         #endif
     }
 
-    public static void withClipboardContentText(Style style, String content) {
-        style.data.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content));
+    public static Style withClipboardContentText(Style style, String content) {
+        return new Style(style.data.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content)));
     }
 
-    public static void withURLContentText(Style style, String urlContent) {
-        style.data.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, urlContent));
+    public static Style withURLContentText(Style style, String urlContent) {
+        return new Style(style.data.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, urlContent)));
     }
 
-    public static void withHoverContentText(Style style, MutableText content) {
-        style.data.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, content.data));
+    public static Style withHoverContentText(Style style, MutableText content) {
+        return new Style(style.data.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, content.data)));
     }
 }

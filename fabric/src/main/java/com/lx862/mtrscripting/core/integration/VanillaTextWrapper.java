@@ -58,22 +58,22 @@ public class VanillaTextWrapper {
     }
 
     public VanillaTextWrapper clickToCopyText(String content) {
-        LoaderImpl.withClipboardContentText(style, content);
+        this.style = LoaderImpl.withClipboardContentText(style, content);
         return this;
     }
 
     public VanillaTextWrapper clickToOpenURL(String urlContent) {
-        LoaderImpl.withURLContentText(style, urlContent);
+        this.style = LoaderImpl.withURLContentText(style, urlContent);
         return this;
     }
 
     public VanillaTextWrapper withHoverText(String content) {
-        LoaderImpl.withHoverContentText(style, TextHelper.literal(content));
+        this.style = LoaderImpl.withHoverContentText(style, TextHelper.literal(content));
         return this;
     }
 
     public VanillaTextWrapper withHoverText(MutableText content) {
-        LoaderImpl.withHoverContentText(style, content);
+        this.style = LoaderImpl.withHoverContentText(style, content);
         return this;
     }
 
