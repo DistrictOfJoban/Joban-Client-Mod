@@ -47,6 +47,14 @@ public class LoaderImpl {
         #endif
     }
 
+    public static int getRedstoneLevel(World world, BlockPos blockPos) {
+        #if MC_VERSION < "12001"
+        return world.data.getBestNeighborSignal(blockPos.data);
+        #else
+        return world.data.getReceivedRedstonePower(blockPos.data);
+        #endif
+    }
+
     public static void withClipboardContentText(Style style, String content) {
         style.data.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content));
     }
