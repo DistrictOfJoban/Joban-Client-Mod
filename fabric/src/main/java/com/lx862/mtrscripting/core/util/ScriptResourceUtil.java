@@ -190,6 +190,14 @@ public class ScriptResourceUtil {
         return resourceFound[0];
     }
 
+    public static boolean hasSystemFont(String fontName) {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        for(String fontFamily : ge.getAvailableFontFamilyNames()) {
+            if(fontName.equals(fontFamily)) return true;
+        }
+        return false;
+    }
+
     public static Font getSystemFont(String fontName) {
         if(fontName.equals("Noto Sans")) {
             Font cjkFont = getSystemFont("Noto Sans CJK TC Medium");
