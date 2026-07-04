@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.core.util.model;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.mod.MTRScriptingMod;
+import com.mojang.blaze3d.systems.RenderSystem;
 import org.apache.commons.io.IOUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.mapping.holder.Identifier;
@@ -103,6 +104,8 @@ public class ModelManagerJS {
     }
 
     public static ModelJS upload(RawModelJS rawModel) {
+        if(!RenderSystem.isOnRenderThread()) throw new IllegalStateException("Cannot invoke ModelManager.upload() off-thread! Upload during script parsing phase or use DynamicModelHolder.");
+
         if(modelCache.containsKey(rawModel)) return modelCache.get(rawModel);
         ModelJS uploadedModel = ModelJS.uploadRawModel(rawModel);
         modelCache.put(rawModel, uploadedModel);
