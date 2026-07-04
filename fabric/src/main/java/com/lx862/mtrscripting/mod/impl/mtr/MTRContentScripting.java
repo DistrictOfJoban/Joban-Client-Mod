@@ -47,6 +47,7 @@ public class MTRContentScripting {
         scriptManager.parseScriptEvent.register((contextName, context, scriptable) -> {
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
+            scriptable.put("MTRUtil", scriptable, new NativeJavaClass(scriptable, MTRUtil.class));
         });
 
         MTRScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
