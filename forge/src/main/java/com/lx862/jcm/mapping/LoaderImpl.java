@@ -48,6 +48,10 @@ public class LoaderImpl {
         #endif
     }
 
+    public static int getRedstoneLevel(World world, BlockPos blockPos) {
+        return world.data.getBestNeighborSignal(blockPos.data);
+    }
+
     public static Style withClipboardContentText(Style style, String content) {
         return new Style(style.data.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content)));
     }

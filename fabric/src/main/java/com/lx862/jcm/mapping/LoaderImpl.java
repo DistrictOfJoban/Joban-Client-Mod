@@ -48,11 +48,7 @@ public class LoaderImpl {
     }
 
     public static int getRedstoneLevel(World world, BlockPos blockPos) {
-        #if MC_VERSION < "12001"
-        return world.data.getBestNeighborSignal(blockPos.data);
-        #else
         return world.data.getReceivedRedstonePower(blockPos.data);
-        #endif
     }
 
     public static Style withClipboardContentText(Style style, String content) {
