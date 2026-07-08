@@ -57,12 +57,12 @@ public abstract class PIDSDrawCall<T extends PIDSDrawCall<?>> extends RenderDraw
             graphicsHolder1.scale(PIDSPresetBase.BASE_SCALE, PIDSPresetBase.BASE_SCALE, PIDSPresetBase.BASE_SCALE);
             graphicsHolder1.translate(this.x, this.y, 0);
         });
-        drawTransformed(storedMatrixTransformations, facing);
+        drawTransformed(storedMatrixTransformations, facing, light);
     }
 
     @ApiInternal
     public abstract void validate();
 
     @ApiInternal
-    protected abstract void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing);
+    protected abstract void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light);
 }

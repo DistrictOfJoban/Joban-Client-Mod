@@ -32,6 +32,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     protected double lineHeight;
     protected double marqueeProgressOverride;
     protected double marqueeDurationOverride;
+    protected boolean naturalLight;
 
     protected TextWrapper() {
         super(100, 25);
@@ -146,6 +147,11 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         return this;
     }
 
+    public TextWrapper naturalLight() {
+        this.naturalLight = true;
+        return this;
+    }
+
     public TextWrapper renderType(String renderType) {
         this.renderType = QueuedRenderLayer.valueOf(renderType);
         return this;
@@ -157,7 +163,8 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     }
 
     @Override
-    protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
+    protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        final int textLight = this.naturalLight ? light : MAX_RENDER_LIGHT;
         MainRenderer.scheduleRender(this.renderType, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
@@ -204,11 +211,11 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
             }
 
             if(this.overflowMode == 4 && actualW > this.w) { // Marquee
-                drawMarqueeText(graphicsHolderNew, texts.get(0).getString(), this.color, this.shadow, MAX_RENDER_LIGHT, this.marqueeDurationOverride, this.marqueeProgressOverride);
+                drawMarqueeText(graphicsHolderNew, texts.get(0).getString(), this.color, this.shadow, textLight, this.marqueeDurationOverride, this.marqueeProgressOverride);
             } else {
                 int i = 0;
                 for(MutableText text : texts) {
-                    drawText(graphicsHolderNew, text, (int)(i*(9*this.lineHeight)), this.color, this.shadow, MAX_RENDER_LIGHT);
+                    drawText(graphicsHolderNew, text, (int)(i*(9*this.lineHeight)), this.color, this.shadow, textLight);
                     i++;
                 }
             }

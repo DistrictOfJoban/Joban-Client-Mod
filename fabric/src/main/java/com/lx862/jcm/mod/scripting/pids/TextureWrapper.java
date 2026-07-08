@@ -12,6 +12,7 @@ import static com.lx862.jcm.mod.render.RenderHelper.*;
 public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
     protected Identifier textureId;
     protected int color;
+    protected boolean naturalLight = false;
     protected float u1;
     protected float v1;
     protected float u2;
@@ -67,6 +68,11 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
         return this;
     }
 
+    public TextureWrapper naturalLight() {
+        this.naturalLight = true;
+        return this;
+    }
+
     public TextureWrapper renderType(String renderType) {
         this.renderType = QueuedRenderLayer.valueOf(renderType);
         return this;
@@ -78,11 +84,11 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
     }
 
     @Override
-    protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
+    protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         MainRenderer.scheduleRender(this.textureId, false, this.renderType, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
-            RenderHelper.drawTexture(graphicsHolderNew, 0, 0, 0, (float)this.w, (float)this.h, this.u1, this.v1, this.u2, this.v2, facing, ARGB_BLACK + this.color, MAX_RENDER_LIGHT);
+            RenderHelper.drawTexture(graphicsHolderNew, 0, 0, 0, (float)this.w, (float)this.h, this.u1, this.v1, this.u2, this.v2, facing, ARGB_BLACK + this.color, this.naturalLight ? light : MAX_RENDER_LIGHT);
             graphicsHolderNew.pop();
         });
     }
