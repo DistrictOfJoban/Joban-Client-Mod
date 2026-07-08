@@ -21,7 +21,7 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     protected String textContent;
     protected Identifier fontId;
-    protected QueuedRenderLayer renderLayer;
+    protected QueuedRenderLayer renderType;
     protected boolean shadow;
     protected boolean styleItalic;
     protected boolean styleBold;
@@ -40,7 +40,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         this.lineHeight = 1;
         this.marqueeDurationOverride = -1;
         this.marqueeProgressOverride = -1;
-        this.renderLayer = QueuedRenderLayer.TEXT;
+        this.renderType = QueuedRenderLayer.TEXT;
         this.fontId = new Identifier(Init.MOD_ID, "mtr");
     }
 
@@ -146,6 +146,11 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         return this;
     }
 
+    public TextWrapper renderType(String renderType) {
+        this.renderType = QueuedRenderLayer.valueOf(renderType);
+        return this;
+    }
+
     @Override
     public void validate() {
         if(this.textContent == null) throw new IllegalArgumentException("Text must be filled");
@@ -153,7 +158,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
 
     @Override
     protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
-        MainRenderer.scheduleRender(this.renderLayer, (graphicsHolderNew, offset) -> {
+        MainRenderer.scheduleRender(this.renderType, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
             graphicsHolderNew.scale((float)this.scale, (float)this.scale, (float)this.scale);

@@ -3,7 +3,9 @@
 ## Additions
 - Add `MinecraftClientWrapper.getRedstoneLevel(pos: BlockPos)` to obtain the emitted redstone level in the world at a specific BlockPos.
 - Add `Resources.hasSystemFont()` to check if a font is available in the system
-- `EyecandyBlockWrapper.redstoneLevel()` now returns the true redstone level., instead of only 0 and 15.
+- `EyecandyBlockWrapper.redstoneLevel()` now returns the true redstone level, instead of only 0 and 15.
+- **PIDS Scripting:**
+  - Add `TextWrapper.renderType` to specify a custom render type for text, alongside TextureWrapper.
 
 ## Changes
 - Incorrect invocation of `ModelManager.upload()` will now throw an error instead of crashing the game. 
