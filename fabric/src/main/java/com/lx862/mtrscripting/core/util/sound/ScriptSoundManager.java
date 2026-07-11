@@ -1,10 +1,7 @@
 package com.lx862.mtrscripting.core.util.sound;
 
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.MinecraftClient;
-import org.mtr.mapping.holder.SoundInstance;
-import org.mtr.mapping.holder.World;
+import org.mtr.mapping.holder.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +18,19 @@ public class ScriptSoundManager {
     }
 
     public void playLocalSound(Identifier id, float volume, float pitch) {
-        queue(new NonPositionedSoundCall(id, volume, pitch));
+        queue(new NonPositionedSoundCall(id, SoundCategory.getMasterMapped(), volume, pitch));
+    }
+
+    public void playLocalSound(Identifier id, float volume, float pitch, String soundCategory) {
+        queue(new NonPositionedSoundCall(id, SoundCategory.valueOf(soundCategory), volume, pitch));
     }
 
     public void playSound(Identifier id, ScriptVector3f pos, float volume, float pitch) {
-        queue(new PositionedSoundCall(id, pos.x(), pos.y(), pos.z(), volume, pitch));
+        queue(new PositionedSoundCall(id, SoundCategory.getMasterMapped(), pos.x(), pos.y(), pos.z(), volume, pitch));
+    }
+
+    public void playSound(Identifier id, ScriptVector3f pos, float volume, float pitch, String soundCategory) {
+        queue(new PositionedSoundCall(id, SoundCategory.valueOf(soundCategory), pos.x(), pos.y(), pos.z(), volume, pitch));
     }
 
     public void play(TickableSoundInstanceJS soundInstance) {
