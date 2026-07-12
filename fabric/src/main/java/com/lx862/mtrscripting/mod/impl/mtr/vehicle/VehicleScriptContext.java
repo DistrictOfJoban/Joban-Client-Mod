@@ -22,10 +22,9 @@ public class VehicleScriptContext extends MTRScriptContext {
     private final VehicleScriptCallsHolder.Committer scriptCallsHolder;
     private final int[] myCars;
     private final String scriptEntryId;
-    private DataFetchMode dataFetchMode;
 
     @ApiInternal
-    public VehicleScriptContext(VehicleExtension vehicleExtension, String scriptEntryId, int[] myCars, boolean fetchDataBeforeExecute) {
+    public VehicleScriptContext(VehicleExtension vehicleExtension, String scriptEntryId, int[] myCars) {
         super(scriptEntryId);
         this.vehicleExtension = vehicleExtension;
         this.myCars = myCars;
@@ -44,10 +43,6 @@ public class VehicleScriptContext extends MTRScriptContext {
                 carBogieRenderManagers.add(new ScriptRenderManager());
             }
             scriptCallsHolder.carBogieRenderers.put(i, carBogieRenderManagers);
-        }
-
-        if(fetchDataBeforeExecute) {
-            dataFetchMode = DataFetchMode.MANDATORY;
         }
     }
 
@@ -110,15 +105,6 @@ public class VehicleScriptContext extends MTRScriptContext {
     @ApiInternal
     public VehicleScriptCallsHolder.Committer getScriptCallsHolder() {
         return scriptCallsHolder;
-    }
-
-    @ApiInternal
-    public DataFetchMode getDataFetchMode() {
-        return dataFetchMode;
-    }
-
-    public void setDataFetchMode(String enumName) {
-        this.dataFetchMode = DataFetchMode.valueOf(enumName);
     }
 
     @Override
