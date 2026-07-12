@@ -96,6 +96,13 @@ public class EyecandyBlockEntityWrapper {
         return false;
     }
 
+    public int redstoneLevel() {
+        World world = be.getWorld2();
+        if(world == null) return 0;
+
+        return LoaderImpl.getRedstoneLevel(World.cast(MinecraftClient.getInstance().getWorldMapped()), blockPos().rawBlockPos());
+    }
+
     /**
      * Equivalent to {@link EyecandyBlockEntityWrapper#blockPos()} and {@link ScriptVector3f#rawBlockPos()}
      * For backward compatibility of scripts designed for Nemo's Transit Expansion (NTE)
@@ -123,11 +130,12 @@ public class EyecandyBlockEntityWrapper {
         return pos();
     }
 
-    public int redstoneLevel() {
-        World world = be.getWorld2();
-        if(world == null) return 0;
-
-        return LoaderImpl.getRedstoneLevel(World.cast(MinecraftClient.getInstance().getWorldMapped()), blockPos().rawBlockPos());
+    /**
+     * be.getModelId() returns the up-to-date model id, prefabId is cached.
+     */
+    @ApiInternal
+    public boolean modelChanged(String modelId) {
+        return !modelId.equals(be.getModelId());
     }
 
     @ApiInternal

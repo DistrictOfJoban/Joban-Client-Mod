@@ -94,8 +94,6 @@ public class VehicleWrapper {
         return stopsData.isFullData;
     }
 
-    /** Whether stops data (Including MTR data) are fully fetched.
-    HACK for existing MTR 3 scripts, not for use by scripts. */
     public boolean isStopsDataFullyFetched() {
         if(!isStopsDataFetched()) return false;
 

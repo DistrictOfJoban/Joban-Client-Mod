@@ -10,7 +10,10 @@
   - Add `TextWrapper.naturalLight()` and `TextureWrapper.naturalLight()` to allow rendering PIDS elements at world light. 
 
 ## Changes
-- Incorrect invocation of `ModelManager.upload()` will now throw an error instead of crashing the game. 
+- Incorrect invocation of `ModelManager.upload()` will now throw an error instead of crashing the game.
+
+## Fixes
+- Fix a bug where changing an eyecandy scripted model will not dispose the previous script.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

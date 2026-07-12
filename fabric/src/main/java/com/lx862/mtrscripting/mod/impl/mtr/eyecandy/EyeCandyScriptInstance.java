@@ -38,7 +38,7 @@ public class EyeCandyScriptInstance extends ScriptInstance<EyecandyBlockEntityWr
 
     public boolean shouldInvalidate() {
         boolean beRemoved = be.removed();
-        boolean modelChanged = !Objects.equals(be.getModelId(), getContextObject().getName());
+        boolean modelChanged = be.modelChanged(getContextObject().getName());
         boolean notInGame = MinecraftClient.getInstance().getWorldMapped() == null;
         return notInGame || beRemoved || modelChanged;
     }
