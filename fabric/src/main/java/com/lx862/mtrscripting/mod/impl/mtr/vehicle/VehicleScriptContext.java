@@ -22,6 +22,7 @@ public class VehicleScriptContext extends MTRScriptContext {
     private final VehicleScriptCallsHolder.Committer scriptCallsHolder;
     private final int[] myCars;
     private final String scriptEntryId;
+    private DataFetchMode fetchModeOverride = null;
 
     @ApiInternal
     public VehicleScriptContext(VehicleExtension vehicleExtension, String scriptEntryId, int[] myCars) {
@@ -56,6 +57,16 @@ public class VehicleScriptContext extends MTRScriptContext {
         ScriptRenderManager renderManager = getCarRenderManager(carIndex);
         if(renderManager == null) return;
         renderManager.drawModel(modelHolder, matrices);
+    }
+
+    @ApiInternal
+    public DataFetchMode getFetchModeOverride() {
+        return this.fetchModeOverride;
+    }
+
+    @Deprecated
+    public void setDataFetchMode(String dataFetchMode) {
+        this.fetchModeOverride = DataFetchMode.valueOf(dataFetchMode);
     }
 
     @Deprecated

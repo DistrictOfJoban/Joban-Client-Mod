@@ -11,8 +11,8 @@
 
 ## Changes
 - Incorrect invocation of `ModelManager.upload()` will now throw an error instead of crashing the game.
-- **Vehicle Scripting (Breaking!):**
-  - `ctx.setDataFetchMode()` has been removed entirely. You should now configure it in the script entry via the `dataFetchMode` field.
+- **Vehicle Scripting:**
+- `ctx.setDataFetchMode()` is now deprecated. You should now configure it in the script entry via the `dataFetchMode` field.
 
 ## Fixes
 - Fix a bug where changing an eyecandy scripted model will not dispose the previous script.

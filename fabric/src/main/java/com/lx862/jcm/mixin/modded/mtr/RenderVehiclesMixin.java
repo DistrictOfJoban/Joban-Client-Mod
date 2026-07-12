@@ -55,6 +55,11 @@ public class RenderVehiclesMixin {
                 VehicleScriptInstance scriptInstance = (VehicleScriptInstance) MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntryId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, scriptEntryId, carsArray), vehicle, scriptEntry.getValue().parsedScript()));
                 if(scriptInstance == null) continue;
 
+                /* Legacy stuff */
+                if(((VehicleScriptContext)scriptInstance.getContextObject()).getFetchModeOverride() != null) {
+                    dataFetchMode = ((VehicleScriptContext)scriptInstance.getContextObject()).getFetchModeOverride();
+                }
+
                 VehicleWrapper wrapperObject = new NTETrainWrapper(dataFetchMode, vehicle);
                 scriptInstance.setWrapperObject(wrapperObject);
 
