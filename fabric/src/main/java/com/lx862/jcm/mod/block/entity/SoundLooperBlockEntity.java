@@ -51,14 +51,16 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
         World world = getWorld2();
 
         if(repeatTick > 0 && !soundID.isEmpty() && world != null && !world.isClient() && JCMServerStats.getGameTick() % repeatTick == 0) {
-            boolean bl1 = world.isEmittingRedstonePower(getPos2(), Direction.NORTH);
-            boolean bl2 = world.isEmittingRedstonePower(getPos2(), Direction.EAST);
-            boolean bl3 = world.isEmittingRedstonePower(getPos2(), Direction.SOUTH);
-            boolean bl4 = world.isEmittingRedstonePower(getPos2(), Direction.WEST);
-            boolean bl5 = world.isEmittingRedstonePower(getPos2(), Direction.UP);
-            boolean bl6 = world.isEmittingRedstonePower(getPos2(), Direction.DOWN);
-            boolean emittingRedstonePower = bl1 || bl2 || bl3 || bl4 || bl5 || bl6;
-            if(needRedstone && !emittingRedstonePower) return;
+            if(needRedstone) {
+                boolean bl1 = world.isEmittingRedstonePower(getPos2(), Direction.NORTH);
+                boolean bl2 = world.isEmittingRedstonePower(getPos2(), Direction.EAST);
+                boolean bl3 = world.isEmittingRedstonePower(getPos2(), Direction.SOUTH);
+                boolean bl4 = world.isEmittingRedstonePower(getPos2(), Direction.WEST);
+                boolean bl5 = world.isEmittingRedstonePower(getPos2(), Direction.UP);
+                boolean bl6 = world.isEmittingRedstonePower(getPos2(), Direction.DOWN);
+                boolean emittingRedstonePower = bl1 || bl2 || bl3 || bl4 || bl5 || bl6;
+                if(!emittingRedstonePower) return;
+            }
 
             final SoundCategory category = SOURCE_LIST[soundCategory];
             Identifier identifier = null;
