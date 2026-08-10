@@ -46,6 +46,7 @@ public class VehicleDataCache {
         VehicleWrapper.StopsData stopsData = new VehicleWrapper.StopsData(siding, true);
 
         long lastPlatformId = 0;
+        int stopIdx = 0;
         for(RouteStopsData routeStopsData : simplifiedStopsData.routeStopsData) {
             long routeId = routeStopsData.routeId;
             SimplifiedRoute route = VehicleDataCache.mtrData.routeIdMap.get(routeId);
@@ -53,7 +54,8 @@ public class VehicleDataCache {
 
             Station destinationStation = VehicleDataCache.mtrData.stationIdMap.get(routeStopsData.stops.get(routeStopsData.stops.size()-1).stationId);
 
-            int stopIdx = 0;
+            int routeStopIdx = 0;
+            List<VehicleWrapper.Stop> routeStops = new ArrayList<>();
             for(SimplifiedStop simplifiedStop : routeStopsData.stops) {
                 Station station = VehicleDataCache.mtrData.stationIdMap.get(simplifiedStop.stationId);
                 Platform platform = VehicleDataCache.mtrData.platformIdMap.get(simplifiedStop.platformId);
@@ -62,8 +64,8 @@ public class VehicleDataCache {
 
                 if(route != null) {
                     List<SimplifiedRoutePlatform> platforms = route.getPlatforms();
-                    if(stopIdx < platforms.size()) {
-                        SimplifiedRoutePlatform simplifiedRoutePlatform = platforms.get(stopIdx);
+                    if(routeStopIdx < platforms.size()) {
+                        SimplifiedRoutePlatform simplifiedRoutePlatform = platforms.get(routeStopIdx);
                         simplifiedRoutePlatform.forEach((color, name) -> {
                             name.forEach(routeName -> {
                                 thisStop.routeInterchanges.add(new VehicleWrapper.Stop.RouteInterchange(color, routeName));
@@ -75,6 +77,7 @@ public class VehicleDataCache {
                     thisStop.connectingInterchanges.putAll(mtrData.connectingStationInterchangeMap.getOrDefault(station.getId(), new HashMap<>()));
                 }
 
+                boolean shouldAppendStop = false;
                 if(lastPlatformId == simplifiedStop.platformId) {
                     VehicleWrapper.Stop prevStop = stopsData.allStops.get(stopsData.allStops.size()-1);
                     prevStop.roundUpRoute = thisStop;
@@ -82,10 +85,13 @@ public class VehicleDataCache {
                     prevStop.isRouteSwitchoverStop = true;
                 } else {
                     stopsData.allStops.add(thisStop);
+                    shouldAppendStop = true;
                 }
-                stopsData.routeStops.computeIfAbsent(routeId, (k) -> new ArrayList<>()).add(thisStop);
+                routeStops.add(thisStop);
+                stopsData.stopIdxToRouteStops.put(stopIdx, routeStops);
                 lastPlatformId = simplifiedStop.platformId;
-                stopIdx++;
+                if(shouldAppendStop) stopIdx++;
+                routeStopIdx++;
             }
         }
 

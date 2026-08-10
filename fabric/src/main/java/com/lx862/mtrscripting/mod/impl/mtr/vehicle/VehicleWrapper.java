@@ -5,7 +5,7 @@ import com.lx862.jcm.mixin.modded.tsc.VehicleAccessorMixin;
 import com.lx862.jcm.mod.util.MTRUtil;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.core.data.*;
 import org.mtr.core.tool.Utilities;
@@ -70,16 +70,29 @@ public class VehicleWrapper {
     }
 
     public List<Stop> getThisRouteStops() {
-        long routeId = getThisRouteId();
-        return getRouteStops(routeId);
+        int nextStopIdx = getNextStopIndex(getStops());
+        if(nextStopIdx >= getStops().size()) {
+            nextStopIdx = getStops().size()-1;
+        }
+        return getRouteStops(nextStopIdx);
     }
 
     public List<Stop> getNextRouteStops() {
+        int nextStopIdx = getNextStopIndex(getStops());
         long thisRouteId = getThisRouteId();
-        int routeIndex = stopsData.routeToRun.indexOf(thisRouteId);
-        int nextRouteIndex = routeIndex+1;
+        int nextRouteIndex = stopsData.routeToRun.indexOf(thisRouteId)+1;
         if(nextRouteIndex >= stopsData.routeToRun.size()) return List.of();
-        return getRouteStops(stopsData.routeToRun.getLong(nextRouteIndex));
+
+        long nextRouteId = stopsData.routeToRun.getLong(nextRouteIndex);
+        int nextRouteStartStopIdx = -1;
+        for(int i = nextStopIdx; i < stopsData.allStops.size(); i++) {
+            if(stopsData.allStops.get(i).route.getId() == nextRouteId) {
+                nextRouteStartStopIdx = i;
+            }
+        }
+
+        if(nextRouteStartStopIdx == -1) return List.of();
+        return getRouteStops(nextRouteStartStopIdx);
     }
 
     public int getNextStopIndex(List<Stop> stops) {
@@ -117,8 +130,8 @@ public class VehicleWrapper {
         return routeId;
     }
 
-    protected List<Stop> getRouteStops(long routeId) {
-        List<Stop> stops = stopsData.routeStops.get(routeId);
+    protected List<Stop> getRouteStops(int stopIndex) {
+        List<Stop> stops = stopsData.stopIdxToRouteStops.get(stopIndex);
         return stops == null ? List.of() : stops;
     }
 
@@ -148,7 +161,7 @@ public class VehicleWrapper {
     public static class StopsData {
         public final ObjectArrayList<Stop> allStops;
         public final ObjectArrayList<Stop> allStopsNextRoute;
-        public final Long2ObjectOpenHashMap<List<Stop>> routeStops;
+        public final Int2ObjectOpenHashMap<List<Stop>> stopIdxToRouteStops;
         public final LongArrayList routeToRun;
         public final Siding siding;
         public final boolean isFullData;
@@ -158,7 +171,7 @@ public class VehicleWrapper {
             this.allStops = new ObjectArrayList<>();
             this.allStopsNextRoute = new ObjectArrayList<>();
             this.routeToRun = new LongArrayList();
-            this.routeStops = new Long2ObjectOpenHashMap<>();
+            this.stopIdxToRouteStops = new Int2ObjectOpenHashMap<>();
             this.siding = siding;
         }
 
@@ -189,11 +202,13 @@ public class VehicleWrapper {
             SimplifiedRoute nextRoute = MinecraftClientData.getInstance().simplifiedRouteIdMap.get(vehicleExtension.vehicleExtraData.getNextRouteId());
             if (nextRoute != null) allRoutes.add(nextRoute);
 
+            int stopIdx = 0;
             long lastPlatformId = 0;
             for(SimplifiedRoute route : allRoutes) {
                 stopsData.routeToRun.add(route.getId());
 
                 List<SimplifiedRoutePlatform> routePlatforms = route.getPlatforms();
+                List<Stop> routeStops = new ArrayList<>();
                 Station destinationStation = MinecraftClientData.getInstance().stationIdMap.get(routePlatforms.get(routePlatforms.size()-1).getStationId());
 
                 for(SimplifiedRoutePlatform routePlatform : routePlatforms) {
@@ -222,16 +237,20 @@ public class VehicleWrapper {
                         });
                     }
 
+                    boolean shouldAppendStop = false;
                     if(routePlatform.getPlatformId() == lastPlatformId) { // Duplicated platform, likely double-added stop from route changeover.
                         Stop prevStop = stopsData.allStops.get(stopsData.allStops.size()-1);
                         prevStop.roundUpRoute = thisStop;
                         prevStop.reverseAtPlatform = true;
                         prevStop.isRouteSwitchoverStop = true;
                     } else {
+                        shouldAppendStop = true;
                         stopsData.allStops.add(thisStop);
                     }
-                    stopsData.routeStops.computeIfAbsent(route.getId(), (k) -> new ArrayList<>()).add(thisStop);
+                    routeStops.add(thisStop);
+                    stopsData.stopIdxToRouteStops.put(stopIdx, routeStops);
                     lastPlatformId = routePlatform.getPlatformId();
+                    if(shouldAppendStop) stopIdx++;
                 }
             }
             return stopsData;
