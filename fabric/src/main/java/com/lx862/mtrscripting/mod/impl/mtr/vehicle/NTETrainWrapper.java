@@ -94,7 +94,7 @@ public class NTETrainWrapper extends VehicleWrapper {
     }
     @Deprecated
     public double accelerationConstant() {
-        return (getServiceAcceleration() * 1000 * 1000) / (1/400d);
+        return (getServiceAcceleration() * 1000 * 1000) / 400d;
     }
     @Deprecated
     public double railProgress() {
