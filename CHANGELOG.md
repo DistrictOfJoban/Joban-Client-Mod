@@ -1,4 +1,4 @@
-# JCM v2.3.0 for MTR 4.0.5 has been released!
+# JCM v2.2.4 for MTR 4.0.5 has been released!
 
 ## Additions
 - Add `MinecraftClientWrapper.getRedstoneLevel(pos: BlockPos)` to obtain the emitted redstone level in the world at a specific BlockPos.
@@ -11,10 +11,14 @@
 
 ## Changes
 - Incorrect invocation of `ModelManager.upload()` will now throw an error instead of crashing the game.
+- Whitelist `top.mcmtr.core` and `top.mcmtr.mod` for scripting
 - **Vehicle Scripting:**
 - `ctx.setDataFetchMode()` is now deprecated. You should now configure it in the script entry via the `dataFetchMode` field.
 
 ## Fixes
+**Scripting**
+- Fix Vehicle Stops Data incorrect when multiple same route is assigned
+- Fix `TrainWrapper.accelerationConstant()` returning value that is 160000x higher.
 - Fix a bug where changing an eyecandy scripted model will not dispose the previous script.
 
 **Download:**  
