@@ -6,7 +6,7 @@
 - `EyecandyBlockWrapper.redstoneLevel()` now returns the true redstone level, instead of only 0 and 15.
 - Add an extra `soundCategory: String` argument overload for `SoundManager.playSound` and `SoundManager.playLocalSound` to play sound other than in the "Master" category.
 - **PIDS Scripting:**
-  - Add `TextWrapper.renderType` to specify a custom render type for text, alongside TextureWrapper.
+  - Add `TextWrapper.renderType()` to specify a custom render type for text, alongside TextureWrapper.
   - Add `TextWrapper.naturalLight()` and `TextureWrapper.naturalLight()` to allow rendering PIDS elements at world light. 
 
 ## Changes
