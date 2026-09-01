@@ -7,6 +7,7 @@ import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
+import java.util.Locale;
 import java.util.Objects;
 
 import static com.lx862.jcm.mod.render.gui.widget.ListViewWidget.ENTRY_PADDING;
@@ -56,7 +57,7 @@ public class ContentItem extends AbstractListItem {
 
     @Override
     public boolean matchQuery(String searchTerm) {
-        return Objects.equals(searchTerm, "") || (title != null && title.getString().contains(searchTerm));
+        return Objects.equals(searchTerm, "") || (title != null && title.getString().toLowerCase(Locale.ROOT).contains(searchTerm.toLowerCase(Locale.ROOT)));
     }
 
     @Override
