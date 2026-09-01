@@ -25,9 +25,11 @@ public class CategoryItem extends AbstractListItem {
 
     /* */
     @Override
-    public void draw(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, int entryX, int entryY, int width, int height, int mouseX, int mouseY, boolean widgetVisible, double elapsed, float tickDelta) {
-        GuiHelper.drawRectangle(guiDrawing, entryX, entryY, width, this.height, 0x99999999);
-        graphicsHolder.drawCenteredText(title, (entryX + width / 2), entryY - (8/2) + (this.height / 2), ARGB_WHITE);
+    public void draw(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, int entryX, int entryY, int width, int height, int mouseX, int mouseY, boolean widgetVisible, boolean rowInSight, double elapsed, float tickDelta) {
+        if(rowInSight) {
+            GuiHelper.drawRectangle(guiDrawing, entryX, entryY, width, this.height, 0x99999999);
+            graphicsHolder.drawCenteredText(title, (entryX + width / 2), entryY - (8/2) + (this.height / 2), ARGB_WHITE);
+        }
     }
 
     @Override

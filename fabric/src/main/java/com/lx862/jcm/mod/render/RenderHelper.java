@@ -24,7 +24,7 @@ public interface RenderHelper {
     }
 
     default boolean inRectangle(double targetX, double targetY, int rectX, int rectY, int rectW, int rectH) {
-        return (targetX > rectX && targetX <= rectX + rectW) && (targetY > rectY && targetY <= rectY + rectH);
+        return (targetX >= rectX && targetX <= rectX + rectW) && (targetY >= rectY && targetY <= rectY + rectH);
     }
 
     static void scaleToFit(GraphicsHolder graphicsHolder, int targetW, double maxW, boolean keepAspectRatio) {
