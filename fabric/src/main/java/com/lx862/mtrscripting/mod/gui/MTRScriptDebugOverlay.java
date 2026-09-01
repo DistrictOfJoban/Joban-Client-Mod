@@ -26,6 +26,10 @@ public class MTRScriptDebugOverlay {
     private static final List<ScriptDebugSource> debugSources = new ArrayList<>();
     private static int sourceIndex;
 
+    static { // Dummy source
+        debugSources.add(ScriptDebugSource.EMPTY);
+    }
+
     public static void registerDebugSource(String sourceName, ScriptManager scriptManager) {
         if(scriptManager == null) throw new IllegalArgumentException("scriptManager must not be null!");
         debugSources.add(new ScriptDebugSource(sourceName, scriptManager));
@@ -33,10 +37,7 @@ public class MTRScriptDebugOverlay {
 
     public static void render(GraphicsHolder graphicsHolder) {
         if(!JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) return;
-        if(MinecraftClient.getInstance().getCurrentScreenMapped() != null) return;
         GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
-
-        if(debugSources.isEmpty()) return;
 
         graphicsHolder.translate(10, 10, 0);
 
@@ -65,16 +66,17 @@ public class MTRScriptDebugOverlay {
             graphicsHolder.drawText(String.format("MTR data transferred: %.2f KB", VehicleDataCache.mtrDataByteCounter / 1024d), 0, 0, COLOR_YELLOW, true, MAX_LIGHT);
         }
 
-        Map<String, List<Pair<UniqueKey, ScriptInstance>>> nameToInstances = getInstancesGroupedByName(selectedSource);
+        if(selectedSource.scriptManager != null) {
+            Map<String, List<Pair<UniqueKey, ScriptInstance>>> nameToInstances = getInstancesGroupedByName(selectedSource);
 
-        graphicsHolder.translate(0, 10, 0);
+            graphicsHolder.translate(0, 10, 0);
 
-        for(Map.Entry<String, List<Pair<UniqueKey, ScriptInstance>>> group : nameToInstances.entrySet()) {
-            MutableText title = TextHelper.literal(group.getKey()).formatted(TextFormatting.UNDERLINE);
-            graphicsHolder.drawText(title, 0, 0, COLOR_BLUE, true, MAX_LIGHT);
+            for(Map.Entry<String, List<Pair<UniqueKey, ScriptInstance>>> group : nameToInstances.entrySet()) {
+                MutableText title = TextHelper.literal(group.getKey()).formatted(TextFormatting.UNDERLINE);
+                graphicsHolder.drawText(title, 0, 0, COLOR_BLUE, true, MAX_LIGHT);
 
-            graphicsHolder.translate(0, 12, 0);
-            graphicsHolder.translate(10, 0, 0);
+                graphicsHolder.translate(0, 12, 0);
+                graphicsHolder.translate(10, 0, 0);
                 int i = 0;
                 for(Pair<UniqueKey, ScriptInstance> scriptInstancePair : group.getValue()) {
                     String keyName = scriptInstancePair.getLeft().toString();
@@ -101,11 +103,12 @@ public class MTRScriptDebugOverlay {
                     graphicsHolder.translate(0, 10, 0);
 
                     graphicsHolder.translate(10, 0, 0);
-                        drawScriptDebugInfo(graphicsHolder, guiDrawing, scriptInstance);
+                    drawScriptDebugInfo(graphicsHolder, guiDrawing, scriptInstance);
                     graphicsHolder.translate(-10, 0, 0);
                     i++;
                 }
-            graphicsHolder.translate(-10, 0, 0);
+                graphicsHolder.translate(-10, 0, 0);
+            }
         }
     }
 
@@ -189,6 +192,7 @@ public class MTRScriptDebugOverlay {
     public static class ScriptDebugSource {
         private final String sourceName;
         private final ScriptManager scriptManager;
+        public static ScriptDebugSource EMPTY = new ScriptDebugSource("None", null);
 
         public ScriptDebugSource(String sourceName, ScriptManager scriptManager) {
             this.sourceName = sourceName;
