@@ -9,6 +9,10 @@
 <p align="center">Bring your transit world to life with various decoration blocks!</p>
 
 <p align="center">
+    <a href="https://weblate.ziyuesinicization.site/engage/joban-client-mod/"><img src="https://weblate.ziyuesinicization.site/widget/joban-client-mod/svg-badge.svg" alt="Translation status"></a>
+</p>
+
+<p align="center">
   <a href="https://modrinth.com/mod/jcm">
     <img alt="Available on Modrinth" height="50" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_vector.svg">
   </a>
