@@ -15,6 +15,10 @@ public class EntityWrapper {
         this.entity = entity;
     }
 
+    public String displayName() {
+        return this.entity.getDisplayName().getString();
+    }
+
     public String name() {
         return this.entity.getName().getString();
     }

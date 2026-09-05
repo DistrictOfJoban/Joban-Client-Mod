@@ -3,18 +3,40 @@ package com.lx862.mtrscripting.core.util.model;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.mod.MTRScriptingMod;
-import org.apache.commons.lang3.StringUtils;
+import com.mojang.blaze3d.systems.RenderSystem;
+import org.apache.commons.io.IOUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.OptimizedModel;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
+import org.mtr.mod.Init;
 import org.mtr.mod.resource.CustomResourceTools;
-import org.mtr.mod.resource.OptimizedModelWrapper;
+import org.mtr.mod.resource.ModelResourceLoader;
+import org.mtr.mod.resource.ResourceProvider;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ModelManagerJS {
+    private static final ResourceProvider RESOURCE_PROVIDER = new ResourceProvider() {
+        public String get(Identifier id) {
+            return ResourceManagerHelper.readResource(id);
+        }
+
+        public byte[] getBytes(Identifier id) {
+            byte[][] bytes = new byte[1][];
+            ResourceManagerHelper.readResource(id, (inputStreamx) -> {
+                try {
+                    bytes[0] = IOUtils.toByteArray(inputStreamx);
+                } catch (Exception e) {
+                    Init.LOGGER.error("", e);
+                }
+
+            });
+            return bytes[0] == null ? new byte[0] : bytes[0];
+        }
+    };
+
     private static final Map<Identifier, RawModelJS> rawModelCache = new HashMap<>();
     private static final Map<RawModelJS, ModelJS> modelCache = new HashMap<>();
 
@@ -58,17 +80,12 @@ public class ModelManagerJS {
     public static Map<String, RawModelJS> loadModelParts(Identifier modelLocation, boolean flipTextureV) {
         String idStr = modelLocation.getNamespace() + ":" + modelLocation.getPath();
 
-        final boolean isSupportedFormat = idStr.endsWith(".obj");
+        final boolean isSupportedFormat = ModelResourceLoader.isSupportedModelResource(idStr);
         final Identifier textureId = CustomResourceTools.formatIdentifierWithDefault("", "png");
 
         if (isSupportedFormat) {
             Map<String, RawModelJS> rawModels = new Object2ObjectOpenHashMap<>();
-            Map<String, OptimizedModel.ObjModel> models = OptimizedModel.ObjModel.loadModel(
-                    ResourceManagerHelper.readResource(CustomResourceTools.formatIdentifierWithDefault(idStr, "obj")),
-                    mtlString -> ResourceManagerHelper.readResource(CustomResourceTools.getResourceFromSamePath(idStr, mtlString, "mtl")),
-                    textureString -> StringUtils.isEmpty(textureString) ? OptimizedModelWrapper.WHITE_TEXTURE : StringUtils.equals(textureString, "default.png") ? textureId : CustomResourceTools.getResourceFromSamePath(idStr, textureString, "png"),
-                    null, true, flipTextureV
-            );
+            Map<String, OptimizedModel.ObjModel> models = ModelResourceLoader.loadModel(idStr, textureId, flipTextureV, RESOURCE_PROVIDER);
             for(Map.Entry<String, OptimizedModel.ObjModel> modelEntry : models.entrySet()) {
                 rawModels.put(modelEntry.getKey(), new RawModelJS(modelEntry.getValue()));
             }
@@ -87,6 +104,8 @@ public class ModelManagerJS {
     }
 
     public static ModelJS upload(RawModelJS rawModel) {
+        if(!RenderSystem.isOnRenderThread()) throw new IllegalStateException("Cannot invoke ModelManager.upload() off-thread! Upload during script parsing phase or use DynamicModelHolder.");
+
         if(modelCache.containsKey(rawModel)) return modelCache.get(rawModel);
         ModelJS uploadedModel = ModelJS.uploadRawModel(rawModel);
         modelCache.put(rawModel, uploadedModel);

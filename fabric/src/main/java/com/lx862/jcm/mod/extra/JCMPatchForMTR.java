@@ -3,7 +3,9 @@ package com.lx862.jcm.mod.extra;
 import com.lx862.jcm.mixin.modded.mtrpatch.OptimizedRendererAccessorMixin;
 import com.lx862.jcm.mixin.modded.mtrpatch.OptimizedRendererWrapperAccessorMixin;
 import it.unimi.dsi.fastutil.longs.Long2IntArrayMap;
+import org.mtr.mapping.holder.Box;
 import org.mtr.mapping.holder.Identifier;
+import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mapping.render.shader.ModShaderHandler;
 import org.mtr.mapping.render.shader.ShaderManager;
@@ -15,6 +17,7 @@ import java.util.Locale;
 
 public class JCMPatchForMTR {
     public static Identifier LIFT_DING_SOUND = new Identifier("minecraft:block.note_block.pling");
+    private final static int RAIL_CULLING_AREA_LIMIT = Integer.MAX_VALUE / 2;
     private static boolean cachedRenderingShadow = false;
     private static Long2IntArrayMap liftInstructions = new Long2IntArrayMap();
 
@@ -63,5 +66,23 @@ public class JCMPatchForMTR {
         boolean liftJustArrived = currentInstructionSize == 0 && lastValue == 1;
         liftInstructions.put(liftId, currentInstructionSize);
         return liftJustArrived;
+    }
+
+    public static boolean shouldSkipCullingTask(double lowX, double lowY, double lowZ, double highX, double highY, double highZ) {
+        // Exceeds max limit, not gonna bother checking
+        if(Math.max(0, highX - lowX) * Math.max(0, highY - lowY) * Math.max(0, highZ - lowZ) > RAIL_CULLING_AREA_LIMIT) {
+            return true;
+        }
+        return false;
+    }
+
+    public static Box clampBoundingBoxToRenderDistance(Vector3d pos, int renderDistance, double lowX, double lowY, double lowZ, double highX, double highY, double highZ) {
+        int blocksPerSide = (renderDistance * 16) + 1;
+        double clampLowX = pos.getXMapped() - blocksPerSide;
+        double clampLowZ = pos.getZMapped() - blocksPerSide;
+        double clampHighX = pos.getXMapped() + blocksPerSide;
+        double clampHighZ = pos.getZMapped() + blocksPerSide;
+
+        return new Box(Math.max(lowX, clampLowX), lowY, Math.max(lowZ, clampLowZ), Math.min(highX, clampHighX), highY, Math.min(highZ, clampHighZ));
     }
 }

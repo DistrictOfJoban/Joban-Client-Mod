@@ -34,28 +34,27 @@ public class RenderVehiclesMixin {
     private static void jsblock$executeScript(long millisElapsed, Vector3d cameraShakeOffset, CallbackInfo ci) {
         for(VehicleExtension vehicle : MinecraftClientData.getInstance().vehicles) {
             ObjectImmutableList<VehicleCar> cars = vehicle.vehicleExtraData.immutableVehicleCars;
-            Object2ObjectOpenHashMap<String, ParsedScript> scriptsInVehicle = new Object2ObjectOpenHashMap<>();
+            Object2ObjectOpenHashMap<String, MTRContentResourceManager.VehicleScriptConfiguration> scriptsInVehicle = new Object2ObjectOpenHashMap<>();
 
             for (VehicleCar vehicleCar : cars) {
                 String scriptEntryId = MTRContentResourceManager.getVehicleScriptEntryId(vehicleCar.getVehicleId());
-                ParsedScript script = MTRContentResourceManager.getVehicleScript(scriptEntryId);
+                MTRContentResourceManager.VehicleScriptConfiguration script = MTRContentResourceManager.getVehicleScript(scriptEntryId);
                 if (script == null || scriptsInVehicle.containsKey(scriptEntryId)) continue;
                 scriptsInVehicle.put(scriptEntryId, script);
             }
 
-            for(Map.Entry<String, ParsedScript> scriptEntry : scriptsInVehicle.entrySet()) {
+            for(Map.Entry<String, MTRContentResourceManager.VehicleScriptConfiguration> scriptEntry : scriptsInVehicle.entrySet()) {
                 String scriptEntryId = scriptEntry.getKey();
                 List<Integer> carsForScripts = new ArrayList<>();
                 for(int i = 0; i < cars.size(); i++) {
                     if(MTRContentResourceManager.getVehicleScriptEntryId(cars.get(i).getVehicleId()).equals(scriptEntryId)) carsForScripts.add(i);
                 }
                 int[] carsArray = carsForScripts.stream().mapToInt(i->i).toArray();
-                boolean requireDataPrefetching = MTRContentResourceManager.shouldPrefetchVehicleData(scriptEntryId);
 
-                VehicleScriptInstance scriptInstance = (VehicleScriptInstance) MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntryId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, scriptEntryId, carsArray, requireDataPrefetching), vehicle, scriptEntry.getValue()));
+                VehicleScriptContext.DataFetchMode dataFetchMode = scriptEntry.getValue().dataFetchMode();
+                VehicleScriptInstance scriptInstance = (VehicleScriptInstance) MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntryId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, scriptEntryId, carsArray), vehicle, scriptEntry.getValue().parsedScript()));
                 if(scriptInstance == null) continue;
 
-                VehicleScriptContext.DataFetchMode dataFetchMode = ((VehicleScriptContext)scriptInstance.getContextObject()).getDataFetchMode();
                 VehicleWrapper wrapperObject = new NTETrainWrapper(dataFetchMode, vehicle);
                 scriptInstance.setWrapperObject(wrapperObject);
 

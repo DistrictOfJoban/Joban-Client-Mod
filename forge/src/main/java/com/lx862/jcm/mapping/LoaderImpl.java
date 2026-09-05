@@ -1,5 +1,7 @@
 package com.lx862.jcm.mapping;
 
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.mtr.mapping.holder.*;
 
@@ -44,5 +46,21 @@ public class LoaderImpl {
         #else
             return new Identifier(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(itm.data));
         #endif
+    }
+
+    public static int getRedstoneLevel(World world, BlockPos blockPos) {
+        return world.data.getBestNeighborSignal(blockPos.data);
+    }
+
+    public static Style withClipboardContentText(Style style, String content) {
+        return new Style(style.data.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content)));
+    }
+
+    public static Style withURLContentText(Style style, String urlContent) {
+        return new Style(style.data.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, urlContent)));
+    }
+
+    public static Style withHoverContentText(Style style, MutableText content) {
+        return new Style(style.data.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, content.data)));
     }
 }

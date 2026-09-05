@@ -92,7 +92,9 @@ public class ScriptResourceUtil {
         } else {
             identifier = idRelative(pathOrIdentifier.toString());
         }
-        executeScript(activeContext, activeScope, identifier, ResourceManagerHelper.readResource(identifier));
+        DataReaderJS scriptFile = read(identifier);
+        if(scriptFile == null) throw new IllegalStateException(String.format("Failed to include script %s:%s as it is not found.", identifier.getNamespace(), identifier.getPath()));
+        executeScript(activeContext, activeScope, identifier, scriptFile.asString());
     }
 
     public static void print(@ValueNullable Object... objs) {
@@ -186,6 +188,14 @@ public class ScriptResourceUtil {
         boolean[] resourceFound = new boolean[]{false};
         ResourceManagerHelper.readResource(id, is -> resourceFound[0] = true);
         return resourceFound[0];
+    }
+
+    public static boolean hasSystemFont(String fontName) {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        for(String fontFamily : ge.getAvailableFontFamilyNames()) {
+            if(fontName.equals(fontFamily)) return true;
+        }
+        return false;
     }
 
     public static Font getSystemFont(String fontName) {

@@ -21,8 +21,10 @@ public abstract class AbstractListItem implements RenderHelper, GuiHelper {
     }
 
     /* */
-    public void draw(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, int entryX, int entryY, int width, int height, int mouseX, int mouseY, boolean widgetVisible, double elapsed, float tickDelta) {
-        drawBackground(graphicsHolder, guiDrawing, entryX, entryY, width, mouseX, mouseY, widgetVisible, elapsed, tickDelta);
+    public void draw(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, int entryX, int entryY, int width, int height, int mouseX, int mouseY, boolean widgetVisible, boolean rowInSight, double elapsed, float tickDelta) {
+        if(rowInSight) {
+            drawBackground(graphicsHolder, guiDrawing, entryX, entryY, width, mouseX, mouseY, widgetVisible, elapsed, tickDelta);
+        }
     }
 
     public abstract boolean matchQuery(String searchTerm);

@@ -42,11 +42,14 @@ public class MTRContentScripting {
         }
 
         scriptManager.getClassShutter().allowClass(ClassRule.parse("org.mtr.*"));
+        scriptManager.getClassShutter().allowClass(ClassRule.parse("top.mcmtr.core.*"));
+        scriptManager.getClassShutter().allowClass(ClassRule.parse("top.mcmtr.mod.*"));
         scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.mtrscripting.mod.impl.mtr.*"));
 
         scriptManager.parseScriptEvent.register((contextName, context, scriptable) -> {
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
+            scriptable.put("MTRUtil", scriptable, new NativeJavaClass(scriptable, MTRUtil.class));
         });
 
         MTRScriptingAPI.registerAddonVersion("mtr", mtrModVersion);

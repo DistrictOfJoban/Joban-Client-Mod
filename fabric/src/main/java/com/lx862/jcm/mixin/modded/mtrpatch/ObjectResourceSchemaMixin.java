@@ -29,14 +29,29 @@ public class ObjectResourceSchemaMixin {
         jsblock$scaleArray = new DoubleArrayList();
         jsblock$mirrorArray = new BooleanArrayList();
 
+        int[] axis = {0};
         readerBase.iterateDoubleArray("translation", () -> {}, (d) -> {
-            jsblock$translationArray.add(-d);
+            // MTR 4 model rotated by 180 degrees
+            // x => x
+            // y => -y
+            // z => -z
+            if(axis[0] != 0) jsblock$translationArray.add(-d);
+            else jsblock$translationArray.add(d);
+            axis[0]++;
         });
+
+        axis[0] = 0;
         readerBase.iterateDoubleArray("rotation", () -> {}, (d) -> {
-            jsblock$rotationArray.add(-d);
+            // MTR 4 model rotated by 180 degrees
+            // x => x
+            // y => -y
+            // z => -z
+            if(axis[0] != 0) jsblock$rotationArray.add(-d);
+            else jsblock$rotationArray.add(d);
+            axis[0]++;
         });
         readerBase.iterateDoubleArray("scale", () -> {}, (d) -> {
-            jsblock$scaleArray.add(-d);
+            jsblock$scaleArray.add(d);
         });
         readerBase.iterateBooleanArray("mirror", () -> {}, (bl) -> {
             jsblock$mirrorArray.add(bl);

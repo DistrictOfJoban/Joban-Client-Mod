@@ -10,15 +10,24 @@ import org.mtr.mod.render.StoredMatrixTransformations;
 import static com.lx862.jcm.mod.render.RenderHelper.*;
 
 public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
-    protected Identifier id;
-    protected int color = ARGB_WHITE;
-    protected float u1 = 0;
-    protected float v1 = 0;
-    protected float u2 = 1;
-    protected float v2 = 1;
+    protected Identifier textureId;
+    protected int color;
+    protected boolean naturalLight = false;
+    protected float u1;
+    protected float v1;
+    protected float u2;
+    protected float v2;
+    protected QueuedRenderLayer renderType;
 
     protected TextureWrapper() {
         super(20, 20);
+        this.textureId = null;
+        this.color = ARGB_WHITE;
+        this.u1 = 0;
+        this.v1 = 0;
+        this.u2 = 1;
+        this.v2 = 1;
+        this.renderType = QueuedRenderLayer.LIGHT_2;
     }
 
     public static TextureWrapper create() {
@@ -34,7 +43,7 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
     }
 
     public TextureWrapper texture(Identifier id) {
-        this.id = id;
+        this.textureId = id;
         return this;
     }
 
@@ -59,17 +68,27 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
         return this;
     }
 
-    @Override
-    public void validate() {
-        if(id == null) throw new IllegalArgumentException("texture must be filled");
+    public TextureWrapper naturalLight() {
+        this.naturalLight = true;
+        return this;
+    }
+
+    public TextureWrapper renderType(String renderType) {
+        this.renderType = QueuedRenderLayer.valueOf(renderType);
+        return this;
     }
 
     @Override
-    protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
-        MainRenderer.scheduleRender(this.id, false, QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
+    public void validate() {
+        if(this.textureId == null) throw new IllegalArgumentException("texture must be filled");
+    }
+
+    @Override
+    protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        MainRenderer.scheduleRender(this.textureId, false, this.renderType, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
-            RenderHelper.drawTexture(graphicsHolderNew, 0, 0, 0, (float)w, (float)h, u1, v1, u2, v2, facing, ARGB_BLACK + color, MAX_RENDER_LIGHT);
+            RenderHelper.drawTexture(graphicsHolderNew, 0, 0, 0, (float)this.w, (float)this.h, this.u1, this.v1, this.u2, this.v2, facing, ARGB_BLACK + this.color, this.naturalLight ? light : MAX_RENDER_LIGHT);
             graphicsHolderNew.pop();
         });
     }

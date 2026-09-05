@@ -22,10 +22,10 @@ public class VehicleScriptContext extends MTRScriptContext {
     private final VehicleScriptCallsHolder.Committer scriptCallsHolder;
     private final int[] myCars;
     private final String scriptEntryId;
-    private DataFetchMode dataFetchMode;
+    private DataFetchMode fetchModeOverride = null;
 
     @ApiInternal
-    public VehicleScriptContext(VehicleExtension vehicleExtension, String scriptEntryId, int[] myCars, boolean fetchDataBeforeExecute) {
+    public VehicleScriptContext(VehicleExtension vehicleExtension, String scriptEntryId, int[] myCars) {
         super(scriptEntryId);
         this.vehicleExtension = vehicleExtension;
         this.myCars = myCars;
@@ -45,10 +45,6 @@ public class VehicleScriptContext extends MTRScriptContext {
             }
             scriptCallsHolder.carBogieRenderers.put(i, carBogieRenderManagers);
         }
-
-        if(fetchDataBeforeExecute) {
-            dataFetchMode = DataFetchMode.MANDATORY;
-        }
     }
 
     public void drawCarModel(ModelJS model, int carIndex, @ValueNullable Matrices matrices) {
@@ -61,6 +57,16 @@ public class VehicleScriptContext extends MTRScriptContext {
         ScriptRenderManager renderManager = getCarRenderManager(carIndex);
         if(renderManager == null) return;
         renderManager.drawModel(modelHolder, matrices);
+    }
+
+    @ApiInternal
+    public DataFetchMode getFetchModeOverride() {
+        return this.fetchModeOverride;
+    }
+
+    @Deprecated
+    public void setDataFetchMode(String dataFetchMode) {
+        this.fetchModeOverride = DataFetchMode.valueOf(dataFetchMode);
     }
 
     @Deprecated
@@ -110,15 +116,6 @@ public class VehicleScriptContext extends MTRScriptContext {
     @ApiInternal
     public VehicleScriptCallsHolder.Committer getScriptCallsHolder() {
         return scriptCallsHolder;
-    }
-
-    @ApiInternal
-    public DataFetchMode getDataFetchMode() {
-        return dataFetchMode;
-    }
-
-    public void setDataFetchMode(String enumName) {
-        this.dataFetchMode = DataFetchMode.valueOf(enumName);
     }
 
     @Override

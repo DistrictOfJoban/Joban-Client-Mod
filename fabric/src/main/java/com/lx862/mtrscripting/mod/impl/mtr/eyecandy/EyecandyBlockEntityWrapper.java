@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.mod.impl.mtr.eyecandy;
 
+import com.lx862.jcm.mapping.LoaderImpl;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
@@ -95,6 +96,13 @@ public class EyecandyBlockEntityWrapper {
         return false;
     }
 
+    public int redstoneLevel() {
+        World world = be.getWorld2();
+        if(world == null) return 0;
+
+        return LoaderImpl.getRedstoneLevel(World.cast(MinecraftClient.getInstance().getWorldMapped()), blockPos().rawBlockPos());
+    }
+
     /**
      * Equivalent to {@link EyecandyBlockEntityWrapper#blockPos()} and {@link ScriptVector3f#rawBlockPos()}
      * For backward compatibility of scripts designed for Nemo's Transit Expansion (NTE)
@@ -122,15 +130,12 @@ public class EyecandyBlockEntityWrapper {
         return pos();
     }
 
-    public int redstoneLevel() {
-        World world = be.getWorld2();
-        if(world == null) return 0;
-        int highestRedstoneLevel = 0;
-
-        for(Direction direction : Direction.values()) {
-            highestRedstoneLevel = Math.max(highestRedstoneLevel, world.isEmittingRedstonePower(blockPos().rawBlockPos().offset(direction), direction.getOpposite()) ? 15 : 0);
-        }
-        return highestRedstoneLevel;
+    /**
+     * be.getModelId() returns the up-to-date model id, prefabId is cached.
+     */
+    @ApiInternal
+    public boolean modelChanged(String modelId) {
+        return !modelId.equals(be.getModelId());
     }
 
     @ApiInternal

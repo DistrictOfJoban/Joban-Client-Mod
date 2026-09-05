@@ -11,6 +11,7 @@ import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptContent;
 import com.lx862.mtrscripting.mod.MTRScriptingMod;
 import com.lx862.mtrscripting.core.util.ConsoleJS;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptContext;
 import org.apache.commons.io.FilenameUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
@@ -28,12 +29,11 @@ import java.util.Map;
 public class MTRContentResourceManager {
     private static final JsonParser JSON_PARSER = new JsonParser();
 
-    private static final Map<String, ParsedScript> vehicleScripts = new HashMap<>();
+    private static final Map<String, VehicleScriptConfiguration> vehicleScripts = new HashMap<>();
     private static final Map<String, ParsedScript> eyecandyScripts = new HashMap<>();
     private static final Map<String, String> vehicleScriptIds = new HashMap<>();
     private static final Map<String, String> eyecandyScriptIds = new HashMap<>();
 
-    private static final List<String> vehicleScriptsForPrefetching = new ObjectArrayList<>();
     private static final List<String> vehiclesWithDisplayCubeHidden = new ObjectArrayList<>();
 
     public static void reload() {
@@ -43,7 +43,6 @@ public class MTRContentResourceManager {
         vehicleScriptIds.clear();
         eyecandyScriptIds.clear();
         vehiclesWithDisplayCubeHidden.clear();
-        vehicleScriptsForPrefetching.clear();
         VehicleDataCache.clearData();
 
         if(JCMClientConfig.INSTANCE.scripting.skipScriptParsing.value()) {
@@ -123,8 +122,7 @@ public class MTRContentResourceManager {
                                 } else {
                                     ParsedScript parsedScript = tryParseScript(baseId, "vehicle", "Vehicle", vehicleResource, false, true);
                                     if (parsedScript != null) {
-                                        vehicleScripts.put(baseId, parsedScript);
-                                        vehicleScriptsForPrefetching.add(baseId);
+                                        vehicleScripts.put(baseId, new VehicleScriptConfiguration(parsedScript, VehicleScriptContext.DataFetchMode.MANDATORY));
                                         vehicleScriptIds.put(baseId + "_cab_1", baseId);
                                         vehicleScriptIds.put(baseId + "_cab_2", baseId);
                                         vehicleScriptIds.put(baseId + "_cab_3", baseId);
@@ -172,8 +170,9 @@ public class MTRContentResourceManager {
 
                                 if(entryReferenced || forceLoad) {
                                     ParsedScript parsedScript = tryParseScript(scriptEntryId, "vehicle", "Vehicle", scriptObject, true, false);
+                                    VehicleScriptContext.DataFetchMode dataFetchMode = scriptObject.has("dataFetchMode") ? VehicleScriptContext.DataFetchMode.valueOf(scriptObject.get("dataFetchMode").getAsString()) : VehicleScriptContext.DataFetchMode.SKIP;
                                     if (parsedScript != null) {
-                                        vehicleScripts.put(scriptEntryId, parsedScript);
+                                        vehicleScripts.put(scriptEntryId, new VehicleScriptConfiguration(parsedScript, dataFetchMode));
                                     }
                                 } else {
                                     MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Skip parsing vehicle scripts \"{}\", which is not referenced by any vehicle!", scriptEntryId);
@@ -288,7 +287,7 @@ public class MTRContentResourceManager {
         return eyecandyScripts.get(eyecandyScriptIds.getOrDefault(modelId, modelId));
     }
 
-    public static ParsedScript getVehicleScript(String scriptEntryId) {
+    public static VehicleScriptConfiguration getVehicleScript(String scriptEntryId) {
         return vehicleScripts.get(scriptEntryId);
     }
 
@@ -298,10 +297,6 @@ public class MTRContentResourceManager {
 
     public static boolean shouldHideDisplayParts(String vehicleId) {
         return vehiclesWithDisplayCubeHidden.contains(vehicleId);
-    }
-
-    public static boolean shouldPrefetchVehicleData(String vehicleScriptId) {
-        return vehicleScriptsForPrefetching.contains(vehicleScriptId);
     }
 
     private static void logError(String action, Exception e) {
@@ -316,4 +311,6 @@ public class MTRContentResourceManager {
             MTRScriptingMod.LOGGER.error("(Enable debug mode to see more information)");
         }
     }
+
+    public record VehicleScriptConfiguration(ParsedScript parsedScript, VehicleScriptContext.DataFetchMode dataFetchMode) {}
 }

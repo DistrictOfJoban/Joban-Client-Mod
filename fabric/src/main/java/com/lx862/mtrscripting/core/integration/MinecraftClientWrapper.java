@@ -69,6 +69,10 @@ public class MinecraftClientWrapper {
         return Math.min(blockLightAt(pos), skyLightAt(pos));
     }
 
+    public static int getRedstoneLevel(ScriptVector3f pos) {
+        return LoaderImpl.getRedstoneLevel(World.cast(MinecraftClient.getInstance().getWorldMapped()), pos.rawBlockPos());
+    }
+
     public static PlayerEntityWrapper localPlayer() {
         ClientPlayerEntity clientPlayerEntity = MinecraftClient.getInstance().getPlayerMapped();
         if(clientPlayerEntity == null) return null;

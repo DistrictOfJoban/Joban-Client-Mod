@@ -21,6 +21,7 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     protected String textContent;
     protected Identifier fontId;
+    protected QueuedRenderLayer renderType;
     protected boolean shadow;
     protected boolean styleItalic;
     protected boolean styleBold;
@@ -28,15 +29,19 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     protected int overflowMode;
     protected int alignment;
     protected int color;
+    protected double lineHeight;
     protected double marqueeProgressOverride;
     protected double marqueeDurationOverride;
+    protected boolean naturalLight;
 
     protected TextWrapper() {
         super(100, 25);
         this.alignment = -1;
         this.scale = 1;
+        this.lineHeight = 1;
         this.marqueeDurationOverride = -1;
         this.marqueeProgressOverride = -1;
+        this.renderType = QueuedRenderLayer.TEXT;
         this.fontId = new Identifier(Init.MOD_ID, "mtr");
     }
 
@@ -93,6 +98,11 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         return this;
     }
 
+    public TextWrapper lineHeight(double lineHeightFactor) {
+        this.lineHeight = lineHeightFactor;
+        return this;
+    }
+
     public TextWrapper marquee() {
         return marquee(-1);
     }
@@ -137,17 +147,28 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         return this;
     }
 
-    @Override
-    public void validate() {
-        if(textContent == null) throw new IllegalArgumentException("Text must be filled");
+    public TextWrapper naturalLight() {
+        this.naturalLight = true;
+        return this;
+    }
+
+    public TextWrapper renderType(String renderType) {
+        this.renderType = QueuedRenderLayer.valueOf(renderType);
+        return this;
     }
 
     @Override
-    protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing) {
-        MainRenderer.scheduleRender(QueuedRenderLayer.TEXT, (graphicsHolderNew, offset) -> {
+    public void validate() {
+        if(this.textContent == null) throw new IllegalArgumentException("Text must be filled");
+    }
+
+    @Override
+    protected void drawTransformed(StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        final int textLight = this.naturalLight ? light : MAX_RENDER_LIGHT;
+        MainRenderer.scheduleRender(this.renderType, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
-            graphicsHolderNew.scale((float)scale, (float)scale, (float)scale);
+            graphicsHolderNew.scale((float)this.scale, (float)this.scale, (float)this.scale);
 
             List<MutableText> texts = new ArrayList<>();
             final MutableText originalText = getFormattedText(textContent);
@@ -155,26 +176,26 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
             int actualW = GraphicsHolder.getTextWidth(originalText);
             int actualH = 9;
 
-            if(overflowMode == 1) { // Stretch XY
-                if(actualW > w) {
-                    graphicsHolderNew.scale((float)(w / actualW), 1, 1);
+            if(this.overflowMode == 1) { // Stretch XY
+                if(actualW > this.w) {
+                    graphicsHolderNew.scale((float)(this.w / actualW), 1, 1);
                 }
-                if(actualH > h) {
-                    graphicsHolderNew.scale(1, (float)(h / actualH), 1);
+                if(actualH > this.h) {
+                    graphicsHolderNew.scale(1, (float)(this.h / actualH), 1);
                 }
-            } else if(overflowMode == 2) { // Scale XY
-                double minScale = Math.min(actualW > w ? w / actualW : 1, actualH > h ? h / actualH : 1);
-                graphicsHolderNew.translate(0, (h - (actualH * minScale)) / 2, 0); // Center it vertically
+            } else if(this.overflowMode == 2) { // Scale XY
+                double minScale = Math.min(actualW > this.w ? this.w / actualW : 1, actualH > this.h ? this.h / actualH : 1);
+                graphicsHolderNew.translate(0, (this.h - (actualH * minScale)) / 2, 0); // Center it vertically
                 graphicsHolderNew.scale((float)minScale, (float)minScale, 0);
             }
 
-            if(overflowMode == 3) { // Wrap Text
+            if(this.overflowMode == 3) { // Wrap Text
                 StringBuilder curLine = new StringBuilder();
                 int wSoFar = 0;
-                for(int i = 0; i < textContent.length(); i++) {
-                    char c = textContent.charAt(i);
+                for(int i = 0; i < this.textContent.length(); i++) {
+                    char c = this.textContent.charAt(i);
                     wSoFar += GraphicsHolder.getTextWidth(String.valueOf(c));
-                    if(wSoFar > w) {
+                    if(wSoFar > this.w) {
                         texts.add(getFormattedText(curLine.toString()));
                         curLine = new StringBuilder(String.valueOf(c));
                         wSoFar = 0;
@@ -186,15 +207,15 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
                     texts.add(getFormattedText(curLine.toString()));
                 }
             } else {
-                texts.add(getFormattedText(textContent));
+                texts.add(getFormattedText(this.textContent));
             }
 
-            if(overflowMode == 4 && actualW > w) { // Marquee
-                drawMarqueeText(graphicsHolderNew, texts.get(0).getString(), color, shadow, MAX_RENDER_LIGHT, marqueeDurationOverride, marqueeProgressOverride);
+            if(this.overflowMode == 4 && actualW > this.w) { // Marquee
+                drawMarqueeText(graphicsHolderNew, texts.get(0).getString(), this.color, this.shadow, textLight, this.marqueeDurationOverride, this.marqueeProgressOverride);
             } else {
                 int i = 0;
                 for(MutableText text : texts) {
-                    drawText(graphicsHolderNew, text, i*9, color, shadow, MAX_RENDER_LIGHT);
+                    drawText(graphicsHolderNew, text, (int)(i*(9*this.lineHeight)), this.color, this.shadow, textLight);
                     i++;
                 }
             }
@@ -205,9 +226,9 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     private void drawText(GraphicsHolder graphicsHolder, MutableText text, int y, int color, boolean shadow, int light) {
         int startX = 0;
         int totalW = GraphicsHolder.getTextWidth(text);
-        if(alignment == 0) {
+        if(this.alignment == 0) {
             startX -= totalW / 2;
-        } else if(alignment == 1) {
+        } else if(this.alignment == 1) {
             startX -= totalW;
         }
         graphicsHolder.drawText(text, startX, y, color, shadow, light);
@@ -225,7 +246,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         }
 
         /* + w accounts for the duration where the text starts to appear from the right edge */
-        int fullWidth = (int)(textWidth + (int)w);
+        int fullWidth = (int)(textWidth + (int)this.w);
         double cycleDuration = durationOverride != -1 ? (durationOverride * 20) : str.length() * 10;
         double marqueeProgress = progressOverride != -1 ? progressOverride : (InitClient.getGameTick() % cycleDuration) / cycleDuration;
 
@@ -234,7 +255,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
             String st = String.valueOf(str.charAt(i));
             final MutableText tx = getFormattedText(st);
 
-            if(wSoFar >= 0 && wSoFar <= w) {
+            if(wSoFar >= 0 && wSoFar <= this.w) {
                 graphicsHolder.push();
                 graphicsHolder.translate(wSoFar, 0, 0);
                 graphicsHolder.drawText(tx, 0, 0, color, shadow, light);
@@ -247,10 +268,10 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
 
     private MutableText getFormattedText(String str) {
         final Style fontStyle;
-        if(fontId != null) {
-            fontStyle = TextUtil.withFontStyle(fontId).withBold(styleBold).withItalic(styleItalic);
+        if(this.fontId != null) {
+            fontStyle = TextUtil.withFontStyle(this.fontId).withBold(this.styleBold).withItalic(this.styleItalic);
         } else {
-            fontStyle = Style.getEmptyMapped().withBold(styleBold).withItalic(styleItalic);
+            fontStyle = Style.getEmptyMapped().withBold(this.styleBold).withItalic(this.styleItalic);
         }
 
         return TextHelper.setStyle(TextHelper.literal(str), fontStyle);

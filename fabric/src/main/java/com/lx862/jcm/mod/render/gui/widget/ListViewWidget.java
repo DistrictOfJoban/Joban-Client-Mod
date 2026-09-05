@@ -88,6 +88,7 @@ public class ListViewWidget extends AbstractScrollViewWidget implements RenderHe
             int entryX = getX2();
             int entryY = getY2() + incY - (int) currentScroll;
             boolean widgetVisible = false;
+            boolean rowInSight = inRectangle(entryX, entryY, getX2(), getY2(), getWidth2(), getHeight2()) || inRectangle(entryX, entryY+abstractListItem.height, getX2(), getY2(), getWidth2(), getHeight2());
 
             if (abstractListItem instanceof ContentItem) {
                 ContentItem contentItem = (ContentItem) abstractListItem;
@@ -96,7 +97,8 @@ public class ListViewWidget extends AbstractScrollViewWidget implements RenderHe
                 widgetVisible = topLeftVisible && bottomRightVisible;
             }
 
-            abstractListItem.draw(graphicsHolder, guiDrawing, entryX, entryY, width - getScrollbarOffset(), height, mouseX, mouseY, widgetVisible, elapsed, tickDelta);
+            abstractListItem.draw(graphicsHolder, guiDrawing, entryX, entryY, width - getScrollbarOffset(), height, mouseX, mouseY, widgetVisible, rowInSight, elapsed, tickDelta);
+
             incY += abstractListItem.height;
         }
     }

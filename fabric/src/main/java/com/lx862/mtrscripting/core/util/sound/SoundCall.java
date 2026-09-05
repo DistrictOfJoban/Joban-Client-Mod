@@ -3,19 +3,21 @@ package com.lx862.mtrscripting.core.util.sound;
 import com.lx862.mtrscripting.core.api.ScriptResultCall;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import org.mtr.mapping.holder.SoundCategory;
 import org.mtr.mapping.holder.SoundEvent;
 import org.mtr.mapping.holder.World;
 
 public abstract class SoundCall implements ScriptResultCall {
     protected final SoundEvent soundEvent;
-    protected final String soundCategory = "MASTER";
+    protected final SoundCategory soundCategory;
     protected final float volume;
     protected final float pitch;
 
-    public SoundCall(SoundEvent soundEvent, float volume, float pitch) {
+    public SoundCall(SoundEvent soundEvent, SoundCategory soundCategory, float volume, float pitch) {
         this.soundEvent = soundEvent;
         this.volume = volume;
         this.pitch = pitch;
+        this.soundCategory = soundCategory;
     }
 
     @ApiInternal
