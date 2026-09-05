@@ -8,9 +8,7 @@
 
 <p align="center">Bring your transit world to life with various decoration blocks!</p>
 
-<p align="center">
-    <a href="https://weblate.ziyuesinicization.site/engage/joban-client-mod/"><img src="https://weblate.ziyuesinicization.site/widget/joban-client-mod/svg-badge.svg" alt="Translation status"></a>
-</p>
+<a align="center" href="https://weblate.ziyuesinicization.site/engage/joban-client-mod/"><img src="https://weblate.ziyuesinicization.site/widget/joban-client-mod/svg-badge.svg" alt="Translation status"></a>
 
 <p align="center">
   <a href="https://modrinth.com/mod/jcm">
