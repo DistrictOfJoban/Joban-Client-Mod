@@ -4,6 +4,8 @@
 - Add **Emergency Train Stop Button (Wall mounted, TML)** & URL variant (Thanks **LX9702**!)
 
 ## Changes
+- When script debug mode is enabled, in-game script parsing error messages will now display the first-time you join the game.
+
 ### PIDS Textures
 Please note that several textures used by PIDS (`rv_door_cls_apg.png`, `rv_door_cls_psd.png`, `rv_door_cls_train.png`, `thumbnail/pids_1a.png`) has been relocated from `jsblock:textures/block/pids` to `jsblock:textures/pids`.
 

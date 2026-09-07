@@ -45,6 +45,8 @@ public class MTRContentResourceManager {
         vehiclesWithDisplayCubeHidden.clear();
         VehicleDataCache.clearData();
 
+        MTRContentScripting.getScriptManager().scriptErrorNotifier.reset();
+
         if(JCMClientConfig.INSTANCE.scripting.skipScriptParsing.value()) {
             MTRScriptingMod.LOGGER.info("[MTR Scripting via JCM] Scripting has been disabled, not parsing any script.");
         } else {
@@ -60,6 +62,10 @@ public class MTRContentResourceManager {
                 consoleJS.timeEnd("MTR Script Load Time");
             }
             CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.finishReload();
+        }
+
+        if(MinecraftClient.getInstance().getPlayerMapped() != null) {
+            MTRContentScripting.getScriptManager().scriptErrorNotifier.flush();
         }
     }
 
@@ -278,7 +284,7 @@ public class MTRContentResourceManager {
         try {
             return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, scripts);
         } catch (Exception e) {
-            logError("parsing " + scriptType + " script with id " + id, e);
+            logError("parsing " + scriptType + " script (" + id + ")", e);
             return null;
         }
     }
@@ -302,10 +308,10 @@ public class MTRContentResourceManager {
     private static void logError(String action, Exception e) {
         if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             MTRScriptingMod.LOGGER.error("[MTR] Error while {}!", action, e);
-            if(MinecraftClient.getInstance().getPlayerMapped() != null) {
+            MTRContentScripting.getScriptManager().scriptErrorNotifier.queue(() -> {
                 MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("[MTR] Error while " + action + "!"), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
                 MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
-            }
+            });
         } else {
             MTRScriptingMod.LOGGER.error("[MTR] Error while {}: {}", action, e.getMessage());
             MTRScriptingMod.LOGGER.error("(Enable debug mode to see more information)");

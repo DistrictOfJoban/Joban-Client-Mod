@@ -18,6 +18,7 @@ import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.integration.VoxelShapeWrapper;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
 import com.lx862.mtrscripting.mod.MTRScriptingMod;
+import com.lx862.mtrscripting.mod.gui.ScriptErrorNotifier;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.TriConsumer;
 
@@ -38,6 +39,7 @@ public class ScriptManager {
 
     public final ParseScriptEvent<TriConsumer<String, Context, Scriptable>> parseScriptEvent = new ParseScriptEvent<>();
     public final ParseScriptEvent<Consumer<ParsedScript>> finishParseScriptEvent = new ParseScriptEvent<>();
+    public final ScriptErrorNotifier scriptErrorNotifier = new ScriptErrorNotifier();
 
     /**
      * Create a new script manager

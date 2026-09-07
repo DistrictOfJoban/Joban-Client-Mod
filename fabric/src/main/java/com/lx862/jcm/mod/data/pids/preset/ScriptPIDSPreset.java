@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.jcm.mod.resource.JCMResourceManager;
 import com.lx862.jcm.mod.scripting.JCMScripting;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptInstance;
@@ -85,7 +86,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             ParsedScript script = scripts.isEmpty() ? null : JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts);
             return script == null ? null : new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, script);
         } catch (Exception e) {
-            logError("parsing PIDS script with id " + id, e);
+            logError("parsing PIDS script (" + id + ")", e);
             return null;
         }
     }
@@ -125,10 +126,11 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     public static void logError(String action, Exception e) {
         if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             JCMLogger.error("[JCM] Error while " + action + "!", e);
-            if(MinecraftClient.getInstance().getPlayerMapped() != null) {
+
+            JCMScripting.getScriptManager().scriptErrorNotifier.queue(() -> {
                 MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("[JCM] Error while " + action + "!"), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
                 MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
-            }
+            });
         } else {
             JCMLogger.error("[JCM] Error while " + action + ": " + e.getMessage());
             JCMLogger.error("(Enable debug mode to see more information)");

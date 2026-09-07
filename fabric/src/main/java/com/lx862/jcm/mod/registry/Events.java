@@ -32,6 +32,12 @@ public class Events {
             }
         });
 
+        JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerClientJoin(() -> {
+            /* On behalf of MTR Scripting */
+            MTRContentScripting.getScriptManager().scriptErrorNotifier.flush();
+            JCMScripting.getScriptManager().scriptErrorNotifier.flush();
+        });
+
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerEndClientTick(() -> {
             if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value() && KeyBinds.SCRIPT_DEBUG_SOURCE_PREV.wasPressed()) {
                 MTRScriptDebugOverlay.previousSource();
