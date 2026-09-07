@@ -9,12 +9,18 @@ import org.mtr.core.data.Station;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mod.InitClient;
 
 public class PIDSWrapper {
     private final PIDSBlockEntity be;
     private final ArrivalsWrapper arrivalsWrapper;
     private final LongImmutableList targetPlatformIds;
+
+    private final BlockPos blockPos;
+    private final boolean isPlatformNumberHidden;
+    private final boolean isAutoDetectPlatform;
+
     public final String type;
     public final int rows;
     public final int width;
@@ -28,15 +34,20 @@ public class PIDSWrapper {
         this.height = height;
         this.rows = be.getRowAmount();
         this.targetPlatformIds = targetPlatformIds;
+
+        this.blockPos = be.getPos2();
+        this.isPlatformNumberHidden = be.platformNumberHidden();
+        this.isAutoDetectPlatform = be.getPlatformIds().isEmpty();
+
         this.arrivalsWrapper = new ArrivalsWrapper(arrivalsResponse);
     }
 
     public LongImmutableList getTargetPlatformIds() {
-        return targetPlatformIds;
+        return this.targetPlatformIds;
     }
 
     public ScriptVector3f blockPos() {
-        return new ScriptVector3f(be.getPos2());
+        return new ScriptVector3f(this.blockPos);
     }
 
     public boolean isKeyBlock() {
@@ -58,14 +69,18 @@ public class PIDSWrapper {
     }
 
     public boolean isPlatformNumberHidden() {
-        return be.platformNumberHidden();
+        return this.isPlatformNumberHidden;
+    }
+
+    public boolean isPlatformAutoDetected() {
+        return this.isAutoDetectPlatform;
     }
 
     public @ValueNullable Station station() {
-        return InitClient.findStation(be.getPos2());
+        return InitClient.findStation(this.blockPos);
     }
 
     public ArrivalsWrapper arrivals() {
-        return arrivalsWrapper;
+        return this.arrivalsWrapper;
     }
 }
