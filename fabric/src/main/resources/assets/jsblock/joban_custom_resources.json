@@ -17,7 +17,7 @@
       "id": "door_cls_psd",
       "name": "RV PIDS (Door Closing PSD)",
       "builtin": true,
-      "background": "jsblock:textures/block/pids/rv_door_cls_psd.png",
+      "background": "jsblock:textures/pids/rv_door_cls_psd.png",
       "color": "000000",
       "topPadding": true,
       "showWeather": true,
@@ -30,7 +30,7 @@
       "id": "door_cls_apg",
       "name": "RV PIDS (Door Closing APG)",
       "builtin": true,
-      "background": "jsblock:textures/block/pids/rv_door_cls_apg.png",
+      "background": "jsblock:textures/pids/rv_door_cls_apg.png",
       "color": "000000",
       "topPadding": true,
       "showWeather": true,
@@ -43,7 +43,7 @@
       "id": "door_cls_train",
       "name": "RV PIDS (Door Closing)",
       "builtin": true,
-      "background": "jsblock:textures/block/pids/rv_door_cls_train.png",
+      "background": "jsblock:textures/pids/rv_door_cls_train.png",
       "color": "000000",
       "topPadding": true,
       "showWeather": true,
@@ -70,7 +70,7 @@
       "id": "pids_1a",
       "name": "PIDS 1A",
       "builtin": true,
-      "thumbnail": "jsblock:textures/block/pids/thumbnail/pids_1a.png",
+      "thumbnail": "jsblock:textures/pids/thumbnail/pids_1a.png",
       "scriptFiles": ["jsblock:scripts/builtin/pids_1a.js"]
     }
   ]
