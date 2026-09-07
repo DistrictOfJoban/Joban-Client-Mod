@@ -53,8 +53,8 @@ public abstract class ScriptInstance<T> {
         return this.lastExecutionDurationMs;
     }
 
-    public void setCreateFunctionInvoked() {
-        this.createFunctionInvoked = true;
+    public void setCreateFunctionInvoked(boolean isTrue) {
+        this.createFunctionInvoked = isTrue;
     }
 
     public boolean isCreateFunctionInvoked() {

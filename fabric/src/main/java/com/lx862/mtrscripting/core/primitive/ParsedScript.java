@@ -99,7 +99,11 @@ public class ParsedScript {
     }
 
     public Future<?> invokeCreateFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
-        return invokeFunctions(instance, createFunctions, finishCallback);
+        return invokeFunctions(instance, createFunctions, finishCallback,
+                // Ensure create function is re-invoked after error.
+                // Note: This will leak memory when the create function is invoked again, but not sure if there's a good solution without manually introducing checkpoint for disposing.
+                () -> instance.setCreateFunctionInvoked(false)
+        );
     }
 
     public void invokeRenderFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
@@ -107,18 +111,17 @@ public class ParsedScript {
             return;
         }
         if(instance.isCreateFunctionInvoked()) {
-            instance.scriptTask = invokeFunctions(instance, renderFunctions, finishCallback);
+            instance.scriptTask = invokeFunctions(instance, renderFunctions, finishCallback, null);
         } else {
             instance.scriptTask = invokeCreateFunctions(instance, finishCallback);
-            instance.setCreateFunctionInvoked();
         }
     }
 
     public void invokeDisposeFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
-        invokeFunctions(instance, disposeFunctions, finishCallback);
+        invokeFunctions(instance, disposeFunctions, finishCallback, null);
     }
 
-    public Future<?> invokeFunctions(ScriptInstance<?> scriptInstance, List<Function> functions, Runnable finishExecutionCallback) {
+    public Future<?> invokeFunctions(ScriptInstance<?> scriptInstance, List<Function> functions, Runnable finishExecutionCallback, Runnable errorCallback) {
         if(duringFailCooldown()) {
             return null;
         }
@@ -145,6 +148,7 @@ public class ParsedScript {
                 scriptManager.getLogger().error("[MTR Scripting via JCM] Error executing script {}!", displayName, e);
                 lastFailedTime = System.currentTimeMillis();
                 capturedScriptException = e;
+                if(errorCallback != null) errorCallback.run();
             } finally {
                 Context.exit();
             }

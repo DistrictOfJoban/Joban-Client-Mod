@@ -4,6 +4,8 @@
 - Add **Emergency Train Stop Button (Wall mounted, TML)** & URL variant (Thanks **LX9702**!)
 
 ## Changes
+- **Scripting**
+  - The `create()` function is changed to be re-invoked again after an execution error, instead of continuing towards `render()` function, where not all variable may be initialized, obscuring the original error in the create function.
 - **PIDS Scripting**
   - Add `PIDSWrapper.isPlatformAutoDetected()`, returning whether the selected PIDS platform is manually picked by the user, or automatically detected.
 - When script debug mode is enabled, in-game script parsing error messages will now display the first-time you join the game.
