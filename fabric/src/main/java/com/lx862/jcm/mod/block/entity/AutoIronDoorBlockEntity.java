@@ -27,7 +27,7 @@ public class AutoIronDoorBlockEntity extends JCMBlockEntityBase {
             AtomicBoolean haveNearbyPlayer = new AtomicBoolean(false);
 
             MinecraftServerHelper.iteratePlayers(ServerWorld.cast(getWorld2()), (player) -> {
-                if(box.contains(player.getPos())) {
+                if(!player.isSpectator() && box.contains(player.getPos())) {
                     boolean alreadyOpened = IBlock.getStatePropertySafe(state, new Property<>(DoorBlockAbstractMapping.getOpenMapped().data));
 
                     if(!alreadyOpened) {
