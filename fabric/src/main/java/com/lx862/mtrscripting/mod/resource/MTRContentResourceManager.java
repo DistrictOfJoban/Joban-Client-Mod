@@ -5,13 +5,17 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.mtrscripting.core.util.DataReaderJS;
+import com.lx862.mtrscripting.core.util.ScriptResourceUtil;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleDataCache;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptContent;
 import com.lx862.mtrscripting.mod.MTRScriptingMod;
 import com.lx862.mtrscripting.core.util.ConsoleJS;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptContext;
+import com.lx862.mtrscripting.mod.util.JsonUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
@@ -22,6 +26,7 @@ import org.mtr.mod.client.CustomResourceLoader;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +35,7 @@ public class MTRContentResourceManager {
     private static final JsonParser JSON_PARSER = new JsonParser();
 
     private static final Map<String, VehicleScriptConfiguration> vehicleScripts = new HashMap<>();
-    private static final Map<String, ParsedScript> eyecandyScripts = new HashMap<>();
+    private static final Map<String, EyecandyScriptConfiguration> eyecandyScripts = new HashMap<>();
     private static final Map<String, String> vehicleScriptIds = new HashMap<>();
     private static final Map<String, String> eyecandyScriptIds = new HashMap<>();
 
@@ -44,7 +49,6 @@ public class MTRContentResourceManager {
         eyecandyScriptIds.clear();
         vehiclesWithDisplayCubeHidden.clear();
         VehicleDataCache.clearData();
-
         MTRContentScripting.getScriptManager().scriptErrorNotifier.reset();
 
         if(JCMClientConfig.INSTANCE.scripting.skipScriptParsing.value()) {
@@ -70,31 +74,37 @@ public class MTRContentResourceManager {
     }
 
     /**
-     * Read legacy script entry in MTR-NTE (for MTR 3)
+     * Read legacy script entry (for MTR-NTE based eyecandy entries)
      */
     private static void readNteEyecandy() {
         ResourceManagerHelper.readDirectory("eyecandies", (identifier, inputStream) -> {
-            if (identifier.getNamespace().equals(Init.MOD_ID_NTE) && identifier.getPath().endsWith(".json")) {
-                try(InputStreamReader isp = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-                    final JsonObject rootObject = JSON_PARSER.parse(isp).getAsJsonObject();
+            boolean fileIsNteEyecandy = identifier.getNamespace().equals(Init.MOD_ID_NTE) && identifier.getPath().endsWith(".json");
+            if (fileIsNteEyecandy) {
+                try(InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+                    final JsonObject rootObject = JSON_PARSER.parse(reader).getAsJsonObject();
 
+                    Map<String, JsonElement> objectsInJson = new HashMap<>();
                     if(rootObject.has("model")) {
+                        // Single entry registration
                         String id = FilenameUtils.getBaseName(identifier.getPath());
-                        ParsedScript ps = tryParseScript(id, "eyecandy", "Block", rootObject, false, false);
-                        if(ps != null) {
-                            eyecandyScriptIds.put(id, id);
-                            eyecandyScripts.put(id, ps);
-                        }
+                        objectsInJson.put(id, rootObject);
                     } else {
-                        for (Map.Entry<String, JsonElement> entry : rootObject.entrySet()) {
-                            final String id = entry.getKey();
-                            final JsonObject entryObject = entry.getValue().getAsJsonObject();
+                        // Multi-entry registration
+                        rootObject.entrySet().forEach((entry) -> {
+                            objectsInJson.put(entry.getKey(), entry.getValue());
+                        });
+                    }
 
-                            ParsedScript ps = tryParseScript(id, "eyecandy", "Block", entryObject, false, false);
-                            if(ps != null) {
-                                eyecandyScriptIds.put(id, id);
-                                eyecandyScripts.put(id, ps);
-                            }
+                    // Do registration
+                    for(Map.Entry<String, JsonElement> entry : objectsInJson.entrySet()) {
+                        final String id = entry.getKey();
+                        final JsonObject entryObject = entry.getValue().getAsJsonObject();
+                        final EyecandyCustomConfig eyecandyCustomConfig = parseEyecandyCustomConfig(entryObject, true);
+
+                        ParsedScript parsedScript = tryParseScript(id, "eyecandy", "Block", entryObject, false, false);
+                        if(parsedScript != null) {
+                            eyecandyScriptIds.put(id, id);
+                            eyecandyScripts.put(id, new EyecandyScriptConfiguration(parsedScript, eyecandyCustomConfig));
                         }
                     }
                 } catch (Exception e) {
@@ -105,15 +115,17 @@ public class MTRContentResourceManager {
     }
 
     private static void readMtrCustomResources(boolean pendingMigration) {
-        ResourceManagerHelper.readAllResources(new Identifier(Init.MOD_ID, pendingMigration ? CustomResourceLoader.CUSTOM_RESOURCES_PENDING_MIGRATION_ID + ".json" : CustomResourceLoader.CUSTOM_RESOURCES_ID + ".json"), (inputStream) -> {
-            try(InputStreamReader isp = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-                final JsonObject rootObject = JSON_PARSER.parse(isp).getAsJsonObject();
-                final boolean isVehicleLegacyResource = rootObject.has("custom_trains"); // Whether train format are in MTR 3
-                final JsonElement vehicleElement = isVehicleLegacyResource ? rootObject.get("custom_trains") : rootObject.get("vehicles");
-                final JsonElement objectsElement = rootObject.get("objects");
+        String fileName = pendingMigration ? CustomResourceLoader.CUSTOM_RESOURCES_PENDING_MIGRATION_ID + ".json" : CustomResourceLoader.CUSTOM_RESOURCES_ID + ".json";
+
+        ResourceManagerHelper.readAllResources(new Identifier(Init.MOD_ID, fileName), (inputStream) -> {
+            try(InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+                final JsonObject rootObject = JSON_PARSER.parse(reader).getAsJsonObject();
+                final boolean isLegacyResource = rootObject.has("custom_trains"); // Whether train format are in MTR 3
+                final JsonElement vehicleElement = isLegacyResource ? rootObject.get("custom_trains") : rootObject.get("vehicles");
+                final JsonElement mtr4EyecandyElement = rootObject.get("objects"); // MTR 4
 
                 if(vehicleElement != null) {
-                    if(isVehicleLegacyResource) { // MTR 3
+                    if(isLegacyResource) { // MTR 3
                         final JsonObject vehicleObject = vehicleElement.getAsJsonObject();
                         for (Map.Entry<String, JsonElement> map : vehicleObject.entrySet()) {
                             String baseId = "mtr_custom_train_" + map.getKey();
@@ -186,28 +198,18 @@ public class MTRContentResourceManager {
                             }
                         }
                     }
-
-                    // Validation
-                    for(Map.Entry<String, String> vehicleEntry : vehicleScriptIds.entrySet()) {
-                        String entryId = vehicleEntry.getKey();
-                        String scriptEntryId = vehicleEntry.getValue();
-
-                        if(!vehicleScripts.containsKey(scriptEntryId)) {
-                            MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Vehicle script \"{}\" is either missing or failed to load! (Used by vehicle {})", scriptEntryId, entryId);
-                        }
-                    }
                 }
 
                 // Parse MTR 4 Eyecandy
-                if(objectsElement != null) { // Only MTR 4 specifies eyecandy in mtr_custom_resources
+                if(mtr4EyecandyElement != null) {
                     final JsonElement scriptsElement = rootObject.get("objectScripts");
-                    JsonArray eyecandyObjects = objectsElement.getAsJsonArray();
+                    JsonArray eyecandyObjects = mtr4EyecandyElement.getAsJsonArray();
                     for(JsonElement jsonElement : eyecandyObjects) {
-                        final JsonObject entryObject = jsonElement.getAsJsonObject();
-                        final String id = entryObject.get("id").getAsString();
-                        if(entryObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
-                            String scriptId = entryObject.get("scriptId").getAsString();
-                            eyecandyScriptIds.put(id, scriptId);
+                        final JsonObject eyecandyEntry = jsonElement.getAsJsonObject();
+                        final String id = eyecandyEntry.get("id").getAsString();
+                        if(eyecandyEntry.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
+                            String eyecandyScriptId = eyecandyEntry.get("scriptId").getAsString();
+                            eyecandyScriptIds.put(id, eyecandyScriptId);
                         }
                     }
 
@@ -216,31 +218,89 @@ public class MTRContentResourceManager {
                         for(JsonElement entryElement : scriptArray) {
                             JsonObject scriptObject = entryElement.getAsJsonObject();
                             String scriptEntryId = scriptObject.get("id").getAsString();
+                            EyecandyCustomConfig customConfig = parseEyecandyCustomConfig(scriptObject, false);
                             boolean entryReferenced = eyecandyScriptIds.values().stream().anyMatch(e -> e.equals(scriptEntryId));
 
                             if(entryReferenced) {
                                 ParsedScript parsedScript = tryParseScript(scriptEntryId, "eyecandy", "Block", scriptObject, true, false);
-                                if(parsedScript != null) eyecandyScripts.put(scriptEntryId, parsedScript);
+                                if(parsedScript != null) eyecandyScripts.put(scriptEntryId, new EyecandyScriptConfiguration(parsedScript, customConfig));
                             } else {
-                                MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Skip parsing eyecandy scripts \"{}\", which is not referenced by any eyecandy object!", scriptEntryId);
+                                MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Skip parsing eyecandy script \"{}\", which is not referenced by any eyecandy object!", scriptEntryId);
                             }
                         }
                     }
 
-                    // Validation
-                    for(Map.Entry<String, String> scriptEntry : eyecandyScriptIds.entrySet()) {
-                        String entryId = scriptEntry.getKey();
-                        String scriptEntryId = scriptEntry.getValue();
-
-                        if(!eyecandyScriptIds.containsKey(scriptEntryId)) {
-                            MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Eyecandy script \"{}\" is either missing or failed to load! (Used by entry {})", scriptEntryId, entryId);
-                        }
-                    }
                 }
             } catch (Exception e) {
                 logError("parsing scripts in mtr_custom_resources.json", e);
             }
         });
+
+        validateScriptEntries();
+    }
+
+    private static EyecandyCustomConfig parseEyecandyCustomConfig(JsonObject rootObject, boolean legacy) {
+        String customConfigKey = legacy ? "scriptCustomConfig" : "customConfig";
+        String customConfigFileKey = legacy ? "scriptCustomConfigFile" : "customConfigFile";
+
+        if(rootObject.has(customConfigKey)) {
+            JsonObject customConfigObject = rootObject.get(customConfigKey).getAsJsonObject();
+            return parseEyecandyCustomConfigJson(customConfigObject);
+        }
+        if(rootObject.has(customConfigFileKey)) {
+            String configLocation = rootObject.get(customConfigFileKey).getAsString();
+            DataReaderJS dataReader = ScriptResourceUtil.read(new Identifier(configLocation));
+            if(dataReader == null) throw new IllegalStateException(String.format("Custom config location \"%s\" does not exists!", configLocation));
+            String configContent = dataReader.asString();
+
+            JsonObject customConfigObject = JSON_PARSER.parse(configContent).getAsJsonObject();
+            return parseEyecandyCustomConfigJson(customConfigObject);
+        }
+        return null;
+    }
+
+    private static EyecandyCustomConfig parseEyecandyCustomConfigJson(JsonObject jsonObject) {
+        String description = JsonUtil.getString("description", null, jsonObject);
+
+        List<EyecandyCustomConfig.Entry> entries = new ArrayList<>();
+        if(jsonObject.has("entries")) {
+            JsonArray entriesArray = jsonObject.get("entries").getAsJsonArray();
+            for(JsonElement jsonElement : entriesArray) {
+                JsonObject entryObject = jsonElement.getAsJsonObject();
+                String id = JsonUtil.getString("id", entryObject);
+                String name = JsonUtil.getString("name", id, entryObject);
+                EyecandyCustomConfig.Entry.Type type = EyecandyCustomConfig.Entry.Type.valueOf(JsonUtil.getString("type", entryObject));
+                String validation = JsonUtil.getString("validation", null, entryObject);
+                boolean optional = JsonUtil.getBoolean("optional", true, entryObject);
+
+                EyecandyCustomConfig.Entry entry = new EyecandyCustomConfig.Entry(id, name, type, validation, optional);
+                entries.add(entry);
+            }
+        }
+
+        return new EyecandyCustomConfig(description, entries);
+    }
+
+    private static void validateScriptEntries() {
+        // Vehicle validation
+        for(Map.Entry<String, String> vehicleEntry : vehicleScriptIds.entrySet()) {
+            String entryId = vehicleEntry.getKey();
+            String scriptEntryId = vehicleEntry.getValue();
+
+            if(!vehicleScripts.containsKey(scriptEntryId)) {
+                MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Vehicle script \"{}\" is either missing or failed to load! (Used by vehicle {})", scriptEntryId, entryId);
+            }
+        }
+
+        // Eyecandy validation
+        for(Map.Entry<String, String> scriptEntry : eyecandyScriptIds.entrySet()) {
+            String entryId = scriptEntry.getKey();
+            String scriptEntryId = scriptEntry.getValue();
+
+            if(!eyecandyScriptIds.containsKey(scriptEntryId)) {
+                MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Eyecandy script \"{}\" is either missing or failed to load! (Used by entry {})", scriptEntryId, entryId);
+            }
+        }
     }
 
     private static ParsedScript tryParseScript(String id, String scriptType, String contextName, JsonObject jsonObject, boolean isParsingMTR4, boolean useSnakeCase) {
@@ -289,7 +349,7 @@ public class MTRContentResourceManager {
         }
     }
 
-    public static ParsedScript getEyecandyScript(String modelId) {
+    public static EyecandyScriptConfiguration getEyecandyScript(String modelId) {
         return eyecandyScripts.get(eyecandyScriptIds.getOrDefault(modelId, modelId));
     }
 
@@ -317,6 +377,8 @@ public class MTRContentResourceManager {
             MTRScriptingMod.LOGGER.error("(Enable debug mode to see more information)");
         }
     }
+
+    public record EyecandyScriptConfiguration(ParsedScript parsedScript, EyecandyCustomConfig eyecandyCustomConfig) {}
 
     public record VehicleScriptConfiguration(ParsedScript parsedScript, VehicleScriptContext.DataFetchMode dataFetchMode) {}
 }

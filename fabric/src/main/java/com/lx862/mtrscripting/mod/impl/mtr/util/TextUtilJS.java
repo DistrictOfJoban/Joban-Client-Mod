@@ -34,8 +34,8 @@ import java.util.List;
 import static com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent.SWITCH_LANG_DURATION;
 
 @SuppressWarnings("unused")
-public class TextUtil {
-    private TextUtil() {
+public class TextUtilJS {
+    private TextUtilJS() {
     }
 
     public static String getCjkParts(String src) {

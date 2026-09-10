@@ -59,8 +59,8 @@ public class StringMapSerializer {
         return serializeIn(map).toByteArray();
     }
 
-    public static Map<String, String> deserialize(Map<String, String> map, byte[] bytes) throws IOException {
-        return deserializeIn(map, bytes);
+    public static Map<String, String> deserialize(byte[] bytes) throws IOException {
+        return deserializeIn(new HashMap<>(), bytes);
     }
 
     public static String serializeToString(Map<String, String> map) throws IOException {

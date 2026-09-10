@@ -3,7 +3,7 @@ package com.lx862.mtrscripting.mod.impl.mtr;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.mod.gui.MTRScriptDebugOverlay;
 import com.lx862.mtrscripting.mod.MTRScriptingMod;
-import com.lx862.mtrscripting.mod.impl.mtr.util.TextUtil;
+import com.lx862.mtrscripting.mod.impl.mtr.util.TextUtilJS;
 import com.lx862.mtrscripting.core.ScriptManager;
 import com.lx862.mtrscripting.core.api.ClassRule;
 import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
@@ -48,7 +48,7 @@ public class MTRContentScripting {
 
         scriptManager.parseScriptEvent.register((contextName, context, scriptable) -> {
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
-            scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtil.class));
+            scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtilJS.class));
             scriptable.put("MTRUtil", scriptable, new NativeJavaClass(scriptable, MTRUtil.class));
         });
 

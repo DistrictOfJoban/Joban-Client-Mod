@@ -45,7 +45,7 @@ public class EyecandyBlockEntityWrapper {
         this.rotateY = be.getRotateY();
         this.rotateZ = be.getRotateZ();
         this.fullLight = be.getFullBrightness();
-        this.customConfigs = new HashMap<>(((JCMBlockEyecandyExtra)be).jsblock$getCustomConfigs());
+        this.customConfigs = new HashMap<>(((JCMBlockEyecandyExtra)be).jsblock$getCustomConfig());
     }
 
     public String getModelId() {
