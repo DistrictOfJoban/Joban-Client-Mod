@@ -1,6 +1,9 @@
 # JCM v2.3.0-beta.1 for MTR 4.0.5 has been released!
 
 ## Additions
+- **Scripting**
+  - Added `ctx.setDebugInfo(value: any)` shorthand for temporary, single-value on-screen debug info, without requiring a key.
+    - Same as calling `ctx.setDebugInfo("<Untitled>", value)`
 - Add **Emergency Train Stop Button (Wall mounted, TML)** & URL variant (Thanks **LX9702**!)
 
 ## Changes

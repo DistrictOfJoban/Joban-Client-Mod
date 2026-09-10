@@ -20,6 +20,10 @@ public abstract class AbstractScriptContext {
         return this.name;
     }
 
+    public void setDebugInfo(@ValueNullable Object value) {
+        this.setDebugInfo("<Untitled>", value);
+    }
+
     public void setDebugInfo(String key, @ValueNullable Object value) {
         debugInfoMap.put(key, value);
     }
