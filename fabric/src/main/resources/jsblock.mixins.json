@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_16",
   "mixins": [
     "compat.SimpleDefaultedRegistryMixin",
+    "modded.mtr.BlockEntityEyecandyMixin",
     "modded.mtr.BlockPIDSPoleMixin",
     "modded.mtr.InitAccessorMixin",
     "modded.mtr.TicketSystemMixin",

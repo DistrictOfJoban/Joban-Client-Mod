@@ -4,6 +4,7 @@
   "package": "com.lx862.jcm.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
+    "modded.mtr.BlockEntityEyecandyMixin",
     "modded.mtr.BlockPIDSPoleMixin",
     "modded.mtr.InitAccessorMixin",
     "modded.mtr.TicketSystemMixin",

@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.mod.impl.mtr.eyecandy;
 
 import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.jcm.mixin.modded.mtr.JCMBlockEyecandyExtra;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
@@ -8,8 +9,13 @@ import org.mtr.mapping.holder.*;
 import org.mtr.mod.block.BlockEyeCandy;
 import org.mtr.mod.block.IBlock;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class EyecandyBlockEntityWrapper {
     private final BlockEyeCandy.BlockEntity be;
+
+    private final Map<String, String> customConfigs;
 
     /* Note: Field access for backward compatibility only, you should use the getter functions. */
     @Deprecated
@@ -39,6 +45,7 @@ public class EyecandyBlockEntityWrapper {
         this.rotateY = be.getRotateY();
         this.rotateZ = be.getRotateZ();
         this.fullLight = be.getFullBrightness();
+        this.customConfigs = new HashMap<>(((JCMBlockEyecandyExtra)be).jsblock$getCustomConfigs());
     }
 
     public String getModelId() {
@@ -101,6 +108,10 @@ public class EyecandyBlockEntityWrapper {
         if(world == null) return 0;
 
         return LoaderImpl.getRedstoneLevel(World.cast(MinecraftClient.getInstance().getWorldMapped()), blockPos().rawBlockPos());
+    }
+
+    public String getCustomConfig(String key) {
+        return customConfigs.get(key);
     }
 
     /**
