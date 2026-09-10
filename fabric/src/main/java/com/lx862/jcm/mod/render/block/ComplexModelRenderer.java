@@ -51,11 +51,13 @@ public class ComplexModelRenderer<T extends BlockEntityExtension> extends BlockE
         }
     }
 
-    public boolean rendersOutsideBoundingBox2(BlockEyeCandy.BlockEntity blockEntity) {
+    @Override
+    public boolean rendersOutsideBoundingBox2(T blockEntity) {
         return true;
     }
 
-    public boolean isInRenderDistance(BlockEyeCandy.BlockEntity blockEntity, Vector3d position) {
+    @Override
+    public boolean isInRenderDistance(T blockEntity, Vector3d position) {
         return true;
     }
 }

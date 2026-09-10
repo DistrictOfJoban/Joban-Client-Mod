@@ -78,4 +78,9 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
         // Most other PIDS have a known size which usually only ranges to ~2 blocks, PIDS Projector is an exception, devs can create whatever they want
         return true;
     }
+
+    @Override
+    public boolean isInRenderDistance(PIDSProjectorBlockEntity blockEntity, Vector3d position) {
+        return true;
+    }
 }

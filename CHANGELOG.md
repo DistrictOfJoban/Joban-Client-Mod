@@ -14,6 +14,7 @@
 - When script debug mode is enabled, in-game script parsing error messages will now display the first-time you join the game.
 
 ## Fixes
+- **PIDS Projector** can now render even further away before disappearing.
 - Fix Automatic Iron Door accounting for players in spectator mode as well.
 
 ### PIDS Textures
