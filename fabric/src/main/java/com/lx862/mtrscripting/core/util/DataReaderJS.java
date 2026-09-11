@@ -2,7 +2,7 @@ package com.lx862.mtrscripting.core.util;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
-import com.lx862.mtrscripting.mod.MTRScriptingMod;
+import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import com.lx862.mtrscripting.core.util.video.Video;
 import com.lx862.mtrscripting.core.util.video.VideoDecoder;
 import org.apache.commons.io.IOUtils;
@@ -27,7 +27,7 @@ public class DataReaderJS {
         try (InputStream is = asInputStream()) {
             return IOUtils.toString(is, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            MTRScriptingMod.LOGGER.error("", e);
+            MTRScriptingModClient.LOGGER.error("", e);
             return null;
         }
     }
@@ -37,7 +37,7 @@ public class DataReaderJS {
             BufferedImage image = ImageIO.read(is);
             return GraphicsTexture.createArgbBufferedImage(image);
         } catch (IOException e) {
-            MTRScriptingMod.LOGGER.error("[MTR Scripting via JCM] Failed to read image:", e);
+            MTRScriptingModClient.LOGGER.error("[MTR Scripting via JCM] Failed to read image:", e);
             return null;
         }
     }
@@ -46,7 +46,7 @@ public class DataReaderJS {
         try(InputStream is = asInputStream()) {
             return Font.createFont(Font.TRUETYPE_FONT, is);
         } catch (Exception e) {
-            MTRScriptingMod.LOGGER.error("[MTR Scripting via JCM] Failed to read font:", e);
+            MTRScriptingModClient.LOGGER.error("[MTR Scripting via JCM] Failed to read font:", e);
             return null;
         }
     }
@@ -55,7 +55,7 @@ public class DataReaderJS {
         try (InputStream is = asInputStream()) {
             return is.readAllBytes();
         } catch (Exception e) {
-            MTRScriptingMod.LOGGER.error("[MTR Scripting via JCM] Failed to read raw bytes:", e);
+            MTRScriptingModClient.LOGGER.error("[MTR Scripting via JCM] Failed to read raw bytes:", e);
             return null;
         }
     }

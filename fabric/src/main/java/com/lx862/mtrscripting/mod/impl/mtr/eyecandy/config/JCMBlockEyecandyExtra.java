@@ -1,4 +1,4 @@
-package com.lx862.jcm.mixin.modded.mtr;
+package com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config;
 
 import java.util.Map;
 

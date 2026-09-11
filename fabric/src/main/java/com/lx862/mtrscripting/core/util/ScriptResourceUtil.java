@@ -31,7 +31,7 @@ import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
 
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
-import com.lx862.mtrscripting.mod.MTRScriptingMod;
+import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 
@@ -173,7 +173,7 @@ public class ScriptResourceUtil {
             try {
                 fileBytes[0] = is.readAllBytes();
             } catch (IOException e) {
-                MTRScriptingMod.LOGGER.error("[JCM Scripting] Error while reading data {}", identifier);
+                MTRScriptingModClient.LOGGER.error("[JCM Scripting] Error while reading data {}", identifier);
             }
         });
 
@@ -210,7 +210,7 @@ public class ScriptResourceUtil {
                 try {
                     NOTO_SERIF_CACHE = readFont(NOTO_SERIF_LOCATION);
                 } catch (Exception ex) {
-                    MTRScriptingMod.LOGGER.error("[JCM Scripting] Failed loading font", ex);
+                    MTRScriptingModClient.LOGGER.error("[JCM Scripting] Failed loading font", ex);
                     return null;
                 }
             }
@@ -220,7 +220,7 @@ public class ScriptResourceUtil {
                 try {
                     NOTO_SANS_CJK_CACHE = readFont(NOTO_SANS_CJK_LOCATION);
                 } catch (Exception ex) {
-                    MTRScriptingMod.LOGGER.error("[JCM Scripting] Failed to load font", ex);
+                    MTRScriptingModClient.LOGGER.error("[JCM Scripting] Failed to load font", ex);
                 }
             }
             return NOTO_SANS_CJK_CACHE;
@@ -229,7 +229,7 @@ public class ScriptResourceUtil {
                 try {
                     NOTO_SANS_CACHE = readFont(NOTO_SANS_LOCATION);
                 } catch (Exception ex) {
-                    MTRScriptingMod.LOGGER.error("[JCM Scripting] Failed to load font", ex);
+                    MTRScriptingModClient.LOGGER.error("[JCM Scripting] Failed to load font", ex);
                 }
             }
             return NOTO_SANS_CACHE;

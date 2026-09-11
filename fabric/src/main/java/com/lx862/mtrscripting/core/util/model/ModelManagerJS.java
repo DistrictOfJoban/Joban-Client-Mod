@@ -2,7 +2,7 @@ package com.lx862.mtrscripting.core.util.model;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
-import com.lx862.mtrscripting.mod.MTRScriptingMod;
+import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.apache.commons.io.IOUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -72,7 +72,7 @@ public class ModelManagerJS {
             rawModelCache.put(id, rawModel);
             return rawModel;
         } catch (Exception e) {
-            MTRScriptingMod.LOGGER.error("", e);
+            MTRScriptingModClient.LOGGER.error("", e);
             return null;
         }
     }

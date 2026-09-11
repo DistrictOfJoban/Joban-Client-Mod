@@ -18,6 +18,7 @@ import java.util.function.Function;
 
 public class Networking {
     private static final List<String> registeredPackets = new ArrayList<>();
+
     public static void register() {
         JCMLogger.debug("Registering network packets...");
         JCMRegistry.setupPacket();
@@ -52,7 +53,7 @@ public class Networking {
         JCMRegistryClient.setupPacketClient();
     }
 
-    private static <T extends PacketHandler> void registerPacket(Class<T> classObject, Function<PacketBufferReceiver, T> getInstance) {
+    public static <T extends PacketHandler> void registerPacket(Class<T> classObject, Function<PacketBufferReceiver, T> getInstance) {
         // Keep track of the registered packets, so we can warn if we try to send a non-registered packet
         // I believe Minecraft Mapping itself already keeps track of the registered packets, it just doesn't warn
         registeredPackets.add(classObject.getName());

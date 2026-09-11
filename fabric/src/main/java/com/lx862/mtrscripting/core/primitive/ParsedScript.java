@@ -99,7 +99,10 @@ public class ParsedScript {
     }
 
     public Future<?> invokeCreateFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
-        return invokeFunctions(instance, createFunctions, finishCallback,
+        return invokeFunctions(instance, createFunctions, () -> {
+                finishCallback.run();
+                instance.setCreateFunctionInvoked(true);
+        },
                 // Ensure create function is re-invoked after error.
                 // Note: This will leak memory when the create function is invoked again, but not sure if there's a good solution without manually introducing checkpoint for disposing.
                 () -> instance.setCreateFunctionInvoked(false)

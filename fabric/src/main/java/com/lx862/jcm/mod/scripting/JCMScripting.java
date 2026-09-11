@@ -2,7 +2,7 @@ package com.lx862.jcm.mod.scripting;
 
 import com.lx862.jcm.mod.JCM;
 import com.lx862.jcm.mod.config.JCMClientConfig;
-import com.lx862.mtrscripting.mod.gui.MTRScriptDebugOverlay;
+import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.jcm.mod.scripting.pids.TextWrapper;
 import com.lx862.jcm.mod.scripting.pids.TextureWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;

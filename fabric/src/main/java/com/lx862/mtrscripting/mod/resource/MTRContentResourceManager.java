@@ -7,12 +7,13 @@ import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.core.util.DataReaderJS;
 import com.lx862.mtrscripting.core.util.ScriptResourceUtil;
+import com.lx862.mtrscripting.mod.MTRScriptingMod;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleDataCache;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptContent;
-import com.lx862.mtrscripting.mod.MTRScriptingMod;
+import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import com.lx862.mtrscripting.core.util.ConsoleJS;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptContext;
 import com.lx862.mtrscripting.mod.util.JsonUtil;
@@ -42,7 +43,7 @@ public class MTRContentResourceManager {
     private static final List<String> vehiclesWithDisplayCubeHidden = new ObjectArrayList<>();
 
     public static void reload() {
-        MTRScriptingMod.LOGGER.info("[MTR Scripting via JCM] Loading MTR Vehicle/Eyecandy scripts...");
+        MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Loading MTR Vehicle/Eyecandy scripts...");
         eyecandyScripts.clear();
         vehicleScripts.clear();
         vehicleScriptIds.clear();
@@ -52,7 +53,7 @@ public class MTRContentResourceManager {
         MTRContentScripting.getScriptManager().scriptErrorNotifier.reset();
 
         if(JCMClientConfig.INSTANCE.scripting.skipScriptParsing.value()) {
-            MTRScriptingMod.LOGGER.info("[MTR Scripting via JCM] Scripting has been disabled, not parsing any script.");
+            MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Scripting has been disabled, not parsing any script.");
         } else {
             CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER.beginReload();
             ConsoleJS consoleJS = new ConsoleJS();
@@ -193,7 +194,7 @@ public class MTRContentResourceManager {
                                         vehicleScripts.put(scriptEntryId, new VehicleScriptConfiguration(parsedScript, dataFetchMode));
                                     }
                                 } else {
-                                    MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Skip parsing vehicle scripts \"{}\", which is not referenced by any vehicle!", scriptEntryId);
+                                    MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Skip parsing vehicle scripts \"{}\", which is not referenced by any vehicle!", scriptEntryId);
                                 }
                             }
                         }
@@ -225,7 +226,7 @@ public class MTRContentResourceManager {
                                 ParsedScript parsedScript = tryParseScript(scriptEntryId, "eyecandy", "Block", scriptObject, true, false);
                                 if(parsedScript != null) eyecandyScripts.put(scriptEntryId, new EyecandyScriptConfiguration(parsedScript, customConfig));
                             } else {
-                                MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Skip parsing eyecandy script \"{}\", which is not referenced by any eyecandy object!", scriptEntryId);
+                                MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Skip parsing eyecandy script \"{}\", which is not referenced by any eyecandy object!", scriptEntryId);
                             }
                         }
                     }
@@ -271,9 +272,10 @@ public class MTRContentResourceManager {
                 String name = JsonUtil.getString("name", id, entryObject);
                 EyecandyCustomConfig.Entry.Type type = EyecandyCustomConfig.Entry.Type.valueOf(JsonUtil.getString("type", entryObject));
                 String validation = JsonUtil.getString("validation", null, entryObject);
-                boolean optional = JsonUtil.getBoolean("optional", true, entryObject);
+                String validationMessage = JsonUtil.getString("validationMessage", String.format("Value is not %s!", validation), entryObject);
+                String defaultValue = JsonUtil.getString("defaultValue", null, entryObject);
 
-                EyecandyCustomConfig.Entry entry = new EyecandyCustomConfig.Entry(id, name, type, validation, optional);
+                EyecandyCustomConfig.Entry entry = new EyecandyCustomConfig.Entry(id, name, type, validation == null ? null : new EyecandyCustomConfig.Entry.ValidationCallback.Regex(validation, validationMessage), defaultValue);
                 entries.add(entry);
             }
         }
@@ -288,7 +290,7 @@ public class MTRContentResourceManager {
             String scriptEntryId = vehicleEntry.getValue();
 
             if(!vehicleScripts.containsKey(scriptEntryId)) {
-                MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Vehicle script \"{}\" is either missing or failed to load! (Used by vehicle {})", scriptEntryId, entryId);
+                MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Vehicle script \"{}\" is either missing or failed to load! (Used by vehicle {})", scriptEntryId, entryId);
             }
         }
 
@@ -298,7 +300,7 @@ public class MTRContentResourceManager {
             String scriptEntryId = scriptEntry.getValue();
 
             if(!eyecandyScriptIds.containsKey(scriptEntryId)) {
-                MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Eyecandy script \"{}\" is either missing or failed to load! (Used by entry {})", scriptEntryId, entryId);
+                MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Eyecandy script \"{}\" is either missing or failed to load! (Used by entry {})", scriptEntryId, entryId);
             }
         }
     }
@@ -332,7 +334,7 @@ public class MTRContentResourceManager {
                     Identifier scriptLocationSource = new Identifier(scriptFilesArray.get(i).getAsString());
                     String scriptText = ResourceManagerHelper.readResource(scriptLocationSource);
                     if(scriptText.isEmpty()) {
-                        MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Script {}:{} is missing (or empty)!", scriptLocationSource.getNamespace(), scriptLocationSource.getPath());
+                        MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Script {}:{} is missing (or empty)!", scriptLocationSource.getNamespace(), scriptLocationSource.getPath());
                         continue;
                     }
 
@@ -349,6 +351,20 @@ public class MTRContentResourceManager {
         }
     }
 
+    private static void logError(String action, Exception e) {
+        if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
+            MTRScriptingModClient.LOGGER.error("[MTR] Error while {}!", action, e);
+            MTRContentScripting.getScriptManager().scriptErrorNotifier.queue(() -> {
+                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("[MTR] Error while " + action + "!"), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+            });
+        } else {
+            MTRScriptingModClient.LOGGER.error("[MTR] Error while {}: {}", action, e.getMessage());
+            MTRScriptingModClient.LOGGER.error("(Enable debug mode to see more information)");
+        }
+    }
+
+    /* Getters */
     public static EyecandyScriptConfiguration getEyecandyScript(String modelId) {
         return eyecandyScripts.get(eyecandyScriptIds.getOrDefault(modelId, modelId));
     }
@@ -363,19 +379,6 @@ public class MTRContentResourceManager {
 
     public static boolean shouldHideDisplayParts(String vehicleId) {
         return vehiclesWithDisplayCubeHidden.contains(vehicleId);
-    }
-
-    private static void logError(String action, Exception e) {
-        if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
-            MTRScriptingMod.LOGGER.error("[MTR] Error while {}!", action, e);
-            MTRContentScripting.getScriptManager().scriptErrorNotifier.queue(() -> {
-                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("[MTR] Error while " + action + "!"), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
-                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
-            });
-        } else {
-            MTRScriptingMod.LOGGER.error("[MTR] Error while {}: {}", action, e.getMessage());
-            MTRScriptingMod.LOGGER.error("(Enable debug mode to see more information)");
-        }
     }
 
     public record EyecandyScriptConfiguration(ParsedScript parsedScript, EyecandyCustomConfig eyecandyCustomConfig) {}

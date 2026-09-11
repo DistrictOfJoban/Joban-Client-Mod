@@ -1,6 +1,8 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
+import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.core.util.ante.StringMapSerializer;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.JCMBlockEyecandyExtra;
 import org.mtr.mapping.holder.CompoundTag;
 import org.mtr.mod.block.BlockEyeCandy;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Mixin(value = BlockEyeCandy.BlockEntity.class, remap = false)
-public class BlockEntityEyecandyMixin implements JCMBlockEyecandyExtra {
+public abstract class BlockEntityEyecandyMixin implements JCMBlockEyecandyExtra {
     @Unique
     private final Map<String, String> jsblock$eyecandyCustomConfig = new HashMap<>();
 
@@ -22,21 +24,23 @@ public class BlockEntityEyecandyMixin implements JCMBlockEyecandyExtra {
     private void jsblock$readCustomConfigTag(CompoundTag compoundTag, CallbackInfo ci) {
         jsblock$eyecandyCustomConfig.clear();
 
-        try {
-            if (compoundTag.contains("customConfigs")) {
+        if(compoundTag.contains("customConfigs")) {
+            try {
                 byte[] dataBytes = compoundTag.getByteArray("customConfigs");
                 jsblock$eyecandyCustomConfig.putAll(StringMapSerializer.deserialize(dataBytes));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
         }
     }
 
-    @Inject(method = "readCompoundTag", at = @At("HEAD"))
+    @Inject(method = "writeCompoundTag", at = @At("HEAD"))
     private void jsblock$writeCustomConfigTag(CompoundTag compoundTag, CallbackInfo ci) {
         try {
             byte[] configBytes = StringMapSerializer.serializeToByteArray(jsblock$eyecandyCustomConfig);
             compoundTag.putByteArray("customConfigs", configBytes);
         } catch (IOException e) {
+            JCMLogger.error("Failed to save eyecandy custom config!", e);
         }
     }
 
@@ -47,7 +51,8 @@ public class BlockEntityEyecandyMixin implements JCMBlockEyecandyExtra {
 
     @Override
     public void jsblock$updateCustomConfig(Map<String, String> newConfig) {
-        jsblock$eyecandyCustomConfig.putAll(newConfig);
+        jsblock$eyecandyCustomConfig.clear();
+        jsblock$eyecandyCustomConfig.putAll(new HashMap<>(newConfig));
         ((BlockEyeCandy.BlockEntity)(Object)this).markDirty2();
     }
 }

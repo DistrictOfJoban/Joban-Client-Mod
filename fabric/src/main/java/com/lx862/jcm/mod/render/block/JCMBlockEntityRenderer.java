@@ -1,6 +1,5 @@
 package com.lx862.jcm.mod.render.block;
 
-import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.RenderHelper;

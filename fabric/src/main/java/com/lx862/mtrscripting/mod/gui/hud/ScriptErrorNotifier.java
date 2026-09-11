@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.mod.gui;
+package com.lx862.mtrscripting.mod.gui.hud;
 
 import java.util.ArrayList;
 import java.util.List;

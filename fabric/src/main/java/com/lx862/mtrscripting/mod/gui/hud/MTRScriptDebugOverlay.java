@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.mod.gui;
+package com.lx862.mtrscripting.mod.gui.hud;
 
 import com.google.common.base.Splitter;
 import com.lx862.jcm.mod.config.JCMClientConfig;

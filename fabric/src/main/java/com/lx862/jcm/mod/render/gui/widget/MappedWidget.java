@@ -204,20 +204,15 @@ public class MappedWidget {
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float tickDelta) {
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
-        }
-        if(widget instanceof TextFieldWidgetExtension) {
+        } else if(widget instanceof TextFieldWidgetExtension) {
             ((TextFieldWidgetExtension) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
-        }
-        if(widget instanceof CheckboxWidgetExtension) {
+        } else if(widget instanceof CheckboxWidgetExtension) {
             ((CheckboxWidgetExtension) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
-        }
-        if(widget instanceof SliderWidgetExtension) {
+        } else if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
-        }
-        if(widget instanceof ClickableWidgetExtension) {
+        } else if(widget instanceof ClickableWidgetExtension) {
             ((ClickableWidgetExtension) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
-        }
-        if(widget instanceof MappedWidget) {
+        } else if(widget instanceof MappedWidget) {
             ((MappedWidget) widget).render(graphicsHolder, mouseX, mouseY, tickDelta);
         }
     }
@@ -225,20 +220,15 @@ public class MappedWidget {
     public void setVisible(boolean value) {
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension) widget).setVisibleMapped(value);
-        }
-        if(widget instanceof TextFieldWidgetExtension) {
+        } else if(widget instanceof TextFieldWidgetExtension) {
             ((TextFieldWidgetExtension) widget).setVisibleMapped(value);
-        }
-        if(widget instanceof CheckboxWidgetExtension) {
+        } else if(widget instanceof CheckboxWidgetExtension) {
             ((CheckboxWidgetExtension) widget).setVisibleMapped(value);
-        }
-        if(widget instanceof SliderWidgetExtension) {
+        } else if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setVisibleMapped(value);
-        }
-        if(widget instanceof ClickableWidgetExtension) {
+        } else if(widget instanceof ClickableWidgetExtension) {
             ((ClickableWidgetExtension) widget).setVisibleMapped(value);
-        }
-        if(widget instanceof MappedWidget) {
+        } else if(widget instanceof MappedWidget) {
             ((MappedWidget) widget).setVisible(value);
         }
     }
@@ -246,20 +236,15 @@ public class MappedWidget {
     public void setAlpha(float alpha) {
         if(widget instanceof ButtonWidgetExtension) {
             ((ButtonWidgetExtension) widget).setAlpha2(alpha);
-        }
-        if(widget instanceof TextFieldWidgetExtension) {
+        } else if(widget instanceof TextFieldWidgetExtension) {
             ((TextFieldWidgetExtension) widget).setAlpha2(alpha);
-        }
-        if(widget instanceof CheckboxWidgetExtension) {
+        } else if(widget instanceof CheckboxWidgetExtension) {
             ((CheckboxWidgetExtension) widget).setAlpha2(alpha);
-        }
-        if(widget instanceof SliderWidgetExtension) {
+        } else if(widget instanceof SliderWidgetExtension) {
             ((SliderWidgetExtension) widget).setAlpha2(alpha);
-        }
-        if(widget instanceof ClickableWidgetExtension) {
+        } else if(widget instanceof ClickableWidgetExtension) {
             ((ClickableWidgetExtension) widget).setAlpha2(alpha);
-        }
-        if(widget instanceof MappedWidget) {
+        } else if(widget instanceof MappedWidget) {
             ((MappedWidget) widget).setAlpha(alpha);
         }
     }

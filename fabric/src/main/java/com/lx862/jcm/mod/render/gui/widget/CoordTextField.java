@@ -2,13 +2,12 @@ package com.lx862.jcm.mod.render.gui.widget;
 
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.JCMLogger;
-import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
 /**
  * Text Field Widget for entering coordinates (XYZ)
  */
-public class CoordTextField extends TextFieldWidgetExtension implements RenderHelper {
+public class CoordTextField extends AlwaysRenderedTextField implements RenderHelper {
     private final long min;
     private final long max;
     private final int defaultValue;

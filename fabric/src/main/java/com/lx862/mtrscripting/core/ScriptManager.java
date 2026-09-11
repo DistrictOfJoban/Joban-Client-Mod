@@ -17,8 +17,8 @@ import com.lx862.mtrscripting.core.integration.MinecraftClientWrapper;
 import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.integration.VoxelShapeWrapper;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
-import com.lx862.mtrscripting.mod.MTRScriptingMod;
-import com.lx862.mtrscripting.mod.gui.ScriptErrorNotifier;
+import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.mtrscripting.mod.gui.hud.ScriptErrorNotifier;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.TriConsumer;
 
@@ -74,7 +74,7 @@ public class ScriptManager {
             finishParseScriptEvent.invoke(e -> e.accept(parsedScript));
             return parsedScript;
         } catch (NoSuchMethodException e) {
-            MTRScriptingMod.LOGGER.error("[JCM Scripting] Fatal error: Cannot find required java method to add to script!", e);
+            MTRScriptingModClient.LOGGER.error("[JCM Scripting] Fatal error: Cannot find required java method to add to script!", e);
             return null;
         }
     }

@@ -4,6 +4,8 @@ import com.lx862.jcm.mod.config.JCMServerConfig;
 import com.lx862.jcm.mod.registry.JCMRegistry;
 import com.lx862.jcm.mod.util.BuildMetadata;
 import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.mtrscripting.mod.MTRScriptingMod;
+import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import org.mtr.mod.Keys;
 
 import java.io.IOException;
@@ -32,6 +34,7 @@ public class JCM {
             JCMLogger.warn("Cannot obtain MTR Version, countdown to disaster...");
         }
         JCMServerConfig.init();
+        MTRScriptingMod.init();
         JCMRegistry.register();
     }
 }

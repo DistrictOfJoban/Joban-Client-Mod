@@ -19,9 +19,10 @@ public class ContentItem extends AbstractListItem {
     public DrawIconCallback drawIconCallback = null;
     public final MutableText title;
     public final MappedWidget widget;
+    private final int height;
 
     public ContentItem(MutableText title, MappedWidget widget, int height) {
-        super(height);
+        this.height = height;
         this.title = title;
         this.widget = widget;
     }
@@ -77,6 +78,11 @@ public class ContentItem extends AbstractListItem {
         if(widget != null) {
             widget.setVisible(true);
         }
+    }
+
+    @Override
+    public int getHeight() {
+        return this.height;
     }
 
     private void drawListEntry(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, int entryX, int entryY, int width, int mouseX, int mouseY, boolean widgetVisible, boolean rowInSight, double elapsed, float tickDelta) {

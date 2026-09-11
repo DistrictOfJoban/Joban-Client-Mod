@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.registry;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.JCMServerStats;
-import com.lx862.mtrscripting.mod.gui.MTRScriptDebugOverlay;
+import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.jcm.mod.resource.JCMResourceManager;
 import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
 import com.lx862.jcm.mod.scripting.JCMScripting;

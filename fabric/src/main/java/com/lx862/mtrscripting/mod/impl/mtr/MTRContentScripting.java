@@ -1,8 +1,8 @@
 package com.lx862.mtrscripting.mod.impl.mtr;
 
 import com.lx862.jcm.mod.config.JCMClientConfig;
-import com.lx862.mtrscripting.mod.gui.MTRScriptDebugOverlay;
-import com.lx862.mtrscripting.mod.MTRScriptingMod;
+import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
+import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import com.lx862.mtrscripting.mod.impl.mtr.util.TextUtilJS;
 import com.lx862.mtrscripting.core.ScriptManager;
 import com.lx862.mtrscripting.core.api.ClassRule;
@@ -32,7 +32,7 @@ public class MTRContentScripting {
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
-        scriptManager = new ScriptManager(MTRScriptingMod.LOGGER, scriptExecutors);
+        scriptManager = new ScriptManager(MTRScriptingModClient.LOGGER, scriptExecutors);
         scriptManager.getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
 
         String mtrModVersion = null;
@@ -63,7 +63,7 @@ public class MTRContentScripting {
     public static void tick() {
         int clearedInstance = scriptManager.getInstanceManager().clearDeadInstance();
         if(clearedInstance > 0 && JCMClientConfig.INSTANCE.debugMode.value()) {
-            MTRScriptingMod.LOGGER.info("[MTR Scripting via JCM] Removed {} dead MTR script instance", clearedInstance);
+            MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Removed {} dead MTR script instance", clearedInstance);
         }
     }
 

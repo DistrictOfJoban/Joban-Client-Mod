@@ -1,7 +1,7 @@
 package com.lx862.mtrscripting.mod.impl.mtr.eyecandy;
 
 import com.lx862.jcm.mapping.LoaderImpl;
-import com.lx862.jcm.mixin.modded.mtr.JCMBlockEyecandyExtra;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.JCMBlockEyecandyExtra;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
@@ -111,7 +111,11 @@ public class EyecandyBlockEntityWrapper {
     }
 
     public String getCustomConfig(String key) {
-        return customConfigs.get(key);
+        return getCustomConfig(key, null);
+    }
+
+    public String getCustomConfig(String key, String fallback) {
+        return customConfigs.getOrDefault(key, fallback);
     }
 
     /**

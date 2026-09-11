@@ -4,7 +4,7 @@ import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.RhinoException;
-import com.lx862.mtrscripting.mod.MTRScriptingMod;
+import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -85,23 +85,23 @@ public class ConsoleJS {
 
     public static void log(String... str) {
         String s = String.join(" ", str);
-        MTRScriptingMod.LOGGER.info("{} {}", buildLogPrefix(), s);
+        MTRScriptingModClient.LOGGER.info("{} {}", buildLogPrefix(), s);
     }
 
     public static void warn(String... str) {
         String s = String.join(" ", str);
-        MTRScriptingMod.LOGGER.warn("{} {}", buildLogPrefix(), s);
+        MTRScriptingModClient.LOGGER.warn("{} {}", buildLogPrefix(), s);
     }
 
     public static void error(String... str) {
         String s = String.join(" ", str);
-        MTRScriptingMod.LOGGER.error("{} {}", buildLogPrefix(), s);
+        MTRScriptingModClient.LOGGER.error("{} {}", buildLogPrefix(), s);
     }
 
     public static void debug(String... str) {
         if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             String s = String.join(" ", str);
-            MTRScriptingMod.LOGGER.error("{} {}", buildLogPrefix(), s);
+            MTRScriptingModClient.LOGGER.error("{} {}", buildLogPrefix(), s);
         }
     }
 

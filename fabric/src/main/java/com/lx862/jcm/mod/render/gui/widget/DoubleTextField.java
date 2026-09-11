@@ -6,7 +6,6 @@ import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
 import javax.annotation.Nonnull;
@@ -15,7 +14,7 @@ import java.math.BigDecimal;
 /**
  * Text Field Widget that is specifically designed for entering number only
  */
-public class DoubleTextField extends TextFieldWidgetExtension implements RenderHelper {
+public class DoubleTextField extends AlwaysRenderedTextField implements RenderHelper {
     private final double min;
     private final double max;
     private final String prefix;

@@ -1,6 +1,7 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.mtrscripting.core.util.ante.StringMapSerializer;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.JCMBlockEyecandyExtra;
 import org.mtr.mapping.holder.CompoundTag;
 import org.mtr.mod.block.BlockEyeCandy;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,11 +23,10 @@ public class BlockEntityEyecandyMixin implements JCMBlockEyecandyExtra {
     private void jsblock$readCustomConfigTag(CompoundTag compoundTag, CallbackInfo ci) {
         jsblock$eyecandyCustomConfig.clear();
 
-        // Legacy ANTE custom config parsing
         try {
             if (compoundTag.contains("customConfigs")) {
                 byte[] dataBytes = compoundTag.getByteArray("customConfigs");
-                StringMapSerializer.deserialize(jsblock$eyecandyCustomConfig, dataBytes);
+                jsblock$eyecandyCustomConfig.putAll(StringMapSerializer.deserialize(dataBytes));
             }
         } catch (IOException e) {
         }
@@ -34,7 +34,6 @@ public class BlockEntityEyecandyMixin implements JCMBlockEyecandyExtra {
 
     @Inject(method = "readCompoundTag", at = @At("HEAD"))
     private void jsblock$writeCustomConfigTag(CompoundTag compoundTag, CallbackInfo ci) {
-        // Legacy ANTE custom config writing
         try {
             byte[] configBytes = StringMapSerializer.serializeToByteArray(jsblock$eyecandyCustomConfig);
             compoundTag.putByteArray("customConfigs", configBytes);
@@ -43,7 +42,13 @@ public class BlockEntityEyecandyMixin implements JCMBlockEyecandyExtra {
     }
 
     @Override
-    public Map<String, String> jsblock$getCustomConfigs() {
+    public Map<String, String> jsblock$getCustomConfig() {
         return jsblock$eyecandyCustomConfig;
+    }
+
+    @Override
+    public void jsblock$updateCustomConfig(Map<String, String> newConfig) {
+        jsblock$eyecandyCustomConfig.putAll(newConfig);
+        ((BlockEyeCandy.BlockEntity)(Object)this).markDirty2();
     }
 }

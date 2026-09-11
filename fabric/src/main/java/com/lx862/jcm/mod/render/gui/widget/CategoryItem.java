@@ -12,14 +12,15 @@ import java.util.Objects;
  */
 public class CategoryItem extends AbstractListItem {
     public final MutableText title;
+    private final int height;
 
     public CategoryItem(MutableText title, int height) {
-        super(height);
+        this.height = height;
         this.title = title;
     }
 
     public CategoryItem(MutableText title) {
-        super();
+        this.height = 22;
         this.title = title;
     }
 
@@ -47,5 +48,10 @@ public class CategoryItem extends AbstractListItem {
 
     @Override
     public void shown() {
+    }
+
+    @Override
+    public int getHeight() {
+        return 22;
     }
 }
