@@ -6,27 +6,22 @@ import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.gui.screen.base.TitledScreen;
-import com.lx862.jcm.mod.render.gui.widget.ContentItem;
-import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
-import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
-import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
+import com.lx862.jcm.mod.render.gui.widget.*;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
 import org.mtr.mapping.mapper.GuiDrawing;
-import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
 
 import java.util.function.Consumer;
 
 public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiHelper {
     private static final Identifier PIDS_PREVIEW_BASE = new Identifier("jsblock:textures/gui/pids_preview.png");
-    private final TextFieldWidgetExtension searchBox;
-    private final ListViewWidget listViewWidget;
     private final Consumer<String> callback;
     private final String selectedPreset;
     private final String pidsType;
+
     public PIDSPresetScreen(BlockPos pos, String selectedPreset, Consumer<String> callback) {
         super(false);
         BlockEntity be = MinecraftClient.getInstance().getWorldMapped().getBlockEntity(pos);
@@ -37,8 +32,6 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         }
         this.selectedPreset = selectedPreset;
         this.callback = callback;
-        this.listViewWidget = new ListViewWidget();
-        this.searchBox = new TextFieldWidgetExtension(0, 0, 0, 22, 60, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "widget.search").getString());
     }
 
     @Override
@@ -50,11 +43,10 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         int searchStartY = TEXT_PADDING * 5;
         int startY = searchStartY + (TEXT_PADDING * 3);
 
-        listViewWidget.reset();
-        addConfigEntries();
-        searchBox.setX2(startX);
-        searchBox.setY2(searchStartY);
-        searchBox.setWidth2(contentWidth);
+        ListViewWidget listViewWidget = new ListViewWidget();
+        addConfigEntries(listViewWidget);
+
+        AlwaysRenderedTextField searchBox = new AlwaysRenderedTextField(startX, searchStartY, contentWidth, 22, 60, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "widget.search").getString());
         searchBox.setChangedListener2(listViewWidget::setSearchTerm);
         searchBox.setText2(searchBox.getText2());
 
@@ -73,21 +65,21 @@ public class PIDSPresetScreen extends TitledScreen implements RenderHelper, GuiH
         return TextUtil.translatable(TextCategory.GUI, "pids_preset.subtitle", selectedPreset);
     }
 
-    public void addConfigEntries() {
+    public void addConfigEntries(ListViewWidget listViewWidget) {
         listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.category.builtin"));
         for(PIDSPresetBase preset : PIDSManager.getBuiltInPresets()) {
-            addPreset(preset);
+            addPreset(listViewWidget, preset);
         }
 
         if(!PIDSManager.getCustomPresets().isEmpty()) {
             listViewWidget.addCategory(TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.category.custom"));
             for(PIDSPresetBase preset : PIDSManager.getCustomPresets()) {
-                addPreset(preset);
+                addPreset(listViewWidget, preset);
             }
         }
     }
 
-    private void addPreset(PIDSPresetBase preset) {
+    private void addPreset(ListViewWidget listViewWidget, PIDSPresetBase preset) {
         if(!preset.typeAllowed(pidsType)) return;
 
         ButtonWidgetExtension selectBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.choose"), (btn) -> {

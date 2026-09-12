@@ -9,6 +9,7 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.tool.TextCase;
 
 import javax.annotation.Nonnull;
+import java.util.function.Consumer;
 
 /**
  * Text Field Widget that is specifically designed for entering number only
@@ -18,6 +19,7 @@ public class IntegerTextField extends AlwaysRenderedTextField implements RenderH
     private final long max;
     private final String prefix;
     private final long defaultValue;
+    private Consumer<Long> changeListener;
 
     public IntegerTextField(int x, int y, int width, int height, long min, long max, long defaultValue, @Nonnull String prefix) {
         super(x, y, width, height, 16, TextCase.LOWER, null, String.valueOf(defaultValue));
@@ -65,6 +67,16 @@ public class IntegerTextField extends AlwaysRenderedTextField implements RenderH
         }
 
         drawUpDownButton(graphicsHolder);
+    }
+
+    public void onChange(Consumer<Long> callback) {
+        this.changeListener = callback;
+    }
+
+    @Override
+    public void setText2(String s) {
+        super.setText2(s);
+        if(this.changeListener != null) this.changeListener.accept(Long.parseLong(s));
     }
 
     protected void drawPrefix(GraphicsHolder graphicsHolder) {

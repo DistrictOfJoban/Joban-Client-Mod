@@ -13,13 +13,16 @@ import org.mtr.mod.InitClient;
 import org.mtr.mod.data.IGui;
 
 public abstract class SavableScreen extends TitledScreen implements GuiHelper {
-    protected final WidgetSet bottomEntryWidget;
-    protected final ButtonWidgetExtension saveButton;
-    protected final ButtonWidgetExtension discardButton;
+    protected ButtonWidgetExtension saveButton;
+    protected ButtonWidgetExtension discardButton;
     protected boolean discardConfig = false;
 
     public SavableScreen(boolean animatable) {
         super(animatable);
+    }
+
+    protected void addBottomRowEntry(int x, int y, int width, int height) {
+        WidgetSet bottomEntryWidget = new WidgetSet(20);
 
         this.saveButton = new ButtonWidgetExtension(0, 0, 0, 20, TextUtil.translatable(TextCategory.GUI, "block_config.save"), (btn) -> {
             onClose2();
@@ -30,11 +33,6 @@ public abstract class SavableScreen extends TitledScreen implements GuiHelper {
             onClose2();
         });
 
-        this.bottomEntryWidget = new WidgetSet(20);
-    }
-
-    protected void addBottomRowEntry(int x, int y, int width, int height) {
-        bottomEntryWidget.reset();
         addChild(new ClickableWidget(saveButton));
         addChild(new ClickableWidget(discardButton));
 

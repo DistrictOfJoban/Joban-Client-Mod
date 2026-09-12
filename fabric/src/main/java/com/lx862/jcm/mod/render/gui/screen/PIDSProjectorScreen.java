@@ -3,10 +3,7 @@ package com.lx862.jcm.mod.render.gui.screen;
 import com.lx862.jcm.mod.network.block.PIDSProjectorUpdatePacket;
 import com.lx862.jcm.mod.registry.Blocks;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.render.gui.widget.CategoryItem;
-import com.lx862.jcm.mod.render.gui.widget.DoubleTextField;
-import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
-import com.lx862.jcm.mod.render.gui.widget.WidgetSet;
+import com.lx862.jcm.mod.render.gui.widget.*;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.BlockPos;
@@ -49,7 +46,7 @@ public class PIDSProjectorScreen extends PIDSScreen {
     }
 
     @Override
-    public void addConfigEntries() {
+    public void addConfigEntries(ListViewWidget listViewWidget) {
         WidgetSet positionFields = new WidgetSet(20, 0);
         WidgetSet rotationFields = new WidgetSet(20, 0);
 
@@ -78,7 +75,6 @@ public class PIDSProjectorScreen extends PIDSScreen {
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotate"), new MappedWidget(rotationFields));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.scale"), new MappedWidget(scaleField));
         listViewWidget.add(new CategoryItem(TextUtil.translatable(TextCategory.GUI, "pids.listview.category.pids")));
-        super.addConfigEntries();
     }
 
     @Override

@@ -8,33 +8,21 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
 
 public class ConfigIntegerField extends IntegerTextField implements ValidatableWidget {
     private final EyecandyCustomConfig.Entry.ValidationCallback validationCallback;
-    private Consumer<String> changedListener = null;
     private EyecandyCustomConfig.Entry.ValidationResult result = new EyecandyCustomConfig.Entry.ValidationResult(null);
     private int originalValue = 0;
 
     public ConfigIntegerField(int x, int y, int width, int height, EyecandyCustomConfig.Entry.ValidationCallback validationCallback) {
         super(x, y, width, height, Integer.MIN_VALUE, Integer.MAX_VALUE, 0);
         this.validationCallback = validationCallback;
-        setChangedListener2((newStr) -> {
-            if(changedListener != null) {
-                changedListener.accept(newStr);
-            }
-            updateValidation(newStr);
-        });
+        setChangedListener2(this::updateValidation);
         updateValidation("");
     }
 
     public void setOriginalValue(int i) {
         this.originalValue = i;
-    }
-
-    public void onChange(Consumer<String> callback) {
-        this.changedListener = callback;
     }
 
     @Override

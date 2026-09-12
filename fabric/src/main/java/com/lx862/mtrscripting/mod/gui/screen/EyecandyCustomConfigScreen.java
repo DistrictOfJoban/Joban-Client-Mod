@@ -52,7 +52,7 @@ public class EyecandyCustomConfigScreen extends SavableScreen implements RenderH
 
         validatableWidgets.clear();
         listViewWidget.reset();
-        addConfigEntries();
+        addConfigEntries(this.listViewWidget);
 
         listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
         addChild(new ClickableWidget(listViewWidget));
@@ -93,7 +93,7 @@ public class EyecandyCustomConfigScreen extends SavableScreen implements RenderH
         #endif
     }
 
-    public void addConfigEntries() {
+    public void addConfigEntries(ListViewWidget listViewWidget) {
         if(customConfig != null) {
             if(customConfig.description() != null) {
                 DescriptionItem descriptionItem = new DescriptionItem(TextUtil.translatable(customConfig.description()), (int)Math.min((width * 0.75), MAX_CONTENT_WIDTH));
@@ -130,8 +130,8 @@ public class EyecandyCustomConfigScreen extends SavableScreen implements RenderH
             validatableWidgets.add(textField);
         } else if(entry.type() == EyecandyCustomConfig.Entry.Type.INTEGER) {
             ConfigIntegerField textField = new ConfigIntegerField(0, 0, 120, 20, entry.validationCallback());
-            textField.onChange((newStr) -> {
-                this.storedConfigEntriesPending.put(entry.id(), newStr);
+            textField.onChange((newValue) -> {
+                this.storedConfigEntriesPending.put(entry.id(), String.valueOf(newValue));
             });
             textField.setOriginalValue(parseInt(originalValue, 0));
             textField.setValue(parseInt(originalValue, 0));

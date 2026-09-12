@@ -67,7 +67,7 @@ public class EyecandySelectionScreen extends SavableScreen implements RenderHelp
 
         selectListener.clear();
         listViewWidget.reset();
-        addConfigEntries();
+        addConfigEntries(this.listViewWidget);
         searchBox.setX2(startX);
         searchBox.setY2(searchStartY);
         searchBox.setWidth2(contentWidth);
@@ -91,9 +91,9 @@ public class EyecandySelectionScreen extends SavableScreen implements RenderHelp
         return TextUtil.translatable(TextCategory.GUI, "eyecandy.subtitle", currentObject);
     }
 
-    public void addConfigEntries() {
+    public void addConfigEntries(ListViewWidget listViewWidget) {
         for(ObjectResource objectResource : loadedObjects) {
-            addObjectEntry(objectResource);
+            addObjectEntry(listViewWidget, objectResource);
         }
         updateSelectedEntry();
     }
@@ -104,7 +104,7 @@ public class EyecandySelectionScreen extends SavableScreen implements RenderHelp
         selectListener.forEach(Runnable::run);
     }
 
-    private void addObjectEntry(ObjectResource objectResource) {
+    private void addObjectEntry(ListViewWidget listViewWidget, ObjectResource objectResource) {
         ButtonWidgetExtension selectBtn = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids_preset.listview.widget.choose"), (btn) -> {
             choose(objectResource);
             updateSelectedEntry();

@@ -7,6 +7,7 @@ import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigListScreen;
 import com.lx862.jcm.mod.render.gui.widget.BlockPosWidget;
 import com.lx862.jcm.mod.render.gui.widget.IntegerTextField;
+import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -29,6 +30,7 @@ public class SoundLooperScreen extends BlockConfigListScreen {
     private final BlockPosWidget corner1Widget;
     private final BlockPosWidget corner2Widget;
     private int soundCategory;
+
     public SoundLooperScreen(BlockPos blockPos, BlockPos corner1, BlockPos corner2, String soundId, int soundCategory, float volume, int repeatTick, boolean needRedstonePower, boolean limitRange) {
         super(blockPos);
         this.soundCategoryButton = new ButtonWidgetExtension(0, 0, 60, 20, (btn) -> {
@@ -68,7 +70,7 @@ public class SoundLooperScreen extends BlockConfigListScreen {
     }
 
     @Override
-    public void addConfigEntries() {
+    public void addConfigEntries(ListViewWidget listViewWidget) {
         corner1Widget.addWidget(this::addChild);
         corner2Widget.addWidget(this::addChild);
         addChild(new ClickableWidget(soundCategoryButton));

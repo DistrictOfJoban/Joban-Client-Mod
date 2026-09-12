@@ -35,7 +35,6 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private static final int STAR_ROTATION_LENGTH = 260 * 1000;
 
     private final WidgetSet bottomRowWidget;
-    private final ListViewWidget listViewWidget;
     private final CheckboxWidgetExtension disableRenderingButton;
     private final CheckboxWidgetExtension disableRailRenderingButton;
     private final CheckboxWidgetExtension hideRidingVehicleButton;
@@ -52,7 +51,6 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     public ClientConfigScreen() {
         super(true);
         bottomRowWidget = new WidgetSet(20);
-        listViewWidget = new ListViewWidget();
         linkedConfig = new HashMap<>();
 
         this.disableRenderingButton = checkboxForConfig(JCMClientConfig.INSTANCE.disableRendering);
@@ -101,7 +99,6 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     @Override
     protected void init2() {
         super.init2();
-        listViewWidget.reset();
         bottomRowWidget.reset();
 
         int contentWidth = (int)Math.min((width * 0.75), MAX_CONTENT_WIDTH);
@@ -111,10 +108,11 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
         int bottomEntryHeight = (height - startY - listViewHeight - (BOTTOM_ROW_MARGIN * 2));
 
-        addConfigEntries();
-        addBottomButtons();
+        ListViewWidget listViewWidget = new ListViewWidget();
+        addConfigEntries(listViewWidget);
+        addBottomButtons(this.bottomRowWidget);
         addChild(new ClickableWidget(listViewWidget));
-        addChild(new ClickableWidget(bottomRowWidget));
+        addChild(new ClickableWidget(this.bottomRowWidget));
         listViewWidget.setXYSize(startX, startY, contentWidth, listViewHeight);
         bottomRowWidget.setXYSize(startX, startY + listViewHeight + BOTTOM_ROW_MARGIN, contentWidth, bottomEntryHeight);
     }
@@ -125,7 +123,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         });
     }
 
-    private void addConfigEntries() {
+    private void addConfigEntries(ListViewWidget listViewWidget) {
         setEntryStateFromClientConfig();
 
         linkedConfig.keySet().forEach(btn -> addChild(new ClickableWidget(btn)));
@@ -148,7 +146,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     }
 
 
-    private void addBottomButtons() {
+    private void addBottomButtons(WidgetSet bottomRowWidget) {
         ButtonWidgetExtension latestLogButton = new ButtonWidgetExtension(0, 0, 0, 20, TextUtil.translatable(TextCategory.GUI, "config.latest_log"), (btn) -> {
             openLatestLog();
         });

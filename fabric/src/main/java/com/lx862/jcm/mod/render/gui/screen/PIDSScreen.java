@@ -8,6 +8,7 @@ import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.gui.screen.base.BlockConfigListScreen;
 import com.lx862.jcm.mod.render.gui.widget.ContentItem;
 import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
+import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
 import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -97,7 +98,7 @@ public class PIDSScreen extends BlockConfigListScreen {
     }
 
     @Override
-    public void addConfigEntries() {
+    public void addConfigEntries(ListViewWidget listViewWidget) {
         // Preset button
         addChild(new ClickableWidget(choosePresetButton));
         ContentItem presetEntry = new ContentItem(TextUtil.translatable(TextCategory.GUI, "pids.listview.title.pids_preset"), new MappedWidget(choosePresetButton), 26);
