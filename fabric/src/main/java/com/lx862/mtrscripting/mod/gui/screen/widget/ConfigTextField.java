@@ -1,10 +1,13 @@
 package com.lx862.mtrscripting.mod.gui.screen.widget;
 
+import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.jcm.mod.render.ClipStack;
 import com.lx862.jcm.mod.render.gui.widget.AlwaysRenderedTextField;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import org.mtr.mapping.holder.MinecraftClient;
+import org.mtr.mapping.holder.OrderedText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
@@ -55,7 +58,8 @@ public class ConfigTextField extends AlwaysRenderedTextField implements Validata
         String content = getText2();
         if(!this.result.success() && isHovered()) {
             #if MC_VERSION >= "11903"
-                MinecraftClient.getInstance().getCurrentScreenMapped().data.setTooltip(List.of(TextUtil.translatable(this.result.validationMessage()).data.asOrderedText()));
+                OrderedText orderedText = LoaderImpl.asOrderedText(TextUtil.translatable(this.result.validationMessage()));
+                LoaderImplClient.setTooltip(MinecraftClient.getInstance().getCurrentScreenMapped(), orderedText);
             #endif
         } else if(!Objects.equals(this.originalValue, content)) {
             guiDrawing.beginDrawingRectangle();

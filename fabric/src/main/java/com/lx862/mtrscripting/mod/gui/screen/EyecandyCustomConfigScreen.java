@@ -1,5 +1,7 @@
 package com.lx862.mtrscripting.mod.gui.screen;
 
+import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.jcm.mod.render.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
@@ -88,7 +90,8 @@ public class EyecandyCustomConfigScreen extends SavableScreen implements RenderH
 
         #if MC_VERSION >= "11903"
         if(saveButton.isHovered()) {
-            setTooltip(List.of(TextUtil.translatable(TextCategory.GUI, "eyecandy.listview.widget.not_validated").data.asOrderedText()));
+            OrderedText orderedText = LoaderImpl.asOrderedText(TextUtil.translatable(TextCategory.GUI, "eyecandy.listview.widget.not_validated"));
+            LoaderImplClient.setTooltip(MinecraftClient.getInstance().getCurrentScreenMapped(), orderedText);
         }
         #endif
     }

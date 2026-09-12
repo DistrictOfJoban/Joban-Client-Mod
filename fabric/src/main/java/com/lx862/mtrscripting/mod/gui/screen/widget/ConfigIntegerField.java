@@ -1,9 +1,12 @@
 package com.lx862.mtrscripting.mod.gui.screen.widget;
 
+import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.jcm.mod.render.gui.widget.IntegerTextField;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import org.mtr.mapping.holder.MinecraftClient;
+import org.mtr.mapping.holder.OrderedText;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
 
@@ -38,7 +41,8 @@ public class ConfigIntegerField extends IntegerTextField implements ValidatableW
 
         if(!this.result.success() && isHovered()) {
             #if MC_VERSION >= "11903"
-                MinecraftClient.getInstance().getCurrentScreenMapped().data.setTooltip(List.of(TextUtil.translatable(this.result.validationMessage()).data.asOrderedText()));
+                OrderedText orderedText = LoaderImpl.asOrderedText(TextUtil.translatable(this.result.validationMessage()));
+                LoaderImplClient.setTooltip(MinecraftClient.getInstance().getCurrentScreenMapped(), orderedText);
             #endif
         } else if(this.originalValue != getNumber()) {
             guiDrawing.beginDrawingRectangle();

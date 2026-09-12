@@ -1,13 +1,13 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
-import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
+import com.lx862.mtrscripting.core.primitive.ParsedScript;
+import com.lx862.mtrscripting.core.primitive.ScriptInstance;
+import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.EyeCandyScriptContext;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.EyeCandyScriptInstance;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.EyecandyBlockEntityWrapper;
-import com.lx862.mtrscripting.core.primitive.ParsedScript;
-import com.lx862.mtrscripting.core.primitive.UniqueKey;
-import com.lx862.mtrscripting.core.primitive.ScriptInstance;
+import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
@@ -28,11 +28,12 @@ public class RenderEyeCandyMixin {
         World world = blockEntity.getWorld2();
         if(world == null) return;
 
-        ParsedScript script = MTRContentResourceManager.getEyecandyScript(blockEntity.getModelId());
-        if(script == null) return;
+        MTRContentResourceManager.EyecandyScriptConfiguration eyecandyScriptEntry = MTRContentResourceManager.getEyecandyScript(blockEntity.getModelId());
+        if(eyecandyScriptEntry == null) return;
+        ParsedScript parsedScript = eyecandyScriptEntry.parsedScript();
         EyecandyBlockEntityWrapper beWrapper = new EyecandyBlockEntityWrapper(blockEntity);
 
-        ScriptInstance<EyecandyBlockEntityWrapper> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(beWrapper), beWrapper, script));
+        ScriptInstance<EyecandyBlockEntityWrapper> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(beWrapper), beWrapper, parsedScript));
         if(!(scriptInstance instanceof EyeCandyScriptInstance)) return;
 
         EyeCandyScriptInstance eyeCandyScriptInstance = (EyeCandyScriptInstance) scriptInstance;

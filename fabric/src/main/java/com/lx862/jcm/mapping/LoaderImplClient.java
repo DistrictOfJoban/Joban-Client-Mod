@@ -54,4 +54,10 @@ public class LoaderImplClient {
     public static Vector3d getEntityVelocity(Entity entity) {
         return new Vector3d(entity.data.getVelocity());
     }
+
+    public static void setTooltip(Screen screen, OrderedText orderedText) {
+        #if MC_VERSION >= "11903"
+        screen.data.setTooltip(List.of(orderedText.data));
+        #endif
+    }
 }
