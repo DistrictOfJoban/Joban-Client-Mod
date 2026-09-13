@@ -2,7 +2,7 @@ package com.lx862.jcm.mod.network.gui;
 
 import com.lx862.jcm.mod.data.EnquiryScreenType;
 import com.lx862.jcm.mod.data.TransactionEntry;
-import com.lx862.jcm.mod.render.gui.screen.*;
+import com.lx862.jcm.mod.gui.screen.*;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.Screen;

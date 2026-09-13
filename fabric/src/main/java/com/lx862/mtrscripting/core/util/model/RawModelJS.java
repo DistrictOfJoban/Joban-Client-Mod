@@ -1,7 +1,7 @@
 package com.lx862.mtrscripting.core.util.model;
 
-import com.lx862.jcm.mixin.modded.mtr.ObjModelAccessor;
-import com.lx862.jcm.mixin.modded.mtr.RawMeshAccessor;
+import com.lx862.jcm.mixin.mtrscripting.ObjModelAccessor;
+import com.lx862.jcm.mixin.mtrscripting.RawMeshAccessor;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.mtr.mapping.holder.Identifier;

@@ -1,7 +1,8 @@
 package com.lx862.jcm.mod.data.pids.preset.components.base;
 
-import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.KVPair;
+import com.lx862.jcm.mod.data.pids.TextOverflowMode;
+import com.lx862.jcm.mod.data.pids.TextTranslationMode;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.render.text.*;
 import org.mtr.mapping.holder.Direction;
@@ -51,9 +52,9 @@ public abstract class TextComponent extends PIDSComponent {
         graphicsHolder.push();
         graphicsHolder.translate(x, y, 0);
         graphicsHolder.scale((float)scale, (float)scale, (float)scale);
-        double textWidth = TextRenderingManager.getTextWidth(finalText);
+        double textWidth = GraphicsHolder.getTextWidth(finalText.toMutableText());
         if(textOverflowMode == TextOverflowMode.MARQUEE && textWidth > width) {
-            finalText = finalText.withScrollingText().withMaxWidth((float)width);
+            finalText = finalText.withScrollingText();
         } else {
             RenderHelper.scaleToFit(graphicsHolder, textWidth, width, textOverflowMode == TextOverflowMode.SCALE, 14);
         }

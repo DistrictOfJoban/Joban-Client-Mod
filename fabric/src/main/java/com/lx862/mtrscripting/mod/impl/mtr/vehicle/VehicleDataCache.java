@@ -1,6 +1,6 @@
 package com.lx862.mtrscripting.mod.impl.mtr.vehicle;
 
-import com.lx862.jcm.mod.network.scripting.RequestStopsDataC2SPacket;
+import com.lx862.mtrscripting.mod.network.packet.data.RequestStopsDataC2SPacket;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRDatasetHolder;
 import org.mtr.core.data.*;

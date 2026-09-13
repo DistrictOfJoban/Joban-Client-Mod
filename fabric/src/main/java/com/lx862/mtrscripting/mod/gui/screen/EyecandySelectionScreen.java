@@ -1,12 +1,12 @@
 package com.lx862.mtrscripting.mod.gui.screen;
 
-import com.lx862.jcm.mod.render.GuiHelper;
+import com.lx862.amberui.gui.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.gui.screen.base.SavableScreen;
-import com.lx862.jcm.mod.render.gui.widget.ContentItem;
-import com.lx862.jcm.mod.render.gui.widget.HorizontalWidgetSet;
-import com.lx862.jcm.mod.render.gui.widget.ListViewWidget;
-import com.lx862.jcm.mod.render.gui.widget.MappedWidget;
+import com.lx862.amberui.gui.screen.SavableScreen;
+import com.lx862.amberui.gui.widget.ContentItem;
+import com.lx862.amberui.gui.widget.HorizontalWidgetSet;
+import com.lx862.amberui.gui.widget.ListViewWidget;
+import com.lx862.amberui.gui.widget.MappedWidget;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;

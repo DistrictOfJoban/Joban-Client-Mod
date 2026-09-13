@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.data.pids.preset.components.base;
 
 import com.lx862.jcm.mod.data.KVPair;
-import com.lx862.jcm.mod.render.GuiHelper;
+import com.lx862.amberui.gui.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;

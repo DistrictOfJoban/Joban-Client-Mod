@@ -44,6 +44,13 @@ mixin {
     debug.export = true
 }
 
+mixin {
+    add sourceSets.main, "mtrscripting.refmap.json"
+    config "mtrscripting.mixins.json"
+    debug.verbose = true
+    debug.export = true
+}
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(java_version))

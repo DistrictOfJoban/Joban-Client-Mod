@@ -1,7 +1,7 @@
 package com.lx862.jcm.mod.extra;
 
-import com.lx862.jcm.mixin.modded.mtrpatch.OptimizedRendererAccessorMixin;
-import com.lx862.jcm.mixin.modded.mtrpatch.OptimizedRendererWrapperAccessorMixin;
+import com.lx862.jcm.mixin.mtrpatch.OptimizedRendererAccessorMixin;
+import com.lx862.jcm.mixin.mtrpatch.OptimizedRendererWrapperAccessorMixin;
 import it.unimi.dsi.fastutil.longs.Long2IntArrayMap;
 import org.mtr.mapping.holder.Box;
 import org.mtr.mapping.holder.Identifier;

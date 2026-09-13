@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.core.util.model;
 
-import com.lx862.jcm.mixin.modded.mtr.*;
+import com.lx862.jcm.mixin.mtrscripting.OptimizedModelAccessor;
+import com.lx862.jcm.mixin.mtrscripting.OptimizedModelWrapperAccessor;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.OptimizedModel;

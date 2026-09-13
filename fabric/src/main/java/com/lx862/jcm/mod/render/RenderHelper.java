@@ -23,10 +23,6 @@ public interface RenderHelper {
         graphicsHolder.drawText(text, x - (w / 2), y, textColor, false, MAX_RENDER_LIGHT);
     }
 
-    default boolean inRectangle(double targetX, double targetY, int rectX, int rectY, int rectW, int rectH) {
-        return (targetX >= rectX && targetX <= rectX + rectW) && (targetY >= rectY && targetY <= rectY + rectH);
-    }
-
     static void scaleToFit(GraphicsHolder graphicsHolder, int targetW, double maxW, boolean keepAspectRatio) {
         scaleToFit(graphicsHolder, targetW, maxW, keepAspectRatio, 0);
     }

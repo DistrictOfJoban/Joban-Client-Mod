@@ -64,7 +64,7 @@ public interface ScriptResourceProvider {
         }
 
         try {
-            return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, scripts);
+            return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
         } catch (Exception e) {
             ScriptResourceProvider.logError("parsing " + scriptType + " script (" + id + ")", e);
             return null;

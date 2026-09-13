@@ -1,6 +1,6 @@
 package com.lx862.mtrscripting.core.util.model;
 
-import com.lx862.jcm.mixin.modded.mtr.VertexAttributeStateAccessor;
+import com.lx862.jcm.mixin.mtrscripting.VertexAttributeStateAccessor;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.mtr.mapping.holder.Identifier;

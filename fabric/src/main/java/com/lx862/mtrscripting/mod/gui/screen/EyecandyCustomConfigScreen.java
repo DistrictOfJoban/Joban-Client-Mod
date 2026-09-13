@@ -1,17 +1,16 @@
 package com.lx862.mtrscripting.mod.gui.screen;
 
-import com.lx862.jcm.mapping.LoaderImpl;
-import com.lx862.jcm.mapping.LoaderImplClient;
+import com.lx862.amberui.gui.widget.*;
+import com.lx862.amberui.mapping.LoaderImplGUI;
 import com.lx862.jcm.mod.registry.Networking;
-import com.lx862.jcm.mod.render.GuiHelper;
+import com.lx862.amberui.gui.GuiHelper;
 import com.lx862.jcm.mod.render.RenderHelper;
-import com.lx862.jcm.mod.render.gui.screen.base.SavableScreen;
-import com.lx862.jcm.mod.render.gui.widget.*;
+import com.lx862.amberui.gui.screen.SavableScreen;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
-import com.lx862.mtrscripting.mod.gui.screen.widget.ConfigIntegerField;
-import com.lx862.mtrscripting.mod.gui.screen.widget.ConfigTextField;
-import com.lx862.mtrscripting.mod.gui.screen.widget.ValidatableWidget;
+import com.lx862.mtrscripting.mod.gui.widget.ConfigIntegerField;
+import com.lx862.mtrscripting.mod.gui.widget.ConfigTextField;
+import com.lx862.mtrscripting.mod.gui.widget.ValidatableWidget;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import com.lx862.mtrscripting.mod.network.packet.EyecandyCustomConfigUpdateC2SPacket;
 import org.mtr.mapping.holder.*;
@@ -90,8 +89,8 @@ public class EyecandyCustomConfigScreen extends SavableScreen implements RenderH
 
         #if MC_VERSION >= "11903"
         if(saveButton.isHovered()) {
-            OrderedText orderedText = LoaderImpl.asOrderedText(TextUtil.translatable(TextCategory.GUI, "eyecandy.listview.widget.not_validated"));
-            LoaderImplClient.setTooltip(MinecraftClient.getInstance().getCurrentScreenMapped(), orderedText);
+            OrderedText orderedText = LoaderImplGUI.asOrderedText(TextUtil.translatable(TextCategory.GUI, "eyecandy.listview.widget.not_validated"));
+            LoaderImplGUI.setTooltip(MinecraftClient.getInstance().getCurrentScreenMapped(), orderedText);
         }
         #endif
     }

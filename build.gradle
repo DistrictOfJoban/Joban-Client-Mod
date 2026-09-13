@@ -156,6 +156,11 @@ tasks.register("setupFiles") {
 			}
 
 			copy {
+				from "${sourceModloader}/src/main/java/com/lx862/amberui/gui"
+				into "${targetModloader}/src/main/java/com/lx862/amberui/gui"
+			}
+
+			copy {
 				from "${sourceModloader}/src/main/resources/assets"
 				into "${targetModloader}/src/main/resources/assets"
 			}

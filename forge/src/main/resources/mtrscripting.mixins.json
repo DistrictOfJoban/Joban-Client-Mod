@@ -1,0 +1,35 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.lx862.jcm.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "mtrscripting.BlockEntityEyecandyMixin",
+    "mtrscripting.MainAccessorMixin",
+    "mtrscripting.SidingAccessorMixin"
+  ],
+  "client": [
+    "mtrscripting.NativeImageAccessor",
+    "mtrscripting.LegacyVehicleResourceSchemaMixin",
+    "mtrscripting.ModelPropertiesPartMixin",
+    "mtrscripting.ObjModelAccessor",
+    "mtrscripting.OptimizedModelAccessor",
+    "mtrscripting.OptimizedModelWrapperAccessor",
+    "mtrscripting.RawMeshAccessor",
+    "mtrscripting.RenderVehiclesMixin",
+    "mtrscripting.VehicleSchemaMixin",
+    "mtrscripting.VertexAttributeStateAccessor",
+    "mtrscripting.BlockEyecandyMixin",
+    "mtrscripting.EyecandyScreenMixin",
+    "mtrscripting.MainRendererMixin",
+    "mtrscripting.RenderEyeCandyMixin",
+    "mtrscripting.RenderLiftsMixin",
+    "mtrscripting.VehicleExtensionMixin",
+    "mtrscripting.VehicleResourceMixin",
+    "mtrscripting.VehicleAccessorMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "mtrscripting.refmap.json"
+}

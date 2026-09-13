@@ -1,6 +1,6 @@
 package com.lx862.jcm.entrypoint;
 
-import com.lx862.jcm.mod.render.gui.screen.ClientConfigScreen;
+import com.lx862.jcm.mod.gui.screen.ClientConfigScreen;
 import org.mtr.mapping.holder.Screen;
 #if MC_VERSION <= "11701"
     import net.minecraftforge.fml.ModLoadingContext;

@@ -1,7 +1,7 @@
 package com.lx862.mtrscripting.mod.impl.mtr.vehicle;
 
-import com.lx862.jcm.mixin.modded.mtr.VehicleSchemaMixin;
-import com.lx862.jcm.mixin.modded.tsc.VehicleAccessorMixin;
+import com.lx862.jcm.mixin.mtrscripting.VehicleSchemaMixin;
+import com.lx862.jcm.mixin.mtrscripting.VehicleAccessorMixin;
 import com.lx862.jcm.mod.util.MTRUtil;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;

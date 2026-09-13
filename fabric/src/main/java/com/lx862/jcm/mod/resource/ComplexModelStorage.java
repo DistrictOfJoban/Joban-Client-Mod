@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.resource;
 
-import com.lx862.jcm.mixin.modded.mtr.OptimizedModelWrapperAccessor;
+import com.lx862.jcm.mixin.mtrscripting.OptimizedModelWrapperAccessor;
 import com.lx862.mtrscripting.core.util.model.ModelJS;
 import com.lx862.mtrscripting.core.util.model.ModelManagerJS;
 import com.lx862.mtrscripting.core.util.model.RawModelJS;

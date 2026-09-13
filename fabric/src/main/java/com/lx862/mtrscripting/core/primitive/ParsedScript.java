@@ -1,6 +1,5 @@
 package com.lx862.mtrscripting.core.primitive;
 
-import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.core.ScriptManager;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.*;
@@ -31,7 +30,7 @@ public class ParsedScript {
     private Exception capturedScriptException = null;
     private long lastFailedTime = -1;
 
-    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scriptContents) throws NoSuchMethodException {
+    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scriptContents, boolean verboseLogging) throws NoSuchMethodException {
         this.displayName = displayName;
         this.scriptManager = scriptManager;
         this.scriptContents = scriptContents;
@@ -64,7 +63,7 @@ public class ParsedScript {
                 tryAndAddFunction("render", scope, renderFunctions);
                 tryAndAddFunction("dispose", scope, disposeFunctions);
 
-                if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
+                if(verboseLogging) {
                     scriptManager.getLogger().info("[MTR Scripting via JCM] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
                 }
             }

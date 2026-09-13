@@ -63,8 +63,4 @@ public class LoaderImpl {
     public static Style withHoverContentText(Style style, MutableText content) {
         return new Style(style.data.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, content.data)));
     }
-
-    public static OrderedText asOrderedText(MutableText mutableText) {
-        return new OrderedText(mutableText.data.getVisualOrderText());
-    }
 }

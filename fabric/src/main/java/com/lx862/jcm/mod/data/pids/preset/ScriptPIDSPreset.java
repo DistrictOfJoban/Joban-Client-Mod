@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.jcm.mod.config.JCMClientConfig;
-import com.lx862.jcm.mod.resource.JCMResourceManager;
 import com.lx862.jcm.mod.scripting.JCMScripting;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptInstance;
@@ -83,7 +82,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         }
 
         try {
-            ParsedScript script = scripts.isEmpty() ? null : JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts);
+            ParsedScript script = scripts.isEmpty() ? null : JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
             return script == null ? null : new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, script);
         } catch (Exception e) {
             logError("parsing PIDS script (" + id + ")", e);
