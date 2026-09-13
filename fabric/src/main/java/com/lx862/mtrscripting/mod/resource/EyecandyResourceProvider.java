@@ -17,18 +17,16 @@ import org.mtr.mod.Init;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class EyecandyResourceProvider implements ScriptResourceProvider<EyecandyResourceProvider.EyecandyScriptConfiguration> {
+public class EyecandyResourceProvider implements ScriptResourceProvider {
     private final Map<String, EyecandyScriptConfiguration> eyecandyScripts = new HashMap<>();
     private final Map<String, String> eyecandyScriptIds = new HashMap<>();
+    private final Set<String> scriptControlledRendering = new HashSet<>();
 
     @Override
     public void parseCustom() {
-        readNteEyecandy();
+        readLegacyEyecandy();
     }
 
     @Override
@@ -46,6 +44,9 @@ public class EyecandyResourceProvider implements ScriptResourceProvider<Eyecandy
                 if(eyecandyEntry.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
                     String eyecandyScriptId = eyecandyEntry.get("scriptId").getAsString();
                     eyecandyScriptIds.put(id, eyecandyScriptId);
+                }
+                if(JsonUtil.getBoolean("isScriptRendered", false, eyecandyEntry)) {
+                    scriptControlledRendering.add(id);
                 }
             }
 
@@ -85,11 +86,15 @@ public class EyecandyResourceProvider implements ScriptResourceProvider<Eyecandy
     public void reset() {
         eyecandyScripts.clear();
         eyecandyScriptIds.clear();
+        scriptControlledRendering.clear();
     }
 
-    @Override
     public EyecandyScriptConfiguration getScriptEntry(String id) {
         return eyecandyScripts.get(eyecandyScriptIds.getOrDefault(id, id));
+    }
+
+    public boolean isScriptControlledRendering(String id) {
+        return scriptControlledRendering.contains(id);
     }
 
     private static EyecandyCustomConfig parseEyecandyCustomConfig(JsonObject rootObject, boolean legacy) {
@@ -138,7 +143,7 @@ public class EyecandyResourceProvider implements ScriptResourceProvider<Eyecandy
     /**
      * Read legacy script entry (for MTR-NTE based eyecandy entries)
      */
-    private void readNteEyecandy() {
+    private void readLegacyEyecandy() {
         ResourceManagerHelper.readDirectory("eyecandies", (identifier, inputStream) -> {
             boolean fileIsNteEyecandy = identifier.getNamespace().equals(Init.MOD_ID_NTE) && identifier.getPath().endsWith(".json");
             if (fileIsNteEyecandy) {
@@ -162,6 +167,10 @@ public class EyecandyResourceProvider implements ScriptResourceProvider<Eyecandy
                         final String id = entry.getKey();
                         final JsonObject entryObject = entry.getValue().getAsJsonObject();
                         final EyecandyCustomConfig eyecandyCustomConfig = parseEyecandyCustomConfig(entryObject, true);
+
+                        if(JsonUtil.getBoolean("isScriptRendered", false, entryObject)) {
+                            scriptControlledRendering.add(id);
+                        }
 
                         ParsedScript parsedScript = ScriptResourceProvider.tryParseScript(id, "eyecandy", "Block", entryObject, false, false);
                         if(parsedScript != null) {

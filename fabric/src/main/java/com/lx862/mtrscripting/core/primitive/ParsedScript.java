@@ -65,7 +65,7 @@ public class ParsedScript {
                 tryAndAddFunction("dispose", scope, disposeFunctions);
 
                 if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
-                    scriptManager.getLogger().info("[JCM Scripting] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
+                    scriptManager.getLogger().info("[MTR Scripting via JCM] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
                 }
             }
         } finally {

@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class VehicleResourceProvider implements ScriptResourceProvider<VehicleResourceProvider.VehicleScriptConfiguration> {
+public class VehicleResourceProvider implements ScriptResourceProvider {
     private final Map<String, VehicleScriptConfiguration> vehicleScripts = new HashMap<>();
     private final Map<String, String> vehicleScriptIds = new HashMap<>();
     private final List<String> vehiclesWithDisplayCubeHidden = new ObjectArrayList<>();
@@ -121,11 +121,6 @@ public class VehicleResourceProvider implements ScriptResourceProvider<VehicleRe
         vehicleScriptIds.clear();
         vehiclesWithDisplayCubeHidden.clear();
         VehicleDataCache.clearData();
-    }
-
-    @Override
-    public VehicleScriptConfiguration getScriptEntry(String id) {
-        return vehicleScripts.get(vehicleScriptIds.getOrDefault(id, id));
     }
 
     public VehicleResourceProvider.VehicleScriptConfiguration getVehicleScript(String scriptEntryId) {

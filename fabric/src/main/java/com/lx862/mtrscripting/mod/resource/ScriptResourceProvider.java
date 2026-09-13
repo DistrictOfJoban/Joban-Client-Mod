@@ -15,7 +15,7 @@ import org.mtr.mapping.mapper.TextHelper;
 
 import java.util.List;
 
-public interface ScriptResourceProvider<T> {
+public interface ScriptResourceProvider {
 
     void parseCustom();
 
@@ -24,9 +24,6 @@ public interface ScriptResourceProvider<T> {
     void validate();
 
     void reset();
-
-    T getScriptEntry(String id);
-
 
     static ParsedScript tryParseScript(String id, String scriptType, String contextName, JsonObject jsonObject, boolean isParsingMTR4, boolean useSnakeCase) {
         final List<ScriptContent> scripts = new ObjectArrayList<>();

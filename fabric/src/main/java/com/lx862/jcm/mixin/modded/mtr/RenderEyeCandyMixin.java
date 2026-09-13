@@ -24,22 +24,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = RenderEyeCandy.class, remap = false)
 public class RenderEyeCandyMixin {
-    @Inject(method = "render(Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;FLorg/mtr/mapping/mapper/GraphicsHolder;II)V", at = @At(value = "INVOKE", target = "Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;getModelId()Ljava/lang/String;"))
+    @Inject(method = "render(Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;FLorg/mtr/mapping/mapper/GraphicsHolder;II)V", at = @At(value = "INVOKE", target = "Lorg/mtr/mod/block/BlockEyeCandy$BlockEntity;getModelId()Ljava/lang/String;"), cancellable = true)
     public void renderScript(BlockEyeCandy.BlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int overlay, CallbackInfo ci) {
         World world = blockEntity.getWorld2();
         if(world == null) return;
 
-        EyecandyResourceProvider.EyecandyScriptConfiguration eyecandyScriptEntry = MtrScriptingResourceManager.eyecandy.getScriptEntry(blockEntity.getModelId());
+        String eyecandyId = blockEntity.getModelId();
+        EyecandyResourceProvider.EyecandyScriptConfiguration eyecandyScriptEntry = MtrScriptingResourceManager.eyecandy.getScriptEntry(eyecandyId);
         if(eyecandyScriptEntry == null) return;
         ParsedScript parsedScript = eyecandyScriptEntry.parsedScript();
-        EyecandyBlockEntityWrapper beWrapper = new EyecandyBlockEntityWrapper(blockEntity);
+        EyecandyBlockEntityWrapper eyecandyWrapper = new EyecandyBlockEntityWrapper(blockEntity);
 
-        ScriptInstance<EyecandyBlockEntityWrapper> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", blockEntity.getModelId(), blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(beWrapper), beWrapper, parsedScript));
+        ScriptInstance<EyecandyBlockEntityWrapper> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", eyecandyId, blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(eyecandyWrapper), eyecandyWrapper, parsedScript));
         if(!(scriptInstance instanceof EyeCandyScriptInstance)) return;
+
+        if(MtrScriptingResourceManager.eyecandy.isScriptControlledRendering(eyecandyId)) {
+            ci.cancel();
+        }
 
         EyeCandyScriptInstance eyeCandyScriptInstance = (EyeCandyScriptInstance) scriptInstance;
         EyeCandyScriptContext eyeCandyScriptContext = (EyeCandyScriptContext)scriptInstance.getContextObject();
-        scriptInstance.setWrapperObject(beWrapper);
+        scriptInstance.setWrapperObject(eyecandyWrapper);
 
         scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
             eyeCandyScriptInstance.updateRenderer(eyeCandyScriptContext.getRenderManager());
@@ -62,6 +67,6 @@ public class RenderEyeCandyMixin {
         });
 
         eyeCandyScriptInstance.getRenderManager().invoke(world, storedMatrixTransformations, facing, light);
-        eyeCandyScriptInstance.getSoundManager().invoke(world, beWrapper.pos());
+        eyeCandyScriptInstance.getSoundManager().invoke(world, eyecandyWrapper.pos());
     }
 }

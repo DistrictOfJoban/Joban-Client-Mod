@@ -4,6 +4,7 @@
 - **Scripting**
   - Added `ctx.setDebugInfo(value: any)` shorthand for temporary, single-value on-screen debug info, without requiring a key.
     - Same as calling `ctx.setDebugInfo("<Untitled>", value)`
+  - Added `isScriptRendered` field for eyecandy and lift entry, which allows script to fully take over the rendering, without MTR's default renderer.
 - Add **Emergency Train Stop Button (Wall mounted, TML)** & URL variant (Thanks **LX9702**!)
 
 ## Changes

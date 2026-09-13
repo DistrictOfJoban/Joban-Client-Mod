@@ -106,7 +106,7 @@ public class ConsoleJS {
     }
 
     private static String buildLogPrefix() {
-        StringBuilder sb = new StringBuilder("[JCM Scripting]");
+        StringBuilder sb = new StringBuilder("[MTR Scripting via JCM]");
 
         if(JCMClientConfig.INSTANCE.scripting.showLogSource.value()) {
             String source;

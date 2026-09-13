@@ -5,13 +5,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.mtrscripting.mod.util.JsonUtil;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-public class LiftResourceProvider implements ScriptResourceProvider<LiftResourceProvider.LiftScriptConfiguration> {
+public class LiftResourceProvider implements ScriptResourceProvider {
     private final Map<String, LiftScriptConfiguration> liftScripts = new HashMap<>();
     private final Map<String, String> liftScriptIds = new HashMap<>();
+    private final Set<String> scriptControlledRendering = new HashSet<>();
 
     @Override
     public void parseCustom() {
@@ -19,17 +20,20 @@ public class LiftResourceProvider implements ScriptResourceProvider<LiftResource
 
     @Override
     public void parseMtrResources(JsonObject rootObject, boolean isLegacyResource) {
-        if(isLegacyResource) return;
-        // Parse lift
+        if(isLegacyResource) return; // No lift customization in MTR 3
+
         final JsonElement liftsElement = rootObject.get("lifts");
         final JsonElement liftScriptsElement = rootObject.get("liftScripts");
         if(liftsElement != null) {
             JsonArray liftsArray = liftsElement.getAsJsonArray();
             for(JsonElement liftEntry : liftsArray) {
                 JsonObject liftObject = liftEntry.getAsJsonObject();
-                String baseId = liftObject.get("id").getAsString();
+                String liftId = liftObject.get("id").getAsString();
                 if(liftObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
-                    liftScriptIds.put(baseId, liftObject.get("scriptId").getAsString());
+                    liftScriptIds.put(liftId, liftObject.get("scriptId").getAsString());
+                }
+                if(JsonUtil.getBoolean("isScriptRendered", false, liftObject)) {
+                    scriptControlledRendering.add(liftId);
                 }
             }
 
@@ -56,13 +60,12 @@ public class LiftResourceProvider implements ScriptResourceProvider<LiftResource
 
     @Override
     public void validate() {
-        // Lift validation
         for(Map.Entry<String, String> scriptEntry : liftScriptIds.entrySet()) {
-            String entryId = scriptEntry.getKey();
-            String scriptEntryId = scriptEntry.getValue();
+            String liftId = scriptEntry.getKey();
+            String scriptId = scriptEntry.getValue();
 
-            if(!liftScripts.containsKey(scriptEntryId)) {
-                MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Lift script \"{}\" is either missing or failed to load! (Used by entry {})", scriptEntryId, entryId);
+            if(!liftScripts.containsKey(scriptId)) {
+                MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Lift script \"{}\" is either missing or failed to load! (Used by entry {})", scriptId, liftId);
             }
         }
     }
@@ -71,11 +74,15 @@ public class LiftResourceProvider implements ScriptResourceProvider<LiftResource
     public void reset() {
         liftScripts.clear();
         liftScriptIds.clear();
+        scriptControlledRendering.clear();
     }
 
-    @Override
     public LiftScriptConfiguration getScriptEntry(String id) {
         return liftScripts.get(liftScriptIds.getOrDefault(id, id));
+    }
+
+    public boolean isScriptControlledRendering(String id) {
+        return scriptControlledRendering.contains(id);
     }
 
     public record LiftScriptConfiguration(ParsedScript parsedScript) {}
