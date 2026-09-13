@@ -37,17 +37,21 @@ public class MTRContentResourceManager {
 
     private static final Map<String, VehicleScriptConfiguration> vehicleScripts = new HashMap<>();
     private static final Map<String, EyecandyScriptConfiguration> eyecandyScripts = new HashMap<>();
+    private static final Map<String, LiftScriptConfiguration> liftScripts = new HashMap<>();
     private static final Map<String, String> vehicleScriptIds = new HashMap<>();
     private static final Map<String, String> eyecandyScriptIds = new HashMap<>();
+    private static final Map<String, String> liftScriptIds = new HashMap<>();
 
     private static final List<String> vehiclesWithDisplayCubeHidden = new ObjectArrayList<>();
 
     public static void reload() {
-        MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Loading MTR Vehicle/Eyecandy scripts...");
+        MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Loading MTR scripts...");
         eyecandyScripts.clear();
         vehicleScripts.clear();
         vehicleScriptIds.clear();
         eyecandyScriptIds.clear();
+        liftScripts.clear();
+        liftScriptIds.clear();
         vehiclesWithDisplayCubeHidden.clear();
         VehicleDataCache.clearData();
         MTRContentScripting.getScriptManager().scriptErrorNotifier.reset();
@@ -162,10 +166,10 @@ public class MTRContentResourceManager {
                             }
                         }
                     } else { // MTR 4
-                        final JsonElement scriptsElement = rootObject.get("vehicleScripts");
-                        final JsonArray vehicleArray = vehicleElement.getAsJsonArray();
+                        final JsonElement vehicleScriptsElement = rootObject.get("vehicleScripts");
+                        final JsonArray vehiclesArray = vehicleElement.getAsJsonArray();
 
-                        for(JsonElement vehicleEntry : vehicleArray) {
+                        for(JsonElement vehicleEntry : vehiclesArray) {
                             JsonObject vehicleObject = vehicleEntry.getAsJsonObject();
                             String baseId = vehicleObject.get("id").getAsString();
                             if(vehicleObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
@@ -178,8 +182,8 @@ public class MTRContentResourceManager {
                             }
                         }
 
-                        if(scriptsElement != null) {
-                            JsonArray scriptArray = scriptsElement.getAsJsonArray();
+                        if(vehicleScriptsElement != null) {
+                            JsonArray scriptArray = vehicleScriptsElement.getAsJsonArray();
 
                             for(JsonElement entryElement : scriptArray) {
                                 JsonObject scriptObject = entryElement.getAsJsonObject();
@@ -196,6 +200,39 @@ public class MTRContentResourceManager {
                                 } else {
                                     MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Skip parsing vehicle scripts \"{}\", which is not referenced by any vehicle!", scriptEntryId);
                                 }
+                            }
+                        }
+                    }
+                }
+
+                // Parse lift
+                final JsonElement liftsElement = rootObject.get("lifts");
+                final JsonElement liftScriptsElement = rootObject.get("liftScripts");
+                if(liftsElement != null) {
+                    JsonArray liftsArray = liftsElement.getAsJsonArray();
+                    for(JsonElement liftEntry : liftsArray) {
+                        JsonObject liftObject = liftEntry.getAsJsonObject();
+                        String baseId = liftObject.get("id").getAsString();
+                        if(liftObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
+                            liftScriptIds.put(baseId, liftObject.get("scriptId").getAsString());
+                        }
+                    }
+
+                    if(liftScriptsElement != null) {
+                        JsonArray scriptArray = liftScriptsElement.getAsJsonArray();
+
+                        for(JsonElement entryElement : scriptArray) {
+                            JsonObject scriptObject = entryElement.getAsJsonObject();
+                            String scriptEntryId = scriptObject.get("id").getAsString();
+                            boolean entryReferenced = liftScriptIds.values().stream().anyMatch(e -> e.equals(scriptEntryId));
+
+                            if(entryReferenced) {
+                                ParsedScript parsedScript = tryParseScript(scriptEntryId, "lift", "Lift", scriptObject, true, false);
+                                if (parsedScript != null) {
+                                    liftScripts.put(scriptEntryId, new LiftScriptConfiguration(parsedScript));
+                                }
+                            } else {
+                                MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Skip parsing lift scripts \"{}\", which is not referenced by any vehicle!", scriptEntryId);
                             }
                         }
                     }
@@ -299,8 +336,18 @@ public class MTRContentResourceManager {
             String entryId = scriptEntry.getKey();
             String scriptEntryId = scriptEntry.getValue();
 
-            if(!eyecandyScriptIds.containsKey(scriptEntryId)) {
+            if(!eyecandyScripts.containsKey(scriptEntryId)) {
                 MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Eyecandy script \"{}\" is either missing or failed to load! (Used by entry {})", scriptEntryId, entryId);
+            }
+        }
+
+        // Lift validation
+        for(Map.Entry<String, String> scriptEntry : liftScriptIds.entrySet()) {
+            String entryId = scriptEntry.getKey();
+            String scriptEntryId = scriptEntry.getValue();
+
+            if(!liftScripts.containsKey(scriptEntryId)) {
+                MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Lift script \"{}\" is either missing or failed to load! (Used by entry {})", scriptEntryId, entryId);
             }
         }
     }
@@ -373,6 +420,10 @@ public class MTRContentResourceManager {
         return vehicleScripts.get(scriptEntryId);
     }
 
+    public static LiftScriptConfiguration getLiftScript(String scriptEntryId) {
+        return liftScripts.get(liftScriptIds.getOrDefault(scriptEntryId, scriptEntryId));
+    }
+
     public static String getVehicleScriptEntryId(String str) {
         return vehicleScriptIds.getOrDefault(str, str);
     }
@@ -380,6 +431,8 @@ public class MTRContentResourceManager {
     public static boolean shouldHideDisplayParts(String vehicleId) {
         return vehiclesWithDisplayCubeHidden.contains(vehicleId);
     }
+
+    public record LiftScriptConfiguration(ParsedScript parsedScript) {}
 
     public record EyecandyScriptConfiguration(ParsedScript parsedScript, EyecandyCustomConfig eyecandyCustomConfig) {}
 

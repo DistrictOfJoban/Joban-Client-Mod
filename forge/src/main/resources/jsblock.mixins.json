@@ -44,7 +44,8 @@
     "modded.mtrpatch.RenderVehiclesMixin",
     "modded.mtrpatch.VehicleSelectorScreenMixin",
     "modded.mtrpatch.WidgetMapMixin",
-    "modded.tsc.VehicleAccessorMixin"
+    "modded.tsc.VehicleAccessorMixin",
+    "modded.mtrscripting.RenderLiftsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

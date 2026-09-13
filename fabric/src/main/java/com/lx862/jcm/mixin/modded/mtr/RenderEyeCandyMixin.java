@@ -41,8 +41,8 @@ public class RenderEyeCandyMixin {
         scriptInstance.setWrapperObject(beWrapper);
 
         scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
-            eyeCandyScriptInstance.updateRenderer(eyeCandyScriptContext.renderManager());
-            eyeCandyScriptInstance.updateSound(eyeCandyScriptContext.soundManager());
+            eyeCandyScriptInstance.updateRenderer(eyeCandyScriptContext.getRenderManager());
+            eyeCandyScriptInstance.updateSound(eyeCandyScriptContext.getSoundManager());
             eyeCandyScriptContext.resetForNextRun();
         });
 

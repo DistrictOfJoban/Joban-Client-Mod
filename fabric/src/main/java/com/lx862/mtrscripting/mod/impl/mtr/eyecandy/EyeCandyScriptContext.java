@@ -82,15 +82,15 @@ public class EyeCandyScriptContext extends MTRScriptContext {
     }
 
     public void drawModel(ModelJS model, @ValueNullable Matrices matrices) {
-        renderManager().drawModel(model, matrices);
+        this.renderManager.drawModel(model, matrices);
     }
 
     public void drawModel(DynamicModelHolderJS dynamicModelHolder, @ValueNullable Matrices matrices) {
-        renderManager().drawModel(dynamicModelHolder, matrices);
+        this.renderManager.drawModel(dynamicModelHolder, matrices);
     }
 
     public void playSound(Identifier id, float volume, float pitch) {
-        soundManager().playSound(id, ScriptVector3f.ZERO, volume, pitch);
+        this.soundManager.playSound(id, ScriptVector3f.ZERO, volume, pitch);
     }
 
     @Override
