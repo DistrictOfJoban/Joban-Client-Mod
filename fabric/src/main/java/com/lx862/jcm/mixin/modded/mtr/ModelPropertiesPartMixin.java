@@ -1,6 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
-import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
+import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectDoubleImmutablePair;
 import org.mtr.mapping.holder.Box;
@@ -23,7 +23,7 @@ public class ModelPropertiesPartMixin extends ModelPropertiesPartSchema {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void jsblock$hideDisplayParts(Identifier texture, StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int[] scrollingDisplayIndexTracker, int light, ObjectArrayList<ObjectDoubleImmutablePair<Box>> openDoorways, boolean fromResourcePackCreator, CallbackInfo ci) {
         String vehicleId = vehicle.getVehicleCarsAndPositions().get(carNumber).left().getVehicleId();
-        if(type == PartType.DISPLAY && MTRContentResourceManager.shouldHideDisplayParts(vehicleId)) {
+        if(type == PartType.DISPLAY && MtrScriptingResourceManager.vehicle.shouldHideDisplayParts(vehicleId)) {
             ci.cancel();
         }
     }

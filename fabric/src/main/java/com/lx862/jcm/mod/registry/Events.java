@@ -5,7 +5,7 @@ import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.jcm.mod.resource.JCMResourceManager;
-import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
+import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.jcm.mod.scripting.JCMScripting;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.core.util.model.ModelManagerJS;
@@ -66,7 +66,7 @@ public class Events {
                     JCMResourceManager.reload();
                 } else {
                     MTRContentScripting.reset();
-                    MTRContentResourceManager.reload();
+                    MtrScriptingResourceManager.reload();
                 }
             }
         });
@@ -81,6 +81,6 @@ public class Events {
         MTRContentScripting.reset();
         ModelManagerJS.reset();
         JCMResourceManager.reload();
-        MTRContentResourceManager.reload();
+        MtrScriptingResourceManager.reload();
     }
 }

@@ -11,7 +11,8 @@ import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.JCMBlockEyecandyExtra;
-import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
+import com.lx862.mtrscripting.mod.resource.EyecandyResourceProvider;
+import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectImmutableList;
 import org.mtr.mapping.holder.*;
@@ -120,7 +121,7 @@ public class EyecandySelectionScreen extends SavableScreen implements RenderHelp
             }
         });
 
-        MTRContentResourceManager.EyecandyScriptConfiguration scriptConfig = MTRContentResourceManager.getEyecandyScript(objectResource.getId());
+        EyecandyResourceProvider.EyecandyScriptConfiguration scriptConfig = MtrScriptingResourceManager.eyecandy.getScriptEntry(objectResource.getId());
         boolean hasCustomConfig = scriptConfig != null && scriptConfig.eyecandyCustomConfig() != null;
 
         ButtonWidgetExtension editBtn = new ButtonWidgetExtension(0, 0, 20, 20, TextUtil.translatable(TextCategory.GUI, "eyecandy.listview.widget.edit"), (btn) -> {
@@ -173,7 +174,7 @@ public class EyecandySelectionScreen extends SavableScreen implements RenderHelp
     private void sendUpdate() {
         this.callback.run();
 
-        MTRContentResourceManager.EyecandyScriptConfiguration scriptConfig = MTRContentResourceManager.getEyecandyScript(currentObject);
+        EyecandyResourceProvider.EyecandyScriptConfiguration scriptConfig = MtrScriptingResourceManager.eyecandy.getScriptEntry(currentObject);
         boolean hasCustomConfig = scriptConfig != null && scriptConfig.eyecandyCustomConfig() != null;
 
         if(hasCustomConfig) {

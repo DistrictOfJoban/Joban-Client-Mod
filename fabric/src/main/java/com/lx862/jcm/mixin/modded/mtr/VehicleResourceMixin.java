@@ -1,7 +1,7 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.config.JCMClientConfig;
-import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
+import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
@@ -34,7 +34,7 @@ public abstract class VehicleResourceMixin {
         }
 
         VehicleCar vehicleCar = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber);
-        String scriptGroupId = MTRContentResourceManager.getVehicleScriptEntryId(vehicleCar.getVehicleId());
+        String scriptGroupId = MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(vehicleCar.getVehicleId());
         if(scriptGroupId == null) return;
 
         ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptGroupId));

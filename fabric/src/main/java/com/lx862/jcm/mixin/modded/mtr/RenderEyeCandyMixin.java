@@ -1,6 +1,7 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
-import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
+import com.lx862.mtrscripting.mod.resource.EyecandyResourceProvider;
+import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.EyeCandyScriptContext;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.EyeCandyScriptInstance;
@@ -28,7 +29,7 @@ public class RenderEyeCandyMixin {
         World world = blockEntity.getWorld2();
         if(world == null) return;
 
-        MTRContentResourceManager.EyecandyScriptConfiguration eyecandyScriptEntry = MTRContentResourceManager.getEyecandyScript(blockEntity.getModelId());
+        EyecandyResourceProvider.EyecandyScriptConfiguration eyecandyScriptEntry = MtrScriptingResourceManager.eyecandy.getScriptEntry(blockEntity.getModelId());
         if(eyecandyScriptEntry == null) return;
         ParsedScript parsedScript = eyecandyScriptEntry.parsedScript();
         EyecandyBlockEntityWrapper beWrapper = new EyecandyBlockEntityWrapper(blockEntity);

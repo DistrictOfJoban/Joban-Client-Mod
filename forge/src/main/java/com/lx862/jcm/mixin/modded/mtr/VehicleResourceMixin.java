@@ -1,7 +1,6 @@
 package com.lx862.jcm.mixin.modded.mtr;
 
 import com.lx862.jcm.mod.config.JCMClientConfig;
-import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptInstance;
 import com.lx862.mtrscripting.core.primitive.ScriptInstance;
@@ -9,6 +8,7 @@ import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
+import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import org.mtr.core.data.VehicleCar;
 import org.mtr.core.tool.Vector;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -34,7 +34,7 @@ public abstract class VehicleResourceMixin {
         }
 
         VehicleCar vehicleCar = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber);
-        String scriptGroupId = MTRContentResourceManager.getVehicleScriptEntryId(vehicleCar.getVehicleId());
+        String scriptGroupId = MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(vehicleCar.getVehicleId());
         if(scriptGroupId == null) return;
 
         ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptGroupId));

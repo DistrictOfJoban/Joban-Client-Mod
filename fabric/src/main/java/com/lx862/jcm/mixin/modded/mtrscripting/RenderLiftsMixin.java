@@ -9,9 +9,8 @@ import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.mod.impl.mtr.lift.LiftScriptContext;
 import com.lx862.mtrscripting.mod.impl.mtr.lift.LiftScriptInstance;
 import com.lx862.mtrscripting.mod.impl.mtr.lift.LiftWrapper;
-import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptContext;
-import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptInstance;
-import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
+import com.lx862.mtrscripting.mod.resource.LiftResourceProvider;
+import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import org.mtr.core.data.Lift;
 import org.mtr.libraries.com.logisticscraft.occlusionculling.util.Vec3d;
 import org.mtr.libraries.it.unimi.dsi.fastutil.ints.IntObjectImmutablePair;
@@ -34,7 +33,7 @@ public class RenderLiftsMixin {
         for(MinecraftClientData.LiftWrapper liftWrapper : MinecraftClientData.getInstance().liftWrapperList.values()) {
             String style = liftWrapper.getLift().getStyle();
 
-            MTRContentResourceManager.LiftScriptConfiguration scriptEntry = MTRContentResourceManager.getLiftScript(style);
+            LiftResourceProvider.LiftScriptConfiguration scriptEntry = MtrScriptingResourceManager.lift.getScriptEntry(style);
             if(scriptEntry == null) continue;
 
             LiftWrapper wrapperObject = new LiftWrapper(liftWrapper, World.cast(MinecraftClient.getInstance().getWorldMapped()));
