@@ -42,11 +42,16 @@ public abstract class SavableScreen extends TitledScreen implements GuiHelper {
         // Save config by default, unless explicitly requested not to
         if(!discardConfig) {
             onSave();
+        } else {
+            onDiscard();
         }
         super.onClose2();
     }
 
     protected abstract void onSave();
+
+    protected void onDiscard() {
+    }
 
     @Override
     public boolean isPauseScreen2() {

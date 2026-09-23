@@ -14,6 +14,7 @@
   - Add `PIDSWrapper.isPlatformAutoDetected()`, returning whether the selected PIDS platform is manually picked by the user, or automatically detected.
 - When script debug mode is enabled, in-game script parsing error messages will now display the first-time you join the game.
 - UI:
+  - PIDS Projector will now reflect the position offset and rotation as you change the field, so you can precisely position it in real-time.
   - Numeric field no longer have the arrow button, as it's rarely used
   - Numeric field scrolling now allows finer increment when holding Shift (0.05), or Ctrl+Shift (0.025)
   - Numeric field now allows you to enter negative sign directly (`-`) after Ctrl+A.
