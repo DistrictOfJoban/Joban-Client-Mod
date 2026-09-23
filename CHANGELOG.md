@@ -13,6 +13,10 @@
 - **PIDS Scripting**
   - Add `PIDSWrapper.isPlatformAutoDetected()`, returning whether the selected PIDS platform is manually picked by the user, or automatically detected.
 - When script debug mode is enabled, in-game script parsing error messages will now display the first-time you join the game.
+- UI:
+  - Numeric field no longer have the arrow button, as it's rarely used
+  - Numeric field scrolling now allows finer increment when holding Shift (0.05), or Ctrl+Shift (0.025)
+  - Numeric field now allows you to enter negative sign directly (`-`) after Ctrl+A.
 
 ## Fixes
 - **PIDS Projector** can now render even further away before disappearing.

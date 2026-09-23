@@ -6,6 +6,7 @@ import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.MutableText;
+import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.tool.TextCase;
 
@@ -42,8 +43,10 @@ public class DoubleTextField extends AlwaysRenderedTextField implements GuiHelpe
         String prevValue = getText2();
         boolean bl = super.charTyped2(chr, modifiers);
 
+        String newString = getText2();
+        if(newString.equals("-")) return bl;
+
         try {
-            String newString = getText2();
             double val = Double.parseDouble(newString);
             if(val < min || val > max) {
                 JCMLogger.debug("DoubleTextField: Value too large or small");
@@ -78,14 +81,14 @@ public class DoubleTextField extends AlwaysRenderedTextField implements GuiHelpe
     }
 
     protected void drawUpDownButton(GraphicsHolder graphicsHolder) {
-        MutableText upArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.increment");
-        MutableText dnArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.decrement");
-        int fontHeight = 9;
-        int startY = (height - (fontHeight * 2));
-        int upWidth = GraphicsHolder.getTextWidth(upArrow);
-        int dnWidth = GraphicsHolder.getTextWidth(dnArrow);
-        graphicsHolder.drawText(upArrow, getX2() + width - upWidth - 2, getY2() + startY, 0xFFFFFFFF, false, MAX_RENDER_LIGHT);
-        graphicsHolder.drawText(dnArrow, getX2() + width - dnWidth - 2, getY2() + startY + fontHeight, 0xFFFFFFFF, false, MAX_RENDER_LIGHT);
+//        MutableText upArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.increment");
+//        MutableText dnArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.decrement");
+//        int fontHeight = 9;
+//        int startY = (height - (fontHeight * 2));
+//        int upWidth = GraphicsHolder.getTextWidth(upArrow);
+//        int dnWidth = GraphicsHolder.getTextWidth(dnArrow);
+//        graphicsHolder.drawText(upArrow, getX2() + width - upWidth - 2, getY2() + startY, 0xFFFFFFFF, false, MAX_RENDER_LIGHT);
+//        graphicsHolder.drawText(dnArrow, getX2() + width - dnWidth - 2, getY2() + startY + fontHeight, 0xFFFFFFFF, false, MAX_RENDER_LIGHT);
     }
 
     @Override
@@ -102,20 +105,20 @@ public class DoubleTextField extends AlwaysRenderedTextField implements GuiHelpe
 
     @Override
     public boolean mouseClicked2(double mouseX, double mouseY, int button) {
-        MutableText upArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.increment");
-        MutableText dnArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.decrement");
-        int fontHeight = 9;
-        int startY = getY2() + (height - (fontHeight * 2)) / 2;
-        int upWidth = GraphicsHolder.getTextWidth(upArrow.getString());
-        int dnWidth = GraphicsHolder.getTextWidth(dnArrow.getString());
-
-        if(inRectangle(mouseX, mouseY, getX2() + width - upWidth - 2, startY, upWidth, fontHeight)) {
-            increment();
-        }
-
-        if(inRectangle(mouseX, mouseY, getX2() + width - dnWidth - 2, startY + fontHeight, dnWidth, fontHeight)) {
-            decrement();
-        }
+//        MutableText upArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.increment");
+//        MutableText dnArrow = TextUtil.translatable(TextCategory.GUI, "widget.numeric_text_field.decrement");
+//        int fontHeight = 9;
+//        int startY = getY2() + (height - (fontHeight * 2)) / 2;
+//        int upWidth = GraphicsHolder.getTextWidth(upArrow.getString());
+//        int dnWidth = GraphicsHolder.getTextWidth(dnArrow.getString());
+//
+//        if(inRectangle(mouseX, mouseY, getX2() + width - upWidth - 2, startY, upWidth, fontHeight)) {
+//            increment();
+//        }
+//
+//        if(inRectangle(mouseX, mouseY, getX2() + width - dnWidth - 2, startY + fontHeight, dnWidth, fontHeight)) {
+//            decrement();
+//        }
 
         return super.mouseClicked2(mouseX, mouseY, button);
     }
@@ -135,7 +138,7 @@ public class DoubleTextField extends AlwaysRenderedTextField implements GuiHelpe
 
     private void increment() {
         try {
-            BigDecimal result = new BigDecimal(getText2()).add(new BigDecimal("0.1"));
+            BigDecimal result = new BigDecimal(getText2()).add(new BigDecimal(getStep()));
             setValue(result.doubleValue());
         } catch (Exception e) {
             setValue(defaultValue);
@@ -144,10 +147,21 @@ public class DoubleTextField extends AlwaysRenderedTextField implements GuiHelpe
 
     private void decrement() {
         try {
-            BigDecimal result = new BigDecimal(getText2()).subtract(new BigDecimal("0.1"));
+            BigDecimal result = new BigDecimal(getText2()).subtract(new BigDecimal(getStep()));
             setValue(result.doubleValue());
         } catch (Exception e) {
             setValue(defaultValue);
         }
+    }
+
+    private static String getStep() {
+        if(Screen.hasShiftDown()) {
+            if(Screen.hasControlDown()) {
+                return "0.025";
+            } else {
+                return "0.05";
+            }
+        }
+        return "0.1";
     }
 }

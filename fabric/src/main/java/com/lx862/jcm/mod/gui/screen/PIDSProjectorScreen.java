@@ -75,6 +75,7 @@ public class PIDSProjectorScreen extends PIDSScreen {
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.rotate"), new MappedWidget(rotationFields));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.scale"), new MappedWidget(scaleField));
         listViewWidget.add(new CategoryItem(TextUtil.translatable(TextCategory.GUI, "pids.listview.category.pids")));
+        super.addConfigEntries(listViewWidget);
     }
 
     @Override

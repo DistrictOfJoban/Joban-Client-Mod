@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.mod.gui.widget;
 
+import com.lx862.amberui.gui.GuiHelper;
 import com.lx862.amberui.mapping.LoaderImplGUI;
 import com.lx862.amberui.gui.ClipStack;
 import com.lx862.amberui.gui.widget.AlwaysRenderedTextField;
@@ -50,7 +51,6 @@ public class ConfigTextField extends AlwaysRenderedTextField implements Validata
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
         ClipStack.ensureStateCorrect();
         super.render(graphicsHolder, mouseX, mouseY, delta);
-        GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
 
         String content = getText2();
         if(!this.result.success() && isHovered()) {
@@ -59,13 +59,7 @@ public class ConfigTextField extends AlwaysRenderedTextField implements Validata
                 LoaderImplGUI.setTooltip(MinecraftClient.getInstance().getCurrentScreenMapped(), orderedText);
             #endif
         } else if(!Objects.equals(this.originalValue, content)) {
-            guiDrawing.beginDrawingRectangle();
-            guiDrawing.drawRectangle(getX2(), getY2(), getX2() + getWidth2(), getY2()+1, 0xFFFFFF88);
-            guiDrawing.drawRectangle(getX2(), getY2(), getX2()+1, getY2() + getHeight2(), 0xFFFFFF88);
-
-            guiDrawing.drawRectangle(getX2(), getY2()+getHeight2()-1, getX2() + getWidth2(), getY2()+getHeight2(), 0xFFFFFF88);
-            guiDrawing.drawRectangle(getX2()+getWidth2()-1, getY2(), getX2()+getWidth2(), getY2() + getHeight2(), 0xFFFFFF88);
-            guiDrawing.finishDrawingRectangle();
+            GuiHelper.drawBorder(graphicsHolder, getX2(), getY2(), getWidth2(), getHeight2(), 0xFFFFFF88);
         }
     }
 

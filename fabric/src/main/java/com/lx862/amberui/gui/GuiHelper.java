@@ -71,4 +71,15 @@ public interface GuiHelper {
     default boolean inRectangle(double targetX, double targetY, int rectX, int rectY, int rectW, int rectH) {
         return (targetX >= rectX && targetX <= rectX + rectW) && (targetY >= rectY && targetY <= rectY + rectH);
     }
+
+    static void drawBorder(GraphicsHolder graphicsHolder, int x, int y, int width, int height, int color) {
+        GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
+        guiDrawing.beginDrawingRectangle();
+        guiDrawing.drawRectangle(x, y, x + width, y+1, color);
+        guiDrawing.drawRectangle(x, y, x+1, y + height, color);
+
+        guiDrawing.drawRectangle(x, y + height - 1, x + width, y + height, color);
+        guiDrawing.drawRectangle(x + width - 1, y, x + width, y + height, color);
+        guiDrawing.finishDrawingRectangle();
+    }
 }

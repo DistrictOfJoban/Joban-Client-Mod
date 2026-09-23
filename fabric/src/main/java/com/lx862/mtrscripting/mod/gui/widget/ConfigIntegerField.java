@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.mod.gui.widget;
 
+import com.lx862.amberui.gui.GuiHelper;
 import com.lx862.amberui.mapping.LoaderImplGUI;
 import com.lx862.amberui.gui.widget.IntegerTextField;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
@@ -34,7 +35,6 @@ public class ConfigIntegerField extends IntegerTextField implements ValidatableW
     @Override
     public void render(GraphicsHolder graphicsHolder, int mouseX, int mouseY, float delta) {
         super.render(graphicsHolder, mouseX, mouseY, delta);
-        GuiDrawing guiDrawing = new GuiDrawing(graphicsHolder);
 
         if(!this.result.success() && isHovered()) {
             #if MC_VERSION >= "11903"
@@ -42,13 +42,7 @@ public class ConfigIntegerField extends IntegerTextField implements ValidatableW
                 LoaderImplGUI.setTooltip(MinecraftClient.getInstance().getCurrentScreenMapped(), orderedText);
             #endif
         } else if(this.originalValue != getNumber()) {
-            guiDrawing.beginDrawingRectangle();
-            guiDrawing.drawRectangle(getX2(), getY2(), getX2() + getWidth2(), getY2()+1, 0xFFFFFF88);
-            guiDrawing.drawRectangle(getX2(), getY2(), getX2()+1, getY2() + getHeight2(), 0xFFFFFF88);
-
-            guiDrawing.drawRectangle(getX2(), getY2()+getHeight2()-1, getX2() + getWidth2(), getY2()+getHeight2(), 0xFFFFFF88);
-            guiDrawing.drawRectangle(getX2()+getWidth2()-1, getY2(), getX2()+getWidth2(), getY2() + getHeight2(), 0xFFFFFF88);
-            guiDrawing.finishDrawingRectangle();
+            GuiHelper.drawBorder(graphicsHolder, getX2(), getY2(), getWidth2(), getHeight2(), 0xFFFFFF88);
         }
     }
 
