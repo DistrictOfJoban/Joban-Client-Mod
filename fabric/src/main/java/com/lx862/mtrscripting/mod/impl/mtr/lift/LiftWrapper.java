@@ -68,8 +68,7 @@ public class LiftWrapper {
             Floor floor = new Floor(liftWrapper.getLift(), liftFloor, floorBE);
             this.floors.add(floor);
         });
-        // TODO
-        this.floors.sort((e, f) -> f.index - e.index);
+        this.floors.sort((e, f) -> e.index - f.index);
     }
 
     public Lift getMtrLift() {
@@ -129,7 +128,7 @@ public class LiftWrapper {
     }
 
     public List<Floor> getFloors() {
-        return floors;
+        return new ArrayList<>(this.floors);
     }
 
     public boolean isClientPlayerRiding() {
@@ -170,6 +169,10 @@ public class LiftWrapper {
             this.index = currentLift.getFloorIndex(liftFloor.getPosition());
             this.isTargetFloor = currentLift.hasInstruction(this.index).contains(LiftDirection.NONE);
             this.isCurrentFloor = currentLift.getCurrentFloor().getPosition().equals(liftFloor.getPosition());
+        }
+
+        public int getIndex() {
+            return this.index;
         }
 
         public String getNumber() {
