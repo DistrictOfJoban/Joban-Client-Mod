@@ -13,6 +13,7 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.World;
 import org.mtr.mod.block.BlockLiftTrackFloor;
 import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.mod.client.VehicleRidingMovement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -129,6 +130,10 @@ public class LiftWrapper {
 
     public List<Floor> getFloors() {
         return floors;
+    }
+
+    public boolean isClientPlayerRiding() {
+        return VehicleRidingMovement.isRiding(liftObject.getId());
     }
 
     @ApiInternal
