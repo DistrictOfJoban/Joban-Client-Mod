@@ -3,11 +3,13 @@
   "package": "com.lx862.jcm.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "SimpleDefaultedRegistryMixin",
     "BlockPIDSPoleMixin",
+    "SimpleDefaultedRegistryMixin",
     "TicketSystemMixin"
   ],
   "client": [
+    "mtrpatch.RenderRailwaySignMixin",
+    "mtrpatch.SignResourceSchemaMixin",
     "mtrpatch.CustomResourceLoaderMixin",
     "mtrpatch.CustomResourceToolsMixin",
     "mtrpatch.LiftMixin",
@@ -22,9 +24,9 @@
     "mtrpatch.RawMeshMixin",
     "mtrpatch.RenderRailsMixin",
     "mtrpatch.RenderVehiclesMixin",
+    "mtrpatch.VehicleResourceMixin",
     "mtrpatch.VehicleSelectorScreenMixin",
-    "mtrpatch.WidgetMapMixin",
-    "mtrpatch.VehicleResourceMixin"
+    "mtrpatch.WidgetMapMixin"
   ],
   "injectors": {
     "defaultRequire": 1

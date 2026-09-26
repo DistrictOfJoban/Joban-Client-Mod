@@ -8,6 +8,8 @@
     "TicketSystemMixin"
   ],
   "client": [
+    "mtrpatch.RenderRailwaySignMixin",
+    "mtrpatch.SignResourceSchemaMixin",
     "mtrpatch.CustomResourceLoaderMixin",
     "mtrpatch.CustomResourceToolsMixin",
     "mtrpatch.LiftMixin",

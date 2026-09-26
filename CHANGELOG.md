@@ -15,6 +15,8 @@ See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for document
   - Added `ctx.setDebugInfo(value: any)` shorthand for temporary, single-value on-screen debug info, without requiring a key.
     - Same as calling `ctx.setDebugInfo("<Untitled>", value)`
   - Added `isScriptRendered` field for eyecandy and lift entry, which allows script to fully take over the rendering, without MTR's default renderer.
+- **Railway Signs (MTR 4 format)**
+  - Allow coloring text with the `textColor` field. Format is the same as `backgroundColor`.
 
 ### Changes
 - **Eyecandy**
