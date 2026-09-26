@@ -13,8 +13,20 @@ public class PlayerEntityWrapper extends EntityWrapper {
         this.playerEntity = player;
     }
 
+    public boolean isSpectator() {
+        return playerEntity.isSpectator();
+    }
+
+    public boolean isCreative() {
+        return playerEntity.isCreative();
+    }
+
     public String playerName() {
         return playerEntity.getGameProfile().getName();
+    }
+
+    public String displayName() {
+        return playerEntity.getDisplayName().getString();
     }
 
     public boolean isSneaking() {

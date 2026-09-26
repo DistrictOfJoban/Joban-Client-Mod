@@ -15,6 +15,12 @@ See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for document
   - Added `ctx.setDebugInfo(value: any)` shorthand for temporary, single-value on-screen debug info, without requiring a key.
     - Same as calling `ctx.setDebugInfo("<Untitled>", value)`
   - Added `isScriptRendered` field for eyecandy and lift entry, which allows script to fully take over the rendering, without MTR's default renderer.
+  - Added `PlayerEntity.displayName()` to return the player's name with team prefixes.
+  - Added `PlayerEntity.isSpectator()` and `PlayerEntity.isCreative()`
+  - `Vector3f` now accepts TSC's `Position` class as a constructor
+- **PIDS Scripting**
+  - Add `TextWrapper.measureWidth()` to return the actual text width. Note that this cannot be chained for further usage, and must be invoked separately. 
+  - Add `PIDSWrapper.isPlatformAutoDetected()`, returning whether the selected PIDS platform is manually picked by the user, or automatically detected.
 - **Railway Signs (MTR 4 format)**
   - Allow coloring text with the `textColor` field. Format is the same as `backgroundColor`.
 
@@ -26,8 +32,6 @@ See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for document
 - **Scripting**
   - The `create()` function is changed to be re-invoked again after an execution error, instead of continuing towards `render()` function, where not all variable may be initialized, obscuring the original error in the create function.
   - When script debug mode is enabled, in-game script parsing error messages will now display on the first-time you join the game.
-- **PIDS Scripting**
-  - Add `PIDSWrapper.isPlatformAutoDetected()`, returning whether the selected PIDS platform is manually picked by the user, or automatically detected.
 - **UI Changes:**
   - PIDS Projector will now reflect the position offset and rotation as you change the field, so you can precisely position it in real-time.
   - Numeric field no longer have the arrow button, as it's rarely used

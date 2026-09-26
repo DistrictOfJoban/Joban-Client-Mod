@@ -162,8 +162,7 @@ public class LiftWrapper {
         private final boolean isCurrentFloor;
 
         public Floor(Lift currentLift, LiftFloor liftFloor, BlockLiftTrackFloor.BlockEntity be) {
-            // TODO: Add TSC Position as constructor for v3f
-            this.pos = new ScriptVector3f(liftFloor.getPosition().getX(), liftFloor.getPosition().getY(), liftFloor.getPosition().getZ());
+            this.pos = new ScriptVector3f(liftFloor.getPosition());
             this.number = be == null ? liftFloor.getNumber() : be.getFloorNumber();
             this.description = be == null ? liftFloor.getDescription() : be.getFloorDescription();
             this.index = currentLift.getFloorIndex(liftFloor.getPosition());

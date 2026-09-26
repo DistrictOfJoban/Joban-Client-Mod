@@ -157,6 +157,11 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         return this;
     }
 
+    public int measureWidth() {
+        if(textContent == null) throw new IllegalStateException("Text is not set!");
+        return GraphicsHolder.getTextWidth(getFormattedText(textContent));
+    }
+
     @Override
     public void validate() {
         if(this.textContent == null) throw new IllegalArgumentException("Text must be filled");
