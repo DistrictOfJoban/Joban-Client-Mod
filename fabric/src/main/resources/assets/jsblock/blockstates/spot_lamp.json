@@ -1,6 +1,8 @@
 {
   "variants": {
-    "ceiling=true": { "model": "jsblock:block/spot_lamp_ceiling" },
-	"ceiling=false": { "model": "jsblock:block/spot_lamp_ground" }
+    "ceiling=true,is_slab=false": { "model": "jsblock:block/spot_lamp_ceiling" },
+	"ceiling=false,is_slab=false": { "model": "jsblock:block/spot_lamp_ground" },
+    "ceiling=true,is_slab=true": { "model": "jsblock:block/spot_lamp_ceiling_slab" },
+    "ceiling=false,is_slab=true": { "model": "jsblock:block/spot_lamp_ground_slab" }
   }
 }

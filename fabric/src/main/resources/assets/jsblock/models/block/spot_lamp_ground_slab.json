@@ -1,0 +1,17 @@
+{
+	"textures": {
+		"0": "jsblock:block/spot_lamp",
+		"particle": "jsblock:block/spot_lamp"
+	},
+	"elements": [
+		{
+			"from": [4, -7.9, 4],
+			"to": [12, -7.9, 12],
+			"shade": false,
+			"faces": {
+				"up": {"uv": [0, 0, 16, 16], "texture": "#0"},
+				"down": {"uv": [0, 0, 16, 16], "texture": "#0", "cullface": "down"}
+			}
+		}
+	]
+}

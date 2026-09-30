@@ -1,9 +1,6 @@
 package com.lx862.jcm.mod.data;
 
-import org.mtr.mapping.holder.BooleanProperty;
-import org.mtr.mapping.holder.DirectionProperty;
-import org.mtr.mapping.holder.EnumProperty;
-import org.mtr.mapping.holder.IntegerProperty;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.DirectionHelper;
 import org.mtr.mod.block.IBlock;
 
@@ -16,6 +13,7 @@ public final class BlockProperties {
     public static final BooleanProperty HORIZONTAL_IS_LEFT = BooleanProperty.of("left");
     public static final EnumProperty<IBlock.DoubleBlockHalf> VERTICAL_2 = IBlock.HALF;
     public static final EnumProperty<IBlock.EnumThird> VERTICAL_PART_3 = IBlock.THIRD;
+    public static final EnumProperty<InvertBoolean> IS_SLAB_MIGRATE = EnumProperty.of("is_slab", InvertBoolean.class);
     public static final IntegerProperty LIGHT_LEVEL = IntegerProperty.of("level", 0, 15);
     public static final BooleanProperty POWERED = BooleanProperty.of("powered");
     public static final BooleanProperty IS_SLAB = BooleanProperty.of("is_slab");
@@ -24,4 +22,20 @@ public final class BlockProperties {
     public static final BooleanProperty POINT_TO_LEFT = BooleanProperty.of("right");
     public static final IntegerProperty BARRIER_FENCE_TYPE = IntegerProperty.of("type", 0, 10);
     public static final BooleanProperty BARRIER_FLIPPED = BooleanProperty.of("flipped");
+
+    public enum InvertBoolean implements StringIdentifiable {
+        FALSE("false"),
+        TRUE("true");
+
+        private final String name;
+
+        InvertBoolean(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String asString2() {
+            return this.name;
+        }
+    }
 }

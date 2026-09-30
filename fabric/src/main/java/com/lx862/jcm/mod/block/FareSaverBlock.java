@@ -13,10 +13,11 @@ import org.mtr.mapping.mapper.BlockWithEntity;
 import org.mtr.mod.block.IBlock;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class FareSaverBlock extends Vertical3Block implements BlockWithEntity {
-    public static final HashMap<UUID, Integer> discountList = new HashMap<>();
+    public static final Map<UUID, Integer> discountList = new HashMap<>();
 
     public FareSaverBlock(BlockSettings settings) {
         super(settings);

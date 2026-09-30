@@ -26,19 +26,19 @@ public abstract class SlabExtendableBlock extends DirectionalBlock {
         BlockState state = super.getPlacementState2(ctx);
         if(state == null) return null;
 
-        return state.with(new Property<>(IS_SLAB.data), shouldExtendForSlab(WorldAccess.cast(ctx.getWorld()), ctx.getBlockPos()));
+        return state.with(new Property<>(IS_SLAB.data), shouldExtendForSlab(WorldAccess.cast(ctx.getWorld()), ctx.getBlockPos().up(), SlabType.TOP));
     }
 
     @Override
     public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos).with(new Property<>(IS_SLAB.data), shouldExtendForSlab(world, pos));
+        return super.getStateForNeighborUpdate2(state, direction, neighborState, world, pos, neighborPos).with(new Property<>(IS_SLAB.data), shouldExtendForSlab(world, pos.up(), SlabType.TOP));
     }
 
-    public static boolean shouldExtendForSlab(WorldAccess world, BlockPos pos) {
-        BlockState blockTop = world.getBlockState(pos.up());
+    public static boolean shouldExtendForSlab(WorldAccess world, BlockPos pos, SlabType slabType) {
+        BlockState blockTop = world.getBlockState(pos);
 
         try {
-            return SlabBlockExtension.getType(blockTop) == SlabType.TOP;
+            return SlabBlockExtension.getType(blockTop) == slabType;
         } catch (IllegalArgumentException ignored) { // Likely no slab property
             return false;
         }

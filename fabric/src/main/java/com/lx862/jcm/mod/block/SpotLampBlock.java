@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.block;
 
+import com.lx862.jcm.mod.block.base.SlabExtendableBlock;
 import com.lx862.jcm.mod.block.base.VerticallyAttachedBlock;
 import com.lx862.jcm.mod.data.BlockProperties;
 import org.mtr.mapping.holder.*;
@@ -10,9 +11,21 @@ import java.util.List;
 
 public class SpotLampBlock extends VerticallyAttachedBlock {
     public static final BooleanProperty LIT = BlockProperties.POWERED;
+    public static final EnumProperty<BlockProperties.InvertBoolean> IS_SLAB = BlockProperties.IS_SLAB_MIGRATE;
 
     public SpotLampBlock(BlockSettings settings) {
         super(settings);
+    }
+
+    @Override
+    public BlockState getPlacementState2(ItemPlacementContext ctx) {
+        BlockState superState = super.getPlacementState2(ctx);
+        if(superState == null) return null;
+        boolean isTop = IBlock.getStatePropertySafe(superState, BlockProperties.TOP);
+        BlockPos targetBlockPos = isTop ? ctx.getBlockPos().up() : ctx.getBlockPos().down();
+        boolean hasSlab = SlabExtendableBlock.shouldExtendForSlab(WorldAccess.cast(ctx.getWorld()), targetBlockPos, isTop ? SlabType.TOP : SlabType.BOTTOM);
+
+        return superState.with(new Property<>(IS_SLAB.data), hasSlab ? BlockProperties.InvertBoolean.TRUE : BlockProperties.InvertBoolean.FALSE);
     }
 
     @Override
@@ -22,6 +35,11 @@ public class SpotLampBlock extends VerticallyAttachedBlock {
         } else {
             return IBlock.getVoxelShapeByDirection(4, 0, 4, 12, 0.25, 12, Direction.NORTH);
         }
+    }
+
+    @Override
+    public VoxelShape getCollisionShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
+        return VoxelShapes.empty();
     }
 
     @Override
@@ -36,5 +54,6 @@ public class SpotLampBlock extends VerticallyAttachedBlock {
     public void addBlockProperties(List<HolderBase<?>> properties) {
         super.addBlockProperties(properties);
         properties.add(LIT);
+        properties.add(IS_SLAB);
     }
 }

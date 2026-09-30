@@ -9,6 +9,7 @@ See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for document
 - Add **Emergency Train Stop Button (Wall mounted, TML)** and **URL variant** (Thanks **LX9702**!)
 - Previously **Spot Lamp** will always prefer attaching to the top block if available. 
   - Now it will respect attaching to the side the player clicked on.
+- Add slab support for **Spot Lamp**
 - **PIDS Projector** can now render further away before disappearing.
 - Fix **Automatic Iron Door** detecting players in spectator mode as well.
 
