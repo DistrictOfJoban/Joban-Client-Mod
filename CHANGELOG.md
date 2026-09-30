@@ -5,8 +5,12 @@ Lift Scripting has been added for review and feedback by the public.
 
 See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for documentation.
 
-## New: Blocks
+## Building / Blocks
 - Add **Emergency Train Stop Button (Wall mounted, TML)** and **URL variant** (Thanks **LX9702**!)
+- Previously **Spot Lamp** will always prefer attaching to the top block if available. 
+  - Now it will respect attaching to the side the player clicked on.
+- **PIDS Projector** can now render further away before disappearing.
+- Fix **Automatic Iron Door** detecting players in spectator mode as well.
 
 ## Other Changes
 
@@ -37,10 +41,6 @@ See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for document
   - Numeric field no longer have the arrow button, as it's rarely used
   - Numeric field scrolling now allows finer increment when holding Shift (0.05), or Ctrl+Shift (0.025)
   - Numeric field now allows you to enter negative sign directly (`-`) after Ctrl+A.
-
-### Fixes
-- **PIDS Projector** can now render further away before disappearing.
-- Fix **Automatic Iron Door** detecting players in spectator mode as well.
 
 #### PIDS Textures
 Please note that several textures used by PIDS (`rv_door_cls_apg.png`, `rv_door_cls_psd.png`, `rv_door_cls_train.png`, `thumbnail/pids_1a.png`) has been relocated from `jsblock:textures/block/pids` to `jsblock:textures/pids`.

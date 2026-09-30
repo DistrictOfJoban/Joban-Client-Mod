@@ -19,9 +19,12 @@ public abstract class VerticallyAttachedBlock extends JCMBlock {
         BlockState superState = super.getPlacementState2(ctx);
         BlockState blockAbove = ctx.getWorld().getBlockState(ctx.getBlockPos().up());
         if(superState == null) return null;
-        if(!com.lx862.jcm.mod.block.behavior.VerticallyAttachedBlock.canPlace(true, true, ctx)) return null;
+        boolean canAttachTop = com.lx862.jcm.mod.block.behavior.VerticallyAttachedBlock.canPlace(true, false, ctx);
+        boolean canAttachBottom = com.lx862.jcm.mod.block.behavior.VerticallyAttachedBlock.canPlace(false, true, ctx);
+        if(!canAttachTop && !canAttachBottom) return null;
 
-        return superState.with(new Property<>(TOP.data), !blockAbove.isAir());
+        boolean shouldAttachTop = !blockAbove.isAir() && !(ctx.getSide().equals(Direction.UP) && canAttachBottom);
+        return superState.with(new Property<>(TOP.data), shouldAttachTop);
     }
 
     @Override
