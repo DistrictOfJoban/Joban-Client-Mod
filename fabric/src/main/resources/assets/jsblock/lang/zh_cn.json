@@ -173,5 +173,6 @@
     "gui.jsblock.enquiry_screen.add_balance": "最后充值: %s",
     "gui.jsblock.enquiry_screen.balance": "剩余金额: %s",
     "gui.jsblock.enquiry_screen.points": "港铁积分: %s",
-    "gui.jsblock.rvenquiry_screen.balance": "净余金额"
+    "gui.jsblock.rvenquiry_screen.balance": "净余金额",
+    "gui.jsblock.keybinds.script_debug_reload": "重载脚本（与潜行键共用：JCM，与疾跑键共用：MTR）"
 }
