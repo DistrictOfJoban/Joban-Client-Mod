@@ -9,24 +9,24 @@
     "mtrscripting.SidingAccessorMixin"
   ],
   "client": [
-    "mtrscripting.NativeImageAccessor",
+    "mtrscripting.BlockEyecandyMixin",
+    "mtrscripting.EyecandyScreenMixin",
     "mtrscripting.LegacyVehicleResourceSchemaMixin",
+    "mtrscripting.MainRendererMixin",
     "mtrscripting.ModelPropertiesPartMixin",
+    "mtrscripting.NativeImageAccessor",
     "mtrscripting.ObjModelAccessor",
     "mtrscripting.OptimizedModelAccessor",
     "mtrscripting.OptimizedModelWrapperAccessor",
     "mtrscripting.RawMeshAccessor",
-    "mtrscripting.RenderVehiclesMixin",
-    "mtrscripting.VehicleSchemaMixin",
-    "mtrscripting.VertexAttributeStateAccessor",
-    "mtrscripting.BlockEyecandyMixin",
-    "mtrscripting.EyecandyScreenMixin",
-    "mtrscripting.MainRendererMixin",
     "mtrscripting.RenderEyeCandyMixin",
     "mtrscripting.RenderLiftsMixin",
+    "mtrscripting.RenderVehiclesMixin",
+    "mtrscripting.VehicleAccessorMixin",
     "mtrscripting.VehicleExtensionMixin",
     "mtrscripting.VehicleResourceMixin",
-    "mtrscripting.VehicleAccessorMixin"
+    "mtrscripting.VehicleSchemaMixin",
+    "mtrscripting.VertexAttributeStateAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

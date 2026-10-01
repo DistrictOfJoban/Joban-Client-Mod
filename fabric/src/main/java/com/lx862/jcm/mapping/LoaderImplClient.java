@@ -1,6 +1,9 @@
 package com.lx862.jcm.mapping;
 
 import com.lx862.jcm.mixin.mtrscripting.NativeImageAccessor;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import org.mtr.mapping.holder.*;
 
@@ -25,5 +28,9 @@ public class LoaderImplClient {
 
     public static long getNativeImagePointer(NativeImage nativeImage) {
         return ((NativeImageAccessor)(Object)nativeImage.data).getPointer();
+    }
+
+    public static void addPackOverride(Identifier id, String modid) {
+        ResourceManagerHelper.registerBuiltinResourcePack(id.data, FabricLoader.getInstance().getModContainer(modid).orElseThrow(), ResourcePackActivationType.ALWAYS_ENABLED);
     }
 }

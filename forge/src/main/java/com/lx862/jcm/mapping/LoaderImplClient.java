@@ -26,4 +26,7 @@ public class LoaderImplClient {
     public static Vector3d getEntityVelocity(Entity entity) {
         return new Vector3d(entity.data.getDeltaMovement());
     }
+
+    public static void addPackOverride(Identifier id, String modid) {
+    }
 }

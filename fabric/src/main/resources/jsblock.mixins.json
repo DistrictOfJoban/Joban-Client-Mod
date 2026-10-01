@@ -5,11 +5,12 @@
   "mixins": [
     "BlockPIDSPoleMixin",
     "SimpleDefaultedRegistryMixin",
-    "TicketSystemMixin"
+    "TicketSystemMixin",
+    "mtrpatch.BlockExtensionMixin",
+    "mtrpatch.BlockPoleCheckBaseMixin",
+    "mtrpatch.BlockRailwaySignPoleMixin"
   ],
   "client": [
-    "mtrpatch.RenderRailwaySignMixin",
-    "mtrpatch.SignResourceSchemaMixin",
     "mtrpatch.CustomResourceLoaderMixin",
     "mtrpatch.CustomResourceToolsMixin",
     "mtrpatch.LiftMixin",
@@ -23,7 +24,9 @@
     "mtrpatch.RailMathMixin",
     "mtrpatch.RawMeshMixin",
     "mtrpatch.RenderRailsMixin",
+    "mtrpatch.RenderRailwaySignMixin",
     "mtrpatch.RenderVehiclesMixin",
+    "mtrpatch.SignResourceSchemaMixin",
     "mtrpatch.VehicleResourceMixin",
     "mtrpatch.VehicleSelectorScreenMixin",
     "mtrpatch.WidgetMapMixin"

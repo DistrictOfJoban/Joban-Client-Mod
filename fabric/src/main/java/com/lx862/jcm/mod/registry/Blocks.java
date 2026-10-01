@@ -4,6 +4,7 @@ import com.lx862.jcm.mod.block.*;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.Block;
+import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.registry.BlockRegistryObject;
 import org.mtr.mod.block.IBlock;

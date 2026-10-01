@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.registry;
 
+import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.jcm.mod.Constants;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.mapper.BlockEntityExtension;
@@ -38,6 +39,7 @@ public class JCMRegistryClient {
         BlockEntityRenderers.registerClient();
         Networking.registerClient();
         KeyBinds.registerClient();
+        LoaderImplClient.addPackOverride(Constants.id("jsblock_override"), Constants.MOD_ID);
         REGISTRY_CLIENT.init();
     }
 }

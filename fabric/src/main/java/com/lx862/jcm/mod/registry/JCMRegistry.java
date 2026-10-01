@@ -1,10 +1,7 @@
 package com.lx862.jcm.mod.registry;
 
 import com.lx862.jcm.mod.Constants;
-import org.mtr.mapping.holder.Block;
-import org.mtr.mapping.holder.BlockPos;
-import org.mtr.mapping.holder.BlockState;
-import org.mtr.mapping.holder.ItemSettings;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.registry.*;
 import org.mtr.mapping.tool.PacketBufferReceiver;
@@ -16,6 +13,18 @@ import java.util.function.Supplier;
 public class JCMRegistry {
 
     public static final Registry REGISTRY = new Registry();
+
+    public static BlockRegistryObject registerBlockItem(Identifier id, Supplier<Block> supplier, CreativeModeTabHolder itemGroup) {
+        return REGISTRY.registerBlockWithBlockItem(id, supplier, itemGroup);
+    }
+
+    public static BlockRegistryObject registerBlock(Identifier id, Supplier<Block> supplier) {
+        return REGISTRY.registerBlock(id, supplier);
+    }
+
+    public static ItemRegistryObject registerItem(Identifier id, Function<ItemSettings, org.mtr.mapping.holder.Item> callback, CreativeModeTabHolder itemGroup) {
+        return REGISTRY.registerItem(id, callback, itemGroup);
+    }
 
     public static BlockRegistryObject registerBlockItem(String id, Supplier<Block> supplier, CreativeModeTabHolder itemGroup) {
         return REGISTRY.registerBlockWithBlockItem(Constants.id(id), supplier, itemGroup);

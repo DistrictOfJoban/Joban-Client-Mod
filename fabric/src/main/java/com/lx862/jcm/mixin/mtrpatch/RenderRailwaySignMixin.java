@@ -16,7 +16,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(value = RenderRailwaySign.class, remap = false)
+/* On priority: Tianjin Metro addon overwrites the entire drawSign method, we'll let it go first... */
+@Mixin(value = RenderRailwaySign.class, remap = false, priority = 1100)
 public class RenderRailwaySignMixin {
     @Unique private static int jsblock$curSignTextColor = -1;
 
