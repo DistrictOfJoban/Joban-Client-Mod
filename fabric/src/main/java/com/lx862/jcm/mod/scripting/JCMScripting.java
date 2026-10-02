@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.scripting;
 
 import com.lx862.jcm.mod.JCM;
 import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.jcm.mod.scripting.pids.RectangleWrapper;
 import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.jcm.mod.scripting.pids.TextWrapper;
 import com.lx862.jcm.mod.scripting.pids.TextureWrapper;
@@ -36,6 +37,7 @@ public class JCMScripting {
             if (contextName.equals("pids")) {
                 scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));
                 scriptable.put("Texture", scriptable, new NativeJavaClass(scriptable, TextureWrapper.class));
+                scriptable.put("Rectangle", scriptable, new NativeJavaClass(scriptable, RectangleWrapper.class));
             }
         });
 

@@ -28,6 +28,12 @@ Lift Scripting has been added for review and feedback by the public.
 
 See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for documentation.
 
+### PIDS Scripting
+- Add `TextWrapper.measureWidth()` to return the actual text width. Note that this cannot be chained for further usage, and must be invoked separately.
+- Add `PIDSWrapper.isPlatformAutoDetected()`, returning whether the selected PIDS platform is manually picked by the user, or automatically detected.
+- Add `RectangleWrapper`, which is similar to `TextureWrapper` with the texture id pointing to `mtr:textures/block/white.png`
+  - PIDS relying on a white texture previously should change to use `RectangleWrapper` (`Rectangle.`), as it is guaranteed the output will be a solid color, even if such texture is moved/no longer available in future MTR versions.
+
 ### Additions
 - **Scripting**
   - Added `ctx.setDebugInfo(value: any)` shorthand for temporary, single-value on-screen debug info, without requiring a key.
@@ -36,9 +42,6 @@ See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for document
   - Added `PlayerEntity.displayName()` to return the player's name with team prefixes.
   - Added `PlayerEntity.isSpectator()` and `PlayerEntity.isCreative()`
   - `Vector3f` now accepts TSC's `Position` class as a constructor
-- **PIDS Scripting**
-  - Add `TextWrapper.measureWidth()` to return the actual text width. Note that this cannot be chained for further usage, and must be invoked separately. 
-  - Add `PIDSWrapper.isPlatformAutoDetected()`, returning whether the selected PIDS platform is manually picked by the user, or automatically detected.
 
 ### Changes
 - **Eyecandy**
