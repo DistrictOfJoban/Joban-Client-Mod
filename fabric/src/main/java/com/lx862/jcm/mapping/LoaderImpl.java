@@ -1,9 +1,17 @@
 package com.lx862.jcm.mapping;
 
 import net.fabricmc.loader.api.FabricLoader;
+#if MC_VERSION >= "11903"
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
+#else
+import net.minecraft.network.packet.s2c.play.PlaySoundIdS2CPacket;
+#endif
+
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.SoundHelper;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -61,5 +69,18 @@ public class LoaderImpl {
 
     public static Style withHoverContentText(Style style, MutableText content) {
         return new Style(style.data.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, content.data)));
+    }
+
+    public static void playSound(World world, ServerPlayerEntity playerEntity, Identifier soundId, SoundCategory soundCategory, BlockPos blockPos, float volume, float pitch) {
+        #if MC_VERSION >= "11903"
+        SoundEvent event = SoundHelper.createSoundEvent(soundId);
+        playerEntity.data.networkHandler.sendPacket(
+                new PlaySoundS2CPacket(RegistryEntry.of(event.data), soundCategory.data, blockPos.getX(), blockPos.getY(), blockPos.getZ(), volume, pitch, world.getRandom().data.nextLong())
+        );
+        #elif MC_VERSION >= "11900"
+        playerEntity.data.networkHandler.sendPacket(new PlaySoundIdS2CPacket(soundId, soundCategory.data, new net.minecraft.util.math.Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()), volume, 1, world.getRandom().data.nextLong()));
+        #else
+        playerEntity.data.networkHandler.sendPacket(new PlaySoundIdS2CPacket(soundId, soundCategory.data, new net.minecraft.util.math.Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()), volume, 1));
+        #endif
     }
 }

@@ -14,6 +14,11 @@
   - Now it will respect attaching to the side the player clicked on.
 - **PIDS Projector** can now render further away before disappearing.
 - Fix **Automatic Iron Door** detecting players in spectator mode as well.
+- The playing mechanism for **Sound Looper** has been revised.
+  - In JCM v1, the sounds are played to everyone across the server, which makes it a reliable source for playing all sorts of audio.
+  - In JCM v2, it would only play to nearby players. Which means player may not be able to hear anything after getting in-range, until another loop occurs.
+  - In this update, the range is now changed dynamically based on the duration. This allows short-form looping audio to play for nearby players, while having further range for long-form audio.
+    - This should hopefully make sound looper more reliable.
 
 ## Technical
 

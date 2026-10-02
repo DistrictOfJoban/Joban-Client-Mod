@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.block.entity;
 
+import com.lx862.jcm.mapping.LoaderImpl;
 import com.lx862.jcm.mod.data.JCMServerStats;
 import com.lx862.jcm.mod.registry.BlockEntities;
 import org.mtr.mapping.holder.*;
@@ -8,6 +9,8 @@ import org.mtr.mapping.mapper.SoundHelper;
 
 public class SoundLooperBlockEntity extends JCMBlockEntityBase {
     public static final SoundCategory[] SOURCE_LIST = {SoundCategory.MASTER, SoundCategory.MUSIC, SoundCategory.WEATHER, SoundCategory.AMBIENT, SoundCategory.PLAYERS, SoundCategory.BLOCKS, SoundCategory.VOICE};
+    public static final int MIN_SOUND_RANGE = 64;
+    public static final int MAX_SOUND_RANGE = 2000; // 2km range, should be good enough for most of the things tbh.
     private String soundID = "";
     private BlockPos corner1 = new BlockPos(0, 0, 0);
     private BlockPos corner2 = new BlockPos(0, 0, 0);
@@ -61,16 +64,24 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
             if(needRedstone && !emittingRedstonePower) return;
 
             final SoundCategory category = SOURCE_LIST[soundCategory];
-            Identifier identifier = null;
+            final Identifier identifier;
             try {
                 identifier = new Identifier(soundID);
             } catch (Exception ignored) {
+                return;
             }
-            if(identifier == null) return;
+
             SoundEvent soundEvent = SoundHelper.createSoundEvent(identifier);
 
             if(!limitRange) {
-                world.playSound((PlayerEntity) null, getPos2(), soundEvent, category, volume, 1);
+                int broadcastRange = Math.min(MAX_SOUND_RANGE, Math.max(MIN_SOUND_RANGE, getLoopInterval()));
+                Box limitedRange = new Box(getPos2().getX()-broadcastRange, getPos2().getY()-broadcastRange, getPos2().getZ()-broadcastRange, getPos2().getX()+broadcastRange, getPos2().getY()+broadcastRange, getPos2().getZ()+broadcastRange);
+
+                MinecraftServerHelper.iteratePlayers(ServerWorld.cast(world), (player) -> {
+                    if(limitedRange.contains(player.getPos())) {
+                        LoaderImpl.playSound(world, player, identifier, category, getPos2(), volume, 1);
+                    }
+                });
             } else {
                 BlockPos corner1 = getCorner1();
                 BlockPos corner2 = getCorner2();
