@@ -127,7 +127,6 @@
     "gui.jsblock.pids_preset.listview.category.builtin": "内置显示屏格式",
     "gui.jsblock.pids_preset.listview.category.custom": "自订显示屏格式",
     "gui.jsblock.pids_preset.listview.widget.choose": "选择",
-    "gui.jsblock.pids_preset.listview.widget.edit": "编辑",
     "gui.jsblock.pids_preset.listview.widget.selected": "已选择",
     "gui.jsblock.pids_preset.subtitle": "已选择: %s",
     "gui.jsblock.pids_preset.title": "显示屏格式",
@@ -174,5 +173,5 @@
     "gui.jsblock.enquiry_screen.balance": "剩余金额: %s",
     "gui.jsblock.enquiry_screen.points": "港铁积分: %s",
     "gui.jsblock.rvenquiry_screen.balance": "净余金额",
-    "gui.jsblock.keybinds.script_debug_reload": "重载脚本（与潜行键共用：JCM，与疾跑键共用：MTR）"
+    "gui.jsblock.keybinds.script_debug_reload": "重载脚本快捷键"
 }

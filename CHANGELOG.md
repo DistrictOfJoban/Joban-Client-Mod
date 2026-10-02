@@ -1,14 +1,15 @@
 # JCM v2.3.0-beta.1 for MTR 4.0.5 has been released!
 
-## Building / Blocks
+## General
 ### New Blocks
 - Add **Emergency Train Stop Button (Wall mounted, TML)** and **URL variant** (Thanks **LX9702**!)
 
-### Slab Support
+### Blocks Slab Support
 - The **Spot Lamp** block in JCM will now descend/ascend in accordance to slab blocks attached.
 - The **Railway Sign Poles** in MTR now gained the ability to extend the pole according to the slab above.
 
 ### Fixes
+- Fix JCM having an overly-long keybinding description, causing the Minecraft keybind page to shift outside the game window.
 - Previously **Spot Lamp** will always prefer attaching to the top block if available. 
   - Now it will respect attaching to the side the player clicked on.
 - **PIDS Projector** can now render further away before disappearing.

@@ -127,7 +127,6 @@
     "gui.jsblock.pids_preset.listview.category.builtin": "內置顯示屏格式",
     "gui.jsblock.pids_preset.listview.category.custom": "自訂顯示屏格式",
     "gui.jsblock.pids_preset.listview.widget.choose": "選擇",
-    "gui.jsblock.pids_preset.listview.widget.edit": "編輯",
     "gui.jsblock.pids_preset.listview.widget.selected": "已選擇",
     "gui.jsblock.pids_preset.subtitle": "已選擇: %s",
     "gui.jsblock.pids_preset.title": "顯示屏格式",
@@ -173,5 +172,6 @@
     "gui.jsblock.enquiry_screen.add_balance": "最後增值: %s",
     "gui.jsblock.enquiry_screen.balance": "餘額: %s",
     "gui.jsblock.enquiry_screen.points": "港鐵積分: %s",
-    "gui.jsblock.rvenquiry_screen.balance": "餘額"
+    "gui.jsblock.rvenquiry_screen.balance": "餘額",
+    "gui.jsblock.keybinds.script_debug_reload": "重新載入腳本快捷鍵"
 }
