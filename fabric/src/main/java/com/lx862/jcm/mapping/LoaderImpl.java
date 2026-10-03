@@ -78,9 +78,9 @@ public class LoaderImpl {
                 new PlaySoundS2CPacket(RegistryEntry.of(event.data), soundCategory.data, blockPos.getX(), blockPos.getY(), blockPos.getZ(), volume, pitch, world.getRandom().data.nextLong())
         );
         #elif MC_VERSION >= "11900"
-        playerEntity.data.networkHandler.sendPacket(new PlaySoundIdS2CPacket(soundId, soundCategory.data, new net.minecraft.util.math.Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()), volume, 1, world.getRandom().data.nextLong()));
+        playerEntity.data.networkHandler.sendPacket(new PlaySoundIdS2CPacket(soundId.data, soundCategory.data, new net.minecraft.util.math.Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()), volume, 1, world.getRandom().data.nextLong()));
         #else
-        playerEntity.data.networkHandler.sendPacket(new PlaySoundIdS2CPacket(soundId, soundCategory.data, new net.minecraft.util.math.Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()), volume, 1));
+        playerEntity.data.networkHandler.sendPacket(new PlaySoundIdS2CPacket(soundId.data, soundCategory.data, new net.minecraft.util.math.Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()), volume, 1));
         #endif
     }
 }
