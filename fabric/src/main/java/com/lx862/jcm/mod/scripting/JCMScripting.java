@@ -7,7 +7,7 @@ import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.jcm.mod.scripting.pids.TextWrapper;
 import com.lx862.jcm.mod.scripting.pids.TextureWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
-import com.lx862.mtrscripting.mod.impl.mtr.MTRUtil;
+import com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.util.TextUtilJS;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.core.ScriptManager;
@@ -31,8 +31,8 @@ public class JCMScripting {
 
         scriptManager.parseScriptEvent.register((contextName, context, scriptable) -> {
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
+            scriptable.put("MTR", scriptable, new NativeJavaClass(scriptable, MTRWrapper.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtilJS.class));
-            scriptable.put("MTRUtil", scriptable, new NativeJavaClass(scriptable, MTRUtil.class));
 
             if (contextName.equals("pids")) {
                 scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));

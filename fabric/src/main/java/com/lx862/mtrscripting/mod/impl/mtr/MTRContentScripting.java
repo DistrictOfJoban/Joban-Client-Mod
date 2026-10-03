@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.mod.impl.mtr;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.util.TextUtilJS;
 import com.lx862.mtrscripting.core.ScriptManager;
 import com.lx862.mtrscripting.core.api.ClassRule;
@@ -48,8 +49,8 @@ public class MTRContentScripting {
 
         scriptManager.parseScriptEvent.register((contextName, context, scriptable) -> {
             scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
+            scriptable.put("MTR", scriptable, new NativeJavaClass(scriptable, MTRWrapper.class));
             scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtilJS.class));
-            scriptable.put("MTRUtil", scriptable, new NativeJavaClass(scriptable, MTRUtil.class));
         });
 
         MTRScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
