@@ -7,10 +7,7 @@ import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.mojang.text2speech.Narrator;
 import org.mtr.mapping.holder.*;
-import org.mtr.mapping.mapper.MinecraftClientHelper;
-import org.mtr.mapping.mapper.ScoreboardHelper;
-import org.mtr.mapping.mapper.TextHelper;
-import org.mtr.mapping.mapper.WorldHelper;
+import org.mtr.mapping.mapper.*;
 
 import java.util.List;
 
@@ -71,6 +68,16 @@ public class MinecraftClientWrapper {
 
     public static int getRedstoneLevel(ScriptVector3f pos) {
         return LoaderImpl.getRedstoneLevel(World.cast(MinecraftClient.getInstance().getWorldMapped()), pos.rawBlockPos());
+    }
+
+    public static String getCurrentWorldId() {
+        Identifier id = MinecraftServerHelper.getWorldId(World.cast(MinecraftClient.getInstance().getWorldMapped()));
+        return id.getNamespace() + ":" + id.getPath();
+    }
+
+    public static String getWorldBlockState(ScriptVector3f blockPos, String stateName) {
+        BlockState blockState = MinecraftClient.getInstance().getWorldMapped().getBlockState(blockPos.rawBlockPos());
+        return LoaderImpl.getBlockStateValue(blockState, stateName);
     }
 
     public static PlayerEntityWrapper localPlayer() {

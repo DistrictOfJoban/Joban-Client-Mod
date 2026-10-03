@@ -8,6 +8,7 @@ import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlaySoundIdS2CPacket;
 #endif
 
+import net.minecraft.state.property.Property;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import org.mtr.mapping.holder.*;
@@ -82,5 +83,11 @@ public class LoaderImpl {
         #else
         playerEntity.data.networkHandler.sendPacket(new PlaySoundIdS2CPacket(soundId.data, soundCategory.data, new net.minecraft.util.math.Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()), volume, 1));
         #endif
+    }
+
+    public static String getBlockStateValue(BlockState blockState, String stateName) {
+        Property property = blockState.getBlock().data.getStateManager().getProperty(stateName);
+        if(property == null) return null;
+        return property.name(blockState.data.get(property));
     }
 }
