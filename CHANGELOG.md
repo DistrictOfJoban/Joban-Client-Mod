@@ -1,12 +1,12 @@
-# JCM v2.2.5 for MTR 4.0.5 has been released!
+# JCM v2.2.6 for MTR 4.0.5 (Forge) has been released!
 
-Fairly small release to address some usability issues. ^^  
-Does not alter server-side behaviour.
+This is a hotfix for all **Minecraft Forge** distribution of JCM.
 
-## Changes
-- Script Debug Overlay source can now be switched to "None" to avoid cluttering up the screen when not in use.
-- Search box in PIDS selection screen is no longer case-sensitive for better usability.
-- Improve GUI performance. This should improve situations like PIDS selection screen freezing the game for a few seconds with many RPs loaded.
+**All Forge users are advised to update to this version to ensure addon content works properly.**
+
+It issues for resource packs making use of JCM Scripting (`ctx.setDataFetchMode` is ineffective).
+
+Fabric loader is unaffected, no action is needed.
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)
