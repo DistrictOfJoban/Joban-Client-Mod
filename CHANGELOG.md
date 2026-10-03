@@ -4,7 +4,7 @@
 ### New Blocks
 - Add **Emergency Train Stop Button (Wall mounted, TML)** and **URL variant** (Thanks **LX9702**!)
 
-### Blocks Slab Support
+### Slab Support for blocks
 - The **Spot Lamp** block in JCM will now descend/ascend in accordance to slab blocks attached.
 - The **Railway Sign Poles** in MTR now gained the ability to extend the pole according to the slab above.
 
@@ -26,23 +26,23 @@
 It now supports real-time position/rotation preview, and you may now type the negative sign (-) as the first character.
 
 ### Railway Sign Text Coloring
-- Allow coloring text with the `textColor` field in the mtr_custom_resources.json "sign" section. Format is the same as `backgroundColor`.
+Allow coloring text with the `textColor` field in the mtr_custom_resources.json "sign" section. Format is the same as `backgroundColor`.
 
 ### Lift Scripting
-Lift Scripting has been added for review and feedback by the public.
+Lift Scripting has been added for review and feedback by the public, including rendering and sound playing.
 
 See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for documentation.
 
 ### PIDS Scripting
 - Add `TextWrapper.measureWidth()` to return the actual text width. Note that this cannot be chained for further usage, and must be invoked separately.
-- Add `PIDSWrapper.isPlatformAutoDetected()`, returning whether the selected PIDS platform is manually picked by the user, or automatically detected.
+- Add `PIDSWrapper.isPlatformAutoDetected()`, returning whether the selected PIDS platform is manually picked by the user, or if it's automatically detected.
 - Add `RectangleWrapper`, which is similar to `TextureWrapper` with the texture id pointing to `mtr:textures/block/white.png`
   - PIDS relying on a white texture previously should change to use `RectangleWrapper` (`Rectangle.`), as it is guaranteed the output will be a solid color, even if such texture is moved/no longer available in future Minecraft/MTR versions.
 
 ### General Scripting
 #### API-related
 - `Vector3f` now accepts TSC's `Position` class as a constructor
-- Added `ctx.setDebugInfo(value: any)` shorthand for temporary, single-value on-screen debug info, without requiring a key.
+- Added the `ctx.setDebugInfo(value: any)` shorthand for temporary, single-value on-screen debug info, without requiring a key.
   - Same as calling `ctx.setDebugInfo("<Untitled>", value)`
 - Added `PlayerEntity.displayName()` to return the player's name with team prefixes.
 - Added `PlayerEntity.isSpectator()` and `PlayerEntity.isCreative()`
@@ -63,11 +63,22 @@ See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for document
     - Though I have other plans for the UI, so it will likely be removed in future releases.
 - When script debug mode is enabled, in-game script parsing error messages will now display on the first-time you join the game.
   - Previously this will cause errored scripts to be missed on launch.
+- **Script Debug Overlay**
+  - "More relevant" instances are now sorted at the top for ease of visualization (Usually as one is closer to an object)
+  - If riding a scripted lift or scripted vehicle, it will always be sorted to the top as it's of most-relevance.
 
 ### PIDS Textures
 Please note that several textures used by PIDS (`rv_door_cls_apg.png`, `rv_door_cls_psd.png`, `rv_door_cls_train.png`, `thumbnail/pids_1a.png`) has been relocated from `jsblock:textures/block/pids` to `jsblock:textures/pids`.
 
 It is done this way to avoid Minecraft including the texture to the block texture atlas, resulting in unnecessary overhead/enlarging of the block texture size.
+
+## Translations
+Thanks to the following people who have contributed translations for this release! (No particular order):
+- Smile Wood (zh_cn)
+- DelphoxOTS (ja_jp)
+- Fed (it_it)
+
+Translations for JCM is now hosted on [ZiYue's Weblate](https://weblate.ziyuesinicization.site/projects/joban-client-mod/)
 
 **Download:**  
 You can download this release on [Modrinth](https://modrinth.com/mod/jcm), [CurseForge](https://curseforge.com/minecraft/mc-mods/jcm) or [GitHub](https://github.com/DistrictOfJoban/Joban-Client-Mod/releases)

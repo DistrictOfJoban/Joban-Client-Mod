@@ -8,6 +8,8 @@ import com.lx862.mtrscripting.core.ScriptManager;
 import com.lx862.mtrscripting.core.primitive.ScriptInstance;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.core.util.GraphicsTexture;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
@@ -15,6 +17,8 @@ import org.mtr.mapping.mapper.SoundHelper;
 import org.mtr.mapping.mapper.TextHelper;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class MTRScriptDebugOverlay {
     private static final double IDEAL_FRAMERATE = 60;
@@ -78,9 +82,10 @@ public class MTRScriptDebugOverlay {
                 graphicsHolder.translate(0, 12, 0);
                 graphicsHolder.translate(10, 0, 0);
                 int i = 0;
+
                 for(Pair<UniqueKey, ScriptInstance> scriptInstancePair : group.getValue()) {
                     String keyName = scriptInstancePair.getLeft().toString();
-                    ScriptInstance scriptInstance = scriptInstancePair.getRight();
+                    ScriptInstance<?> scriptInstance = scriptInstancePair.getRight();
 
                     if(i >= 6) {
                         graphicsHolder.drawText(String.format("... and %d more script instance(s)", group.getValue().size() - i), 0, 0, COLOR_BLUE, true, MAX_LIGHT);
@@ -112,6 +117,14 @@ public class MTRScriptDebugOverlay {
         }
     }
 
+    private static int getScriptInstanceSortScore(ScriptInstance<?> scriptInstance) {
+        if(scriptInstance instanceof SortableScriptInstance) {
+            return ((SortableScriptInstance)scriptInstance).getSortScore();
+        } else {
+            return 0;
+        }
+    }
+
     private static Map<String, List<Pair<UniqueKey, ScriptInstance>>> getInstancesGroupedByName(ScriptDebugSource selectedSource) {
         Map<String, List<Pair<UniqueKey, ScriptInstance>>> groupedMap = new HashMap<>();
         if(debugSources.isEmpty()) return groupedMap;
@@ -124,11 +137,31 @@ public class MTRScriptDebugOverlay {
             groupedMap.put(map.getValue().getScript().getDisplayName(), existingInstances);
         }
 
-        // Sort instance by execution time
-        for(List<Pair<UniqueKey, ScriptInstance>> instances : groupedMap.values()) {
-            instances.sort((e, f) -> Double.compare(f.getRight().getLastExecutionDurationMs(), e.getRight().getLastExecutionDurationMs()));
+        Object2IntOpenHashMap<String> groupSortScores = new Object2IntOpenHashMap<>();
+        for(String group : groupedMap.keySet()) {
+            // Sort instance by execution time
+            int[] groupScore = {Integer.MAX_VALUE};
+            List<Pair<UniqueKey, ScriptInstance>> instances = groupedMap.get(group);
+
+            instances.forEach(e -> {
+                int score = getScriptInstanceSortScore(e.getRight());
+                groupScore[0] = Math.min(groupScore[0], score);
+            });
+
+            groupedMap.get(group).sort(Comparator.comparingInt(e -> getScriptInstanceSortScore(e.getRight())));
+            groupSortScores.put(group, groupScore[0]);
         }
-        return groupedMap;
+
+        Map<String, List<Pair<UniqueKey, ScriptInstance>>> sortedGroupedMap = new LinkedHashMap<>();
+        for(Map.Entry<String, List<Pair<UniqueKey, ScriptInstance>>> entry : groupedMap
+                .entrySet().stream()
+                .sorted(Comparator.comparingInt(v -> groupSortScores.getInt(v.getKey())))
+                .collect(Collectors.toList())
+        ) {
+            sortedGroupedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedGroupedMap;
     }
 
     private static void drawScriptDebugInfo(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, ScriptInstance scriptInstance) {
