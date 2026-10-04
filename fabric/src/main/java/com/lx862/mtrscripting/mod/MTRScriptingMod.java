@@ -14,6 +14,7 @@ import org.mtr.mapping.holder.Identifier;
 
 public class MTRScriptingMod {
     public static final Logger LOGGER = LogManager.getLogger("MTR Scripting via JCM");
+    public static final String VERSION = JCM.buildMetadata.version;
     private static final String MOD_ID = "mtrscripting";
 
     public static Identifier id(String path) {
@@ -21,7 +22,7 @@ public class MTRScriptingMod {
     }
 
     public static void init() {
-        MTRScriptingAPI.registerAddonVersion(MOD_ID, JCM.buildMetadata.version);
+        MTRScriptingAPI.registerAddonVersion(MOD_ID, VERSION);
 
         // Register packet
         Networking.registerPacket(EyecandyCustomConfigUpdateC2SPacket.class, EyecandyCustomConfigUpdateC2SPacket::new);

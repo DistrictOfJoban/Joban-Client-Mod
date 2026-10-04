@@ -4,6 +4,7 @@ import com.lx862.mtrscripting.core.ScriptManager;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.*;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
+import com.lx862.mtrscripting.mod.MTRScriptingMod;
 import org.mtr.mapping.holder.Identifier;
 
 import java.util.ArrayList;
@@ -147,7 +148,7 @@ public class ParsedScript {
                 }
                 scriptInstance.setLastExecutionDurationMs(System.nanoTime() - startTime);
             } catch (Exception e) {
-                scriptManager.getLogger().error("[MTR Scripting via JCM] Error executing script {}!", displayName, e);
+                scriptManager.getLogger().error("[MTR Scripting via JCM {}] Error executing script {}!", MTRScriptingMod.VERSION, displayName, e);
                 lastFailedTime = System.currentTimeMillis();
                 capturedScriptException = e;
                 if(errorCallback != null) errorCallback.run();
