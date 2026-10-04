@@ -1,5 +1,15 @@
 # JCM v2.3.0-beta.1 for MTR 4.0.5 has been released!
 
+> **Beta Notice**
+> 
+> This is a beta release and is not recommended for stable deployment, nor is it intended for normal players to use. Please report any mod behaviors you feel could be improved.
+> 
+> Feature/implementation details may change throughout the beta lifecycle, any content you have made for this beta release may or may not break in the next version.
+
+
+> This release contains breaking changes to JCM's internal codebase. Common addons have been tested against, however some addon depending on JCM may break.
+
+
 ## General
 ### New Blocks
 - Add **Emergency Train Stop Button (Wall mounted, TML)** and **URL variant** (Thanks **LX9702**!)
