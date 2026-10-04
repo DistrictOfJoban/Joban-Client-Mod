@@ -168,7 +168,7 @@ public class MTRScriptDebugOverlay {
         final int maxTexWidth = MinecraftClient.getInstance().getWindow().getScaledWidth() - 10 - 10 - 10;
         final int maxTexHeight = MinecraftClient.getInstance().getWindow().getScaledHeight() / 3;
 
-        for(Map.Entry<String, Object> debugInfoEntry : scriptInstance.getContextObject().getDebugInfo()) {
+        for(Map.Entry<String, Object> debugInfoEntry : new HashSet<>(scriptInstance.getContextObject().getDebugInfo())) {
             String key = debugInfoEntry.getKey();
             Object value = debugInfoEntry.getValue();
 
