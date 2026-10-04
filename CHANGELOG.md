@@ -43,7 +43,8 @@ See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for document
 #### API-related
 - `Vector3f` now accepts TSC's `Position` class as a constructor
 - Added the `ctx.setDebugInfo(value: any)` shorthand for temporary, single-value on-screen debug info, without requiring a key.
-  - Same as calling `ctx.setDebugInfo("<Untitled>", value)`
+  - Same as calling `ctx.setDebugInfo("<Untitled>", value)` if called once.
+  - Subsequent invocation will result in `<Untitled2>`, `<Untitled3>` and so on...
 - Added `PlayerEntity.displayName()` to return the player's name with team prefixes.
 - Added `PlayerEntity.isSpectator()` and `PlayerEntity.isCreative()`
 - Added `MinecraftClientWrapper.getCurrentWorldId()` and `MinecraftClientWrapper.getWorldBlockState()`, allowing for better environmental context.
@@ -65,7 +66,8 @@ See [JCM Docs](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for document
   - Previously this will cause errored scripts to be missed on launch.
 - **Script Debug Overlay**
   - "More relevant" instances are now sorted at the top for ease of visualization (Usually as one is closer to an object)
-  - If riding a scripted lift or scripted vehicle, it will always be sorted to the top as it's of most-relevance.
+    - If riding a scripted lift or scripted vehicle, it will always be sorted to the top as it's of most-relevance.
+  - Order of script debug info is now always arranged according to the script execution order.
 
 ### PIDS Textures
 Please note that several textures used by PIDS (`rv_door_cls_apg.png`, `rv_door_cls_psd.png`, `rv_door_cls_train.png`, `thumbnail/pids_1a.png`) has been relocated from `jsblock:textures/block/pids` to `jsblock:textures/pids`.
