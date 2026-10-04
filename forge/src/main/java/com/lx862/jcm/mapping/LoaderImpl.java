@@ -9,6 +9,7 @@ import net.minecraft.network.protocol.game.ClientboundCustomSoundPacket;
 
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.SoundHelper;
@@ -83,5 +84,11 @@ public class LoaderImpl {
         #else
         playerEntity.data.connection.send(new ClientboundCustomSoundPacket(soundId.data, soundCategory.data, new net.minecraft.world.phys.Vec3(blockPos.getX(), blockPos.getY(), blockPos.getZ()), volume, 1));
         #endif
+    }
+
+    public static String getBlockStateValue(BlockState blockState, String stateName) {
+        Property property = blockState.getBlock().data.getStateDefinition().getProperty(stateName);
+        if(property == null) return null;
+        return property.getName(blockState.data.getValue(property));
     }
 }
