@@ -36,6 +36,7 @@ public class LiftScriptInstance extends ScriptInstance<LiftWrapper> implements S
         return this.renderManager;
     }
 
+    @Override
     public boolean shouldInvalidate() {
         boolean beRemoved = getWrapperObject().removed();
         boolean modelChanged = getWrapperObject().styleChanged(getContextObject().getName());

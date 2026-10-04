@@ -100,7 +100,7 @@ public class LiftWrapper {
     }
 
     public float getAngleDegrees() {
-        return this.angleDegrees;
+        return Angle.fromAngle(-90 + this.angleDegrees).angleDegrees;
     }
 
     public double getAngleRadians() {
@@ -137,7 +137,9 @@ public class LiftWrapper {
 
     @ApiInternal
     public boolean styleChanged(String style) {
-        return !style.equals(liftObject.getStyle());
+        Lift lift = MinecraftClientData.getLift(id); // our reference of lift may be discarded, and thus don't have up to date info
+        if(lift == null) return true;
+        return !style.equals(lift.getStyle());
     }
 
     @ApiInternal
