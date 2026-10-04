@@ -4,9 +4,11 @@ import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalsWrapper;
 import org.mtr.core.data.*;
+import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.mod.Init;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.client.VehicleRidingMovement;
@@ -68,7 +70,7 @@ public class MTRWrapper {
             return new ArrayList<>(MinecraftClientData.getInstance().stations);
         }
 
-        /* Depots */
+        /* Depot */
         public static @ValueNullable Depot findDepot(ScriptVector3f pos) {
             return InitClient.findDepot(pos.rawBlockPos());
         }
@@ -103,6 +105,15 @@ public class MTRWrapper {
             return MinecraftClientData.getInstance().vehicles.stream().filter(e -> e.getId() == vehicleId).findFirst().orElse(null);
         }
 
+        public static VehicleExtension getPlayerMountedVehicle() {
+            for(VehicleExtension vehicleExtension : MinecraftClientData.getInstance().vehicles) {
+                if(isPlayerMounted(vehicleExtension.getId())) {
+                    return vehicleExtension;
+                }
+            }
+            return null;
+        }
+
         public static List<VehicleExtension> getKnownVehicles() {
             return new ArrayList<>(MinecraftClientData.getInstance().vehicles);
         }
@@ -116,43 +127,88 @@ public class MTRWrapper {
             return MinecraftClientData.getLift(vehicleId);
         }
 
+        public static Lift getPlayerMountedLift() {
+            for(MinecraftClientData.LiftWrapper liftWrapper : MinecraftClientData.getInstance().liftWrapperList.values()) {
+                if(VehicleRidingMovement.isRiding(liftWrapper.getLift().getId())) {
+                    return liftWrapper.getLift();
+                }
+            }
+            return null;
+        }
+
         public static List<Lift> getKnownLifts() {
             return new ArrayList<>(MinecraftClientData.getInstance().lifts);
         }
 
-        /* Rail */
+        /* Siding */
+        public static @ValueNullable Siding getSiding(long platformId) {
+            return MinecraftClientData.getInstance().sidingIdMap.get(platformId);
+        }
+
+        public static List<Siding> getKnownSidings() {
+            return new ArrayList<>(MinecraftClientData.getInstance().sidings);
+        }
+
+        public static List<Siding> findNearbySidings(ScriptVector3f pos, int radius) {
+            List<Siding> sidings = new ArrayList<>();
+            Position position = Init.blockPosToPosition(pos.rawBlockPos());
+            MinecraftClientData.getInstance().sidings
+                    .stream()
+                    .filter((siding) -> siding.closeTo(position, radius))
+                    .forEach(sidings::add);
+            return sidings;
+        }
+
+        /* Platform */
+        public static @ValueNullable Platform getPlatform(long platformId) {
+            return MinecraftClientData.getInstance().platformIdMap.get(platformId);
+        }
+
+        public static List<Platform> getKnownPlatforms() {
+            return new ArrayList<>(MinecraftClientData.getInstance().platforms);
+        }
+
         public static List<Platform> findNearbyPlatforms(ScriptVector3f pos, int radius) {
             List<Platform> platforms = new ArrayList<>();
-            InitClient.findClosePlatform(pos.rawBlockPos(), radius, platforms::add);
+            Position position = Init.blockPosToPosition(pos.rawBlockPos());
+            MinecraftClientData.getInstance().platforms
+                    .stream()
+                    .filter((platform) -> platform.closeTo(position, radius))
+                    .forEach(platforms::add);
             return platforms;
         }
 
+        /* Rail */
         public static Rail getRailFromPath(PathData pathData) {
             String hexId = pathData.getRail().getHexId();
             for(MinecraftClientData.RailWrapper railWrapper : MinecraftClientData.getInstance().railWrapperList.values()) {
                 if(railWrapper.getRail().getHexId().equals(hexId)) return railWrapper.getRail();
             }
-            return pathData.getRail();
+            return pathData.getRail(); // Fallback
         }
 
         public static List<Rail> getKnownRails() {
             return new ArrayList<>(MinecraftClientData.getInstance().railWrapperList.values().stream().map(e -> e.getRail()).collect(Collectors.toList()));
         }
 
-        public static List<Long> getBlockedSignalColors(String railHexId) {
-            return new ArrayList<>(MinecraftClientData.getInstance().railIdToCurrentlyBlockedSignalColors.getOrDefault(railHexId, new LongArrayList()));
+        public static boolean isRailBlocked(String railHexId) {
+            return MinecraftClientData.getInstance().blockedRailIds.contains(railHexId);
         }
 
         public static List<String> getKnownBlockedRails() {
             return new ArrayList<>(MinecraftClientData.getInstance().blockedRailIds);
         }
 
-        /* ETAs */
-        public static ArrivalsWrapper findArrivals(long platformId) {
-            return findArrivals(List.of(platformId));
+        public static List<Long> getBlockedSignalColors(String railHexId) {
+            return new ArrayList<>(MinecraftClientData.getInstance().railIdToCurrentlyBlockedSignalColors.getOrDefault(railHexId, new LongArrayList()));
         }
 
-        public static ArrivalsWrapper findArrivals(List<Long> platformId) {
+        /* ETAs */
+        public static ArrivalsWrapper getArrivals(long platformId) {
+            return getArrivals(new long[]{platformId});
+        }
+
+        public static ArrivalsWrapper getArrivals(long[] platformId) {
             return new ArrivalsWrapper(ArrivalsCacheClient.INSTANCE.requestArrivals(new LongImmutableList(platformId)));
         }
     }
