@@ -29,6 +29,21 @@ public class SpotLampBlock extends VerticallyAttachedBlock {
     }
 
     @Override
+    public BlockState getStateForNeighborUpdate2(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
+        boolean isTop = IBlock.getStatePropertySafe(state, BlockProperties.TOP);
+
+        if((isTop && direction == Direction.UP) || (!isTop && direction == Direction.DOWN)) {
+            if(SlabExtendableBlock.shouldExtendForSlab(world, neighborPos, isTop ? SlabType.TOP : SlabType.BOTTOM)) {
+                return state.with(new Property<>(IS_SLAB.data), BlockProperties.InvertBoolean.TRUE);
+            } else {
+                return state.with(new Property<>(IS_SLAB.data), BlockProperties.InvertBoolean.FALSE);
+            }
+        }
+
+        return state;
+    }
+
+    @Override
     public VoxelShape getOutlineShape2(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
         if (IBlock.getStatePropertySafe(state, TOP)) {
             return IBlock.getVoxelShapeByDirection(4, 15.75, 4, 12, 16, 12, Direction.NORTH);
