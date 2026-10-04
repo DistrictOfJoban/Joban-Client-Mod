@@ -36,6 +36,7 @@ public class LiftScriptContext extends MTRScriptContext {
 
     @Override
     public void resetForNextRun() {
+        super.resetForNextRun();
         this.renderManager.reset();
         this.soundManager.reset();
     }

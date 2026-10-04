@@ -67,6 +67,7 @@ public class PIDSScriptContext extends MTRScriptContext {
 
     @Override
     public void resetForNextRun() {
+        super.resetForNextRun();
         this.renderManager.reset();
         this.soundManager.reset();
         currentZOrder = 0;

@@ -120,6 +120,7 @@ public class VehicleScriptContext extends MTRScriptContext {
 
     @Override
     public void resetForNextRun() {
+        super.resetForNextRun();
         scriptCallsHolder.reset();
     }
 

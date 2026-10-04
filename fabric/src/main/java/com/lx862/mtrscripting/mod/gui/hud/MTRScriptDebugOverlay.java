@@ -9,7 +9,6 @@ import com.lx862.mtrscripting.core.primitive.ScriptInstance;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.core.util.GraphicsTexture;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.GuiDrawing;
@@ -17,7 +16,6 @@ import org.mtr.mapping.mapper.SoundHelper;
 import org.mtr.mapping.mapper.TextHelper;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class MTRScriptDebugOverlay {
@@ -168,7 +166,8 @@ public class MTRScriptDebugOverlay {
         final int maxTexWidth = MinecraftClient.getInstance().getWindow().getScaledWidth() - 10 - 10 - 10;
         final int maxTexHeight = MinecraftClient.getInstance().getWindow().getScaledHeight() / 3;
 
-        for(Map.Entry<String, Object> debugInfoEntry : new HashSet<>(scriptInstance.getContextObject().getDebugInfo())) {
+
+        for(Map.Entry<String, Object> debugInfoEntry : new LinkedHashMap<>(scriptInstance.getContextObject().getDebugInfo()).entrySet()) {
             String key = debugInfoEntry.getKey();
             Object value = debugInfoEntry.getValue();
 

@@ -95,6 +95,7 @@ public class EyeCandyScriptContext extends MTRScriptContext {
 
     @Override
     public void resetForNextRun() {
+        super.resetForNextRun();
         this.renderManager.reset();
         this.soundManager.reset();
     }
