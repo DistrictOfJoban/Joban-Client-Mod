@@ -94,6 +94,10 @@ public class EyecandyBlockEntityWrapper {
         return IBlock.getStatePropertySafe(be.getCachedState2(), BlockProperties.FACING);
     }
 
+    public float facingAngle() {
+        return facing().asRotation();
+    }
+
     public boolean isCrosshairTarget() {
         HitResult hitResult = MinecraftClient.getInstance().getCrosshairTargetMapped();
 
