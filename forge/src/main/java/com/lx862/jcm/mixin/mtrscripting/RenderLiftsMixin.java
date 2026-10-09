@@ -17,6 +17,7 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.ints.IntObjectImmutablePair;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mod.client.MinecraftClientData;
+import org.mtr.mod.client.VehicleRidingMovement;
 import org.mtr.mod.render.PositionAndRotation;
 import org.mtr.mod.render.RenderLifts;
 import org.mtr.mod.render.StoredMatrixTransformations;
@@ -56,12 +57,18 @@ public class RenderLiftsMixin {
         ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("lift", lift.getHexId()));
         if(!(scriptInstance instanceof LiftScriptInstance)) return;
 
-        if(MtrScriptingResourceManager.lift.isScriptControlledRendering(lift.getStyle())) ci.cancel();
+        boolean skipBuiltinRenderer = MtrScriptingResourceManager.lift.isScriptControlledRendering(lift.getStyle());
+
+        if(skipBuiltinRenderer) ci.cancel();
 
         World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
         ScriptRenderManager scriptRenderManager = ((LiftScriptInstance)scriptInstance).getRenderManager();
         ScriptSoundManager scriptSoundManager = ((LiftScriptInstance)scriptInstance).getSoundManager();
         scriptRenderManager.invoke(world, storedMatrixTransformations.copy(), Direction.NORTH, absolutePositionAndRotation.light);
         scriptSoundManager.invoke(world, new ScriptVector3f((int)absolutePositionAndRotation.position.x, (int)absolutePositionAndRotation.position.y, (int)absolutePositionAndRotation.position.z));
+
+        if (skipBuiltinRenderer && canRide) {
+            VehicleRidingMovement.movePlayer(millisElapsed, lift.getId(), 0, floorsAndDoorways, null, null, null, absolutePositionAndRotation);
+        }
     }
 }

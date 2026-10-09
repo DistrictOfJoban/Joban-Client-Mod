@@ -12,6 +12,9 @@
 
 ## Technical
 
+### Lift Scripting
+- Fix `isScriptRendered` not allowing player to board the lift.
+
 ### Eyecandy Scripting
 - Add `EyecandyWrapper.facingAngle()`, which returns the block facing angle directly.
   - Please use this instead of relying on `EyecandyWrapper.facing().asRotation()`, which will no longer work in MTR 4.1.
