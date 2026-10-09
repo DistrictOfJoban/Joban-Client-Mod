@@ -12,8 +12,12 @@
 
 ## Technical
 
+### Vehicle Scripting
+- Add `VehicleWrapper.isDoorOpenable()` and `VehicleWrapper.isDoorOpen()`, given the car number and a position relative to the center of the car.
+
 ### Lift Scripting
 - Fix `isScriptRendered` not allowing player to board the lift.
+- Add `LiftWrapper.isDoorway1Openable()`, `LiftWrapper.isDoorway2Openable()`, `LiftWrapper.isDoorway1Open()` and `LiftWrapper.isDoorway2Open()` for checking open doorways.
 
 ### Eyecandy Scripting
 - Add `EyecandyWrapper.facingAngle()`, which returns the block facing angle directly.

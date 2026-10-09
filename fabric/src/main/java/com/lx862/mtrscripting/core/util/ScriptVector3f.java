@@ -133,6 +133,10 @@ public class ScriptVector3f {
         return new Vector3f((float)x(), (float)y(), (float)z());
     }
 
+    public Vector rawTscVector() {
+        return new Vector(x(), y(), z());
+    }
+
     @Override
     public int hashCode() {
         return impl.hashCode();

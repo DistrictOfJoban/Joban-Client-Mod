@@ -5,6 +5,7 @@ import com.lx862.jcm.mixin.mtrscripting.VehicleAccessorMixin;
 import com.lx862.jcm.mod.util.MTRUtil;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
+import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.core.data.*;
@@ -425,5 +426,23 @@ public class VehicleWrapper {
     /** NOTE: Elapsed Dwell Time is not counted on the client-side, it purely relies on the synced value from the server, which isn't real-time. */
     public long getElapsedDwellTime() {
         return ((VehicleAccessorMixin)vehicleExtension).getElapsedDwellTime();
+    }
+
+    public boolean isDoorOpenable(int car, ScriptVector3f relativeCarPos1, ScriptVector3f relativeCarPos2) {
+        if(car >= posAndRotations.size()) return false;
+        PositionAndRotation positionAndRotation = posAndRotations.get(car);
+        return MTRUtil.canOpenDoors(new Box(relativeCarPos1.rawVector3d(), relativeCarPos2.rawVector3d()), positionAndRotation);
+    }
+
+    public boolean isDoorOpenable(int car, ScriptVector3f relativeCarPos) {
+        return isDoorOpenable(car, relativeCarPos, relativeCarPos);
+    }
+
+    public boolean isDoorOpen(int car, ScriptVector3f relativeCarPos1, ScriptVector3f relativeCarPos2) {
+        return getDoorValue() > 0 && isDoorOpenable(car, relativeCarPos1, relativeCarPos2);
+    }
+
+    public boolean isDoorOpen(int car, ScriptVector3f relativeCarPos) {
+        return getDoorValue() > 0 && isDoorOpenable(car, relativeCarPos);
     }
 }
