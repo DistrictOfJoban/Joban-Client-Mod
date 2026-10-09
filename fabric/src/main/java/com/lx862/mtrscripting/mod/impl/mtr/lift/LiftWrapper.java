@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.mod.impl.mtr.lift;
 
+import com.lx862.jcm.mod.util.MTRUtil;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.mtr.core.data.Lift;
@@ -7,13 +8,12 @@ import org.mtr.core.data.LiftDirection;
 import org.mtr.core.data.LiftFloor;
 import org.mtr.core.tool.Angle;
 import org.mtr.core.tool.Vector;
-import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import org.mtr.mapping.holder.BlockEntity;
-import org.mtr.mapping.holder.BlockPos;
-import org.mtr.mapping.holder.World;
+import org.mtr.mapping.holder.*;
 import org.mtr.mod.block.BlockLiftTrackFloor;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.client.VehicleRidingMovement;
+import org.mtr.mod.item.ItemLiftRefresher;
+import org.mtr.mod.render.PositionAndRotation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +35,8 @@ public class LiftWrapper {
     private final float doorValue;
     private final float angleDegrees;
     private final double angleRadians;
+    private final boolean doorway1Openable;
+    private final boolean doorway2Openable;
 
     public LiftWrapper(MinecraftClientData.LiftWrapper liftWrapper, World worldView) {
         this.liftObject = liftWrapper.getLift();
@@ -55,7 +57,8 @@ public class LiftWrapper {
         this.angleDegrees = angle.angleDegrees;
         this.angleRadians = angle.angleRadians;
 
-        this.pos = new ScriptVector3f(getLiftPosition(liftWrapper.getLift()));
+        PositionAndRotation absolutePositionAndRotation = getLiftPositionAndRotation(ClientWorld.cast(worldView), liftObject);
+        this.pos = new ScriptVector3f(absolutePositionAndRotation.position);
 
         /* Populate floors */
         liftWrapper.getLift().iterateFloors(liftFloor -> {
@@ -69,6 +72,16 @@ public class LiftWrapper {
             this.floors.add(floor);
         });
         this.floors.sort((e, f) -> e.index - f.index);
+        Box doorway1 = new Box(-0.75F, 0.0F, -liftObject.getDepth() / (double)2.0F + (double)0.25F, 0.75F, 0.0F, -liftObject.getDepth() / (double)2.0F);
+        Box doorway2 = new Box(-0.75F, 0.0F, liftObject.getDepth() / (double)2.0F - (double)0.25F, 0.75F, 0.0F, liftObject.getDepth() / (double)2.0F);
+
+        if (!liftObject.hasCoolDown()) {
+            doorway1Openable = false;
+            doorway2Openable = false;
+        } else {
+            doorway1Openable = MTRUtil.canOpenDoors(doorway1, absolutePositionAndRotation);
+            doorway2Openable = liftObject.getIsDoubleSided() && MTRUtil.canOpenDoors(doorway2, absolutePositionAndRotation);
+        }
     }
 
     public Lift getMtrLift() {
@@ -115,6 +128,22 @@ public class LiftWrapper {
         return this.doorValue;
     }
 
+    public boolean isDoorway1Openable() {
+        return this.doorway1Openable;
+    }
+
+    public boolean isDoorway2Openable() {
+        return this.doorway2Openable;
+    }
+
+    public boolean isDoorway1Open() {
+        return isDoorway1Openable() && getDoorValue() > 0;
+    }
+
+    public boolean isDoorway2Open() {
+        return isDoorway2Openable() && getDoorValue() > 0;
+    }
+
     public int getDirection() {
         return this.direction;
     }
@@ -148,11 +177,9 @@ public class LiftWrapper {
     }
 
     @ApiInternal
-    private static Vector getLiftPosition(Lift lift) {
-        return lift.getPosition((floorPosition1, floorPosition2) -> ObjectArrayList.of(
-                new Vector(floorPosition1.getX(), floorPosition1.getY(),floorPosition1.getZ()),
-                new Vector(floorPosition2.getX(), floorPosition2.getY(), floorPosition2.getZ())
-        ));
+    private static PositionAndRotation getLiftPositionAndRotation(ClientWorld clientWorld, Lift lift) {
+        Vector position = lift.getPosition((floorPosition1, floorPosition2) -> ItemLiftRefresher.findPath(new World(clientWorld.data), floorPosition1, floorPosition2));
+        return new PositionAndRotation(new Vector(position.x + lift.getOffsetX(), position.y + lift.getOffsetY(), position.z + lift.getOffsetZ()), (-Math.PI / 2D) - lift.getAngle().angleRadians, (double)0.0F);
     }
 
     public static class Floor {
