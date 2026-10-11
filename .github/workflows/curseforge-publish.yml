@@ -48,6 +48,13 @@ jobs:
             loader: forge
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout release notes
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github/release-notes.md
+
       - name: Require the repository CurseForge token
         env:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_PAT }}
