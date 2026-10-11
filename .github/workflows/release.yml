@@ -135,6 +135,10 @@ jobs:
                   bridges = [p for p in archive.namelist() if p.startswith('assets/jcm/natives/') and p.endswith(('.dll', '.so', '.dylib'))]
                   assert len(bridges) == 4, (jar, bridges)
                   assert archive.testzip() is None, jar
+                  import json
+                  config = json.loads(archive.read('mtrscripting.mixins.json'))
+                  assert 'mtrscripting.GlStateTrackerAccessor' in config['client'], jar
+                  assert 'com/lx862/jcm/mixin/mtrscripting/GlStateTrackerAccessor.class' in archive.namelist(), jar
           PY
       - uses: actions/upload-artifact@v4
         with:
