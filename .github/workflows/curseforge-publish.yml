@@ -1,0 +1,84 @@
+name: CurseForge Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish-tag:
+        type: string
+        required: true
+        description: GitHub release version without the v prefix
+      release-type:
+        type: choice
+        required: true
+        options: [beta, release]
+        description: CurseForge release channel
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - minecraft: 1.17.1
+            loader: fabric
+          - minecraft: 1.17.1
+            loader: forge
+          - minecraft: 1.18.2
+            loader: fabric
+          - minecraft: 1.18.2
+            loader: forge
+          - minecraft: 1.19.2
+            loader: fabric
+          - minecraft: 1.19.2
+            loader: forge
+          - minecraft: 1.19.4
+            loader: fabric
+          - minecraft: 1.19.4
+            loader: forge
+          - minecraft: 1.20.1
+            loader: fabric
+          - minecraft: 1.20.1
+            loader: forge
+          - minecraft: 1.20.4
+            loader: fabric
+          - minecraft: 1.20.4
+            loader: forge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the repository CurseForge token
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_PAT }}
+        run: test -n "$CURSEFORGE_TOKEN"
+
+      - name: Download the verified GitHub Release jar
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FILE_NAME: JCM-${{ matrix.loader }}-${{ inputs.publish-tag }}+${{ matrix.minecraft }}.jar
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          gh release download "v${{ inputs.publish-tag }}" \
+            --repo "${{ github.repository }}" \
+            --pattern "$FILE_NAME" \
+            --dir dist
+          test -s "dist/$FILE_NAME"
+
+      - name: Publish ${{ matrix.loader }} ${{ matrix.minecraft }} to CurseForge
+        uses: Kira-NT/mc-publish@v3.3
+        with:
+          curseforge-id: 1316710
+          curseforge-token: ${{ secrets.CURSEFORGE_PAT }}
+          files: dist/JCM-${{ matrix.loader }}-${{ inputs.publish-tag }}+${{ matrix.minecraft }}.jar
+          name: '[${{ matrix.loader }} ${{ matrix.minecraft }}] v${{ inputs.publish-tag }}'
+          version: v${{ inputs.publish-tag }}+${{ matrix.minecraft }}
+          version-type: ${{ inputs.release-type }}
+          loaders: ${{ matrix.loader }}
+          game-versions: ${{ matrix.minecraft }}
+          dependencies: minecraft-transit-railway
+          changelog-file: .github/release-notes.md
+          retry-attempts: 3
+          retry-delay: 30000
+          fail-mode: fail
