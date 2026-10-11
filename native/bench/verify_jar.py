@@ -26,8 +26,8 @@ def verify(path, version=None):
         assert b'getTransportMode' in data and b'org/mtr/core/data/TransportMode' in data
         metadata=json.loads(jar.read('build_metadata.json'))
         if version: assert metadata['version']==version,(path,metadata)
-        assert re.fullmatch(r'1\.(17\.1|18\.2|19\.2|19\.4|20\.1|20\.4)',metadata['mc_version']),metadata
-    return {'jar':path.name,'version':metadata['version'],'minecraft':metadata['mc_version'],'bridges':4,'resource_pack_scan':'passed'}
+        assert re.fullmatch(r'1\.(17\.1|18\.2|19\.2|19\.4|20\.1|20\.4)',metadata['minecraftVersion']),metadata
+    return {'jar':path.name,'version':metadata['version'],'minecraft':metadata['minecraftVersion'],'bridges':4,'resource_pack_scan':'passed'}
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('paths',nargs='+',type=Path);parser.add_argument('--version');args=parser.parse_args()

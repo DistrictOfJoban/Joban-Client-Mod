@@ -33,10 +33,18 @@ public abstract class GraphicsHolderMatrixMixin implements NativeMatrixApplier {
 #if LOADER == "fabric"
         net.minecraft.util.math.Matrix4f matrix=new net.minecraft.util.math.Matrix4f();
         matrix.readColumnMajor(FloatBuffer.wrap(values));
+#if MC_VERSION <= "11701"
+        matrixStack.peek().getModel().multiply(matrix);
+#else
         matrixStack.peek().getPositionMatrix().multiply(matrix);
+#endif
         net.minecraft.util.math.Matrix3f normal = new net.minecraft.util.math.Matrix3f(matrix);
         normal.invert(); normal.transpose();
+#if MC_VERSION <= "11701"
+        matrixStack.peek().getNormal().multiply(normal);
+#else
         matrixStack.peek().getNormalMatrix().multiply(normal);
+#endif
 #else
         com.mojang.math.Matrix4f matrix=new com.mojang.math.Matrix4f();
         matrix.load(FloatBuffer.wrap(values));

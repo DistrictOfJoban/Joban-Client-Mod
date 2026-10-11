@@ -1077,7 +1077,10 @@
       "arities": [
         1
       ],
-      "signature": "VanillaText.withHoverText(content: VanillaText): VanillaText"
+      "signature": "VanillaText.withHoverText(content: VanillaText): VanillaText",
+      "required_descriptors": [
+        "(Lcom/lx862/mtrscripting/core/integration/VanillaTextWrapper;)Lcom/lx862/mtrscripting/core/integration/VanillaTextWrapper;"
+      ]
     },
     {
       "page": "mc",

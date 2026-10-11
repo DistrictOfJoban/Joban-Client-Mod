@@ -122,7 +122,7 @@ public final class NativeApiSession {
         try {
             if (closed) throw new IllegalStateException("native API session is disposed");
             JsonObject reply = new JsonObject();
-            reply.add("value", dispatch(JsonParser.parseString(request).getAsJsonObject()));
+            reply.add("value", dispatch(new JsonParser().parse(request).getAsJsonObject()));
             return JSON.toJson(reply);
         } catch (Exception e) {
             Throwable cause = e instanceof InvocationTargetException ? ((InvocationTargetException)e).getTargetException() : e;
@@ -330,7 +330,7 @@ public final class NativeApiSession {
                 JsonArray parameters = new JsonArray();
                 if (args != null) for (Object arg : args) parameters.add(encode(arg));
                 byte[] result = NativeScriptManager.nativeApiCallback(function, user, JSON.toJson(parameters).getBytes(StandardCharsets.UTF_8));
-                JsonObject reply = JsonParser.parseString(new String(result, StandardCharsets.UTF_8)).getAsJsonObject();
+                JsonObject reply = new JsonParser().parse(new String(result, StandardCharsets.UTF_8)).getAsJsonObject();
                 if (reply.has("error")) throw new IllegalStateException(reply.get("error").getAsString());
                 return method.getReturnType() == void.class ? null : convert(reply.get("value"), method.getReturnType());
             } finally {

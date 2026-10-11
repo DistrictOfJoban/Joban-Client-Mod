@@ -77,6 +77,10 @@ public class VanillaTextWrapper {
         return this;
     }
 
+    public VanillaTextWrapper withHoverText(VanillaTextWrapper content) {
+        return withHoverText(content.impl());
+    }
+
     public String getString() {
         return this.impl.getString();
     }

@@ -86,6 +86,7 @@ def audit(classes, jars, manifest):
         kind, member, owner = entry['kind'], entry['member'], manifest['types'][entry['type']]
         available = public_members(owner, kind == 'field', kind != 'constructor')
         matches = [item for item in available if item[0] == member]
+        if entry.get('required_descriptors') and not all(any(item[1] == descriptor for item in matches) for descriptor in entry['required_descriptors']): matches = []
         if kind != 'field':
             if not all(any(parameter_count(item[1]) == count or
                        (item[2] & 0x80 and count >= parameter_count(item[1]) - 1) for item in matches) for count in entry['arities']): matches = []

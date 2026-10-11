@@ -23,7 +23,7 @@ public final class NativeDisplayHelper implements AutoCloseable {
 
     public NativeDisplayHelper(JsonObject config) {
         if (config.get("version").getAsInt() != 1) throw new IllegalArgumentException("Unknown DisplayHelper version");
-        this.config = config.deepCopy();
+        this.config = new JsonParser().parse(config.toString()).getAsJsonObject();
         JsonArray size = config.getAsJsonArray("texSize");
         String renderType = config.has("renderType") ? config.get("renderType").getAsString() : "interior";
         RawMeshBuilderJS mesh = new RawMeshBuilderJS(4, renderType, new Identifier("minecraft:textures/misc/white.png"));
@@ -35,7 +35,7 @@ public final class NativeDisplayHelper implements AutoCloseable {
             float u2 = (area.get(0).getAsFloat() + area.get(2).getAsFloat()) / size.get(0).getAsFloat();
             float v2 = (area.get(1).getAsFloat() + area.get(3).getAsFloat()) / size.get(1).getAsFloat();
             float[][] uv = {{u1,v1},{u1,v2},{u2,v2},{u2,v1}};
-            JsonArray offsets = slot.has("offsets") ? slot.getAsJsonArray("offsets") : JsonParser.parseString("[[0,0,0]]").getAsJsonArray();
+            JsonArray offsets = slot.has("offsets") ? slot.getAsJsonArray("offsets") : new JsonParser().parse("[[0,0,0]]").getAsJsonArray();
             for (JsonElement offset : offsets) for (JsonElement polygon : slot.getAsJsonArray("pos")) {
                 for (int i = 0; i < 4; i++) {
                     JsonArray vertex = polygon.getAsJsonArray().get(i).getAsJsonArray();
