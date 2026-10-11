@@ -9,6 +9,9 @@
 
 > This release contains breaking changes to JCM's internal codebase. Common addons have been tested against, however some addon depending on JCM may break.
 
+## General
+### MTR Patches
+- For MTR's Item Selection Screen (Multi-select), you can now hold `Shift` to exclusively select one item, instead of adding the new item then removing the existing item.
 
 ## Technical
 
