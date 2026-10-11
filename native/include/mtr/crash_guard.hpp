@@ -64,7 +64,7 @@ template <typename F> inline int guard_cpp(F&& function) noexcept {
     }
 #else
 #  define MTR_GUARDED_BODY(body)                                              \
-    return mtr::guard_cpp([&]() -> int { body; })
+    return mtr::guard_cpp([&]() -> int { body; });
 #endif
 
 #if defined(_MSC_VER)
