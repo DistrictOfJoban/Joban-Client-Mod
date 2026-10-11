@@ -2,6 +2,7 @@
 #include "mtr_native.h"
 #include "detail/json.hpp"
 #include <functional>
+#include <initializer_list>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -21,7 +22,7 @@ public:
             const char* data = invoke(user, bytes.data(), static_cast<int32_t>(bytes.size()), &size);
             if (!data || size < 0) throw std::runtime_error("Native API unavailable");
             Json reply = Json::parse(data, data + size);
-            if (reply.contains("error")) throw std::runtime_error(reply["error"].get<std::string>());
+            if (reply.contains("error")) throw std::runtime_error("Native API " + command.value("member", command.value("name", command.value("op", "request"))) + ": " + reply["error"].get<std::string>());
             return reply.at("value");
         }
     };
@@ -47,9 +48,12 @@ public:
         const Json& json() const { static const Json null; return reference_ ? reference_->value : null; }
         template <typename T> T as() const { return json().get<T>(); }
         std::string enum_name() const { return json().at("name").get<std::string>(); }
-        Object call(const std::string& member, Json args = Json::array()) const {
+        Object call(const std::string& member, Json args) const {
             if (is_null()) throw std::runtime_error("Call on null native object");
             return Object(reference_->channel, reference_->channel->request({{"op","call"},{"target",json()},{"member",member},{"args",args}}));
+        }
+        Object call(const std::string& member, std::initializer_list<Json> args = {}) const {
+            return call(member, Json(Json::array_t(args)));
         }
         Object get(const std::string& member) const {
             if (is_null()) throw std::runtime_error("Get on null native object");
@@ -94,11 +98,17 @@ public:
     Object context() const { return root("context"); }
     Object wrapper() const { return root("wrapper"); }
     Json input() const { return channel_->request({{"op","root"},{"name","SCRIPT_INPUT"}}); }
-    Object create(const std::string& type, Json args = Json::array()) const {
+    Object create(const std::string& type, Json args) const {
         return wrap(channel_->request({{"op","new"},{"class",type},{"args",args}}));
     }
-    Object call(const std::string& type, const std::string& member, Json args = Json::array()) const {
+    Object create(const std::string& type, std::initializer_list<Json> args = {}) const {
+        return create(type, Json(Json::array_t(args)));
+    }
+    Object call(const std::string& type, const std::string& member, Json args) const {
         return wrap(channel_->request({{"op","call"},{"class",type},{"member",member},{"args",args}}));
+    }
+    Object call(const std::string& type, const std::string& member, std::initializer_list<Json> args = {}) const {
+        return call(type, member, Json(Json::array_t(args)));
     }
     Object get(const std::string& type, const std::string& member) const {
         return wrap(channel_->request({{"op","get"},{"class",type},{"member",member}}));
