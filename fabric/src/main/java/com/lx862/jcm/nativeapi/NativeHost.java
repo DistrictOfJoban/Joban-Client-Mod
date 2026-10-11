@@ -275,6 +275,12 @@ public final class NativeHost {
             instances.put(key, instance);
             if (previous != null) previous.close();
         }
+        final long readyTextures = java.util.Arrays.stream(instance.textures).filter(java.util.Objects::nonNull).count();
+        final long readyModels = java.util.Arrays.stream(instance.models).filter(java.util.Objects::nonNull).count();
+        final long requestedTextures = widths == null ? 0 : java.util.Arrays.stream(widths).filter(w -> w > 0).count();
+        final long requestedModels = quadTextureSlot == null ? 0 : java.util.Arrays.stream(quadTextureSlot).filter(slot -> slot >= 0).count();
+        JCMLogger.info("NativeHost: resources for {}: textures={}/{}, models={}/{}",
+                key, readyTextures, requestedTextures, readyModels, requestedModels);
         return out;
     }
 

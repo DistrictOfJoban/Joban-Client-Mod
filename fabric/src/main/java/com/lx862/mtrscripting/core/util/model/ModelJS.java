@@ -2,6 +2,7 @@ package com.lx862.mtrscripting.core.util.model;
 
 import com.lx862.jcm.mixin.mtrscripting.OptimizedModelAccessor;
 import com.lx862.jcm.mixin.mtrscripting.OptimizedModelWrapperAccessor;
+import com.lx862.jcm.mixin.mtrscripting.GlStateTrackerAccessor;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.OptimizedModel;
@@ -9,6 +10,7 @@ import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mapping.render.batch.MaterialProperties;
 import org.mtr.mapping.render.model.RawModel;
 import org.mtr.mapping.render.object.VertexArray;
+import org.mtr.mapping.render.tool.GlStateTracker;
 import org.mtr.mod.client.CustomResourceLoader;
 import org.mtr.mod.render.MainRenderer;
 import org.mtr.mod.render.QueuedRenderLayer;
@@ -26,10 +28,19 @@ public class ModelJS {
 
     @ApiInternal
     public static ModelJS uploadRawModel(RawModelJS rawModelJS) {
-        RawModel rawModel = rawModelJS.rawModel;
-        List<VertexArray> vertexArrays = rawModel.upload(OptimizedModelAccessor.getDefaultMapping());
-        OptimizedModel optimizedModel = new OptimizedModel(vertexArrays);
-        return new ModelJS(OptimizedModelWrapperAccessor.createNew(optimizedModel));
+        // Native scripts upload during RenderVehicles.render(), outside MTR's
+        // resource-reload scope. VertexArray/VertexBuffer require protection
+        // even on the render thread. Leave an existing outer scope intact.
+        final boolean ownsProtection = !GlStateTrackerAccessor.isStateProtected();
+        if (ownsProtection) GlStateTracker.capture();
+        try {
+            RawModel rawModel = rawModelJS.rawModel;
+            List<VertexArray> vertexArrays = rawModel.upload(OptimizedModelAccessor.getDefaultMapping());
+            OptimizedModel optimizedModel = new OptimizedModel(vertexArrays);
+            return new ModelJS(OptimizedModelWrapperAccessor.createNew(optimizedModel));
+        } finally {
+            if (ownsProtection) GlStateTracker.restore();
+        }
     }
 
     public ModelJS copyForMaterialChanges() {

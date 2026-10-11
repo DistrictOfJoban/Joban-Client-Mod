@@ -129,6 +129,16 @@ public class NativeIntegrationTest {
         NativeHost.get().uploadPixels(0,-1,0,2,2,pixels);
         var pixelTexture=NativeHost.get().texture(0,"pixel-test");
         check(pixelTexture.bufferedImage.getRGB(0,0)==0xff040506 && pixelTexture.bufferedImage.getRGB(0,1)==0xff0a0b0c,"clipped BGRA upload preserves source rows and red/blue channels");
+        // A pixel upload alone is not a renderable model frame. This used to
+        // report withDrawCalls=1 even when every GPU model upload had failed.
+        var uploadRecord=ByteBuffer.allocateDirect(56).order(ByteOrder.nativeOrder());
+        uploadRecord.put(0,(byte)6).putInt(4,56).putInt(8,0).putInt(28,1).putInt(32,1).putLong(48,4);
+        var pixelArena=ByteBuffer.allocateDirect(4).put(new byte[]{3,2,1,(byte)255}); pixelArena.flip();
+        var uploadOnly=new NativeScriptManager.NativeFrame(uploadRecord,1,null,pixelArena,null);
+        uploadOnly.instanceKey="pixel-test";
+        var applyMethod=NativeVehicleDriver.class.getDeclaredMethod("applyFrame",NativeScriptManager.NativeFrame.class,Map.class);
+        applyMethod.setAccessible(true);
+        check(!(boolean)applyMethod.invoke(null,uploadOnly,managers),"texture-only frames cannot be counted as model draw calls");
         // A new vehicle uses the same slots without replacing the first vehicle.
         var other=NativeScriptManager.renderVehicle("other/wr2a03","wr2a03",snapshot);
         models(other.get(0),30); models(other.get(1),14); apply(other,3);

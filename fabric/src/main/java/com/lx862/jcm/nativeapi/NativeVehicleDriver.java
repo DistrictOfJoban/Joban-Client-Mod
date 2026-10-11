@@ -114,6 +114,10 @@ public final class NativeVehicleDriver {
         }
 
         final List<String> ids = scriptIdsOf(vehicle);
+        // Most vehicles in a city use only JS or no script. Avoid logging each
+        // of those as a missing native module; it hides real native failures.
+        ids.removeIf(id -> !NativeScriptManager.isLoaded(id));
+        if (ids.isEmpty()) return 0;
         traceOnce("vehicle " + vehicle.getHexId(), "cars=" + carCount, "scriptIds=" + ids,
                 "nativeModules=" + NativeScriptManager.getModules().size());
 
@@ -257,7 +261,7 @@ public final class NativeVehicleDriver {
                     final int car = records.get(pos + 8) & 0xFF;
                     final int modelHandle = records.getInt(pos + 12);
                     final ScriptRenderManager manager = managers.get(car);
-                    if (manager != null && modelHandle >= 0) {
+                    if (manager != null && NativeHost.get().model(modelHandle) != null) {
                         manager.draw(NativeModelDrawCall.create(modelHandle));
                         any = true;
                     }
@@ -282,7 +286,6 @@ public final class NativeVehicleDriver {
                         src.position((int) pixelOffset);
                         src.get(bytes, 0, (int) pixelLen);
                         NativeHost.get().uploadPixels(textureHandle, dx, dy, dw, dh, bytes);
-                        any = true;
                     }
                     break;
                 }
@@ -312,6 +315,7 @@ public final class NativeVehicleDriver {
         if (manager == null) return;
         final World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
         if (world == null) return;
+        traceOnce("replaying '" + scriptId + "' car " + carNumber, vehicle.getHexId());
         final StoredMatrixTransformations transform = storedMatrixTransformations.copy();
         transform.add(gh -> gh.translate(0, -1, 0));
         manager.invoke(world, transform, Direction.NORTH, light);

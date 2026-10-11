@@ -14,6 +14,28 @@ on:
 permissions:
   contents: read
 jobs:
+  model-upload:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify real MTR model upload and GL state restoration
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1-mesa-dri
+          mkdir -p native/build-gl
+          curl --fail --location --retry 3 'https://api.modrinth.com/maven/maven/modrinth/minecraft-transit-railway/FABRIC-4.0.5+1.20.1/minecraft-transit-railway-FABRIC-4.0.5+1.20.1.jar' -o native/build-gl/mtr.jar
+          xvfb-run -a python3 native/bench/model_upload_test.py --mtr-jar native/build-gl/mtr.jar --work native/build-gl/test
   natives:
     strategy:
       fail-fast: false
@@ -121,7 +143,7 @@ jobs:
           retention-days: 1
           if-no-files-found: error
   publish:
-    needs: build
+    needs: [build, model-upload]
     runs-on: ubuntu-latest
     permissions:
       contents: write
