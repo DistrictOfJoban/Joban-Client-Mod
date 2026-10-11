@@ -12,6 +12,11 @@
 
 ## Technical
 
+### General
+- Add `MinecraftClient.getCameraMode()` to return the perspective of the player's camera. (F5)
+- Add light parameter overload for `RenderManager.drawModel()`, for rendering a model with a particular light.
+  - light value can be obtained via the newly added `MinecraftClient.lightAt(pos: Vector3f)`, which returns an integer value consisted of both the block & sky light level.
+
 ### Vehicle Scripting
 - Add `VehicleWrapper.isDoorOpenable()` and `VehicleWrapper.isDoorOpen()`, given the car number and a position relative to the center of the car.
 
