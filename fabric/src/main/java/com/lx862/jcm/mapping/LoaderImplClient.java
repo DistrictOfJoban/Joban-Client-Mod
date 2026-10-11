@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.option.Perspective;
 import org.mtr.mapping.holder.*;
 
 import java.util.ArrayList;
@@ -32,5 +33,10 @@ public class LoaderImplClient {
 
     public static void addPackOverride(Identifier id, String modid) {
         ResourceManagerHelper.registerBuiltinResourcePack(id.data, FabricLoader.getInstance().getModContainer(modid).orElseThrow(), ResourcePackActivationType.ALWAYS_ENABLED);
+    }
+
+    public static int getCameraMode() {
+        Perspective perspective = MinecraftClient.getInstance().getOptionsMapped().data.getPerspective();
+        return perspective == Perspective.FIRST_PERSON ? 1 : perspective == Perspective.THIRD_PERSON_BACK ? 2 : 3;
     }
 }

@@ -104,6 +104,10 @@ public class MinecraftClientWrapper {
         return ScoreboardHelper.getPlayerScore(scoreboard, playerName, objective);
     }
 
+    public static int getCameraMode() {
+        return LoaderImplClient.getCameraMode();
+    }
+
     public static boolean gamePaused() {
         return MinecraftClient.getInstance().isPaused();
     }
