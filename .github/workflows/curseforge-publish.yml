@@ -76,7 +76,7 @@ jobs:
       - name: Publish ${{ matrix.loader }} ${{ matrix.minecraft }} to CurseForge
         uses: Kira-NT/mc-publish@v3.3
         with:
-          curseforge-id: 1316710
+          curseforge-id: 1736483
           curseforge-token: ${{ secrets.CURSEFORGE_PAT }}
           files: dist/JCM-${{ matrix.loader }}-${{ inputs.publish-tag }}+${{ matrix.minecraft }}.jar
           name: '[${{ matrix.loader }} ${{ matrix.minecraft }}] v${{ inputs.publish-tag }}'

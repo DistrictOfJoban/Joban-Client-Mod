@@ -7,4 +7,3 @@
 - Add direct C++ access to the shared Java scripting APIs, including resources, models, graphics, sounds, Minecraft, files, networking and callbacks.
 - Preserve ABI 6/7 compatibility while introducing ABI 8.
 - Release per-instance resources on removal/reload and cache JNI method/class bindings.
-- Keep user resource pack code and assets outside the mod repository and jars.
