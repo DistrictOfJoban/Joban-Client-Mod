@@ -39,20 +39,17 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     public static ScriptPIDSPreset parse(JsonObject rootJsonObject) throws Exception {
         final String id = rootJsonObject.get("id").getAsString();
 
-        /* Yanyang: C++ native PIDS preset ("language": "cpp" +
-           "nativeLibrary"). The running OS/arch is auto-detected and
-           the per-platform declaration resolved; when this platform
-           isn't declared the script is skipped (not executed) with a
-           hint in latest.log + JCM debug mode. Returns null either
-           way — native presets render through NativeScriptManager. */
-        final com.google.gson.JsonElement language = rootJsonObject.get("language");
-        if (language != null && language.isJsonPrimitive() && "cpp".equalsIgnoreCase(language.getAsString())) {
-            com.lx862.jcm.nativeapi.NativeScriptManager.loadFromDeclaration(id, rootJsonObject.get("nativeLibrary"));
-            return null;
-        }
         final String name = rootJsonObject.has("name") ? rootJsonObject.get("name").getAsString() : null;
         final boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
         final Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : DEFAULT_THUMBNAIL;
+
+        if (com.lx862.mtrscripting.mod.resource.ScriptResourceProvider.isNativeCppScript(rootJsonObject)) {
+            com.lx862.jcm.nativeapi.NativeScriptManager.configure(id,rootJsonObject.get("scriptInput"),null);
+            com.lx862.jcm.nativeapi.NativeScriptManager.loadManyFromDeclaration(id,rootJsonObject.has("nativeLibraries")?rootJsonObject.get("nativeLibraries"):rootJsonObject.get("nativeLibrary"));
+            List<String> blacklist = new ArrayList<>();
+            if(rootJsonObject.has("blacklist")) rootJsonObject.getAsJsonArray("blacklist").forEach(e->blacklist.add(e.getAsString()));
+            return new ScriptPIDSPreset(id,name,thumbnail,blacklist,builtin,null);
+        }
 
         final List<ScriptContent> scripts = new ObjectArrayList<>();
         // Parse script input and pass to the script
@@ -105,6 +102,10 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, LongImmutableList targetPlatformIds, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height, int light) {
         PIDSWrapper pidsWrapper = new PIDSWrapper(be, targetPlatformIds, arrivals, width, height);
+        if (parsedScripts == null) {
+            com.lx862.jcm.nativeapi.NativeContentDriver.pids(getId(),pidsWrapper,world,storedMatrixTransformations,facing,light);
+            return;
+        }
         ScriptInstance<PIDSWrapper> scriptInstance = JCMScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("pids", getId(), pos.getX(), pos.getY(), pos.getZ()), () -> new PIDSScriptInstance(be, parsedScripts, pidsWrapper));
 
         if(scriptInstance instanceof PIDSScriptInstance) {

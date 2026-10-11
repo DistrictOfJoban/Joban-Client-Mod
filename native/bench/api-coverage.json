@@ -1,0 +1,6001 @@
+{
+  "source": "https://jcm.joban.org/latest/dev/scripting/",
+  "audited_on": "2026-10-11",
+  "types": {
+    "Resources": "com.lx862.mtrscripting.core.util.ScriptResourceUtil",
+    "TextUtil": "com.lx862.mtrscripting.mod.impl.mtr.util.TextUtilJS",
+    "Vector3f": "com.lx862.mtrscripting.core.util.ScriptVector3f",
+    "ModelManager": "com.lx862.mtrscripting.core.util.model.ModelManagerJS",
+    "console": "com.lx862.mtrscripting.core.util.ConsoleJS",
+    "Timing": "com.lx862.jcm.nativeapi.NativeApiSession$NativeTiming",
+    "BackgroundWorker": "com.lx862.jcm.nativeapi.NativeApiSession$Background",
+    "RenderManager": "com.lx862.mtrscripting.core.util.render.ScriptRenderManager",
+    "SoundManager": "com.lx862.mtrscripting.core.util.sound.ScriptSoundManager",
+    "QuadDrawCall": "com.lx862.mtrscripting.core.util.render.QuadDrawCall",
+    "DisplayHelper": "com.lx862.jcm.nativeapi.NativeDisplayHelper",
+    "NetworkResponse": "com.lx862.mtrscripting.core.util.NetworkingJS$NetworkResponse",
+    "CircularState": "org.mtr.core.data.Route$CircularState",
+    "Vector": "org.mtr.core.tool.Vector",
+    "GraphicsTexture": "com.lx862.mtrscripting.core.util.GraphicsTexture",
+    "Matrices": "com.lx862.mtrscripting.core.util.Matrices",
+    "StateTracker": "com.lx862.mtrscripting.core.util.StateTrackerJS",
+    "CycleTracker": "com.lx862.mtrscripting.core.util.CycleTrackerJS",
+    "RateLimit": "com.lx862.mtrscripting.core.util.RateLimitJS",
+    "Networking": "com.lx862.mtrscripting.core.util.NetworkingJS",
+    "Files": "com.lx862.mtrscripting.core.util.FilesJS",
+    "DataReader": "com.lx862.mtrscripting.core.util.DataReaderJS",
+    "RawModel": "com.lx862.mtrscripting.core.util.model.RawModelJS",
+    "RawMeshBuilder": "com.lx862.mtrscripting.core.util.model.RawMeshBuilderJS",
+    "DynamicModelHolder": "com.lx862.mtrscripting.core.util.model.DynamicModelHolderJS",
+    "Model": "com.lx862.mtrscripting.core.util.model.ModelJS",
+    "TickableSoundInstance": "com.lx862.mtrscripting.core.util.sound.TickableSoundInstanceJS",
+    "MinecraftClient": "com.lx862.mtrscripting.core.integration.MinecraftClientWrapper",
+    "VanillaText": "com.lx862.mtrscripting.core.integration.VanillaTextWrapper",
+    "VoxelShape": "com.lx862.mtrscripting.core.integration.VoxelShapeWrapper",
+    "PlayerEntity": "com.lx862.mtrscripting.core.integration.PlayerEntityWrapper",
+    "ItemStack": "com.lx862.mtrscripting.core.integration.ItemStackWrapper",
+    "TransportMode": "org.mtr.core.data.TransportMode",
+    "Route": "org.mtr.core.data.Route",
+    "RouteType": "org.mtr.core.data.RouteType",
+    "Station": "org.mtr.core.data.Station",
+    "StationExit": "org.mtr.core.data.StationExit",
+    "Siding": "org.mtr.core.data.Siding",
+    "Platform": "org.mtr.core.data.Platform",
+    "SimplifiedRoute": "org.mtr.core.data.SimplifiedRoute",
+    "SimplifiedRoutePlatform": "org.mtr.core.data.SimplifiedRoutePlatform",
+    "Vehicle": "org.mtr.core.data.Vehicle",
+    "VehicleExtraData": "org.mtr.core.data.VehicleExtraData",
+    "PathData": "org.mtr.core.data.PathData",
+    "Rail": "org.mtr.core.data.Rail",
+    "Position": "org.mtr.core.data.Position",
+    "Text": "com.lx862.jcm.mod.scripting.pids.TextWrapper",
+    "Texture": "com.lx862.jcm.mod.scripting.pids.TextureWrapper",
+    "Rectangle": "com.lx862.jcm.mod.scripting.pids.RectangleWrapper",
+    "PIDSScriptContext": "com.lx862.jcm.mod.scripting.pids.PIDSScriptContext",
+    "PIDSBlockEntity": "com.lx862.jcm.mod.scripting.pids.PIDSWrapper",
+    "ArrivalEntries": "com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalsWrapper",
+    "ArrivalEntry": "com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalWrapper",
+    "CarDetails": "org.mtr.core.operation.CarDetails",
+    "EyeCandyScriptContext": "com.lx862.mtrscripting.mod.impl.mtr.eyecandy.EyeCandyScriptContext",
+    "EyecandyScriptContext": "com.lx862.mtrscripting.mod.impl.mtr.eyecandy.EyeCandyScriptContext",
+    "EyecandyWrapper": "com.lx862.mtrscripting.mod.impl.mtr.eyecandy.EyecandyBlockEntityWrapper",
+    "EyecandyEvents": "com.lx862.mtrscripting.mod.impl.mtr.eyecandy.event.EyecandyEvents",
+    "BlockUseEvent": "com.lx862.mtrscripting.mod.impl.mtr.util.ScriptEvent",
+    "BlockUseDetail": "com.lx862.mtrscripting.mod.impl.mtr.eyecandy.event.BlockUseEvent",
+    "Stop": "com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper$Stop",
+    "RouteInterchange": "com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper$Stop$RouteInterchange",
+    "VehicleScriptContext": "com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptContext",
+    "VehicleWrapper": "com.lx862.mtrscripting.mod.impl.mtr.vehicle.NTETrainWrapper",
+    "VehicleDoor": "com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper$VehicleDoor",
+    "StopsData": "com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper$StopsData",
+    "LiftWrapper": "com.lx862.mtrscripting.mod.impl.mtr.lift.LiftWrapper",
+    "LiftFloor": "com.lx862.mtrscripting.mod.impl.mtr.lift.LiftWrapper$Floor",
+    "LiftScriptContext": "com.lx862.mtrscripting.mod.impl.mtr.lift.LiftScriptContext"
+  },
+  "members": [
+    {
+      "page": "bgworker",
+      "type": "BackgroundWorker",
+      "kind": "method",
+      "member": "submit",
+      "arities": [
+        1
+      ],
+      "signature": "static BackgroundWorker.submit(task: Runnable): void"
+    },
+    {
+      "page": "builtin_display_helper",
+      "type": "DisplayHelper",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        1
+      ],
+      "signature": "new DisplayHelper(cfg: Object): DisplayHelper"
+    },
+    {
+      "page": "builtin_display_helper",
+      "type": "DisplayHelper",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        0
+      ],
+      "signature": "DisplayHelper.create(): DisplayHelper"
+    },
+    {
+      "page": "builtin_display_helper",
+      "type": "DisplayHelper",
+      "kind": "method",
+      "member": "close",
+      "arities": [
+        0
+      ],
+      "signature": "DisplayHelper.close(): void"
+    },
+    {
+      "page": "builtin_display_helper",
+      "type": "DisplayHelper",
+      "kind": "method",
+      "member": "graphics",
+      "arities": [
+        0
+      ],
+      "signature": "DisplayHelper.graphics(): Graphics2D"
+    },
+    {
+      "page": "builtin_display_helper",
+      "type": "DisplayHelper",
+      "kind": "method",
+      "member": "graphicsFor",
+      "arities": [
+        1
+      ],
+      "signature": "DisplayHelper.graphicsFor(slotName: String): Graphics2D"
+    },
+    {
+      "page": "builtin_display_helper",
+      "type": "DisplayHelper",
+      "kind": "method",
+      "member": "upload",
+      "arities": [
+        0
+      ],
+      "signature": "DisplayHelper.upload(): void"
+    },
+    {
+      "page": "builtin_display_helper",
+      "type": "DisplayHelper",
+      "kind": "field",
+      "member": "model",
+      "arities": [
+        0
+      ],
+      "signature": "DisplayHelper.model: Model"
+    },
+    {
+      "page": "builtin_display_helper",
+      "type": "DisplayHelper",
+      "kind": "field",
+      "member": "texture",
+      "arities": [
+        0
+      ],
+      "signature": "DisplayHelper.texture: GraphicsTexture"
+    },
+    {
+      "page": "console",
+      "type": "console",
+      "kind": "method",
+      "member": "log",
+      "arities": [
+        1
+      ],
+      "signature": "static console.log(values: Object...): void"
+    },
+    {
+      "page": "console",
+      "type": "console",
+      "kind": "method",
+      "member": "warn",
+      "arities": [
+        1
+      ],
+      "signature": "static console.warn(values: Object...): void"
+    },
+    {
+      "page": "console",
+      "type": "console",
+      "kind": "method",
+      "member": "error",
+      "arities": [
+        1
+      ],
+      "signature": "static console.error(values: Object...): void"
+    },
+    {
+      "page": "console",
+      "type": "console",
+      "kind": "method",
+      "member": "debug",
+      "arities": [
+        1
+      ],
+      "signature": "static console.debug(values: Object...): void"
+    },
+    {
+      "page": "console",
+      "type": "console",
+      "kind": "method",
+      "member": "count",
+      "arities": [
+        0,
+        1
+      ],
+      "signature": "static console.count(label: String = \"default\"): void"
+    },
+    {
+      "page": "console",
+      "type": "console",
+      "kind": "method",
+      "member": "countReset",
+      "arities": [
+        0,
+        1
+      ],
+      "signature": "static console.countReset(label: String = \"default\"): void"
+    },
+    {
+      "page": "console",
+      "type": "console",
+      "kind": "method",
+      "member": "time",
+      "arities": [
+        0,
+        1
+      ],
+      "signature": "static console.time(label: String = \"default\"): void"
+    },
+    {
+      "page": "console",
+      "type": "console",
+      "kind": "method",
+      "member": "timeLog",
+      "arities": [
+        0,
+        1
+      ],
+      "signature": "static console.timeLog(label: String = \"default\"): void"
+    },
+    {
+      "page": "console",
+      "type": "console",
+      "kind": "method",
+      "member": "timeEnd",
+      "arities": [
+        0,
+        1
+      ],
+      "signature": "static console.timeEnd(label: String = \"default\"): void"
+    },
+    {
+      "page": "data_reading",
+      "type": "DataReader",
+      "kind": "method",
+      "member": "asString",
+      "arities": [
+        0
+      ],
+      "signature": "DataReader.asString(): String?"
+    },
+    {
+      "page": "data_reading",
+      "type": "DataReader",
+      "kind": "method",
+      "member": "asBufferedImage",
+      "arities": [
+        0
+      ],
+      "signature": "DataReader.asBufferedImage(): BufferImage?"
+    },
+    {
+      "page": "data_reading",
+      "type": "DataReader",
+      "kind": "method",
+      "member": "asFont",
+      "arities": [
+        0
+      ],
+      "signature": "DataReader.asFont(): Font?"
+    },
+    {
+      "page": "data_reading",
+      "type": "DataReader",
+      "kind": "method",
+      "member": "asByteArray",
+      "arities": [
+        0
+      ],
+      "signature": "DataReader.asByteArray(): byte[]"
+    },
+    {
+      "page": "data_reading",
+      "type": "DataReader",
+      "kind": "method",
+      "member": "openInputStream",
+      "arities": [
+        1
+      ],
+      "signature": "DataReader.openInputStream(callback: Consumer<InputStream>): void"
+    },
+    {
+      "page": "data_reading",
+      "type": "DataReader",
+      "kind": "method",
+      "member": "asInputStream",
+      "arities": [
+        0
+      ],
+      "signature": "DataReader.asInputStream(): InputStream"
+    },
+    {
+      "page": "dynamic_textures",
+      "type": "GraphicsTexture",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        2
+      ],
+      "signature": "new GraphicsTexture(width: int, height: int): GraphicsTexture"
+    },
+    {
+      "page": "dynamic_textures",
+      "type": "GraphicsTexture",
+      "kind": "field",
+      "member": "identifier",
+      "arities": [
+        0
+      ],
+      "signature": "GraphicsTexture.identifier: Identifier"
+    },
+    {
+      "page": "dynamic_textures",
+      "type": "GraphicsTexture",
+      "kind": "field",
+      "member": "bufferedImage",
+      "arities": [
+        0
+      ],
+      "signature": "GraphicsTexture.bufferedImage: BufferedImage"
+    },
+    {
+      "page": "dynamic_textures",
+      "type": "GraphicsTexture",
+      "kind": "field",
+      "member": "graphics",
+      "arities": [
+        0
+      ],
+      "signature": "GraphicsTexture.graphics: Graphics2D"
+    },
+    {
+      "page": "dynamic_textures",
+      "type": "GraphicsTexture",
+      "kind": "method",
+      "member": "upload",
+      "arities": [
+        0
+      ],
+      "signature": "GraphicsTexture.upload(): void"
+    },
+    {
+      "page": "dynamic_textures",
+      "type": "GraphicsTexture",
+      "kind": "method",
+      "member": "upload",
+      "arities": [
+        4
+      ],
+      "signature": "GraphicsTexture.upload(x: int, y: int, width: int, height: int): void"
+    },
+    {
+      "page": "dynamic_textures",
+      "type": "GraphicsTexture",
+      "kind": "method",
+      "member": "close",
+      "arities": [
+        0
+      ],
+      "signature": "GraphicsTexture.close(): void"
+    },
+    {
+      "page": "files",
+      "type": "Files",
+      "kind": "method",
+      "member": "read",
+      "arities": [
+        1
+      ],
+      "signature": "static Files.read(path: String...): DataReader?"
+    },
+    {
+      "page": "files",
+      "type": "Files",
+      "kind": "method",
+      "member": "readData",
+      "arities": [
+        1
+      ],
+      "signature": "static Files.readData(path: String...): DataReader?"
+    },
+    {
+      "page": "files",
+      "type": "Files",
+      "kind": "method",
+      "member": "saveData",
+      "arities": [
+        2
+      ],
+      "signature": "static Files.saveData(content: String, path: String...): void"
+    },
+    {
+      "page": "files",
+      "type": "Files",
+      "kind": "method",
+      "member": "saveData",
+      "arities": [
+        2
+      ],
+      "signature": "static Files.saveData(content: BufferedImage, path: String...): void"
+    },
+    {
+      "page": "files",
+      "type": "Files",
+      "kind": "method",
+      "member": "deleteData",
+      "arities": [
+        1
+      ],
+      "signature": "static Files.deleteData(path: String...): void"
+    },
+    {
+      "page": "files",
+      "type": "Files",
+      "kind": "method",
+      "member": "hasData",
+      "arities": [
+        1
+      ],
+      "signature": "static Files.hasData(path: String...): boolean"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        3
+      ],
+      "signature": "new Vector3f(x: float, y: float, z: float): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        1
+      ],
+      "signature": "new Vector3f(tscVec: Vector): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "x",
+      "arities": [
+        0
+      ],
+      "signature": "Vector3f.x(): float"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "y",
+      "arities": [
+        0
+      ],
+      "signature": "Vector3f.y(): float"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "z",
+      "arities": [
+        0
+      ],
+      "signature": "Vector3f.z(): float"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "copy",
+      "arities": [
+        0
+      ],
+      "signature": "Vector3f.copy(): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "normalize",
+      "arities": [
+        0
+      ],
+      "signature": "Vector3f.normalize(): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "add",
+      "arities": [
+        3
+      ],
+      "signature": "Vector3f.add(x: float, y: float, z: float): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "add",
+      "arities": [
+        1
+      ],
+      "signature": "Vector3f.add(other: Vector3f): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "sub",
+      "arities": [
+        1
+      ],
+      "signature": "Vector3f.sub(other: Vector3f): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "mul",
+      "arities": [
+        3
+      ],
+      "signature": "Vector3f.mul(x: float, y: float, z: float): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "mul",
+      "arities": [
+        1
+      ],
+      "signature": "Vector3f.mul(n: float): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "rotX",
+      "arities": [
+        1
+      ],
+      "signature": "Vector3f.rotX(rad: float): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "rotY",
+      "arities": [
+        1
+      ],
+      "signature": "Vector3f.rotY(rad: float): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "rotZ",
+      "arities": [
+        1
+      ],
+      "signature": "Vector3f.rotZ(rad: float): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "cross",
+      "arities": [
+        1
+      ],
+      "signature": "Vector3f.cross(other: Vector3f): Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "distance",
+      "arities": [
+        1
+      ],
+      "signature": "Vector3f.distance(other: Vector3f): float"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "distanceSq",
+      "arities": [
+        1
+      ],
+      "signature": "Vector3f.distanceSq(other: Vector3f): float"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "method",
+      "member": "rawBlockPos",
+      "arities": [
+        0
+      ],
+      "signature": "Vector3f.rawBlockPos(): BlockPos"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "field",
+      "member": "ZERO",
+      "arities": [
+        0
+      ],
+      "signature": "static Vector3f.ZERO: Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "field",
+      "member": "XP",
+      "arities": [
+        0
+      ],
+      "signature": "static Vector3f.XP: Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "field",
+      "member": "YP",
+      "arities": [
+        0
+      ],
+      "signature": "static Vector3f.YP: Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Vector3f",
+      "kind": "field",
+      "member": "ZP",
+      "arities": [
+        0
+      ],
+      "signature": "static Vector3f.ZP: Vector3f"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        0
+      ],
+      "signature": "new Matrices(): Matrices"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "method",
+      "member": "translate",
+      "arities": [
+        3
+      ],
+      "signature": "Matrices.translate(x: float, y: float, z: float): void"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "method",
+      "member": "rotateX",
+      "arities": [
+        1
+      ],
+      "signature": "Matrices.rotateX(xRad: float): void"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "method",
+      "member": "rotateY",
+      "arities": [
+        1
+      ],
+      "signature": "Matrices.rotateY(yRad: float): void"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "method",
+      "member": "rotateZ",
+      "arities": [
+        1
+      ],
+      "signature": "Matrices.rotateZ(zRad: float): void"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "method",
+      "member": "rotateXDegrees",
+      "arities": [
+        1
+      ],
+      "signature": "Matrices.rotateXDegrees(xDeg: float): void"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "method",
+      "member": "rotateYDegrees",
+      "arities": [
+        1
+      ],
+      "signature": "Matrices.rotateYDegrees(yDeg: float): void"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "method",
+      "member": "rotateZDegrees",
+      "arities": [
+        1
+      ],
+      "signature": "Matrices.rotateZDegrees(zDeg: float): void"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "method",
+      "member": "pushPose",
+      "arities": [
+        0
+      ],
+      "signature": "Matrices.pushPose(): void"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "method",
+      "member": "popPose",
+      "arities": [
+        0
+      ],
+      "signature": "Matrices.popPose(): void"
+    },
+    {
+      "page": "math",
+      "type": "Matrices",
+      "kind": "method",
+      "member": "popPushPose",
+      "arities": [
+        0
+      ],
+      "signature": "Matrices.popPushPose(): void"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "worldIsRaining",
+      "arities": [
+        0
+      ],
+      "signature": "static MinecraftClient.worldIsRaining(): boolean"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "worldIsThundering",
+      "arities": [
+        0
+      ],
+      "signature": "static MinecraftClient.worldIsThundering(): boolean"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "worldIsRainingAt",
+      "arities": [
+        1
+      ],
+      "signature": "static MinecraftClient.worldIsRainingAt(pos: Vector3f): boolean"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "worldDayTime",
+      "arities": [
+        0
+      ],
+      "signature": "static MinecraftClient.worldDayTime(): int"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "blockLightAt",
+      "arities": [
+        1
+      ],
+      "signature": "static MinecraftClient.blockLightAt(pos: Vector3f): int"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "skyLightAt",
+      "arities": [
+        1
+      ],
+      "signature": "static MinecraftClient.skyLightAt(pos: Vector3f): int"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "lightLevelAt",
+      "arities": [
+        1
+      ],
+      "signature": "static MinecraftClient.lightLevelAt(pos: Vector3f): int"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "narrate",
+      "arities": [
+        1
+      ],
+      "signature": "static MinecraftClient.narrate(message: String): void"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "localPlayer",
+      "arities": [
+        0
+      ],
+      "signature": "static MinecraftClient.localPlayer(): PlayerEntity"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "getScoreboardScore",
+      "arities": [
+        2
+      ],
+      "signature": "static MinecraftClient.getScoreboardScore(objectiveName: String, playerName: String): int"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "getRedstoneLevel",
+      "arities": [
+        1
+      ],
+      "signature": "static MinecraftClient.getRedstoneLevel(pos: Vector3f): int"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "displayMessage",
+      "arities": [
+        2
+      ],
+      "signature": "static MinecraftClient.displayMessage(message: String, actionBar: boolean): void"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "displayMessage",
+      "arities": [
+        2
+      ],
+      "signature": "static MinecraftClient.displayMessage(message: VanillaText, actionBar: boolean): void"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "spawnParticleInWorld",
+      "arities": [
+        3,
+        4
+      ],
+      "signature": "static MinecraftClient.spawnParticleInWorld(particleId: Identifier, pos: Vector3f, initialVelocity: Vector3f, alwaysSpawn: boolean = false): void"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "renderDistance",
+      "arities": [
+        0
+      ],
+      "signature": "static MinecraftClient.renderDistance(): int"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "getWorldPlayers",
+      "arities": [
+        0
+      ],
+      "signature": "static MinecraftClient.getWorldPlayers(): List<PlayerEntity>"
+    },
+    {
+      "page": "mc",
+      "type": "MinecraftClient",
+      "kind": "method",
+      "member": "gamePaused",
+      "arities": [
+        0
+      ],
+      "signature": "static MinecraftClient.gamePaused(): boolean"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "literal",
+      "arities": [
+        1
+      ],
+      "signature": "static VanillaText.literal(str: String): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "translatable",
+      "arities": [
+        2
+      ],
+      "signature": "static VanillaText.translatable(key: String, placeholders: objects...): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "append",
+      "arities": [
+        1
+      ],
+      "signature": "VanillaText.append(other: VanillaText): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "withBold",
+      "arities": [
+        0
+      ],
+      "signature": "VanillaText.withBold(): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "withItalic",
+      "arities": [
+        0
+      ],
+      "signature": "VanillaText.withItalic(): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "withFont",
+      "arities": [
+        1
+      ],
+      "signature": "VanillaText.withFont(id: Identifier): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "withColor",
+      "arities": [
+        1
+      ],
+      "signature": "VanillaText.withColor(rgb: int): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "withColor",
+      "arities": [
+        1
+      ],
+      "signature": "VanillaText.withColor(colorName: String): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "clickToCopyText",
+      "arities": [
+        1
+      ],
+      "signature": "VanillaText.clickToCopyText(clipboardText: String): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "clickToOpenURL",
+      "arities": [
+        1
+      ],
+      "signature": "VanillaText.clickToOpenURL(url: String): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "withHoverText",
+      "arities": [
+        1
+      ],
+      "signature": "VanillaText.withHoverText(content: String): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "withHoverText",
+      "arities": [
+        1
+      ],
+      "signature": "VanillaText.withHoverText(content: VanillaText): VanillaText"
+    },
+    {
+      "page": "mc",
+      "type": "VanillaText",
+      "kind": "method",
+      "member": "getString",
+      "arities": [
+        0
+      ],
+      "signature": "VanillaText.getString(): String"
+    },
+    {
+      "page": "mc",
+      "type": "VoxelShape",
+      "kind": "method",
+      "member": "empty",
+      "arities": [
+        0
+      ],
+      "signature": "static VoxelShape.empty(): VoxelShape"
+    },
+    {
+      "page": "mc",
+      "type": "VoxelShape",
+      "kind": "method",
+      "member": "fullCube",
+      "arities": [
+        0
+      ],
+      "signature": "static VoxelShape.fullCube(): VoxelShape"
+    },
+    {
+      "page": "mc",
+      "type": "VoxelShape",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        6
+      ],
+      "signature": "static VoxelShape.create(minX: double, minY: double, minZ: double, maxX: double, maxY: double, maxZ: double): VoxelShape"
+    },
+    {
+      "page": "mc",
+      "type": "VoxelShape",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        7
+      ],
+      "signature": "static VoxelShape.create(minX: double, minY: double, minZ: double, maxX: double, maxY: double, maxZ: double, facing: Direction): VoxelShape"
+    },
+    {
+      "page": "mc",
+      "type": "VoxelShape",
+      "kind": "method",
+      "member": "combine",
+      "arities": [
+        1
+      ],
+      "signature": "VoxelShape.combine(other: VoxelShape): VoxelShape"
+    },
+    {
+      "page": "mc",
+      "type": "ItemStack",
+      "kind": "method",
+      "member": "itemId",
+      "arities": [
+        0
+      ],
+      "signature": "ItemStack.itemId(): String"
+    },
+    {
+      "page": "mc",
+      "type": "ItemStack",
+      "kind": "method",
+      "member": "translationId",
+      "arities": [
+        0
+      ],
+      "signature": "ItemStack.translationId(): String"
+    },
+    {
+      "page": "mc",
+      "type": "ItemStack",
+      "kind": "method",
+      "member": "empty",
+      "arities": [
+        0
+      ],
+      "signature": "ItemStack.empty(): boolean"
+    },
+    {
+      "page": "mc",
+      "type": "ItemStack",
+      "kind": "method",
+      "member": "count",
+      "arities": [
+        0
+      ],
+      "signature": "ItemStack.count(): int"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "uuid",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.uuid(): String"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "hasPermissionLevel",
+      "arities": [
+        1
+      ],
+      "signature": "PlayerEntity.hasPermissionLevel(level: int): boolean"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "pos",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.pos(): Vector3f"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "blockPos",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.blockPos(): Vector3f"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "smoothPos",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.smoothPos(): Vector3f"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "velocity",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.velocity(): Vector3f"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "yaw",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.yaw(): float"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "pitch",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.pitch(): float"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "bodyYaw",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.bodyYaw(): float"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "playerName",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.playerName(): String"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "isHoldingItem",
+      "arities": [
+        1
+      ],
+      "signature": "PlayerEntity.isHoldingItem(id: Identifier): boolean"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "mainHandItem",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.mainHandItem(): ItemStack"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "offHandItem",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.offHandItem(): ItemStack"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "activeItem",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.activeItem(): ItemStack"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "isSneaking",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.isSneaking(): boolean"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "isSprinting",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.isSprinting(): boolean"
+    },
+    {
+      "page": "mc",
+      "type": "PlayerEntity",
+      "kind": "method",
+      "member": "isSwimming",
+      "arities": [
+        0
+      ],
+      "signature": "PlayerEntity.isSwimming(): boolean"
+    },
+    {
+      "page": "model",
+      "type": "ModelManager",
+      "kind": "method",
+      "member": "loadModel",
+      "arities": [
+        1,
+        2
+      ],
+      "signature": "static ModelManager.loadModel(id: Identifier, flipV: boolean = true): RawModel"
+    },
+    {
+      "page": "model",
+      "type": "ModelManager",
+      "kind": "method",
+      "member": "loadModelParts",
+      "arities": [
+        1,
+        2
+      ],
+      "signature": "static ModelManager.loadModelParts(id: Identifier, flipV: boolean = true): Map<String, RawModel>"
+    },
+    {
+      "page": "model",
+      "type": "ModelManager",
+      "kind": "method",
+      "member": "upload",
+      "arities": [
+        1
+      ],
+      "signature": "static ModelManager.upload(rawModel: RawModel): Model"
+    },
+    {
+      "page": "model",
+      "type": "ModelManager",
+      "kind": "method",
+      "member": "loadRawModel",
+      "arities": [
+        3
+      ],
+      "signature": "static ModelManager.loadRawModel(null, id: Identifier, null): RawModel?"
+    },
+    {
+      "page": "model",
+      "type": "ModelManager",
+      "kind": "method",
+      "member": "loadPartedRawModel",
+      "arities": [
+        3
+      ],
+      "signature": "static ModelManager.loadPartedRawModel(null, id: Identifier, null): Map<String, RawModel>"
+    },
+    {
+      "page": "model",
+      "type": "ModelManager",
+      "kind": "method",
+      "member": "uploadVertArrays",
+      "arities": [
+        1
+      ],
+      "signature": "static ModelManager.uploadVertArrays(rawModel: RawModel): Model"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        0
+      ],
+      "signature": "new RawModel(): RawModel"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "append",
+      "arities": [
+        1
+      ],
+      "signature": "RawModel.append(other: RawMesh): void"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "append",
+      "arities": [
+        1
+      ],
+      "signature": "RawModel.append(other: RawModel): void"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "applyTranslation",
+      "arities": [
+        3
+      ],
+      "signature": "RawModel.applyTranslation(x: float, y: float, z: float): void"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "applyRotation",
+      "arities": [
+        2
+      ],
+      "signature": "RawModel.applyRotation(direction: Vector3f, angle: float): void"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "applyScale",
+      "arities": [
+        3
+      ],
+      "signature": "RawModel.applyScale(x: float, y: float, z: float): void"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "applyMirror",
+      "arities": [
+        3
+      ],
+      "signature": "RawModel.applyMirror(x: boolean, y: boolean, z: boolean): void"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "applyUVMirror",
+      "arities": [
+        2
+      ],
+      "signature": "RawModel.applyUVMirror(u: boolean, v: boolean): void"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "setAllRenderType",
+      "arities": [
+        1
+      ],
+      "signature": "RawModel.setAllRenderType(renderType: String): void"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "copy",
+      "arities": [
+        0
+      ],
+      "signature": "RawModel.copy(): RawModel"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "replaceTexture",
+      "arities": [
+        2
+      ],
+      "signature": "RawModel.replaceTexture(fileName: string, id: Identifier): void"
+    },
+    {
+      "page": "model",
+      "type": "RawModel",
+      "kind": "method",
+      "member": "replaceAllTexture",
+      "arities": [
+        1
+      ],
+      "signature": "RawModel.replaceAllTexture(id: Identifier): void"
+    },
+    {
+      "page": "model",
+      "type": "Model",
+      "kind": "method",
+      "member": "replaceTexture",
+      "arities": [
+        2
+      ],
+      "signature": "Model.replaceTexture(fileName: string, id: Identifier): void"
+    },
+    {
+      "page": "model",
+      "type": "Model",
+      "kind": "method",
+      "member": "replaceAllTexture",
+      "arities": [
+        1
+      ],
+      "signature": "Model.replaceAllTexture(id: Identifier): void"
+    },
+    {
+      "page": "model",
+      "type": "Model",
+      "kind": "method",
+      "member": "copyForMaterialChanges",
+      "arities": [
+        0
+      ],
+      "signature": "Model.copyForMaterialChanges(): Model"
+    },
+    {
+      "page": "model",
+      "type": "Model",
+      "kind": "method",
+      "member": "close",
+      "arities": [
+        0
+      ],
+      "signature": "Model.close(): void"
+    },
+    {
+      "page": "model",
+      "type": "RawMeshBuilder",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        3
+      ],
+      "signature": "new RawMeshBuilder(faceSize: int, renderType: String, texture: Identifier): RawMeshBuilder"
+    },
+    {
+      "page": "model",
+      "type": "RawMeshBuilder",
+      "kind": "method",
+      "member": "vertex",
+      "arities": [
+        1
+      ],
+      "signature": "RawMeshBuilder.vertex(pos: Vector3f): RawMeshBuilder"
+    },
+    {
+      "page": "model",
+      "type": "RawMeshBuilder",
+      "kind": "method",
+      "member": "vertex",
+      "arities": [
+        3
+      ],
+      "signature": "RawMeshBuilder.vertex(x: double, y: double, z: double): RawMeshBuilder"
+    },
+    {
+      "page": "model",
+      "type": "RawMeshBuilder",
+      "kind": "method",
+      "member": "normal",
+      "arities": [
+        3
+      ],
+      "signature": "RawMeshBuilder.normal(x: double, y: double, z: double): RawMeshBuilder"
+    },
+    {
+      "page": "model",
+      "type": "RawMeshBuilder",
+      "kind": "method",
+      "member": "uv",
+      "arities": [
+        2
+      ],
+      "signature": "RawMeshBuilder.uv(x: float, y: float): RawMeshBuilder"
+    },
+    {
+      "page": "model",
+      "type": "RawMeshBuilder",
+      "kind": "method",
+      "member": "endVertex",
+      "arities": [
+        0
+      ],
+      "signature": "RawMeshBuilder.endVertex(): RawMeshBuilder"
+    },
+    {
+      "page": "model",
+      "type": "RawMeshBuilder",
+      "kind": "method",
+      "member": "color",
+      "arities": [
+        4
+      ],
+      "signature": "RawMeshBuilder.color(r: int, g: int, b: int, a: int): RawMeshBuilder"
+    },
+    {
+      "page": "model",
+      "type": "RawMeshBuilder",
+      "kind": "method",
+      "member": "getMesh",
+      "arities": [
+        0
+      ],
+      "signature": "RawMeshBuilder.getMesh(): RawMesh"
+    },
+    {
+      "page": "model",
+      "type": "RawMeshBuilder",
+      "kind": "method",
+      "member": "asRawModel",
+      "arities": [
+        0
+      ],
+      "signature": "RawMeshBuilder.asRawModel(): RawModel"
+    },
+    {
+      "page": "model",
+      "type": "DynamicModelHolder",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        0
+      ],
+      "signature": "new DynamicModelHolder(): DynamicModelHolder"
+    },
+    {
+      "page": "model",
+      "type": "DynamicModelHolder",
+      "kind": "method",
+      "member": "uploadLater",
+      "arities": [
+        1
+      ],
+      "signature": "DynamicModelHolder.uploadLater(rawModel: RawModel): void"
+    },
+    {
+      "page": "model",
+      "type": "DynamicModelHolder",
+      "kind": "method",
+      "member": "getUploadedModel",
+      "arities": [
+        0
+      ],
+      "signature": "DynamicModelHolder.getUploadedModel(): RawModel?"
+    },
+    {
+      "page": "model",
+      "type": "DynamicModelHolder",
+      "kind": "method",
+      "member": "close",
+      "arities": [
+        0
+      ],
+      "signature": "DynamicModelHolder.close(): void"
+    },
+    {
+      "page": "networking",
+      "type": "Networking",
+      "kind": "method",
+      "member": "fetch",
+      "arities": [
+        1
+      ],
+      "signature": "static Networking.fetch(url: String): NetworkResponse<DataReader>"
+    },
+    {
+      "page": "networking",
+      "type": "Networking",
+      "kind": "method",
+      "member": "fetch",
+      "arities": [
+        2
+      ],
+      "signature": "static Networking.fetch(url: String, requestOption: RequestOption): NetworkResponse<DataReader>"
+    },
+    {
+      "page": "networking",
+      "type": "Networking",
+      "kind": "method",
+      "member": "fetchString",
+      "arities": [
+        1
+      ],
+      "signature": "static Networking.fetchString(url: String): NetworkResponse<String>"
+    },
+    {
+      "page": "networking",
+      "type": "Networking",
+      "kind": "method",
+      "member": "fetchString",
+      "arities": [
+        2
+      ],
+      "signature": "static Networking.fetchString(url: String, requestOption: RequestOption): NetworkResponse<String>"
+    },
+    {
+      "page": "networking",
+      "type": "Networking",
+      "kind": "method",
+      "member": "fetchImage",
+      "arities": [
+        1
+      ],
+      "signature": "static Networking.fetchImage(url: String): NetworkResponse<BufferedImage>"
+    },
+    {
+      "page": "networking",
+      "type": "Networking",
+      "kind": "method",
+      "member": "fetchImage",
+      "arities": [
+        2
+      ],
+      "signature": "static Networking.fetchImage(url: String, requestOption: RequestOption): NetworkResponse<BufferedImage>"
+    },
+    {
+      "page": "networking",
+      "type": "NetworkResponse",
+      "kind": "method",
+      "member": "getResponseCode",
+      "arities": [
+        0
+      ],
+      "signature": "NetworkResponse.getResponseCode(): int"
+    },
+    {
+      "page": "networking",
+      "type": "NetworkResponse",
+      "kind": "method",
+      "member": "success",
+      "arities": [
+        0
+      ],
+      "signature": "NetworkResponse.success(): boolean"
+    },
+    {
+      "page": "networking",
+      "type": "NetworkResponse",
+      "kind": "method",
+      "member": "ok",
+      "arities": [
+        0
+      ],
+      "signature": "NetworkResponse.ok(): boolean"
+    },
+    {
+      "page": "networking",
+      "type": "NetworkResponse",
+      "kind": "method",
+      "member": "getData",
+      "arities": [
+        0
+      ],
+      "signature": "NetworkResponse.getData(): DynamicType?"
+    },
+    {
+      "page": "networking",
+      "type": "NetworkResponse",
+      "kind": "method",
+      "member": "exception",
+      "arities": [
+        0
+      ],
+      "signature": "NetworkResponse.exception(): Exception?"
+    },
+    {
+      "page": "networking",
+      "type": "NetworkResponse",
+      "kind": "method",
+      "member": "getHeaders",
+      "arities": [
+        0
+      ],
+      "signature": "NetworkResponse.getHeaders(): Map<String, List<String>>?"
+    },
+    {
+      "page": "rendering",
+      "type": "RenderManager",
+      "kind": "method",
+      "member": "drawModel",
+      "arities": [
+        2
+      ],
+      "signature": "RenderManager.drawModel(model: Model, matrices: Matrices?): void"
+    },
+    {
+      "page": "rendering",
+      "type": "RenderManager",
+      "kind": "method",
+      "member": "drawModel",
+      "arities": [
+        2
+      ],
+      "signature": "RenderManager.drawModel(modelHolder: DynamicModelHolder, matrices: Matrices?): void"
+    },
+    {
+      "page": "rendering",
+      "type": "RenderManager",
+      "kind": "method",
+      "member": "draw",
+      "arities": [
+        1
+      ],
+      "signature": "RenderManager.draw(call: DrawCall): void"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        0
+      ],
+      "signature": "static QuadDrawCall.create(): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        1
+      ],
+      "signature": "static QuadDrawCall.create(comment: String): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "quad",
+      "arities": [
+        4
+      ],
+      "signature": "QuadDrawCall.quad(corner1: Vector3f, corner2: Vector3f, corner3: Vector3f, corner4: Vector3f): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "corner1",
+      "arities": [
+        1
+      ],
+      "signature": "QuadDrawCall.corner1(pos: Vector3f): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "corner2",
+      "arities": [
+        1
+      ],
+      "signature": "QuadDrawCall.corner2(pos: Vector3f): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "corner3",
+      "arities": [
+        1
+      ],
+      "signature": "QuadDrawCall.corner3(pos: Vector3f): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "corner4",
+      "arities": [
+        1
+      ],
+      "signature": "QuadDrawCall.corner4(pos: Vector3f): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "renderType",
+      "arities": [
+        1
+      ],
+      "signature": "QuadDrawCall.renderType(renderType: String): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "color",
+      "arities": [
+        1
+      ],
+      "signature": "QuadDrawCall.color(rgb: int): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "texture",
+      "arities": [
+        1
+      ],
+      "signature": "QuadDrawCall.texture(id: Identifier): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "uv",
+      "arities": [
+        4
+      ],
+      "signature": "QuadDrawCall.uv(u1: float, v1: float, u2: float, v2: float): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "uv",
+      "arities": [
+        2
+      ],
+      "signature": "QuadDrawCall.uv(u2: float, v2: float): QuadDrawCall"
+    },
+    {
+      "page": "rendering",
+      "type": "QuadDrawCall",
+      "kind": "method",
+      "member": "matrices",
+      "arities": [
+        1
+      ],
+      "signature": "QuadDrawCall.matrices(matrices: Matrices): QuadDrawCall"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "id",
+      "arities": [
+        1
+      ],
+      "signature": "static Resources.id(idStr: String): Identifier"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "idr",
+      "arities": [
+        1
+      ],
+      "signature": "static Resources.idr(relPath: String): Identifier"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "read",
+      "arities": [
+        1
+      ],
+      "signature": "static Resources.read(id: Identifier): DataReader?"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "exist",
+      "arities": [
+        1
+      ],
+      "signature": "static Resources.exist(id: Identifier): boolean"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "manager",
+      "arities": [
+        0
+      ],
+      "signature": "static Resources.manager(): null"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "readString",
+      "arities": [
+        1
+      ],
+      "signature": "static Resources.readString(id: Identifier): String?"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "readBufferedImage",
+      "arities": [
+        1
+      ],
+      "signature": "static Resources.readBufferedImage(id: Identifier): BufferedImage?"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "readFont",
+      "arities": [
+        1
+      ],
+      "signature": "static Resources.readFont(id: Identifier): Font?"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "getSystemFont",
+      "arities": [
+        1
+      ],
+      "signature": "static Resources.getSystemFont(name: String): Font"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "hasSystemFont",
+      "arities": [
+        1
+      ],
+      "signature": "static Resources.hasSystemFont(name: String): boolean"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "getFontRenderContext",
+      "arities": [
+        0
+      ],
+      "signature": "static Resources.getFontRenderContext(): FontRenderContext"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "ensureStrFonts",
+      "arities": [
+        3
+      ],
+      "signature": "static Resources.ensureStrFonts(text: String, primaryFont: Font, fallbackFonts: Font...): AttributedString"
+    },
+    {
+      "page": "sounds",
+      "type": "SoundManager",
+      "kind": "method",
+      "member": "playLocalSound",
+      "arities": [
+        3,
+        4
+      ],
+      "signature": "SoundManager.playLocalSound(id: Identifier, volume: float, pitch: float, soundCategory: string = \"MASTER\"): void"
+    },
+    {
+      "page": "sounds",
+      "type": "SoundManager",
+      "kind": "method",
+      "member": "playSound",
+      "arities": [
+        4,
+        5
+      ],
+      "signature": "SoundManager.playSound(id: Identifier, pos: Vector3f, volume: float, pitch: float, soundCategory: string = \"MASTER\"): void"
+    },
+    {
+      "page": "sounds",
+      "type": "SoundManager",
+      "kind": "method",
+      "member": "play",
+      "arities": [
+        1
+      ],
+      "signature": "SoundManager.play(soundInstance: TickableSoundInstance): void"
+    },
+    {
+      "page": "sounds",
+      "type": "SoundManager",
+      "kind": "method",
+      "member": "stop",
+      "arities": [
+        1
+      ],
+      "signature": "SoundManager.stop(soundInstance: TickableSoundInstance): void"
+    },
+    {
+      "page": "sounds",
+      "type": "TickableSoundInstance",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        2
+      ],
+      "signature": "static TickableSoundInstance.create(id: Identifier, soundCategory: String): TickableSoundInstance"
+    },
+    {
+      "page": "sounds",
+      "type": "TickableSoundInstance",
+      "kind": "method",
+      "member": "setSoundVolume",
+      "arities": [
+        1
+      ],
+      "signature": "TickableSoundInstance.setSoundVolume(volume: float): TickableSoundInstance"
+    },
+    {
+      "page": "sounds",
+      "type": "TickableSoundInstance",
+      "kind": "method",
+      "member": "setSoundPitch",
+      "arities": [
+        1
+      ],
+      "signature": "TickableSoundInstance.setSoundPitch(pitch: float): TickableSoundInstance"
+    },
+    {
+      "page": "sounds",
+      "type": "TickableSoundInstance",
+      "kind": "method",
+      "member": "setLoopable",
+      "arities": [
+        1
+      ],
+      "signature": "TickableSoundInstance.setLoopable(loopable: boolean): TickableSoundInstance"
+    },
+    {
+      "page": "sounds",
+      "type": "TickableSoundInstance",
+      "kind": "method",
+      "member": "setLoopDelay",
+      "arities": [
+        1
+      ],
+      "signature": "TickableSoundInstance.setLoopDelay(delayTick: int): TickableSoundInstance"
+    },
+    {
+      "page": "sounds",
+      "type": "TickableSoundInstance",
+      "kind": "method",
+      "member": "setRelative",
+      "arities": [
+        1
+      ],
+      "signature": "TickableSoundInstance.setRelative(relative: boolean): TickableSoundInstance"
+    },
+    {
+      "page": "sounds",
+      "type": "TickableSoundInstance",
+      "kind": "method",
+      "member": "setPos",
+      "arities": [
+        1
+      ],
+      "signature": "TickableSoundInstance.setPos(pos: Vector3f): TickableSoundInstance"
+    },
+    {
+      "page": "sounds",
+      "type": "TickableSoundInstance",
+      "kind": "method",
+      "member": "isPlaying",
+      "arities": [
+        0
+      ],
+      "signature": "TickableSoundInstance.isPlaying(): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getName",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getName(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getHexId",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getHexId(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getId",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getRailLength",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getRailLength(): double"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getDepotName",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getDepotName(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getEarlyVehicleIncreaseDwellTime",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getEarlyVehicleIncreaseDwellTime(): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getMaxVehicles",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getMaxVehicles(): int"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getIsUnlimited",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getIsUnlimited(): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getDelayedVehicleSpeedIncreasePercentage",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getDelayedVehicleSpeedIncreasePercentage(): int"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getDelayedVehicleReduceDwellTimePercentage",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getDelayedVehicleReduceDwellTimePercentage(): int"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "getMidPosition",
+      "arities": [
+        0
+      ],
+      "signature": "Siding.getMidPosition(): Position"
+    },
+    {
+      "page": "tsc",
+      "type": "Siding",
+      "kind": "method",
+      "member": "containsPos",
+      "arities": [
+        1
+      ],
+      "signature": "Siding.containsPos(pos: Position): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "Platform",
+      "kind": "field",
+      "member": "routes",
+      "arities": [
+        0
+      ],
+      "signature": "Platform.routes: ObjectAVLTreeSet<Route>"
+    },
+    {
+      "page": "tsc",
+      "type": "Platform",
+      "kind": "field",
+      "member": "routeColors",
+      "arities": [
+        0
+      ],
+      "signature": "Platform.routeColors: IntAVLTreeSet"
+    },
+    {
+      "page": "tsc",
+      "type": "Platform",
+      "kind": "method",
+      "member": "getName",
+      "arities": [
+        0
+      ],
+      "signature": "Platform.getName(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "Platform",
+      "kind": "method",
+      "member": "getHexId",
+      "arities": [
+        0
+      ],
+      "signature": "Platform.getHexId(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "Platform",
+      "kind": "method",
+      "member": "getId",
+      "arities": [
+        0
+      ],
+      "signature": "Platform.getId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Platform",
+      "kind": "method",
+      "member": "getDwellTime",
+      "arities": [
+        0
+      ],
+      "signature": "Platform.getDwellTime(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Platform",
+      "kind": "method",
+      "member": "getMidPosition",
+      "arities": [
+        0
+      ],
+      "signature": "Platform.getMidPosition(): Position"
+    },
+    {
+      "page": "tsc",
+      "type": "Platform",
+      "kind": "method",
+      "member": "containsPos",
+      "arities": [
+        1
+      ],
+      "signature": "Platform.containsPos(pos: Position): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getHexId",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getHexId(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getId",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getName",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getName(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getColor",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getColor(): int"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getColorHex",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getColorHex(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getZone1",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getZone1(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getZone2",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getZone2(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getZone3",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getZone3(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getMinX",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getMinX(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getMinY",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getMinY(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getMinZ",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getMinZ(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getMaxX",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getMaxX(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getMaxY",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getMaxY(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getMaxZ",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getMaxZ(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "inArea",
+      "arities": [
+        1
+      ],
+      "signature": "Station.inArea(pos: Position): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "isTransportMode",
+      "arities": [
+        1
+      ],
+      "signature": "Station.isTransportMode(mode: TransportMode): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getCenter",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getCenter(): Position"
+    },
+    {
+      "page": "tsc",
+      "type": "Station",
+      "kind": "method",
+      "member": "getExits",
+      "arities": [
+        0
+      ],
+      "signature": "Station.getExits(): List<StationExit>"
+    },
+    {
+      "page": "tsc",
+      "type": "StationExit",
+      "kind": "method",
+      "member": "getName",
+      "arities": [
+        0
+      ],
+      "signature": "StationExit.getName(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "StationExit",
+      "kind": "method",
+      "member": "getDestinations",
+      "arities": [
+        0
+      ],
+      "signature": "StationExit.getDestinations(): List<String>"
+    },
+    {
+      "page": "tsc",
+      "type": "TransportMode",
+      "kind": "field",
+      "member": "TRAIN",
+      "arities": [
+        0
+      ],
+      "signature": "static TransportMode.TRAIN: TransportMode"
+    },
+    {
+      "page": "tsc",
+      "type": "TransportMode",
+      "kind": "field",
+      "member": "BOAT",
+      "arities": [
+        0
+      ],
+      "signature": "static TransportMode.BOAT: TransportMode"
+    },
+    {
+      "page": "tsc",
+      "type": "TransportMode",
+      "kind": "field",
+      "member": "CABLE_CAR",
+      "arities": [
+        0
+      ],
+      "signature": "static TransportMode.CABLE_CAR: TransportMode"
+    },
+    {
+      "page": "tsc",
+      "type": "TransportMode",
+      "kind": "field",
+      "member": "AIRPLANE",
+      "arities": [
+        0
+      ],
+      "signature": "static TransportMode.AIRPLANE: TransportMode"
+    },
+    {
+      "page": "tsc",
+      "type": "TransportMode",
+      "kind": "field",
+      "member": "maxLength",
+      "arities": [
+        0
+      ],
+      "signature": "TransportMode.maxLength: int"
+    },
+    {
+      "page": "tsc",
+      "type": "SimplifiedRoute",
+      "kind": "method",
+      "member": "getName",
+      "arities": [
+        0
+      ],
+      "signature": "SimplifiedRoute.getName(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "SimplifiedRoute",
+      "kind": "method",
+      "member": "getId",
+      "arities": [
+        0
+      ],
+      "signature": "SimplifiedRoute.getId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "SimplifiedRoute",
+      "kind": "method",
+      "member": "getColor",
+      "arities": [
+        0
+      ],
+      "signature": "SimplifiedRoute.getColor(): int"
+    },
+    {
+      "page": "tsc",
+      "type": "SimplifiedRoute",
+      "kind": "method",
+      "member": "getCircularState",
+      "arities": [
+        0
+      ],
+      "signature": "SimplifiedRoute.getCircularState(): Route.CircularState"
+    },
+    {
+      "page": "tsc",
+      "type": "SimplifiedRoute",
+      "kind": "method",
+      "member": "getPlatforms",
+      "arities": [
+        0
+      ],
+      "signature": "SimplifiedRoute.getPlatforms(): List<SimplifiedRoutePlatform>"
+    },
+    {
+      "page": "tsc",
+      "type": "SimplifiedRoute",
+      "kind": "method",
+      "member": "getPlatformIndex",
+      "arities": [
+        1
+      ],
+      "signature": "SimplifiedRoute.getPlatformIndex(platformId: long): int"
+    },
+    {
+      "page": "tsc",
+      "type": "SimplifiedRoutePlatform",
+      "kind": "method",
+      "member": "getPlatformId",
+      "arities": [
+        0
+      ],
+      "signature": "SimplifiedRoutePlatform.getPlatformId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "SimplifiedRoutePlatform",
+      "kind": "method",
+      "member": "getStationId",
+      "arities": [
+        0
+      ],
+      "signature": "SimplifiedRoutePlatform.getStationId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "SimplifiedRoutePlatform",
+      "kind": "method",
+      "member": "getStationName",
+      "arities": [
+        0
+      ],
+      "signature": "SimplifiedRoutePlatform.getStationName(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "SimplifiedRoutePlatform",
+      "kind": "method",
+      "member": "getDestination",
+      "arities": [
+        0
+      ],
+      "signature": "SimplifiedRoutePlatform.getDestination(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "CircularState",
+      "kind": "field",
+      "member": "NONE",
+      "arities": [
+        0
+      ],
+      "signature": "static CircularState.NONE: CircularState"
+    },
+    {
+      "page": "tsc",
+      "type": "CircularState",
+      "kind": "field",
+      "member": "CLOCKWISE",
+      "arities": [
+        0
+      ],
+      "signature": "static CircularState.CLOCKWISE: CircularState"
+    },
+    {
+      "page": "tsc",
+      "type": "CircularState",
+      "kind": "field",
+      "member": "ANTICLOCKWISE",
+      "arities": [
+        0
+      ],
+      "signature": "static CircularState.ANTICLOCKWISE: CircularState"
+    },
+    {
+      "page": "tsc",
+      "type": "Vehicle",
+      "kind": "field",
+      "member": "vehicleExtraData",
+      "arities": [
+        0
+      ],
+      "signature": "Vehicle.vehicleExtraData: VehicleExtraData"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getDepotId",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getDepotId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getSidingId",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getSidingId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getStopIndex",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getStopIndex(): int"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getIsTerminating",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getIsTerminating(): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getStoppingPoint",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getStoppingPoint(): double"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getSpeedTarget",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getSpeedTarget(): double"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "iterateRidingEntities",
+      "arities": [
+        1
+      ],
+      "signature": "VehicleExtraData.iterateRidingEntities(callback: Consumer<VehicleRidingEntity>): void"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getPreviousRouteId",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getPreviousRouteId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getPreviousRouteColor",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getPreviousRouteColor(): int"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getPreviousRouteName",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getPreviousRouteName(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getPreviousRouteNumber",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getPreviousRouteNumber(): String"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getPreviousRouteCircularState",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getPreviousRouteCircularState(): Route.CircularState"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getPreviousRouteType",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getPreviousRouteType(): RouteType"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getPreviousRouteDestination",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getPreviousRouteDestination(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getPreviousPlatformId",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getPreviousPlatformId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getPreviousStationId",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getPreviousStationId(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "VehicleExtraData",
+      "kind": "method",
+      "member": "getPreviousStationName",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleExtraData.getPreviousStationName(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "RouteType",
+      "kind": "field",
+      "member": "NORMAL",
+      "arities": [
+        0
+      ],
+      "signature": "static RouteType.NORMAL: RouteType"
+    },
+    {
+      "page": "tsc",
+      "type": "RouteType",
+      "kind": "field",
+      "member": "LIGHT_RAIL",
+      "arities": [
+        0
+      ],
+      "signature": "static RouteType.LIGHT_RAIL: RouteType"
+    },
+    {
+      "page": "tsc",
+      "type": "RouteType",
+      "kind": "field",
+      "member": "HIGH_SPEED",
+      "arities": [
+        0
+      ],
+      "signature": "static RouteType.HIGH_SPEED: RouteType"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "getStartDistance",
+      "arities": [
+        0
+      ],
+      "signature": "PathData.getStartDistance(): double"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "getEndDistance",
+      "arities": [
+        0
+      ],
+      "signature": "PathData.getEndDistance(): double"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "getRail",
+      "arities": [
+        0
+      ],
+      "signature": "PathData.getRail(): Rail"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "getOrderedPosition1",
+      "arities": [
+        0
+      ],
+      "signature": "PathData.getOrderedPosition1(): Position"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "getOrderedPosition2",
+      "arities": [
+        0
+      ],
+      "signature": "PathData.getOrderedPosition2(): Position"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "isSameRail",
+      "arities": [
+        1
+      ],
+      "signature": "PathData.isSameRail(other: PathData): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "isOppositeRail",
+      "arities": [
+        1
+      ],
+      "signature": "PathData.isOppositeRail(other: PathData): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "getSpeedLimitKilometersPerHour",
+      "arities": [
+        0
+      ],
+      "signature": "PathData.getSpeedLimitKilometersPerHour(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "getRailLength",
+      "arities": [
+        0
+      ],
+      "signature": "PathData.getRailLength(): double"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "isDescending",
+      "arities": [
+        0
+      ],
+      "signature": "PathData.isDescending(): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "PathData",
+      "kind": "method",
+      "member": "getDwellTime",
+      "arities": [
+        0
+      ],
+      "signature": "PathData.getDwellTime(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Rail",
+      "kind": "method",
+      "member": "getTransportMode",
+      "arities": [
+        0
+      ],
+      "signature": "Rail.getTransportMode(): TransportMode"
+    },
+    {
+      "page": "tsc",
+      "type": "Rail",
+      "kind": "method",
+      "member": "getStyles",
+      "arities": [
+        0
+      ],
+      "signature": "Rail.getStyles(): List<String>"
+    },
+    {
+      "page": "tsc",
+      "type": "Rail",
+      "kind": "method",
+      "member": "canAccelerate",
+      "arities": [
+        0
+      ],
+      "signature": "Rail.canAccelerate(): boolean"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "x",
+      "arities": [
+        0
+      ],
+      "signature": "Vector.x(): double"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "y",
+      "arities": [
+        0
+      ],
+      "signature": "Vector.y(): double"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "z",
+      "arities": [
+        0
+      ],
+      "signature": "Vector.z(): double"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "multiply",
+      "arities": [
+        3
+      ],
+      "signature": "Vector.multiply(x: double, y: double, z: double): Vector"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "multiply",
+      "arities": [
+        1
+      ],
+      "signature": "Vector.multiply(vec: Vector): Vector"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "rotateX",
+      "arities": [
+        1
+      ],
+      "signature": "Vector.rotateX(angle: double): Vector"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "rotateY",
+      "arities": [
+        1
+      ],
+      "signature": "Vector.rotateY(angle: double): Vector"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "rotateZ",
+      "arities": [
+        1
+      ],
+      "signature": "Vector.rotateZ(angle: double): Vector"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "distanceTo",
+      "arities": [
+        1
+      ],
+      "signature": "Vector.distanceTo(vec: Vector): double"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "normalize",
+      "arities": [
+        0
+      ],
+      "signature": "Vector.normalize(): Vector"
+    },
+    {
+      "page": "tsc",
+      "type": "Vector",
+      "kind": "method",
+      "member": "getAverage",
+      "arities": [
+        2
+      ],
+      "signature": "static Vector.getAverage(vec1: Vector, vec2: Vector): Vector"
+    },
+    {
+      "page": "tsc",
+      "type": "Position",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        3
+      ],
+      "signature": "new Position(x: long, y: long, z: long): Position"
+    },
+    {
+      "page": "tsc",
+      "type": "Position",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        1
+      ],
+      "signature": "new Position(railPosition: Vector): Position"
+    },
+    {
+      "page": "tsc",
+      "type": "Position",
+      "kind": "method",
+      "member": "getX",
+      "arities": [
+        0
+      ],
+      "signature": "Position.getX(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Position",
+      "kind": "method",
+      "member": "getY",
+      "arities": [
+        0
+      ],
+      "signature": "Position.getY(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Position",
+      "kind": "method",
+      "member": "getZ",
+      "arities": [
+        0
+      ],
+      "signature": "Position.getZ(): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Position",
+      "kind": "method",
+      "member": "offset",
+      "arities": [
+        3
+      ],
+      "signature": "Position.offset(offsetX: long, offsetY: long, offsetZ: long): Position"
+    },
+    {
+      "page": "tsc",
+      "type": "Position",
+      "kind": "method",
+      "member": "offset",
+      "arities": [
+        1
+      ],
+      "signature": "Position.offset(pos: Position): Position"
+    },
+    {
+      "page": "tsc",
+      "type": "Position",
+      "kind": "method",
+      "member": "manhattanDistance",
+      "arities": [
+        1
+      ],
+      "signature": "Position.manhattanDistance(pos: Position): long"
+    },
+    {
+      "page": "tsc",
+      "type": "Position",
+      "kind": "method",
+      "member": "getMin",
+      "arities": [
+        2
+      ],
+      "signature": "static Position.getMin(pos1: Position?, pos2: Position?): Position"
+    },
+    {
+      "page": "tsc",
+      "type": "Position",
+      "kind": "method",
+      "member": "getMax",
+      "arities": [
+        2
+      ],
+      "signature": "static Position.getMax(pos1: Position?, pos2: Position?): Position"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyeCandyScriptContext",
+      "kind": "method",
+      "member": "drawModel",
+      "arities": [
+        2
+      ],
+      "signature": "EyeCandyScriptContext.drawModel(model: ScriptedModel, matrices: Matrices?): void"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyeCandyScriptContext",
+      "kind": "method",
+      "member": "setDebugInfo",
+      "arities": [
+        2
+      ],
+      "signature": "EyeCandyScriptContext.setDebugInfo(key: String, value: object): void"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyeCandyScriptContext",
+      "kind": "method",
+      "member": "getRenderManager",
+      "arities": [
+        0
+      ],
+      "signature": "EyeCandyScriptContext.getRenderManager(): RenderManager"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyeCandyScriptContext",
+      "kind": "method",
+      "member": "getSoundManager",
+      "arities": [
+        0
+      ],
+      "signature": "EyeCandyScriptContext.getSoundManager(): SoundManager"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyScriptContext",
+      "kind": "method",
+      "member": "events",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyScriptContext.events(): EyecandyEvents"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyeCandyScriptContext",
+      "kind": "method",
+      "member": "setOutlineShape",
+      "arities": [
+        1
+      ],
+      "signature": "EyeCandyScriptContext.setOutlineShape(shape: VoxelShape): void"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyeCandyScriptContext",
+      "kind": "method",
+      "member": "setCollisionShape",
+      "arities": [
+        1
+      ],
+      "signature": "EyeCandyScriptContext.setCollisionShape(shape: VoxelShape): void"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "getModelId",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.getModelId(): String"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "getTranslateX",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.getTranslateX(): float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "getTranslateY",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.getTranslateY(): float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "getTranslateZ",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.getTranslateZ(): float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "getRotateX",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.getRotateX(): float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "getRotateY",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.getRotateY(): float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "getRotateZ",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.getRotateZ(): float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "pos",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.pos(): Vector3f"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "blockPos",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.blockPos(): Vector3f"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "facing",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.facing(): Direction"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "isCrosshairTarget",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.isCrosshairTarget(): boolean"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "getFullBrightness",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.getFullBrightness(): boolean"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "redstoneLevel",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.redstoneLevel(): int"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "field",
+      "member": "prefabId",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.prefabId: String?"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "field",
+      "member": "translateX",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.translateX: float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "field",
+      "member": "translateY",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.translateY: float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "field",
+      "member": "translateZ",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.translateZ: float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "field",
+      "member": "rotateX",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.rotateX: float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "field",
+      "member": "rotateY",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.rotateY: float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "field",
+      "member": "rotateZ",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.rotateZ: float"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "field",
+      "member": "fullLight",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.fullLight: boolean"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "getWorldPosVector3f",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.getWorldPosVector3f(): Vector3f"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyWrapper",
+      "kind": "method",
+      "member": "getTransformPosVector3f",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyWrapper.getTransformPosVector3f(): Vector3f"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyEvents",
+      "kind": "field",
+      "member": "onBlockUse",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyEvents.onBlockUse: BlockUseEvent"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "EyecandyEvents",
+      "kind": "method",
+      "member": "handled",
+      "arities": [
+        0
+      ],
+      "signature": "EyecandyEvents.handled(): void"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "BlockUseEvent",
+      "kind": "method",
+      "member": "occurred",
+      "arities": [
+        0
+      ],
+      "signature": "BlockUseEvent.occurred(): boolean"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "BlockUseEvent",
+      "kind": "method",
+      "member": "detail",
+      "arities": [
+        0
+      ],
+      "signature": "BlockUseEvent.detail(): BlockUseDetail"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "BlockUseDetail",
+      "kind": "method",
+      "member": "player",
+      "arities": [
+        0
+      ],
+      "signature": "BlockUseDetail.player(): PlayerEntity"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "BlockUseEvent",
+      "kind": "method",
+      "member": "detail",
+      "arities": [
+        0
+      ],
+      "signature": "BlockUseEvent.detail(): BlockUseDetail"
+    },
+    {
+      "page": "type_eyecandy",
+      "type": "BlockUseDetail",
+      "kind": "method",
+      "member": "item",
+      "arities": [
+        0
+      ],
+      "signature": "BlockUseDetail.item(): ItemStack"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSScriptContext",
+      "kind": "method",
+      "member": "getRenderManager",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSScriptContext.getRenderManager(): RenderManager"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSScriptContext",
+      "kind": "method",
+      "member": "getSoundManager",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSScriptContext.getSoundManager(): SoundManager"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSScriptContext",
+      "kind": "method",
+      "member": "setAutoZOrdering",
+      "arities": [
+        1
+      ],
+      "signature": "PIDSScriptContext.setAutoZOrdering(autoZOrdering: boolean): void"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSScriptContext",
+      "kind": "method",
+      "member": "setZOrderStep",
+      "arities": [
+        1
+      ],
+      "signature": "PIDSScriptContext.setZOrderStep(distanceMeter: double): void"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSScriptContext",
+      "kind": "method",
+      "member": "setDebugInfo",
+      "arities": [
+        2
+      ],
+      "signature": "PIDSScriptContext.setDebugInfo(key: String, value: object): void"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        0
+      ],
+      "signature": "Text.create(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        1
+      ],
+      "signature": "Text.create(comment: String): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "pos",
+      "arities": [
+        2
+      ],
+      "signature": "Text.pos(x: double, y: double): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "size",
+      "arities": [
+        2
+      ],
+      "signature": "Text.size(w: double, h: double): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "text",
+      "arities": [
+        1
+      ],
+      "signature": "Text.text(str: String): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "scale",
+      "arities": [
+        1
+      ],
+      "signature": "Text.scale(i: double): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "leftAlign",
+      "arities": [
+        0
+      ],
+      "signature": "Text.leftAlign(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "centerAlign",
+      "arities": [
+        0
+      ],
+      "signature": "Text.centerAlign(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "rightAlign",
+      "arities": [
+        0
+      ],
+      "signature": "Text.rightAlign(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "shadowed",
+      "arities": [
+        0
+      ],
+      "signature": "Text.shadowed(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "italic",
+      "arities": [
+        0
+      ],
+      "signature": "Text.italic(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "bold",
+      "arities": [
+        0
+      ],
+      "signature": "Text.bold(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "lineHeight",
+      "arities": [
+        1
+      ],
+      "signature": "Text.lineHeight(factor: number): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "stretchXY",
+      "arities": [
+        0
+      ],
+      "signature": "Text.stretchXY(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "scaleXY",
+      "arities": [
+        0
+      ],
+      "signature": "Text.scaleXY(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "wrapText",
+      "arities": [
+        0
+      ],
+      "signature": "Text.wrapText(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "marquee",
+      "arities": [
+        0
+      ],
+      "signature": "Text.marquee(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "marquee",
+      "arities": [
+        1
+      ],
+      "signature": "Text.marquee(duration: double): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "withMarqueeProgress",
+      "arities": [
+        1
+      ],
+      "signature": "Text.withMarqueeProgress(progress: double): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "fontMC",
+      "arities": [
+        0
+      ],
+      "signature": "Text.fontMC(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "naturalLight",
+      "arities": [
+        0
+      ],
+      "signature": "Text.naturalLight(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "renderType",
+      "arities": [
+        1
+      ],
+      "signature": "Text.renderType(renderType: String): QuadDrawCall"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "matrices",
+      "arities": [
+        1
+      ],
+      "signature": "Text.matrices(matrices: Matrices): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "font",
+      "arities": [
+        1
+      ],
+      "signature": "Text.font(id: String): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "font",
+      "arities": [
+        1
+      ],
+      "signature": "Text.font(id: Identifier): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "color",
+      "arities": [
+        1
+      ],
+      "signature": "Text.color(color: int): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "draw",
+      "arities": [
+        1
+      ],
+      "signature": "Text.draw(ctx: PIDSScriptContext): void"
+    },
+    {
+      "page": "type_pids",
+      "type": "Text",
+      "kind": "method",
+      "member": "zOrder",
+      "arities": [
+        1
+      ],
+      "signature": "Text.zOrder(order: int): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        0
+      ],
+      "signature": "Texture.create(): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        1
+      ],
+      "signature": "Texture.create(comment: String): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "pos",
+      "arities": [
+        2
+      ],
+      "signature": "Texture.pos(x: double, y: double): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "size",
+      "arities": [
+        2
+      ],
+      "signature": "Texture.size(w: double, h: double): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "texture",
+      "arities": [
+        1
+      ],
+      "signature": "Texture.texture(id: String): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "texture",
+      "arities": [
+        1
+      ],
+      "signature": "Texture.texture(id: Identifier): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "color",
+      "arities": [
+        1
+      ],
+      "signature": "Texture.color(color: int): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "uv",
+      "arities": [
+        2
+      ],
+      "signature": "Texture.uv(u2: float, v2: float): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "uv",
+      "arities": [
+        4
+      ],
+      "signature": "Texture.uv(u1: float, v1: float, u2: float, v2: float): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "naturalLight",
+      "arities": [
+        0
+      ],
+      "signature": "Texture.naturalLight(): Text"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "matrices",
+      "arities": [
+        1
+      ],
+      "signature": "Texture.matrices(matrices: Matrices): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "draw",
+      "arities": [
+        1
+      ],
+      "signature": "Texture.draw(ctx: PIDSScriptContext): void"
+    },
+    {
+      "page": "type_pids",
+      "type": "Texture",
+      "kind": "method",
+      "member": "zOrder",
+      "arities": [
+        1
+      ],
+      "signature": "Texture.zOrder(order: int): Texture"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "field",
+      "member": "type",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSBlockEntity.type: String"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "field",
+      "member": "width",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSBlockEntity.width: int"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "field",
+      "member": "height",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSBlockEntity.height: int"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "field",
+      "member": "rows",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSBlockEntity.rows: int"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "method",
+      "member": "isRowHidden",
+      "arities": [
+        1
+      ],
+      "signature": "PIDSBlockEntity.isRowHidden(i: int): boolean"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "method",
+      "member": "getCustomMessage",
+      "arities": [
+        1
+      ],
+      "signature": "PIDSBlockEntity.getCustomMessage(i: int): String"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "method",
+      "member": "getTargetPlatformIds",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSBlockEntity.getTargetPlatformIds(): List<Long>"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "method",
+      "member": "isPlatformNumberHidden",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSBlockEntity.isPlatformNumberHidden(): boolean"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "method",
+      "member": "blockPos",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSBlockEntity.blockPos(): Vector3f"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "method",
+      "member": "isKeyBlock",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSBlockEntity.isKeyBlock(): boolean"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "method",
+      "member": "station",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSBlockEntity.station(): Station?"
+    },
+    {
+      "page": "type_pids",
+      "type": "PIDSBlockEntity",
+      "kind": "method",
+      "member": "arrivals",
+      "arities": [
+        0
+      ],
+      "signature": "PIDSBlockEntity.arrivals(): ArrivalEntries"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntries",
+      "kind": "method",
+      "member": "get",
+      "arities": [
+        1
+      ],
+      "signature": "ArrivalEntries.get(i: int): ArrivalEntry?"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntries",
+      "kind": "method",
+      "member": "mixedCarLength",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntries.mixedCarLength(): boolean"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntries",
+      "kind": "method",
+      "member": "platforms",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntries.platforms(): List<Platform>"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "destination",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.destination(): String"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "arrivalTime",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.arrivalTime(): long"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "departureTime",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.departureTime(): long"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "deviation",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.deviation(): long"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "realtime",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.realtime(): boolean"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "departureIndex",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.departureIndex(): long"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "terminating",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.terminating(): boolean"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "route",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.route(): SimplifiedRoute?"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "routeId",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.routeId(): long"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "routeName",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.routeName(): String"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "routeNumber",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.routeNumber(): String"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "routeColor",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.routeColor(): int"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "circularState",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.circularState(): Route.CircularState"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "platform",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.platform(): Platform?"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "platformId",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.platformId(): long"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "platformName",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.platformName(): String"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "carCount",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.carCount(): int"
+    },
+    {
+      "page": "type_pids",
+      "type": "ArrivalEntry",
+      "kind": "method",
+      "member": "cars",
+      "arities": [
+        0
+      ],
+      "signature": "ArrivalEntry.cars(): List<CarDetails>"
+    },
+    {
+      "page": "type_pids",
+      "type": "CarDetails",
+      "kind": "method",
+      "member": "getVehicleId",
+      "arities": [
+        0
+      ],
+      "signature": "CarDetails.getVehicleId(): String"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "getCarRenderManager",
+      "arities": [
+        1
+      ],
+      "signature": "VehicleScriptContext.getCarRenderManager(carIndex: int): RenderManager?"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "getCarBogieRenderManager",
+      "arities": [
+        2
+      ],
+      "signature": "VehicleScriptContext.getCarBogieRenderManager(carIndex: int, bogieIndex: int): RenderManager?"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "getCarSoundManager",
+      "arities": [
+        1
+      ],
+      "signature": "VehicleScriptContext.getCarSoundManager(carIndex: int): SoundManager?"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "playAnnSound",
+      "arities": [
+        3
+      ],
+      "signature": "VehicleScriptContext.playAnnSound(sound: Identifier, volume: float, pitch: float): void"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "getScriptEntryId",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleScriptContext.getScriptEntryId(): String"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "getMyCars",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleScriptContext.getMyCars(): int[]"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "setDebugInfo",
+      "arities": [
+        2
+      ],
+      "signature": "VehicleScriptContext.setDebugInfo(key: String, value: object): void"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "setDataFetchMode",
+      "arities": [
+        1
+      ],
+      "signature": "VehicleScriptContext.setDataFetchMode(mode: String): void"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "drawCarModel",
+      "arities": [
+        3
+      ],
+      "signature": "VehicleScriptContext.drawCarModel(model: Model, carIndex: int, matrices: Matrices?): void"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "playCarSound",
+      "arities": [
+        7
+      ],
+      "signature": "VehicleScriptContext.playCarSound(sound: Identifier, carIndex: int, x: float, y: float, z: float, volume: float, pitch: float): void"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "drawConnModel",
+      "arities": [
+        3
+      ],
+      "signature": "VehicleScriptContext.drawConnModel(model: Model, carIndex: int, matrices: Matrices?): void",
+      "status": "upstream_unimplemented"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleScriptContext",
+      "kind": "method",
+      "member": "drawConnStretchTexture",
+      "arities": [
+        2
+      ],
+      "signature": "VehicleScriptContext.drawConnStretchTexture(texture: Identifier, carIndex: int): void",
+      "status": "upstream_unimplemented"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getStops",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getStops(): List<Stop>"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getThisRouteStops",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getThisRouteStops(): List<Stop>"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getNextRouteStops",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getNextRouteStops(): List<Stop>"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getNextStopIndex",
+      "arities": [
+        1,
+        2
+      ],
+      "signature": "VehicleWrapper.getNextStopIndex(stopList: List<Stop>, overrunTolerance: double = 0.5): int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "isStopsDataFetched",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.isStopsDataFetched(): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "isRendered",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.isRendered(): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "isCarRendered",
+      "arities": [
+        1
+      ],
+      "signature": "VehicleWrapper.isCarRendered(cars: int...): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "isClientPlayerRiding",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.isClientPlayerRiding(): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getMtrVehicle",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getMtrVehicle(): VehicleExtension"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getId",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getId(): long"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getSiding",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getSiding(): Siding?"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getVehicleId",
+      "arities": [
+        1
+      ],
+      "signature": "VehicleWrapper.getVehicleId(carIndex: int): String?"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getLength",
+      "arities": [
+        1
+      ],
+      "signature": "VehicleWrapper.getLength(carIndex: int): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getWidth",
+      "arities": [
+        1
+      ],
+      "signature": "VehicleWrapper.getWidth(carIndex: int): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getTransportMode",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getTransportMode(): TransportMode"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getCarCount",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getCarCount(): int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getServiceAcceleration",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getServiceAcceleration(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getServiceDeceleration",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getServiceDeceleration(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getMaxManualSpeed",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getMaxManualSpeed(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "isManualAllowed",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.isManualAllowed(): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getDepartureIndex",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getDepartureIndex(): long"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getManualToAutomaticTime",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getManualToAutomaticTime(): int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getPathData",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getPathData(): List<PathData>"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getRailProgress",
+      "arities": [
+        0,
+        1
+      ],
+      "signature": "VehicleWrapper.getRailProgress(carIndex: int = 0): int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getRailIndex",
+      "arities": [
+        2
+      ],
+      "signature": "VehicleWrapper.getRailIndex(railProgress: double, roundDown: boolean): int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getRailSpeed",
+      "arities": [
+        1
+      ],
+      "signature": "VehicleWrapper.getRailSpeed(pathIndex: int): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getNotchLevel",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getNotchLevel(): int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getNotchPosition",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getNotchPosition(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getSpeedMs",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getSpeedMs(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getSpeedKmh",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getSpeedKmh(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getDoorValue",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getDoorValue(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "isCurrentlyManual",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.isCurrentlyManual(): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "isReversed",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.isReversed(): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "isOnRoute",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.isOnRoute(): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getTotalDwellTime",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getTotalDwellTime(): long"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getElapsedDwellTime",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getElapsedDwellTime(): long"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getAllPlatforms",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getAllPlatforms(): List<Stop>"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getThisRoutePlatforms",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getThisRoutePlatforms(): List<Stop>"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getNextRoutePlatforms",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getNextRoutePlatforms(): List<Stop>"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getAllPlatformsNextIndex",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getAllPlatformsNextIndex(): int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "getThisRoutePlatformsNextIndex",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getThisRoutePlatformsNextIndex(): int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "id",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.id(): long"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "siding",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.siding(): Siding"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "transportMode",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.transportMode(): TransportMode"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "trainCars",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.trainCars(): int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "shouldRender",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.shouldRender(): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "shouldRenderDetail",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.shouldRenderDetail(): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "trainTypeId",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.trainTypeId(): String"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "mtrTrain",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.mtrTrain(): VehicleExtension"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "speed",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.speed(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "spacing",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.spacing(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "width",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.width(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "accelerationConstant",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.accelerationConstant(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "railProgress",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.railProgress(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "path",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.path(): List<PathData>"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "manualAllowed",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.manualAllowed(): boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "doorValue",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.doorValue(): double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
+      "member": "manualToAutomaticTime",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.manualToAutomaticTime(): int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "route",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.route: SimplifiedRoute?"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "station",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.station: Station?"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "platform",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.platform: Platform?"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "destinationName",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.destinationName: String"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "customDestination",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.customDestination: String?"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "routeInterchanges",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.routeInterchanges: List<RouteInterchange>"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "connectingInterchanges",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.connectingInterchanges: Map<String, List<RouteInterchange>"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "dwellTimeMillis",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.dwellTimeMillis: long"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "distance",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.distance: double"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "isRouteSwitchoverStop",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.isRouteSwitchoverStop: boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "roundUpRoute",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.roundUpRoute: Stop"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "turnbackPlatform",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.turnbackPlatform: boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "dwellTime",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.dwellTime: long"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "destinationStation",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.destinationStation: Station"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "Stop",
+      "kind": "field",
+      "member": "reverseAtPlatform",
+      "arities": [
+        0
+      ],
+      "signature": "Stop.reverseAtPlatform: boolean"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "RouteInterchange",
+      "kind": "field",
+      "member": "color",
+      "arities": [
+        0
+      ],
+      "signature": "RouteInterchange.color: int"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "RouteInterchange",
+      "kind": "field",
+      "member": "name",
+      "arities": [
+        0
+      ],
+      "signature": "RouteInterchange.name: String"
+    },
+    {
+      "page": "utilities",
+      "type": "Resources",
+      "kind": "method",
+      "member": "getAddonVersion",
+      "arities": [
+        1
+      ],
+      "signature": "static Resources.getAddonVersion(modId: String): String"
+    },
+    {
+      "page": "utilities",
+      "type": "Resources",
+      "kind": "method",
+      "member": "getMTRVersion",
+      "arities": [
+        0
+      ],
+      "signature": "static Resources.getMTRVersion(): String"
+    },
+    {
+      "page": "utilities",
+      "type": "Resources",
+      "kind": "method",
+      "member": "getNTEVersion",
+      "arities": [
+        0
+      ],
+      "signature": "static Resources.getNTEVersion(): String"
+    },
+    {
+      "page": "utilities",
+      "type": "Resources",
+      "kind": "method",
+      "member": "getNTEVersionInt",
+      "arities": [
+        0
+      ],
+      "signature": "static Resources.getNTEVersionInt(): int"
+    },
+    {
+      "page": "utilities",
+      "type": "Resources",
+      "kind": "method",
+      "member": "getNTEProtoVersion",
+      "arities": [
+        0
+      ],
+      "signature": "static Resources.getNTEProtoVersion(): int"
+    },
+    {
+      "page": "utilities",
+      "type": "TextUtil",
+      "kind": "method",
+      "member": "getCjkParts",
+      "arities": [
+        1
+      ],
+      "signature": "static TextUtil.getCjkParts(src: String): String"
+    },
+    {
+      "page": "utilities",
+      "type": "TextUtil",
+      "kind": "method",
+      "member": "getNonCjkParts",
+      "arities": [
+        1
+      ],
+      "signature": "static TextUtil.getNonCjkParts(src: String): String"
+    },
+    {
+      "page": "utilities",
+      "type": "TextUtil",
+      "kind": "method",
+      "member": "getExtraParts",
+      "arities": [
+        1
+      ],
+      "signature": "static TextUtil.getExtraParts(src: String): String"
+    },
+    {
+      "page": "utilities",
+      "type": "TextUtil",
+      "kind": "method",
+      "member": "getNonExtraParts",
+      "arities": [
+        1
+      ],
+      "signature": "static TextUtil.getNonExtraParts(src: String): String"
+    },
+    {
+      "page": "utilities",
+      "type": "TextUtil",
+      "kind": "method",
+      "member": "getNonCjkAndExtraParts",
+      "arities": [
+        1
+      ],
+      "signature": "static TextUtil.getNonCjkAndExtraParts(src: String): String"
+    },
+    {
+      "page": "utilities",
+      "type": "TextUtil",
+      "kind": "method",
+      "member": "isCjk",
+      "arities": [
+        1
+      ],
+      "signature": "static TextUtil.isCjk(src: String): boolean"
+    },
+    {
+      "page": "utilities",
+      "type": "TextUtil",
+      "kind": "method",
+      "member": "cycleString",
+      "arities": [
+        1
+      ],
+      "signature": "static TextUtil.cycleString(src: String): String"
+    },
+    {
+      "page": "utilities",
+      "type": "TextUtil",
+      "kind": "method",
+      "member": "cycleString",
+      "arities": [
+        2
+      ],
+      "signature": "static TextUtil.cycleString(src: String, duration: int): String"
+    },
+    {
+      "page": "utilities",
+      "type": "Timing",
+      "kind": "method",
+      "member": "elapsed",
+      "arities": [
+        0
+      ],
+      "signature": "static Timing.elapsed(): double"
+    },
+    {
+      "page": "utilities",
+      "type": "Timing",
+      "kind": "method",
+      "member": "delta",
+      "arities": [
+        0
+      ],
+      "signature": "static Timing.delta(): double"
+    },
+    {
+      "page": "utilities",
+      "type": "Timing",
+      "kind": "method",
+      "member": "currentTimeMillis",
+      "arities": [
+        0
+      ],
+      "signature": "static Timing.currentTimeMillis(): long"
+    },
+    {
+      "page": "utilities",
+      "type": "Timing",
+      "kind": "method",
+      "member": "nanoTime",
+      "arities": [
+        0
+      ],
+      "signature": "static Timing.nanoTime(): long"
+    },
+    {
+      "page": "utilities",
+      "type": "StateTracker",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        0
+      ],
+      "signature": "new StateTracker(): StateTracker"
+    },
+    {
+      "page": "utilities",
+      "type": "StateTracker",
+      "kind": "method",
+      "member": "setState",
+      "arities": [
+        1
+      ],
+      "signature": "StateTracker.setState(value: object?): void"
+    },
+    {
+      "page": "utilities",
+      "type": "StateTracker",
+      "kind": "method",
+      "member": "stateNow",
+      "arities": [
+        0
+      ],
+      "signature": "StateTracker.stateNow(): object?"
+    },
+    {
+      "page": "utilities",
+      "type": "StateTracker",
+      "kind": "method",
+      "member": "stateLast",
+      "arities": [
+        0
+      ],
+      "signature": "StateTracker.stateLast(): object?"
+    },
+    {
+      "page": "utilities",
+      "type": "StateTracker",
+      "kind": "method",
+      "member": "stateNowDuration",
+      "arities": [
+        0
+      ],
+      "signature": "StateTracker.stateNowDuration(): double"
+    },
+    {
+      "page": "utilities",
+      "type": "StateTracker",
+      "kind": "method",
+      "member": "stateNowFirst",
+      "arities": [
+        0
+      ],
+      "signature": "StateTracker.stateNowFirst(): boolean"
+    },
+    {
+      "page": "utilities",
+      "type": "StateTracker",
+      "kind": "method",
+      "member": "changedTo",
+      "arities": [
+        1
+      ],
+      "signature": "StateTracker.changedTo(value: object?): boolean"
+    },
+    {
+      "page": "utilities",
+      "type": "StateTracker",
+      "kind": "method",
+      "member": "changedFromTo",
+      "arities": [
+        2
+      ],
+      "signature": "StateTracker.changedFromTo(oldValue: object?, value: object?): boolean"
+    },
+    {
+      "page": "utilities",
+      "type": "CycleTracker",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        1
+      ],
+      "signature": "new CycleTracker(params: Object[]): CycleTracker"
+    },
+    {
+      "page": "utilities",
+      "type": "CycleTracker",
+      "kind": "method",
+      "member": "tick",
+      "arities": [
+        0
+      ],
+      "signature": "CycleTracker.tick(): void"
+    },
+    {
+      "page": "utilities",
+      "type": "CycleTracker",
+      "kind": "method",
+      "member": "stateNow",
+      "arities": [
+        0
+      ],
+      "signature": "CycleTracker.stateNow(): String"
+    },
+    {
+      "page": "utilities",
+      "type": "CycleTracker",
+      "kind": "method",
+      "member": "stateLast",
+      "arities": [
+        0
+      ],
+      "signature": "CycleTracker.stateLast(): String?"
+    },
+    {
+      "page": "utilities",
+      "type": "CycleTracker",
+      "kind": "method",
+      "member": "stateNowDuration",
+      "arities": [
+        0
+      ],
+      "signature": "CycleTracker.stateNowDuration(): double"
+    },
+    {
+      "page": "utilities",
+      "type": "CycleTracker",
+      "kind": "method",
+      "member": "stateNowFirst",
+      "arities": [
+        0
+      ],
+      "signature": "CycleTracker.stateNowFirst(): boolean"
+    },
+    {
+      "page": "utilities",
+      "type": "RateLimit",
+      "kind": "constructor",
+      "member": "<init>",
+      "arities": [
+        1
+      ],
+      "signature": "new RateLimit(interval: double): RateLimit"
+    },
+    {
+      "page": "utilities",
+      "type": "RateLimit",
+      "kind": "method",
+      "member": "shouldUpdate",
+      "arities": [
+        0
+      ],
+      "signature": "RateLimit.shouldUpdate(): boolean"
+    },
+    {
+      "page": "utilities",
+      "type": "RateLimit",
+      "kind": "method",
+      "member": "resetCoolDown",
+      "arities": [
+        0
+      ],
+      "signature": "RateLimit.resetCoolDown(): void"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getMtrLift",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getMtrLift(): Lift"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "shouldRender",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.shouldRender(): boolean"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getId",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getId(): long"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getWidth",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getWidth(): double"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getHeight",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getHeight(): double"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getDepth",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getDepth(): double"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getOffset",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getOffset(): ScriptVector3f"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getAngleDegrees",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getAngleDegrees(): float"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getAngleRadians",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getAngleRadians(): double"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "isDoubleSided",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.isDoubleSided(): boolean"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getDoorValue",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getDoorValue(): float"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getDirection",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getDirection(): int"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getPos",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getPos(): ScriptVector3f"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getRawPos",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getRawPos(): ScriptVector3f"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "getFloors",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.getFloors(): List<Floor>"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftWrapper",
+      "kind": "method",
+      "member": "isClientPlayerRiding",
+      "arities": [
+        0
+      ],
+      "signature": "LiftWrapper.isClientPlayerRiding(): boolean"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftFloor",
+      "kind": "method",
+      "member": "getIndex",
+      "arities": [
+        0
+      ],
+      "signature": "LiftFloor.getIndex(): int"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftFloor",
+      "kind": "method",
+      "member": "getNumber",
+      "arities": [
+        0
+      ],
+      "signature": "LiftFloor.getNumber(): String"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftFloor",
+      "kind": "method",
+      "member": "getDescription",
+      "arities": [
+        0
+      ],
+      "signature": "LiftFloor.getDescription(): String"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftFloor",
+      "kind": "method",
+      "member": "getPos",
+      "arities": [
+        0
+      ],
+      "signature": "LiftFloor.getPos(): ScriptVector3f"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftFloor",
+      "kind": "method",
+      "member": "isCurrentFloor",
+      "arities": [
+        0
+      ],
+      "signature": "LiftFloor.isCurrentFloor(): boolean"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftFloor",
+      "kind": "method",
+      "member": "isTargetFloor",
+      "arities": [
+        0
+      ],
+      "signature": "LiftFloor.isTargetFloor(): boolean"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftScriptContext",
+      "kind": "method",
+      "member": "getRenderManager",
+      "arities": [
+        0
+      ],
+      "signature": "LiftScriptContext.getRenderManager(): ScriptRenderManager"
+    },
+    {
+      "page": "lift_source",
+      "type": "LiftScriptContext",
+      "kind": "method",
+      "member": "getSoundManager",
+      "arities": [
+        0
+      ],
+      "signature": "LiftScriptContext.getSoundManager(): ScriptSoundManager"
+    },
+    {
+      "page": "extension",
+      "type": "RouteInterchange",
+      "kind": "method",
+      "member": "getTransportMode",
+      "arities": [
+        0
+      ],
+      "signature": "RouteInterchange.getTransportMode(): TransportMode?"
+    }
+  ]
+}

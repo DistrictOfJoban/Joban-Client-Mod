@@ -37,6 +37,11 @@ public class RenderLiftsMixin {
             if(scriptEntry == null) continue;
 
             LiftWrapper wrapperObject = new LiftWrapper(liftWrapper, World.cast(MinecraftClient.getInstance().getWorldMapped()));
+            String nativeId=MtrScriptingResourceManager.lift.getScriptEntryId(style);
+            if(com.lx862.jcm.nativeapi.NativeScriptManager.isLoaded(nativeId)) {
+                com.lx862.jcm.nativeapi.NativeContentDriver.lift(nativeId,wrapperObject,liftWrapper.getLift());
+                continue;
+            }
             LiftScriptInstance scriptInstance = (LiftScriptInstance) MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("lift", liftWrapper.getLift().getHexId()), () -> new LiftScriptInstance(new LiftScriptContext(liftWrapper.getLift()), wrapperObject, scriptEntry.parsedScript()));
             if(scriptInstance == null) continue;
 
@@ -53,6 +58,13 @@ public class RenderLiftsMixin {
 
     @Inject(method = "lambda$render$6", at = @At(value = "INVOKE", target = "Lorg/mtr/mod/model/ModelLift1;render(Lorg/mtr/mod/render/StoredMatrixTransformations;Lorg/mtr/core/data/NameColorDataBase;Lorg/mtr/mapping/holder/Identifier;IFFZIIZZZZZ)V"), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
     private static void jsblock$drawScript(boolean isHoldingRefresher, ClientWorld clientWorld, ObjectArrayList cullingTasks, Vec3d camera, Vector3d cameraShakeOffset, boolean canRide, ClientPlayerEntity clientPlayerEntity, long millisElapsed, MinecraftClientData.LiftWrapper liftWrapper, CallbackInfo ci, Lift lift, PositionAndRotation absolutePositionAndRotation, IntObjectImmutablePair ridingVehicleCarNumberAndOffset, PositionAndRotation ridingCarPositionAndRotation, Vector3d offsetVector, Double offsetRotation, PositionAndRotation renderingPositionAndRotation, ObjectArrayList floorsAndDoorways, ObjectArrayList openDoorways, Box doorway1, Box doorway2, boolean doorway1Open, boolean doorway2Open, StoredMatrixTransformations storedMatrixTransformations) {
+        String nativeId=MtrScriptingResourceManager.lift.getScriptEntryId(lift.getStyle());
+        if(com.lx862.jcm.nativeapi.NativeScriptManager.isLoaded(nativeId)) {
+            com.lx862.jcm.nativeapi.NativeContentDriver.invokeLift(nativeId,lift.getId(),World.cast(clientWorld),storedMatrixTransformations.copy(),absolutePositionAndRotation.light,
+                new ScriptVector3f((float)absolutePositionAndRotation.position.x,(float)absolutePositionAndRotation.position.y,(float)absolutePositionAndRotation.position.z));
+            if(MtrScriptingResourceManager.lift.isScriptControlledRendering(lift.getStyle())) ci.cancel();
+            return;
+        }
         ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("lift", lift.getHexId()));
         if(!(scriptInstance instanceof LiftScriptInstance)) return;
 

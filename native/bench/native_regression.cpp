@@ -12,7 +12,8 @@ int main() {
     float matrices[16]{}, floats[16]{};
     char strings[16]{};
     uint8_t pixels[256]{};
-    frame.attach(records, matrices, strings, pixels, sizeof(pixels), floats);
+    frame.attach(records, matrices, strings, pixels, sizeof(pixels), floats,
+                 sizeof(records), sizeof(matrices), sizeof(strings), sizeof(floats));
     frame.begin_frame();
     texture.upload(frame); // consume initial full-image dirtiness
     frame.begin_frame();

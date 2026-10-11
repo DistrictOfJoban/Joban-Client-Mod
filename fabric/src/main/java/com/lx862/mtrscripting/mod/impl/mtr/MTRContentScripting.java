@@ -62,6 +62,8 @@ public class MTRContentScripting {
     }
 
     public static void tick() {
+        com.lx862.jcm.nativeapi.NativeContentDriver.tick();
+        com.lx862.jcm.nativeapi.NativeVehicleDriver.tick();
         int clearedInstance = scriptManager.getInstanceManager().clearDeadInstance();
         if(clearedInstance > 0 && JCMClientConfig.INSTANCE.debugMode.value()) {
             MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Removed {} dead MTR script instance", clearedInstance);

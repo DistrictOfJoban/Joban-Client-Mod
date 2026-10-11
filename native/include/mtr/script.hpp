@@ -3,18 +3,18 @@
  *
  * Usage (vehicle example):
  *
- *   struct MyLcdState { mtr::CycleTracker dest{"KOWLOON|TSUEN WAN"}; };
+ *   struct MyVehicleState { mtr::CycleTracker dest{"KOWLOON|TSUEN WAN"}; };
  *
- *   struct MyLcdScript : mtr::VehicleScript<MyLcdState> {
- *       static constexpr auto ID = "demo:kcx_lcd";
+ *   struct MyVehicleScript : mtr::VehicleScript<MyVehicleState> {
+ *       static constexpr auto ID = "demo:vehicle";
  *
- *       void create(VehicleContext& ctx, MyLcdState& state,
+ *       void create(VehicleContext& ctx, MyVehicleState& state,
  *                   const Train& train) override { ... }
- *       void render(VehicleContext& ctx, MyLcdState& state,
+ *       void render(VehicleContext& ctx, MyVehicleState& state,
  *                   const Train& train) override { ... }
  *   };
  *
- *   MTR_REGISTER_VEHICLE_SCRIPT(MyLcdScript)
+ *   MTR_REGISTER_VEHICLE_SCRIPT(MyVehicleScript)
  *
  * This mirrors the JS lifecycle functions create/render/dispose.
  * Per-instance `state` blocks are allocated by the HOST (one per
@@ -30,6 +30,8 @@
 #include "vehicle.hpp"
 #include "pids.hpp"
 #include "eyecandy.hpp"
+#include "lift.hpp"
+#include "api.hpp"
 #include <cstring>
 #include <new>
 #include <type_traits>
@@ -71,7 +73,7 @@ inline void install_frame() {
        file-backed data), which bloated every macOS dylib to ~17 MB.
        `new` gives demand-zero pages on all three platforms and keeps
        the one-time attach semantics. */
-    static HostBuffers* buffers = new HostBuffers();
+    static std::unique_ptr<HostBuffers> buffers(new HostBuffers());
     static bool attached = false;
     if (!attached) {
         recorder().attach(buffers->records, buffers->matrix_arena,
@@ -116,6 +118,16 @@ struct PidsAdapter {
     static Pids make_wrapper(const void* snap) {
         return Pids(static_cast<const JcmPidsSnapshot*>(static_cast<const void*>(snap)));
     }
+};
+
+struct LiftAdapter {
+    static constexpr int RESOURCE_ID = MTR_RESOURCE_LIFT;
+    static constexpr const char* TYPE = "lift";
+    using Context = LiftContext;
+    using Wrapper = Lift;
+    using Snapshot = JcmLiftSnapshot;
+    static LiftContext make_context(FrameRecorder& f, const JcmFrameInput& in) { return LiftContext(f, in); }
+    static Lift make_wrapper(const void* snap) { return Lift(static_cast<const JcmLiftSnapshot*>(snap)); }
 };
 
 struct EyecandyAdapter {
@@ -176,6 +188,9 @@ template <typename State>
 class PidsScript : public ScriptBase<State, detail::PidsAdapter> {};
 
 template <typename State>
+class LiftScript : public ScriptBase<State, detail::LiftAdapter> {};
+
+template <typename State>
 class EyecandyScript : public ScriptBase<State, detail::EyecandyAdapter> {};
 
 } /* namespace mtr */
@@ -208,7 +223,7 @@ class EyecandyScript : public ScriptBase<State, detail::EyecandyAdapter> {};
         MTR_GUARDED_BODY(return mtr_g_script.lifecycle<1>(in, out))             \
     }                                                                           \
     MTR_NATIVE_EXPORT int32_t mtrDispose(const JcmFrameInput* in) {             \
-        return mtr_g_script.lifecycle<2>(in, nullptr);                          \
+        MTR_GUARDED_BODY(return mtr_g_script.lifecycle<2>(in, nullptr))         \
     }                                                                           \
     } /* extern "C" */
 
@@ -216,6 +231,8 @@ class EyecandyScript : public ScriptBase<State, detail::EyecandyAdapter> {};
     MTR_INTERNAL_EXPORTS(S, "vehicle", S::ID)
 #define MTR_REGISTER_PIDS_SCRIPT(S) \
     MTR_INTERNAL_EXPORTS(S, "pids", S::ID)
+#define MTR_REGISTER_LIFT_SCRIPT(S) \
+    MTR_INTERNAL_EXPORTS(S, "lift", S::ID)
 #define MTR_REGISTER_EYECANDY_SCRIPT(S) \
     MTR_INTERNAL_EXPORTS(S, "eyecandy", S::ID)
 
@@ -250,6 +267,7 @@ struct ScriptBox {
        "already initialised" flag, which would silently skip construction for a
        second instance and let the script run on unconstructed memory. */
     std::unordered_set<void*> live_states;
+    void* create_records_state = nullptr;
 
     using State = typename ScriptType::StateType;
     using Adapter = typename ScriptType::Kind;
@@ -278,7 +296,12 @@ struct ScriptBox {
         if (in->abi_version != MTR_NATIVE_ABI_VERSION) return -2;
         if (in->resource_kind != Adapter::RESOURCE_ID) return -3;
 
-        install_frame();
+        if constexpr (Phase == 1) {
+            if (create_records_state != in->state || in->state == nullptr) install_frame();
+            create_records_state = nullptr;
+        } else {
+            install_frame();
+        }
 
         /* Resolve the state block for this instance. mtrInit() should already
            have constructed it; do it here too so a create/render that arrives
@@ -292,21 +315,23 @@ struct ScriptBox {
 
         if constexpr (Phase == 0) {
             script.create(ctx, *state, wrapper);
+            create_records_state = in->state;
         } else if constexpr (Phase == 1) {
             script.render(ctx, *state, wrapper);
             recorder().write_output(*out);
         } else {
-            script.dispose(ctx, *state, wrapper);
-            if (!std::is_trivially_default_constructible_v<State> && state) {
-                state->~State();
-            }
-            /* mtrDispose destroyed it; only mtrInit may construct it again */
-            live_states.erase(static_cast<void*>(state));
+            try { script.dispose(ctx, *state, wrapper); }
+            catch (...) { destroy_state(state); throw; }
+            destroy_state(state);
         }
         return 0;
     }
 
 private:
+    void destroy_state(State* state) {
+        if (state) state->~State();
+        live_states.erase(static_cast<void*>(state));
+    }
     State* resolve_state(const JcmFrameInput& in) {
         if (in.state && in.state_size >= sizeof(State)) {
             return static_cast<State*>(in.state);

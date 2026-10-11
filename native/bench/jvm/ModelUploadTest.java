@@ -32,7 +32,7 @@ public final class ModelUploadTest {
         }
         check(b.getMesh().vertices.get(0).position.getY() == -.6f, "production builder flips the Y axis");
         check(b.getMesh().faces.size() == 2, "production builder triangulates the quad");
-        return new RawModelJS(b.asRawModel());
+        return b.asRawModel();
     }
 
     private static List<VertexArray> parts(ModelJS model) {

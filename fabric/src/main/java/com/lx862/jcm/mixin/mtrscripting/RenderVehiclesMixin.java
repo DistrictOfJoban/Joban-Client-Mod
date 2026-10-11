@@ -95,6 +95,7 @@ public class RenderVehiclesMixin {
         VehicleCar vehicleCar = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber);
         String scriptGroupId = MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(vehicleCar.getVehicleId());
         if(scriptGroupId == null) return;
+        com.lx862.jcm.nativeapi.NativeVehicleDriver.invokeBogie(vehicle,scriptGroupId,carNumber,bogieIndex,storedMatrixTransformations,absoluteVehicleCarPositionAndRotation.light);
 
         ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptGroupId));
         if(!(scriptInstance instanceof VehicleScriptInstance)) return;

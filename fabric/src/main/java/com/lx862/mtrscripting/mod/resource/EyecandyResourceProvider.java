@@ -61,7 +61,7 @@ public class EyecandyResourceProvider implements ScriptResourceProvider {
 
                     if(entryReferenced) {
                         ParsedScript parsedScript = ScriptResourceProvider.tryParseScript(scriptEntryId, "eyecandy", "Block", scriptObject, true, false);
-                        if(parsedScript != null) eyecandyScripts.put(scriptEntryId, new EyecandyScriptConfiguration(parsedScript, customConfig));
+                        if(parsedScript != null || NativeScriptManager.isLoaded(scriptEntryId)) eyecandyScripts.put(scriptEntryId, new EyecandyScriptConfiguration(parsedScript, customConfig));
                     } else {
                         MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Skip parsing eyecandy script \"{}\", which is not referenced by any eyecandy object!", scriptEntryId);
                     }
@@ -101,6 +101,8 @@ public class EyecandyResourceProvider implements ScriptResourceProvider {
     public EyecandyScriptConfiguration getScriptEntry(String id) {
         return eyecandyScripts.get(eyecandyScriptIds.getOrDefault(id, id));
     }
+
+    public String getScriptEntryId(String id) { return eyecandyScriptIds.getOrDefault(id, id); }
 
     public boolean isScriptControlledRendering(String id) {
         return scriptControlledRendering.contains(id);

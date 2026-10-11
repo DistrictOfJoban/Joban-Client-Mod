@@ -29,10 +29,10 @@ public class RawMeshBuilderJS {
         return mesh;
     }
 
-    public RawModel asRawModel() {
+    public RawModelJS asRawModel() {
         RawModel rawModel = new RawModel();
         rawModel.append(getMesh());
-        return rawModel;
+        return new RawModelJS(rawModel);
     }
 
     public RawMeshBuilderJS reset() {

@@ -27,7 +27,8 @@
     "mtrscripting.RawMeshAccessor",
     "mtrscripting.RenderVehiclesMixin",
     "mtrscripting.VehicleSchemaMixin",
-    "mtrscripting.VertexAttributeStateAccessor"
+    "mtrscripting.VertexAttributeStateAccessor",
+    "mtrscripting.GraphicsHolderMatrixMixin"
   ],
   "injectors": {
     "defaultRequire": 1

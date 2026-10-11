@@ -222,21 +222,28 @@ public class VehicleWrapper {
 
                     Stop thisStop = new Stop(route, station, platform, routePlatform.getStationName(), destinationName, "", -1, false);
                     thisStop.destinationStation = destinationStation;
+                    Map<String, TransportMode> interchangeModes = new HashMap<>();
+                    if (station != null) {
+                        station.getInterchangeStationToColorToRoutesMap(true).forEach((s, interchanges) -> {
+                            if (s.getId() == station.getId()) interchanges.forEach((color, routes) -> routes.forEach(r ->
+                                        interchangeModes.put(color + "\u0000" + r.getName(), r.getTransportMode())));
+                        });
+                    }
+                    if (platform != null) platform.routes.forEach(r ->
+                            interchangeModes.put(r.getColor() + "\u0000" + r.getName(), r.getTransportMode()));
                     // In-station interchange
                     routePlatform.forEach((color, routes) -> {
                         routes.forEach(routeName -> {
-                            thisStop.routeInterchanges.add(new Stop.RouteInterchange(color, routeName));
+                            thisStop.routeInterchanges.add(new Stop.RouteInterchange(color, routeName, interchangeModes.get(color + "\u0000" + routeName)));
                         });
                     });
                     // Connecting station interchange
                     if(station != null) {
-                        station.getInterchangeStationNameToColorToRouteNamesMap(true).forEach((stationName, interchanges) -> {
-                            if(!stationName.equals(station.getName())) {
-                                interchanges.forEach((color, routeNames) -> {
-                                    routeNames.forEach(routeName -> {
-                                        thisStop.connectingInterchanges.computeIfAbsent(stationName, k -> new ObjectArrayList<>()).add(new Stop.RouteInterchange(color, routeName));
-                                    });
-                                });
+                        station.getInterchangeStationToColorToRoutesMap(true).forEach((connectingStation, interchanges) -> {
+                            if (connectingStation.getId() != station.getId()) {
+                                interchanges.forEach((color, routes) -> routes.forEach(interchangeRoute ->
+                                        thisStop.connectingInterchanges.computeIfAbsent(connectingStation.getName(), k -> new ObjectArrayList<>())
+                                                .add(new Stop.RouteInterchange(color, interchangeRoute.getName(), interchangeRoute.getTransportMode()))));
                             }
                         });
                     }
@@ -304,11 +311,23 @@ public class VehicleWrapper {
         public static class RouteInterchange {
             public final int color;
             public final String name;
+            private final TransportMode transportMode;
 
             @ApiInternal
             public RouteInterchange(int color, String name) {
+                this(color, name, null);
+            }
+
+            @ApiInternal
+            public RouteInterchange(int color, String name, TransportMode transportMode) {
                 this.color = color;
                 this.name = name;
+                this.transportMode = transportMode;
+            }
+
+            /** The actual interchange mode, or null when older server data omits it. */
+            public @ValueNullable TransportMode getTransportMode() {
+                return transportMode;
             }
         }
     }

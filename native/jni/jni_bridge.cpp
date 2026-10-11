@@ -82,7 +82,11 @@ namespace {
 struct Instance {
     std::vector<uint8_t> state;         /* mtrStateSize() zeroed block  */
     std::vector<uint8_t> last_snapshot; /* for safe dispose() rebuild   */
+    std::string api_key;
+    int32_t resource_kind = MTR_RESOURCE_VEHICLE;
     bool created = false;               /* mtrCreate called?            */
+    bool initialized = false;
+    bool failed = false;
 
     /* v4/v5: what create()/render() asked the host for, and what Java actually
        handed back. Frame records carry the SLOT index the script saw; the
@@ -170,6 +174,10 @@ namespace {
 
 JavaVM* g_vm = nullptr;
 jobject g_host = nullptr;                 /* global ref, or null      */
+jclass g_api_class = nullptr;
+jmethodID g_api_invoke = nullptr;
+jclass g_frame_class = nullptr;
+jmethodID g_frame_ctor = nullptr;
 jmethodID g_mid_create_resources = nullptr;
 jmethodID g_mid_upload_pixels = nullptr;
 jmethodID g_mid_rasterize_text = nullptr;
@@ -192,6 +200,16 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
     g_mid_draw_font_text = nullptr;
     if (!host) return;
 
+    if (!g_api_class) {
+        jclass api = env->FindClass("com/lx862/jcm/nativeapi/NativeApiSession");
+        g_api_class = static_cast<jclass>(env->NewGlobalRef(api));
+        g_api_invoke = env->GetStaticMethodID(g_api_class, "invoke", "([B[B)[B");
+        env->DeleteLocalRef(api);
+        jclass frame = env->FindClass("com/lx862/jcm/nativeapi/NativeScriptManager$NativeFrame");
+        g_frame_class = static_cast<jclass>(env->NewGlobalRef(frame));
+        g_frame_ctor = env->GetMethodID(g_frame_class, "<init>", "(Ljava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V");
+        env->DeleteLocalRef(frame);
+    }
     g_host = env->NewGlobalRef(host);
     jclass cls = env->GetObjectClass(host);
     if (!cls) return;
@@ -213,15 +231,28 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
 
 /* ---- host services handed to the script module (see mtr_native.h) ---- */
 
-int32_t host_acquire_model(void* user, const char* path) {
-    /* v5: models come from acquire_quad_model (host-built geometry), so
-       this path form only records intent for diagnostics. */
-    (void)user;
-    (void)path;
-    return -1;
+int32_t host_acquire_model(void*, const char* path) {
+    JNIEnv* env=nullptr;
+    if(!g_vm||!g_host||g_vm->GetEnv(reinterpret_cast<void**>(&env),JNI_VERSION_1_8)!=JNI_OK) return -1;
+    jclass cls=env->GetObjectClass(g_host);
+    jmethodID method=env->GetMethodID(cls,"acquireModel","(Ljava/lang/String;)I");
+    jstring name=env->NewStringUTF(path);
+    jint handle=env->CallIntMethod(g_host,method,name);
+    env->DeleteLocalRef(name); env->DeleteLocalRef(cls);
+    if(env->ExceptionCheck()) {env->ExceptionDescribe();env->ExceptionClear();return -1;}
+    return handle<0 ? -1 : handle|0x40000000;
 }
 
 void host_release_model(void* user, int32_t slot) {
+    if(slot>=0&&(slot&0x40000000)) {
+        JNIEnv* env=nullptr;
+        if(g_vm&&g_host&&g_vm->GetEnv(reinterpret_cast<void**>(&env),JNI_VERSION_1_8)==JNI_OK) {
+            jclass cls=env->GetObjectClass(g_host);
+            jmethodID method=env->GetMethodID(cls,"releaseModel","(I)V");
+            env->CallVoidMethod(g_host,method,slot&~0x40000000); env->DeleteLocalRef(cls);
+        }
+        return;
+    }
     auto& inst = *static_cast<Instance*>(user);
     if (slot < 0 || slot >= static_cast<int32_t>(inst.quad_slot.size())) return;
     inst.quad_slot[slot] = -1;
@@ -343,6 +374,30 @@ int32_t host_acquire_quad_model(void* user, const float* verts, const float* uv,
     return static_cast<int32_t>(inst.quad_slot.size()) - 1;
 }
 
+const char* host_invoke_api(void* user, const char* request, int32_t length, int32_t* result_length) {
+    thread_local std::string result;
+    auto& inst = *static_cast<Instance*>(user);
+    JNIEnv* env = nullptr;
+    bool attached = false;
+    if (g_vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) == JNI_EDETACHED) {
+        if (g_vm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr) != JNI_OK) return nullptr;
+        attached = true;
+    }
+    jbyteArray key = utf8_array(env, inst.api_key.data(), static_cast<int32_t>(inst.api_key.size()));
+    jbyteArray message = utf8_array(env, request, length);
+    auto reply = static_cast<jbyteArray>(env->CallStaticObjectMethod(g_api_class, g_api_invoke, key, message));
+    env->DeleteLocalRef(key); env->DeleteLocalRef(message);
+    if (env->ExceptionCheck()) { env->ExceptionDescribe(); env->ExceptionClear(); result = "{\"error\":\"Java native API invocation failed\"}"; }
+    else if (reply) {
+        result.resize(env->GetArrayLength(reply));
+        env->GetByteArrayRegion(reply, 0, static_cast<jsize>(result.size()), reinterpret_cast<jbyte*>(result.data()));
+        env->DeleteLocalRef(reply);
+    } else result = "{\"error\":\"Java native API returned no result\"}";
+    if (attached) g_vm->DetachCurrentThread();
+    *result_length = static_cast<int32_t>(result.size());
+    return result.data();
+}
+
 void fill_host(JcmHostServices& host, Instance& inst) {
     std::memset(&host, 0, sizeof(host));
     host.user = &inst;
@@ -355,6 +410,7 @@ void fill_host(JcmHostServices& host, Instance& inst) {
     host.acquire_quad_model = host_acquire_quad_model;
     host.measure_font_text = host_measure_font_text;
     host.draw_font_text = host_draw_font_text;
+    host.invoke_api = host_invoke_api;
 }
 
 #if !defined(_WIN32)
@@ -483,7 +539,8 @@ void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
         } else if (h->kind == JCM_DRAW_MODEL) {
             JcmDrawModel* m = reinterpret_cast<JcmDrawModel*>(p);
             const int32_t slot = m->model_handle;
-            if (slot >= 0 && slot < static_cast<int32_t>(inst.model_slot_handles.size())) {
+            if (slot >= 0 && (slot & 0x40000000)) m->model_handle = slot & ~0x40000000;
+            else if (slot >= 0 && slot < static_cast<int32_t>(inst.model_slot_handles.size())) {
                 m->model_handle = inst.model_slot_handles[static_cast<size_t>(slot)];
                 if (m->model_handle < 0) keep = false;   /* host refused the quad */
             } else if (slot >= 0) {
@@ -593,7 +650,10 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
     std::lock_guard<std::mutex> lock(mod->mutex);
 
     Instance& inst = mod->instances[key];
+    inst.api_key = key;
+    inst.resource_kind = resourceKind;
     env->ReleaseStringUTFChars(instanceKey, key);
+    if (inst.failed) return nullptr;
 
     if (inst.state.empty() && mod->state_size() > 0) {
         inst.state.assign(mod->state_size(), 0);
@@ -626,10 +686,12 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
         if (mod->init) {
             mod->init(&in);
         }
+        inst.initialized = true;
 
         if (mod->create(&in) != 0) {
             /* same failure semantics as a JS script that throws in
                create(): drop the instance, let the host cool it down */
+            inst.failed = true;
             return nullptr;
         }
         inst.created = true;
@@ -637,9 +699,8 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
     }
 
     JcmFrameOutput out{};
-    if (mod->render(&in, &out) != 0) return nullptr;
-    // Synchronise AFTER render as well as create: LCDs allocate on their first
-    // render, and both ports rebuild their resources when car count changes.
+    if (mod->render(&in, &out) != 0) { inst.failed = true; return nullptr; }
+    // Scripts may allocate or rebuild resources during render().
     if (!resolve_captured_resources(env, inst)) return nullptr;
 
     /* v4/v5: swap the script's slot handles for the real JVM handles and
@@ -653,14 +714,7 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
     /* wrap the module-owned arenas as NIO ByteBuffers (zero copy).
        Valid until the next nRender on this module — the replay step
        must complete first (same discipline as the JS pipeline). */
-    jclass frameCls = env->FindClass(
-        "com/lx862/jcm/nativeapi/NativeScriptManager$NativeFrame");
-    if (!frameCls) return nullptr;
-    jmethodID ctor = env->GetMethodID(
-        frameCls, "<init>",
-        "(Ljava/nio/ByteBuffer;ILjava/nio/ByteBuffer;"
-        "Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V");
-    if (!ctor) return nullptr;
+    if (!g_frame_class || !g_frame_ctor) return nullptr;
 
     jobject records = env->NewDirectByteBuffer(
         const_cast<void*>(out.records), out.records_len);
@@ -673,9 +727,13 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
         out.matrix_arena ? const_cast<float*>(out.matrix_arena) : nullptr,
         out.matrix_arena_len);
 
-    return env->NewObject(frameCls, ctor, records,
+    jobject floats = env->NewDirectByteBuffer(out.float_arena ? const_cast<float*>(out.float_arena) : nullptr, out.float_arena_len);
+    jobject result = env->NewObject(g_frame_class, g_frame_ctor, records,
                           static_cast<jint>(out.record_count),
-                          strings, pixels, matrices);
+                          strings, pixels, matrices, floats);
+    env->DeleteLocalRef(records); env->DeleteLocalRef(strings);
+    env->DeleteLocalRef(pixels); env->DeleteLocalRef(matrices); env->DeleteLocalRef(floats);
+    return result;
 }
 
 /* ------------------------------------------------------------------ */
@@ -693,12 +751,12 @@ JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey)
     env->ReleaseStringUTFChars(instanceKey, key);
     if (it == mod->instances.end()) return;
 
-    if (it->second.created) {
+    if (it->second.initialized) {
         JcmHostServices host;
         fill_host(host, it->second);
         JcmFrameInput in{};
         in.abi_version = mod->abi();
-        in.resource_kind = MTR_RESOURCE_VEHICLE; /* informational for dispose */
+        in.resource_kind = it->second.resource_kind;
         in.snapshot = it->second.last_snapshot.data();
         in.state = it->second.state.data();
         in.state_size = it->second.state.size();
@@ -716,11 +774,11 @@ JNI_M(nClose)(JNIEnv*, jobject, jlong handle) {
         std::lock_guard<std::mutex> lock(mod->mutex);
         JcmHostServices host;
         for (auto& kv : mod->instances) {
-            if (!kv.second.created) continue;
+            if (!kv.second.initialized) continue;
             fill_host(host, kv.second);
             JcmFrameInput in{};
             in.abi_version = mod->abi();
-            in.resource_kind = MTR_RESOURCE_VEHICLE;
+            in.resource_kind = kv.second.resource_kind;
             in.snapshot = kv.second.last_snapshot.data();
             in.state = kv.second.state.data();
             in.state_size = kv.second.state.size();
@@ -735,4 +793,16 @@ JNI_M(nClose)(JNIEnv*, jobject, jlong handle) {
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
     g_vm = vm;
     return JNI_VERSION_1_8;
+}
+
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeApiCallback(JNIEnv* env, jclass, jlong function, jlong user, jbyteArray parameters) {
+    using Callback = const char* (*)(void*, const char*, int32_t, int32_t*);
+    if (!function || !parameters) return nullptr;
+    std::string bytes(static_cast<size_t>(env->GetArrayLength(parameters)), '\0');
+    env->GetByteArrayRegion(parameters, 0, static_cast<jsize>(bytes.size()), reinterpret_cast<jbyte*>(bytes.data()));
+    int32_t length = 0;
+    const char* result = reinterpret_cast<Callback>(static_cast<uintptr_t>(function))(
+        reinterpret_cast<void*>(static_cast<uintptr_t>(user)), bytes.data(), static_cast<int32_t>(bytes.size()), &length);
+    return utf8_array(env, result, length);
 }

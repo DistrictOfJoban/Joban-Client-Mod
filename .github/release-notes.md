@@ -1,24 +1,14 @@
-# JCM v2.3.0-beta.1-yanyang.6
+JCM Yanyang.7 adds complete native execution for vehicle, PIDS, Lift and Eyecandy scripts.
 
-修复 WR2-A03 C++ 资源包的 LCD 和车号已能绘制、但字体完全错误的问题。
+- JavaScript `RouteInterchange.getTransportMode()` returns the actual TSC TransportMode. Server stop data includes in-station and connecting interchange types.
+- ABI 8 gives C++ direct access to the same public Common API and script-specific Java objects, including Java2D, resource/model/texture loading, rendering, sound, networking, files, callbacks and data classes.
+- PIDS, Lift and Eyecandy now execute native create/render/dispose and replay models, text, textures, sounds, matrices, shapes and block-use events.
+- JNI lookup caching, reusable buffers, smaller snapshot copies, bounded draw arenas and callback quiescence improve execution and reload behavior.
+- ABI 6/7 modules remain accepted with their original snapshot layout. New ABI 8 scripts require this version. Full remote interchange metadata requires updated server JCM.
+- Each jar contains only the four platform JNI bridges. Native SDK examples and resource-pack scripts/assets are distributed separately from the mod.
 
-旧原生绘图使用 5×7 点阵绘制英文和数字，中文使用模组内 Noto 字体并按字形边界缩放。
-现在原生脚本可请求资源包字体，通过与 JavaScript 相同的 Java2D `FontMetrics` 和
-`drawString` 度量并绘制整段文字，保留真实字宽、字形比例、基线和下行部。
+Supported Minecraft versions: 1.17.1, 1.18.2, 1.19.2, 1.19.4, 1.20.1 and 1.20.4, for Fabric and Forge (12 jars).
 
-- WR2-A03 中文使用思源黑体 Medium，英文使用 Arial，线路大号数字按原脚本选用 Arial Bold。
-- LCD 顶部车号和车体编号使用 Sans Lao；开门页大站名使用鸿雷行书。
-- 支持水平压缩、纹理缩放、透明度和裁剪；缓存字模，避免每帧重复生成，脚本重载时清理字体缓存。
-- 修复 SDK 圆角矩形路径的角点顺序，消除线路框上的斜线和折角。
-- 保留 yanyang.5 的 GPU 模型上传及 GL 状态保护修复。
+Validation includes four-platform CMake/CTest, real JNI tests for every script kind, an API declaration audit and real MTR OpenGL model upload. Automated tests do not replace final visual testing in Minecraft.
 
-本机使用 WR2-A03 原有六种字体文件完成 168 项 Java2D 字形、字体度量、压缩、裁剪和缓存对照；
-真实 C++ → JNI → 宿主 → 纹理上传生成的侧面与头尾车号，均与独立 Java2D Sans Lao 参考图逐像素一致。
-发布流程还验证四平台 CMake/CTest/JNI、MTR GPU 上传，以及全部 12 个 jar 的打包内容。
-独立纹理验证不代替完整游戏内视觉复测。
-
-Minecraft 支持版本：1.17.1、1.18.2、1.19.2、1.19.4、1.20.1、1.20.4，各提供 Fabric 与 Forge jar。
-每个 jar 均内嵌 Windows-x64、Linux-x64、macOS-x64、macOS-arm64 四平台 JNI 桥。
-
-新字体接口使用 ABI 7。请同时安装更新后的 JCM jar 和重新编译的 WR2-A03 C++ 资源包，
-然后完全重启游戏。新宿主仍支持 ABI 6 模块，但旧脚本不会自动获得本次字体修复。
+Native SDK documentation: https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/blob/main/native/README.md

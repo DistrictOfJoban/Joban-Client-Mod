@@ -48,7 +48,7 @@ public class LiftResourceProvider implements ScriptResourceProvider {
 
                     if(entryReferenced) {
                         ParsedScript parsedScript = ScriptResourceProvider.tryParseScript(scriptEntryId, "lift", "Lift", scriptObject, true, false);
-                        if (parsedScript != null) {
+                        if (parsedScript != null || NativeScriptManager.isLoaded(scriptEntryId)) {
                             liftScripts.put(scriptEntryId, new LiftScriptConfiguration(parsedScript));
                         }
                     } else {
@@ -89,6 +89,8 @@ public class LiftResourceProvider implements ScriptResourceProvider {
     public LiftScriptConfiguration getScriptEntry(String id) {
         return liftScripts.get(liftScriptIds.getOrDefault(id, id));
     }
+
+    public String getScriptEntryId(String id) { return liftScriptIds.getOrDefault(id, id); }
 
     public boolean isScriptControlledRendering(String id) {
         return scriptControlledRendering.contains(id);

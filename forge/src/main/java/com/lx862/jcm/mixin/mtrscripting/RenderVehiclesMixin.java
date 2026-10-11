@@ -1,14 +1,16 @@
 package com.lx862.jcm.mixin.mtrscripting;
 
+import com.lx862.jcm.nativeapi.NativeScriptManager;
+import com.lx862.jcm.nativeapi.NativeVehicleDriver;
 import com.lx862.mtrscripting.core.primitive.ScriptInstance;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.NTETrainWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptContext;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptInstance;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper;
+import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
-import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.mtrscripting.mod.resource.VehicleResourceProvider;
 import org.mtr.core.data.VehicleCar;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -33,6 +35,12 @@ public class RenderVehiclesMixin {
     @Inject(method = "render(JLorg/mtr/mapping/holder/Vector3d;)V", at = @At(value = "INVOKE", target = "Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArraySet;forEach(Ljava/util/function/Consumer;)V"))
     private static void jsblock$executeScript(long millisElapsed, Vector3d cameraShakeOffset, CallbackInfo ci) {
         for(VehicleExtension vehicle : MinecraftClientData.getInstance().vehicles) {
+            /* Yanyang: C++ (language=cpp) scripts take the native route and
+               never build a VehicleScriptInstance — drive them first so their
+               per-car draw calls are captured before MTR starts queueing cars.
+               Idle for every vehicle whose script id has no native modules. */
+            NativeVehicleDriver.render(vehicle);
+
             ObjectImmutableList<VehicleCar> cars = vehicle.vehicleExtraData.immutableVehicleCars;
             Object2ObjectOpenHashMap<String, VehicleResourceProvider.VehicleScriptConfiguration> scriptsInVehicle = new Object2ObjectOpenHashMap<>();
 
@@ -45,6 +53,12 @@ public class RenderVehiclesMixin {
 
             for(Map.Entry<String, VehicleResourceProvider.VehicleScriptConfiguration> scriptEntry : scriptsInVehicle.entrySet()) {
                 String scriptEntryId = scriptEntry.getKey();
+                /* Yanyang: a native (language=cpp) entry is also registered here
+                   so NativeVehicleDriver can read its dataFetchMode, but it
+                   carries no ParsedScript — driving it through the JS instance
+                   pipeline would NPE on .parsedScript(). It is rendered above by
+                   NativeVehicleDriver.render(). */
+                if(NativeScriptManager.isLoaded(scriptEntryId)) continue;
                 List<Integer> carsForScripts = new ArrayList<>();
                 for(int i = 0; i < cars.size(); i++) {
                     if(MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(cars.get(i).getVehicleId()).equals(scriptEntryId)) carsForScripts.add(i);
@@ -81,6 +95,7 @@ public class RenderVehiclesMixin {
         VehicleCar vehicleCar = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber);
         String scriptGroupId = MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(vehicleCar.getVehicleId());
         if(scriptGroupId == null) return;
+        com.lx862.jcm.nativeapi.NativeVehicleDriver.invokeBogie(vehicle,scriptGroupId,carNumber,bogieIndex,storedMatrixTransformations,absoluteVehicleCarPositionAndRotation.light);
 
         ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptGroupId));
         if(!(scriptInstance instanceof VehicleScriptInstance)) return;

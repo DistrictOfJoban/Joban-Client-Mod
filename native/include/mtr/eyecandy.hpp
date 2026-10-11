@@ -36,8 +36,7 @@ public:
     float rotate_z() const { return snap_->rotate[2]; }
     bool full_brightness() const { return snap_->full_brightness != 0; }
 
-    /* Direction: 0=SOUTH 1=WEST 2=NORTH 3=EAST (MC 2D facing order used
-       by the host; mirrors be.facing() in JS). */
+    /* Direction.ordinal(), matching the Java scripting wrapper. */
     int32_t facing() const { return snap_->facing; }
     bool is_crosshair_target() const { return snap_->crosshair_target != 0; }
 
@@ -50,21 +49,17 @@ public:
     /* Pending onBlockUse events this frame (bitmask; the host coalesces
        multiple clicks per frame — the JS event queue behaves the same). */
     uint32_t block_use_events() const { return snap_->block_use_events; }
-    bool consume_block_use() {
-        if (pending_use_) {
-            pending_use_ = false;
-            return true;
-        }
-        const bool has = snap_->block_use_events != 0;
-        pending_use_ = false;
-        return has;
+    bool consume_block_use() const {
+        if (consumed_use_ || snap_->block_use_events == 0) return false;
+        consumed_use_ = true;
+        return true;
     }
 
     const JcmEyecandySnapshot& raw() const { return *snap_; }
 
 private:
     const JcmEyecandySnapshot* snap_;
-    bool pending_use_ = false;
+    mutable bool consumed_use_ = false;
 };
 
 /**

@@ -37,7 +37,8 @@ public class ModelManagerJS {
         }
     };
 
-    private static final Map<Identifier, RawModelJS> rawModelCache = new HashMap<>();
+    private record ModelKey(Identifier id, boolean flipTextureV) {}
+    private static final Map<ModelKey, RawModelJS> rawModelCache = new HashMap<>();
     private static final Map<RawModelJS, ModelJS> modelCache = new HashMap<>();
 
     private ModelManagerJS() {
@@ -63,13 +64,14 @@ public class ModelManagerJS {
     }
 
     public static RawModelJS loadModel(Identifier id, boolean flipTextureV) {
-        if(rawModelCache.containsKey(id)) return rawModelCache.get(id);
+        ModelKey key = new ModelKey(id, flipTextureV);
+        if(rawModelCache.containsKey(key)) return rawModelCache.get(key);
 
         try {
             RawModelJS rawModel = new RawModelJS();
             Map<String, RawModelJS> modelDataParts = loadModelParts(id, flipTextureV);
             modelDataParts.values().forEach(rawModel::append);
-            rawModelCache.put(id, rawModel);
+            rawModelCache.put(key, rawModel);
             return rawModel;
         } catch (Exception e) {
             MTRScriptingModClient.LOGGER.error("", e);
@@ -93,6 +95,10 @@ public class ModelManagerJS {
         } else {
             throw new IllegalArgumentException("Unsupported model format " + idStr + ".");
         }
+    }
+
+    public static Map<String, RawModelJS> loadModelParts(Identifier modelLocation) {
+        return loadModelParts(modelLocation, true);
     }
 
     public static RawModelJS loadModelPart(String modelName, Identifier modelLocation) {

@@ -104,7 +104,7 @@ public final class NativeSnapshot {
     private static final int STOP_SWITCHOVER = 81;
 
     /* ---- JcmInterchange / JcmExit / JcmStrRef ---- */
-    private static final int SZ_INTERCHANGE = 12;
+    private static final int SZ_INTERCHANGE = 16;
     private static final int SZ_EXIT = 16;
     private static final int SZ_STR_REF = 8;
 
@@ -114,7 +114,7 @@ public final class NativeSnapshot {
     /** Cheap ABI sanity probe; a mismatch means the jar and the .dll disagree. */
     public static boolean selfCheck() {
         return SZ_VEHICLE == 184 && SZ_CAR == 20 && SZ_STOP == 88
-                && SZ_INTERCHANGE == 12 && SZ_EXIT == 16 && SZ_STR_REF == 8;
+                && SZ_INTERCHANGE == 16 && SZ_EXIT == 16 && SZ_STR_REF == 8;
     }
 
     /* ------------------------------------------------------------------ */
@@ -123,7 +123,10 @@ public final class NativeSnapshot {
      * Flattens {@code v} into {@code out}. The buffer is cleared and left
      * FLIPPED (position 0, limit = end of blob) — hand it straight to JNI.
      */
-    public static ByteBuffer build(ByteBuffer out, VehicleWrapper v) {
+    public static ByteBuffer build(ByteBuffer out, VehicleWrapper v) { return build(out, v, 8); }
+
+    public static ByteBuffer build(ByteBuffer out, VehicleWrapper v, int abi) {
+        final int interchangeSize = abi >= 8 ? 16 : 12;
         final List<VehicleWrapper.Stop> allStops = new ArrayList<>(v.getStops());
         final List<VehicleWrapper.Stop> thisRouteStops = new ArrayList<>(v.getThisRouteStops());
         final List<VehicleWrapper.Stop> nextRouteStops = new ArrayList<>(v.getNextRouteStops());
@@ -162,12 +165,13 @@ public final class NativeSnapshot {
             if (ics == null || ics.isEmpty()) continue;
             stopIcOffset[s] = out.position();
             for (int j = 0; j < ics.size(); j++) {
-                final int p = stopIcOffset[s] + j * SZ_INTERCHANGE;
+                final int p = stopIcOffset[s] + j * interchangeSize;
                 out.putInt(p, ics.get(j).color);
                 out.putInt(p + 4, 0);      /* name offset, patched in the pool pass */
                 out.putInt(p + 8, 0);
+                if (abi >= 8) out.putInt(p + 12, ics.get(j).getTransportMode() == null ? -1 : ics.get(j).getTransportMode().ordinal());
             }
-            out.position(stopIcOffset[s] + ics.size() * SZ_INTERCHANGE);
+            out.position(stopIcOffset[s] + ics.size() * interchangeSize);
         }
 
         /* ---- exits (JcmExit[] pool; destinations are JcmStrRef[]) ---- */
@@ -212,7 +216,7 @@ public final class NativeSnapshot {
             if (ics == null || ics.isEmpty()) continue;
             for (int j = 0; j < ics.size(); j++) {
                 final int[] ref = pool.add(ics.get(j).name);
-                final int p = stopIcOffset[s] + j * SZ_INTERCHANGE;
+                final int p = stopIcOffset[s] + j * interchangeSize;
                 out.putInt(p + 4, ref[0]);
                 out.putInt(p + 8, ref[1]);
             }
@@ -318,8 +322,7 @@ public final class NativeSnapshot {
             final List<ExitData> exits = stopExits.get(s);
             out.putInt(p + STOP_EXIT_COUNT, exits.size());
             out.putInt(p + STOP_EXIT_OFFSET, exits.isEmpty() ? 0 : stopExitOffset[s]);
-            /* v5: the stop's OWN route CircularState — this is what lets the
-               LCD port walk the stop list exactly like circular.js does */
+            /* v5: use this stop's route rather than the current route. */
             out.put(p + STOP_ROUTE_CIRCULAR, (byte) circularOrdinal(stop.route));
             out.put(p + STOP_SWITCHOVER, (byte) (stop.isRouteSwitchoverStop ? 1 : 0));
             out.put(p + STOP_SWITCHOVER + 1, (byte) 0);

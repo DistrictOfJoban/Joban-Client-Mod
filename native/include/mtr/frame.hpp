@@ -17,11 +17,16 @@
 #include <cstring>
 #include <cstdlib>
 #include <new>
+#include <stdexcept>
 
 namespace mtr {
 
 class FrameRecorder {
 public:
+    FrameRecorder() = default;
+    FrameRecorder(const FrameRecorder&) = delete;
+    FrameRecorder& operator=(const FrameRecorder&) = delete;
+    ~FrameRecorder() { if (pixel_owned_) std::free(pixel_arena_); }
     void begin_frame() {
         record_count_ = 0;
         records_bytes_ = 0;
@@ -101,20 +106,16 @@ public:
         return r;
     }
 
-    /* Upper bound for a single pixel push. A vehicle script repaints one
-       screen rect at a time (3304x944x4 ≈ 12.5 MB for the WR2 LCD), so
-       256 MB is far above anything legitimate while still rejecting the
-       corrupted/negative lengths that reach memcpy as an enormous size_t.
-       (Observed in the field as an ACCESS_VIOLATION inside VCRUNTIME140
-       with the calling frame already unwound, which makes it very hard to
-       attribute — hence the explicit clamp.) */
+    /* Bound individual pixel writes to reject invalid arena sizes. */
     static constexpr int64_t MAX_PIXEL_BYTES = 256LL * 1024 * 1024;
 
     /* ---- string arena (UTF-8) ---- */
 
     int32_t intern(const char* s, int32_t len) {
+        if (!s) return string_bytes_;
         if (len < 0) len = static_cast<int32_t>(std::strlen(s));
         if (len <= 0 || !s) return string_bytes_;
+        if (len > string_cap_ - string_bytes_) throw std::length_error("Native string arena capacity exceeded");
         int32_t off = string_bytes_;
         std::memcpy(string_arena_ + string_bytes_, s, static_cast<size_t>(len));
         string_bytes_ += len;
@@ -124,6 +125,7 @@ public:
     /* ---- matrix arena: JcmMat4 stream ---- */
 
     int32_t push_matrix(const JcmMat4& m) {
+        if (sizeof(m) > static_cast<size_t>(matrix_cap_ - matrix_bytes_)) throw std::length_error("Native matrix arena capacity exceeded");
         int32_t idx = matrix_bytes_ / static_cast<int32_t>(sizeof(JcmMat4));
         std::memcpy(reinterpret_cast<uint8_t*>(matrix_arena_) + matrix_bytes_, m.m, sizeof(m));
         matrix_bytes_ += static_cast<int32_t>(sizeof(m));
@@ -134,6 +136,7 @@ public:
 
     int32_t push_floats(const float* v, int32_t count) {
         if (count <= 0 || !v) return float_bytes_;
+        if (static_cast<int64_t>(count) * sizeof(float) > float_cap_ - float_bytes_) throw std::length_error("Native shape arena capacity exceeded");
         int32_t off = float_bytes_;
         std::memcpy(reinterpret_cast<uint8_t*>(float_arena_) + float_bytes_, v,
                     sizeof(float) * static_cast<size_t>(count));
@@ -144,8 +147,7 @@ public:
     /* ---- pixel arena (BGRA8) — grows on demand ----
 
        The host installs an initial static buffer (zero-cost BSS);
-       frames that need more (e.g. an 8-car × 2-side LCD repaint
-       burst) transparently switch to a heap buffer that persists for
+       frames that need more texture data transparently switch to a heap buffer that persists for
        the module lifetime. The steady-state hot path never allocates. */
     int64_t push_pixels(const uint8_t* px, int64_t len) {
         /* Hard invariant. A negative/absurd len here reaches memcpy as a
@@ -192,7 +194,10 @@ public:
        16MB pixels (2048x2048 RGBA), 1KB floats; the pixel arena
        grows if a frame needs more. */
     void attach(void* records, float* matrix_arena, char* string_arena,
-                uint8_t* pixel_arena, int64_t pixel_cap, float* float_arena) {
+                uint8_t* pixel_arena, int64_t pixel_cap, float* float_arena,
+                int32_t record_cap = sizeof(JcmDrawText) * 256,
+                int32_t matrix_cap = 128 * sizeof(JcmMat4),
+                int32_t string_cap = 32 * 1024, int32_t float_cap = 1024 * sizeof(float)) {
         records_ = records;
         matrix_arena_ = matrix_arena;
         string_arena_ = string_arena;
@@ -200,6 +205,8 @@ public:
         pixel_cap_ = pixel_cap;
         pixel_owned_ = false;
         float_arena_ = float_arena;
+        record_cap_ = record_cap; matrix_cap_ = matrix_cap;
+        string_cap_ = string_cap; float_cap_ = float_cap;
     }
 
 private:
@@ -219,10 +226,13 @@ private:
 
     template <typename T>
     T& push_record(uint8_t kind) {
+        constexpr int32_t padded = (sizeof(T) + 7) & ~7;
+        if (padded > record_cap_ - records_bytes_) throw std::length_error("Native draw record capacity exceeded");
         T* slot = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(records_) + records_bytes_);
+        std::memset(slot, 0, padded);
         slot->header.kind = kind;
-        slot->header.record_size = static_cast<int32_t>(sizeof(T));
-        records_bytes_ += static_cast<int32_t>(sizeof(T));
+        slot->header.record_size = padded;
+        records_bytes_ += padded;
         record_count_++;
         return *slot;
     }
@@ -235,6 +245,7 @@ private:
 
     int64_t pixel_cap_ = 0;
     bool pixel_owned_ = false;
+    int32_t record_cap_ = 0, matrix_cap_ = 0, string_cap_ = 0, float_cap_ = 0;
 
     int32_t record_count_ = 0;
     int32_t records_bytes_ = 0;

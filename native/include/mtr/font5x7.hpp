@@ -4,7 +4,7 @@
  * Convention (identical to the classic glcdfont tables used by LED/LCD
  * displays): each glyph is 5 column bytes, 7 rows tall, and in every
  * byte bit 0 (LSB) is the TOP pixel. Only the ASCII printable range
- * needed by LCD / 车号 displays is included; unknown codepoints return
+ * needed for ASCII displays is included; unknown codepoints return
  * nullptr and LcdCanvas advances one blank cell, falling back to host
  * TTF rasterization for CJK when available.
  */

@@ -168,7 +168,7 @@ private:
  * LcdCanvas — dot-matrix painter over a GraphicsTexture.
  * 5x7 glyphs at 2px dot pitch => 10x10 cell per char + 1px spacing.
  * This is the native replacement for java.awt.Graphics2D.drawString
- * in LCD/车号 rendering, and is the hot loop benchmarked in bench/.
+ * in dynamic texture rendering.
  */
 class LcdCanvas {
 public:

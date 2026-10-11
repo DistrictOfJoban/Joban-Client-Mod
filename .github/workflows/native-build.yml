@@ -1,234 +1,29 @@
-# Cross-platform build CI for the MTR native script libraries.
-#
-# The 5 example scripts (vehicle_lcd, pids_arrivals, eyecandy_signal,
-# jslcd_vehicle, jslcd_train_num) are built as shared libraries on every
-# desktop platform Minecraft players actually use:
-#
-#   linux-x64   ubuntu-latest    lib*.so        (+ 41-assertion smoke test)
-#   windows-x64 windows-latest   *.dll          (MSVC)
-#   macos-x64   macos-latest     lib*.dylib (x86_64, cross-compiled)
-#   macos-arm64 macos-latest     lib*.dylib
-#
-# Pushing a tag (v*) additionally stitches the per-platform artifacts into
-# a GitHub Release — that is the official download channel for players who
-# don't build from source. The `resourcepack` job also assembles the
-# ready-to-use MTR resource pack (all 4 platforms + JSON wiring in one zip)
-# as a CI artifact; the zip itself is NOT attached to releases (kept
-# private on request).
-#
-# Install: copy this file to the repository root as
-#   .github/workflows/native-build.yml
-
-name: native-scripts CI
-
+name: Native SDK Tests
 on:
-  push:
-    branches: [main]
-    paths:
-      - "native/**"
-      - ".github/workflows/native-build.yml"
-  pull_request:
-    paths:
-      - "native/**"
-      - ".github/workflows/native-build.yml"
   workflow_dispatch:
-
+permissions:
+  contents: read
 jobs:
-  build:
-    name: build ${{ matrix.platform }}
-    runs-on: ${{ matrix.os }}
+  test:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux-x64
-          - os: windows-latest
-            platform: windows-x64
-          # macos-13 (Intel) runners are being retired by GitHub — long/infinite
-          # queues. Build the x86_64 slice by cross-compiling on an arm runner.
-          - os: macos-latest
-            platform: macos-x64
-            cmake-arch: -DCMAKE_OSX_ARCHITECTURES=x86_64
-          - os: macos-latest
-            platform: macos-arm64
-
+        os: [ubuntu-22.04, windows-latest, macos-15-intel, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Configure CMake
-        run: cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake-arch }}
-
-      - name: Build script libraries
-        run: cmake --build native/build --config Release --parallel
-
-      - name: Run jslcd smoke test (41 assertions)
-        if: runner.os == 'Linux'
-        working-directory: native/build
-        run: ./jslcd_smoke
-
-      - name: Run LCD microbenchmark (10000 frames)
-        if: runner.os == 'Linux'
-        working-directory: native/build
-        run: ./lcd_bench
-
-      # WR2-A03 (the LCD + car-number pair this pack ships) on EVERY platform,
-      # not just Linux: this is the test that catches the ABI-6 state-lifetime
-      # problem, because a zero-filled state block is only "valid" on MSVC —
-      # libstdc++/libc++ dereference a null inline string buffer and crash.
-      # A green Windows-only run proves nothing here.
-      # NB: absolute paths on purpose — a multi-line `run:` block does NOT honour
-      # `working-directory` (only single-line ones do), so `./x` resolves against
-      # the workspace root and the step dies with "cannot load ./lib...".
-      # The binary's directory also differs per platform: the Linux/macOS jobs use
-      # the single-config Makefile generator (binaries in native/build), while
-      # Windows defaults to the multi-config Visual Studio generator, which puts
-      # them in native/build/Release.
-      - name: Run WR2-A03 smoke test (real ABI, 41 assertions)
-        shell: bash
-        run: |
-          set -euo pipefail
-          B="$GITHUB_WORKSPACE/native/build"
-          ls -l "$B" | head -40
-          BIN="$(find "$B" -maxdepth 2 -name 'wr2a03_smoke*' -type f | head -1)"
-          [ -n "$BIN" ] || { echo "::error::wr2a03_smoke was not built"; exit 1; }
-          echo "running $BIN from $(dirname "$BIN")"
-          "$BIN" "$(dirname "$BIN")"
-
-      - name: Run WR2-A03 performance harness
-        shell: bash
-        run: |
-          set -euo pipefail
-          B="$GITHUB_WORKSPACE/native/build"
-          BIN="$(find "$B" -maxdepth 2 -name 'wr2a03_bench*' -type f | head -1)"
-          [ -n "$BIN" ] || { echo "::error::wr2a03_bench was not built"; exit 1; }
-          "$BIN" "$(dirname "$BIN")" 200
-
-      - name: Verify exported ABI (mtrInit must be present)
-        shell: bash
-        run: |
-          set -euo pipefail
-          B="$GITHUB_WORKSPACE/native/build"
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            find "$B" -maxdepth 2 -name 'wr2a03_*.dll' -type f -exec ls -l {} +
-            find "$B" -maxdepth 2 -name 'wr2a03_*.dll' -type f | grep -q . \
-              || { echo "::error::no wr2a03 DLLs were built"; exit 1; }
-            exit 0
-          fi
-          if [ "${{ runner.os }}" = "macos" ] || [ "${{ runner.os }}" = "macOS" ]; then
-            MODS=(libwr2a03_lcd.dylib libwr2a03_train_num.dylib); NM="nm -gU"
-          else
-            MODS=(libwr2a03_lcd.so libwr2a03_train_num.so); NM="nm -D --defined-only"
-          fi
-          for m in "${MODS[@]}"; do
-            LIB="$(find "$B" -maxdepth 2 -name "$m" -type f | head -1)"
-            [ -n "$LIB" ] || { echo "::error::$m was not built"; exit 1; }
-            echo "--- $m"
-            # shellcheck disable=SC2086
-            $NM "$LIB" | grep -o 'mtr[A-Za-z]*' | sort -u
-            # shellcheck disable=SC2086
-            $NM "$LIB" | grep -q mtrInit || { echo "::error::$m does not export mtrInit (ABI 6)"; exit 1; }
-          done
-
-      - name: Report Linux symbol-version floors
-        if: runner.os == 'Linux'
-        run: |
-          set -euo pipefail
-          B="$GITHUB_WORKSPACE/native/build"
-          for m in libwr2a03_lcd.so libwr2a03_train_num.so; do
-            echo -n "$m needs up to: "
-            objdump -T "$B/$m" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1 | tr '\n' ' '
-            objdump -T "$B/$m" | grep -o 'GLIBCXX_[0-9.]*' | sort -uV | tail -1
-          done
-
-      - name: Collect script libraries
-        shell: bash
-        run: |
-          set -euxo pipefail
-          OUT="dist-${{ matrix.platform }}/assets/mtr/natives"
-          mkdir -p "$OUT"
-          case "${{ matrix.platform }}" in
-            windows-*) find native/build -name '*.dll' -exec cp {} "$OUT" \; ;;
-            macos-*)   find native/build -name '*.dylib' -exec cp {} "$OUT" \; ;;
-            *)         find native/build -name '*.so' -exec cp {} "$OUT" \; ;;
-          esac
-          # README so the artifact is self-explanatory
-          cp native/README.md "dist-${{ matrix.platform }}/"
-          ls -la "$OUT"
-
-      - uses: actions/upload-artifact@v4
         with:
-          name: mtr-native-scripts-${{ matrix.platform }}
-          path: dist-${{ matrix.platform }}/
-          if-no-files-found: error
-
-  resourcepack:
-    # Assemble the ready-to-use MTR resource pack: natives from all 4
-    # platform jobs + the JSON wiring shipped in native/resourcepack/.
-    # Result: one zip a player drops into resourcepacks/ and gets two
-    # SP1900 trains driven by the C++ scripts.
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
+          persist-credentials: false
+      - uses: actions/setup-java@v4
         with:
-          path: dist
-
-      - name: Assemble yanyang-jslcd-pack
+          distribution: temurin
+          java-version: 21
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and test
         shell: bash
         run: |
-          set -euxo pipefail
-          STAGE="native/resourcepack/yanyang-jslcd-pack"
-          for platform in linux-x64 windows-x64 macos-x64 macos-arm64; do
-            mkdir -p "pack/assets/yanyang/natives/$platform"
-            cp "dist/mtr-native-scripts-$platform/assets/mtr/natives/"* \
-               "pack/assets/yanyang/natives/$platform/"
-          done
-          cp "$STAGE/pack.mcmeta" pack/
-          cp "$STAGE/README.md" pack/
-          mkdir -p pack/assets/mtr
-          cp "$STAGE/assets/mtr/mtr_custom_resources.json" pack/assets/mtr/
-          (cd pack && zip -r "../yanyang-native-lcd-pack.zip" .)
-          unzip -l yanyang-native-lcd-pack.zip | head -20
-          du -h yanyang-native-lcd-pack.zip
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: yanyang-native-lcd-pack
-          path: yanyang-native-lcd-pack.zip
-          if-no-files-found: error
-
-  release:
-    # Tag a version (e.g. `git tag v3 && git push origin v3`) to publish
-    # per-platform zips as a GitHub Release.
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
-
-      - name: Package per-platform zips
-        shell: bash
-        run: |
-          set -euxo pipefail
-          for d in dist/mtr-native-scripts-*; do
-            name="$(basename "$d")"
-            (cd "$d" && zip -r "../${name}.zip" .)
-          done
-          ls -la ./*.zip
-
-      # Note: yanyang-native-lcd-pack.zip stays a CI artifact only —
-      # it is intentionally NOT attached to public releases.
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            mtr-native-scripts-*.zip
-          generate_release_notes: true
+          cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build native/build --config Release --parallel 4
+          ctest --test-dir native/build -C Release --output-on-failure

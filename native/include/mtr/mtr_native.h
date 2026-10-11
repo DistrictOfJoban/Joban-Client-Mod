@@ -42,7 +42,9 @@ extern "C" {
 /* Version / module identity                                           */
 /* ------------------------------------------------------------------ */
 
-/* ABI 7 appends resource-font metrics and baseline text rasterization to
+/* ABI 8 appends invoke_api, Lift snapshots and typed interchange modes.
+   ABI 6/7 modules retain their original host prefix and snapshot layouts.
+   ABI 7 appends resource-font metrics and baseline text rasterization to
    JcmHostServices. The ABI 6 prefix and snapshot layouts are unchanged.
    ABI 6 — mtrInit(): the host must construct the per-instance state
    object instead of assuming a zeroed block is usable (see mtrStateSize).
@@ -52,13 +54,14 @@ extern "C" {
    the newer header call a host function slot that does not exist in an
    older host (the struct grew), so an old host must refuse the module
    instead of reading past it. */
-#define MTR_NATIVE_ABI_VERSION 7
+#define MTR_NATIVE_ABI_VERSION 8
 
 /* Resource kinds, identical to JCM script contexts. */
 enum MtrResourceKind {
     MTR_RESOURCE_VEHICLE  = 0,
     MTR_RESOURCE_PIDS     = 1,
-    MTR_RESOURCE_EYECANDY = 2
+    MTR_RESOURCE_EYECANDY = 2,
+    MTR_RESOURCE_LIFT     = 3
 };
 
 /* ------------------------------------------------------------------ */
@@ -156,7 +159,7 @@ typedef struct JcmDrawTexture {
     double   x, y, w, h;
     float    u1, v1, u2, v2;
     int32_t  z_order;
-    int32_t  texture_offset;  /* into frame string arena, e.g. "jsblock:textures/lcd.png" */
+    int32_t  texture_offset;  /* into frame string arena, e.g. "example:textures/screen.png" */
     int32_t  texture_len;
 } JcmDrawTexture;
 
@@ -199,7 +202,7 @@ typedef struct JcmDrawShape {
     uint8_t  is_collision;    /* 1 = collision (max 1.5 blocks), 0 = outline */
     uint8_t  _pad1[3];
     int32_t  box_count;       /* VoxelShapeWrapper boxes, AABB triples */
-    int32_t  box_offset;      /* into frame float arena: 6 floats per box */
+    int32_t  box_offset;      /* byte offset into frame float arena: 6 floats per box */
 } JcmDrawShape;
 
 /* ------------------------------------------------------------------ */
@@ -234,10 +237,8 @@ typedef struct JcmStop {
     int32_t  exit_offset;
     /* v5 (ABI 5): this stop's ROUTE CircularState
        (JS: stop.route.getCircularState(), 0 NONE / 1 CLOCKWISE /
-       2 ANTICLOCKWISE).  The LCD port's 环线检测 walks the stop list
-       exactly like circular.js does; without a per-stop value the host
-       can only be probed through the current route, which mis-detects
-       any multi-stop route as a loop. */
+       2 ANTICLOCKWISE). Per-stop data distinguishes route changes when
+       a vehicle continues onto a different route. */
     uint8_t  route_circular_state;
     uint8_t  is_route_switchover;
     uint8_t  _pad0[2];
@@ -247,6 +248,7 @@ typedef struct JcmInterchange {
     int32_t color;
     int32_t route_name_offset;
     int32_t route_name_len;
+    int32_t transport_mode; /* ABI 8: -1 when older server data omits it */
 } JcmInterchange;
 
 /* v3 (ABI 3): station exit, mirrors StationExit (JS: station.getExits()
@@ -325,15 +327,14 @@ typedef struct JcmVehicleSnapshot {
     int32_t  next_stop_index;     /* precomputed for this-route stops */
     /* v2 (ABI 2): current-route identity, mirrors what JS reads from
        thisRouteStops.get(0).route (name / color / CircularState).
-       The host marshals them once per frame; scripts use them for
-       LCD headers, route-colored rings and 环线/直线 branch selection. */
+       The host marshals these values once per frame. */
     int32_t  route_name_offset;   /* UTF-8 into string pool, "" = unknown */
     int32_t  route_name_len;
     int32_t  route_color;         /* ARGB, host-safe default 0xFF009BC0 */
     uint8_t  circular_state;      /* 0 none, 1 clockwise, 2 anticlockwise */
     uint8_t  _pad1[3];
     /* v2: siding display name (JS: vehicle.getSiding().getName()) —
-       carries the 车号/编组 string, e.g. "10010/01-02-03-04-05-06-07-08". */
+       can contain a user-defined name or description. */
     int32_t  siding_name_offset;
     int32_t  siding_name_len;
     int32_t  string_pool_offset;  /* shared string pool */
@@ -374,6 +375,26 @@ typedef struct JcmPidsSnapshot {
     int32_t  string_pool_offset;
     int32_t  string_pool_len;
 } JcmPidsSnapshot;
+
+typedef struct JcmLiftFloor {
+    int32_t index;
+    uint8_t current_floor, target_floor;
+    uint8_t _pad0[2];
+    double position[3];
+    int32_t number_offset, number_len;
+    int32_t description_offset, description_len;
+} JcmLiftFloor;
+
+typedef struct JcmLiftSnapshot {
+    int64_t id, game_time_millis, in_game_time;
+    double position[3], offset[3];
+    double width, height, depth;
+    double angle_degrees, angle_radians, door_value;
+    int32_t direction;
+    uint8_t should_render, double_sided, player_riding;
+    uint8_t _pad0;
+    int32_t floor_count, floor_offset;
+} JcmLiftSnapshot;
 
 /* Mirrors EyecandyBlockEntityWrapper. */
 typedef struct JcmEyecandySnapshot {
@@ -497,6 +518,11 @@ struct JcmHostServices {
                              int32_t clip_x1, int32_t clip_y1,
                              uint8_t* pixels, int32_t width, int32_t height,
                              int32_t* dirty_bounds); /* x0,y0,x1,y1, exclusive */
+
+    /* ABI 8: direct access to Java scripting APIs. UTF-8 JSON result remains
+       valid on this thread until the next invocation; no Rhino evaluation. */
+    const char* (*invoke_api)(void* user, const char* request, int32_t length,
+                             int32_t* result_length);
 };
 
 /* ------------------------------------------------------------------ */
@@ -509,7 +535,7 @@ MTR_NATIVE_EXPORT uint32_t mtrNativeAbiVersion(void);
 /* "vehicle" | "pids" | "eyecandy". */
 MTR_NATIVE_EXPORT const char* mtrScriptType(void);
 
-/* Script id, e.g. "demo:kcx_lcd". Must match mtr_custom_resources.json. */
+/* Script id, e.g. "example:vehicle_status". Must match mtr_custom_resources.json. */
 MTR_NATIVE_EXPORT const char* mtrScriptId(void);
 
 /* Lifecycle. Return 0 on success, non-zero error code.

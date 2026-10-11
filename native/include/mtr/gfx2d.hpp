@@ -1,7 +1,7 @@
 /**
  * gfx2d.hpp — java.awt.Graphics2D subset, in C++, for native scripts.
  *
- * The community JS LCD / 车号 scripts paint through java.awt.Graphics2D
+ * JavaScript scripts can paint through java.awt.Graphics2D
  * (fillRect / fillRoundRect / drawRoundRect / fillOval / drawOval /
  * drawLine / GeneralPath fill+stroke / drawString with derived TTF
  * fonts / clip / AlphaComposite). This header re-implements that exact
@@ -13,7 +13,7 @@
  * Resource text: supplying font resource IDs to the constructor uses the
  * host's real FontMetrics and drawString for whole UTF-8 strings, preserving
  * advances, bearings, baseline, compression, alpha and device clipping.
- * WR2-A03 supplies the same resource fonts as its JavaScript version.
+ * resource supplies the same resource fonts as its JavaScript version.
  *
  * Headless / legacy text fallback:
  *   - ASCII/latin: built-in 5x7 font scaled to the requested size,

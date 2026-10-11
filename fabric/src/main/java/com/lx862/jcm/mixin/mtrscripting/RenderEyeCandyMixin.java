@@ -32,6 +32,21 @@ public class RenderEyeCandyMixin {
         String eyecandyId = blockEntity.getModelId();
         EyecandyResourceProvider.EyecandyScriptConfiguration eyecandyScriptEntry = MtrScriptingResourceManager.eyecandy.getScriptEntry(eyecandyId);
         if(eyecandyScriptEntry == null) return;
+        String nativeId=MtrScriptingResourceManager.eyecandy.getScriptEntryId(eyecandyId);
+        if(com.lx862.jcm.nativeapi.NativeScriptManager.isLoaded(nativeId)) {
+            BlockPos pos=blockEntity.getPos2();
+            Direction facing=IBlock.getStatePropertySafe(world,pos,BlockEyeCandy.FACING);
+            StoredMatrixTransformations transforms=new StoredMatrixTransformations(0.5+pos.getX(),pos.getY(),0.5+pos.getZ());
+            transforms.add(gh->{
+                gh.translate(blockEntity.getTranslateX(),blockEntity.getTranslateY(),blockEntity.getTranslateZ());
+                gh.rotateYRadians(-(float)Math.toRadians(facing.asRotation())+(float)Math.PI);
+                gh.rotateXRadians(blockEntity.getRotateX()+(float)Math.PI);
+                gh.rotateYRadians(blockEntity.getRotateY()); gh.rotateZRadians(blockEntity.getRotateZ());
+            });
+            com.lx862.jcm.nativeapi.NativeContentDriver.eyecandy(nativeId,blockEntity,world,transforms,facing,light);
+            if(MtrScriptingResourceManager.eyecandy.isScriptControlledRendering(eyecandyId)) ci.cancel();
+            return;
+        }
         ParsedScript parsedScript = eyecandyScriptEntry.parsedScript();
         EyecandyBlockEntityWrapper eyecandyWrapper = new EyecandyBlockEntityWrapper(blockEntity);
 

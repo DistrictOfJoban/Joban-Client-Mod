@@ -75,7 +75,7 @@ public class EyeCandyScriptContext extends MTRScriptContext {
     }
 
     public void setCollisionShape(VoxelShapeWrapper voxelShapeWrapper) {
-        if(voxelShapeWrapper.impl().getBoundingBox().getMaxYMapped() > 1.5) {
+        if(!voxelShapeWrapper.impl().isEmpty() && voxelShapeWrapper.impl().getBoundingBox().getMaxYMapped() > 1.5) {
             throw new IllegalStateException("Collision shape must not be larger than 1.5 blocks (24 unit)!");
         }
         this.collisionShape = voxelShapeWrapper;

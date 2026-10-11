@@ -16,6 +16,8 @@
 
 namespace mtr {
 
+enum class TransportMode : int32_t { UNKNOWN=-1, TRAIN=0, BOAT=1, CABLE_CAR=2, AIRPLANE=3 };
+
 class Stop {
 public:
     Stop(const JcmVehicleSnapshot* snap, const JcmStop* stop)
@@ -45,6 +47,8 @@ public:
     struct Interchange {
         int32_t color;
         StrView name;
+        int32_t transport_mode;
+        TransportMode getTransportMode() const { return static_cast<TransportMode>(transport_mode); }
     };
     Interchange interchange(int32_t i) const {
         /* interchanges are stored in the snapshot blob at interchange_offset. */
@@ -52,6 +56,7 @@ public:
         const JcmInterchange* ic = reinterpret_cast<const JcmInterchange*>(base + stop_->interchange_offset) + i;
         Interchange out;
         out.color = ic->color;
+        out.transport_mode = ic->transport_mode;
         out.name = pool(ic->route_name_offset, ic->route_name_len);
         return out;
     }
@@ -214,7 +219,7 @@ public:
     uint8_t circular_state() const { return snap_->circular_state; }
     bool circular() const { return snap_->circular_state != 0; }
 
-    /* v2: siding name (JS: vehicle.getSiding().getName()) — 车号 source. */
+    /* v2: siding name (JS: vehicle.getSiding().getName()). */
     StrView siding_name() const {
         return pool(snap_->siding_name_offset, snap_->siding_name_len);
     }

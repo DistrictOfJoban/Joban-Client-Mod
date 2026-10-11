@@ -9,6 +9,7 @@
 
 #include "mtr_native.h"
 #include "frame.hpp"
+#include "api.hpp"
 #include "text.hpp"
 #include "util.hpp"
 
@@ -60,6 +61,7 @@ public:
 
     /* pids.arrivals().get(i) — returns nullptr-equivalent via valid(). */
     Arrival at(int32_t i) const {
+        if (i < 0 || i >= count_) throw std::out_of_range("Arrival index");
         const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
         const JcmArrival* arr = reinterpret_cast<const JcmArrival*>(base + offset_);
         return Arrival(snap_, arr + i);
@@ -135,6 +137,7 @@ public:
 
 private:
     StrView pool(int32_t offset, int32_t len) const {
+        if (len <= 0 || offset < 0) return StrView{};
         const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
         return make_view(reinterpret_cast<const char*>(base + offset), len);
     }
@@ -150,11 +153,18 @@ public:
     PidsContext(FrameRecorder& frame, const JcmFrameInput& in)
         : frame_(&frame), input_(&in) {}
 
-    void set_auto_z_ordering(bool on) { auto_z_ = on; }
-    void set_z_order_step(double step) { z_step_ = step; }
+    void set_auto_z_ordering(bool on) {
+        auto_z_ = on;
+        if (input_->abi_version >= 8) Api(*input_).context().call("setAutoZOrdering", {on});
+    }
+    void set_z_order_step(double step) {
+        z_step_ = step;
+        if (input_->abi_version >= 8) Api(*input_).context().call("setZOrderStep", {step});
+    }
 
     FrameRecorder& frame() { return *frame_; }
     const JcmHostServices* host() const { return input_->host; }
+    const JcmFrameInput& input() const { return *input_; }
 
     int32_t alloc_z(JcmDrawText& rec, int32_t requested) {
         if (!auto_z_) return requested;

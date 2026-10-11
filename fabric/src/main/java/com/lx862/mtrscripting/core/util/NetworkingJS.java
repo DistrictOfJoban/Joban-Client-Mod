@@ -92,23 +92,13 @@ public class NetworkingJS {
             if(requestObject.containsKey("method")) {
                 connection.setRequestMethod((String)requestObject.get("method"));
             }
-            if(requestObject.containsKey("connectTimeout")) {
-                Object timeoutObj = requestObject.get("connectTimeout");
-                if(timeoutObj instanceof Double) {
-                    connection.setConnectTimeout((int)(double)timeoutObj);
-                }
-                if(timeoutObj instanceof Integer) {
-                    connection.setConnectTimeout((int)timeoutObj);
-                }
+            if(requestObject.containsKey("connectionTimeout") || requestObject.containsKey("connectTimeout")) {
+                Object timeoutObj = requestObject.get(requestObject.containsKey("connectionTimeout") ? "connectionTimeout" : "connectTimeout");
+                if(timeoutObj instanceof Number) connection.setConnectTimeout(((Number)timeoutObj).intValue());
             }
             if(requestObject.containsKey("readTimeout")) {
                 Object timeoutObj = requestObject.get("readTimeout");
-                if(timeoutObj instanceof Double) {
-                    connection.setReadTimeout((int)(double)timeoutObj);
-                }
-                if(timeoutObj instanceof Integer) {
-                    connection.setReadTimeout((int)timeoutObj);
-                }
+                if(timeoutObj instanceof Number) connection.setReadTimeout(((Number)timeoutObj).intValue());
             }
             if(requestObject.containsKey("headers")) {
                 NativeObject headerObject = (NativeObject)requestObject.get("headers");
@@ -128,7 +118,7 @@ public class NetworkingJS {
         }
 
         if(body != null) {
-            byte[] bodyByte = body.getBytes();
+            byte[] bodyByte = body.getBytes(StandardCharsets.UTF_8);
             long contentLength = bodyByte.length;
             connection.setRequestProperty("Content-Length", String.valueOf(contentLength));
             connection.setDoOutput(true);

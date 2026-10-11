@@ -68,7 +68,10 @@ public class VehicleDataCache {
                         SimplifiedRoutePlatform simplifiedRoutePlatform = platforms.get(routeStopIdx);
                         simplifiedRoutePlatform.forEach((color, name) -> {
                             name.forEach(routeName -> {
-                                thisStop.routeInterchanges.add(new VehicleWrapper.Stop.RouteInterchange(color, routeName));
+                                TransportMode mode = mtrData.stationInterchangeMap.getOrDefault(simplifiedStop.stationId, java.util.Collections.emptyList())
+                                        .stream().filter(e -> e.color == color && e.name.equals(routeName))
+                                        .map(VehicleWrapper.Stop.RouteInterchange::getTransportMode).filter(java.util.Objects::nonNull).findFirst().orElse(null);
+                                thisStop.routeInterchanges.add(new VehicleWrapper.Stop.RouteInterchange(color, routeName, mode));
                             });
                         });
                     }
@@ -110,6 +113,8 @@ public class VehicleDataCache {
         mtrData.platformIdMap.clear();
         mtrData.routeIdMap.clear();
         mtrData.sidingIdMap.clear();
+        mtrData.stationInterchangeMap.clear();
+        mtrData.connectingStationInterchangeMap.clear();
     }
 
     public static void putStopsDataCache(long vehicleId, SimplifiedStopsData stopsData) {

@@ -27,15 +27,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * ...
  *
  *   "vehicleScripts": [{
- *       "id": "demo:kcx_lcd",
+ *       "id": "demo:vehicle_status",
  *       "language": "cpp",
  *
  *       // Form A — platform-agnostic stem: resolves on EVERY OS via the
  *       // natives/{platform}/ convention (see resolveNativeLibraryPath):
- *       "nativeLibrary": "demo:natives/kcx_lcd"
- *       //     -> demo:natives/linux-x64/libkcx_lcd.so
- *       //     -> demo:natives/windows-x64/kcx_lcd.dll
- *       //     -> demo:natives/macos-arm64/libkcx_lcd.dylib
+ *       "nativeLibrary": "demo:natives/vehicle_status"
+ *       //     -> demo:natives/linux-x64/libvehicle_status.so
+ *       //     -> demo:natives/windows-x64/vehicle_status.dll
+ *       //     -> demo:natives/macos-arm64/libvehicle_status.dylib
  *
  *       // Form B — per-platform map: declare exactly which library runs
  *       // on which OS. Keys: "windows" / "linux" / "macos", optionally
@@ -43,9 +43,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *       // "macos-arm64") which take precedence over the generic key.
  *       // Values may again be full paths (with extension) or stems.
  *       "nativeLibrary": {
- *           "windows":    "demo:natives/windows-x64/kcx_lcd.dll",
- *           "linux":      "demo:natives/linux-x64/libkcx_lcd.so",
- *           "macos-arm64": "demo:natives/macos-arm64/libkcx_lcd.dylib"
+ *           "windows":    "demo:natives/windows-x64/vehicle_status.dll",
+ *           "linux":      "demo:natives/linux-x64/libvehicle_status.so",
+ *           "macos-arm64": "demo:natives/macos-arm64/libvehicle_status.dylib"
  *       }
  *   }]
  *
@@ -64,16 +64,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * and-replay path on the render thread is byte-for-byte identical to
  * the JS route — JS and native scripts coexist in the same world.
  *
- * Performance model (see native/bench for the measured numbers):
- *   - ONE JNI boundary crossing per frame per instance: the snapshot
- *     is marshalled into a direct ByteBuffer, mtrRender runs, and the
- *     frame records come back in the same call.
- *   - No reflection, no boxing, no per-call Java object allocation on
- *     the script path; the module bump-allocates records internally.
- *
- * This file is reference integration code: it compiles against the
- * MTR/JCM mappings used by JCM v2.3 plus the JNI headers shipped with
- * the JDK (native/jni_bridge.cpp implements the C side).
+ * Compact snapshot data and draw records share one JNI call per frame.
+ * ABI 8 also offers direct Java API calls; those use additional JNI calls
+ * and cached reflection. Scripts can use the compact path for frequent
+ * operations and keep Java objects in their per-instance state.
  */
 public final class NativeScriptManager {
     /* Must match MTR_NATIVE_ABI_VERSION in native/include/mtr/mtr_native.h.
@@ -84,12 +78,12 @@ public final class NativeScriptManager {
        a valid State when State holds std::string / std::vector — libstdc++
        keeps the SSO buffer pointer inline, so a zeroed std::string dereferences
        null (immediate SIGSEGV on Linux/macOS); only MSVC's layout tolerated it.
-       v5 = JcmStop.route_circular_state (per-stop route CircularState, so the
-       LCD port's 环线检测 can walk the stop list like circular.js does). */
-    private static final int ABI_VERSION = 7;
+       v5 = JcmStop.route_circular_state (per-stop route CircularState).
+       v8 appends direct Java API access and interchange transport modes. */
+    private static final int ABI_VERSION = 8;
 
     private static boolean supportedAbi(int version) {
-        return version == 6 || version == ABI_VERSION;
+        return version == 6 || version == 7 || version == ABI_VERSION;
     }
 
     /* Route.CircularState mapping (v2 snapshots). */
@@ -101,8 +95,8 @@ public final class NativeScriptManager {
      *
      * MULTI-MODULE (Yanyang): an id maps to a LIST because MTR's vehicle
      * schema has exactly one `scriptId` per vehicle entry, while a resource
-     * pack often needs several C++ libraries to drive one train (our pack
-     * ports main.js AND train_num.js, which the JS route used to load as two
+     * pack often needs several C++ libraries to drive one train (a resource pack
+     * ports main.js AND overlay.js, which the JS route used to load as two
      * entries of the same `scriptLocations` array). Declare them with
      * "nativeLibraries": [ ... ] and every module runs for the same script
      * id; their draw-call frames are concatenated in declaration order, which
@@ -137,6 +131,13 @@ public final class NativeScriptManager {
     private NativeScriptManager() {}
 
     private static native void nativeSetHost(NativeHost host);
+    static native byte[] nativeApiCallback(long function, long user, byte[] parameters);
+    private static final Map<String, JsonElement> INPUTS = new ConcurrentHashMap<>();
+    private static final Map<String, String> RESOURCE_BASES = new ConcurrentHashMap<>();
+    public static void configure(String id, JsonElement input, String base) {
+        INPUTS.put(id, input == null ? com.google.gson.JsonNull.INSTANCE : input);
+        if(base!=null) RESOURCE_BASES.put(id,base);
+    }
 
     private static boolean installBridgeHost() {
         nativeSetHost(NativeHost.get());
@@ -182,7 +183,11 @@ public final class NativeScriptManager {
         if (before > 0) {
             JCMLogger.info("Native scripts: reloading, dropping {} loaded module(s)", before);
         }
+        NativeApiSession.quiesceAll();
         MODULES.values().forEach(list -> list.forEach(NativeScriptModule::dispose));
+        NativeApiSession.reset();
+        NativeContentDriver.reset();
+        INPUTS.clear(); RESOURCE_BASES.clear();
         MODULES.clear();
         SKIPPED.clear();
         INSTANCE_STATES.clear();
@@ -240,7 +245,7 @@ public final class NativeScriptManager {
             Files.write(extracted, lib);
             extracted.toFile().deleteOnExit();
 
-            final NativeScriptModule module = new NativeScriptModule(scriptId, extracted.toAbsolutePath().toString());
+            final NativeScriptModule module = new NativeScriptModule(scriptId, extracted.toAbsolutePath().toString(), libraryPath);
             if (module.getNativeHandle() == 0) {
                 JCMLogger.error("Native script {}: could not open {} (see the bridge log above).",
                         scriptId, libraryPath);
@@ -315,15 +320,15 @@ public final class NativeScriptManager {
      * MULTI-MODULE entry point — one script id, N native libraries.
      *
      * MTR's vehicle schema carries a single `scriptId`, but a pack often
-     * needs several C++ libraries for one train (our WR2-A03 pack ports
-     * main.js AND train_num.js, which the JS route loaded as two entries
+     * needs several C++ libraries for one train (our resource pack ports
+     * main.js AND overlay.js, which the JS route loaded as two entries
      * of one `scriptLocations` array). Declaring
      *
      *     "vehicleScripts": [{
-     *         "id": "wr2a03", "language": "cpp",
+     *         "id": "demo:vehicle", "language": "cpp",
      *         "nativeLibraries": [
-     *             "mtr:wr2a03/natives/wr2a03_lcd",
-     *             "mtr:wr2a03/natives/wr2a03_train_num"
+     *             "demo:natives/vehicle_overlay",
+     *             "demo:natives/display_overlay"
      *         ]
      *     }]
      *
@@ -497,10 +502,10 @@ public final class NativeScriptManager {
      * Resolve a platform-agnostic nativeLibrary declaration to the
      * concrete resource path for the running OS/arch. Convention:
      *
-     *   "yanyang:natives/jslcd_vehicle"
-     *     -> yanyang:natives/linux-x64/libjslcd_vehicle.so
-     *     -> yanyang:natives/windows-x64/jslcd_vehicle.dll
-     *     -> yanyang:natives/macos-arm64/libjslcd_vehicle.dylib
+     *   "example:natives/script"
+     *     -> yanyang:natives/linux-x64/libscript.so
+     *     -> yanyang:natives/windows-x64/script.dll
+     *     -> yanyang:natives/macos-arm64/libscript.dylib
      *
      * A value that already carries a library extension is used as-is
      * (single-platform packs stay valid).
@@ -577,8 +582,7 @@ public final class NativeScriptManager {
      *
      * @param snapshotBuf a buffer already filled by
      *        {@link NativeSnapshot#build}; must have been written successfully —
-     *        the bridge hands the module the WHOLE capacity, so a partial
-     *        snapshot would be read as a valid one.
+     *        only its written limit is passed to the native module.
      *
      * The returned frames are in declaration order — the host replays them
      * in that order, which reproduces the JS pipeline's record order for a
@@ -587,35 +591,63 @@ public final class NativeScriptManager {
      * @return one NativeFrame per module that rendered this frame (possibly
      *         empty), never null.
      */
-    public static List<NativeFrame> renderVehicle(String instanceKey, String scriptId,
-                                                   ByteBuffer snapshotBuf) {
-        final List<NativeScriptModule> modules = getModules(scriptId);
-        if (modules.isEmpty()) return Collections.emptyList();
-        if (snapshotBuf == null) return Collections.emptyList();
+    public static List<NativeFrame> renderVehicle(String instanceKey, String scriptId, ByteBuffer snapshotBuf) {
+        return render(instanceKey, scriptId, snapshotBuf, MTR_RESOURCE_VEHICLE, module -> null, null, null);
+    }
 
-        /* Tell the host which instance owns the handles it is about to see:
-           texture/model handles are per-instance SLOTS, so both the resource
-           creation (first frame) and every later upload need the key. */
-        final List<NativeFrame> frames = new ArrayList<>(modules.size());
-        for (NativeScriptModule module : modules) {
-            if (!"vehicle".equals(module.scriptType)) continue;
-            // A script entry can contain several libraries. Their texture slots
-            // start at zero independently, so ownership must include the module.
-            final String moduleInstanceKey = instanceKey + "/module/" + module.nativeHandle;
-            NativeHost.get().setPendingInstance(moduleInstanceKey);
-            final NativeFrame frame = module.render(moduleInstanceKey, snapshotBuf, MTR_RESOURCE_VEHICLE);
-            if (frame != null) {
-                frame.instanceKey = moduleInstanceKey;
-                frames.add(frame);
+    public static List<NativeFrame> render(String instanceKey, String scriptId, ByteBuffer snapshotBuf,
+            int kind, java.util.function.Function<NativeScriptModule,Object> contextFactory,
+            Object wrapper, java.util.function.BiConsumer<NativeScriptModule,Object> after) {
+        List<NativeFrame> frames = new ArrayList<>();
+        ByteBuffer oldSnapshot = null;
+        for (NativeScriptModule module : getModules(scriptId)) {
+            if (!typeName(kind).equals(module.scriptType)) continue;
+            String moduleKey = instanceKey + "/module/" + module.nativeHandle;
+            Object context = contextFactory.apply(module);
+            NativeApiSession.bind(moduleKey, context, wrapper, INPUTS.get(scriptId), RESOURCE_BASES.getOrDefault(scriptId, module.resourceBase));
+            NativeHost.get().setPendingInstance(moduleKey);
+            ByteBuffer snapshot = snapshotBuf;
+            if (kind == MTR_RESOURCE_VEHICLE && module.abiVersion < 8 && wrapper instanceof com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper) {
+                if (oldSnapshot == null) oldSnapshot = NativeSnapshot.build(ByteBuffer.allocateDirect(NativeSnapshot.CAPACITY), (com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper)wrapper, module.abiVersion);
+                snapshot = oldSnapshot;
             }
+            NativeFrame frame = module.render(moduleKey, snapshot, kind);
+            if (frame != null) { frame.instanceKey = moduleKey; frames.add(frame); }
+            if (after != null) after.accept(module, context);
         }
         return frames;
+    }
+
+    private static String typeName(int kind) {
+        switch (kind) {
+            case MTR_RESOURCE_VEHICLE: return "vehicle";
+            case MTR_RESOURCE_PIDS: return "pids";
+            case MTR_RESOURCE_EYECANDY: return "eyecandy";
+            case MTR_RESOURCE_LIFT: return "lift";
+            default: throw new IllegalArgumentException("Unknown native script kind " + kind);
+        }
+    }
+
+    public static void disposeInstance(String instanceKey, String scriptId) {
+        for (NativeScriptModule module : getModules(scriptId)) {
+            String moduleKey = instanceKey + "/module/" + module.nativeHandle;
+            synchronized (module) {
+                NativeApiSession.quiesce(moduleKey);
+                try {
+                    if (module.nativeHandle != 0) module.nDisposeInstance(module.nativeHandle, moduleKey);
+                } finally {
+                    NativeApiSession.dispose(moduleKey);
+                    NativeHost.get().releaseInstance(moduleKey);
+                }
+            }
+        }
     }
 
     /* Resource kind ids, must match MtrResourceKind in mtr_native.h. */
     public static final int MTR_RESOURCE_VEHICLE = 0;
     public static final int MTR_RESOURCE_PIDS = 1;
     public static final int MTR_RESOURCE_EYECANDY = 2;
+    public static final int MTR_RESOURCE_LIFT = 3;
 
     /**
      * NativeFrame — draw-call records + arenas read back from the
@@ -632,14 +664,16 @@ public final class NativeScriptManager {
         public final ByteBuffer stringArena;
         public final ByteBuffer pixelArena;
         public final ByteBuffer matrixArena;
+        public final ByteBuffer floatArena;
 
         NativeFrame(ByteBuffer records, int recordCount, ByteBuffer stringArena,
-                    ByteBuffer pixelArena, ByteBuffer matrixArena) {
+                    ByteBuffer pixelArena, ByteBuffer matrixArena, ByteBuffer floatArena) {
             this.records = records;
             this.recordCount = recordCount;
             this.stringArena = stringArena;
             this.pixelArena = pixelArena;
             this.matrixArena = matrixArena;
+            this.floatArena = floatArena;
         }
     }
 
@@ -801,6 +835,7 @@ public final class NativeScriptManager {
         final String loadedPlatform;
         /** Resolved library resource path (for the debug overlay). */
         final String sourcePath;
+        final String resourceBase;
 
         private native long nOpen(String path);
         private native void nClose(long handle);
@@ -811,7 +846,8 @@ public final class NativeScriptManager {
         private native NativeFrame nRender(long handle, String instanceKey,
                                            ByteBuffer snapshot, int resourceKind);
 
-        NativeScriptModule(String scriptId, String path) {
+        NativeScriptModule(String scriptId, String path, String resourceBase) {
+            this.resourceBase = resourceBase;
             this.nativeHandle = nOpen(path);
             if (this.nativeHandle == 0) {
                 /* nOpen already logged the concrete dlopen/LoadLibrary
@@ -834,8 +870,8 @@ public final class NativeScriptManager {
             if (!scriptId.equals(this.scriptId)) {
                 /* Expected, not a problem: MTR's vehicle schema carries ONE
                    scriptId, so a pack that needs several libraries declares them
-                   together under one entry ("wr2a03") while each library keeps
-                   its own self-describing id ("wr2a03:lcd"). The MODULES
+                   together under one entry ("demo:vehicle") while each library keeps
+                   its own self-describing id ("demo:overlay"). The MODULES
                    registry is keyed by the ENTRY id, which is also what the
                    driver looks up, so the mismatch is by design. Logged at
                    debug level to stop it reading like an error. */
@@ -878,17 +914,13 @@ public final class NativeScriptManager {
             return sourcePath;
         }
 
-        NativeFrame render(String instanceKey, ByteBuffer snapshot, int resourceKind) {
-            /* Per-instance state block, zeroed once (mirrors the JS
-               `state` object created per ScriptInstance). */
-            INSTANCE_STATES.computeIfAbsent(instanceKey,
-                    k -> ByteBuffer.allocateDirect((int) Math.max(1, stateSize))
-                                   .order(ByteOrder.nativeOrder()));
+        private native void nDisposeInstance(long handle, String instanceKey);
 
-            return nRender(nativeHandle, instanceKey, snapshot, resourceKind);
+        synchronized NativeFrame render(String instanceKey, ByteBuffer snapshot, int resourceKind) {
+            return nativeHandle == 0 ? null : nRender(nativeHandle, instanceKey, snapshot.slice().order(ByteOrder.nativeOrder()), resourceKind);
         }
 
-        void dispose() {
+        synchronized void dispose() {
             if (nativeHandle != 0) {
                 nClose(nativeHandle);
                 nativeHandle = 0;

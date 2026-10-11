@@ -40,13 +40,14 @@ public interface ScriptResourceProvider {
            either "nativeLibraries": [..] (Yanyang extension) or the
            single "nativeLibrary" field, which is treated as a
            one-element list. All of them run for the same id; this is how
-           our WR2-A03 pack keeps main.js and train_num.js together the way
+           our resource pack keeps main.js and overlay.js together the way
            the JS route did with two scriptLocations entries. */
         if (isNativeCppScript(jsonObject)) {
             final JsonElement many = jsonObject.get(nativeLibrariesKey(useSnakeCase));
             final JsonElement declared = (many != null && !many.isJsonNull())
                     ? many
                     : jsonObject.get(nativeLibraryKey(useSnakeCase));
+            NativeScriptManager.configure(id, jsonObject.get(isParsingMTR4 ? "input" : "scriptInput"), null);
             NativeScriptManager.loadManyFromDeclaration(id, declared);
             return null;
         }

@@ -11,6 +11,7 @@ import org.mtr.mapping.holder.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * NativeHost — the JVM-side owner of every resource a C++ script asks for.
@@ -322,7 +323,7 @@ public final class NativeHost {
             builder.uv(uv[ui + v * 2], uv[ui + v * 2 + 1]);
             builder.endVertex();
         }
-        final RawModelJS raw = new RawModelJS(builder.asRawModel());
+        final RawModelJS raw = builder.asRawModel();
         final ModelJS model = ModelManagerJS.upload(raw);
         if (model == null) return null;
         /* The JS DisplayHelper never applies a matrix either: the slot quad is
@@ -361,10 +362,7 @@ public final class NativeHost {
             }
         }
 
-        /* Push ONLY this rectangle. The previous version called upload(),
-           which copies and re-uploads the whole image — for a 3304x944 LCD
-           that is 12.5 MB per screen per repaint, i.e. ~150 MB for a 6-car
-           train every blink tick, and it measured as a 50-107 ms frame. */
+        /* Upload the changed rectangle without copying the entire image. */
         tex.uploadRawABGR(pixels, sx, sy, w, h, PIXEL_PPM);
     }
 
@@ -396,6 +394,19 @@ public final class NativeHost {
      * frame per vehicle — hence the map rather than a scan over instances
      * (which would make replay O(vehicles x quads) per frame).
      */
+    private final Map<String, java.util.Set<Integer>> externalModels = new java.util.HashMap<>();
+    public int acquireModel(String path) {
+        com.lx862.mtrscripting.core.util.model.RawModelJS raw = ModelManagerJS.loadModel(new Identifier(path));
+        if(raw==null) return -1;
+        ModelJS model=ModelJS.uploadRawModel(raw);
+        int handle=nextHandle.getAndIncrement(); modelsByHandle.put(handle,model);
+        externalModels.computeIfAbsent(pendingInstanceKey,k->new java.util.HashSet<>()).add(handle);
+        return handle;
+    }
+    public void releaseModel(int handle) {
+        ModelJS model=modelsByHandle.remove(handle); if(model!=null) model.close();
+        externalModels.values().forEach(set->set.remove(handle));
+    }
     public ModelJS model(int handle) {
         if (handle < 0) return null;
         return modelsByHandle.get(handle);
@@ -423,6 +434,8 @@ public final class NativeHost {
 
     /** Drop one instance's resources (script instance dropped / state rebuilt). */
     public void releaseInstance(String instanceKey) {
+        java.util.Set<Integer> extra=externalModels.remove(instanceKey);
+        if(extra!=null) for(int handle:extra) releaseModel(handle);
         final Instance instance = instances.remove(instanceKey);
         if (instance == null) return;
         for (int handle : instance.modelHandles) modelsByHandle.remove(handle);
@@ -433,6 +446,8 @@ public final class NativeHost {
     public void reset() {
         final List<Instance> all = new ArrayList<>(instances.values());
         instances.clear();
+        new java.util.ArrayList<>(externalModels.keySet()).forEach(this::releaseInstance);
+        externalModels.clear();
         modelsByHandle.clear();
         pendingInstanceKey = null;
         activeInstanceKey = null;

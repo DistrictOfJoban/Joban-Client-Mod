@@ -17,6 +17,8 @@
  * is not something this SDK should attempt.
  */
 #pragma once
+#include <cstdio>
+#include <exception>
 
 #if defined(_MSC_VER)
    /* NOMINMAX is mandatory: this header is pulled in by script.hpp, which is
@@ -42,22 +44,27 @@ inline bool& module_faulted() {
     return faulted;
 }
 
+template <typename F> inline int guard_cpp(F&& function) noexcept {
+    try { return function(); }
+    catch (const std::exception& error) {
+        std::fprintf(stderr, "[mtr] native script exception: %s\n", error.what());
+    } catch (...) {
+        std::fprintf(stderr, "[mtr] unknown native script exception\n");
+    }
+    module_faulted() = true;
+    return -99;
+}
+
 #if defined(_MSC_VER)
 #  define MTR_GUARDED_BODY(body)                                              \
     __try {                                                                   \
-        body;                                                                 \
+        return mtr::guard_cpp([&]() -> int { body; });                          \
     } __except (mtr::report_seh(GetExceptionInformation(), __FILE__, __LINE__)) { \
         return -99;                                                           \
     }
 #else
 #  define MTR_GUARDED_BODY(body)                                              \
-    try {                                                                     \
-        body;                                                                 \
-    } catch (...) {                                                           \
-        std::fprintf(stderr, "[mtr] C++ exception escaped native script\n");   \
-        mtr::module_faulted() = true;                                         \
-        return -99;                                                           \
-    }
+    return mtr::guard_cpp([&]() -> int { body; })
 #endif
 
 #if defined(_MSC_VER)

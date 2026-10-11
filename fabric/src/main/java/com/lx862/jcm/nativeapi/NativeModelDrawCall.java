@@ -33,6 +33,17 @@ public final class NativeModelDrawCall extends RenderDrawCall<NativeModelDrawCal
         return new NativeModelDrawCall(modelHandle);
     }
 
+    public NativeModelDrawCall pose(java.nio.ByteBuffer arena,int offset,int count) {
+        if(offset<0||count<=0) return this;
+        if(arena==null||((long)offset+count)*64>arena.limit()) throw new IllegalArgumentException("Invalid native pose arena");
+        final float[][] poses=new float[count][16];
+        arena=arena.duplicate().order(java.nio.ByteOrder.nativeOrder());
+        for(int i=0;i<count;i++) for(int j=0;j<16;j++) poses[i][j]=arena.getFloat((offset+i)*64+j*4);
+        storedMatrixTransformations=new StoredMatrixTransformations();
+        for(float[] pose:poses) storedMatrixTransformations.add(gh->((NativeMatrixApplier)(Object)gh).jcm$multiplyNativeMatrix(pose));
+        return this;
+    }
+
     @Override
     public void run(World world, StoredMatrixTransformations storedMatrixTransformations,
                     Direction facing, int light) {

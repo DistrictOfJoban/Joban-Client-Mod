@@ -30,8 +30,9 @@ struct StrView {
         }
         return rhs[len] == '\0';
     }
+    bool operator!=(const char* rhs) const { return !(*this == rhs); }
 
-    std::string str() const { return std::string(data, static_cast<size_t>(len)); }
+    std::string str() const { return !data || len <= 0 ? std::string() : std::string(data, static_cast<size_t>(len)); }
 };
 
 inline StrView make_view(const char* data, int32_t len) {

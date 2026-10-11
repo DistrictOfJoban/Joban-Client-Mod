@@ -38,12 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>Called from the render thread. The state map is concurrent only because a
  * resource reload can clear it from another thread.
  *
- * <p><b>Sound records are ignored on purpose.</b> The JS pipeline plays them
- * through {@code VehicleScriptCallsHolder.carSoundManagers} and
- * {@code VehicleResourceMixin}; native scripts would need the same per-car
- * base-position plumbing, and neither the WR2-A03 port nor any other ported
- * script emits sounds today. Adding it later means one more record kind in
- * {@link #applyFrame}.
+ * <p>Models and sounds replay through the same per-car and per-bogie
+ * contexts used by JavaScript scripts.
  */
 public final class NativeVehicleDriver {
 
@@ -53,6 +49,9 @@ public final class NativeVehicleDriver {
                 .allocateDirect(NativeSnapshot.CAPACITY)
                 .order(ByteOrder.nativeOrder());
         final String instanceKey;
+        final Map<Long, VehicleScriptContext> contexts = new java.util.LinkedHashMap<>();
+        int[] cars = new int[0];
+        long touched = System.nanoTime();
         /** First snapshot-build failure, so it is logged once and not per frame. */
         String reportedSnapshotFailure;
 
@@ -161,9 +160,16 @@ public final class NativeVehicleDriver {
         final State state = STATES.computeIfAbsent(
                 key(vehicle.getHexId(), scriptId), k -> new State(vehicle.getHexId(), scriptId));
 
+        state.touched = System.nanoTime();
+        int[] ownCars = java.util.stream.IntStream.range(0, carCount).filter(i -> scriptId.equals(
+                MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(vehicle.vehicleExtraData.immutableVehicleCars.get(i).getVehicleId()))).toArray();
+        if (!java.util.Arrays.equals(state.cars, ownCars)) {
+            if (state.cars.length != 0) NativeScriptManager.disposeInstance(state.instanceKey, scriptId);
+            state.contexts.clear(); state.cars = ownCars;
+        }
         final VehicleWrapper wrapper;
         try {
-            wrapper = new VehicleWrapper(fetchMode, vehicle);
+            wrapper = new com.lx862.mtrscripting.mod.impl.mtr.vehicle.NTETrainWrapper(fetchMode, vehicle);
         } catch (Throwable t) {
             /* Full trace on purpose: t.toString() alone pointed at an inlined
                getter and made the failing line impossible to find. */
@@ -179,19 +185,7 @@ public final class NativeVehicleDriver {
             return 0;
         }
 
-        /* Build the snapshot FIRST, and if it fails, do NOT call into native
-           code at all.
-
-           This is not defensive padding: the JNI bridge hands the module
-           GetDirectBufferAddress with GetDirectBufferCapacity, i.e. the WHOLE
-           256 KB block, regardless of how much the marshaller actually wrote.
-           `ByteBuffer.putX(index, ...)` also does not advance position, so a
-           half-written buffer has position 0 while its header is garbage.
-           Passing that to mtrRender gives the script a bogus car_count and
-           stop_count, and it walks off the end of the blob — which is how a
-           route-data NullPointerException turned into a native access
-           violation inside memcpy. Skipping the call keeps the previous frame's
-           textures on screen instead. */
+        /* Only invoke the module after the complete snapshot is written. */
         try {
             NativeSnapshot.build(state.snapshot, wrapper);
         } catch (Throwable t) {
@@ -206,7 +200,8 @@ public final class NativeVehicleDriver {
 
         final List<NativeScriptManager.NativeFrame> frames;
         try {
-            frames = NativeScriptManager.renderVehicle(state.instanceKey, scriptId, state.snapshot);
+            frames = NativeScriptManager.render(state.instanceKey, scriptId, state.snapshot, NativeScriptManager.MTR_RESOURCE_VEHICLE,
+                    module -> { VehicleScriptContext ctx = state.contexts.computeIfAbsent(module.getNativeHandle(), h -> new VehicleScriptContext(vehicle, scriptId, state.cars)); ctx.resetForNextRun(); return ctx; }, wrapper, null);
         } catch (Throwable t) {
             JCMLogger.error("Native vehicle script {} threw while rendering: {}", scriptId, t.toString());
             JCMLogger.error("  stack:", t);
@@ -223,7 +218,7 @@ public final class NativeVehicleDriver {
 
         int produced = 0;
         for (NativeScriptManager.NativeFrame frame : frames) {
-            if (applyFrame(frame, managers)) produced++;
+            if (applyFrame(frame, managers, state.contexts.get(Long.parseLong(frame.instanceKey.substring(frame.instanceKey.lastIndexOf('/')+1))), wrapper.isClientPlayerRiding())) produced++;
         }
         traceOnce("'" + scriptId + "' frame applied", "modules=" + frames.size(),
                 "withDrawCalls=" + produced, "carCount=" + carCount);
@@ -239,7 +234,7 @@ public final class NativeVehicleDriver {
     /* ------------------------------------------------------------------ */
 
     private static boolean applyFrame(NativeScriptManager.NativeFrame frame,
-                                      Map<Integer, ScriptRenderManager> managers) {
+                                      Map<Integer, ScriptRenderManager> managers, VehicleScriptContext context, boolean riding) {
         final ByteBuffer records = frame.records;
         if (records == null) return false;
         NativeHost.get().setActiveInstance(frame.instanceKey);
@@ -253,6 +248,8 @@ public final class NativeVehicleDriver {
             final int kind = records.get(pos) & 0xFF;
             final int size = records.getInt(pos + 4);
             if (size < HDR_SIZE || pos + size > limit) break;   /* malformed: stop */
+            int minimum = kind==3 ? 24 : (kind==4||kind==5) ? 40 : kind==6 ? 56 : 8;
+            if (size < minimum) throw new IllegalArgumentException("Truncated native vehicle record");
 
             switch (kind) {
                 case KIND_MODEL: {
@@ -260,11 +257,25 @@ public final class NativeVehicleDriver {
                        model_handle(12) pose_offset(16) pose_count(20) */
                     final int car = records.get(pos + 8) & 0xFF;
                     final int modelHandle = records.getInt(pos + 12);
-                    final ScriptRenderManager manager = managers.get(car);
+                    final int bogie=records.get(pos+9)&255;
+                    final ScriptRenderManager manager = bogie==255 ? managers.get(car) : context.getCarBogieRenderManager(car,bogie);
                     if (manager != null && NativeHost.get().model(modelHandle) != null) {
-                        manager.draw(NativeModelDrawCall.create(modelHandle));
+                        NativeModelDrawCall call = NativeModelDrawCall.create(modelHandle);
+                        call.pose(frame.matrixArena, records.getInt(pos+16), records.getInt(pos+20));
+                        manager.draw(call);
                         any = true;
                     }
+                    break;
+                }
+                case 4:
+                case 5: {
+                    int offset=records.getInt(pos+32), length=records.getInt(pos+36);
+                    if(offset<0||length<0||(long)offset+length>frame.stringArena.limit()) throw new IllegalArgumentException("Invalid native sound reference");
+                    byte[] utf8=new byte[length]; ByteBuffer text=frame.stringArena.duplicate(); text.position(offset); text.get(utf8);
+                    org.mtr.mapping.holder.Identifier sound=new org.mtr.mapping.holder.Identifier(new String(utf8,java.nio.charset.StandardCharsets.UTF_8));
+                    if(kind==5) { if(riding) context.playAnnSound(sound,records.getFloat(pos+24),records.getFloat(pos+28)); }
+                    else context.playCarSound(sound,records.get(pos+8)&255,records.getFloat(pos+12),records.getFloat(pos+16),records.getFloat(pos+20),records.getFloat(pos+24),records.getFloat(pos+28));
+                    any=true;
                     break;
                 }
                 case KIND_TEXTURE_UPLOAD: {
@@ -280,7 +291,7 @@ public final class NativeVehicleDriver {
                     final long pixelLen = records.getLong(pos + 48);
                     final ByteBuffer pixels = frame.pixelArena;
                     if (pixels != null && dw > 0 && dh > 0 && pixelLen > 0
-                            && pixelOffset >= 0 && pixelOffset + pixelLen <= pixels.limit()) {
+                            && pixelOffset >= 0 && pixelLen <= pixels.limit() - pixelOffset && pixelLen <= Integer.MAX_VALUE) {
                         final byte[] bytes = new byte[(int) pixelLen];
                         final ByteBuffer src = pixels.duplicate();
                         src.position((int) pixelOffset);
@@ -290,9 +301,7 @@ public final class NativeVehicleDriver {
                     break;
                 }
                 default:
-                    /* text / texture quads / outline shapes / sounds: the
-                       vehicle LCD ports emit none of these. See the class note
-                       about sound records. */
+                    /* Remaining records belong to other script types. */
                     break;
             }
             pos += size;
@@ -319,6 +328,18 @@ public final class NativeVehicleDriver {
         final StoredMatrixTransformations transform = storedMatrixTransformations.copy();
         transform.add(gh -> gh.translate(0, -1, 0));
         manager.invoke(world, transform, Direction.NORTH, light);
+        State state=STATES.get(key(vehicle.getHexId(),scriptId));
+        if(state!=null) {
+            double x=0,y=0,z=0; int count=0;
+            for(var pair:vehicle.getVehicleCarsAndPositions().get(carNumber).right()) {
+                x+=pair.left().x+pair.right().x; y+=pair.left().y+pair.right().y; z+=pair.left().z+pair.right().z; count+=2;
+            }
+            com.lx862.mtrscripting.core.util.ScriptVector3f pos=new com.lx862.mtrscripting.core.util.ScriptVector3f((float)(x/Math.max(1,count)),(float)(y/Math.max(1,count)),(float)(z/Math.max(1,count)));
+            for(VehicleScriptContext ctx:state.contexts.values()) {
+                var render=ctx.getCarRenderManager(carNumber); if(render!=null) render.invoke(world,transform.copy(),Direction.NORTH,light);
+                var sound=ctx.getCarSoundManager(carNumber); if(sound!=null) sound.invoke(world,pos);
+            }
+        }
     }
 
     /* ------------------------------------------------------------------ */
@@ -327,11 +348,26 @@ public final class NativeVehicleDriver {
 
     /** Forget one vehicle+script (script instance dropped, vehicle gone). */
     public static void forget(String vehicleHexId, String scriptId) {
-        STATES.remove(key(vehicleHexId, scriptId));
+        State state=STATES.remove(key(vehicleHexId, scriptId));
+        if(state!=null) NativeScriptManager.disposeInstance(state.instanceKey,scriptId);
         NativeDrawRegistry.remove(vehicleHexId, scriptId);
     }
 
     /** Drop every per-vehicle state (resource reload). */
+    public static void tick() {
+        long now=System.nanoTime();
+        for(Map.Entry<String,State> entry:STATES.entrySet()) if(now-entry.getValue().touched>5_000_000_000L) {
+            String[] identity=entry.getKey().split("\\u0000",2);
+            if(identity.length==2) forget(identity[0],identity[1]);
+        }
+    }
+    public static void invokeBogie(VehicleExtension vehicle,String scriptId,int car,int bogie,StoredMatrixTransformations transforms,int light) {
+        State state=STATES.get(key(vehicle.getHexId(),scriptId)); if(state==null) return;
+        World world=World.cast(MinecraftClient.getInstance().getWorldMapped()); if(world==null) return;
+        for(VehicleScriptContext ctx:state.contexts.values()) {
+            var manager=ctx.getCarBogieRenderManager(car,bogie); if(manager!=null) manager.invoke(world,transforms.copy(),Direction.NORTH,light);
+        }
+    }
     public static void reset() {
         STATES.clear();
         NativeDrawRegistry.clear();

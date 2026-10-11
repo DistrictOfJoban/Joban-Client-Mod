@@ -31,6 +31,8 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
                 boolean notHoldingBrush = MinecraftClient.getInstance().getPlayerMapped() != null && !MinecraftClient.getInstance().getPlayerMapped().isHolding(Items.BRUSH.get());
 
                 if(notHoldingBrush) {
+                    VoxelShape nativeShape=com.lx862.jcm.nativeapi.NativeContentDriver.shape((BlockEyeCandy.BlockEntity)blockEntity.data,false);
+                    if(nativeShape!=null) return nativeShape;
                     ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity) blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
                     if (scriptInstance != null && scriptInstance.getContextObject() instanceof EyeCandyScriptContext) {
                         VoxelShape shape = ((EyeCandyScriptContext) scriptInstance.getContextObject()).getOutlineShape();
@@ -54,6 +56,8 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
                 boolean notHoldingBrush = MinecraftClient.getInstance().getPlayerMapped() != null && !MinecraftClient.getInstance().getPlayerMapped().isHolding(Items.BRUSH.get());
 
                 if(notHoldingBrush) {
+                    VoxelShape nativeShape=com.lx862.jcm.nativeapi.NativeContentDriver.shape((BlockEyeCandy.BlockEntity)blockEntity.data,true);
+                    if(nativeShape!=null) return nativeShape;
                     ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity) blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
                     if (scriptInstance != null && scriptInstance.getContextObject() instanceof EyeCandyScriptContext) {
                         VoxelShape shape = ((EyeCandyScriptContext) scriptInstance.getContextObject()).getCollisionShape();
@@ -64,7 +68,6 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
                 }
             }
         }
-
         return VoxelShapes.empty();
     }
 
@@ -78,6 +81,10 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
                 org.mtr.mapping.holder.BlockEntity blockEntity = world.getBlockEntity(pos);
                 if (blockEntity != null && blockEntity.data instanceof BlockEyeCandy.BlockEntity) {
                     ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity)blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
+                    if(com.lx862.jcm.nativeapi.NativeContentDriver.blockUse((BlockEyeCandy.BlockEntity)blockEntity.data,new BlockUseEvent(player,player.getStackInHand(hand)))) {
+                        cir.setReturnValue(ActionResult.SUCCESS);
+                        return;
+                    }
                     if(scriptInstance != null && scriptInstance.getContextObject() instanceof EyeCandyScriptContext) {
                         ((EyeCandyScriptContext)scriptInstance.getContextObject()).events().onBlockUse.trigger(new BlockUseEvent(player, player.getStackInHand(hand)));
                         cir.setReturnValue(ActionResult.SUCCESS);

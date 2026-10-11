@@ -12,11 +12,11 @@
 
 > [!IMPORTANT]
 > **Joban-Client-Mod-Yanyang** — this fork adds **C++ native scripting** for
-> Minecraft Transit Railway 4.0 `vehicle` / `eye_candy` / `pids` resources,
-> ported 1:1 from the v2.3 JavaScript (Rhino) scripting surface.
-> See [`native/README.md`](native/README.md) for the SDK, examples
-> (including the full port of the community JS LCD + 车号 pack), benchmarks
-> (C++ ~6.8 µs/frame vs Rhino ~280 µs) and the JNI integration
+> Minecraft Transit Railway 4.0 vehicle, PIDS, Lift and Eyecandy resources.
+> ABI 8 provides direct access to the same public Java API objects used by
+> JavaScript scripts, plus compact C++ snapshots and draw records.
+> See [`native/README.md`](native/README.md) for the SDK, generic examples,
+> API coverage audit, lifecycle tests and the JNI integration
 > ([NativeScriptManager.java](fabric/src/main/java/com/lx862/jcm/nativeapi/NativeScriptManager.java)).
 > Resource packs declare `"language": "cpp"` and ship a prebuilt library —
 > JS and C++ scripts coexist on the same capture-and-replay pipeline.
@@ -31,7 +31,7 @@
   </a>
 </p>
 
-Joban Client Mod is an addon mod for the **Minecraft Transit Railway 4.0**, adding various blocks from **Emergency stop button**, **Helpline** to fully customizable Passenger Information Display System and more!  
+Joban Client Mod is an addon mod for the **Minecraft Transit Railway 4.0**, adding various blocks from **Emergency stop button**, **Helpline** to fully customizable Passenger Information Display System and more!
 
 This repository contains the source code for Joban Client Mod.
 

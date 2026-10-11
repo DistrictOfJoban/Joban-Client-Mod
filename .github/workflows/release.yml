@@ -47,14 +47,14 @@ jobs:
           - os: windows-latest
             platform: windows-x64
             java-arch: x64
-          - os: macos-latest
+          - os: macos-15-intel
             platform: macos-x64
             java-arch: x64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
           - os: macos-latest
             platform: macos-arm64
             java-arch: aarch64
-            cmake-arch: -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+            cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
     runs-on: ${{ matrix.os }}
     env:
       NATIVE_TEST_PLATFORM: ${{ matrix.platform }}
@@ -77,19 +77,17 @@ jobs:
           cmake --build native/build --config Release --parallel 4
       - name: Verify scripts, ABI layout and real JVM JNI integration
         run: ctest --test-dir native/build -C Release --output-on-failure
-      - name: Verify other SDK script examples
-        if: runner.os == 'Linux'
-        working-directory: native/build
-        run: ./jslcd_smoke
-      - name: Collect bridge and WR2-A03 script libraries
+      - name: Collect bridge and generic example libraries
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "dist/bridges/${{ matrix.platform }}" "dist/scripts/${{ matrix.platform }}"
+          mkdir -p "dist/bridges/${{ matrix.platform }}" "dist/examples/${{ matrix.platform }}"
           find native/build -type f \( -name '*jcm_native_bridge.dll' -o -name '*jcm_native_bridge.so' -o -name '*jcm_native_bridge.dylib' \) -exec cp {} "dist/bridges/${{ matrix.platform }}/" \;
-          find native/build -type f \( -name 'wr2a03_*.dll' -o -name 'libwr2a03_*.so' -o -name 'libwr2a03_*.dylib' \) -exec cp {} "dist/scripts/${{ matrix.platform }}/" \;
+          for module in pids_arrivals eyecandy_signal lift_indicator; do
+            find native/build -type f \( -name "$module.dll" -o -name "lib$module.so" -o -name "lib$module.dylib" \) -exec cp {} "dist/examples/${{ matrix.platform }}/" \;
+          done
           test "$(find dist/bridges -type f | wc -l | tr -d ' ')" = 1
-          test "$(find dist/scripts -type f | wc -l | tr -d ' ')" = 2
+          test "$(find dist/examples -type f | wc -l | tr -d ' ')" = 3
       - uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.platform }}
@@ -124,26 +122,21 @@ jobs:
           chmod +x ./gradlew
           ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}" --console=plain
           ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="${{ inputs.publish-tag }}" -Pnative_bridge_dir=native-dist/bridges --console=plain
-      - name: Verify packaged JNI bridges
+      - name: Audit documented Java API declarations
         run: |
+          find .gradle ~/.gradle -name '*4.0.5*.jar' -type f > native/build-api-jars.txt
           python3 - <<'PY'
-          import glob, zipfile
-          jars = glob.glob('build/*.jar')
-          assert len(jars) == 2, jars
-          for jar in jars:
-              with zipfile.ZipFile(jar) as archive:
-                  bridges = [p for p in archive.namelist() if p.startswith('assets/jcm/natives/') and p.endswith(('.dll', '.so', '.dylib'))]
-                  assert len(bridges) == 4, (jar, bridges)
-                  assert archive.testzip() is None, jar
-                  import json
-                  config = json.loads(archive.read('mtrscripting.mixins.json'))
-                  assert 'mtrscripting.GlStateTrackerAccessor' in config['client'], jar
-                  assert 'com/lx862/jcm/mixin/mtrscripting/GlStateTrackerAccessor.class' in archive.namelist(), jar
-                  renderer = archive.read('com/lx862/jcm/nativeapi/NativeFontRenderer.class')
-                  assert b'FontMetrics' in renderer and b'drawString' in renderer and b'readFont' in renderer, jar
-                  host = archive.read('com/lx862/jcm/nativeapi/NativeHost.class')
-                  assert b'measureFontText' in host and b'drawFontText' in host, jar
+          from pathlib import Path
+          import sys, json
+          sys.path.insert(0,'native/bench')
+          from api_coverage import audit
+          jars=[Path(line) for line in Path('native/build-api-jars.txt').read_text().splitlines()]
+          manifest=json.loads(Path('native/bench/api-coverage.json').read_text())
+          for loader in ('fabric','forge'):
+              audit(Path(loader+'/build/classes/java/main'),jars,manifest)
           PY
+      - name: Verify jar contents and absence of user resource packs
+        run: python3 native/bench/verify_jar.py --version "${{ inputs.publish-tag }}" build/*.jar
       - uses: actions/upload-artifact@v4
         with:
           name: jars-${{ matrix.minecraft }}
@@ -164,8 +157,26 @@ jobs:
           pattern: jars-*
           path: release-jars
           merge-multiple: true
-      - name: Require all twelve jars
-        run: test "$(find release-jars -name '*.jar' -type f | wc -l)" -eq 12
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: native-dist
+          merge-multiple: true
+      - name: Require all twelve jars and package a separate SDK
+        run: |
+          test "$(find release-jars -name '*.jar' -type f | wc -l)" -eq 12
+          python3 - <<'PY'
+          import subprocess,zipfile
+          from pathlib import Path
+          files=subprocess.check_output(['git','ls-files','native'],text=True).splitlines()
+          with zipfile.ZipFile('jcm-native-sdk-${{ inputs.publish-tag }}.zip','w',zipfile.ZIP_DEFLATED) as archive:
+              archive.write('LICENSE')
+              for name in files:
+                  path=Path(name)
+                  if path.is_file(): archive.write(path,path)
+              for path in Path('native-dist/examples').rglob('*'):
+                  if path.is_file(): archive.write(path,path.relative_to('native-dist'))
+          PY
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ inputs.publish-tag }}
@@ -174,4 +185,6 @@ jobs:
           prerelease: ${{ inputs.release-type == 'beta' }}
           body_path: .github/release-notes.md
           fail_on_unmatched_files: true
-          files: release-jars/*.jar
+          files: |
+            release-jars/*.jar
+            jcm-native-sdk-*.zip
