@@ -45,7 +45,7 @@ public class EyecandyResourceProvider implements ScriptResourceProvider {
                     String eyecandyScriptId = eyecandyEntry.get("scriptId").getAsString();
                     eyecandyScriptIds.put(id, eyecandyScriptId);
                 }
-                if(JsonUtil.getBoolean("isScriptRendered", false, eyecandyEntry)) {
+                if(JsonUtil.getBoolean("isScriptControlled", false, eyecandyEntry)) {
                     scriptControlledRendering.add(id);
                 }
             }
@@ -168,7 +168,7 @@ public class EyecandyResourceProvider implements ScriptResourceProvider {
                         final JsonObject entryObject = entry.getValue().getAsJsonObject();
                         final EyecandyCustomConfig eyecandyCustomConfig = parseEyecandyCustomConfig(entryObject, true);
 
-                        if(JsonUtil.getBoolean("isScriptRendered", false, entryObject)) {
+                        if(JsonUtil.getBoolean("isScriptControlled", false, entryObject)) {
                             scriptControlledRendering.add(id);
                         }
 

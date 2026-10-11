@@ -32,7 +32,7 @@ public class LiftResourceProvider implements ScriptResourceProvider {
                 if(liftObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
                     liftScriptIds.put(liftId, liftObject.get("scriptId").getAsString());
                 }
-                if(JsonUtil.getBoolean("isScriptRendered", false, liftObject)) {
+                if(JsonUtil.getBoolean("isScriptControlled", false, liftObject)) {
                     scriptControlledRendering.add(liftId);
                 }
             }

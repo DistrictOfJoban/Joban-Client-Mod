@@ -22,9 +22,11 @@
 
 ### Lift Scripting
 - Fix `isScriptRendered` not allowing player to board the lift.
+- Rename `isScriptRendered` to `isScriptControlled`
 - Add `LiftWrapper.isDoorway1Openable()`, `LiftWrapper.isDoorway2Openable()`, `LiftWrapper.isDoorway1Open()` and `LiftWrapper.isDoorway2Open()` for checking open doorways.
 
 ### Eyecandy Scripting
+- Rename `isScriptRendered` to `isScriptControlled`
 - Add `EyecandyWrapper.facingAngle()`, which returns the block facing angle directly.
   - Please use this instead of relying on `EyecandyWrapper.facing().asRotation()`, which will no longer work in MTR 4.1.
 
