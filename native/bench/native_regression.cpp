@@ -1,4 +1,5 @@
 #include <mtr/gfx.hpp>
+#include <mtr/gfx2d.hpp>
 #include <cstdio>
 #include <cstring>
 
@@ -33,5 +34,24 @@ int main() {
         return 1;
     }
     std::puts("NATIVE REGRESSION OK: cropped multi-row BGRA texture upload");
+    mtr::GraphicsTexture outline;
+    outline.create(in, 320, 120);
+    outline.fill(0);
+    mtr::Gfx2D g(outline);
+    g.set_color(0xffffffffu);
+    g.draw_round_rect(20, 20, 280, 80, 80, 80, 3);
+    auto ink = [&](int x, int y) { return outline.pixels32()[y * 320 + x] != 0; };
+    if (!ink(160, 20) || !ink(160, 100) || !ink(20, 60) || !ink(300, 60)
+            || ink(160, 60) || ink(20, 20) || ink(300, 100)) {
+        std::fprintf(stderr, "FAIL: rounded outline must be closed, axis-aligned and empty inside\n");
+        return 1;
+    }
+    for (int y = 28; y < 93; y++) for (int x = 70; x < 251; x++) {
+        if (ink(x, y)) {
+            std::fprintf(stderr, "FAIL: rounded outline has an interior chord at %d,%d\n", x, y);
+            return 1;
+        }
+    }
+    std::puts("NATIVE REGRESSION OK: closed rounded outline without diagonal chords");
     return 0;
 }

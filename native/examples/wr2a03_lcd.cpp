@@ -107,7 +107,7 @@ void draw_centered_text(Gfx2D& g, const std::string& text, double cx,
                         double y_baseline, double size, uint32_t color) {
     if (text.empty()) return;
     g.set_color(color);
-    const double w = Gfx2D::text_width(size, text.c_str());
+    const double w = g.font_width(size, text.c_str());
     g.draw_text(cx - w * 0.5, y_baseline, size, text.c_str());
 }
 
@@ -164,7 +164,7 @@ void draw_adaptive_centered_text(Gfx2D& g, const std::string& text, double cx,
                                  double y_baseline, double size, double availW,
                                  uint32_t color) {
     if (text.empty()) return;
-    const double origW = Gfx2D::text_width(size, text.c_str());
+    const double origW = g.font_width(size, text.c_str());
     const double compress = compute_per_text_compress_x(origW, availW);
     g.set_color(color);
     g.draw_text_compressed(cx - origW * compress * 0.5, y_baseline, size,
@@ -264,7 +264,11 @@ void append_ring_segment(std::vector<double>& xs, std::vector<double>& ys,
 
 /* drawArrowChar — 进度段中点上的方向箭头 */
 void draw_arrow_char(Gfx2D& g, char dir, double cx, double cy) {
-    draw_arrow(g, cx, cy, dir, WHITE_COLOR, K(30) * 0.5);
+    const char* text = dir == 'R' ? "→" : dir == 'L' ? "←" : dir == 'U' ? "↑" : "↓";
+    const JcmFontMetrics fm = g.font_metrics(30, text, FONT_HAN_SANS);
+    g.set_color(WHITE_COLOR);
+    g.draw_text(cx - fm.width * 0.5, cy + (fm.ascent - fm.descent) * 0.5,
+                30, text, FONT_HAN_SANS);
 }
 
 /* drawProgressOverlay — 环线当前→下一站区段闪烁 */
@@ -315,7 +319,7 @@ void draw_transfer_badges(Gfx2D& g, const std::vector<Transfer>& transfers,
     double totalW = 0;
     for (size_t i = 0; i < transfers.size(); i++) {
         texts[i] = normalize_line_id(transfers[i].name);
-        widths[i] = std::max(Gfx2D::text_width(K(18), texts[i].c_str()) + 22.0, badgeH);
+        widths[i] = std::max(g.font_width(K(18), texts[i].c_str(), FONT_HAN_SANS) + 22.0, badgeH);
         totalW += widths[i] + gap;
     }
     totalW -= gap;
@@ -330,8 +334,8 @@ void draw_transfer_badges(Gfx2D& g, const std::vector<Transfer>& transfers,
         g.set_color(transfers[j].color);
         g.fill_round_rect(cx - w * 0.5, y - badgeH * 0.5, w, badgeH, badgeH, badgeH);
         g.set_color(WHITE_COLOR);
-        const double tw = Gfx2D::text_width(K(18), texts[j].c_str());
-        g.draw_text(cx - tw * 0.5, y + K(7), K(18), texts[j].c_str());
+        const double tw = g.font_width(K(18), texts[j].c_str(), FONT_HAN_SANS);
+        g.draw_text(cx - tw * 0.5, y + K(7), K(18), texts[j].c_str(), FONT_HAN_SANS);
         startX += w + gap;
     }
 }
@@ -351,11 +355,11 @@ void draw_big_station_name(Gfx2D& g, const StationInfo& station, double centerY,
     const double enBaseline = cnBaseline + gap + enVisualH;
 
     g.set_color(rc);
-    const double cnW = Gfx2D::text_width(cnSize, station.nameCn.c_str());
-    g.draw_text(TEX_W * 0.5 - cnW * 0.5, cnBaseline, cnSize, station.nameCn.c_str());
+    const double cnW = g.font_width(cnSize, station.nameCn.c_str(), FONT_HONGLEI);
+    g.draw_text(TEX_W * 0.5 - cnW * 0.5, cnBaseline, cnSize, station.nameCn.c_str(), FONT_HONGLEI);
 
     g.set_color(BLACK_COLOR);
-    const double enW = Gfx2D::text_width(enSize, station.nameEn.c_str());
+    const double enW = g.font_width(enSize, station.nameEn.c_str());
     g.draw_text(TEX_W * 0.5 - enW * 0.5, enBaseline, enSize, station.nameEn.c_str());
 }
 
@@ -364,9 +368,9 @@ void draw_terminus_message(Gfx2D& g, double y) {
     const char* cnText = "本次列车已抵达终点站，请所有乘客全部下车。";
     const char* enText = "This train has arrived at the terminus. Please alight from the train.";
     g.set_color(BLACK_COLOR);
-    const double cnW = Gfx2D::text_width(K(26), cnText);
+    const double cnW = g.font_width(K(26), cnText);
     g.draw_text(TEX_W * 0.5 - cnW * 0.5, y, K(26), cnText);
-    const double enW = Gfx2D::text_width(K(20), enText);
+    const double enW = g.font_width(K(20), enText);
     g.draw_text(TEX_W * 0.5 - enW * 0.5, y + K(36), K(20), enText);
 }
 
@@ -391,23 +395,23 @@ struct RouteNameOpts {
 };
 
 /* measureRouteNameBlock */
-double measure_route_name_block(const std::string& routeCn, const std::string& routeEn,
+double measure_route_name_block(Gfx2D& g, const std::string& routeCn, const std::string& routeEn,
                                 double h, const RouteNameOpts& opts) {
     if (is_number_route_name(routeCn, routeEn)) {
         const std::string numStr = routeCn.substr(0, routeCn.size() - 6);
         const double numSize = std::max(1.0, static_cast<double>(std::lround(h * 0.62 * opts.scale)));
         const double suffixSize = std::max(1.0, static_cast<double>(std::lround(h * 0.26 * opts.scale)));
         const double enSize = std::max(1.0, static_cast<double>(std::lround(h * 0.20 * opts.scale)));
-        const double numW = Gfx2D::text_width(numSize, numStr.c_str());
-        const double suffixW = Gfx2D::text_width(suffixSize, "号线");
-        const double enW = Gfx2D::text_width(enSize, routeEn.c_str());
+        const double numW = g.font_width(numSize, numStr.c_str(), opts.numberBold ? FONT_ARIAL_BOLD : FONT_ARIAL);
+        const double suffixW = g.font_width(suffixSize, "号线");
+        const double enW = g.font_width(enSize, routeEn.c_str());
         return std::lround(numW + std::lround(h * 0.06 * opts.scale)
                            + std::max(suffixW, enW));
     }
     const double cnSize = std::max(1.0, static_cast<double>(std::lround(h * 0.30 * opts.scale)));
     const double enSize = std::max(1.0, static_cast<double>(std::lround(h * 0.20 * opts.scale)));
-    const double cnW = Gfx2D::text_width(cnSize, routeCn.c_str());
-    const double enW = Gfx2D::text_width(enSize, routeEn.c_str());
+    const double cnW = g.font_width(cnSize, routeCn.c_str());
+    const double enW = g.font_width(enSize, routeEn.c_str());
     return std::lround(std::max(cnW, enW));
 }
 
@@ -424,13 +428,14 @@ void draw_route_name_block(Gfx2D& g, double x, double y, double w, double h,
         const double suffixSize = std::max(1.0, static_cast<double>(std::lround(h * 0.26 * opts.scale)));
         const double enSize = std::max(1.0, static_cast<double>(std::lround(h * 0.20 * opts.scale)));
 
-        const double numW = Gfx2D::text_width(numSize, numStr.c_str());
-        const double suffixW = Gfx2D::text_width(suffixSize, "号线");
-        const double enW = Gfx2D::text_width(enSize, routeEn.c_str());
+        const char* numFont = opts.numberBold ? FONT_ARIAL_BOLD : FONT_ARIAL;
+        const double numW = g.font_width(numSize, numStr.c_str(), numFont);
+        const double suffixW = g.font_width(suffixSize, "号线");
+        const double enW = g.font_width(enSize, routeEn.c_str());
 
         const double lineGap = std::max(1.0, static_cast<double>(std::lround(h * 0.02 * opts.scale)));
-        const double suffixH = Gfx2D::text_ascent(suffixSize) + Gfx2D::text_descent(suffixSize);
-        const double enH = Gfx2D::text_ascent(enSize) + Gfx2D::text_descent(enSize);
+        const double suffixH = g.font_ascent(suffixSize, FONT_HAN_SANS) + g.font_descent(suffixSize, FONT_HAN_SANS);
+        const double enH = g.font_ascent(enSize) + g.font_descent(enSize);
         const double blockH = suffixH + lineGap + enH;
 
         const double gapNX = std::lround(h * 0.06 * opts.scale);
@@ -438,16 +443,16 @@ void draw_route_name_block(Gfx2D& g, double x, double y, double w, double h,
         const double totalW = numW + gapNX + rightW;
 
         const double startX = opts.numberCenter ? x + (w - totalW) * 0.5 : x;
-        const double numBaseline = cy + (Gfx2D::text_ascent(numSize)
-                                         - Gfx2D::text_descent(numSize)) * 0.5;
+        const double numBaseline = cy + (g.font_ascent(numSize, numFont)
+                                         - g.font_descent(numSize, numFont)) * 0.5;
         const double rightX = startX + numW + gapNX;
 
         g.set_color(textColor);
-        g.draw_text(startX, numBaseline, numSize, numStr.c_str());
+        g.draw_text(startX, numBaseline, numSize, numStr.c_str(), numFont);
 
         const double blockTop = cy - blockH * 0.5;
-        const double suffixBaseline = blockTop + Gfx2D::text_ascent(suffixSize);
-        const double enBaseline = blockTop + suffixH + lineGap + Gfx2D::text_ascent(enSize);
+        const double suffixBaseline = blockTop + g.font_ascent(suffixSize, FONT_HAN_SANS);
+        const double enBaseline = blockTop + suffixH + lineGap + g.font_ascent(enSize);
         g.draw_text(rightX, suffixBaseline, suffixSize, "号线");
         g.draw_text(rightX, enBaseline, enSize, routeEn.c_str());
     } else {
@@ -455,21 +460,21 @@ void draw_route_name_block(Gfx2D& g, double x, double y, double w, double h,
         const double baseEn = std::max(1.0, static_cast<double>(std::lround(h * 0.20 * opts.scale)));
         const double centerX = x + w * 0.5;
 
-        const double cnW = Gfx2D::text_width(baseCn, routeCn.c_str());
-        const double cnH = Gfx2D::text_ascent(baseCn) + Gfx2D::text_descent(baseCn);
-        const double enW = routeEn.empty() ? 0.0 : Gfx2D::text_width(baseEn, routeEn.c_str());
+        const double cnW = g.font_width(baseCn, routeCn.c_str());
+        const double cnH = g.font_ascent(baseCn, FONT_HAN_SANS) + g.font_descent(baseCn, FONT_HAN_SANS);
+        const double enW = routeEn.empty() ? 0.0 : g.font_width(baseEn, routeEn.c_str());
         const double enH = routeEn.empty() ? 0.0
-            : Gfx2D::text_ascent(baseEn) + Gfx2D::text_descent(baseEn);
+            : g.font_ascent(baseEn) + g.font_descent(baseEn);
         const double gap2 = routeEn.empty() ? 0.0
             : std::max(1.0, static_cast<double>(std::lround(h * 0.05 * opts.scale)));
         const double totalH = cnH + gap2 + enH;
         const double top2 = cy - totalH * 0.5;
 
         g.set_color(textColor);
-        g.draw_text(centerX - cnW * 0.5, top2 + Gfx2D::text_ascent(baseCn),
+        g.draw_text(centerX - cnW * 0.5, top2 + g.font_ascent(baseCn, FONT_HAN_SANS),
                     baseCn, routeCn.c_str());
         if (!routeEn.empty()) {
-            g.draw_text(centerX - enW * 0.5, top2 + cnH + gap2 + Gfx2D::text_ascent(baseEn),
+            g.draw_text(centerX - enW * 0.5, top2 + cnH + gap2 + g.font_ascent(baseEn),
                         baseEn, routeEn.c_str());
         }
     }
@@ -500,8 +505,8 @@ void draw_destination_block(Gfx2D& g, const ScreenInfo& info, double startX,
 
     double cnSize = K(32);
     double enSize = K(22);
-    const double cnW = Gfx2D::text_width(cnSize, cnText.c_str());
-    const double enW = Gfx2D::text_width(enSize, enText.c_str());
+    const double cnW = g.font_width(cnSize, cnText.c_str());
+    const double enW = g.font_width(enSize, enText.c_str());
     const double maxW = std::max(cnW, enW);
     if (maxW > availW && maxW > 0) {
         const double k = availW / maxW;
@@ -520,9 +525,9 @@ void draw_vehicle_num_box(Gfx2D& g, const ScreenInfo& info, uint32_t routeColor)
     if (numText.empty()) return;
 
     const double size = K(36);                  /* FONT_VEHICLE_NUM = 36 * LAYOUT_K */
-    const double textW = Gfx2D::text_width(size, numText.c_str());
-    const double ascent = Gfx2D::text_ascent(size);
-    const double descent = Gfx2D::text_descent(size);
+    const double textW = g.font_width(size, numText.c_str(), FONT_SANS_LAO);
+    const double ascent = g.font_ascent(size, FONT_SANS_LAO);
+    const double descent = g.font_descent(size, FONT_SANS_LAO);
     const double textH = ascent + descent;
 
     const double boxH = K(80);
@@ -558,7 +563,7 @@ void draw_vehicle_num_box(Gfx2D& g, const ScreenInfo& info, uint32_t routeColor)
     g.draw_round_rect(boxX, boxY, boxW, boxH, radius, radius, 2.0);
 
     g.set_color(Gfx2D::contrast_text(routeColor));
-    g.draw_text(textCx - textW * 0.5, baseY, size, numText.c_str());
+    g.draw_text(textCx - textW * 0.5, baseY, size, numText.c_str(), FONT_SANS_LAO);
 }
 
 /* drawHeader — 顶部信息栏 */
@@ -587,7 +592,7 @@ void draw_header(Gfx2D& g, const ScreenInfo& info) {
     double nameRightX = leftX;
     if (!routeCn.empty() || !routeEn.empty()) {
         RouteNameOpts nameOpts;
-        const double contentW = measure_route_name_block(routeCn, routeEn, HEADER_H, nameOpts);
+        const double contentW = measure_route_name_block(g, routeCn, routeEn, HEADER_H, nameOpts);
         draw_route_name_block(g, leftX, 0, contentW, HEADER_H, routeCn, routeEn,
                               textColor, nameOpts);
         nameRightX = leftX + contentW;
@@ -610,8 +615,8 @@ void draw_header(Gfx2D& g, const ScreenInfo& info) {
     {
         const std::string cnFull = std::string(label) + " " + bigStation.nameCn;
         const std::string enFull = std::string(labelEn) + " " + bigStation.nameEn;
-        const double halfCn = Gfx2D::text_width(K(40), cnFull.c_str()) * 0.5;
-        const double halfEn = Gfx2D::text_width(K(28), enFull.c_str()) * 0.5;
+        const double halfCn = g.font_width(K(40), cnFull.c_str()) * 0.5;
+        const double halfEn = g.font_width(K(28), enFull.c_str()) * 0.5;
         centerLimit = centerX - std::max(halfCn, halfEn) - K(30);
     }
     draw_destination_block(g, info, nameRightX + K(36), centerLimit, textColor);
@@ -705,7 +710,7 @@ void draw_exit_info(Gfx2D& g, int curIdx, const std::vector<StationInfo>& statio
 
     g.set_color(BLACK_COLOR);
     g.draw_text(x, y, K(34), "出站口");
-    g.draw_text(x + Gfx2D::text_width(K(34), "出站口") + K(10), y, K(34), "Exits");
+    g.draw_text(x + g.font_width(K(34), "出站口") + K(10), y, K(34), "Exits");
 
     /* 唯一前缀折叠 */
     auto letter_run = [](const std::string& s) -> std::string {
@@ -793,8 +798,8 @@ void draw_circular_full_map(Gfx2D& g, const Wr2LcdState& state, const ScreenInfo
     const double baseEnSize = K(26);
     double maxCnW = 0, maxEnW = 0;
     for (const StationInfo& st : stations) {
-        maxCnW = std::max(maxCnW, Gfx2D::text_width(baseCnSize, st.nameCn.c_str()));
-        maxEnW = std::max(maxEnW, Gfx2D::text_width(baseEnSize, st.nameEn.c_str()));
+        maxCnW = std::max(maxCnW, g.font_width(baseCnSize, st.nameCn.c_str()));
+        maxEnW = std::max(maxEnW, g.font_width(baseEnSize, st.nameEn.c_str()));
     }
     const double MIN_CN_SIZE = 36, MIN_EN_SIZE = 28;
     const double cnSize = compute_adaptive_font_size(baseCnSize, maxCnW, availW, MIN_CN_SIZE);
@@ -925,7 +930,7 @@ void draw_linear_transfer_badges(Gfx2D& g, const std::vector<Transfer>& transfer
 
     std::vector<double> widths(items.size());
     for (size_t k = 0; k < items.size(); k++) {
-        widths[k] = measure_route_name_block(items[k].cn, items[k].en, badgeH, nameOpts)
+        widths[k] = measure_route_name_block(g, items[k].cn, items[k].en, badgeH, nameOpts)
                     + padX * 2;
     }
 
@@ -969,8 +974,8 @@ void draw_linear_full_map(Gfx2D& g, const Wr2LcdState& state, const ScreenInfo& 
     const double baseCnSize = K(32), baseEnSize = K(26);
     double maxCnW = 0, maxEnW = 0;
     for (const StationInfo& st : stations) {
-        maxCnW = std::max(maxCnW, Gfx2D::text_width(baseCnSize, st.nameCn.c_str()));
-        maxEnW = std::max(maxEnW, Gfx2D::text_width(baseEnSize, st.nameEn.c_str()));
+        maxCnW = std::max(maxCnW, g.font_width(baseCnSize, st.nameCn.c_str()));
+        maxEnW = std::max(maxEnW, g.font_width(baseEnSize, st.nameEn.c_str()));
     }
     const double MIN_CN_SIZE = 36, MIN_EN_SIZE = 28;
     const double cnSize = compute_adaptive_font_size(baseCnSize, maxCnW, availW, MIN_CN_SIZE);
@@ -1000,9 +1005,9 @@ void draw_linear_full_map(Gfx2D& g, const Wr2LcdState& state, const ScreenInfo& 
     const double edgeGap = K(12);
     const double lineGap = K(2);
     const double enCapHeight = std::lround(enSize * 0.72);
-    const double cnAscent = Gfx2D::text_ascent(cnSize);
-    const double cnDescent = Gfx2D::text_descent(cnSize);
-    const double enDescent = Gfx2D::text_descent(enSize);
+    const double cnAscent = g.font_ascent(cnSize, FONT_HAN_SANS);
+    const double cnDescent = g.font_descent(cnSize, FONT_HAN_SANS);
+    const double enDescent = g.font_descent(enSize);
 
     for (int i = 0; i < n; i++) {
         const LinearPos pos = get_linear_station_pos(i, n);
@@ -1357,7 +1362,7 @@ struct Wr2LcdScript : VehicleScript<Wr2LcdState> {
                    仍是上一张图的值，线路恢复时会被误判成"只有闪烁变了"而
                    跳过绘制，屏幕就停在白底上。 */
                 if (cs.leftSig != 0 || !cs.everPainted) {
-                    Gfx2D gL(cs.left, ctx.host());
+                    Gfx2D gL(cs.left, ctx.host(), FONT_HAN_SANS, FONT_ARIAL);
                     gL.set_scale(state.sx, state.sy);
                     gL.set_color(WHITE_COLOR);
                     gL.fill_rect(0, 0, TEX_W, TEX_H);
@@ -1365,7 +1370,7 @@ struct Wr2LcdScript : VehicleScript<Wr2LcdState> {
                     cs.leftLaySig = 0;
                 }
                 if (cs.rightSig != 0 || !cs.everPainted) {
-                    Gfx2D gR(cs.right, ctx.host());
+                    Gfx2D gR(cs.right, ctx.host(), FONT_HAN_SANS, FONT_ARIAL);
                     gR.set_scale(state.sx, state.sy);
                     gR.set_color(WHITE_COLOR);
                     gR.fill_rect(0, 0, TEX_W, TEX_H);
@@ -1397,7 +1402,7 @@ struct Wr2LcdScript : VehicleScript<Wr2LcdState> {
                 const uint64_t layL = screen_signature(state, info, leftMode, carDisplay, false);
                 if (cs.leftSig != sigL) {
                     if (cs.leftLaySig != layL) {
-                        Gfx2D gL(cs.left, ctx.host());
+                        Gfx2D gL(cs.left, ctx.host(), FONT_HAN_SANS, FONT_ARIAL);
                         gL.set_scale(state.sx, state.sy);
                         paint_screen(gL, state, info, leftMode);
                     }
@@ -1408,7 +1413,7 @@ struct Wr2LcdScript : VehicleScript<Wr2LcdState> {
                 const uint64_t layR = screen_signature(state, info, rightMode, carDisplay, false);
                 if (cs.rightSig != sigR) {
                     if (cs.rightLaySig != layR) {
-                        Gfx2D gR(cs.right, ctx.host());
+                        Gfx2D gR(cs.right, ctx.host(), FONT_HAN_SANS, FONT_ARIAL);
                         gR.set_scale(state.sx, state.sy);
                         paint_screen(gR, state, info, rightMode);
                     }

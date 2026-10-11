@@ -11,7 +11,7 @@ JavaScript (Rhino) 脚本 1:1 语义对齐（同样的 `create/render/dispose`
 ```
 native/
 ├── include/mtr/            # 脚本 SDK（header-only）
-│   ├── mtr_native.h        #   C ABI：导出、POD 快照、draw call 记录（v6）
+│   ├── mtr_native.h        #   C ABI：导出、POD 快照、draw call 记录（v7）
 │   ├── script.hpp          #   注册宏 + 生命周期适配（ScriptBox）
 │   ├── frame.hpp           #   bump-arena 帧录制器（像素 arena 按需增长）
 │   ├── vehicle.hpp         #   Train/Car/Stop 包装（对应 VehicleWrapper）
@@ -259,6 +259,30 @@ draw_num.js）的**全量 C++ 移植**——车侧路线图 LCD + 车号系统�
 像素级断言（顶栏线路色、红绿站点圆点、玻璃卡字形、环线色环、开门大
 站名、车牌墨迹、**出口面板青色字母与黑色目的地 CJK**）+ 性能断言
 （稳态 <100µs、重绘预算帧 <20ms）。
+
+## ABI v7：资源包字体
+
+`JcmHostServices` 末尾新增 `measure_font_text` 和 `draw_font_text`。
+`Gfx2D` 可指定字体资源 ID，由宿主以 `FontMetrics` 测量、`drawString` 绘制整段 UTF-8
+文本，保留字形比例、字宽、基线、下行部、压缩、透明度和裁剪。字模按字体、字号、
+缩放和子像素位置缓存，上限 32 MiB；脚本重载时重新读取字体。
+
+WR2-A03 使用资源包自带的思源黑体 Medium、Arial / Arial Bold、Sans Lao、鸿雷行书；
+错误提示使用同包已有的思源黑体 Regular。资源缺失时宿主记录一次警告并回退到
+内置 Noto。无宿主测试仍可使用 SDK 的点阵回退。
+
+新脚本需搭配 yanyang.6 或更高版本的宿主和四平台桥。ABI 6 的快照与宿主表前缀不变，
+新宿主仍接受 ABI 6 模块，并向其传递版本 6 的生命周期输入。
+
+本地可用实际资源字体验证：
+
+```sh
+python native/bench/jvm_test.py --build native/build --resource-pack /path/to/WR2-A03-pack
+```
+
+验证包含 Java2D 字形、字宽、基线、压缩和裁剪对照，以及通过真实 JNI 生成的
+侧面、头尾车号纹理逐像素对照。指定资源包时还会生成三种 LCD 页面预览。
+云端未提供 WR2-A03 字体文件时，使用 JCM 自带 Noto 字体验证接口和 JNI 通路。
 
 ## ABI v6 变更
 

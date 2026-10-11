@@ -63,20 +63,20 @@ void clear_texture_transparent(GraphicsTexture& tex) {
 /* drawNum — 以 (NUM_W - width) / 2 居中, 基线 NUM_H - 12 */
 void draw_num(Gfx2D& g, const std::string& num, double fontSize) {
     if (num.empty()) return;
-    const double w = Gfx2D::text_width(fontSize, num.c_str());
+    const double w = g.font_width(fontSize, num.c_str(), FONT_SANS_LAO);
     const double x = (NUM_W - w) / 2.0;
     const double y = NUM_H - 12;
     g.set_color(BLACK_COLOR);
-    g.draw_text(x, y, fontSize, num.c_str());
+    g.draw_text(x, y, fontSize, num.c_str(), FONT_SANS_LAO);
 }
 
 /* drawError — 车厢数与车厢号数量不符时的红色双语提示 */
 void draw_error(Gfx2D& g) {
-    const double w = Gfx2D::text_width(60, NUM_ERROR_TEXT);
+    const double w = g.font_width(60, NUM_ERROR_TEXT, FONT_HAN_REGULAR);
     const double x = (NUM_W - w) / 2.0;
     const double y = NUM_H - 12;
     g.set_color(RED_COLOR);
-    g.draw_text(x, y, 60, NUM_ERROR_TEXT);
+    g.draw_text(x, y, 60, NUM_ERROR_TEXT, FONT_HAN_REGULAR);
 }
 
 /* ==================================================================== */
@@ -155,12 +155,12 @@ struct Wr2TrainNumScript : VehicleScript<Wr2TrainNumState> {
                 clear_texture_transparent(cs.right);
 
                 {
-                    Gfx2D gL(cs.left, ctx.host());
+                    Gfx2D gL(cs.left, ctx.host(), FONT_HAN_SANS, FONT_ARIAL);
                     if (mismatch) draw_error(gL);
                     else          draw_num(gL, carNum[static_cast<size_t>(i)], NUM_FONT_SIZE_CAR);
                 }
                 {
-                    Gfx2D gR(cs.right, ctx.host());
+                    Gfx2D gR(cs.right, ctx.host(), FONT_HAN_SANS, FONT_ARIAL);
                     if (mismatch) draw_error(gR);
                     else          draw_num(gR, carNum[static_cast<size_t>(i)], NUM_FONT_SIZE_CAR);
                 }
@@ -168,13 +168,13 @@ struct Wr2TrainNumScript : VehicleScript<Wr2TrainNumState> {
 
             /* 车头牌 */
             {
-                Gfx2D gF(state.fwd, ctx.host());
+                Gfx2D gF(state.fwd, ctx.host(), FONT_HAN_SANS, FONT_ARIAL);
                 clear_texture_transparent(state.fwd);
                 draw_num(gF, vehicleNum, NUM_FONT_SIZE_HEAD);
             }
             /* 车尾牌 */
             {
-                Gfx2D gB(state.bwd, ctx.host());
+                Gfx2D gB(state.bwd, ctx.host(), FONT_HAN_SANS, FONT_ARIAL);
                 clear_texture_transparent(state.bwd);
                 draw_num(gB, vehicleNum, NUM_FONT_SIZE_HEAD);
             }

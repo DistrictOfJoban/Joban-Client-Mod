@@ -42,7 +42,9 @@ extern "C" {
 /* Version / module identity                                           */
 /* ------------------------------------------------------------------ */
 
-/* ABI 6 — mtrInit(): the host must construct the per-instance state
+/* ABI 7 appends resource-font metrics and baseline text rasterization to
+   JcmHostServices. The ABI 6 prefix and snapshot layouts are unchanged.
+   ABI 6 — mtrInit(): the host must construct the per-instance state
    object instead of assuming a zeroed block is usable (see mtrStateSize).
    ABI 5 added JcmStop.route_circular_state (per-stop route
    CircularState).  ABI 4 added JcmHostServices.acquire_quad_model
@@ -50,7 +52,7 @@ extern "C" {
    the newer header call a host function slot that does not exist in an
    older host (the struct grew), so an old host must refuse the module
    instead of reading past it. */
-#define MTR_NATIVE_ABI_VERSION 6
+#define MTR_NATIVE_ABI_VERSION 7
 
 /* Resource kinds, identical to JCM script contexts. */
 enum MtrResourceKind {
@@ -426,6 +428,13 @@ typedef struct JcmFrameOutput {
 /* Host services (functions the script may call while rendering)      */
 /* ------------------------------------------------------------------ */
 
+typedef struct JcmFontMetrics {
+    double width;
+    double ascent;
+    double descent;
+    double height;
+} JcmFontMetrics;
+
 struct JcmHostServices {
     void*    user;
     /* Model management: host-side handles mirror ModelJS handles. */
@@ -471,6 +480,23 @@ struct JcmHostServices {
     int32_t (*acquire_quad_model)(void* user, const float* vertices_xyz,
                                   const float* uv, int32_t vertex_count,
                                   int32_t render_stage, int32_t texture_handle);
+
+    /* ABI 7: same resource fonts, FontMetrics and drawString semantics as
+       JavaScript Graphics2D. font_resource is a namespaced resource ID.
+       Sizes and baseline positions are logical coordinates; the host applies
+       canvas scale and optional horizontal compression without fitting glyphs
+       into square cells. Returns 0 on success, -1 when unavailable. */
+    int32_t (*measure_font_text)(void* user, const char* font_resource,
+                                const char* utf8, int32_t len, double size,
+                                double scale_x, double scale_y, JcmFontMetrics* out);
+    int32_t (*draw_font_text)(void* user, const char* font_resource,
+                             const char* utf8, int32_t len, double size,
+                             double x, double baseline, double scale_x,
+                             double scale_y, double compress_x, uint32_t argb,
+                             int32_t clip_x0, int32_t clip_y0,
+                             int32_t clip_x1, int32_t clip_y1,
+                             uint8_t* pixels, int32_t width, int32_t height,
+                             int32_t* dirty_bounds); /* x0,y0,x1,y1, exclusive */
 };
 
 /* ------------------------------------------------------------------ */

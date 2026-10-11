@@ -449,10 +449,11 @@ int count_color(const ReconTex& t, uint32_t want, int tol,
    不应有线路色（站点圆点最多 2*K(14)=±23px，取 ±60px 的窄带即可区分）。
    采样带取 RING_TOP_Y..RING_BOTTOM_Y 的中段，避开上下两条水平轨道。 */
 int rail_column_pixels(const ReconTex& t, uint32_t color, int tol, bool rightSide) {
-    const int band = 60;
-    const int cx = rightSide ? 2600 : 200;      /* RING_RIGHT_X / RING_LEFT_X */
-    const int y0 = 400 + 80;                    /* RING_TOP_Y + 80 */
-    const int y1 = 650 - 80;                    /* RING_BOTTOM_Y - 80 */
+    const double sx = t.w / 2800.0, sy = t.h / 800.0;
+    const int band = static_cast<int>(std::lround(60 * sx));
+    const int cx = static_cast<int>(std::lround((rightSide ? 2600 : 200) * sx));
+    const int y0 = static_cast<int>(std::lround((400 + 80) * sy));
+    const int y1 = static_cast<int>(std::lround((650 - 80) * sy));
     return count_color(t, color, tol, cx - band, y0, cx + band, y1);
 }
 

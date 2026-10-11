@@ -21,9 +21,8 @@
  *   2. 屏幕内容签名：JS 每帧重画全部车厢两侧；本移植对每块屏做内容哈希
  *      (pageMode / 闪烁 / 门 / 站序 / 线路 / 侧线名)，内容不变则跳过光栅化，
  *      仍每帧提交贴图与模型绘制——视觉与 JS 等价，CPU 占用更低。
- *   3. 字体：JS 使用 TTF 派生字号 + getFontMetrics().stringWidth()；
- *      本移植用 Gfx2D 的内置字模（CJK 由宿主 TTF 兜底），度量与绘制
- *      自洽，布局常量保持不变。
+ *   3. 字体与 JS 共用资源包内的 TTF/OTF，通过宿主 FontMetrics / drawString
+ *      保留原始字形、字宽、基线和上下行部。无宿主的测试才使用内置字模。
  */
 #pragma once
 
@@ -41,6 +40,15 @@
 namespace wr2a03 {
 
 using namespace mtr;
+
+/* Same resources as config.js. Use the existing regular Han Sans for the
+   error message (draw_num.js's source-han-sans-cn path is absent in the pack). */
+inline constexpr const char* FONT_HAN_SANS = "mtr:wr2a03/fonts/source-han-sans/source-han-sans-medium.otf";
+inline constexpr const char* FONT_HAN_REGULAR = "mtr:wr2a03/fonts/source-han-sans/source-han-sans-regular.otf";
+inline constexpr const char* FONT_ARIAL = "mtr:wr2a03/fonts/arial/arial.ttf";
+inline constexpr const char* FONT_ARIAL_BOLD = "mtr:wr2a03/fonts/arial/arialbd.ttf";
+inline constexpr const char* FONT_SANS_LAO = "mtr:wr2a03/fonts/sans_lao/sans_lao.ttf";
+inline constexpr const char* FONT_HONGLEI = "mtr:wr2a03/fonts/honglei/hongleixingshu.otf";
 
 /* MSVC 在 /std:c++17 下不保证 <cmath> 暴露 M_PI（需要 _USE_MATH_DEFINES），
    这里自带一个常量，避免依赖平台宏。 */

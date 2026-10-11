@@ -77,6 +77,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class NativeScriptManager {
     /* Must match MTR_NATIVE_ABI_VERSION in native/include/mtr/mtr_native.h.
+       v7 appends resource-font callbacks; the v6 host-table prefix and
+       snapshots remain compatible, so previously built v6 modules still load.
        v6 = mtrInit(): the host must construct the per-instance state object
        instead of treating a zeroed block as a valid one. A zeroed block is NOT
        a valid State when State holds std::string / std::vector — libstdc++
@@ -84,7 +86,11 @@ public final class NativeScriptManager {
        null (immediate SIGSEGV on Linux/macOS); only MSVC's layout tolerated it.
        v5 = JcmStop.route_circular_state (per-stop route CircularState, so the
        LCD port's 环线检测 can walk the stop list like circular.js does). */
-    private static final int ABI_VERSION = 6;
+    private static final int ABI_VERSION = 7;
+
+    private static boolean supportedAbi(int version) {
+        return version == 6 || version == ABI_VERSION;
+    }
 
     /* Route.CircularState mapping (v2 snapshots). */
     public static final int CIRCULAR_NONE = 0;
@@ -240,7 +246,7 @@ public final class NativeScriptManager {
                         scriptId, libraryPath);
                 return null;
             }
-            if (module.abiVersion != ABI_VERSION) {
+            if (!supportedAbi(module.abiVersion)) {
                 JCMLogger.error("Native script {} has ABI version {} (host {}), refusing to load.",
                         scriptId, module.abiVersion, ABI_VERSION);
                 module.dispose();
@@ -840,7 +846,7 @@ public final class NativeScriptManager {
 
         /** False when the module failed to open or failed the ABI check. */
         public boolean isValid() {
-            return nativeHandle != 0 && abiVersion == ABI_VERSION;
+            return nativeHandle != 0 && supportedAbi(abiVersion);
         }
 
         /** Raw dlopen/LoadLibrary handle (0 = the module failed to open). */

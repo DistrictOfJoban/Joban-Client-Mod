@@ -109,6 +109,20 @@ public final class NativeHost {
             new java.util.concurrent.atomic.AtomicInteger(1);
     private java.awt.Font nativeFont;
     private final java.util.Map<String, java.awt.image.BufferedImage> glyphMasks = new java.util.HashMap<>();
+    private final NativeFontRenderer fontRenderer = new NativeFontRenderer();
+
+    /** ABI 7 font callbacks. JNI passes resource IDs and text as UTF-8. */
+    public double[] measureFontText(byte[] font, byte[] text, double size, double sx, double sy) {
+        return fontRenderer.measure(font, text, size, sx, sy);
+    }
+
+    public int[] drawFontText(byte[] font, byte[] text, double size, double x, double baseline,
+                              double sx, double sy, double compression, int color,
+                              int clipX0, int clipY0, int clipX1, int clipY1,
+                              java.nio.ByteBuffer pixels, int width, int height) {
+        return fontRenderer.draw(font, text, size, x, baseline, sx, sy, compression, color,
+                clipX0, clipY0, clipX1, clipY1, pixels, width, height);
+    }
 
     /** JNI font callback. Pixels are packed ARGB ints, stored as BGRA bytes. */
     public int rasterizeText(byte[] utf8, int x, int y, int maxWidth,
@@ -424,6 +438,7 @@ public final class NativeHost {
         activeInstanceKey = null;
         glyphMasks.clear();
         nativeFont = null;
+        fontRenderer.reset();
         for (Instance instance : all) instance.close();
     }
 }

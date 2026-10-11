@@ -78,6 +78,7 @@ public class NativeIntegrationTest {
         boolean hasInk=false;
         for(int i=0;i<64*64;i++) if(glyph.getInt(i*4)!=0) { hasInk=true; break; }
         check(hasInk,"font callback writes visible glyph pixels");
+        NativeFontTest.run();
         for(String row:Files.readAllLines(Path.of(args[1]))) {
             var parts=row.split("="); var field=NativeSnapshot.class.getDeclaredField(parts[0]); field.setAccessible(true);
             check(field.getInt(null)==Integer.parseInt(parts[1]),"Java/C++ ABI mismatch at "+row);
@@ -119,6 +120,8 @@ public class NativeIntegrationTest {
         check(headHash!=0,"head plate receives uploaded pixels");
         var side0=NativeHost.get().texture(0,owner(frames.get(1)));
         var side1=NativeHost.get().texture(2,owner(frames.get(1)));
+        NativeFontTest.plate(side0.bufferedImage,"01",60,"side-number");
+        NativeFontTest.plate(headTexture.bufferedImage,"10010",30,"end-number");
         check(!Arrays.equals(((java.awt.image.DataBufferInt)side0.bufferedImage.getRaster().getDataBuffer()).getData(),
                             ((java.awt.image.DataBufferInt)side1.bufferedImage.getRaster().getDataBuffer()).getData()),"different cars retain different car numbers");
         // BGRA conversion and clipping through the real GraphicsTexture upload.
@@ -156,7 +159,22 @@ public class NativeIntegrationTest {
         load();
         var reloaded=NativeScriptManager.renderVehicle("vehicle/wr2a03","wr2a03",snapshot);
         models(reloaded.get(0),20); models(reloaded.get(1),10); apply(reloaded,2);
+        NativeFontTest.previews();
         NativeScriptManager.reload();
+        if (System.getProperty("jcm.test.legacy6") != null) {
+            String extension = NativeScriptManager.getPlatformKey().equals("windows") ? ".dll" :
+                    NativeScriptManager.getPlatformKey().equals("macos") ? ".dylib" : ".so";
+            String prefix = extension.equals(".dll") ? "" : "lib";
+            var libraries = new JsonArray();
+            libraries.add("legacy:" + prefix + "wr2a03_lcd" + extension);
+            libraries.add("legacy:" + prefix + "wr2a03_train_num" + extension);
+            NativeScriptManager.loadManyFromDeclaration("legacy6", libraries);
+            check(NativeScriptManager.getModules("legacy6").size() == 2, "previously compiled ABI 6 modules load");
+            var old = NativeScriptManager.renderVehicle("legacy/validation", "legacy6", snapshot);
+            check(old.size() == 2, "ABI 6 modules accept their lifecycle version and still render");
+            System.out.println("Verified previously compiled ABI 6 WR2-A03 modules with the ABI 7 host");
+            NativeScriptManager.reload();
+        }
         System.out.println("JVM JNI INTEGRATION OK ("+assertions+" assertions)");
     }
 }

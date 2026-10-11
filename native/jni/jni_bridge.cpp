@@ -173,6 +173,8 @@ jobject g_host = nullptr;                 /* global ref, or null      */
 jmethodID g_mid_create_resources = nullptr;
 jmethodID g_mid_upload_pixels = nullptr;
 jmethodID g_mid_rasterize_text = nullptr;
+jmethodID g_mid_measure_font_text = nullptr;
+jmethodID g_mid_draw_font_text = nullptr;
 
 /* (still inside the anonymous namespace opened with the bookkeeping structs) */
 
@@ -186,6 +188,8 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
     g_mid_create_resources = nullptr;
     g_mid_upload_pixels = nullptr;
     g_mid_rasterize_text = nullptr;
+    g_mid_measure_font_text = nullptr;
+    g_mid_draw_font_text = nullptr;
     if (!host) return;
 
     g_host = env->NewGlobalRef(host);
@@ -194,6 +198,8 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
     g_mid_create_resources = env->GetMethodID(cls, "createResources", "([I[I[F[F[I[I)[I");
     g_mid_upload_pixels = env->GetMethodID(cls, "uploadPixels", "(IIIII[B)V");
     g_mid_rasterize_text = env->GetMethodID(cls, "rasterizeText", "([BIIIIIILjava/nio/ByteBuffer;II)I");
+    g_mid_measure_font_text = env->GetMethodID(cls, "measureFontText", "([B[BDDD)[D");
+    g_mid_draw_font_text = env->GetMethodID(cls, "drawFontText", "([B[BDDDDDDIIIIILjava/nio/ByteBuffer;II)[I");
     if (!g_mid_create_resources || !g_mid_upload_pixels) {
         std::fprintf(stderr, "[jcm_native_bridge] host object is missing "
                              "createResources/uploadPixels — native host disabled\n");
@@ -265,6 +271,64 @@ void host_log(void*, int32_t level, const char* utf8, int32_t len) {
     std::fprintf(stderr, "[native-script/%d] %.*s\n", level, len, utf8);
 }
 
+jbyteArray utf8_array(JNIEnv* env, const char* text, int32_t len) {
+    jbyteArray result = env->NewByteArray(len);
+    if (result && len) env->SetByteArrayRegion(result, 0, len, reinterpret_cast<const jbyte*>(text));
+    return result;
+}
+
+int32_t host_measure_font_text(void*, const char* font, const char* utf8, int32_t len,
+                                double size, double sx, double sy, JcmFontMetrics* out) {
+    if (!g_vm || !g_host || !g_mid_measure_font_text || !font || !utf8 || len < 0 || !out) return -1;
+    JNIEnv* env = nullptr;
+    if (g_vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) != JNI_OK) return -1;
+    if (env->PushLocalFrame(4) < 0) return -1;
+    jbyteArray resource = utf8_array(env, font, static_cast<int32_t>(std::strlen(font)));
+    jbyteArray text = utf8_array(env, utf8, len);
+    jdoubleArray result = nullptr;
+    if (resource && text) result = static_cast<jdoubleArray>(env->CallObjectMethod(
+        g_host, g_mid_measure_font_text, resource, text, size, sx, sy));
+    int32_t status = -1;
+    if (!env->ExceptionCheck() && result && env->GetArrayLength(result) == 4) {
+        jdouble values[4];
+        env->GetDoubleArrayRegion(result, 0, 4, values);
+        *out = {values[0], values[1], values[2], values[3]};
+        status = 0;
+    }
+    if (env->ExceptionCheck()) { env->ExceptionDescribe(); env->ExceptionClear(); }
+    env->PopLocalFrame(nullptr);
+    return status;
+}
+
+int32_t host_draw_font_text(void*, const char* font, const char* utf8, int32_t len,
+                             double size, double x, double baseline, double sx, double sy,
+                             double compression, uint32_t argb, int32_t clip_x0, int32_t clip_y0,
+                             int32_t clip_x1, int32_t clip_y1, uint8_t* pixels,
+                             int32_t width, int32_t height, int32_t* bounds) {
+    if (!g_vm || !g_host || !g_mid_draw_font_text || !font || !utf8 || len < 0
+            || !pixels || width <= 0 || height <= 0 || !bounds) return -1;
+    JNIEnv* env = nullptr;
+    if (g_vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) != JNI_OK) return -1;
+    if (env->PushLocalFrame(5) < 0) return -1;
+    jbyteArray resource = utf8_array(env, font, static_cast<int32_t>(std::strlen(font)));
+    jbyteArray text = utf8_array(env, utf8, len);
+    jobject target = env->NewDirectByteBuffer(pixels, static_cast<jlong>(width) * height * 4);
+    jintArray result = nullptr;
+    if (resource && text && target) result = static_cast<jintArray>(env->CallObjectMethod(
+        g_host, g_mid_draw_font_text, resource, text, size, x, baseline, sx, sy, compression,
+        static_cast<jint>(argb), clip_x0, clip_y0, clip_x1, clip_y1, target, width, height));
+    int32_t status = -1;
+    if (!env->ExceptionCheck() && result && env->GetArrayLength(result) == 4) {
+        jint values[4];
+        env->GetIntArrayRegion(result, 0, 4, values);
+        for (int i = 0; i < 4; i++) bounds[i] = static_cast<int32_t>(values[i]);
+        status = 0;
+    }
+    if (env->ExceptionCheck()) { env->ExceptionDescribe(); env->ExceptionClear(); }
+    env->PopLocalFrame(nullptr);
+    return status;
+}
+
 /* v4: host-built textured quad — record the geometry for Java. */
 int32_t host_acquire_quad_model(void* user, const float* verts, const float* uv,
                                 int32_t vertex_count, int32_t render_stage,
@@ -289,6 +353,8 @@ void fill_host(JcmHostServices& host, Instance& inst) {
     host.rasterize_text = host_rasterize_text;
     host.log = host_log;
     host.acquire_quad_model = host_acquire_quad_model;
+    host.measure_font_text = host_measure_font_text;
+    host.draw_font_text = host_draw_font_text;
 }
 
 #if !defined(_WIN32)
@@ -544,7 +610,7 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
     fill_host(host, inst);
 
     JcmFrameInput in{};
-    in.abi_version = MTR_NATIVE_ABI_VERSION;
+    in.abi_version = mod->abi();
     in.resource_kind = resourceKind;
     in.snapshot = inst.last_snapshot.data();
     in.state = inst.state.data();
@@ -631,7 +697,7 @@ JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey)
         JcmHostServices host;
         fill_host(host, it->second);
         JcmFrameInput in{};
-        in.abi_version = MTR_NATIVE_ABI_VERSION;
+        in.abi_version = mod->abi();
         in.resource_kind = MTR_RESOURCE_VEHICLE; /* informational for dispose */
         in.snapshot = it->second.last_snapshot.data();
         in.state = it->second.state.data();
@@ -653,7 +719,7 @@ JNI_M(nClose)(JNIEnv*, jobject, jlong handle) {
             if (!kv.second.created) continue;
             fill_host(host, kv.second);
             JcmFrameInput in{};
-            in.abi_version = MTR_NATIVE_ABI_VERSION;
+            in.abi_version = mod->abi();
             in.resource_kind = MTR_RESOURCE_VEHICLE;
             in.snapshot = kv.second.last_snapshot.data();
             in.state = kv.second.state.data();

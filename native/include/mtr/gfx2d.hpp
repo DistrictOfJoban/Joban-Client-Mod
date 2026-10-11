@@ -10,7 +10,12 @@
  * draw_common.js / draw_circular.js / draw_linear.js / draw_num.js ...)
  * port 1:1 to C++ with only mechanical edits.
  *
- * Text model (self-consistent with the rasterizer, host-independent):
+ * Resource text: supplying font resource IDs to the constructor uses the
+ * host's real FontMetrics and drawString for whole UTF-8 strings, preserving
+ * advances, bearings, baseline, compression, alpha and device clipping.
+ * WR2-A03 supplies the same resource fonts as its JavaScript version.
+ *
+ * Headless / legacy text fallback:
  *   - ASCII/latin: built-in 5x7 font scaled to the requested size,
  *     proportional advances (narrow i/l/., wide m/W) — same numbers
  *     returned by text_width() and used when drawing, so JS layout
@@ -114,8 +119,10 @@ inline double char_advance_em(uint32_t cp) {
 
 class Gfx2D {
 public:
-    Gfx2D(GraphicsTexture& tex, const JcmHostServices* host = nullptr)
+    Gfx2D(GraphicsTexture& tex, const JcmHostServices* host = nullptr,
+          const char* font_cjk = nullptr, const char* font_latin = nullptr)
         : tex_(tex), host_(host),
+          font_cjk_(font_cjk), font_latin_(font_latin),
           base_(tex.pixels32()), stride_(tex.width()) {
         clip_x0_ = 0; clip_y0_ = 0;
         clip_x1_ = tex.width(); clip_y1_ = tex.height();
@@ -313,6 +320,27 @@ public:
     static double text_ascent(double size) { return size * 0.78; }
     static double text_descent(double size) { return size * 0.22; }
 
+    /* Resource font metrics are paired with the host drawString callback.
+       The static text_* helpers below remain the headless bitmap fallback. */
+    JcmFontMetrics font_metrics(double size, const char* utf8 = "",
+                                 const char* font = nullptr) const {
+        JcmFontMetrics result{};
+        const char* path = font ? font : text_font(utf8, static_cast<int32_t>(std::strlen(utf8)));
+        if (path && host_ && host_->measure_font_text &&
+            host_->measure_font_text(host_->user, path, utf8,
+                static_cast<int32_t>(std::strlen(utf8)), size, sx_, sy_, &result) == 0) return result;
+        return {text_width(size, utf8), text_ascent(size), text_descent(size), size};
+    }
+    double font_width(double size, const char* utf8, const char* font = nullptr) const {
+        return font_metrics(size, utf8, font).width;
+    }
+    double font_ascent(double size, const char* font = nullptr) const {
+        return font_metrics(size, "", font).ascent;
+    }
+    double font_descent(double size, const char* font = nullptr) const {
+        return font_metrics(size, "", font).descent;
+    }
+
     /* Logical width — must match draw_text exactly (self-consistent
        replacement for g.getFontMetrics().stringWidth). */
     static double text_width(double size, const char* utf8) {
@@ -340,8 +368,9 @@ public:
     }
 
     /* g.drawString(str, x, y) — baseline at y, current color. */
-    void draw_text(double x, double y_baseline, double size, const char* utf8) {
-        draw_text_impl(x, y_baseline, size, size, utf8, static_cast<int32_t>(std::strlen(utf8)), 1.0);
+    void draw_text(double x, double y_baseline, double size, const char* utf8,
+                   const char* font = nullptr) {
+        draw_text_impl(x, y_baseline, size, size, utf8, static_cast<int32_t>(std::strlen(utf8)), 1.0, font);
     }
     void draw_text(double x, double y_baseline, double size, const StrView& s) {
         draw_text_impl(x, y_baseline, size, size, s.data, s.len, 1.0);
@@ -354,9 +383,9 @@ public:
     }
     /* drawAdaptiveCenteredText: centered + optional horizontal compression. */
     void draw_text_compressed(double cx, double y_baseline, double size,
-                              const char* utf8, double compress) {
+                              const char* utf8, double compress, const char* font = nullptr) {
         draw_text_impl(cx, y_baseline, size, size, utf8,
-                       static_cast<int32_t>(std::strlen(utf8)), compress);
+                       static_cast<int32_t>(std::strlen(utf8)), compress, font);
     }
 
     /* drawCenteredText */
@@ -374,8 +403,8 @@ public:
         fill_round_rect(x, y, w, h, h * 0.3, h * 0.3);
         const uint32_t fg = contrast_text(bg);
         set_color(fg);
-        const double tw = text_width(label_size, label);
-        draw_text(x + (w - tw) * 0.5, y + h * 0.5 + text_ascent(label_size) * 0.5,
+        const double tw = font_width(label_size, label);
+        draw_text(x + (w - tw) * 0.5, y + h * 0.5 + font_ascent(label_size) * 0.5,
                   label_size, label);
     }
 
@@ -456,20 +485,40 @@ private:
                 pt(cx + rx * std::cos(a), cy + ry * std::sin(a));
             }
         };
-        arc(x + rx, y + ry, -M_PI / 2, 0);          /* TL */
+        pt(x + rx, y);
         pt(x + w - rx, y);
-        arc(x + w - rx, y + ry, 0, M_PI / 2);       /* TR */
+        arc(x + w - rx, y + ry, -M_PI / 2, 0);     /* TR */
         pt(x + w, y + h - ry);
-        arc(x + w - rx, y + h - ry, M_PI / 2, M_PI);/* BR */
+        arc(x + w - rx, y + h - ry, 0, M_PI / 2);   /* BR */
         pt(x + rx, y + h);
-        arc(x + rx, y + h - ry, M_PI, 3 * M_PI / 2);/* BL */
+        arc(x + rx, y + h - ry, M_PI / 2, M_PI);    /* BL */
         pt(x, y + ry);
+        arc(x + rx, y + ry, M_PI, 3 * M_PI / 2);    /* TL, closes the path */
+    }
+
+    const char* text_font(const char* utf8, int32_t len) const {
+        Utf8Cursor c(utf8, len);
+        while (!c.done()) if (is_cjk_cp(c.next())) return font_cjk_;
+        return font_latin_;
     }
 
     /* Shared text rasterizer: segments CJK vs latin, per-glyph size,
        optional X compression, deterministic advances. */
     void draw_text_impl(double x, double y_baseline, double size_cjk, double size_en,
-                        const char* utf8, int32_t len, double compress) {
+                        const char* utf8, int32_t len, double compress, const char* font = nullptr) {
+        if (size_cjk == size_en) {
+            const char* path = font ? font : text_font(utf8, len);
+            int32_t bounds[4]{};
+            if (path && host_ && host_->draw_font_text &&
+                host_->draw_font_text(host_->user, path, utf8, len, size_en,
+                    x, y_baseline, sx_, sy_, compress, color_,
+                    clip_x0_, clip_y0_, clip_x1_, clip_y1_,
+                    tex_.pixels(), tex_.width(), tex_.height(), bounds) == 0) {
+                if (bounds[2] > bounds[0] && bounds[3] > bounds[1])
+                    dirty_union(bounds[0], bounds[1], bounds[2] - 1, bounds[3] - 1);
+                return;
+            }
+        }
         Utf8Cursor c(utf8, len);
         double pen = x;   /* logical */
         while (!c.done()) {
@@ -584,6 +633,8 @@ private:
 
     GraphicsTexture& tex_;
     const JcmHostServices* host_ = nullptr;
+    const char* font_cjk_ = nullptr;
+    const char* font_latin_ = nullptr;
     uint32_t* base_ = nullptr;        /* cached pixel base (no realloc while drawing) */
     int32_t stride_ = 0;
     uint32_t color_ = 0xFF000000u;

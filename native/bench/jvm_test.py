@@ -15,6 +15,14 @@ import urllib.request
 STUBS = {
     'com/lx862/mtrscripting/core/util/ScriptResourceUtil.java': '''package com.lx862.mtrscripting.core.util;
 public class ScriptResourceUtil {
+ public static java.awt.Font readFont(org.mtr.mapping.holder.Identifier id) {
+  String pack=System.getProperty("jcm.test.pack");
+  if(pack==null) return getSystemFont("Noto Sans");
+  String namespace=id.toString().split(":",2)[0];
+  try { return java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT,
+    java.nio.file.Path.of(pack,"assets",namespace,id.getPath()).toFile()); }
+  catch(Exception e) { throw new AssertionError("Missing requested resource font "+id,e); }
+ }
  public static java.awt.Font getSystemFont(String name) {
   try { return java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, new java.io.File(System.getProperty("jcm.test.font"))); }
   catch (Exception e) { throw new AssertionError("Failed to load the bundled JCM CJK font", e); }
@@ -37,7 +45,8 @@ import org.mtr.mapping.holder.Identifier;
 public class ResourceManagerHelper {
  public static java.nio.file.Path root;
  public static void readAllResources(Identifier id, java.util.function.Consumer<java.io.InputStream> reader) {
-  try { reader.accept(java.nio.file.Files.newInputStream(root.resolve(id.getPath()))); }
+  var source=id.toString().startsWith("legacy:") ? java.nio.file.Path.of(System.getProperty("jcm.test.legacy6")) : root;
+  try { reader.accept(java.nio.file.Files.newInputStream(source.resolve(id.getPath()))); }
   catch (java.io.IOException e) { throw new java.io.UncheckedIOException(e); }
  }
 }''',
@@ -202,6 +211,8 @@ def main():
     parser.add_argument('--java-home', type=Path, default=os.environ.get('JAVA_HOME'))
     parser.add_argument('--source-repo', type=Path)
     parser.add_argument('--platform', default=os.environ.get('NATIVE_TEST_PLATFORM'))
+    parser.add_argument('--resource-pack', type=Path, help='Validate the actual WR2-A03 resource fonts and save texture previews')
+    parser.add_argument('--legacy6-directory', type=Path, help='Validate already compiled ABI 6 WR2-A03 modules with the new host')
     args = parser.parse_args()
     repo = args.source_repo or Path(__file__).resolve().parents[2]
     build = args.build.resolve()
@@ -220,9 +231,10 @@ def main():
         sources.append(file)
     main_source = Path(__file__).with_name('jvm') / 'NativeIntegrationTest.java'
     sources.append(main_source)
+    sources.append(main_source.with_name('NativeFontTest.java'))
     base = repo / 'fabric/src/main/java'
     sources.extend(base / ('com/lx862/jcm/nativeapi/' + name + '.java') for name in [
-        'NativeScriptManager', 'NativeHost', 'NativeVehicleDriver', 'NativeDrawRegistry', 'NativeModelDrawCall', 'NativeSnapshot'])
+        'NativeScriptManager', 'NativeHost', 'NativeFontRenderer', 'NativeVehicleDriver', 'NativeDrawRegistry', 'NativeModelDrawCall', 'NativeSnapshot'])
     sources.append(base / 'com/lx862/mtrscripting/core/util/GraphicsTexture.java')
     classes = work / 'classes'
     classes.mkdir(exist_ok=True)
@@ -245,7 +257,12 @@ def main():
     with layout.open('w', encoding='utf-8') as output:
         subprocess.run([str(libs / ('native_abi_layout.exe' if os.name == 'nt' else 'native_abi_layout'))], stdout=output, check=True)
     font = repo / 'fabric/src/main/resources/assets/mtr/font/noto-sans-cjk-tc-medium.otf'
-    subprocess.run([java_tool('java'), '-Xmx1G', '-Djava.awt.headless=true', '-Djcm.test.font=' + str(font), '-cp', str(classes) + os.pathsep + str(gson), 'com.lx862.jcm.nativeapi.NativeIntegrationTest', str(libs), str(layout)], check=True)
+    options = ['-Djcm.test.output=' + str(work)]
+    if args.resource_pack:
+        options.append('-Djcm.test.pack=' + str(args.resource_pack.resolve()))
+    if args.legacy6_directory:
+        options.append('-Djcm.test.legacy6=' + str(args.legacy6_directory.resolve()))
+    subprocess.run([java_tool('java'), '-Xmx1G', '-Djava.awt.headless=true', '-Djcm.test.font=' + str(font), *options, '-cp', str(classes) + os.pathsep + str(gson), 'com.lx862.jcm.nativeapi.NativeIntegrationTest', str(libs), str(layout)], check=True)
 
 
 if __name__ == '__main__':
