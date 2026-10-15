@@ -68,7 +68,7 @@ public class RenderRailsMixin {
 
     @Inject(method = "lambda$render$1", at = @At("HEAD"), cancellable = true)
     private static void jsblock$improveRailCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
-        boolean overrideDefaultBehaviour = JCMClientConfig.INSTANCE.mtrPatch.railCullingImprovement.value();
+        boolean overrideDefaultBehaviour = JCMClientConfig.INSTANCE.mtrPatch.allowCameraLowering.value();
         if(!overrideDefaultBehaviour) return;
 
         Box railCullingBoundary = JCMPatchForMTR.clampBoundingBoxToRenderDistance(

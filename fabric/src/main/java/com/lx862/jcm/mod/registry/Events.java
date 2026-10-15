@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.registry;
 import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.JCMServerStats;
+import com.lx862.jcm.mod.extra.JCMPatchForMTR;
 import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.jcm.mod.resource.JCMResourceManager;
 import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
@@ -26,6 +27,7 @@ public class Events {
             JCMScripting.tick();
             MTRContentScripting.tick();
             VehicleDataCache.tick();
+            JCMPatchForMTR.tick();
 
             if(MinecraftClient.getInstance().getWorldMapped() == null) {
                 VehicleDataCache.clearData();

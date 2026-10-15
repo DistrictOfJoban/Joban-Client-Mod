@@ -2,9 +2,12 @@ package com.lx862.jcm.mod.extra;
 
 import com.lx862.jcm.mixin.mtrpatch.OptimizedRendererAccessorMixin;
 import com.lx862.jcm.mixin.mtrpatch.OptimizedRendererWrapperAccessorMixin;
+import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapper;
 import it.unimi.dsi.fastutil.longs.Long2IntArrayMap;
 import org.mtr.mapping.holder.Box;
 import org.mtr.mapping.holder.Identifier;
+import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mapping.render.shader.ModShaderHandler;
@@ -16,10 +19,12 @@ import java.nio.file.FileSystems;
 import java.util.Locale;
 
 public class JCMPatchForMTR {
-    public static Identifier LIFT_DING_SOUND = new Identifier("minecraft:block.note_block.pling");
     private final static int RAIL_CULLING_AREA_LIMIT = Integer.MAX_VALUE / 2;
     private static boolean cachedRenderingShadow = false;
-    private static Long2IntArrayMap liftInstructions = new Long2IntArrayMap();
+    private static final Long2IntArrayMap liftInstructions = new Long2IntArrayMap();
+    public static Identifier LIFT_DING_SOUND = new Identifier("minecraft:block.note_block.pling");
+    public static boolean isSitting = false;
+    public static boolean wasSneaking = false;
 
     /**
      * Reload optimized rendering shaders.<br>
@@ -30,6 +35,22 @@ public class JCMPatchForMTR {
         OptimizedRenderer optimizedRenderer = ((OptimizedRendererWrapperAccessorMixin)(Object) CustomResourceLoader.OPTIMIZED_RENDERER_WRAPPER).getOptimizedRenderer();
         ShaderManager shaderManager = ((OptimizedRendererAccessorMixin)(Object) optimizedRenderer).getShaderManager();
         shaderManager.reloadShaders();
+    }
+
+    public static void tick() {
+        if(MinecraftClient.getInstance().getPlayerMapped() != null) {
+            if(JCMClientConfig.INSTANCE.mtrPatch.allowCameraLowering.value()) {
+                boolean isPlayerSneaking = MinecraftClient.getInstance().getPlayerMapped().isSneaking();
+                if(MTRWrapper.Data.getPlayerMountedVehicle() == null) {
+                    JCMPatchForMTR.isSitting = false;
+                } else {
+                    if(isPlayerSneaking && !JCMPatchForMTR.wasSneaking) {
+                        JCMPatchForMTR.isSitting = !JCMPatchForMTR.isSitting;
+                    }
+                }
+                JCMPatchForMTR.wasSneaking = isPlayerSneaking;
+            }
+        }
     }
 
     /**

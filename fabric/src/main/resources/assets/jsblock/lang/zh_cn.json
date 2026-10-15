@@ -97,6 +97,7 @@
     "gui.jsblock.config.listview.title.disable_scripting": "停用脚本功能 (需重启)",
     "gui.jsblock.config.listview.title.disable_scripting_class_restriction": "放宽脚本限制",
     "gui.jsblock.config.listview.title.hide_riding_vehicle": "不显示正在乘坐的车辆",
+    "gui.jsblock.config.listview.title.allow_camera_lowering": "允许潜行 (Shift) 用作降低镜头视野",
     "gui.jsblock.config.listview.title.script_debug_mode": "脚本除错模式",
     "gui.jsblock.config.listview.title.script_show_log_source": "显示脚本日志来源",
     "gui.jsblock.config.listview.widget.open": "查看",

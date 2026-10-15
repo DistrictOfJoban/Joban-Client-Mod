@@ -53,6 +53,10 @@ public class JCMClientConfig extends ReflectiveConfig {
         @Comment("Whether to show platform/siding tooltip when hovered in MTR Dashboard.")
         public final TrackedValue<Boolean> showDashboardTooltip = value(true);
 
+        @Comment("Whether to enable a camera-lowering feature, togglable via sneaking on vehicles.")
+        @Comment("Equivalent to MTR 3's sitting feature.")
+        public final TrackedValue<Boolean> allowCameraLowering = value(true);
+
         @Comment("Rail Culling Improvements")
         @ChangeWarning(folk.sisby.kaleido.lib.quiltconfig.api.metadata.ChangeWarning.Type.Experimental)
         public final TrackedValue<Boolean> railCullingImprovement = value(false);
