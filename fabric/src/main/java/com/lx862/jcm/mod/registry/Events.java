@@ -38,6 +38,7 @@ public class Events {
             /* On behalf of MTR Scripting */
             MTRContentScripting.getScriptManager().scriptErrorNotifier.flush();
             JCMScripting.getScriptManager().scriptErrorNotifier.flush();
+            JCMPatchForMTR.cachedRailNodeState.clear();
         });
 
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerEndClientTick(() -> {

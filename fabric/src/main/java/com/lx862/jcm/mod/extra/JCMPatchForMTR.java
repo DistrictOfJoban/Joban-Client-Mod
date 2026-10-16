@@ -5,10 +5,7 @@ import com.lx862.jcm.mixin.mtrpatch.OptimizedRendererWrapperAccessorMixin;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapper;
 import it.unimi.dsi.fastutil.longs.Long2IntArrayMap;
-import org.mtr.mapping.holder.Box;
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.holder.MinecraftClient;
-import org.mtr.mapping.holder.Vector3d;
+import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mapping.render.shader.ModShaderHandler;
 import org.mtr.mapping.render.shader.ShaderManager;
@@ -16,13 +13,16 @@ import org.mtr.mod.client.CustomResourceLoader;
 import org.mtr.mod.resource.CustomResourceTools;
 
 import java.nio.file.FileSystems;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class JCMPatchForMTR {
     private final static int RAIL_CULLING_AREA_LIMIT = Integer.MAX_VALUE / 2;
     private static boolean cachedRenderingShadow = false;
     private static final Long2IntArrayMap liftInstructions = new Long2IntArrayMap();
     public static Identifier LIFT_DING_SOUND = new Identifier("minecraft:block.note_block.pling");
+    public static Map<BlockPos, BlockState> cachedRailNodeState = new HashMap<>();
     public static boolean isSitting = false;
     public static boolean wasSneaking = false;
 

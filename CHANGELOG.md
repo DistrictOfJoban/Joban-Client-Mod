@@ -11,6 +11,7 @@
 
 ## General
 ### MTR Patches
+- (Fabric-only) Aims to preserve rail preview of long-running rail (Outside the render distance) from disappearing.
 - For MTR's Item Selection Screen (Multi-select), you can now hold `Shift` to exclusively select one item, instead of adding the new item then removing the existing item.
 - Re-add camera-lowering feature from MTR 3 by sneaking. (Previously branded as "sitting")
   - May be turned off in JCM Settings (Revert to MTR 4 behaviour)

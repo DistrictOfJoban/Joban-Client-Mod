@@ -1,5 +1,7 @@
 package com.lx862.jcm.mixin.mtrpatch;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.extra.JCMPatchForMTR;
 import org.mtr.core.data.Rail;
@@ -13,6 +15,7 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.MinecraftClientHelper;
+import org.mtr.mod.block.BlockNode;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.render.RenderRails;
 import org.spongepowered.asm.mixin.Mixin;
@@ -88,5 +91,16 @@ public class RenderRailsMixin {
         );
 
         cir.setReturnValue(() -> railWrapper.shouldRender = shouldRender);
+    }
+
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lorg/mtr/mapping/holder/ClientWorld;getBlockState(Lorg/mtr/mapping/holder/BlockPos;)Lorg/mtr/mapping/holder/BlockState;", ordinal = 0))
+    private static BlockState jsblock$returnCachedRailNode(ClientWorld instance, BlockPos pos, Operation<BlockState> original) {
+        BlockState bs = original.call(instance, pos);
+        if(bs.getBlock().data instanceof BlockNode) {
+            JCMPatchForMTR.cachedRailNodeState.put(pos, bs);
+            return bs;
+        } else {
+            return JCMPatchForMTR.cachedRailNodeState.getOrDefault(pos, bs);
+        }
     }
 }
