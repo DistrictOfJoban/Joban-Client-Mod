@@ -44,7 +44,9 @@ This is an interim beta release.
 
 ## Translations
 Thanks to the following people who have contributed translations for this release! (No particular order):
-- TODO
+- BugQuantumCore & Mewzica (zh_cn)
+- DelphoxOTS (ja_jp)
+- Fed (it_it)
 
 Translations for JCM is now hosted on [ZiYue's Weblate](https://weblate.ziyuesinicization.site/projects/joban-client-mod/)
 
