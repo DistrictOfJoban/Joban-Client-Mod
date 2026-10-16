@@ -1,1 +1,18 @@
-{}
+{
+    "block.jsblock.apg_door_drl": "APG (cineál líne ionaid saoire Disney)",
+    "block.jsblock.apg_glass_drl": "APG (cineál líne ionaid saoire Disney)",
+    "block.jsblock.apg_glass_end_drl": "APG (cineál líne ionaid saoire Disney)",
+    "block.jsblock.auto_iron_door": "Doras Iarainn Uathoibrithe",
+    "block.jsblock.block.rv_pids_pole": "Caithfear é a chur díreach os cionn na scáileán PIDS reatha de chuid Railway Vision",
+    "block.jsblock.buffer_stop": "Stad Maolánach (Cineál Líne Iarnróid Thoir)",
+    "block.jsblock.butterfly_light": "Táscaire Dúnta an Dorais (Solas Féileacáin)",
+    "block.jsblock.ceiling_slanted": "Uasteorainn Dhiagonálach",
+    "block.jsblock.circle_wall_1": "Balla Ciorclach 1",
+    "block.jsblock.circle_wall_2": "Balla Ciorclach 2",
+    "block.jsblock.circle_wall_3": "Balla Ciorclach 3",
+    "block.jsblock.circle_wall_4": "Balla Ciorclach 4",
+    "block.jsblock.circle_wall_5": "Balla Ciorclach 5",
+    "block.jsblock.circle_wall_6": "Balla Ciorclach 6",
+    "block.jsblock.circle_wall_7": "Balla Ciorclach 7",
+    "block.jsblock.departure_pole": "Cuaille (Beartaithe do Thiner Imeachta)"
+}
