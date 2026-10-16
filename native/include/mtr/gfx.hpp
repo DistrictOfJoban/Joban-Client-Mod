@@ -56,11 +56,16 @@ public:
         std::swap(dirty_y_, o.dirty_y_);
         std::swap(dirty_w_, o.dirty_w_);
         std::swap(dirty_h_, o.dirty_h_);
+        std::swap(last_upload_bytes_, o.last_upload_bytes_);
     }
 
     int32_t handle() const { return handle_; }
     int32_t width()  const { return width_; }
     int32_t height() const { return height_; }
+    int64_t texture_bytes() const {
+        return static_cast<int64_t>(width_) * static_cast<int64_t>(height_) * 4;
+    }
+    int64_t last_upload_bytes() const { return last_upload_bytes_; }
 
     /* Row-major BGRA8 pixel storage, direct access from C++. */
     uint8_t* pixels() { return reinterpret_cast<uint8_t*>(pixels_.data()); }
@@ -108,6 +113,7 @@ public:
        this texture through its host handle. Records with handle == -1
        (no host texture, e.g. headless tests) are ignored by the host. */
     void upload(FrameRecorder& frame) {
+        last_upload_bytes_ = 0;
         if (dirty_w_ <= 0 || dirty_h_ <= 0) return;
         /* Final clamp before the pointer arithmetic. mark_dirty() already
            refuses out-of-range samples, but the rect is also the source of a
@@ -132,6 +138,7 @@ public:
         r.dirty_w = dirty_w_;
         r.dirty_h = dirty_h_;
         r.pixel_data_len = static_cast<int64_t>(dirty_w_) * dirty_h_ * 4;
+        last_upload_bytes_ = r.pixel_data_len;
 
         const uint8_t* base = pixels() + (static_cast<size_t>(dirty_y_) * width_ + dirty_x_) * 4;
         if (dirty_w_ == width_) {
@@ -162,6 +169,7 @@ private:
     int32_t handle_ = INVALID;
     std::vector<uint32_t> pixels_;   /* ARGB little-endian storage */
     int32_t dirty_x_ = 0, dirty_y_ = 0, dirty_w_ = 0, dirty_h_ = 0;
+    int64_t last_upload_bytes_ = 0;
 };
 
 /**

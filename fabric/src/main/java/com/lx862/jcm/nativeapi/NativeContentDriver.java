@@ -160,8 +160,7 @@ public final class NativeContentDriver {
             } else if(kind==6) {
                 long offset=records.getLong(pos+40),length=records.getLong(pos+48);
                 if(frame.pixelArena==null||offset<0||length<0||length>frame.pixelArena.limit()-offset||length>Integer.MAX_VALUE) throw new IllegalArgumentException("Invalid native pixel arena");
-                ByteBuffer src=frame.pixelArena.duplicate(); src.position((int)offset); byte[] data=new byte[(int)length]; src.get(data);
-                NativeHost.get().uploadPixels(records.getInt(pos+8),records.getInt(pos+20),records.getInt(pos+24),records.getInt(pos+28),records.getInt(pos+32),data);
+                NativeHost.get().uploadPixels(records.getInt(pos+8),records.getInt(pos+20),records.getInt(pos+24),records.getInt(pos+28),records.getInt(pos+32),frame.pixelArena,offset,length);
             } else if(kind==7&&context instanceof EyeCandyScriptContext) {
                 int count=records.getInt(pos+12),offset=records.getInt(pos+16);
                 if(frame.floatArena==null||count<0||offset<0||(offset&3)!=0||(long)offset+(long)count*24>frame.floatArena.limit()) throw new IllegalArgumentException("Invalid native shape arena");

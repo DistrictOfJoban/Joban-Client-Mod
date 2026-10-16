@@ -95,6 +95,7 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
                 if (rootProject.hasProperty("native_bridge_dir")) {
                         def bridges = rootProject.file(rootProject.property("native_bridge_dir"))
                         from(bridges) {
+                                include "**/*.dll", "**/*.so", "**/*.dylib"
                                 into "assets/jcm/natives"
                         }
                 }

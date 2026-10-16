@@ -13,22 +13,23 @@
 		"StrikeSNC",
 		"Dooji",
 		"Jonathan Ho",
-		"CinderaceOTS"
+		"CinderaceOTS",
+		"BugQuantumCore"
 	],
 	"contact": {
 		"homepage": "https://jcm.joban.org",
-		"sources": "https://github.com/DistrictOfJoban/Joban-Client-Mod",
-		"issues": "https://github.com/DistrictOfJoban/Joban-Client-Mod/issues"
+		"sources": "https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang",
+		"issues": "https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/issues"
 	},
 	"license": "MIT",
 	"icon": "assets/jsblock/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-          "com.lx862.jcm.entrypoint.Main"
+			"com.lx862.jcm.entrypoint.Main"
 		],
 		"client": [
-          "com.lx862.jcm.entrypoint.MainClient"
+			"com.lx862.jcm.entrypoint.MainClient"
 		],
 		"modmenu": [
 			"com.lx862.jcm.entrypoint.ModMenuConfig"

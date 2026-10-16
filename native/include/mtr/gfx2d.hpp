@@ -74,20 +74,26 @@ struct Utf8Cursor {
         const uint8_t c = static_cast<uint8_t>(*p++);
         if (c < 0x80) return c;
         if ((c & 0xE0) == 0xC0 && p < end) {
-            const uint32_t cp = ((c & 0x1Fu) << 6) | (static_cast<uint8_t>(*p++) & 0x3Fu);
+            const uint8_t c1 = static_cast<uint8_t>(*p++);
+            const uint32_t cp = ((c & 0x1Fu) << 6) | (c1 & 0x3Fu);
             return cp;
         }
         if ((c & 0xF0) == 0xE0 && p + 1 < end) {
+            const uint8_t c1 = static_cast<uint8_t>(*p++);
+            const uint8_t c2 = static_cast<uint8_t>(*p++);
             const uint32_t cp = ((c & 0x0Fu) << 12)
-                | ((static_cast<uint8_t>(*p++) & 0x3Fu) << 6)
-                | (static_cast<uint8_t>(*p++) & 0x3Fu);
+                | ((c1 & 0x3Fu) << 6)
+                | (c2 & 0x3Fu);
             return cp;
         }
         if ((c & 0xF8) == 0xF0 && p + 2 < end) {
+            const uint8_t c1 = static_cast<uint8_t>(*p++);
+            const uint8_t c2 = static_cast<uint8_t>(*p++);
+            const uint8_t c3 = static_cast<uint8_t>(*p++);
             const uint32_t cp = ((c & 0x07u) << 18)
-                | ((static_cast<uint8_t>(*p++) & 0x3Fu) << 12)
-                | ((static_cast<uint8_t>(*p++) & 0x3Fu) << 6)
-                | (static_cast<uint8_t>(*p++) & 0x3Fu);
+                | ((c1 & 0x3Fu) << 12)
+                | ((c2 & 0x3Fu) << 6)
+                | (c3 & 0x3Fu);
             return cp;
         }
         return 0xFFFDu;

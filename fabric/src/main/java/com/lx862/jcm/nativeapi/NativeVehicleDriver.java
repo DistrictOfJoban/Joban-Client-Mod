@@ -50,6 +50,7 @@ public final class NativeVehicleDriver {
                 .order(ByteOrder.nativeOrder());
         final String instanceKey;
         final Map<Long, VehicleScriptContext> contexts = new java.util.LinkedHashMap<>();
+        final NativeRenderStats perf = new NativeRenderStats();
         int[] cars = new int[0];
         long touched = System.nanoTime();
         /** First snapshot-build failure, so it is logged once and not per frame. */
@@ -147,6 +148,7 @@ public final class NativeVehicleDriver {
     }
 
     private static int renderOne(VehicleExtension vehicle, String scriptId, int carCount) {
+        final long perfBegin = System.nanoTime();
         final VehicleResourceProvider.VehicleScriptConfiguration config =
                 MtrScriptingResourceManager.vehicle.getVehicleScript(scriptId);
         if (config == null) {
@@ -199,6 +201,7 @@ public final class NativeVehicleDriver {
         }
 
         final List<NativeScriptManager.NativeFrame> frames;
+        final long nativeBegin = System.nanoTime();
         try {
             frames = NativeScriptManager.render(state.instanceKey, scriptId, state.snapshot, NativeScriptManager.MTR_RESOURCE_VEHICLE,
                     module -> { VehicleScriptContext ctx = state.contexts.computeIfAbsent(module.getNativeHandle(), h -> new VehicleScriptContext(vehicle, scriptId, state.cars)); ctx.resetForNextRun(); return ctx; }, wrapper, null);
@@ -213,13 +216,15 @@ public final class NativeVehicleDriver {
             return 0;
         }
 
+        final long replayBegin = System.nanoTime();
         final Map<Integer, ScriptRenderManager> managers =
                 NativeDrawRegistry.begin(vehicle.getHexId(), scriptId, carCount);
 
         int produced = 0;
         for (NativeScriptManager.NativeFrame frame : frames) {
-            if (applyFrame(frame, managers, state.contexts.get(Long.parseLong(frame.instanceKey.substring(frame.instanceKey.lastIndexOf('/')+1))), wrapper.isClientPlayerRiding())) produced++;
+            if (applyFrame(frame, managers, state.contexts.get(Long.parseLong(frame.instanceKey.substring(frame.instanceKey.lastIndexOf('/')+1))), wrapper.isClientPlayerRiding(), state.perf)) produced++;
         }
+        state.perf.frame(scriptId, perfBegin, nativeBegin, replayBegin);
         traceOnce("'" + scriptId + "' frame applied", "modules=" + frames.size(),
                 "withDrawCalls=" + produced, "carCount=" + carCount);
         return produced;
@@ -234,7 +239,8 @@ public final class NativeVehicleDriver {
     /* ------------------------------------------------------------------ */
 
     private static boolean applyFrame(NativeScriptManager.NativeFrame frame,
-                                      Map<Integer, ScriptRenderManager> managers, VehicleScriptContext context, boolean riding) {
+                                      Map<Integer, ScriptRenderManager> managers, VehicleScriptContext context, boolean riding,
+                                      NativeRenderStats perf) {
         final ByteBuffer records = frame.records;
         if (records == null) return false;
         NativeHost.get().setActiveInstance(frame.instanceKey);
@@ -292,11 +298,8 @@ public final class NativeVehicleDriver {
                     final ByteBuffer pixels = frame.pixelArena;
                     if (pixels != null && dw > 0 && dh > 0 && pixelLen > 0
                             && pixelOffset >= 0 && pixelLen <= pixels.limit() - pixelOffset && pixelLen <= Integer.MAX_VALUE) {
-                        final byte[] bytes = new byte[(int) pixelLen];
-                        final ByteBuffer src = pixels.duplicate();
-                        src.position((int) pixelOffset);
-                        src.get(bytes, 0, (int) pixelLen);
-                        NativeHost.get().uploadPixels(textureHandle, dx, dy, dw, dh, bytes);
+                        NativeHost.get().uploadPixels(textureHandle, dx, dy, dw, dh, pixels, pixelOffset, pixelLen);
+                        perf.upload(pixelLen);
                     }
                     break;
                 }

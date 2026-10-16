@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.Closeable;
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.UUID;
 
@@ -181,6 +182,20 @@ public class GraphicsTexture implements Closeable {
                         width, height, false, false, false, false);
             }
         });
+    }
+
+    /** Internal native-frame path. Consume the arena before the next JNI call;
+     * only our owned image memory is used by the queued GPU upload. */
+    @ApiInternal
+    public void uploadRawARGB(ByteBuffer source, int byteOffset, int sourceStride,
+                              int sourceX, int sourceY, int dstX, int dstY, int w, int h) {
+        if (dstY < 0 || h <= 0 || (long) dstY + h > height) {
+            throw new IllegalArgumentException("Native upload is outside the texture");
+        }
+        final int[] pixels = ((DataBufferInt) bufferedImage.getRaster().getDataBuffer()).getData();
+        com.lx862.jcm.nativeapi.NativePixelBuffer.copy(source, byteOffset, sourceStride,
+                sourceX, sourceY, pixels, width, dstX, dstY, w, h);
+        upload(dstX, dstY, w, h);
     }
 
     @Override

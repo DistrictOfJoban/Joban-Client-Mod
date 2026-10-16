@@ -366,6 +366,24 @@ public final class NativeHost {
         tex.uploadRawABGR(pixels, sx, sy, w, h, PIXEL_PPM);
     }
 
+    /** Zero staging-array path for both vehicle and block-content frames.
+     * The legacy byte[] overload is kept for JNI/API compatibility. */
+    public void uploadPixels(int textureHandle, int x, int y, int width, int height,
+                             java.nio.ByteBuffer arena, long offset, long length) {
+        if (arena == null || offset < 0 || length < 0 || offset > arena.limit()
+                || length > arena.limit() - offset || width <= 0 || height <= 0
+                || (long) width * height > length / 4) {
+            throw new IllegalArgumentException("Invalid native pixel arena");
+        }
+        final GraphicsTexture tex = texture(textureHandle, activeInstanceKey);
+        if (tex == null) return;
+        final int sx = Math.max(0, x), sy = Math.max(0, y);
+        final int w = (int) Math.min(tex.width, (long) x + width) - sx;
+        final int h = (int) Math.min(tex.height, (long) y + height) - sy;
+        if (w <= 0 || h <= 0) return;
+        tex.uploadRawARGB(arena, (int) offset, width, sx - x, sy - y, sx, sy, w, h);
+    }
+
     /**
      * Lookup table backing {@link #uploadPixels}: maps one byte value to its
      * position inside the packed ARGB int, so the per-pixel work is four
