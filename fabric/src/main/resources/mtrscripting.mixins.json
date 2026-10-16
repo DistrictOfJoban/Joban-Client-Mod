@@ -9,8 +9,6 @@
     "mtrscripting.SidingAccessorMixin"
   ],
   "client": [
-    "mtrpatch.PlayerEntityMixin",
-    "mtrpatch.DashboardListSelectorScreenMixin",
     "mtrscripting.BlockEyecandyMixin",
     "mtrscripting.EyecandyScreenMixin",
     "mtrscripting.LegacyVehicleResourceSchemaMixin",

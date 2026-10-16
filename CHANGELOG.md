@@ -8,11 +8,17 @@
 
 
 > This release contains breaking changes to JCM's internal codebase. Common addons have been tested against, however some addon depending on JCM may break.
+ 
+This is an interim beta release.
 
 ## General
-### MTR Patches
-- (Fabric-only) Aims to preserve rail preview of long-running rail (Outside the render distance) from disappearing.
-- For MTR's Item Selection Screen (Multi-select), you can now hold `Shift` to exclusively select one item, instead of adding the new item then removing the existing item.
+### MTR Patch
+- (Fabric-only) Preserves rail preview of long-running rail (i.e. Outside the render distance), instead of disappearing.
+- For MTR's multi-item selection screen, you can now hold `Shift` to exclusively select one item, instead of needing to add the new item then removing the existing item.
+- **Introduce experimental Frustum culling**
+  - MTR 4 uses occlusion culling, which would perform tracing to check whether elements behind terrains are visible from the player's position.
+  - This update adds Frustum Culling as another layer on top of Occlusion Culling, which simply checks whether the elements are within the camera bound at all. Therefore if you aren't looking at the element, it will skip being rendered. (Scripts will continue to be invoked just like Occlusion Culling.)
+  - If you see any visual artifacts caused by this, please report.
 - Re-add camera-lowering feature from MTR 3 by sneaking. (Previously branded as "sitting")
   - May be turned off in JCM Settings (Revert to MTR 4 behaviour)
 

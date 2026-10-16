@@ -57,6 +57,15 @@ public class JCMClientConfig extends ReflectiveConfig {
         @Comment("Equivalent to MTR 3's sitting feature.")
         public final TrackedValue<Boolean> allowCameraLowering = value(true);
 
+        @Comment("Whether to enable Frustum Culling for Lifts")
+        public final TrackedValue<Boolean> enableFrustumCullingLift = value(true);
+
+        @Comment("Whether to enable Frustum Culling for Vehicles")
+        public final TrackedValue<Boolean> enableFrustumCullingVehicle = value(true);
+
+        @Comment("Whether to enable Frustum Culling for Rails")
+        public final TrackedValue<Boolean> enableFrustumCullingRails = value(true);
+
         @Comment("Rail Culling Improvements")
         @ChangeWarning(folk.sisby.kaleido.lib.quiltconfig.api.metadata.ChangeWarning.Type.Experimental)
         public final TrackedValue<Boolean> railCullingImprovement = value(false);

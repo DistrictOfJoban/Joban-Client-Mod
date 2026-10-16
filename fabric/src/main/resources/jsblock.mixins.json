@@ -11,6 +11,10 @@
     "mtrpatch.BlockRailwaySignPoleMixin"
   ],
   "client": [
+    "mtrpatch.RenderLiftsMixin",
+    "mtrpatch.DashboardListSelectorScreenMixin",
+    "mtrpatch.PlayerEntityMixin",
+    "mtrpatch.WorldRendererAccessor",
     "mtrpatch.CustomResourceLoaderMixin",
     "mtrpatch.CustomResourceToolsMixin",
     "mtrpatch.LiftMixin",

@@ -2,6 +2,7 @@ package com.lx862.jcm.mixin.mtrpatch;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.extra.JCMPatchForMTR;
 import org.mtr.core.data.Rail;
@@ -35,6 +36,16 @@ public class RenderRailsMixin {
     @Shadow
     private static int renderRailStat(GraphicsHolder graphicsHolder, String title, String data, int line) {
         throw new UnsupportedOperationException("Implemented via mixin");
+    }
+
+    @Inject(method = "lambda$render$1", at = @At("HEAD"), cancellable = true)
+    private static void jsblock$railFrustumCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
+        if(JCMClientConfig.INSTANCE.mtrPatch.enableFrustumCullingRails.value()) {
+            Box zbx = new Box(railWrapper.startVector.getX(), railWrapper.startVector.getY(), railWrapper.startVector.getZ(), railWrapper.endVector.getX(), railWrapper.endVector.getY(), railWrapper.endVector.getZ());
+            if(!LoaderImplClient.isFrustumVisible(zbx)) {
+                cir.setReturnValue(() -> railWrapper.shouldRender = false);
+            }
+        }
     }
 
     @Inject(method = "lambda$render$5", at = @At("HEAD"), cancellable = true)
