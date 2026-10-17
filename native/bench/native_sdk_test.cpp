@@ -1,7 +1,15 @@
 #include <mtr/script.hpp>
 #include <cstdio>
+#include <cstring>
+
 int main() {
-  static_assert(sizeof(JcmInterchange)==16);
+  /* ABI 9: JcmInterchange grew from 16 to 24 bytes (type_offset/type_len). */
+  static_assert(sizeof(JcmInterchange)==24);
+  static_assert(offsetof(JcmInterchange,type_offset)==16);
+  static_assert(offsetof(JcmInterchange,type_len)==20);
+  static_assert(sizeof(JcmVehicleSnapshot)==192);
+  static_assert(offsetof(JcmVehicleSnapshot,vehicle_type_offset)==184);
+  static_assert(offsetof(JcmVehicleSnapshot,vehicle_type_len)==188);
   static_assert(sizeof(JcmPidsSnapshot)==104);
   static_assert(sizeof(JcmArrival)==96);
   static_assert(sizeof(JcmEyecandySnapshot)==88);
@@ -9,13 +17,53 @@ int main() {
   static_assert(sizeof(JcmLiftFloor)==48);
   static_assert(offsetof(JcmDrawText,text_offset)==96);
   static_assert(offsetof(JcmDrawTexture,texture_offset)==68);
-  JcmLiftSnapshot snap{}; snap.width=3.5; snap.direction=-1;
-  mtr::Lift lift(&snap);
+
+  /* Vehicle type + interchange type wrappers read an ABI 9 snapshot blob:
+     [ JcmVehicleSnapshot | JcmInterchange | "train_metro" ] in one block. */
+  alignas(8) uint8_t blob[sizeof(JcmVehicleSnapshot) + sizeof(JcmInterchange) + 16] = {};
+  auto* snap = reinterpret_cast<JcmVehicleSnapshot*>(blob);
+  const int32_t icOffset = static_cast<int32_t>(sizeof(JcmVehicleSnapshot));
+  const int32_t poolOffset = icOffset + static_cast<int32_t>(sizeof(JcmInterchange));
+  const char* typeName = "train_metro";
+  const int32_t typeNameLen = static_cast<int32_t>(std::strlen(typeName));
+  std::memcpy(blob + poolOffset, typeName, static_cast<size_t>(typeNameLen));
+
+  snap->transport_mode = 0;
+  snap->vehicle_type_offset = poolOffset;
+  snap->vehicle_type_len = typeNameLen;
+  snap->string_pool_offset = poolOffset;
+
+  mtr::Train train(snap);
+  if (train.getTransportMode() != mtr::TransportMode::TRAIN) return 10;
+  mtr::StrView type = train.getTransportType();
+  if (type.len != typeNameLen || !(type == mtr::transport_type::TRAIN_METRO)) return 11;
+  if (type == mtr::transport_type::TRAIN) return 12;
+
+  auto* ic = reinterpret_cast<JcmInterchange*>(blob + icOffset);
+  ic->color = 0xFF00FF;
+  ic->transport_mode = -1;
+  ic->route_name_offset = poolOffset;
+  ic->route_name_len = 0;   /* empty name */
+  ic->type_offset = poolOffset;
+  ic->type_len = typeNameLen;
+
+  JcmStop stop{};
+  stop.interchange_count = 1;
+  stop.interchange_offset = icOffset;
+  mtr::Stop wrapped(snap, &stop);
+  mtr::Stop::Interchange inter = wrapped.interchange(0);
+  if (inter.color != 0xFF00FF) return 14;
+  if (inter.getTransportMode() != mtr::TransportMode::UNKNOWN) return 15;
+  if (!(inter.getTransportType() == mtr::transport_type::TRAIN_METRO)) return 16;
+  if (!inter.name.empty()) return 17;
+
+  JcmLiftSnapshot lift_snap{}; lift_snap.width=3.5; lift_snap.direction=-1;
+  mtr::Lift lift(&lift_snap);
   if(lift.width()!=3.5||lift.direction()!=-1) return 1;
   bool caught=false; try { lift.floor(-1); } catch(const std::out_of_range&) {caught=true;}
   if(!caught) return 2;
   JcmEyecandySnapshot eye{}; eye.block_use_events=1;
   mtr::EyeCandy candy(&eye);
   if(!candy.consume_block_use()||candy.consume_block_use()) return 3;
-  std::puts("Native SDK layout, lift and bounds checks passed");
+  std::puts("Native SDK layout, transport types, lift and bounds checks passed");
 }

@@ -26,6 +26,25 @@ public class VehicleDataCache {
     public static long mtrDataByteCounter;
 
     /**
+     * Built {@link VehicleWrapper.StopsData} per vehicle, reused across frames.
+     *
+     * <p>Both the JS and the native render pipelines used to rebuild every Stop,
+     * RouteInterchange and backing list on EVERY frame even though the underlying
+     * SimplifiedStopsData and dataset are stable — several hundred short-lived
+     * objects per vehicle per frame, which showed up as a young-gen GC pause at
+     * a fixed period (the reported "every 500ms stutter"). The cache keeps the
+     * built object graph until either the synced stops payload or the dataset
+     * revision changes, then rebuilds once.
+     */
+    private static final Map<Long, BuiltStops> builtStopsCache = new HashMap<>();
+
+    private static final class BuiltStops {
+        VehicleWrapper.StopsData data;
+        SimplifiedStopsData source;
+        long sourceRevision;
+    }
+
+    /**
      * Sends a Minecraft packet to request the full stops data from the specified vehicle.
      * Packet only sent on first invocation of the vehicleId
      * @param vehicleId The numeric id of the vehicle
@@ -41,6 +60,18 @@ public class VehicleDataCache {
     public static VehicleWrapper.StopsData buildVehicleStopsData(VehicleExtension vehicleExtension) {
         SimplifiedStopsData simplifiedStopsData = vehicleStopsCache.get(vehicleExtension.getId());
         if(simplifiedStopsData == null) return null;
+
+        final long revision = mtrData.getRevision();
+        BuiltStops cached = builtStopsCache.get(vehicleExtension.getId());
+        if(cached != null && cached.data != null && cached.source == simplifiedStopsData
+                && cached.sourceRevision == revision) {
+            /* Cached graph is still current. Refresh only the siding reference:
+            MTR swaps the object in sidingIdMap on sync, and the wrapper reads
+            name/manual time from it. */
+            cached.data.siding = VehicleDataCache.mtrData.sidingIdMap.get(
+                    vehicleExtension.vehicleExtraData.getSidingId());
+            return cached.data;
+        }
 
         Siding siding = VehicleDataCache.mtrData.sidingIdMap.get(vehicleExtension.vehicleExtraData.getSidingId());
         VehicleWrapper.StopsData stopsData = new VehicleWrapper.StopsData(siding, true);
@@ -68,11 +99,14 @@ public class VehicleDataCache {
                         SimplifiedRoutePlatform simplifiedRoutePlatform = platforms.get(routeStopIdx);
                         final InterchangeRouteModes interchangeModes = new InterchangeRouteModes();
                         mtrData.stationInterchangeMap.getOrDefault(simplifiedStop.stationId, java.util.Collections.emptyList())
-                                .forEach(e -> interchangeModes.add(e.color, e.name, e.getTransportMode()));
+                                .forEach(e -> interchangeModes.add(e.color, e.name, e.getTransportMode(),
+                                        e.getTransportType(), e.getRouteId()));
                         simplifiedRoutePlatform.forEach((color, name) -> {
                             name.forEach(routeName -> {
-                                TransportMode mode = interchangeModes.get(color, routeName);
-                                thisStop.routeInterchanges.add(new VehicleWrapper.Stop.RouteInterchange(color, routeName, mode));
+                                final InterchangeRouteModes.Entry entry = interchangeModes.getEntry(color, routeName);
+                                thisStop.routeInterchanges.add(new VehicleWrapper.Stop.RouteInterchange(
+                                        entry == null ? 0 : entry.routeId, color, routeName,
+                                        entry == null ? null : entry.mode, entry == null ? null : entry.typeId()));
                             });
                         });
                     }
@@ -99,6 +133,13 @@ public class VehicleDataCache {
             }
         }
 
+        if(cached == null) {
+            cached = new BuiltStops();
+            builtStopsCache.put(vehicleExtension.getId(), cached);
+        }
+        cached.data = stopsData;
+        cached.source = simplifiedStopsData;
+        cached.sourceRevision = revision;
         return stopsData;
     }
 
@@ -106,6 +147,7 @@ public class VehicleDataCache {
         stopsDataByteCounter = 0;
         mtrDataByteCounter = 0;
         vehicleStopsCache.clear();
+        builtStopsCache.clear();
         mtrData.stations.clear();
         mtrData.platforms.clear();
         mtrData.routes.clear();
@@ -124,6 +166,7 @@ public class VehicleDataCache {
 
     public static void clearStopsDataCache(long vehicleId) {
         vehicleStopsCache.remove(vehicleId);
+        builtStopsCache.remove(vehicleId);
     }
 
     public static void putMTRDataCache(MTRDatasetHolder other) {
@@ -165,6 +208,8 @@ public class VehicleDataCache {
             }
         }
         if(needRegenerateCache) {
+            /* generateIdMapCache bumps the dataset revision, which invalidates
+            every builtStopsCache entry on the next build call. */
             mtrData.generateIdMapCache();
         }
     }

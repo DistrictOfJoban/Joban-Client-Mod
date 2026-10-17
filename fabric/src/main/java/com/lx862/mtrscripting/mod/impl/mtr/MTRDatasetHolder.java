@@ -36,7 +36,19 @@ public class MTRDatasetHolder {
     public final Map<Long, SimplifiedRoute> routeIdMap = new HashMap<>();
     public final Map<Long, Siding> sidingIdMap = new HashMap<>();
 
+    /**
+     * Monotonic data revision, bumped whenever the holder's contents are
+     * regenerated or merged. Caches built on top of this dataset (notably
+     * VehicleDataCache's per-vehicle StopsData) compare the revision to detect
+     * staleness without re-allocating anything per frame.
+     */
+    private volatile long revision;
+
     public MTRDatasetHolder() {
+    }
+
+    public long getRevision() {
+        return revision;
     }
 
     public MTRDatasetHolder(String json) {
@@ -47,8 +59,10 @@ public class MTRDatasetHolder {
         jsonReader.iterateReaderArray("stationInterchanges", () -> {}, reader -> {
             List<VehicleWrapper.Stop.RouteInterchange> interchanges = new ArrayList<>();
             reader.iterateReaderArray("interchanges", () -> {}, route -> interchanges.add(
-                    new VehicleWrapper.Stop.RouteInterchange(route.getInt("color", 0), route.getString("name", ""),
-                            parseTransportMode(route.getString("transportMode", "")))));
+                    new VehicleWrapper.Stop.RouteInterchange(route.getLong("routeId", 0), route.getInt("color", 0),
+                            route.getString("name", ""),
+                            parseTransportMode(route.getString("transportMode", "")),
+                            route.getString("transportType", null))));
             stationInterchangeMap.put(reader.getLong("id", 0), interchanges);
         });
         jsonReader.iterateReaderArray("connectingStationInterchanges", () -> {}, reader -> {
@@ -61,7 +75,10 @@ public class MTRDatasetHolder {
                 elementReader.iterateReaderArray("interchanges", () -> {}, interchangeReader -> {
                     String routeName = interchangeReader.getString("name", "");
                     int color = interchangeReader.getInt("color", 0);
-                    VehicleWrapper.Stop.RouteInterchange routeInterchange = new VehicleWrapper.Stop.RouteInterchange(color, routeName, parseTransportMode(interchangeReader.getString("transportMode", "")));
+                    VehicleWrapper.Stop.RouteInterchange routeInterchange = new VehicleWrapper.Stop.RouteInterchange(
+                            interchangeReader.getLong("routeId", 0), color, routeName,
+                            parseTransportMode(interchangeReader.getString("transportMode", "")),
+                            interchangeReader.getString("transportType", null));
                     routeInterchanges.add(routeInterchange);
                 });
 
@@ -91,6 +108,7 @@ public class MTRDatasetHolder {
         platforms.forEach(e -> platformIdMap.put(e.getId(), e));
         routes.forEach(e -> routeIdMap.put(e.getId(), e));
         sidings.forEach(e -> sidingIdMap.put(e.getId(), e));
+        revision++;
     }
 
     public void addStation(Station station) {
@@ -101,13 +119,15 @@ public class MTRDatasetHolder {
             station.getInterchangeStationToColorToRoutesMap(true).forEach((connectingStation, routeInterchanges) -> {
                 List<VehicleWrapper.Stop.RouteInterchange> interchanges = new ArrayList<>();
                 routeInterchanges.forEach((color, routes) -> routes.forEach(route ->
-                        interchanges.add(new VehicleWrapper.Stop.RouteInterchange(color, route.getName(), route.getTransportMode()))));
+                        interchanges.add(new VehicleWrapper.Stop.RouteInterchange(route.getId(), color, route.getName(),
+                                route.getTransportMode(), null))));
                 if (connectingStation.getId() == station.getId()) stationInterchangeMap.put(station.getId(), interchanges);
                 else connectingStations.put(connectingStation.getName(), interchanges);
             });
             if(!connectingStations.isEmpty()) {
                 this.connectingStationInterchangeMap.put(station.getId(), connectingStations);
             }
+            revision++;
         }
     }
 
@@ -139,6 +159,8 @@ public class MTRDatasetHolder {
                 JsonObject entry = new JsonObject();
                 entry.addProperty("name", route.name); entry.addProperty("color", route.color);
                 if (route.getTransportMode() != null) entry.addProperty("transportMode", route.getTransportMode().name());
+                entry.addProperty("transportType", route.getTransportType());
+                if (route.getRouteId() != 0) entry.addProperty("routeId", route.getRouteId());
                 routes.add(entry);
             });
             station.add("interchanges", routes); stationInterchangeArray.add(station);
@@ -164,6 +186,10 @@ public class MTRDatasetHolder {
                     interchangeObject.addProperty("color", routeInterchange.color);
                     if (routeInterchange.getTransportMode() != null) {
                         interchangeObject.addProperty("transportMode", routeInterchange.getTransportMode().name());
+                    }
+                    interchangeObject.addProperty("transportType", routeInterchange.getTransportType());
+                    if (routeInterchange.getRouteId() != 0) {
+                        interchangeObject.addProperty("routeId", routeInterchange.getRouteId());
                     }
                     interchangeArray.add(interchangeObject);
                 });

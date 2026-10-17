@@ -22,7 +22,41 @@ public final class InterchangeRouteModesTest {
         modes.add(1, "20号线|Line 20||train", TransportMode.TRAIN);
         check(modes.get(1, "20号线|Line 20") == null, "ambiguous mixed mode stays unknown");
         check(modes.get(999, "absent") == null, "missing metadata is never assumed TRAIN");
-        System.out.println("PASS: simplified/full names, all modes, missing and ambiguous metadata");
+
+        /* ---- MAGIC MTR extended types (RouteInterchange.getTransportType) ---- */
+
+        // A MAGIC override on the route resolves to its id through the entry.
+        final InterchangeRouteModes magic = new InterchangeRouteModes();
+        magic.add(1, "6号线|Line 6||上行", TransportMode.TRAIN, "train_metro", 0xABCDEF);
+        InterchangeRouteModes.Entry entry = magic.getEntry(1, "6号线|Line 6");
+        check(entry != null && entry.mode == TransportMode.TRAIN, "magic entry keeps the enum mode");
+        check(entry != null && "train_metro".equals(entry.typeId()), "magic entry surfaces the extended type");
+
+        // Two routes in one name/color group agreeing on the type keep it.
+        magic.add(1, "6号线|Line 6||下行", TransportMode.TRAIN, "train_metro", 0x123456);
+        entry = magic.getEntry(1, "6号线|Line 6");
+        check(entry != null && "train_metro".equals(entry.typeId()), "agreeing magic routes keep the type");
+
+        // Conflicting magic types fall back to the agreed base mode id.
+        magic.add(1, "6号线|Line 6||night", TransportMode.TRAIN, "train_light_rail", 0x999999);
+        entry = magic.getEntry(1, "6号线|Line 6");
+        check(entry != null && entry.mode == TransportMode.TRAIN, "mode still agrees after type conflict");
+        check(entry != null && "train".equals(entry.typeId()), "conflicting magic types fall back to the base id");
+
+        // Mixed modes keep both fields unknown, exactly like before.
+        magic.add(2, "环线|Circle||a", TransportMode.BOAT, "train_metro", 1);
+        magic.add(2, "环线|Circle||b", TransportMode.TRAIN, "train_metro", 2);
+        entry = magic.getEntry(2, "环线|Circle");
+        check(entry != null && entry.mode == null, "mixed mode stays unknown with types present");
+        check(entry != null && "unknown".equals(entry.typeId()), "mixed mode entry reports unknown type");
+
+        // No MAGIC data at all: the entry's type id is the base mode id.
+        final InterchangeRouteModes plain = new InterchangeRouteModes();
+        plain.add(3, "轮渡|Ferry", TransportMode.BOAT);
+        entry = plain.getEntry(3, "轮渡");
+        check(entry != null && "boat".equals(entry.typeId()), "base mode id without magic");
+
+        System.out.println("PASS: simplified/full names, all modes, missing and ambiguous metadata, magic types");
     }
 
     private static void check(boolean ok, String name) {

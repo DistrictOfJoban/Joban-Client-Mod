@@ -34,6 +34,21 @@ public final class NativeDrawRegistry {
         return vehicleHexId + "\u0000" + scriptId;
     }
 
+    /* Cars of one vehicle replay consecutively, so the last hex/script pair
+       is memoised instead of concatenating a fresh key string per car per
+       frame (10 cars -> 10 concatenations -> 10 young-gen strings). */
+    private static String memoHex, memoScript, memoKey;
+
+    private static String memoizedKey(String vehicleHexId, String scriptId) {
+        if (memoHex != null && memoHex.equals(vehicleHexId) && memoScript != null && memoScript.equals(scriptId)) {
+            return memoKey;
+        }
+        memoHex = vehicleHexId;
+        memoScript = scriptId;
+        memoKey = key(vehicleHexId, scriptId);
+        return memoKey;
+    }
+
     /**
      * The mutable manager set for one vehicle+script, created on first use.
      * {@code carCount} entries are (re)created so a car that stops being
@@ -41,13 +56,18 @@ public final class NativeDrawRegistry {
      */
     public static synchronized Map<Integer, ScriptRenderManager> begin(
             String vehicleHexId, String scriptId, int carCount) {
-        Map<Integer, ScriptRenderManager> managers = ENTRIES.get(key(vehicleHexId, scriptId));
+        return begin(key(vehicleHexId, scriptId), carCount);
+    }
+
+    /** Variant taking the driver's precomputed {@code hexId + '\u0000' + scriptId}. */
+    public static synchronized Map<Integer, ScriptRenderManager> begin(String combinedKey, int carCount) {
+        Map<Integer, ScriptRenderManager> managers = ENTRIES.get(combinedKey);
         if (managers == null || managers.size() != carCount) {
             managers = new HashMap<>();
             for (int i = 0; i < carCount; i++) {
                 managers.put(i, new ScriptRenderManager());
             }
-            ENTRIES.put(key(vehicleHexId, scriptId), managers);
+            ENTRIES.put(combinedKey, managers);
         } else {
             managers.values().forEach(ScriptRenderManager::reset);
         }
@@ -57,7 +77,7 @@ public final class NativeDrawRegistry {
     /** Draw calls captured for one car this frame, or null. */
     public static synchronized ScriptRenderManager get(
             String vehicleHexId, String scriptId, int carIndex) {
-        final Map<Integer, ScriptRenderManager> managers = ENTRIES.get(key(vehicleHexId, scriptId));
+        final Map<Integer, ScriptRenderManager> managers = ENTRIES.get(memoizedKey(vehicleHexId, scriptId));
         return managers == null ? null : managers.get(carIndex);
     }
 
@@ -69,10 +89,12 @@ public final class NativeDrawRegistry {
     /** Forget one vehicle+script (script reload, vehicle despawn). */
     public static synchronized void remove(String vehicleHexId, String scriptId) {
         ENTRIES.remove(key(vehicleHexId, scriptId));
+        memoHex = memoScript = memoKey = null;
     }
 
     /** Forget everything (resource reload). */
     public static synchronized void clear() {
         ENTRIES.clear();
+        memoHex = memoScript = memoKey = null;
     }
 }

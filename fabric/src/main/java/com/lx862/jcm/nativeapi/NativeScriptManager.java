@@ -79,11 +79,14 @@ public final class NativeScriptManager {
        keeps the SSO buffer pointer inline, so a zeroed std::string dereferences
        null (immediate SIGSEGV on Linux/macOS); only MSVC's layout tolerated it.
        v5 = JcmStop.route_circular_state (per-stop route CircularState).
-       v8 appends direct Java API access and interchange transport modes. */
-    private static final int ABI_VERSION = 8;
+       v8 appends direct Java API access and interchange transport modes.
+       v9 appends the canonical transport TYPE ids (MAGIC MTR Addon route
+       types) to the vehicle header and to every interchange, and removes the
+       per-frame snapshot memcpy + ByteBuffer churn on the JNI bridge. */
+    private static final int ABI_VERSION = 9;
 
     private static boolean supportedAbi(int version) {
-        return version == 6 || version == 7 || version == ABI_VERSION;
+        return version == 6 || version == 7 || version == 8 || version == ABI_VERSION;
     }
 
     /* Route.CircularState mapping (v2 snapshots). */
@@ -580,9 +583,13 @@ public final class NativeScriptManager {
      * marshals the snapshot ONCE (and skips this call entirely if that fails),
      * then every module registered for the id runs against it.
      *
-     * @param snapshotBuf a buffer already filled by
-     *        {@link NativeSnapshot#build}; must have been written successfully —
-     *        only its written limit is passed to the native module.
+     * @param snapshots per-ABI-group snapshot buffers owned by the vehicle's
+     *        driver state; the layout (interchange stride, header size)
+     *        differs between ABI 6/7, 8 and 9, so one group cannot read
+     *        another group's blob.
+     *
+     * @param contextFactory supplies (and resets) the per-module
+     *        VehicleScriptContext bound to the native API session.
      *
      * The returned frames are in declaration order — the host replays them
      * in that order, which reproduces the JS pipeline's record order for a
@@ -591,29 +598,69 @@ public final class NativeScriptManager {
      * @return one NativeFrame per module that rendered this frame (possibly
      *         empty), never null.
      */
-    public static List<NativeFrame> renderVehicle(String instanceKey, String scriptId, ByteBuffer snapshotBuf) {
-        return render(instanceKey, scriptId, snapshotBuf, MTR_RESOURCE_VEHICLE, module -> null, null, null);
+    public static List<NativeFrame> renderVehicle(String instanceKey, String scriptId,
+            VehicleSnapshotBuffers snapshots, com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper wrapper,
+            java.util.function.Function<NativeScriptModule,Object> contextFactory) {
+        /* The wrapper is BOTH the snapshot source (per-ABI-group marshal) and
+           the native API session's `wrapper` root — C++ scripts reach it via
+           api.wrapper() exactly like JavaScript does. */
+        return render(instanceKey, scriptId, null, snapshots, wrapper,
+                MTR_RESOURCE_VEHICLE, contextFactory, wrapper, null);
     }
 
     public static List<NativeFrame> render(String instanceKey, String scriptId, ByteBuffer snapshotBuf,
             int kind, java.util.function.Function<NativeScriptModule,Object> contextFactory,
             Object wrapper, java.util.function.BiConsumer<NativeScriptModule,Object> after) {
+        return render(instanceKey, scriptId, snapshotBuf, null, null, kind, contextFactory, wrapper, after);
+    }
+
+    public static List<NativeFrame> render(String instanceKey, String scriptId, ByteBuffer snapshotBuf,
+            VehicleSnapshotBuffers snapshots,
+            com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper vehicleWrapper,
+            int kind, java.util.function.Function<NativeScriptModule,Object> contextFactory,
+            Object wrapper, java.util.function.BiConsumer<NativeScriptModule,Object> after) {
         List<NativeFrame> frames = new ArrayList<>();
-        ByteBuffer oldSnapshot = null;
-        for (NativeScriptModule module : getModules(scriptId)) {
-            if (!typeName(kind).equals(module.scriptType)) continue;
-            String moduleKey = instanceKey + "/module/" + module.nativeHandle;
-            Object context = contextFactory.apply(module);
-            NativeApiSession.bind(moduleKey, context, wrapper, INPUTS.get(scriptId), RESOURCE_BASES.getOrDefault(scriptId, module.resourceBase));
-            NativeHost.get().setPendingInstance(moduleKey);
-            ByteBuffer snapshot = snapshotBuf;
-            if (kind == MTR_RESOURCE_VEHICLE && module.abiVersion < 8 && wrapper instanceof com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper) {
-                if (oldSnapshot == null) oldSnapshot = NativeSnapshot.build(ByteBuffer.allocateDirect(NativeSnapshot.CAPACITY), (com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper)wrapper, module.abiVersion);
-                snapshot = oldSnapshot;
+        List<NativeScriptModule> modules = MODULES.get(scriptId);
+        if (modules == null) return frames;
+        /* Iterate the module list under its own monitor instead of copying
+           it — getModules() allocated an unmodifiable ArrayList per call,
+           i.e. per vehicle per frame. The list only mutates while a resource
+           pack is loading. */
+        synchronized (modules) {
+            /* Snapshot marshalled at most once per ABI group per render call —
+               modules sharing a group share the blob. */
+            int builtGroup = 0;
+            ByteBuffer builtSnapshot = null;
+            for (NativeScriptModule module : modules) {
+                if (!typeName(kind).equals(module.scriptType)) continue;
+                String moduleKey = instanceKey + "/module/" + module.nativeHandle;
+                Object context = contextFactory.apply(module);
+                NativeApiSession.bind(moduleKey, context, wrapper, INPUTS.get(scriptId), RESOURCE_BASES.getOrDefault(scriptId, module.resourceBase));
+                NativeHost.get().setPendingInstance(moduleKey);
+                ByteBuffer snapshot = snapshotBuf;
+                if (kind == MTR_RESOURCE_VEHICLE && vehicleWrapper != null) {
+                    /* Per-ABI-group snapshot: ABI 9, 8 and 6/7 modules cannot
+                       share one blob (different interchange strides). */
+                    if (snapshots != null) {
+                        final int group = NativeSnapshot.groupOf(module.abiVersion);
+                        if (builtSnapshot == null || builtGroup != group) {
+                            builtSnapshot = snapshots.snapshotFor(group, vehicleWrapper);
+                            builtGroup = group;
+                        }
+                        snapshot = builtSnapshot;
+                    } else if (module.abiVersion < 8) {
+                        /* Historical single-buffer fallback (tests). */
+                        snapshot = NativeSnapshot.build(ByteBuffer.allocateDirect(NativeSnapshot.CAPACITY), vehicleWrapper, module.abiVersion);
+                    }
+                }
+                NativeFrame frame = module.render(moduleKey, snapshot, kind);
+                if (frame != null) {
+                    frame.instanceKey = moduleKey;
+                    frame.moduleHandle = module.nativeHandle;
+                    frames.add(frame);
+                }
+                if (after != null) after.accept(module, context);
             }
-            NativeFrame frame = module.render(moduleKey, snapshot, kind);
-            if (frame != null) { frame.instanceKey = moduleKey; frames.add(frame); }
-            if (after != null) after.accept(module, context);
         }
         return frames;
     }
@@ -625,6 +672,36 @@ public final class NativeScriptManager {
             case MTR_RESOURCE_EYECANDY: return "eyecandy";
             case MTR_RESOURCE_LIFT: return "lift";
             default: throw new IllegalArgumentException("Unknown native script kind " + kind);
+        }
+    }
+
+    /**
+     * VehicleSnapshotBuffers — one snapshot buffer + reusable builder per
+     * ABI layout group, owned by the vehicle driver's per-vehicle state.
+     *
+     * <p>Vehicles whose modules all target the same ABI (the normal case)
+     * marshal exactly one blob per frame. A mixed ABI 9 + ABI 8 script list
+     * marshals one blob per distinct group; groups are keyed 7/8/9, so at
+     * most three buffers exist per vehicle.
+     */
+    public static final class VehicleSnapshotBuffers {
+        private final Map<Integer, GroupBuffer> groups = new java.util.LinkedHashMap<>();
+
+        public static final class GroupBuffer {
+            final ByteBuffer buffer = ByteBuffer
+                    .allocateDirect(NativeSnapshot.CAPACITY)
+                    .order(ByteOrder.nativeOrder());
+            final NativeSnapshot.Builder builder = new NativeSnapshot.Builder();
+        }
+
+        /** Marshals the snapshot for one layout group this frame. */
+        ByteBuffer snapshotFor(int group, com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper wrapper) {
+            GroupBuffer groupBuffer = groups.get(group);
+            if (groupBuffer == null) {
+                groupBuffer = new GroupBuffer();
+                groups.put(group, groupBuffer);
+            }
+            return NativeSnapshot.build(groupBuffer.buffer, wrapper, group, groupBuffer.builder);
         }
     }
 
@@ -659,6 +736,8 @@ public final class NativeScriptManager {
     public static final class NativeFrame {
         /** Host resource owner; set before the frame reaches the replay driver. */
         public String instanceKey;
+        /** Owning module's native handle; avoids re-parsing instanceKey. */
+        public long moduleHandle;
         public final ByteBuffer records;   /* JcmDraw* array */
         public final int recordCount;
         public final ByteBuffer stringArena;
@@ -844,7 +923,7 @@ public final class NativeScriptManager {
         private native String nScriptId(long handle);
         private native long nStateSize(long handle);
         private native NativeFrame nRender(long handle, String instanceKey,
-                                           ByteBuffer snapshot, int resourceKind);
+                                           ByteBuffer snapshot, int snapshotLength, int resourceKind);
 
         NativeScriptModule(String scriptId, String path, String resourceBase) {
             this.resourceBase = resourceBase;
@@ -917,7 +996,14 @@ public final class NativeScriptManager {
         private native void nDisposeInstance(long handle, String instanceKey);
 
         synchronized NativeFrame render(String instanceKey, ByteBuffer snapshot, int resourceKind) {
-            return nativeHandle == 0 ? null : nRender(nativeHandle, instanceKey, snapshot.slice().order(ByteOrder.nativeOrder()), resourceKind);
+            if (nativeHandle == 0) return null;
+            /* No slice(): the snapshot arrives position 0 / limit = written
+               length, so the buffer IS the view — slicing allocated a fresh
+               ByteBuffer object per module per frame for nothing. The written
+               length is passed explicitly; the bridge no longer infers it
+               from the buffer (which would report the full 256 KB capacity). */
+            snapshot.order(ByteOrder.nativeOrder());
+            return nRender(nativeHandle, instanceKey, snapshot, snapshot.limit(), resourceKind);
         }
 
         synchronized void dispose() {

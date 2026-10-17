@@ -151,9 +151,11 @@ Shapes persist across frames. Empty collision shapes are supported; nonempty
 collision shapes retain the Java limit of 1.5 blocks in height. Native drawing
 records use the same in-world transformations as the JavaScript renderer.
 
-## Interchange transport mode
+## Interchange transport mode and type
 
-JavaScript now supports `interchange.getTransportMode()`. C++ can use:
+JavaScript now supports `interchange.getTransportMode()` plus
+`interchange.getTransportType()` (and `vehicle.getTransportType()`). C++ can
+use either:
 
 ```cpp
 auto mode = interchange.call("getTransportMode");
@@ -161,15 +163,42 @@ if (!mode.is_null()) {
     auto name = mode.enum_name(); // TRAIN, BOAT, CABLE_CAR, AIRPLANE
     auto maxLength = mode.get("maxLength").as<int>();
 }
+auto type = interchange.call("getTransportType").as<std::string>();
 ```
 
-The compact ABI 8 vehicle snapshot also provides
-`mtr::Interchange::getTransportMode()`, returning `mtr::TransportMode`.
-Full remote stop data includes actual in-station and connecting route modes.
-An older server that does not send route mode metadata yields null in the Java
-API and `UNKNOWN` in the compact C++ view. Install the updated JCM on the server
-as well to obtain full metadata for remote stations. ABI 6/7 libraries keep
-their original 12-byte interchange entry.
+The compact vehicle snapshot provides the same data natively with zero JNI:
+
+```cpp
+if (train.getTransportType() == mtr::transport_type::TRAIN_METRO) { /* ... */ }
+for (int i = 0; i < stop.interchange_count(); i++) {
+    mtr::Stop::Interchange ic = stop.interchange(i);
+    if (ic.getTransportType() == mtr::transport_type::TRAIN_HIGH_SPEED) { /* ... */ }
+}
+```
+
+`getTransportMode()` covers the four base modes; `getTransportType()`
+additionally resolves the **MAGIC MTR Addon** route types. Base ids are the
+lowercase mode names (`"train"`, `"boat"`, `"cable_car"`, `"airplane"`, plus
+`"unknown"` for older data); MAGIC contributes `train_normal`,
+`train_light_rail`, `train_high_speed`, `train_metro`, `train_bus`,
+`train_tram` and `train_sbahn` (see the `mtr::transport_type` constants).
+Java scripts see the exact same strings through
+`VehicleWrapper.getTransportType()` and
+`Stop.RouteInterchange.getTransportType()`, so JS and C++ scripts can share
+layout logic.
+
+MAGIC types are resolved wherever the route id is known: locally against
+`config/MAGIC/configs/route_types.json` when the addon is installed on the
+client, and through the synced script dataset (`routeId` + `transportType`
+fields) when the server has MAGIC and the client does not. Type conflicts
+inside one (color, name) group fall back to the agreed base mode; mixed base
+modes stay `UNKNOWN`/`"unknown"` exactly as before. Full remote stop data
+includes actual in-station and connecting route modes and types. An older
+server that does not send route metadata yields null in the Java
+`getTransportMode()` and `UNKNOWN` in the compact C++ view. Install the
+updated JCM on the server as well to obtain full metadata for remote
+stations. ABI 6/7 libraries keep their original 12-byte interchange entry;
+ABI 8 keeps 16 bytes without the type fields; ABI 9 uses 24 bytes.
 
 ## Background work and resources
 
@@ -194,10 +223,28 @@ resources in `dispose`; session cleanup closes remaining constructed resources.
 
 Avoid resource reads, HTTP requests and unnecessary Java crossings in every
 render. Cache resource objects in state, use the compact snapshot for frequent
-reads, and upload textures only when their content changes. JNI bindings and
-Java method lists are cached, buffers are reused, snapshot copies use the written
-length, and native draw records are aligned and bounded. These reduce concrete
-overhead; no universal FPS multiplier is claimed.
+reads, and upload textures only when their content changes.
+
+### Keeping the hot path native (GC hygiene)
+
+The snapshot marshal is the ONLY mandatory Java crossing per frame; drawing
+goes through the record stream, and the SDK's native helpers
+(`mtr::Text`, `mtr::GraphicsTexture`, `mtr::gfx2d` canvas, `mtr::Matrices`)
+do the rest without touching the JVM. `mtr::Api` is intended for DATA that is
+not in the snapshot — call it from `create()`, from background tasks, or at
+most a few times per second, never per draw call: every `Api` call is a
+JSON encode + reflection + JSON decode round-trip, and doing that per frame
+per vehicle is what used to produce a periodic GC stutter.
+
+The host does its part: JNI bindings and Java method lists are cached, the
+five arena ByteBuffers are created once per module and rewound per frame,
+the snapshot is marshalled by a reusable builder whose string pool and exit
+memo persist across frames, the built stop graph is cached until the
+underlying data revision changes, the bridge passes the live direct snapshot
+buffer (retaining a copy only for dispose) instead of memcpy'ing 256 KB per
+vehicle per frame, and the pixel arena starts at 1 MB and grows on demand
+instead of a flat 16 MB per module. These reduce concrete overhead; no
+universal FPS multiplier is claimed.
 
 Tests cover JNI execution for all four script kinds, UTF-8, 64-bit IDs, enums,
 Java2D, synchronous/asynchronous callbacks, state isolation, disposal/reload,

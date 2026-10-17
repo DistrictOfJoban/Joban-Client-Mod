@@ -33,7 +33,7 @@ public class NativeIntegrationTest {
   String ext=System.getProperty("os.name").toLowerCase().contains("win")?".dll":System.getProperty("os.name").toLowerCase().contains("mac")?".dylib":".so";
   String prefix=ext.equals(".dll")?"":"lib";
   var module=NativeScriptManager.loadFromDeclaration("test:probe",new JsonPrimitive("test:"+prefix+"api_probe"+ext));
-  check(module!=null&&module.getAbiVersion()==8,"ABI 8 loaded from resource declaration");
+  check(module!=null&&module.getAbiVersion()==9,"ABI 9 loaded from resource declaration");
   Fixture first=new Fixture(),second=new Fixture();
   NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
   ByteBuffer snapshot=ByteBuffer.allocateDirect(184).order(ByteOrder.nativeOrder());snapshot.limit(184);

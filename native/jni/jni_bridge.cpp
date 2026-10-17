@@ -81,7 +81,16 @@ namespace {
 
 struct Instance {
     std::vector<uint8_t> state;         /* mtrStateSize() zeroed block  */
-    std::vector<uint8_t> last_snapshot; /* for safe dispose() rebuild   */
+    /* Snapshot retained ONLY for dispose()-time rebuild. The live buffer is
+       passed to mtrRender directly (the Java driver blocks inside the JNI
+       call while the module reads it); the copy is refreshed when the driver
+       hands over a DIFFERENT buffer (reallocated direct buffer), which for
+       vehicles never happens after the first frame. This used to be a
+       full 256 KB memcpy per vehicle per frame — pure native churn that
+       contributed to the reported periodic stutter. */
+    std::vector<uint8_t> last_snapshot;
+    const void* snapshot_address = nullptr;
+    int64_t snapshot_capacity = 0;
     std::string api_key;
     int32_t resource_kind = MTR_RESOURCE_VEHICLE;
     bool created = false;               /* mtrCreate called?            */
@@ -100,6 +109,16 @@ struct Instance {
     std::vector<jint> tex_w, tex_h;
     std::vector<float> quad_verts, quad_uv;
     std::vector<jint> quad_slot, quad_stage;
+};
+
+/* One cached arena ByteBuffer (global ref) per module. Created once per
+   (address, capacity) and rewound each frame by setting position/limit —
+   instead of five fresh NewDirectByteBuffer heap objects per vehicle per
+   frame, which was pure young-gen garbage on the render thread. */
+struct ArenaView {
+    jobject ref = nullptr;
+    const void* address = nullptr;
+    int64_t capacity = 0;
 };
 
 struct BridgeModule {
@@ -121,6 +140,10 @@ struct BridgeModule {
 
     std::mutex mutex;
     std::unordered_map<std::string, Instance> instances;
+    /* Cached arena ByteBuffers (records/strings/pixels/matrices/floats).
+       The arenas live in the module itself and are stable, so the same five
+       wrapper objects serve every frame of every instance. */
+    ArenaView views[5];
 
     ~BridgeModule() { close_library(); }
 
@@ -183,6 +206,10 @@ jmethodID g_mid_upload_pixels = nullptr;
 jmethodID g_mid_rasterize_text = nullptr;
 jmethodID g_mid_measure_font_text = nullptr;
 jmethodID g_mid_draw_font_text = nullptr;
+/* java.nio.ByteBuffer position/limit setters for the cached arena views. */
+jclass g_bb_class = nullptr;
+jmethodID g_bb_position = nullptr;
+jmethodID g_bb_limit = nullptr;
 
 /* (still inside the anonymous namespace opened with the bookkeeping structs) */
 
@@ -238,6 +265,16 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
                     env->GetMethodID(g_frame_class, "<init>",
                         "(Ljava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V"));
             env->DeleteLocalRef(frame);
+        }
+        jclass bb = jni_lookup(env, "java/nio/ByteBuffer",
+                env->FindClass("java/nio/ByteBuffer"));
+        if (bb) {
+            g_bb_class = static_cast<jclass>(env->NewGlobalRef(bb));
+            g_bb_position = jni_lookup(env, "ByteBuffer.position(int)",
+                    env->GetMethodID(g_bb_class, "position", "(I)Ljava/nio/ByteBuffer;"));
+            g_bb_limit = jni_lookup(env, "ByteBuffer.limit(int)",
+                    env->GetMethodID(g_bb_class, "limit", "(I)Ljava/nio/ByteBuffer;"));
+            env->DeleteLocalRef(bb);
         }
     }
 
@@ -618,6 +655,39 @@ void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
         static_cast<const uint8_t*>(out.records)));
 }
 
+/* Rewind/rebuild one cached arena ByteBuffer to (position 0, limit len).
+   Returns the cached global ref, or a fresh local ref when the module did
+   not report a capacity (pre-ABI-9 modules) — matching the old per-frame
+   behaviour for them. */
+jobject arena_view(JNIEnv* env, BridgeModule& mod, int slot,
+                   const void* address, int64_t len, int64_t capacity) {
+    ArenaView& view = mod.views[slot];
+    if (len < 0) len = 0;
+    if (capacity <= 0 || !address) {
+        /* Unknown capacity: cannot keep a stable view, wrap at the exact
+           length like the pre-ABI-9 bridge did. */
+        if (view.ref) { env->DeleteGlobalRef(view.ref); view.ref = nullptr; }
+        view.address = nullptr;
+        view.capacity = 0;
+        return address ? env->NewDirectByteBuffer(const_cast<void*>(address), len) : nullptr;
+    }
+    if (view.ref == nullptr || view.address != address || view.capacity != capacity) {
+        if (view.ref) env->DeleteGlobalRef(view.ref);
+        jobject local = env->NewDirectByteBuffer(const_cast<void*>(address), capacity);
+        view.ref = local ? env->NewGlobalRef(local) : nullptr;
+        if (local) env->DeleteLocalRef(local);
+        view.address = address;
+        view.capacity = capacity;
+    }
+    if (view.ref == nullptr) return nullptr;
+    if (g_bb_position) {
+        env->CallObjectMethod(view.ref, g_bb_position, static_cast<jint>(0));
+        env->CallObjectMethod(view.ref, g_bb_limit, static_cast<jint>(len));
+        if (env->ExceptionCheck()) env->ExceptionClear();
+    }
+    return view.ref;
+}
+
 } /* anonymous namespace */
 
 } /* anonymous namespace */
@@ -694,7 +764,7 @@ JNI_M(nStateSize)(JNIEnv*, jobject, jlong handle) {
 
 extern "C" JNIEXPORT jobject JNICALL
 JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
-                  jobject snapshotBuf, jint resourceKind) {
+                  jobject snapshotBuf, jint snapshotLen, jint resourceKind) {
     auto* mod = reinterpret_cast<BridgeModule*>(handle);
     if (!mod || !instanceKey || !snapshotBuf) return nullptr;
 
@@ -715,12 +785,21 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
         inst.state.assign(mod->state_size(), 0);
     }
 
-    /* snapshot: direct ByteBuffer written sequentially by the Java side */
+    /* snapshot: direct ByteBuffer written sequentially by the Java side.
+       snapshotLen is the WRITTEN length (buffer position 0 / limit = len);
+       the module reads the live buffer while the Java driver is blocked
+       inside this call. The retained copy for dispose() is refreshed only
+       when the driver hands over a different buffer, replacing what used
+       to be a 256 KB memcpy per vehicle per frame. */
     const void* snap = env->GetDirectBufferAddress(snapshotBuf);
-    const jlong snap_len = env->GetDirectBufferCapacity(snapshotBuf);
-    if (!snap || snap_len <= 0) return nullptr;
-    inst.last_snapshot.assign(static_cast<const uint8_t*>(snap),
-                              static_cast<const uint8_t*>(snap) + snap_len);
+    const jlong snap_capacity = env->GetDirectBufferCapacity(snapshotBuf);
+    if (!snap || snapshotLen <= 0) return nullptr;
+    if (inst.snapshot_address != snap || inst.snapshot_capacity != snap_capacity) {
+        inst.last_snapshot.assign(static_cast<const uint8_t*>(snap),
+                                  static_cast<const uint8_t*>(snap) + snapshotLen);
+        inst.snapshot_address = snap;
+        inst.snapshot_capacity = snap_capacity;
+    }
 
     JcmHostServices host;
     fill_host(host, inst);
@@ -728,7 +807,7 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
     JcmFrameInput in{};
     in.abi_version = mod->abi();
     in.resource_kind = resourceKind;
-    in.snapshot = inst.last_snapshot.data();
+    in.snapshot = snap;
     in.state = inst.state.data();
     in.state_size = inst.state.size();
     in.host = &host;
@@ -767,28 +846,38 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
     out.record_count = keptRecords;
     out.records_len = keptLen;
 
-    /* wrap the module-owned arenas as NIO ByteBuffers (zero copy).
-       Valid until the next nRender on this module — the replay step
-       must complete first (same discipline as the JS pipeline). */
+    /* wrap the module-owned arenas as NIO ByteBuffers. ABI 9+ modules report
+       arena capacities, so the five wrapper objects are cached per module and
+       merely rewound (position 0 / limit = this frame's length); pre-ABI-9
+       modules keep the per-frame wrapping. Valid until the next nRender on
+       this module — the replay step must complete first (same discipline as
+       the JS pipeline). */
     if (!g_frame_class || !g_frame_ctor) return nullptr;
 
-    jobject records = env->NewDirectByteBuffer(
-        const_cast<void*>(out.records), out.records_len);
-    jobject strings = env->NewDirectByteBuffer(
-        out.string_arena ? const_cast<char*>(out.string_arena) : nullptr,
-        out.string_arena_len);
-    jobject pixels = env->NewDirectByteBuffer(
-        const_cast<uint8_t*>(out.pixel_arena), out.pixel_arena_len);
-    jobject matrices = env->NewDirectByteBuffer(
-        out.matrix_arena ? const_cast<float*>(out.matrix_arena) : nullptr,
-        out.matrix_arena_len);
+    jobject records = arena_view(env, *mod, 0, out.records, out.records_len,
+                                 out.records_capacity);
+    jobject strings = arena_view(env, *mod, 1, out.string_arena, out.string_arena_len,
+                                 out.string_arena_capacity);
+    jobject pixels = arena_view(env, *mod, 2, out.pixel_arena, out.pixel_arena_len,
+                                out.pixel_arena_capacity);
+    jobject matrices = arena_view(env, *mod, 3, out.matrix_arena, out.matrix_arena_len,
+                                  out.matrix_arena_capacity);
 
-    jobject floats = env->NewDirectByteBuffer(out.float_arena ? const_cast<float*>(out.float_arena) : nullptr, out.float_arena_len);
+    jobject floats = arena_view(env, *mod, 4, out.float_arena, out.float_arena_len,
+                                out.float_arena_capacity);
     jobject result = env->NewObject(g_frame_class, g_frame_ctor, records,
                           static_cast<jint>(out.record_count),
                           strings, pixels, matrices, floats);
-    env->DeleteLocalRef(records); env->DeleteLocalRef(strings);
-    env->DeleteLocalRef(pixels); env->DeleteLocalRef(matrices); env->DeleteLocalRef(floats);
+    /* The cached views are global refs owned by the module; locals from the
+       pre-ABI-9 path are released below (deleting a global ref's LOCAL
+       reference here would be wrong, so only delete when it is local —
+       arena_view returns either a global ref (owned, do not delete) or a
+       fresh local ref). Distinguish by checking the cache. */
+    if (records && records != mod->views[0].ref) env->DeleteLocalRef(records);
+    if (strings && strings != mod->views[1].ref) env->DeleteLocalRef(strings);
+    if (pixels && pixels != mod->views[2].ref) env->DeleteLocalRef(pixels);
+    if (matrices && matrices != mod->views[3].ref) env->DeleteLocalRef(matrices);
+    if (floats && floats != mod->views[4].ref) env->DeleteLocalRef(floats);
     return result;
 }
 
@@ -823,7 +912,7 @@ JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey)
 }
 
 extern "C" JNIEXPORT void JNICALL
-JNI_M(nClose)(JNIEnv*, jobject, jlong handle) {
+JNI_M(nClose)(JNIEnv* env, jobject, jlong handle) {
     auto* mod = reinterpret_cast<BridgeModule*>(handle);
     if (!mod) return;
     {
@@ -840,6 +929,14 @@ JNI_M(nClose)(JNIEnv*, jobject, jlong handle) {
             in.state_size = kv.second.state.size();
             in.host = &host;
             mod->dispose(&in);
+        }
+        /* Release the cached arena ByteBuffers (global refs owned by this
+           module) before the module memory goes away. */
+        for (ArenaView& view : mod->views) {
+            if (view.ref) env->DeleteGlobalRef(view.ref);
+            view.ref = nullptr;
+            view.address = nullptr;
+            view.capacity = 0;
         }
     }
     /* dlclose happens in ~BridgeModule */

@@ -18,6 +18,28 @@ namespace mtr {
 
 enum class TransportMode : int32_t { UNKNOWN=-1, TRAIN=0, BOAT=1, CABLE_CAR=2, AIRPLANE=3 };
 
+/*
+ * Transport type ids (ABI 9) — the same vocabulary the JS wrapper's
+ * getTransportType() returns, so scripts can compare identically on both
+ * sides. Base modes are the lowercase enum names; the MAGIC MTR Addon
+ * contributes additional route types for TRAIN routes.
+ */
+namespace transport_type {
+    constexpr const char* TRAIN = "train";
+    constexpr const char* BOAT = "boat";
+    constexpr const char* CABLE_CAR = "cable_car";
+    constexpr const char* AIRPLANE = "airplane";
+    constexpr const char* UNKNOWN = "unknown";
+    /* MAGIC MTR Addon (org.justnoone.jme) route type overrides. */
+    constexpr const char* TRAIN_NORMAL = "train_normal";
+    constexpr const char* TRAIN_LIGHT_RAIL = "train_light_rail";
+    constexpr const char* TRAIN_HIGH_SPEED = "train_high_speed";
+    constexpr const char* TRAIN_METRO = "train_metro";
+    constexpr const char* TRAIN_BUS = "train_bus";
+    constexpr const char* TRAIN_TRAM = "train_tram";
+    constexpr const char* TRAIN_SBAHN = "train_sbahn";
+}
+
 class Stop {
 public:
     Stop(const JcmVehicleSnapshot* snap, const JcmStop* stop)
@@ -48,7 +70,17 @@ public:
         int32_t color;
         StrView name;
         int32_t transport_mode;
+        /* ABI 9: canonical transport type id; empty when unresolved. */
+        StrView type;
         TransportMode getTransportMode() const { return static_cast<TransportMode>(transport_mode); }
+        /*
+         * Canonical type id: a base mode ("train", "boat", "cable_car",
+         * "airplane") or a MAGIC MTR Addon route type ("train_metro",
+         * "train_high_speed", ...). Same string as the JS side's
+         * RouteInterchange.getTransportType(). Empty view when the host
+         * could not resolve a type (older server data).
+         */
+        StrView getTransportType() const { return type; }
     };
     Interchange interchange(int32_t i) const {
         /* interchanges are stored in the snapshot blob at interchange_offset. */
@@ -58,6 +90,7 @@ public:
         out.color = ic->color;
         out.transport_mode = ic->transport_mode;
         out.name = pool(ic->route_name_offset, ic->route_name_len);
+        out.type = pool(ic->type_offset, ic->type_len);
         return out;
     }
 
@@ -218,6 +251,23 @@ public:
     /* 0 = NONE, 1 = CLOCKWISE, 2 = ANTICLOCKWISE (Route.CircularState). */
     uint8_t circular_state() const { return snap_->circular_state; }
     bool circular() const { return snap_->circular_state != 0; }
+
+    /* v9: the vehicle's transport mode (JS: vehicle.getTransportMode()).
+       Covers the four base modes — see the TransportMode enum. */
+    TransportMode getTransportMode() const { return static_cast<TransportMode>(snap_->transport_mode); }
+
+    /*
+     * v9: the vehicle's canonical transport TYPE id (JS:
+     * vehicle.getTransportType()). Returns the base mode as a lowercase id
+     * ("train", "boat", "cable_car", "airplane") — or, when the MAGIC MTR
+     * Addon assigns the vehicle's current route an extended type, that id
+     * instead ("train_metro", "train_light_rail", "train_high_speed",
+     * "train_bus", "train_tram", "train_sbahn", "train_normal"). Compare
+     * with the mtr::transport_type constants; empty view when unresolved.
+     */
+    StrView getTransportType() const {
+        return pool(snap_->vehicle_type_offset, snap_->vehicle_type_len);
+    }
 
     /* v2: siding name (JS: vehicle.getSiding().getName()). */
     StrView siding_name() const {

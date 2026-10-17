@@ -45,24 +45,53 @@ public final class NativeVehicleDriver {
 
     /** Per vehicle+script state that must outlive a frame. */
     private static final class State {
-        final ByteBuffer snapshot = ByteBuffer
-                .allocateDirect(NativeSnapshot.CAPACITY)
-                .order(ByteOrder.nativeOrder());
+        final NativeScriptManager.VehicleSnapshotBuffers snapshots =
+                new NativeScriptManager.VehicleSnapshotBuffers();
         final String instanceKey;
+        /** Precomputed "hexId\u0000scriptId" for the draw registry. */
+        final String drawKey;
         final Map<Long, VehicleScriptContext> contexts = new java.util.LinkedHashMap<>();
         final NativeRenderStats perf = new NativeRenderStats();
         int[] cars = new int[0];
         /** Reused per-frame car-index buffer; sized on first use, never per frame. */
         int[] carScratch = EMPTY_CARS;        long touched = System.nanoTime();
-        /** First snapshot-build failure, so it is logged once and not per frame. */
-        String reportedSnapshotFailure;
 
         State(String vehicleHexId, String scriptId) {
             this.instanceKey = vehicleHexId + "/" + scriptId;
+            this.drawKey = vehicleHexId + "\u0000" + scriptId;
         }
     }
 
     private static final Map<String, State> STATES = new ConcurrentHashMap<>();
+
+    /**
+     * Vehicle -> script-id memo. The car -> script-id mapping only changes
+     * when the resource pack does, but resolving it used to allocate an
+     * ArrayList plus a removeIf lambda per vehicle per frame. Entries compare
+     * the car vehicle-id sequence and rebuild on any change; reset() drops
+     * everything on reload.
+     */
+    private static final Map<String, ScriptIds> SCRIPT_IDS = new ConcurrentHashMap<>();
+
+    private static final class ScriptIds {
+        final String[] carVehicleIds;
+        final List<String> ids;
+
+        ScriptIds(String[] carVehicleIds, List<String> ids) {
+            this.carVehicleIds = carVehicleIds;
+            this.ids = ids;
+        }
+
+        boolean matches(VehicleExtension vehicle, int carCount) {
+            if (carVehicleIds.length != carCount) return false;
+            for (int i = 0; i < carCount; i++) {
+                final String current = vehicle.vehicleExtraData.immutableVehicleCars.get(i).getVehicleId();
+                final String memo = carVehicleIds[i];
+                if (memo != current && (memo == null || !memo.equals(current))) return false;
+            }
+            return true;
+        }
+    }
 
     /**
      * Vehicles skipped so far because their envelope is outside the camera
@@ -234,14 +263,23 @@ public final class NativeVehicleDriver {
     }
 
     private static List<String> scriptIdsOf(VehicleExtension vehicle) {
-        final List<String> ids = new ArrayList<>(2);
         final int carCount = vehicle.vehicleExtraData.immutableVehicleCars.size();
+        final ScriptIds memo = SCRIPT_IDS.get(vehicle.getHexId());
+        if (memo != null && memo.matches(vehicle, carCount)) return memo.ids;
+
+        final String[] carVehicleIds = new String[carCount];
+        final List<String> ids = new ArrayList<>(2);
         for (int i = 0; i < carCount; i++) {
-            final String vehicleId = vehicle.vehicleExtraData.immutableVehicleCars.get(i).getVehicleId();
+            final String vehicleId = carVehicleIds[i] =
+                    vehicle.vehicleExtraData.immutableVehicleCars.get(i).getVehicleId();
             final String scriptId = MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(vehicleId);
             if (scriptId == null || ids.contains(scriptId)) continue;
             ids.add(scriptId);
         }
+        /* Most vehicles in a city use only JS or no script. Avoid logging each
+           of those as a missing native module; it hides real native failures. */
+        ids.removeIf(id -> !NativeScriptManager.isLoaded(id));
+        SCRIPT_IDS.put(vehicle.getHexId(), new ScriptIds(carVehicleIds, ids));
         return ids;
     }
 
@@ -296,24 +334,15 @@ public final class NativeVehicleDriver {
             return 0;
         }
 
-        /* Only invoke the module after the complete snapshot is written. */
-        try {
-            NativeSnapshot.build(state.snapshot, wrapper);
-        } catch (Throwable t) {
-            if (state.reportedSnapshotFailure == null) {
-                state.reportedSnapshotFailure = t.toString();
-                JCMLogger.error("Native vehicle script {} could not build a snapshot from the "
-                        + "route data (native render skipped): {}", scriptId, t.toString());
-                JCMLogger.error("  stack:", t);
-            }
-            return 0;
-        }
-
+        /* Snapshot marshalling (per ABI group) and module render happen inside
+           NativeScriptManager.renderVehicle; a marshal failure skips the native
+           call instead of handing mtrRender a half-written buffer, and the
+           driver's reusable Builder keeps a steady frame allocation-free. */
         final List<NativeScriptManager.NativeFrame> frames;
         final long nativeBegin = System.nanoTime();
         try {
-            frames = NativeScriptManager.render(state.instanceKey, scriptId, state.snapshot, NativeScriptManager.MTR_RESOURCE_VEHICLE,
-                    module -> { VehicleScriptContext ctx = state.contexts.computeIfAbsent(module.getNativeHandle(), h -> new VehicleScriptContext(vehicle, scriptId, state.cars)); ctx.resetForNextRun(); return ctx; }, wrapper, null);
+            frames = NativeScriptManager.renderVehicle(state.instanceKey, scriptId, state.snapshots, wrapper,
+                    module -> { VehicleScriptContext ctx = state.contexts.computeIfAbsent(module.getNativeHandle(), h -> new VehicleScriptContext(vehicle, scriptId, state.cars)); ctx.resetForNextRun(); return ctx; });
         } catch (Throwable t) {
             JCMLogger.error("Native vehicle script {} threw while rendering: {}", scriptId, t.toString());
             JCMLogger.error("  stack:", t);
@@ -327,11 +356,11 @@ public final class NativeVehicleDriver {
 
         final long replayBegin = System.nanoTime();
         final Map<Integer, ScriptRenderManager> managers =
-                NativeDrawRegistry.begin(vehicle.getHexId(), scriptId, carCount);
+                NativeDrawRegistry.begin(state.drawKey, carCount);
 
         int produced = 0;
         for (NativeScriptManager.NativeFrame frame : frames) {
-            if (applyFrame(frame, managers, state.contexts.get(Long.parseLong(frame.instanceKey.substring(frame.instanceKey.lastIndexOf('/')+1))), wrapper.isClientPlayerRiding(), state.perf)) produced++;
+            if (applyFrame(frame, managers, state.contexts.get(frame.moduleHandle), wrapper.isClientPlayerRiding(), state.perf)) produced++;
         }
         state.perf.frame(scriptId, perfBegin, nativeBegin, replayBegin, allocDelta(allocBegin));
         traceOnce("'" + scriptId + "' frame applied", "modules=" + frames.size(),
@@ -482,6 +511,7 @@ public final class NativeVehicleDriver {
     }
     public static void reset() {
         STATES.clear();
+        SCRIPT_IDS.clear();
         NativeDrawRegistry.clear();
         /* let the next session report its early-exit reasons again */
         TRACED.clear();

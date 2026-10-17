@@ -42,7 +42,12 @@ extern "C" {
 /* Version / module identity                                           */
 /* ------------------------------------------------------------------ */
 
-/* ABI 8 appends invoke_api, Lift snapshots and typed interchange modes.
+/* ABI 9 appends the canonical transport TYPE ids to the vehicle header
+   (vehicle_type_offset/len) and to every interchange (type_offset/len),
+   exposing the MAGIC MTR Addon's route types alongside the four base modes.
+   ABI 9 hosts also stop copying the snapshot per frame and reuse the arena
+   ByteBuffers on the JNI boundary (see jni_bridge.cpp).
+   ABI 8 appends invoke_api, Lift snapshots and typed interchange modes.
    ABI 6/7 modules retain their original host prefix and snapshot layouts.
    ABI 7 appends resource-font metrics and baseline text rasterization to
    JcmHostServices. The ABI 6 prefix and snapshot layouts are unchanged.
@@ -54,7 +59,7 @@ extern "C" {
    the newer header call a host function slot that does not exist in an
    older host (the struct grew), so an old host must refuse the module
    instead of reading past it. */
-#define MTR_NATIVE_ABI_VERSION 8
+#define MTR_NATIVE_ABI_VERSION 9
 
 /* Resource kinds, identical to JCM script contexts. */
 enum MtrResourceKind {
@@ -249,6 +254,12 @@ typedef struct JcmInterchange {
     int32_t route_name_offset;
     int32_t route_name_len;
     int32_t transport_mode; /* ABI 8: -1 when older server data omits it */
+    /* ABI 9: canonical transport TYPE id into the snapshot string pool —
+       "train", "boat", "cable_car", "airplane", or a MAGIC MTR Addon
+       extension such as "train_metro" / "train_high_speed". Empty when
+       the host cannot resolve a type. */
+    int32_t type_offset;
+    int32_t type_len;
 } JcmInterchange;
 
 /* v3 (ABI 3): station exit, mirrors StationExit (JS: station.getExits()
@@ -339,6 +350,13 @@ typedef struct JcmVehicleSnapshot {
     int32_t  siding_name_len;
     int32_t  string_pool_offset;  /* shared string pool */
     int32_t  string_pool_len;
+    /* v9 (ABI 9): the vehicle's canonical transport TYPE id into the string
+       pool — the base mode ("train", "boat", "cable_car", "airplane") or a
+       MAGIC MTR Addon route type ("train_metro", ...). Mirrors
+       VehicleWrapper.getTransportType(); scripts read it through
+       mtr::Train::getTransportType(). Empty when unresolved. */
+    int32_t  vehicle_type_offset;
+    int32_t  vehicle_type_len;
 } JcmVehicleSnapshot;
 
 typedef struct JcmCar {
@@ -443,6 +461,16 @@ typedef struct JcmFrameOutput {
     const char* string_arena;
     const uint8_t* pixel_arena;
     const float* float_arena;
+    /* ABI 9: full capacities of the arenas behind the pointers above. The
+       host builds ONE ByteBuffer per arena and rewinds its limit every
+       frame instead of allocating five fresh wrapper objects per frame.
+       Entries of 0 mean "unknown" (pre-ABI-9 module); the host then wraps
+       at the exact length like before. */
+    int64_t  records_capacity;
+    int64_t  matrix_arena_capacity;
+    int64_t  string_arena_capacity;
+    int64_t  pixel_arena_capacity;
+    int64_t  float_arena_capacity;
 } JcmFrameOutput;
 
 /* ------------------------------------------------------------------ */

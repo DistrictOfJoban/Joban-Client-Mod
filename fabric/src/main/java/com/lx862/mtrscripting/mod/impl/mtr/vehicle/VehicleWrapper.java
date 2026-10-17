@@ -167,7 +167,9 @@ public class VehicleWrapper {
         public final ObjectArrayList<Stop> allStopsNextRoute;
         public final Int2ObjectOpenHashMap<List<Stop>> stopIdxToRouteStops;
         public final LongArrayList routeToRun;
-        public final Siding siding;
+        /* Non-final: the client cache swaps the siding object in when MTR
+           replaces it in sidingIdMap, without rebuilding the whole graph. */
+        public Siding siding;
         public final boolean isFullData;
 
         public StopsData(Siding siding, boolean isFullData) {
@@ -177,6 +179,26 @@ public class VehicleWrapper {
             this.routeToRun = new LongArrayList();
             this.stopIdxToRouteStops = new Int2ObjectOpenHashMap<>();
             this.siding = siding;
+        }
+
+        /**
+         * Memo for the limited (non-full) stops path, keyed by vehicle id and
+         * fetch mode. The limited path rebuilds its whole Stop graph —
+         * including MTR's per-station interchange maps — on every frame when
+         * full data has not arrived (or SKIP mode never requests it). The
+         * rebuild is bounded to once per second per vehicle, and to
+         * immediately when the route signature or dataset revision changes.
+         */
+        private static final Map<Long, Limited> LIMITED_CACHE = new HashMap<>();
+        private static final long LIMITED_TTL_NANOS = 1_000_000_000L;
+        private static final int LIMITED_MAX = 256;
+
+        private static final class Limited {
+            VehicleScriptContext.DataFetchMode mode;
+            long signature;
+            long revision;
+            long builtAtNanos;
+            StopsData data;
         }
 
         public static StopsData constructData(VehicleScriptContext.DataFetchMode dataFetchMode, VehicleExtension vehicle) {
@@ -189,10 +211,34 @@ public class VehicleWrapper {
                 return fullStopsData;
             }
 
-            long sidingId = vehicle.vehicleExtraData.getSidingId();
-            Siding siding = MinecraftClientData.getInstance().sidingIdMap.get(sidingId);
+            final long vehicleId = vehicle.getId();
+            final long key = vehicleId | (dataFetchMode == VehicleScriptContext.DataFetchMode.SKIP ? 1L << 62 : 0L);
+            final long signature = vehicle.vehicleExtraData.getPreviousRouteId() * 31
+                    + vehicle.vehicleExtraData.getThisRouteId() * 7
+                    + vehicle.vehicleExtraData.getNextRouteId();
+            final long revision = VehicleDataCache.mtrData.getRevision();
+            final long now = System.nanoTime();
+            final Limited cached = LIMITED_CACHE.get(key);
+            if(cached != null && cached.data != null && cached.mode == dataFetchMode
+                    && cached.signature == signature && cached.revision == revision
+                    && now - cached.builtAtNanos < LIMITED_TTL_NANOS) {
+                return cached.data;
+            }
+
+            if(LIMITED_CACHE.size() >= LIMITED_MAX) LIMITED_CACHE.clear();
+
+            Siding siding = MinecraftClientData.getInstance().sidingIdMap.get(vehicle.vehicleExtraData.getSidingId());
             StopsData limitedStopsData = new StopsData(siding, false);
-            return buildLimitedStopsData(limitedStopsData, vehicle);
+            buildLimitedStopsData(limitedStopsData, vehicle);
+
+            Limited entry = cached != null ? cached : new Limited();
+            entry.mode = dataFetchMode;
+            entry.signature = signature;
+            entry.revision = revision;
+            entry.builtAtNanos = now;
+            entry.data = limitedStopsData;
+            LIMITED_CACHE.put(key, entry);
+            return limitedStopsData;
         }
 
         private static StopsData buildLimitedStopsData(StopsData stopsData, VehicleExtension vehicleExtension) {
@@ -226,15 +272,20 @@ public class VehicleWrapper {
                     if (station != null) {
                         station.getInterchangeStationToColorToRoutesMap(true).forEach((s, interchanges) -> {
                             if (s.getId() == station.getId()) interchanges.forEach((color, routes) -> routes.forEach(r ->
-                                        interchangeModes.add(color, r.getName(), r.getTransportMode())));
+                                        interchangeModes.add(color, r.getName(), r.getTransportMode(),
+                                                MagicRouteTypes.extendedType(r.getId()), r.getId())));
                         });
                     }
                     if (platform != null) platform.routes.forEach(r ->
-                            interchangeModes.add(r.getColor(), r.getName(), r.getTransportMode()));
+                            interchangeModes.add(r.getColor(), r.getName(), r.getTransportMode(),
+                                    MagicRouteTypes.extendedType(r.getId()), r.getId()));
                     // In-station interchange
                     routePlatform.forEach((color, routes) -> {
                         routes.forEach(routeName -> {
-                            thisStop.routeInterchanges.add(new Stop.RouteInterchange(color, routeName, interchangeModes.get(color, routeName)));
+                            final InterchangeRouteModes.Entry entry = interchangeModes.getEntry(color, routeName);
+                            thisStop.routeInterchanges.add(new Stop.RouteInterchange(
+                                    entry == null ? 0 : entry.routeId, color, routeName,
+                                    entry == null ? null : entry.mode, entry == null ? null : entry.typeId()));
                         });
                     });
                     // Connecting station interchange
@@ -243,7 +294,8 @@ public class VehicleWrapper {
                             if (connectingStation.getId() != station.getId()) {
                                 interchanges.forEach((color, routes) -> routes.forEach(interchangeRoute ->
                                         thisStop.connectingInterchanges.computeIfAbsent(connectingStation.getName(), k -> new ObjectArrayList<>())
-                                                .add(new Stop.RouteInterchange(color, interchangeRoute.getName(), interchangeRoute.getTransportMode()))));
+                                                .add(new Stop.RouteInterchange(interchangeRoute.getId(), color, interchangeRoute.getName(),
+                                                        interchangeRoute.getTransportMode(), null))));
                             }
                         });
                     }
@@ -312,22 +364,66 @@ public class VehicleWrapper {
             public final int color;
             public final String name;
             private final TransportMode transportMode;
+            /** Canonical type id (MAGIC extension or base mode id); never null. */
+            private final String transportType;
+            /** Originating route id, 0 when the server data omits it. */
+            private final long routeId;
 
             @ApiInternal
             public RouteInterchange(int color, String name) {
-                this(color, name, null);
+                this(0, color, name, null, null);
             }
 
             @ApiInternal
             public RouteInterchange(int color, String name, TransportMode transportMode) {
+                this(0, color, name, transportMode, null);
+            }
+
+            @ApiInternal
+            public RouteInterchange(int color, String name, TransportMode transportMode, String transportType) {
+                this(0, color, name, transportMode, transportType);
+            }
+
+            /**
+             * @param routeId        originating route id (0 = unknown); enables a
+             *                        client-side MAGIC lookup when {@code transportType}
+             *                        is null and the route id is known
+             * @param transportMode  the actual interchange mode, or null when older
+             *                        server data omits it
+             * @param transportType   pre-resolved canonical type id, or null to resolve
+             *                        it from {@code routeId} (MAGIC) / {@code transportMode}
+             */
+            @ApiInternal
+            public RouteInterchange(long routeId, int color, String name,
+                                    TransportMode transportMode, String transportType) {
+                this.routeId = routeId;
                 this.color = color;
                 this.name = name;
                 this.transportMode = transportMode;
+                this.transportType = transportType != null ? transportType
+                        : routeId != 0 ? MagicRouteTypes.typeId(routeId, transportMode)
+                        : MagicRouteTypes.baseTypeId(transportMode);
             }
 
             /** The actual interchange mode, or null when older server data omits it. */
             public @ValueNullable TransportMode getTransportMode() {
                 return transportMode;
+            }
+
+            /**
+             * The interchange's transport type as a canonical id: a MAGIC MTR
+             * extension ("train_metro", "train_light_rail", ...) when the addon
+             * assigns one, otherwise the base mode id ("train", "boat",
+             * "cable_car", "airplane"). Never null; "unknown" only when the mode
+             * itself is unknown (older server data).
+             */
+            public String getTransportType() {
+                return transportType;
+            }
+
+            /** The originating route id, or 0 when the server data omits it. */
+            public long getRouteId() {
+                return routeId;
             }
         }
     }
@@ -366,6 +462,20 @@ public class VehicleWrapper {
     }
     public TransportMode getTransportMode() {
         return vehicleExtension.getTransportMode();
+    }
+    /**
+     * The vehicle's transport type as a canonical id: the MAGIC MTR Addon's
+     * extended type for the vehicle's current route ("train_metro",
+     * "train_high_speed", ...) when one is assigned, otherwise the base mode
+     * id ("train", "boat", "cable_car", "airplane"). Never null.
+     *
+     * <p>Native (C++) snapshots surface the exact same string through
+     * {@code mtr::Train::getTransportType()} (ABI 9), so JS and C++ scripts
+     * agree on the vocabulary. {@link #getTransportMode()} keeps returning the
+     * plain enum for scripts that only care about the four base modes.
+     */
+    public String getTransportType() {
+        return MagicRouteTypes.typeId(getThisRouteId(), getTransportMode());
     }
     public int getCarCount() {
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.size();

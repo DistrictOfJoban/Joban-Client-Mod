@@ -186,6 +186,14 @@ public:
         out.string_arena = string_arena_;
         out.pixel_arena = pixel_arena_;
         out.float_arena = float_arena_;
+        /* ABI 9: capacities let the host cache one ByteBuffer per arena and
+           rewind its limit per frame instead of allocating five wrapper
+           objects per vehicle per frame. */
+        out.records_capacity = record_cap_;
+        out.matrix_arena_capacity = matrix_cap_;
+        out.string_arena_capacity = string_cap_;
+        out.pixel_arena_capacity = pixel_cap_;
+        out.float_arena_capacity = float_cap_;
     }
 
     /* Host installs external buffers before first use (zero shared
