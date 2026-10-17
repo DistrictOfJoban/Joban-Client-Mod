@@ -1,11 +1,17 @@
 # Changelog
 
-## 2.3.0-beta.1-yanyang.10
+## 2.3.0-beta.1-yanyang.11
 
 - Add `getTransportType()` to `VehicleWrapper` and `Stop.RouteInterchange` (JS/Java) and to `mtr::Train` / `mtr::Stop::Interchange` (C++, ABI 9). It returns the canonical transport type id — the four base modes ("train", "boat", "cable_car", "airplane") or the MAGIC MTR Addon route types ("train_metro", "train_light_rail", "train_high_speed", "train_bus", "train_tram", "train_sbahn", "train_normal") — so both script languages finally see MAGIC's vehicle types. MAGIC is integrated by optional reflection (no hard dependency); types also travel through the server→client script dataset (`routeId`, `transportType`).
 - Fix the C++-script GC stutter: reuse the built StopsData graph across frames (invalidated by dataset revision or synced-payload identity), marshal snapshots with a per-vehicle reusable Builder (persistent string pool + exit memo, pooled offset arrays), cache the limited (non-full) stop data with a 1s TTL + route signature, and stop the JNI bridge from copying the 256 KB snapshot and allocating five arena ByteBuffers per vehicle per frame (one cached view per arena, rewound per frame; explicit snapshot length replaces slicing).
 - Cut native memory: the per-module pixel arena now starts at 1 MB and grows on demand (previously a flat 16 MB per module).
 - Keep ABI 6/7/8 modules loading alongside ABI 9 (per-ABI snapshot groups, 12/16/24-byte interchange entries).
+
+## 2.3.0-beta.1-yanyang.10
+
+- Fix the in-game `NoSuchMethodError` from a stale bundled JNI bridge: all four bridges rebuilt from the current `jni_bridge.cpp`, failed JNI lookups now clear and report immediately (disabling the native host instead of leaking the throwable into the script's `render()`), and a new `checkNativeBridges` build task fails the build when a bundled bridge does not embed the `NativeFrame` constructor descriptor the jar's classes declare.
+- Frustum culling for native vehicle scripts: vehicles whose car envelope is outside the camera frustum no longer pay a full snapshot marshal, canvas repaint and texture upload per car.
+- Render-thread allocation: the string pool returns a packed `long` instead of a new `int[2]` per entry; station exits are memoised per build pass; the driver's per-frame `IntStream` filter became a plain loop over a reused buffer.
 
 ## 2.3.0-beta.1-yanyang.9
 
