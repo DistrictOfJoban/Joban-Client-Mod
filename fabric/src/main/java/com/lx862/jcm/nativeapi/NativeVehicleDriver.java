@@ -52,7 +52,8 @@ public final class NativeVehicleDriver {
         final Map<Long, VehicleScriptContext> contexts = new java.util.LinkedHashMap<>();
         final NativeRenderStats perf = new NativeRenderStats();
         int[] cars = new int[0];
-        long touched = System.nanoTime();
+        /** Reused per-frame car-index buffer; sized on first use, never per frame. */
+        int[] carScratch = EMPTY_CARS;        long touched = System.nanoTime();
         /** First snapshot-build failure, so it is logged once and not per frame. */
         String reportedSnapshotFailure;
 
@@ -62,6 +63,16 @@ public final class NativeVehicleDriver {
     }
 
     private static final Map<String, State> STATES = new ConcurrentHashMap<>();
+
+    /**
+     * Vehicles skipped so far because their envelope is outside the camera
+     * frustum. Counted so the saving is visible in the log rather than assumed;
+     * the per-60s native perf line reports the delta.
+     */
+    private static final java.util.concurrent.atomic.AtomicLong CULLED =
+            new java.util.concurrent.atomic.AtomicLong();
+    private static long culledAtLastReport = 0;
+    private static long culledLastLog = System.nanoTime();
 
     /* JcmRecordHeader */
     private static final int HDR_SIZE = 8;
@@ -98,6 +109,81 @@ public final class NativeVehicleDriver {
         return vehicleHexId + "\u0000" + scriptId;
     }
 
+    private static final int[] EMPTY_CARS = new int[0];
+
+    /** Same-content car-index comparison that does not allocate a copy per frame. */
+    private static boolean sameCars(int[] cached, int[] scratch, int count) {
+        if (cached.length != count) return false;
+        for (int i = 0; i < count; i++) {
+            if (cached[i] != scratch[i]) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Bytes allocated by the current thread so far, or -1 when the JVM does not
+     * expose it.
+     *
+     * <p>Used only for the perf line: counting what this path allocates is the
+     * only way to attribute GC pressure to it, and the counter costs nothing per
+     * frame beyond one call.
+     */
+    private static long allocatedBytes() {
+        final com.sun.management.ThreadMXBean mx = ALLOC_MX;
+        if (mx == null) return -1L;
+        try {
+            return mx.getCurrentThreadAllocatedBytes();
+        } catch (Throwable t) {
+            return -1L;
+        }
+    }
+
+    /** Allocation attributed to one render call; 0 when unsupported. */
+    private static long allocDelta(long begin) {
+        if (begin < 0L) return 0L;
+        final long end = allocatedBytes();
+        return end < begin ? 0L : end - begin;
+    }
+
+    private static final com.sun.management.ThreadMXBean ALLOC_MX = allocMx();
+
+    private static com.sun.management.ThreadMXBean allocMx() {
+        try {
+            final java.lang.management.ThreadMXBean mx =
+                    java.lang.management.ManagementFactory.getThreadMXBean();
+            if (mx instanceof com.sun.management.ThreadMXBean) {
+                final com.sun.management.ThreadMXBean sun = (com.sun.management.ThreadMXBean) mx;
+                if (sun.isThreadAllocatedMemorySupported()) {
+                    sun.setThreadAllocatedMemoryEnabled(true);
+                    return sun;
+                }
+            }
+        } catch (Throwable ignored) {
+            /* not a HotSpot-style JVM; allocation reporting stays disabled */
+        }
+        return null;
+    }
+
+    /**
+     * Logs how many vehicles the frustum cull skipped, at most once a minute.
+     *
+     * <p>Reported separately from {@link NativeRenderStats} because it counts
+     * vehicles that never reached a script, so they cannot show up in the
+     * per-script perf line.
+     */
+    private static void reportCulled() {
+        final long now = System.nanoTime();
+        if (now - culledLastLog < 60_000_000_000L) return;
+        culledLastLog = now;
+        final long total = CULLED.get();
+        final long delta = total - culledAtLastReport;
+        culledAtLastReport = total;
+        if (delta > 0) {
+            JCMLogger.info("[native cull] vehicle-script runs skipped by the camera frustum "
+                    + "in the last 60s: {} (total {})", delta, total);
+        }
+    }
+
     /**
      * Renders every native script this vehicle uses. Safe to call for any
      * vehicle: it returns immediately when no C++ module is loaded for the
@@ -107,9 +193,21 @@ public final class NativeVehicleDriver {
      */
     public static int render(VehicleExtension vehicle) {
         if (vehicle == null) return 0;
+        reportCulled();
         final int carCount = vehicle.vehicleExtraData.immutableVehicleCars.size();
         if (carCount <= 0) {
             traceOnce("vehicle has no cars", vehicle.getHexId());
+            return 0;
+        }
+
+        /* Frustum cull before anything expensive: a train outside the camera
+           view would otherwise pay a full snapshot marshal plus a whole-canvas
+           repaint and texture upload per car, for pixels that are never drawn.
+           The frustum comes from the same Fabric hook MTR caches its own
+           block-entity culling frustum from, so this matches MTR's visibility
+           decision. It fails open (see VehicleCulling). */
+        if (!VehicleCulling.shouldRender(vehicle)) {
+            CULLED.incrementAndGet();
             return 0;
         }
 
@@ -149,6 +247,7 @@ public final class NativeVehicleDriver {
 
     private static int renderOne(VehicleExtension vehicle, String scriptId, int carCount) {
         final long perfBegin = System.nanoTime();
+        final long allocBegin = allocatedBytes();
         final VehicleResourceProvider.VehicleScriptConfiguration config =
                 MtrScriptingResourceManager.vehicle.getVehicleScript(scriptId);
         if (config == null) {
@@ -163,11 +262,21 @@ public final class NativeVehicleDriver {
                 key(vehicle.getHexId(), scriptId), k -> new State(vehicle.getHexId(), scriptId));
 
         state.touched = System.nanoTime();
-        int[] ownCars = java.util.stream.IntStream.range(0, carCount).filter(i -> scriptId.equals(
-                MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(vehicle.vehicleExtraData.immutableVehicleCars.get(i).getVehicleId()))).toArray();
-        if (!java.util.Arrays.equals(state.cars, ownCars)) {
+        /* Plain loop: IntStream.range().filter().toArray() allocated a stream,
+           a lambda and a builder on the render thread every single frame. */
+        if (state.carScratch.length < carCount) state.carScratch = new int[carCount];
+        int ownCarCount = 0;
+        final int[] ownCars = state.carScratch;
+        for (int i = 0; i < carCount; i++) {
+            if (scriptId.equals(MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(
+                    vehicle.vehicleExtraData.immutableVehicleCars.get(i).getVehicleId()))) {
+                ownCars[ownCarCount++] = i;
+            }
+        }
+        if (!sameCars(state.cars, ownCars, ownCarCount)) {
             if (state.cars.length != 0) NativeScriptManager.disposeInstance(state.instanceKey, scriptId);
-            state.contexts.clear(); state.cars = ownCars;
+            state.contexts.clear();
+            state.cars = java.util.Arrays.copyOf(ownCars, ownCarCount);
         }
         final VehicleWrapper wrapper;
         try {
@@ -224,7 +333,7 @@ public final class NativeVehicleDriver {
         for (NativeScriptManager.NativeFrame frame : frames) {
             if (applyFrame(frame, managers, state.contexts.get(Long.parseLong(frame.instanceKey.substring(frame.instanceKey.lastIndexOf('/')+1))), wrapper.isClientPlayerRiding(), state.perf)) produced++;
         }
-        state.perf.frame(scriptId, perfBegin, nativeBegin, replayBegin);
+        state.perf.frame(scriptId, perfBegin, nativeBegin, replayBegin, allocDelta(allocBegin));
         traceOnce("'" + scriptId + "' frame applied", "modules=" + frames.size(),
                 "withDrawCalls=" + produced, "carCount=" + carCount);
         return produced;

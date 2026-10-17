@@ -186,6 +186,26 @@ jmethodID g_mid_draw_font_text = nullptr;
 
 /* (still inside the anonymous namespace opened with the bookkeeping structs) */
 
+namespace {
+/** Clears and reports a pending JNI throwable, then returns fallback.
+ *
+ * A failed FindClass / GetMethodID leaves a throwable pending on the thread.
+ * In a JNI entry point that is not called from Java, nothing ever clears it,
+ * so every later JNI call on that thread is rejected by the VM and the error
+ * only surfaces much later at an unrelated call site. Always consume it here.
+ */
+template <typename T>
+T jni_lookup(JNIEnv* env, const char* what, T value) {
+    if (value && !env->ExceptionCheck()) return value;
+    if (env->ExceptionCheck()) {
+        std::fprintf(stderr, "[jcm_native_bridge] JNI lookup failed: %s\n", what);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+    }
+    return nullptr;
+}
+}  // namespace
+
 /** Installed by NativeScriptManager's static initialiser (may be null). */
 extern "C" JNIEXPORT void JNICALL
 Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jclass, jobject host) {
@@ -201,32 +221,68 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
     if (!host) return;
 
     if (!g_api_class) {
-        jclass api = env->FindClass("com/lx862/jcm/nativeapi/NativeApiSession");
-        g_api_class = static_cast<jclass>(env->NewGlobalRef(api));
-        g_api_invoke = env->GetStaticMethodID(g_api_class, "invoke", "([B[B)[B");
-        env->DeleteLocalRef(api);
-        jclass frame = env->FindClass("com/lx862/jcm/nativeapi/NativeScriptManager$NativeFrame");
-        g_frame_class = static_cast<jclass>(env->NewGlobalRef(frame));
-        g_frame_ctor = env->GetMethodID(g_frame_class, "<init>", "(Ljava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V");
-        env->DeleteLocalRef(frame);
+        jclass api = jni_lookup(env, "com/lx862/jcm/nativeapi/NativeApiSession",
+                env->FindClass("com/lx862/jcm/nativeapi/NativeApiSession"));
+        if (api) {
+            g_api_class = static_cast<jclass>(env->NewGlobalRef(api));
+            g_api_invoke = jni_lookup(env, "NativeApiSession.invoke([B[B)[B",
+                    env->GetStaticMethodID(g_api_class, "invoke", "([B[B)[B"));
+            env->DeleteLocalRef(api);
+        }
+        jclass frame = jni_lookup(env, "com/lx862/jcm/nativeapi/NativeScriptManager$NativeFrame",
+                env->FindClass("com/lx862/jcm/nativeapi/NativeScriptManager$NativeFrame"));
+        if (frame) {
+            g_frame_class = static_cast<jclass>(env->NewGlobalRef(frame));
+            g_frame_ctor = jni_lookup(env,
+                    "NativeFrame.<init>(ByteBuffer,int,ByteBuffer,ByteBuffer,ByteBuffer,ByteBuffer)V",
+                    env->GetMethodID(g_frame_class, "<init>",
+                        "(Ljava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V"));
+            env->DeleteLocalRef(frame);
+        }
     }
+
     g_host = env->NewGlobalRef(host);
-    jclass cls = env->GetObjectClass(host);
-    if (!cls) return;
-    g_mid_create_resources = env->GetMethodID(cls, "createResources", "([I[I[F[F[I[I)[I");
-    g_mid_upload_pixels = env->GetMethodID(cls, "uploadPixels", "(IIIII[B)V");
-    g_mid_rasterize_text = env->GetMethodID(cls, "rasterizeText", "([BIIIIIILjava/nio/ByteBuffer;II)I");
-    g_mid_measure_font_text = env->GetMethodID(cls, "measureFontText", "([B[BDDD)[D");
-    g_mid_draw_font_text = env->GetMethodID(cls, "drawFontText", "([B[BDDDDDDIIIIILjava/nio/ByteBuffer;II)[I");
-    if (!g_mid_create_resources || !g_mid_upload_pixels) {
+    jclass cls = jni_lookup(env, "NativeHost class", env->GetObjectClass(host));
+    if (!cls) { g_host = nullptr; return; }
+    g_mid_create_resources = jni_lookup(env, "NativeHost.createResources",
+            env->GetMethodID(cls, "createResources", "([I[I[F[F[I[I)[I"));
+    g_mid_upload_pixels = jni_lookup(env, "NativeHost.uploadPixels",
+            env->GetMethodID(cls, "uploadPixels", "(IIIII[B)V"));
+    g_mid_rasterize_text = jni_lookup(env, "NativeHost.rasterizeText",
+            env->GetMethodID(cls, "rasterizeText", "([BIIIIIILjava/nio/ByteBuffer;II)I"));
+    g_mid_measure_font_text = jni_lookup(env, "NativeHost.measureFontText",
+            env->GetMethodID(cls, "measureFontText", "([B[BDDD)[D"));
+    g_mid_draw_font_text = jni_lookup(env, "NativeHost.drawFontText",
+            env->GetMethodID(cls, "drawFontText", "([B[BDDDDDDIIIIILjava/nio/ByteBuffer;II)[I"));
+    env->DeleteLocalRef(cls);
+
+    /* A bridge built from a different revision than the jar it ships in makes
+       these lookups fail. Disable the native host up front and say which piece
+       is missing: otherwise nRender still tries to build a NativeFrame and the
+       log blames the script's render() at a line that has nothing to do with
+       the real problem. */
+    bool ok = true;
+    if (!g_frame_class || !g_frame_ctor) {
+        std::fprintf(stderr, "[jcm_native_bridge] NativeScriptManager$NativeFrame constructor "
+                             "not found — this jcm_native_bridge does not match "
+                             "NativeScriptManager. Rebuild it from native/jni/jni_bridge.cpp.\n");
+        ok = false;
+    }
+    if (!g_host || !g_mid_create_resources || !g_mid_upload_pixels) {
         std::fprintf(stderr, "[jcm_native_bridge] host object is missing "
                              "createResources/uploadPixels — native host disabled\n");
-        env->DeleteGlobalRef(g_host);
+        ok = false;
+    }
+    if (!ok) {
+        if (g_host) env->DeleteGlobalRef(g_host);
         g_host = nullptr;
         g_mid_create_resources = nullptr;
         g_mid_upload_pixels = nullptr;
+        g_mid_rasterize_text = nullptr;
+        g_mid_measure_font_text = nullptr;
+        g_mid_draw_font_text = nullptr;
     }
-    env->DeleteLocalRef(cls);
+    env->ExceptionClear();
 }
 
 /* ---- host services handed to the script module (see mtr_native.h) ---- */

@@ -82,8 +82,135 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
                 options.encoding = 'UTF-8'
         }
 
+        /* ------------------------------------------------------------------
+         * Native bridge / Java ABI guard.
+         *
+         * jni_bridge.cpp resolves NativeScriptManager$NativeFrame's constructor
+         * and five NativeHost methods by exact JNI descriptor. A bridge built
+         * from a different revision than the classes it ships with makes those
+         * lookups fail, and the failure surfaces as
+         *
+         *   java.lang.NoSuchMethodError: <init>
+         *     at NativeScriptManager$NativeScriptModule.nRender(Native Method)
+         *
+         * while rendering — which says nothing about the real cause. The
+         * yanyang.9 jars shipped exactly that: a bridge from before commit
+         * d26c842 (NativeFrame had 4 ByteBuffers) with classes that had 5.
+         *
+         * So before packaging, read the constructor descriptor out of the
+         * compiled class and assert that every bridge we are about to bundle
+         * embeds it.
+         * ------------------------------------------------------------------ */
+
+        /** [(name, descriptor)] declared by a class file, read straight from the class bytes. */
+        def declaredMethods = { File classFile ->
+                byte[] b = classFile.bytes
+                if (b.length < 10 || (b[0] & 0xff) != 0xca || (b[1] & 0xff) != 0xfe) {
+                        throw new GradleException("Not a class file: ${classFile}")
+                }
+                def u2 = { int off -> ((b[off] & 0xff) << 8) | (b[off + 1] & 0xff) }
+                def u4 = { int off ->
+                        ((b[off] & 0xff) << 24) | ((b[off + 1] & 0xff) << 16) |
+                        ((b[off + 2] & 0xff) << 8) | (b[off + 3] & 0xff)
+                }
+                int cpCount = u2(8)
+                Map<Integer, String> utf8 = [:]
+                int i = 10
+                int n = 1
+                while (n < cpCount) {
+                        int tag = b[i] & 0xff
+                        i += 1
+                        if (tag == 1) {
+                                int len = u2(i); i += 2
+                                utf8[n] = new String(b, i, len, 'UTF-8'); i += len
+                        } else if (tag in [7, 8, 16, 19, 20]) {
+                                i += 2
+                        } else if (tag == 15) {
+                                i += 3
+                        } else if (tag in [3, 4, 9, 10, 11, 12, 17, 18]) {
+                                i += 4
+                        } else if (tag in [5, 6]) {
+                                i += 8; n += 1
+                        } else {
+                                throw new GradleException("Unexpected constant pool tag ${tag} in ${classFile}")
+                        }
+                        n += 1
+                }
+                i += 6                                  // access_flags, this_class, super_class
+                i += 2 + 2 * u2(i)                      // interfaces
+                int fields = u2(i); i += 2
+                for (int f = 0; f < fields; f++) {
+                        int attrs = u2(i + 6); i += 8
+                        for (int a = 0; a < attrs; a++) { i += 6 + u4(i + 2) }
+                }
+                int methods = u2(i); i += 2
+                def out = []
+                for (int m = 0; m < methods; m++) {
+                        String name = utf8[u2(i + 2)]
+                        String desc = utf8[u2(i + 4)]
+                        int attrs = u2(i + 6); i += 8
+                        for (int a = 0; a < attrs; a++) { i += 6 + u4(i + 2) }
+                        out << [name, desc]
+                }
+                return out
+        }
+
+        def nativeFrameCtorDescriptor = {
+                // Layouts differ slightly across Gradle/MC versions; search rather
+                // than assume, so this guard can never fail a build on its own.
+                def candidates = []
+                def buildDir = layout.buildDirectory.get().asFile
+                for (String root : ["classes/java/main", "classes/java/client"]) {
+                        def f = new File(buildDir, "${root}/com/lx862/jcm/nativeapi/NativeScriptManager\$NativeFrame.class")
+                        if (f.isFile()) candidates << f
+                }
+                if (candidates.isEmpty()) {
+                        logger.lifecycle("[native-bridge] compiled NativeFrame not found under " +
+                                "${buildDir}/classes; skipping ABI check")
+                        return null
+                }
+                def ctors = declaredMethods(candidates[0]).findAll { it[0] == '<init>' }
+                if (ctors.size() != 1) {
+                        throw new GradleException("Expected exactly one NativeFrame constructor, found ${ctors}")
+                }
+                return ctors[0][1]
+        }
+
+        tasks.register("checkNativeBridges") {
+                description = "Asserts the JNI bridges bundled into this jar match the compiled NativeFrame/NativeHost ABI"
+                group = "verification"
+                dependsOn tasks.named("compileJava")
+                doLast {
+                        def descriptor = nativeFrameCtorDescriptor()
+                        if (descriptor == null) return
+                        if (!rootProject.hasProperty("native_bridge_dir")) {
+                                logger.lifecycle("[native-bridge] no -Pnative_bridge_dir; " +
+                                        "expects ${descriptor} in whatever bridge is on java.library.path")
+                                return
+                        }
+                        def bridges = rootProject.file(rootProject.property("native_bridge_dir"))
+                        def binaries = fileTree(bridges) { include "**/*.dll", "**/*.so", "**/*.dylib" }.files
+                        if (binaries.isEmpty()) {
+                                throw new GradleException("No JNI bridges found under ${bridges}")
+                        }
+                        def bad = binaries.findAll {
+                                !new String(it.bytes, 'ISO-8859-1').contains(descriptor)
+                        }
+                        if (bad) {
+                                throw new GradleException(
+                                        "Stale JNI bridge(s) — these do not embed the NativeFrame constructor " +
+                                        "${descriptor} that this jar's classes declare:\n" +
+                                        bad.collect { "  ${it}" }.join("\n") +
+                                        "\nRebuild them from native/jni/jni_bridge.cpp " +
+                                        "(see bridge/README.md; repair-api/build-bridges.ps1 cross-compiles all four).")
+                        }
+                        logger.lifecycle("[native-bridge] ${binaries.size()} bridge(s) match ${descriptor}")
+                }
+        }
+
         // Replace placeholder resources
         processResources {
+                dependsOn tasks.named("checkNativeBridges")
                 inputs.property "version", version + artifact_date
                 inputs.property "minecraft_version", rootProject.minecraft_version
                 inputs.property "legacy_unicode", project.lg_unicode

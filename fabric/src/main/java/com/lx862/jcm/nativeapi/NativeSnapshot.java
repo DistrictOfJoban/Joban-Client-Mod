@@ -177,8 +177,9 @@ public final class NativeSnapshot {
         /* ---- exits (JcmExit[] pool; destinations are JcmStrRef[]) ---- */
         final List<List<ExitData>> stopExits = new ArrayList<>(allStops.size());
         final int[] stopExitOffset = new int[allStops.size()];
+        final ExitCache exitCache = new ExitCache();
         for (int s = 0; s < allStops.size(); s++) {
-            final List<ExitData> exits = collectExits(allStops.get(s));
+            final List<ExitData> exits = exitCache.get(allStops.get(s));
             stopExits.add(exits);
             if (exits.isEmpty()) continue;
             stopExitOffset[s] = out.position();
@@ -201,9 +202,9 @@ public final class NativeSnapshot {
         final int poolStart = out.position();
         final Pool pool = new Pool(out);
 
-        final int[][] stopName = new int[allStops.size()][];
-        final int[][] stopDest = new int[allStops.size()][];
-        final int[][] stopCustom = new int[allStops.size()][];
+        final long[] stopName = new long[allStops.size()];
+        final long[] stopDest = new long[allStops.size()];
+        final long[] stopCustom = new long[allStops.size()];
         for (int s = 0; s < allStops.size(); s++) {
             final VehicleWrapper.Stop stop = allStops.get(s);
             stopName[s] = pool.add(stop.name);
@@ -215,10 +216,10 @@ public final class NativeSnapshot {
             final List<VehicleWrapper.Stop.RouteInterchange> ics = allStops.get(s).routeInterchanges;
             if (ics == null || ics.isEmpty()) continue;
             for (int j = 0; j < ics.size(); j++) {
-                final int[] ref = pool.add(ics.get(j).name);
+                final long ref = pool.add(ics.get(j).name);
                 final int p = stopIcOffset[s] + j * interchangeSize;
-                out.putInt(p + 4, ref[0]);
-                out.putInt(p + 8, ref[1]);
+                out.putInt(p + 4, Pool.offset(ref));
+                out.putInt(p + 8, Pool.length(ref));
             }
         }
         /* exit names + destination str-ref arrays */
@@ -228,34 +229,34 @@ public final class NativeSnapshot {
             for (int j = 0; j < exits.size(); j++) {
                 final ExitData ex = exits.get(j);
                 final int p = stopExitOffset[s] + j * SZ_EXIT;
-                final int[] nameRef = pool.add(ex.name);
-                out.putInt(p, nameRef[0]);
-                out.putInt(p + 4, nameRef[1]);
+                final long nameRef = pool.add(ex.name);
+                out.putInt(p, Pool.offset(nameRef));
+                out.putInt(p + 4, Pool.length(nameRef));
 
                 out.position((out.position() + 3) & ~3);
                 final int refOffset = out.position();
                 out.position(refOffset + ex.destinations.size() * SZ_STR_REF);
                 for (int k = 0; k < ex.destinations.size(); k++) {
-                    final int[] dref = pool.add(ex.destinations.get(k));
+                    final long dref = pool.add(ex.destinations.get(k));
                     final int q = refOffset + k * SZ_STR_REF;
-                    out.putInt(q, dref[0]);
-                    out.putInt(q + 4, dref[1]);
+                    out.putInt(q, Pool.offset(dref));
+                    out.putInt(q + 4, Pool.length(dref));
                 }
                 out.putInt(p + 12, refOffset);
             }
         }
         /* car vehicle-type ids (the car array sits before the pool) */
         for (int i = 0; i < carCount; i++) {
-            final int[] ref = pool.add(v.getVehicleId(i));
+            final long ref = pool.add(v.getVehicleId(i));
             final int p = carOffset + i * SZ_CAR;
-            out.putInt(p + CAR_TYPE_OFFSET, ref[0]);
-            out.putInt(p + CAR_TYPE_LEN, ref[1]);
+            out.putInt(p + CAR_TYPE_OFFSET, Pool.offset(ref));
+            out.putInt(p + CAR_TYPE_LEN, Pool.length(ref));
         }
         /* route + siding names */
         final SimplifiedRoute route = thisRouteStops.isEmpty() ? null : thisRouteStops.get(0).route;
-        final int[] routeNameRef = pool.add(route == null ? "" : route.getName());
+        final long routeNameRef = pool.add(route == null ? "" : route.getName());
         final Siding siding = v.getSiding();
-        final int[] sidingRef = pool.add(siding == null ? "" : siding.getName());
+        final long sidingRef = pool.add(siding == null ? "" : siding.getName());
         final int poolEnd = out.position();
 
         /* ---- header ---- */
@@ -291,12 +292,12 @@ public final class NativeSnapshot {
         out.putInt(OFF_NEXT_ROUTE_STOP_OFFSET,
                 stopOffset + (allStopCount + thisRouteStops.size()) * SZ_STOP);
         out.putInt(OFF_NEXT_STOP_INDEX, v.getNextStopIndex(thisRouteStops));
-        out.putInt(OFF_ROUTE_NAME_OFFSET, routeNameRef[0]);
-        out.putInt(OFF_ROUTE_NAME_LEN, routeNameRef[1]);
+        out.putInt(OFF_ROUTE_NAME_OFFSET, Pool.offset(routeNameRef));
+        out.putInt(OFF_ROUTE_NAME_LEN, Pool.length(routeNameRef));
         out.putInt(OFF_ROUTE_COLOR, route == null ? 0 : (route.getColor() | 0xFF000000));
         out.put(OFF_CIRCULAR_STATE, (byte) circularOrdinal(route));
-        out.putInt(OFF_SIDING_NAME_OFFSET, sidingRef[0]);
-        out.putInt(OFF_SIDING_NAME_LEN, sidingRef[1]);
+        out.putInt(OFF_SIDING_NAME_OFFSET, Pool.offset(sidingRef));
+        out.putInt(OFF_SIDING_NAME_LEN, Pool.length(sidingRef));
         out.putInt(OFF_STRING_POOL_OFFSET, poolStart);
         out.putInt(OFF_STRING_POOL_LEN, poolEnd - poolStart);
 
@@ -309,13 +310,13 @@ public final class NativeSnapshot {
             out.putLong(p + STOP_PLATFORM_ID, stop.platform == null ? 0 : stop.platform.getId());
             out.putDouble(p + STOP_DISTANCE, stop.distance);
             out.putDouble(p + STOP_DWELL, stop.dwellTimeMillis);
-            out.putInt(p + STOP_NAME_OFFSET, stopName[s][0]);
-            out.putInt(p + STOP_NAME_LEN, stopName[s][1]);
-            out.putInt(p + STOP_DEST_OFFSET, stopDest[s][0]);
-            out.putInt(p + STOP_DEST_LEN, stopDest[s][1]);
+            out.putInt(p + STOP_NAME_OFFSET, Pool.offset(stopName[s]));
+            out.putInt(p + STOP_NAME_LEN, Pool.length(stopName[s]));
+            out.putInt(p + STOP_DEST_OFFSET, Pool.offset(stopDest[s]));
+            out.putInt(p + STOP_DEST_LEN, Pool.length(stopDest[s]));
             final boolean hasCustom = stop.customDestination != null && !stop.customDestination.isEmpty();
-            out.putInt(p + STOP_CUSTOM_OFFSET, hasCustom ? stopCustom[s][0] : -1);
-            out.putInt(p + STOP_CUSTOM_LEN, hasCustom ? stopCustom[s][1] : 0);
+            out.putInt(p + STOP_CUSTOM_OFFSET, hasCustom ? Pool.offset(stopCustom[s]) : -1);
+            out.putInt(p + STOP_CUSTOM_LEN, hasCustom ? Pool.length(stopCustom[s]) : 0);
             final int icCount = stop.routeInterchanges == null ? 0 : stop.routeInterchanges.size();
             out.putInt(p + STOP_IC_COUNT, icCount);
             out.putInt(p + STOP_IC_OFFSET, icCount == 0 ? 0 : stopIcOffset[s]);
@@ -336,26 +337,47 @@ public final class NativeSnapshot {
 
     /* ------------------------------------------------------------------ */
 
-    /** Dense UTF-8 string pool with a duplicate cache (names repeat a lot). */
+    /**
+     * Dense UTF-8 string pool with a duplicate cache (names repeat a lot).
+     *
+     * <p>{@link #add} returns a packed {@code (offset << 32) | length} in a
+     * {@code long} instead of an {@code int[2]}. This method runs a few hundred
+     * times per frame — once per stop name, destination, interchange, exit and
+     * exit destination — and the old two-element array made every one of those
+     * a heap allocation, i.e. pure young-generation garbage on the render
+     * thread. {@link #offset}/{@link #length} unpack it with no allocation.
+     */
     private static final class Pool {
         private final ByteBuffer buf;
-        private final Map<String, int[]> cache = new HashMap<>();
+        private final Map<String, long[]> cache = new HashMap<>();
 
         Pool(ByteBuffer buf) {
             this.buf = buf;
         }
 
-        /** @return {offset, length}; {0,0} for null/empty (reads back as "") */
-        int[] add(String s) {
-            if (s == null || s.isEmpty()) return new int[]{0, 0};
-            final int[] hit = cache.get(s);
-            if (hit != null) return hit;
+        /** @return packed (offset, length); 0L for null/empty (reads back as "") */
+        long add(String s) {
+            if (s == null || s.isEmpty()) return 0L;
+            final long[] hit = cache.get(s);
+            if (hit != null) return hit[0];
             final byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
             final int off = buf.position();
             buf.put(bytes);
-            final int[] ref = new int[]{off, bytes.length};
-            cache.put(s, ref);
-            return ref;
+            final long packed = pack(off, bytes.length);
+            cache.put(s, new long[] { packed });
+            return packed;
+        }
+
+        static long pack(int offset, int length) {
+            return ((long) offset << 32) | (length & 0xFFFFFFFFL);
+        }
+
+        static int offset(long packed) {
+            return (int) (packed >>> 32);
+        }
+
+        static int length(long packed) {
+            return (int) packed;
         }
     }
 
@@ -400,5 +422,27 @@ public final class NativeSnapshot {
             out.add(data);
         }
         return out;
+    }
+
+    /**
+     * {@link #collectExits} memoised for one build pass.
+     *
+     * <p>The snapshot repeats the same {@code Stop} objects across the
+     * all-stops / this-route / next-route ranges, so without this the exits of a
+     * shared station were flattened (and their destination lists copied) up to
+     * three times per frame. The memo is per call, so a reload that changes
+     * station data is never served stale — the next frame rebuilds it.
+     */
+    private static final class ExitCache {
+        private final java.util.IdentityHashMap<VehicleWrapper.Stop, List<ExitData>> byStop =
+                new java.util.IdentityHashMap<>();
+
+        List<ExitData> get(VehicleWrapper.Stop stop) {
+            final List<ExitData> hit = byStop.get(stop);
+            if (hit != null) return hit;
+            final List<ExitData> exits = collectExits(stop);
+            byStop.put(stop, exits);
+            return exits;
+        }
     }
 }

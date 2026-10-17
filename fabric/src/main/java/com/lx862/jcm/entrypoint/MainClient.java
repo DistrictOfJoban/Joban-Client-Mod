@@ -7,5 +7,8 @@ public class MainClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         JCMClient.initialize();
+        /* Fabric-only: publishes the render-pass frustum used to cull native
+           vehicle scripts (see FabricVehicleCulling / NativeCullFrustum). */
+        FabricVehicleCulling.init();
     }
 }
