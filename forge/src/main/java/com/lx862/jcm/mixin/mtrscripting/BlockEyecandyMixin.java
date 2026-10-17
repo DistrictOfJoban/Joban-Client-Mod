@@ -81,12 +81,15 @@ public class BlockEyecandyMixin extends BlockWaterloggable {
                 org.mtr.mapping.holder.BlockEntity blockEntity = world.getBlockEntity(pos);
                 if (blockEntity != null && blockEntity.data instanceof BlockEyeCandy.BlockEntity) {
                     ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", ((BlockEyeCandy.BlockEntity)blockEntity.data).getModelId(), pos.getX(), pos.getY(), pos.getZ()));
-                    if(com.lx862.jcm.nativeapi.NativeContentDriver.blockUse((BlockEyeCandy.BlockEntity)blockEntity.data,new BlockUseEvent(player,player.getStackInHand(hand)))) {
-                        cir.setReturnValue(ActionResult.SUCCESS);
-                        return;
-                    }
+                    /* Yanyang: mixed entries (JS + C++ under one script id) get
+                       the use event on BOTH sides; the native modules are
+                       triggered inside blockUse, the JS part below. */
+                    boolean handled = com.lx862.jcm.nativeapi.NativeContentDriver.blockUse((BlockEyeCandy.BlockEntity)blockEntity.data,new BlockUseEvent(player,player.getStackInHand(hand)));
                     if(scriptInstance != null && scriptInstance.getContextObject() instanceof EyeCandyScriptContext) {
                         ((EyeCandyScriptContext)scriptInstance.getContextObject()).events().onBlockUse.trigger(new BlockUseEvent(player, player.getStackInHand(hand)));
+                        handled = true;
+                    }
+                    if(handled) {
                         cir.setReturnValue(ActionResult.SUCCESS);
                     }
                 }

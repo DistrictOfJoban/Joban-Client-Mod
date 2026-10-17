@@ -68,7 +68,8 @@ public class LiftResourceProvider implements ScriptResourceProvider {
             String scriptId = scriptEntry.getValue();
 
             if(!liftScripts.containsKey(scriptId)) {
-                /* Yanyang: native (language=cpp) ids are driven by NativeScriptManager. */
+                /* Yanyang: native-only ids are driven by NativeScriptManager
+                   (mixed ids are registered above, with their ParsedScript). */
                 if(NativeScriptManager.isLoaded(scriptId)) {
                     continue;
                 }

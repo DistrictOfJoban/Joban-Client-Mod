@@ -45,9 +45,13 @@ public class RenderEyeCandyMixin {
             });
             com.lx862.jcm.nativeapi.NativeContentDriver.eyecandy(nativeId,blockEntity,world,transforms,facing,light);
             if(MtrScriptingResourceManager.eyecandy.isScriptControlledRendering(eyecandyId)) ci.cancel();
-            return;
+            /* Yanyang: mixed entries (JS + C++ modules under one script id)
+               keep running — the JS part below executes in addition to the
+               native modules above; ci.cancel() only suppresses MTR's
+               built-in model, not the rest of this injector. */
         }
         ParsedScript parsedScript = eyecandyScriptEntry.parsedScript();
+        if(parsedScript == null) return; /* native-only entry: nothing left to drive */
         EyecandyBlockEntityWrapper eyecandyWrapper = new EyecandyBlockEntityWrapper(blockEntity);
 
         ScriptInstance<EyecandyBlockEntityWrapper> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("eyecandy", eyecandyId, blockEntity.getPos2().getX(), blockEntity.getPos2().getY(), blockEntity.getPos2().getZ()), () -> new EyeCandyScriptInstance(new EyeCandyScriptContext(eyecandyWrapper), eyecandyWrapper, parsedScript));

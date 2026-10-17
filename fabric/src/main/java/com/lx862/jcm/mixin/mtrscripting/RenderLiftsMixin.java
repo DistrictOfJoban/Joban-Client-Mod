@@ -41,8 +41,11 @@ public class RenderLiftsMixin {
             String nativeId=MtrScriptingResourceManager.lift.getScriptEntryId(style);
             if(com.lx862.jcm.nativeapi.NativeScriptManager.isLoaded(nativeId)) {
                 com.lx862.jcm.nativeapi.NativeContentDriver.lift(nativeId,wrapperObject,liftWrapper.getLift());
-                continue;
+                /* Yanyang: mixed entries (JS + C++ under one script id) fall
+                   through to the JS instance pipeline below; native-only
+                   entries bail out at the parsedScript check. */
             }
+            if(scriptEntry.parsedScript() == null) continue;
             LiftScriptInstance scriptInstance = (LiftScriptInstance) MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("lift", liftWrapper.getLift().getHexId()), () -> new LiftScriptInstance(new LiftScriptContext(liftWrapper.getLift()), wrapperObject, scriptEntry.parsedScript()));
             if(scriptInstance == null) continue;
 
@@ -59,33 +62,33 @@ public class RenderLiftsMixin {
 
     @Inject(method = "lambda$render$6", at = @At(value = "INVOKE", target = "Lorg/mtr/mod/model/ModelLift1;render(Lorg/mtr/mod/render/StoredMatrixTransformations;Lorg/mtr/core/data/NameColorDataBase;Lorg/mtr/mapping/holder/Identifier;IFFZIIZZZZZ)V"), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
     private static void jsblock$drawScript(boolean isHoldingRefresher, ClientWorld clientWorld, ObjectArrayList cullingTasks, Vec3d camera, Vector3d cameraShakeOffset, boolean canRide, ClientPlayerEntity clientPlayerEntity, long millisElapsed, MinecraftClientData.LiftWrapper liftWrapper, CallbackInfo ci, Lift lift, PositionAndRotation absolutePositionAndRotation, IntObjectImmutablePair ridingVehicleCarNumberAndOffset, PositionAndRotation ridingCarPositionAndRotation, Vector3d offsetVector, Double offsetRotation, PositionAndRotation renderingPositionAndRotation, ObjectArrayList floorsAndDoorways, ObjectArrayList openDoorways, Box doorway1, Box doorway2, boolean doorway1Open, boolean doorway2Open, StoredMatrixTransformations storedMatrixTransformations) {
-        /* Yanyang: C++ lift scripts share the same script-controlled + riding semantics as JS. */
+        /* Yanyang: C++ lift scripts share the same script-controlled + riding
+           semantics as JS. Mixed entries (JS + C++ under one script id) run
+           the native modules AND the JS script: the built-in renderer is
+           suppressed and the riding movement applied exactly once, no matter
+           how many script parts contributed this frame. */
         String nativeId=MtrScriptingResourceManager.lift.getScriptEntryId(lift.getStyle());
-        if(com.lx862.jcm.nativeapi.NativeScriptManager.isLoaded(nativeId)) {
+        boolean nativeLoaded = com.lx862.jcm.nativeapi.NativeScriptManager.isLoaded(nativeId);
+        if(nativeLoaded) {
             com.lx862.jcm.nativeapi.NativeContentDriver.invokeLift(nativeId,lift.getId(),World.cast(clientWorld),storedMatrixTransformations.copy(),absolutePositionAndRotation.light,
                 new ScriptVector3f((float)absolutePositionAndRotation.position.x,(float)absolutePositionAndRotation.position.y,(float)absolutePositionAndRotation.position.z));
-            boolean skipBuiltinRenderer = MtrScriptingResourceManager.lift.isScriptControlledRendering(lift.getStyle());
-            if(skipBuiltinRenderer) ci.cancel();
-            if(skipBuiltinRenderer && canRide) {
-                VehicleRidingMovement.movePlayer(millisElapsed, lift.getId(), 0, floorsAndDoorways, null, null, null, absolutePositionAndRotation);
-            }
-            return;
         }
+
         ScriptInstance<?> scriptInstance = MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("lift", lift.getHexId()));
-        if(!(scriptInstance instanceof LiftScriptInstance)) return;
+        if(scriptInstance instanceof LiftScriptInstance) {
+            World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
+            ScriptRenderManager scriptRenderManager = ((LiftScriptInstance)scriptInstance).getRenderManager();
+            ScriptSoundManager scriptSoundManager = ((LiftScriptInstance)scriptInstance).getSoundManager();
+            scriptRenderManager.invoke(world, storedMatrixTransformations.copy(), Direction.NORTH, absolutePositionAndRotation.light);
+            scriptSoundManager.invoke(world, new ScriptVector3f((int)absolutePositionAndRotation.position.x, (int)absolutePositionAndRotation.position.y, (int)absolutePositionAndRotation.position.z));
+        }
 
         boolean skipBuiltinRenderer = MtrScriptingResourceManager.lift.isScriptControlledRendering(lift.getStyle());
-
-        if(skipBuiltinRenderer) ci.cancel();
-
-        World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
-        ScriptRenderManager scriptRenderManager = ((LiftScriptInstance)scriptInstance).getRenderManager();
-        ScriptSoundManager scriptSoundManager = ((LiftScriptInstance)scriptInstance).getSoundManager();
-        scriptRenderManager.invoke(world, storedMatrixTransformations.copy(), Direction.NORTH, absolutePositionAndRotation.light);
-        scriptSoundManager.invoke(world, new ScriptVector3f((int)absolutePositionAndRotation.position.x, (int)absolutePositionAndRotation.position.y, (int)absolutePositionAndRotation.position.z));
-
-        if(skipBuiltinRenderer && canRide) {
-            VehicleRidingMovement.movePlayer(millisElapsed, lift.getId(), 0, floorsAndDoorways, null, null, null, absolutePositionAndRotation);
+        if(skipBuiltinRenderer && (nativeLoaded || scriptInstance instanceof LiftScriptInstance)) {
+            ci.cancel();
+            if(canRide) {
+                VehicleRidingMovement.movePlayer(millisElapsed, lift.getId(), 0, floorsAndDoorways, null, null, null, absolutePositionAndRotation);
+            }
         }
     }
 }

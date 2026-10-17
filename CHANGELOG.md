@@ -1,5 +1,35 @@
 # Changelog
 
+## 2.3.0-beta-2.yanyang.2
+
+`minecraft_custom_resources.json` script entries no longer need a `language`
+field: every `scriptLocations` entry is classified by the mod itself — `*.js`
+(case-insensitive) is JavaScript, anything else is a C++ module
+(platform-agnostic stem, full `.so`/`.dll`/`.dylib` path, or a per-platform
+map). Any number of both kinds may be mixed in ONE entry, and vehicle, lift,
+eyecandy and PIDS scripts all support it.
+
+- **Mixed JS + C++ entries run both sides**: the JS parts (plus
+  `prependExpressions` and `input`) concatenate into one ParsedScript while
+  the C++ parts all load under the same script id — each side captures into
+  its own replay registry, so draw calls never collide and a failed part
+  degrades gracefully instead of breaking the other.
+- **PIDS presets** (`joban_custom_resources.json`) gain the `scriptLocations`
+  key with the same auto-detection, alongside the legacy `scriptFiles` key.
+- A single entry may combine `.js` locations with `nativeLibrary` /
+  `nativeLibraries`; `language: "cpp"` keeps the legacy native-only
+  semantics (JS parts ignored with a hint) and `language: "javascript"` /
+  `"js"` forces every location down the JS path (escape hatch for
+  extensionless JS paths). Legacy `script_files` / `scriptFiles` keys keep
+  their JS semantics for extensionless entries.
+- Mixed lift rendering suppresses the built-in renderer and applies the
+  riding movement exactly once per lift per frame (no double `movePlayer`);
+  eyecandy block-use events now reach both the JS and the C++ side.
+- Translations stay aligned with upstream JCM (also maintained by
+  BugQuantumCore): all values already match upstream `2.3.0-beta.2`/`main`;
+  the Irish (`ga_ie`) stub and the two new Czech keys are adopted from
+  upstream `main`.
+
 ## 2.3.0-beta-2.yanyang.1
 
 Upstream `2.3.0-beta.2` integrated into the Yanyang fork, with Yanyang-side

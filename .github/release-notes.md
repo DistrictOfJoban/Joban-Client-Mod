@@ -1,36 +1,34 @@
-JCM Yanyang `2.3.0-beta-2.yanyang.1` — upstream 2.3.0-beta.2 integrated into the Yanyang fork, with Yanyang-side optimizations and all Yanyang features (MAGIC vehicle types, native C++ scripting, the GC-stutter fix) retained.
+JCM Yanyang `2.3.0-beta-2.yanyang.2` — `minecraft_custom_resources.json` 脚本条目不再需要 `language` 字段：`scriptLocations` 逐条目自动判定语言，同一条目可混用任意数量的 JavaScript 与 C++ 脚本。
 
-**整合原版 2.3.0-beta.2 / Upstream 2.3.0-beta.2 integrated**
+**新版声明格式 / New declaration format**
 
-MTR Patch:
-- Rail preview of long-running rails outside render distance is preserved (rail node block states cached per tick).
-- The multi-item selection screen supports `Shift` for exclusive selection.
-- **Experimental frustum culling** for vehicles, lifts and rails, layered on top of MTR's occlusion culling — scripts keep being invoked, and each layer is individually toggleable in JCM Settings.
-- The MTR 3 camera-lowering-by-sneaking feature is back (`allowCameraLowering`, default on; revert to MTR 4 behaviour by turning it off).
+```json
+"vehicleScripts": [
+    {
+        "id": "cst_sp1900_lcd",
+        "prependExpressions": ["print('Hello world')"],
+        "scriptLocations": ["mtr:my_pack/js/sp1900_lcd/main.js", "mtr:my_pack/natives/sp1900_train_num"],
+        "input": { "yearEra": 2004 },
+        "dataFetchMode": "ALL"
+    }
+]
+```
 
-Scripting API:
-- `MinecraftClient.getCameraMode()` (F5 perspective), `MinecraftClient.lightAt(pos)` (packed block+sky light), `RenderManager.drawModel(model, matrices, light)`.
-- `VehicleWrapper.isDoorOpenable(car, pos)` / `isDoorOpen(...)`.
-- `LiftWrapper.isDoorway1/2Openable()` / `isDoorway1/2Open()`.
-- Lift scripts that control rendering now move the riding player (`VehicleRidingMovement`).
-- Czech & German language stubs added upstream.
+- `*.js`（大小写不敏感）→ JavaScript；无扩展名 → C++ 平台无关 stem（`natives/{platform}/lib*.so|*.dll|lib*.dylib` 自动解析）；`.so/.dll/.dylib` 完整路径与按平台映射表亦可用。
+- **vehicle / lift / eyecandy / pids 四类脚本全部支持混合**：JS 部分连接成单一 ParsedScript，C++ 模块全部挂到同一脚本 id；两侧各自捕获、各自回放，互不冲突；某一侧缺失或失败只跳过该侧（附提示），另一侧照常渲染。
+- PIDS 预设（`joban_custom_resources.json`）新增同样的 `scriptLocations` 键，与老的 `scriptFiles` 并存。
+- 老格式完全兼容：`"language": "cpp"` + `nativeLibrary`/`nativeLibraries` 仍是纯 C++ 条目（也可与 `.js` 混用）；`"language": "javascript"` 强制全 JS；MTR 3 `script_files` 语义不变。
+- 混合电梯条目下内置渲染只抑制一次、乘坐移动每帧只应用一次；eyecandy 方块使用事件同时送达 JS 与 C++。
 
-**晏阳整合优化 / Yanyang integration optimizations**
+**En (summary)**: script entries no longer declare `language` — each `scriptLocations` entry is auto-classified (`*.js` = JavaScript, anything else = a C++ module) and any number of both may be mixed in one entry. Vehicles, lifts, eyecandies and PIDS all support it; each side captures into its own replay registry (no draw-call conflicts) and a failed part degrades gracefully. Legacy `language: "cpp"` / `nativeLibrary` declarations keep working and may be combined with `.js` entries. PIDS presets gain the same `scriptLocations` key.
 
-- `isScriptRendered` → `isScriptControlled` rename is **backwards compatible**: both field names are accepted, so 2.3.0-beta.1 resource packs keep working.
-- `LiftWrapper` doorway openability is **lazily computed** on first query instead of eagerly per lift per frame in the constructor — scripts that never ask pay zero world-query cost.
-- C++ lift scripts that control rendering now ride the player with the same `VehicleRidingMovement` semantics as JS lift scripts.
-- Upstream's frustum culling (MTR built-in rendering) and Yanyang's `VehicleCulling` (native script execution) are complementary layers; both keep scripts running.
+**翻译对齐原版 / Translations aligned with upstream**
 
-**保留的晏阳能力 / Retained Yanyang features**
+- 语言文件与原版 JCM（同样由 BugQuantumCore 维护翻译）逐键对齐、原版优先；本版采纳原版 `main` 的爱尔兰语（ga_ie）占位与捷克语新键。
 
-- `getTransportType()` returns MAGIC MTR Addon vehicle types (`train_metro`, `train_light_rail`, `train_high_speed`, `train_bus`, `train_tram`, `train_sbahn`, `train_normal`) plus the four base modes — from JS, Java and C++ (ABI 9); MAGIC integrated via optional reflection, no hard dependency.
-- No more native-script GC stutter: StopsData graph reuse, reusable snapshot builders, cached JNI arena views, 1 MB-on-demand pixel arenas (from yanyang.11).
-- ABI 6/7/8 modules keep loading alongside ABI 9.
+**保留的全部晏阳能力 / All Yanyang features retained**
 
-Supported Minecraft versions: 1.17.1, 1.18.2, 1.19.2, 1.19.4, 1.20.1 and 1.20.4, for Fabric and Forge — **12 jars**, each bundling the four desktop JNI bridges (Windows x64, Linux x64, macOS x64, macOS ARM64). A separate `jcm-native-sdk` zip carries the SDK sources, build files and prebuilt example modules.
-
-Validation includes four-platform CMake/CTest, real JNI tests for every script kind, an API declaration audit and real MTR OpenGL model upload. Automated tests do not replace final visual testing in Minecraft.
-
-Native SDK documentation: https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/blob/main/native/README.md
-Changelog: https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/blob/main/CHANGELOG.md
+- `getTransportType()` 返回 MAGIC MTR Addon 车辆类型 + 4 种基础类型（JS / Java / C++，ABI 9；可选反射集成，无硬依赖）。
+- 原生脚本零 GC 卡顿：StopsData 跨帧复用、零分配快照 Builder、JNI 边界收窄（无 256 KB 拷贝）、1 MB 按需像素 arena。
+- 原生车辆视锥剔除（`VehicleCulling`）与原版 beta.2 的 MTR 层剔除互补；ABI 6/7/8 模块与 ABI 9 并存。
+- 12 jar（6 MC 版本 × Fabric/Forge，各 ~24.6 MB，内置 4 平台 bridge）+ native SDK zip，随本 Release 附带。

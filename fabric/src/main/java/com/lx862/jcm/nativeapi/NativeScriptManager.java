@@ -23,35 +23,53 @@ import java.util.concurrent.ConcurrentHashMap;
  * NativeScriptManager — JNI host for C++ script modules.
  *
  * Drop-in companion to JCM v2.3's ScriptManager/Rhino pipeline:
- * resource packs declare native scripts in mtr_custom_resources.json
- * ...
+ * resource packs declare native scripts in mtr_custom_resources.json.
+ *
+ * Since 2.3.0-beta-2.yanyang.2 the C++ modules are declared directly in the
+ * scriptLocations array of a script entry — no "language" field, the mod
+ * classifies every entry itself (*.js is JavaScript, everything else is a
+ * C++ module), and any number of both may be mixed in one entry:
  *
  *   "vehicleScripts": [{
- *       "id": "demo:vehicle_status",
- *       "language": "cpp",
- *
- *       // Form A — platform-agnostic stem: resolves on EVERY OS via the
- *       // natives/{platform}/ convention (see resolveNativeLibraryPath):
- *       "nativeLibrary": "demo:natives/vehicle_status"
- *       //     -> demo:natives/linux-x64/libvehicle_status.so
- *       //     -> demo:natives/windows-x64/vehicle_status.dll
- *       //     -> demo:natives/macos-arm64/libvehicle_status.dylib
- *
- *       // Form B — per-platform map: declare exactly which library runs
- *       // on which OS. Keys: "windows" / "linux" / "macos", optionally
- *       // arch-specific ("windows-x64", "linux-x64", "macos-x64",
- *       // "macos-arm64") which take precedence over the generic key.
- *       // Values may again be full paths (with extension) or stems.
- *       "nativeLibrary": {
- *           "windows":    "demo:natives/windows-x64/vehicle_status.dll",
- *           "linux":      "demo:natives/linux-x64/libvehicle_status.so",
- *           "macos-arm64": "demo:natives/macos-arm64/libvehicle_status.dylib"
- *       }
+ *       "id": "cst_sp1900_lcd",
+ *       "prependExpressions": ["print('Hello world')"],
+ *       "scriptLocations": [
+ *           "mtr:my_pack/js/sp1900_lcd/main.js",      // JavaScript
+ *           "mtr:my_pack/natives/sp1900_train_num"    // C++ (auto-detected)
+ *       ],
+ *       "input": { "yearEra": 2004 },
+ *       "dataFetchMode": "ALL"
  *   }]
+ *
+ * A scriptLocations entry may take three native forms (identical to the
+ * legacy nativeLibrary field):
+ *
+ *   - "demo:natives/vehicle_status"
+ *       Form A — platform-agnostic stem: resolves on EVERY OS via the
+ *       natives/{platform}/ convention (see resolveNativeLibraryPath):
+ *           -> demo:natives/linux-x64/libvehicle_status.so
+ *           -> demo:natives/windows-x64/vehicle_status.dll
+ *           -> demo:natives/macos-arm64/libvehicle_status.dylib
+ *
+ *   - "demo:natives/linux-x64/libvehicle_status.so"
+ *       Form B — full path: bound to the OS its extension implies;
+ *       other systems skip that entry.
+ *
+ *   - {"windows": ..., "linux": ..., "macos": ...}
+ *       Form C — per-platform map: declare exactly which library runs
+ *       on which OS. Keys: "windows" / "linux" / "macos", optionally
+ *       arch-specific ("windows-x64", "linux-x64", "macos-x64",
+ *       "macos-arm64") which take precedence over the generic key.
+ *       Values may again be full paths (with extension) or stems.
+ *
+ * The pre-beta-2 declarations keep working unchanged: "language": "cpp"
+ * with "nativeLibrary"/"nativeLibraries" stays a native-only entry, and
+ * those fields may also be combined with .js scriptLocations entries
+ * without a language field.
  *
  * The running OS/arch is detected once from os.name / os.arch
  * (see getPlatformKey / getPlatformKeyExact). When the current platform
- * has no entry (Form B without a matching key, or an extension-form
+ * has no entry (Form C without a matching key, or an extension-form
  * string for another OS), the script is NOT executed on this system:
  * a one-line hint goes to latest.log (JCMLogger) and, when JCM's
  * scripting debug mode is enabled, to the in-game debug HUD/chat via
@@ -59,10 +77,13 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * ... and the SAME mixins that drive JS scripts (RenderVehiclesMixin,
  * RenderEyeCandyMixin, ScriptPIDSPreset) dispatch to this manager when
- * the script entry is native. Draw-call records produced by the module
- * are translated into ScriptRenderManager draw calls, so the capture-
- * and-replay path on the render thread is byte-for-byte identical to
- * the JS route — JS and native scripts coexist in the same world.
+ * the script entry has native modules — including MIXED entries, where
+ * the JS part and the C++ part of one script id run side by side, each
+ * capturing into its own replay registry. Draw-call records produced by
+ * the module are translated into ScriptRenderManager draw calls, so the
+ * capture-and-replay path on the render thread is byte-for-byte identical
+ * to the JS route — JS and native scripts coexist in the same world, in
+ * the same train, and in the same script entry.
  *
  * Compact snapshot data and draw records share one JNI call per frame.
  * ABI 8 also offers direct Java API calls; those use additional JNI calls
@@ -200,8 +221,10 @@ public final class NativeScriptManager {
         NativeVehicleDriver.reset();
         NativeHost.get().reset();
         /* Actual discovery walks the same mtr_custom_resources.json
-           entries as MTRContentResourceManager, filtering
-           language == "cpp", and calls load(...) below. */
+           entries as MTRContentResourceManager: scriptLocations entries
+           without .js (auto-detected C++), or the legacy language=cpp +
+           nativeLibrary/nativeLibraries declarations, and calls load(...)
+           below. */
     }
 
     /** Diagnostics: log the post-discovery module census once per reload. */
@@ -209,7 +232,8 @@ public final class NativeScriptManager {
         final int total = getModules().size();
         if (total == 0 && SKIPPED.isEmpty()) {
             JCMLogger.warn("Native scripts: no module loaded and no declaration skipped — "
-                    + "no mtr_custom_resources.json entry with \"language\": \"cpp\" was seen");
+                    + "no C++ script location was seen in mtr_custom_resources.json "
+                    + "(scriptLocations entries without .js, or \"language\": \"cpp\" + nativeLibrary)");
             return;
         }
         JCMLogger.info("Native scripts: {} module(s) loaded, {} declaration(s) skipped",

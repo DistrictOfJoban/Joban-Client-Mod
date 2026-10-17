@@ -23,7 +23,11 @@ public class PIDSManager {
                 JsonObject jsonObject = e.getAsJsonObject();
                 presetId = jsonObject.get("id").getAsString();
 
-                boolean isScriptPreset = jsonObject.has("scriptFiles") || jsonObject.has("scriptTexts");
+                /* Yanyang: script presets can also be declared through the
+                   2.3.0-beta.2 scriptLocations key (JS + C++ mixed entries)
+                   or the native nativeLibrary/nativeLibraries fields. */
+                boolean isScriptPreset = jsonObject.has("scriptFiles") || jsonObject.has("scriptTexts")
+                        || jsonObject.has("scriptLocations") || jsonObject.has("nativeLibrary") || jsonObject.has("nativeLibraries");
                 PIDSPresetBase preset;
 
                 if(isScriptPreset && JCMClientConfig.INSTANCE.scripting.skipScriptParsing.value()) {

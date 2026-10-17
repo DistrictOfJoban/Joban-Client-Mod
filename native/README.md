@@ -22,6 +22,34 @@ Only `jcm_native_bridge` belongs in the mod's `assets/jcm/natives/<platform>/`.
 Scripts belong in their authors' resource packs. Example modules and test
 modules are never included in JCM jars.
 
+### Declaring a module in a resource pack
+
+Put the compiled libraries under `natives/<platform>/` and list the module in
+`minecraft_custom_resources.json`. No `language` field is needed — the mod
+classifies each `scriptLocations` entry (`*.js` is JavaScript, anything else
+is a C++ module), and any number of both may be mixed in one entry:
+
+```json
+"vehicleScripts": [{
+    "id": "cst_sp1900_lcd",
+    "prependExpressions": ["print('Hello world')"],
+    "scriptLocations": [
+        "mtr:my_pack/js/sp1900_lcd/main.js",
+        "mtr:my_pack/natives/sp1900_train_num"
+    ],
+    "input": { "yearEra": 2004 },
+    "dataFetchMode": "ALL"
+}]
+```
+
+An entry may also be a full library path (`.so`/`.dll`/`.dylib`, bound to the
+OS its extension implies) or a per-platform map
+(`{"windows": ..., "linux": ..., "macos": ...}`; arch-specific keys such as
+`macos-arm64` win over the generic key). The pre-beta-2 declaration
+(`"language": "cpp"` + `"nativeLibrary"`/`"nativeLibraries"`) keeps working
+and may be combined with `.js` entries. Lifts, eyecandies and PIDS presets
+support the same mixed declarations.
+
 ## Script types and state
 
 Include `<mtr/script.hpp>`, inherit the appropriate base and export it using

@@ -91,17 +91,20 @@ public class VehicleResourceProvider implements ScriptResourceProvider {
                         if(entryReferenced || forceLoad) {
                             ParsedScript parsedScript = ScriptResourceProvider.tryParseScript(scriptEntryId, "vehicle", "Vehicle", scriptObject, true, false);
                             VehicleScriptContext.DataFetchMode dataFetchMode = scriptObject.has("dataFetchMode") ? VehicleScriptContext.DataFetchMode.valueOf(scriptObject.get("dataFetchMode").getAsString()) : VehicleScriptContext.DataFetchMode.SKIP;
-                            /* Yanyang: tryParseScript returns null for BOTH a JS
-                               parse failure and a native (language=cpp) entry, so
-                               the old `parsedScript != null` guard silently dropped
+                            /* Yanyang: tryParseScript returns null when the
+                               entry has no JavaScript part — a pure C++ entry
+                               (native scriptLocations entries / language=cpp)
+                               or a JS entry that failed to parse — so the old
+                               `parsedScript != null` guard silently dropped
                                native scripts from this registry. That made
                                NativeVehicleDriver.renderOne() bail at its
                                getVehicleScript() lookup and nothing was ever drawn
                                — the pack's dataFetchMode/declaration live in this
                                same entry, so it has to be recorded either way.
-                               A null parsedScript is the marker for "native, drive
-                               it through NativeScriptManager"; the JS replay path
-                               in RenderVehiclesMixin skips those explicitly. */
+                               A null parsedScript is the marker for "native-only,
+                               drive it through NativeScriptManager"; MIXED
+                               entries (JS + C++ under one id) register both
+                               sides and each render pipeline drives its part. */
                             if (parsedScript != null || NativeScriptManager.isLoaded(scriptEntryId)) {
                                 vehicleScripts.put(scriptEntryId, new VehicleResourceProvider.VehicleScriptConfiguration(parsedScript, dataFetchMode));
                             }
@@ -122,8 +125,9 @@ public class VehicleResourceProvider implements ScriptResourceProvider {
             String scriptEntryId = vehicleEntry.getValue();
 
             if(!vehicleScripts.containsKey(scriptEntryId)) {
-                /* Yanyang: native (language=cpp) ids never enter the JS
-                   registry — they are driven by NativeScriptManager. */
+                /* Yanyang: native-only ids never enter the JS registry — they
+                   are driven by NativeScriptManager (mixed ids are registered
+                   above, with their ParsedScript). */
                 if(NativeScriptManager.isLoaded(scriptEntryId)) {
                     continue;
                 }
