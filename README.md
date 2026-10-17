@@ -18,9 +18,25 @@
 >
 > 详细 SDK 文档见 [`native/README.md`](native/README.md)。
 
-## ✨ Yanyang.11 更新亮点
+## ✨ 当前版本：2.3.0-beta-2.yanyang.1
 
-### 1. 兼容 MAGIC MTR Addon 的 vehicle 类型
+本版本将原版 [Joban Client Mod 2.3.0-beta.2](https://github.com/DistrictOfJoban/Joban-Client-Mod)（DistrictOfJoban）的全部更新优化整合进晏阳分支，并保留 Yanyang 全部自有功能。
+
+### 本次整合的原版 2.3.0-beta.2 更新
+
+- **MTR Patch**：渲染距离外的长轨道预览不再消失（按 tick 缓存轨道节点方块状态）；多选界面支持 `Shift` 独占选择；**实验性 Frustum Culling**（车辆/电梯/轨道，可在设置中分别开关，叠加在 MTR 遮挡剔除之上，脚本仍照常执行）；潜行降低相机视角（MTR 3 “坐下”特性回归，可关闭）。
+- **脚本 API**：`MinecraftClient.getCameraMode()`（F5 视角）、`MinecraftClient.lightAt(pos)`（方块+天空光照打包值）、`RenderManager.drawModel(model, matrices, light)` 光照重载；`VehicleWrapper.isDoorOpenable(car, pos)` / `isDoorOpen(...)`（车门开闭查询）；`LiftWrapper.isDoorway1/2Openable()` / `isDoorway1/2Open()`；接管渲染的电梯脚本现在会正确移动乘坐中的玩家；新增捷克语/德语语言占位。
+
+### 晏阳整合优化
+
+- `isScriptRendered` 在原版改名为 `isScriptControlled` —— 晏阳版**两个名字都接受**，beta.1 资源包不破坏；
+- `LiftWrapper` 车门可开启性改为**懒惰计算**（原版在每帧每电梯的构造函数里急切做世界查询；不查询的脚本零开销）；
+- C++ 电梯脚本接管渲染时与 JS 脚本一样调用 `VehicleRidingMovement` 移动乘坐玩家；
+- 原版 frustum culling（MTR 内置渲染）与晏阳 `VehicleCulling`（原生脚本执行）互补共存。
+
+### 晏阳核心特性（历次版本积累）
+
+#### 1. 兼容 MAGIC MTR Addon 的 vehicle 类型
 
 两处 `getTransportType()` 此前只能返回 MTR 原版的 4 种基础类型，无法识别 MAGIC MTR Addon 注册的线路类型。现在（ABI 9）：
 
@@ -34,7 +50,7 @@
 - 线路 `routeId` + `transportType` 随服务端 → 客户端脚本数据集同步，新旧版本服混用也能拿到类型；
 - `getTransportMode()` 语义不变，仍返回 MTR 的 `TransportMode`。
 
-### 2. 消除 C++ 脚本每 500ms 的 GC 卡顿
+#### 2. 消除 C++ 脚本每 500ms 的 GC 卡顿
 
 卡顿根因是脚本 tick 循环里每帧制造海量 Java 临时对象（每车每帧数百个 Stop / RouteInterchange / 列表分配 + 一次 256 KB 快照拷贝 + 5 个 arena `ByteBuffer`），持续触发 Minor GC。修复后：
 
@@ -46,7 +62,7 @@
 
 稳态下 C++ 车辆脚本的每帧分配只剩一次轻量包装构造——**跨语言往返、快照拷贝、站点图重建全部消失**。
 
-### 3. ABI 9 与旧模块兼容
+#### 3. ABI 9 与旧模块兼容
 
 ABI 9 在 `JcmVehicleSnapshot` / `JcmInterchange` 末尾追加了类型字段（布局见 [`native/include/mtr/mtr_native.h`](native/include/mtr/mtr_native.h)）；ABI 6/7/8 模块继续按各自原始布局加载（按 ABI 分组的快照，不影响老资源包）。
 
@@ -72,7 +88,7 @@ ABI 9 在 `JcmVehicleSnapshot` / `JcmInterchange` 末尾追加了类型字段（
 脚本核心遵循一条简单规则：**「API 只用于取数据，其余任务原生完成」**——
 
 - 数据获取（列车、站点、换乘、资源、输入）经由 JNI 桥接进入 C++ 快照，每帧一次；
-- 渲染、状态机、图形命令记录、纹理像素处理全部留在 C++ 侧，**不产生 Java 对象分配**，因此不参与 JVM GC——这正是 yanyang.11 卡顿修复的架构基础；
+- 渲染、状态机、图形命令记录、纹理像素处理全部留在 C++ 侧，**不产生 Java 对象分配**，因此不参与 JVM GC——这正是卡顿修复（yanyang.11 起）的架构基础；
 - 图形命令记录进 frame arena，由宿主在 Java 端一次性回放。
 
 可移植性：

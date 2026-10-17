@@ -39,6 +39,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private final CheckboxWidgetExtension disableRenderingButton;
     private final CheckboxWidgetExtension disableRailRenderingButton;
     private final CheckboxWidgetExtension hideRidingVehicleButton;
+    private final CheckboxWidgetExtension allowCameraLoweringButton;
     private final CheckboxWidgetExtension debugModeButton;
     private final CheckboxWidgetExtension disableScriptingButton;
     private final CheckboxWidgetExtension disableScriptingClassRestrictionButton;
@@ -57,6 +58,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         this.disableRenderingButton = checkboxForConfig(JCMClientConfig.INSTANCE.disableRendering);
         this.disableRailRenderingButton = checkboxForConfig(JCMClientConfig.INSTANCE.mtrPatch.disableRailRendering);
         this.hideRidingVehicleButton = checkboxForConfig(JCMClientConfig.INSTANCE.mtrPatch.hideRidingVehicle);
+        this.allowCameraLoweringButton = checkboxForConfig(JCMClientConfig.INSTANCE.mtrPatch.allowCameraLowering);
         this.debugModeButton = checkboxForConfig(JCMClientConfig.INSTANCE.debugMode);
         this.disableScriptingButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.skipScriptParsing);
         this.disableScriptingClassRestrictionButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions, (bool, trackedValue) -> {
@@ -134,6 +136,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_rendering"), new MappedWidget(disableRenderingButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_rail_rendering"), new MappedWidget(disableRailRenderingButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.hide_riding_vehicle"), new MappedWidget(hideRidingVehicleButton));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.allow_camera_lowering"), new MappedWidget(allowCameraLoweringButton));
 
         // Debug
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.debug_mode"), new MappedWidget(debugModeButton));

@@ -30,6 +30,10 @@ public class ScriptRenderManager {
         draw(new DynamicModelDrawCall().modelHolder(modelHolder).matrices(matrices));
     }
 
+    public void drawModel(ModelJS model, @ValueNullable Matrices matrices, int lightCoord) {
+        draw(new ModelDrawCall().modelObject(model).matrices(matrices).light(lightCoord));
+    }
+
     public void drawModel(ModelJS model, @ValueNullable Matrices matrices) {
         draw(new ModelDrawCall().modelObject(model).matrices(matrices));
     }

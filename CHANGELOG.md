@@ -1,5 +1,42 @@
 # Changelog
 
+## 2.3.0-beta-2.yanyang.1
+
+Upstream `2.3.0-beta.2` integrated into the Yanyang fork, with Yanyang-side
+optimizations and the full native/MAGIC feature set retained.
+
+### Upstream 2.3.0-beta.2 (integrated)
+
+- MTR patch: rail preview of long-running rails outside render distance is
+  preserved (rail node block states are cached per tick); the multi-item
+  selection screen supports `Shift` for exclusive selection; experimental
+  frustum culling for vehicles, lifts and rails layered on top of MTR's
+  occlusion culling (config: `enableFrustumCullingVehicle` / `Lift` / `Rails`);
+  the MTR 3 camera-lowering-by-sneaking feature is back (config:
+  `allowCameraLowering`).
+- Scripting API: `MinecraftClient.getCameraMode()` (F5 perspective),
+  `MinecraftClient.lightAt(pos)` and a `RenderManager.drawModel(model,
+  matrices, light)` overload; `VehicleWrapper.isDoorOpenable(car, pos)` /
+  `isDoorOpen(...)`; `LiftWrapper.isDoorway1/2Openable()` and
+  `isDoorway1/2Open()`; lift scripts that control rendering now move the
+  riding player (`VehicleRidingMovement`); Czech and German language stubs.
+
+### Yanyang integration notes & optimizations
+
+- `isScriptRendered` was renamed upstream to `isScriptControlled`; Yanyang
+  accepts **both** field names, so 2.3.0-beta.1 resource packs keep working.
+- `LiftWrapper` doorway openability is now **lazily computed** on first query
+  instead of eagerly in the constructor (which runs per lift per frame);
+  scripts that never ask for doorway state pay zero world-query cost.
+- C++ lift scripts that control rendering now ride the player with the same
+  `VehicleRidingMovement` semantics as JavaScript lift scripts.
+- Upstream's frustum culling (MTR built-in rendering) and Yanyang's
+  `VehicleCulling` (native script execution) remain complementary layers —
+  scripts keep being invoked under both, matching occlusion-culling behaviour.
+- Everything from yanyang.11 retained: `getTransportType()` for MAGIC MTR
+  vehicle types (JS/Java/C++), the native-script GC-stutter fix, ABI 9 with
+  ABI 6/7/8 coexistence.
+
 ## 2.3.0-beta.1-yanyang.11
 
 - Add `getTransportType()` to `VehicleWrapper` and `Stop.RouteInterchange` (JS/Java) and to `mtr::Train` / `mtr::Stop::Interchange` (C++, ABI 9). It returns the canonical transport type id — the four base modes ("train", "boat", "cable_car", "airplane") or the MAGIC MTR Addon route types ("train_metro", "train_light_rail", "train_high_speed", "train_bus", "train_tram", "train_sbahn", "train_normal") — so both script languages finally see MAGIC's vehicle types. MAGIC is integrated by optional reflection (no hard dependency); types also travel through the server→client script dataset (`routeId`, `transportType`).

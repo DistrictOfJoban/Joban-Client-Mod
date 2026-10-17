@@ -1,5 +1,8 @@
 package com.lx862.jcm.mixin.mtrpatch;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.extra.JCMPatchForMTR;
 import org.mtr.core.data.Rail;
@@ -13,6 +16,7 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.MinecraftClientHelper;
+import org.mtr.mod.block.BlockNode;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.render.RenderRails;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,6 +36,16 @@ public class RenderRailsMixin {
     @Shadow
     private static int renderRailStat(GraphicsHolder graphicsHolder, String title, String data, int line) {
         throw new UnsupportedOperationException("Implemented via mixin");
+    }
+
+    @Inject(method = "lambda$render$1", at = @At("HEAD"), cancellable = true)
+    private static void jsblock$railFrustumCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
+        if(JCMClientConfig.INSTANCE.mtrPatch.enableFrustumCullingRails.value()) {
+            Box zbx = new Box(railWrapper.startVector.getX(), railWrapper.startVector.getY(), railWrapper.startVector.getZ(), railWrapper.endVector.getX(), railWrapper.endVector.getY(), railWrapper.endVector.getZ());
+            if(!LoaderImplClient.isFrustumVisible(zbx)) {
+                cir.setReturnValue(() -> railWrapper.shouldRender = false);
+            }
+        }
     }
 
     @Inject(method = "lambda$render$5", at = @At("HEAD"), cancellable = true)
@@ -68,7 +82,7 @@ public class RenderRailsMixin {
 
     @Inject(method = "lambda$render$1", at = @At("HEAD"), cancellable = true)
     private static void jsblock$improveRailCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
-        boolean overrideDefaultBehaviour = JCMClientConfig.INSTANCE.mtrPatch.railCullingImprovement.value();
+        boolean overrideDefaultBehaviour = JCMClientConfig.INSTANCE.mtrPatch.allowCameraLowering.value();
         if(!overrideDefaultBehaviour) return;
 
         Box railCullingBoundary = JCMPatchForMTR.clampBoundingBoxToRenderDistance(
@@ -88,5 +102,16 @@ public class RenderRailsMixin {
         );
 
         cir.setReturnValue(() -> railWrapper.shouldRender = shouldRender);
+    }
+
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lorg/mtr/mapping/holder/ClientWorld;getBlockState(Lorg/mtr/mapping/holder/BlockPos;)Lorg/mtr/mapping/holder/BlockState;", ordinal = 0))
+    private static BlockState jsblock$returnCachedRailNode(ClientWorld instance, BlockPos pos, Operation<BlockState> original) {
+        BlockState bs = original.call(instance, pos);
+        if(bs.getBlock().data instanceof BlockNode) {
+            JCMPatchForMTR.cachedRailNodeState.put(pos, bs);
+            return bs;
+        } else {
+            return JCMPatchForMTR.cachedRailNodeState.getOrDefault(pos, bs);
+        }
     }
 }

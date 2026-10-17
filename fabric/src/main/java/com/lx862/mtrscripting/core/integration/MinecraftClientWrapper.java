@@ -62,6 +62,12 @@ public class MinecraftClientWrapper {
         return MinecraftClient.getInstance().getWorldMapped().getLightLevel(LightType.SKY, pos.rawBlockPos());
     }
 
+    public static int lightAt(ScriptVector3f pos) {
+        int blockLight = blockLightAt(pos);
+        int skyLight = skyLightAt(pos);
+        return LightmapTextureManager.pack(blockLight, skyLight);
+    }
+
     public static int lightLevelAt(ScriptVector3f pos) {
         return Math.min(blockLightAt(pos), skyLightAt(pos));
     }
@@ -102,6 +108,10 @@ public class MinecraftClientWrapper {
         ScoreboardObjective objective = ScoreboardHelper.getScoreboardObjective(scoreboard, objectiveName);
         if(objective == null) return null;
         return ScoreboardHelper.getPlayerScore(scoreboard, playerName, objective);
+    }
+
+    public static int getCameraMode() {
+        return LoaderImplClient.getCameraMode();
     }
 
     public static boolean gamePaused() {

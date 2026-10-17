@@ -1,27 +1,34 @@
-JCM Yanyang.11 — MAGIC MTR vehicle types for `getTransportType()` and no more native-script GC stutter.
+JCM Yanyang `2.3.0-beta-2.yanyang.1` — upstream 2.3.0-beta.2 integrated into the Yanyang fork, with Yanyang-side optimizations and all Yanyang features (MAGIC vehicle types, native C++ scripting, the GC-stutter fix) retained.
 
-**兼容 MAGIC MTR Addon / MAGIC MTR Addon compatibility**
+**整合原版 2.3.0-beta.2 / Upstream 2.3.0-beta.2 integrated**
 
-- `getTransportType()` now returns MAGIC MTR Addon vehicle types — `train_metro`, `train_light_rail`, `train_high_speed`, `train_bus`, `train_tram`, `train_sbahn`, `train_normal` — as well as the four base modes `train` / `boat` / `cable_car` / `airplane`. Available from JavaScript and Java (`vehicle.getTransportType()`, `stop.routeInterchanges[i].getTransportType()`) and natively from C++ (`train.getTransportType()`, `stop.interchange(i).getTransportType()`, ABI 9).
-- MAGIC is integrated via optional reflection: **no hard dependency**. Without MAGIC installed, everything keeps working and base ids are returned.
-- `routeId` + `transportType` travel through the server→client script dataset, so mixed old/new JCM versions still resolve types; `getTransportMode()` is unchanged.
+MTR Patch:
+- Rail preview of long-running rails outside render distance is preserved (rail node block states cached per tick).
+- The multi-item selection screen supports `Shift` for exclusive selection.
+- **Experimental frustum culling** for vehicles, lifts and rails, layered on top of MTR's occlusion culling — scripts keep being invoked, and each layer is individually toggleable in JCM Settings.
+- The MTR 3 camera-lowering-by-sneaking feature is back (`allowCameraLowering`, default on; revert to MTR 4 behaviour by turning it off).
 
-**C++ 脚本不再每 500ms 卡一下 / the native-script GC stutter is gone**
+Scripting API:
+- `MinecraftClient.getCameraMode()` (F5 perspective), `MinecraftClient.lightAt(pos)` (packed block+sky light), `RenderManager.drawModel(model, matrices, light)`.
+- `VehicleWrapper.isDoorOpenable(car, pos)` / `isDoorOpen(...)`.
+- `LiftWrapper.isDoorway1/2Openable()` / `isDoorway1/2Open()`.
+- Lift scripts that control rendering now move the riding player (`VehicleRidingMovement`).
+- Czech & German language stubs added upstream.
 
-- The built StopsData graph is now reused across frames (invalidated by dataset revision or synced-payload identity) — previously hundreds of Stop/RouteInterchange/list objects were allocated per vehicle per frame, driving periodic Minor GC pauses.
-- Snapshot marshalling uses a per-vehicle reusable Builder: persistent string pool, identity exit memo, grow-only offset arrays.
-- The JNI bridge no longer memcpy's a 256 KB snapshot per vehicle per frame; the five arena `ByteBuffer`s are cached per module as global-ref views and simply rewound each frame (explicit snapshot length replaces slicing).
-- Limited (non-full) stop data is cached with a 1s TTL + route signature; module lists iterate without per-frame copies.
-- Native memory: the per-module pixel arena starts at 1 MB and grows on demand (was a flat 16 MB per module).
+**晏阳整合优化 / Yanyang integration optimizations**
 
-**ABI 9 与旧模块 / compatibility notes**
+- `isScriptRendered` → `isScriptControlled` rename is **backwards compatible**: both field names are accepted, so 2.3.0-beta.1 resource packs keep working.
+- `LiftWrapper` doorway openability is **lazily computed** on first query instead of eagerly per lift per frame in the constructor — scripts that never ask pay zero world-query cost.
+- C++ lift scripts that control rendering now ride the player with the same `VehicleRidingMovement` semantics as JS lift scripts.
+- Upstream's frustum culling (MTR built-in rendering) and Yanyang's `VehicleCulling` (native script execution) are complementary layers; both keep scripts running.
 
-- ABI 9 appends type fields to the vehicle snapshot and interchange layouts; ABI 6/7/8 modules keep loading with their exact original layouts (per-ABI-group snapshots). New ABI 9 scripts require this version or later.
-- Full interchange type metadata from other players' servers benefits from an updated server JCM, but old/new mixes are handled.
+**保留的晏阳能力 / Retained Yanyang features**
+
+- `getTransportType()` returns MAGIC MTR Addon vehicle types (`train_metro`, `train_light_rail`, `train_high_speed`, `train_bus`, `train_tram`, `train_sbahn`, `train_normal`) plus the four base modes — from JS, Java and C++ (ABI 9); MAGIC integrated via optional reflection, no hard dependency.
+- No more native-script GC stutter: StopsData graph reuse, reusable snapshot builders, cached JNI arena views, 1 MB-on-demand pixel arenas (from yanyang.11).
+- ABI 6/7/8 modules keep loading alongside ABI 9.
 
 Supported Minecraft versions: 1.17.1, 1.18.2, 1.19.2, 1.19.4, 1.20.1 and 1.20.4, for Fabric and Forge — **12 jars**, each bundling the four desktop JNI bridges (Windows x64, Linux x64, macOS x64, macOS ARM64). A separate `jcm-native-sdk` zip carries the SDK sources, build files and prebuilt example modules.
-
-The C++ core follows "APIs are for data, native helpers are for rendering": rendering, state and draw-record encoding stay on the C++ side with zero per-frame Java allocation, which is why the stutter fix holds. The core is portable to Android (NDK) and to iOS/iPadOS hosts without a JVM.
 
 Validation includes four-platform CMake/CTest, real JNI tests for every script kind, an API declaration audit and real MTR OpenGL model upload. Automated tests do not replace final visual testing in Minecraft.
 

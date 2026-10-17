@@ -11,6 +11,8 @@
     "TicketSystemMixin"
   ],
   "client": [
+    "mtrpatch.PlayerEntityMixin",
+    "mtrpatch.DashboardListSelectorScreenMixin",
     "mtrpatch.RenderRailwaySignMixin",
     "mtrpatch.SignResourceSchemaMixin",
     "mtrpatch.CustomResourceLoaderMixin",

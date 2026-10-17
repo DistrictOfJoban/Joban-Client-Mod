@@ -97,6 +97,7 @@
     "gui.jsblock.config.listview.title.disable_scripting": "停用指令碼功能 (需要重啓)",
     "gui.jsblock.config.listview.title.disable_scripting_class_restriction": "放寬指令碼限制",
     "gui.jsblock.config.listview.title.hide_riding_vehicle": "隱藏正在乘坐的車輛",
+    "gui.jsblock.config.listview.title.allow_camera_lowering": "允許潛行 (Shift) 用作降低鏡頭",
     "gui.jsblock.config.listview.title.script_debug_mode": "指令碼除錯模式",
     "gui.jsblock.config.listview.title.script_show_log_source": "顯示指令碼日誌來源",
     "gui.jsblock.config.listview.widget.open": "查看",

@@ -7,6 +7,8 @@ import org.mtr.mod.render.StoredMatrixTransformations;
 
 public class ModelDrawCall extends RenderDrawCall<ModelDrawCall> {
     private ModelJS model;
+    private int lightCoord = 0;
+    private boolean hasCustomLight = false;
 
     public static ModelDrawCall create() {
         return new ModelDrawCall();
@@ -21,10 +23,16 @@ public class ModelDrawCall extends RenderDrawCall<ModelDrawCall> {
         return this;
     }
 
+    public ModelDrawCall light(int lightCoord) {
+        hasCustomLight = true;
+        this.lightCoord = lightCoord;
+        return this;
+    }
+
     @Override
-    public void run(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        super.run(world, storedMatrixTransformations, facing, light);
-        this.model.draw(storedMatrixTransformations, light);
+    public void run(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int lightCoord) {
+        super.run(world, storedMatrixTransformations, facing, lightCoord);
+        this.model.draw(storedMatrixTransformations, hasCustomLight ? this.lightCoord : lightCoord);
     }
 
     @Override
