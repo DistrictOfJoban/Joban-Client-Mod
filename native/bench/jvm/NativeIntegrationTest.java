@@ -90,7 +90,9 @@ public class NativeIntegrationTest {
    String id="test:legacy"+abi;
    module=NativeScriptManager.loadFromDeclaration(id,new JsonPrimitive("test:"+prefix+"legacy_probe_"+abi+ext));
    check(module!=null&&module.getAbiVersion()==abi,"old ABI accepted "+abi);
-   check(NativeScriptManager.renderVehicle(id,id,snapshot).size()==1,"old ABI renders "+abi);
+   check(NativeScriptManager.renderVehicle(id,id,new NativeScriptManager.VehicleSnapshotBuffers(),
+     new com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper(),m->new Fixture())
+     .size()==1,"old ABI renders "+abi);
    NativeScriptManager.disposeInstance(id,id);
   }
   NativeScriptManager.reload();
