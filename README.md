@@ -87,8 +87,7 @@
 ### 5. 原版版本整合策略
 
 - 每个原版版本（如 2.3.0-beta.2 的轨道预览保留、Shift 独占选择、实验性 frustum culling、潜行降低视角、车门/光照/相机 API、cs_cz/de_de 等）逐文件三路合并，**保留晏阳全部自有能力**；
-- 整合时附带晏阳侧优化：如 beta.2 的 `LiftWrapper` 车门可开启性懒惰计算（原版在每帧每电梯的构造函数里急切做世界查询）、C++ 电梯脚本与 JS 一致的 `VehicleRidingMovement` 乘坐语义；
-- **翻译以原版 JCM 为准**（原版翻译同样由 BugQuantumCore 维护）：本分支语言文件与原版逐键对齐，冲突时原版优先；原版 `main` 新增的翻译（ga_ie 占位、cs_cz 新键）即时采纳。
+- 整合时附带晏阳侧优化：如 beta.2 的 `LiftWrapper` 车门可开启性懒惰计算（原版在每帧每电梯的构造函数里急切做世界查询）、C++ 电梯脚本与 JS 一致的 `VehicleRidingMovement` 乘坐语义。
 
 ### 6. 构建与发布体系
 
@@ -166,10 +165,10 @@ MTR_REGISTER_VEHICLE_SCRIPT(MyTrain, "example", "my_train")
 
 ## 🤝 致谢
 
-- 原版 [Joban Client Mod](https://github.com/DistrictOfJoban/Joban-Client-Mod)（DistrictOfJoban，翻译亦由 BugQuantumCore 维护）及其全体贡献者
-- [Minecraft Transit Railway](https://github.com/Jonafanho/Minecraft-Transit-Railway)（MTR）
-- [MAGIC MTR Addon](https://github.com/JustN00ne/magic-mtr)（JustN00ne）
-- 晏阳技术组（Yanyang Technical Group）
+- 原版 [Joban Client Mod](https://github.com/DistrictOfJoban/Joban-Client-Mod)（AmberFrost）及其全体贡献者
+- [Minecraft Transit Railway](https://github.com/Jonafanho/Minecraft-Transit-Railway)（jonafanho）
+- [MAGIC MTR Addon](https://github.com/JustN00ne/magic-mtr)（JustNoone）
+- 晏阳技术组（Yanyang Technology Group）
 
 ## License
 
