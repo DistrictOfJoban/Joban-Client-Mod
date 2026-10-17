@@ -41,7 +41,13 @@ public class VehicleResourceProvider implements ScriptResourceProvider {
                             vehicleScriptIds.put(baseId + "_trailer", scriptIdOverride);
                         } else {
                             ParsedScript parsedScript = ScriptResourceProvider.tryParseScript(baseId, "vehicle", "Vehicle", vehicleResource, false, true);
-                            if (parsedScript != null) {
+                            /* Yanyang: same fix as the MTR 4 path above — a
+                               native-only entry (language=cpp or native
+                               script_files entries) must still be registered
+                               so NativeVehicleDriver finds its configuration
+                               and the script id mapping; a mixed entry
+                               registers both sides. */
+                            if (parsedScript != null || NativeScriptManager.isLoaded(baseId)) {
                                 vehicleScripts.put(baseId, new VehicleResourceProvider.VehicleScriptConfiguration(parsedScript, VehicleScriptContext.DataFetchMode.MANDATORY));
                                 vehicleScriptIds.put(baseId + "_cab_1", baseId);
                                 vehicleScriptIds.put(baseId + "_cab_2", baseId);
