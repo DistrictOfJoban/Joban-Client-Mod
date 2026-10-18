@@ -29,6 +29,10 @@ on:
         description: 'Modrinth project id'
         required: false
         default: 'kMMJcRqY'
+      skip:
+        description: 'Comma-separated jar filenames to skip (already uploaded)'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -61,6 +65,7 @@ jobs:
         env:
           CF_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_PROJECT: ${{ inputs.cf-project-id }}
+          SKIP: ${{ inputs.skip }}
         run: |
           set -euo pipefail
           if [ -z "${CF_TOKEN:-}" ]; then
@@ -95,14 +100,26 @@ jobs:
                       pass
                   raise RuntimeError(f"HTTP {e.code} for {url}: {detail}")
 
-          # 1. Resolve game version ids via the legacy API
+          # 1. Resolve game version ids via the legacy API. The version list
+          # contains same-named entries from other games and from the Addons
+          # category, so disambiguate by version type from version-types.
+          tname = {t["id"]: t["name"] for t in api(f"{LEG}/game/version-types")}
           vers = api(f"{LEG}/game/versions")
-          byname = {v["name"]: v["id"] for v in vers}
+
+          def pick(name, type_prefix):
+              cands = [v["id"] for v in vers
+                       if v["name"] == name
+                       and tname.get(v["gameVersionTypeID"], "").startswith(type_prefix)]
+              assert len(cands) == 1, f"game version {name!r}: candidates {cands}"
+              return cands[0]
+
           MC = ["1.17.1", "1.18.2", "1.19.2", "1.19.4", "1.20.1", "1.20.4"]
-          NEED = MC + ["Fabric", "Forge", "Java 16", "Java 17", "Client"]
-          for n in NEED:
-              assert n in byname, f"game version not found: {n}"
-          print("game version ids:", {n: byname[n] for n in NEED})
+          MCID = {mc: pick(mc, "Minecraft 1") for mc in MC}
+          LOADERID = {"fabric": pick("Fabric", "Modloader"), "forge": pick("Forge", "Modloader")}
+          JAVAID = {"Java 16": pick("Java 16", "Java"), "Java 17": pick("Java 17", "Java")}
+          CLIENTID = pick("Client", "Environment")
+          print("mc ids:", MCID)
+          print("loader ids:", LOADERID, "| java ids:", JAVAID, "| client:", CLIENTID)
 
           body = open("release_body.md", encoding="utf-8").read()
           JAVAMAP = {"1.17.1": "Java 16"}
@@ -118,14 +135,18 @@ jobs:
 
           jars = sorted(os.listdir("jars"))
           assert len(jars) == 12, jars
+          skip = {s.strip() for s in os.environ.get("SKIP", "").split(",") if s.strip()}
+          if skip:
+              print("skipping already-uploaded files:", sorted(skip))
+          targets = [fn for fn in jars if fn not in skip]
 
           uploaded = []
-          for fn in jars:
+          for fn in targets:
               m = re.match(r"JCM-(fabric|forge)-(.+)\+(1\.17\.1|1\.18\.2|1\.19\.2|1\.19\.4|1\.20\.1|1\.20\.4)\.jar$", fn)
               assert m, f"unparseable jar name: {fn}"
               loader, ver, mc = m.groups()
               lname = "Fabric" if loader == "fabric" else "Forge"
-              gv = [byname[mc], byname[lname], byname[JAVAMAP.get(mc, "Java 17")], byname["Client"]]
+              gv = [MCID[mc], LOADERID[loader], JAVAID[JAVAMAP.get(mc, "Java 17")], CLIENTID]
               meta = json.dumps({
                   "changelog": body,
                   "changelogType": "markdown",
@@ -159,7 +180,7 @@ jobs:
                   s.write(f"- `{fn}` -> file id {fid}\n")
 
           # 2. Secondary visibility check via public cfwidget mirror (cache may lag)
-          missing = list(jars)
+          missing = list(targets)
           for attempt in range(8):
               time.sleep(30)
               try:
@@ -168,10 +189,10 @@ jobs:
                   with urllib.request.urlopen(req, timeout=60) as r:
                       d = json.loads(r.read().decode())
                   names = {f["name"] for f in d.get("files", [])}
-                  missing = [fn for fn in jars if fn not in names]
+                  missing = [fn for fn in targets if fn not in names]
                   print(f"cfwidget check {attempt}: {len(names)} files on project, missing {len(missing)}")
                   if not missing:
-                      print("ALL 12 FILES VISIBLE VIA CFWIDGET")
+                      print(f"ALL {len(targets)} TARGET FILES VISIBLE VIA CFWIDGET")
                       break
               except Exception as e:
                   print(f"cfwidget poll error: {e}")
