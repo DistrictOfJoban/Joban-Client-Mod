@@ -14,67 +14,39 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe CurseForge endpoints round 2
+      - name: Probe CurseForge endpoints round 3
         env:
           CF_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
           set -uo pipefail
+          echo "dummy-content" > /tmp/dummy.jar
+          META='{"changelog":"probe","changelogType":"markdown","releaseType":"beta","gameVersions":[9994],"displayName":"probe"}'
 
-          echo "=== D2: legacy API /api/game/versions with X-Api-Token ==="
-          curl -sS --max-time 60 -o /tmp/d2.json -w "HTTP %{http_code} | %{size_download}B\n" \
-            -H "X-Api-Token: $CF_TOKEN" "https://minecraft.curseforge.com/api/game/versions"
-          python3 - <<'PYEOF'
-          import json
-          try:
-              d = json.load(open('/tmp/d2.json'))
-              print(type(d), len(d) if isinstance(d, list) else d.keys())
-              if isinstance(d, list):
-                  want = {}
-                  for v in d:
-                      want[v['name']] = v['id']
-                  keys = ['1.17.1','1.18.2','1.19.2','1.19.4','1.20.1','1.20.4','Fabric','Forge','Java 16','Java 17','Java 21','NeoForge']
-                  print({k: want.get(k) for k in keys})
-                  print('sample:', d[:3])
-          except Exception as e:
-              print('not json:', e)
-              print(open('/tmp/d2.json').read()[:300])
-          PYEOF
-          echo
+          echo "=== P1: legacy GET /api/projects/1736483 (own project, X-Api-Token) ==="
+          curl -sS --max-time 30 -o /tmp/p1.json -w "HTTP %{http_code} | %{size_download}B\n" \
+            -H "X-Api-Token: $CF_TOKEN" "https://minecraft.curseforge.com/api/projects/1736483"
+          head -c 500 /tmp/p1.json; echo; echo
 
-          echo "=== D3: legacy API /api/game/version-types with X-Api-Token ==="
-          curl -sS --max-time 30 -o /tmp/d3.json -w "HTTP %{http_code} | %{size_download}B\n" \
-            -H "X-Api-Token: $CF_TOKEN" "https://minecraft.curseforge.com/api/game/version-types"
-          head -c 300 /tmp/d3.json; echo; echo
+          echo "=== P2: legacy POST /api/projects/266707/upload-file (MTR, expect permission error) ==="
+          curl -sS --max-time 60 -o /tmp/p2.json -w "HTTP %{http_code}\n" -X POST \
+            -H "X-Api-Token: $CF_TOKEN" \
+            -F "metadata=$META" \
+            -F "file=@/tmp/dummy.jar" \
+            "https://minecraft.curseforge.com/api/projects/266707/upload-file"
+          head -c 500 /tmp/p2.json; echo; echo
 
-          echo "=== A3: core correct path /v1/games/432/versions with x-api-key ==="
-          curl -sS --max-time 60 -o /tmp/a3.json -w "HTTP %{http_code} | %{size_download}B\n" \
-            -H "x-api-key: $CF_TOKEN" -H "Accept: application/json" "https://api.curseforge.com/v1/games/432/versions"
-          head -c 300 /tmp/a3.json; echo; echo
-
-          echo "=== C2: upload API permission probe (MTR mod 266707, dummy metadata) ==="
-          echo "dummy" > /tmp/dummy.jar
-          curl -sS --max-time 60 -o /tmp/c2.json -w "HTTP %{http_code}\n" -X POST \
-            "https://upload.curseforge.com/v1/minecraft/mods/266707/upload" \
+          echo "=== P3: new upload API POST /v1/minecraft/mods/266707/upload (full metadata, X-Api-Key) ==="
+          curl -sS --max-time 60 -o /tmp/p3.json -w "HTTP %{http_code}\n" -X POST \
             -H "X-Api-Key: $CF_TOKEN" \
-            -F 'metadata={"releaseType":"beta","gameVersions":[]}' \
-            -F "file=@/tmp/dummy.jar"
-          head -c 400 /tmp/c2.json; echo; echo
+            -F "metadata=$META" \
+            -F "file=@/tmp/dummy.jar" \
+            "https://upload.curseforge.com/v1/minecraft/mods/266707/upload"
+          head -c 500 /tmp/p3.json; echo; echo
 
-          echo "=== I: cfwidget for project 1736483 ==="
-          curl -sS --max-time 30 -o /tmp/i.json -w "HTTP %{http_code} | %{size_download}B\n" \
-            "https://api.cfwidget.com/1736483"
-          head -c 400 /tmp/i.json; echo; echo
-
-          echo "=== J: cfwidget MTR file entry structure (look for gameVersion ids) ==="
-          curl -sS --max-time 30 -o /tmp/j.json "https://api.cfwidget.com/minecraft/mc-mods/minecraft-transit-railway"
-          python3 - <<'PYEOF'
-          import json
-          d = json.load(open('/tmp/j.json'))
-          files = d.get('files', [])
-          print('files:', len(files))
-          if files:
-              print('keys of a file entry:', sorted(files[0].keys()))
-              print('sample file:', json.dumps(files[0], ensure_ascii=False)[:400])
-          # also check top-level keys
-          print('top keys:', sorted(d.keys()))
-          PYEOF
+          echo "=== P4: new upload API POST with X-Api-Token header variant ==="
+          curl -sS --max-time 60 -o /tmp/p4.json -w "HTTP %{http_code}\n" -X POST \
+            -H "X-Api-Token: $CF_TOKEN" \
+            -F "metadata=$META" \
+            -F "file=@/tmp/dummy.jar" \
+            "https://upload.curseforge.com/v1/minecraft/mods/266707/upload"
+          head -c 500 /tmp/p4.json; echo
