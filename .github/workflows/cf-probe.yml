@@ -14,33 +14,39 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe round 4 - version type groups
+      - name: Probe round 5 - duplicate version names
         env:
           CF_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
           set -uo pipefail
-          echo "=== full version-types list ==="
           curl -sS --max-time 30 -H "X-Api-Token: $CF_TOKEN" \
             "https://minecraft.curseforge.com/api/game/version-types" -o /tmp/vt.json
-          cat /tmp/vt.json; echo; echo
-
-          echo "=== versions grouped by type (non-Minecraft families) ==="
           curl -sS --max-time 60 -H "X-Api-Token: $CF_TOKEN" \
             "https://minecraft.curseforge.com/api/game/versions" -o /tmp/vs.json
           python3 - <<'PYEOF'
           import json
           types = {t['id']: t['name'] for t in json.load(open('/tmp/vt.json'))}
           vers = json.load(open('/tmp/vs.json'))
-          groups = {}
+          targets = ['1.17.1','1.18.2','1.19.2','1.19.4','1.20.1','1.20.4',
+                     'Fabric','Forge','Java 16','Java 17','Client','Server']
+          byname = {}
           for v in vers:
-              groups.setdefault(v['gameVersionTypeID'], []).append(v)
-          for tid, items in sorted(groups.items()):
-              tname = types.get(tid, f'UNKNOWN-{tid}')
-              # skip big Minecraft version families, but show small metadata groups fully
-              if len(items) > 40:
-                  print(f"type {tid} ({tname}): {len(items)} versions (MC family, skipped)")
-                  continue
-              print(f"type {tid} ({tname}):")
-              for v in items:
-                  print(f"    id={v['id']} name={v['name']!r} slug={v.get('slug')}")
+              byname.setdefault(v['name'], []).append(v)
+          print("=== all matches for target names ===")
+          for name in targets:
+              for v in byname.get(name, []):
+                  tname = types.get(v['gameVersionTypeID'], f"OTHERGAME-{v['gameVersionTypeID']}")
+                  print(f"  {name!r}: id={v['id']} type={v['gameVersionTypeID']} ({tname})")
+          print()
+          print("=== minecraft-valid ids (type in minecraft types) ===")
+          mctypes = set(types.keys())
+          valid = {}
+          for name in targets:
+              cands = [v for v in byname.get(name, []) if v['gameVersionTypeID'] in mctypes]
+              for v in cands:
+                  print(f"  {name!r}: id={v['id']} ({types[v['gameVersionTypeID']]})")
+              assert len(cands) == 1, f"{name}: {len(cands)} minecraft candidates!"
+              valid[name] = cands[0]['id']
+          print()
+          print("FINAL MAP:", json.dumps(valid))
           PYEOF
