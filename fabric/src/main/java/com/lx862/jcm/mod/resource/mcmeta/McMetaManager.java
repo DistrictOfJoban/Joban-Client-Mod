@@ -17,9 +17,11 @@ import java.util.function.Consumer;
  */
 public class McMetaManager {
     private final HashMap<Identifier, McMeta> mcMetaList = new HashMap<>();
+    private final java.util.Set<Identifier> failed = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     public void reset() {
         mcMetaList.clear();
+        failed.clear();
     }
 
     /**
@@ -28,21 +30,28 @@ public class McMetaManager {
      */
     public void load(Identifier imagePath) {
         if(mcMetaList.containsKey(imagePath)) return;
+        /* Negative cache: a failed/absent mcmeta was re-read from the resource
+           manager on EVERY load() call (i.e. per frame for per-frame queried
+           textures) because only successes populate mcMetaList. */
+        if(failed.contains(imagePath)) return;
         Identifier mcmetaFile = new Identifier(imagePath.getNamespace(), imagePath.getPath() + ".mcmeta");
 
         String str = ResourceManagerHelper.readResource(mcmetaFile);
-        if(!str.isEmpty()) {
-            JCMLogger.debug("[McMetaManager] Loading mcmeta file: " + imagePath.getPath());
+        if(str.isEmpty()) {
+            failed.add(imagePath);
+            return;
+        }
+        JCMLogger.debug("[McMetaManager] Loading mcmeta file: " + imagePath.getPath());
 
-            try {
-                McMeta mcMeta = McMeta.parse(new JsonParser().parse(str).getAsJsonObject());
+        try {
+            McMeta mcMeta = McMeta.parse(new JsonParser().parse(str).getAsJsonObject());
 
-                readImage(mcMeta, imagePath, mcMeta1 -> {
-                    mcMetaList.put(imagePath, mcMeta1);
-                });
-            } catch (Exception e) {
-                JCMLogger.error("[McMetaManager] Failed to read mcmeta file {}!", imagePath.toString(), e);
-            }
+            readImage(mcMeta, imagePath, mcMeta1 -> {
+                mcMetaList.put(imagePath, mcMeta1);
+            });
+        } catch (Exception e) {
+            failed.add(imagePath);
+            JCMLogger.error("[McMetaManager] Failed to read mcmeta file {}!", imagePath.toString(), e);
         }
     }
 

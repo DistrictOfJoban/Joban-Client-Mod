@@ -89,7 +89,13 @@ public class RenderRailsMixin {
                 railWrapper.endVector.x, railWrapper.endVector.y, railWrapper.endVector.z
         );
 
-        boolean shouldRender = !JCMPatchForMTR.shouldSkipCullingTask(
+        /* Upstream bug (also present upstream main): the negation inverted the
+           semantics — rails within the culling limit were ALWAYS rendered
+           (shouldRender = !false = true, occlusion never consulted) and only
+           the oversized "don't bother checking" case got tested, which is
+           backwards. Match the Fabric semantics: visible when oversized, else
+           occlusion-culled. */
+        boolean shouldRender = JCMPatchForMTR.shouldSkipCullingTask(
                 railCullingBoundary.getMinXMapped(), railCullingBoundary.getMinYMapped(), railCullingBoundary.getMinZMapped(),
                 railCullingBoundary.getMaxXMapped(), railCullingBoundary.getMaxYMapped(), railCullingBoundary.getMaxZMapped()
         ) || occlusionCullingInstance.isAABBVisible(

@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -133,12 +134,6 @@ public final class NativeScriptManager {
        debug-mode overlay (MTRScriptDebugOverlay). */
     private static final Map<String, String> SKIPPED = new ConcurrentHashMap<>();
 
-    /* Per-instance state blocks (mirrors JCM's per-instance `state`
-       JS object): instanceKey -> zeroed direct ByteBuffer. */
-    private static final Map<String, ByteBuffer> INSTANCE_STATES = new ConcurrentHashMap<>();
-
-    private static final int SNAPSHOT_CAPACITY = 16 * 1024; /* generous worst case */
-
     /**
      * DebugNotifier — pluggable sink for "JCM debug mode" hints. The
      * mtrscripting layer wires this to scriptErrorNotifier (yellow chat
@@ -214,7 +209,6 @@ public final class NativeScriptManager {
         INPUTS.clear(); RESOURCE_BASES.clear();
         MODULES.clear();
         SKIPPED.clear();
-        INSTANCE_STATES.clear();
         /* Every per-instance native state and every JVM-side resource the old
            modules created is invalid now: the modules they came from are gone,
            so the handles would dangle. */
@@ -266,10 +260,23 @@ public final class NativeScriptManager {
                 return null;
             }
 
-            /* Extract to a temp file — dlopen needs a real file. */
+            /* Extract to a STABLE temp file — dlopen needs a real file.
+               A fresh createTempFile per reload left one deleted-on-exit
+               file (and one deleteOnExit registration) per script per
+               F3+T forever; a stable name per script id is overwritten
+               in place, and dispose() (reload path) has already
+               FreeLibrary/dlclose'd the old mapping by the time we get
+               here. Locked-file platforms fall back to a fresh temp name. */
             final String realName = libId.getPath().substring(libId.getPath().lastIndexOf('/') + 1);
-            final Path extracted = Files.createTempFile("jcm_native_" + sanitize(scriptId) + "_", "_" + realName);
-            Files.write(extracted, lib);
+            Path extracted;
+            try {
+                extracted = Paths.get(System.getProperty("java.io.tmpdir"),
+                        "jcm_native_" + sanitize(scriptId) + "_" + realName);
+                Files.write(extracted, lib);
+            } catch (IOException locked) {
+                extracted = Files.createTempFile("jcm_native_" + sanitize(scriptId) + "_", "_" + realName);
+                Files.write(extracted, lib);
+            }
             extracted.toFile().deleteOnExit();
 
             final NativeScriptModule module = new NativeScriptModule(scriptId, extracted.toAbsolutePath().toString(), libraryPath);
@@ -288,6 +295,16 @@ public final class NativeScriptManager {
             return module;
         } catch (IOException e) {
             JCMLogger.error("Failed to load native script {}: {}", scriptId, e.getMessage());
+            return null;
+        } catch (RuntimeException | Error e) {
+            /* new Identifier() throws IllegalArgumentException for
+               non-identifier chars (uppercase paths, spaces — the
+               scriptLocations classification deliberately accepts those
+               case-insensitively), and the native open can raise
+               UnsatisfiedLinkError. Degrade to a skipped script instead
+               of escaping into the resource-pack parse loop, where it
+               used to abort every remaining script entry of the pack. */
+            JCMLogger.error("Failed to load native script {}: {}", scriptId, e.toString());
             return null;
         }
     }
@@ -646,6 +663,11 @@ public final class NativeScriptManager {
         List<NativeFrame> frames = new ArrayList<>();
         List<NativeScriptModule> modules = MODULES.get(scriptId);
         if (modules == null) return frames;
+        /* Hoisted once per render call instead of looked up per module per
+           frame (two ConcurrentHashMap gets). */
+        final JsonElement scriptInput = INPUTS.get(scriptId);
+        final String scriptBase = RESOURCE_BASES.get(scriptId);
+        final String keyPrefix = instanceKey + "/module/";
         /* Iterate the module list under its own monitor instead of copying
            it — getModules() allocated an unmodifiable ArrayList per call,
            i.e. per vehicle per frame. The list only mutates while a resource
@@ -657,9 +679,10 @@ public final class NativeScriptManager {
             ByteBuffer builtSnapshot = null;
             for (NativeScriptModule module : modules) {
                 if (!typeName(kind).equals(module.scriptType)) continue;
-                String moduleKey = instanceKey + "/module/" + module.nativeHandle;
+                String moduleKey = keyPrefix + module.nativeHandle;
                 Object context = contextFactory.apply(module);
-                NativeApiSession.bind(moduleKey, context, wrapper, INPUTS.get(scriptId), RESOURCE_BASES.getOrDefault(scriptId, module.resourceBase));
+                NativeApiSession.bind(moduleKey, context, wrapper, scriptInput,
+                        scriptBase != null ? scriptBase : module.resourceBase);
                 NativeHost.get().setPendingInstance(moduleKey);
                 ByteBuffer snapshot = snapshotBuf;
                 if (kind == MTR_RESOURCE_VEHICLE && vehicleWrapper != null) {
@@ -727,15 +750,65 @@ public final class NativeScriptManager {
             }
             return NativeSnapshot.build(groupBuffer.buffer, wrapper, group, groupBuffer.builder);
         }
+
+        /** Current content of a group's buffer WITHOUT re-marshalling —
+         *  used at dispose time so mtrDispose sees the snapshot the module
+         *  actually rendered last, instead of the instance's first frame. */
+        ByteBuffer peek(int group) {
+            final GroupBuffer groupBuffer = groups.get(group);
+            return groupBuffer == null ? null : groupBuffer.buffer;
+        }
     }
 
+    /**
+     * Dispose without a live snapshot: the module falls back to the snapshot
+     * copy retained at its first frame. Prefer the overloads that hand over
+     * the real buffer.
+     */
     public static void disposeInstance(String instanceKey, String scriptId) {
+        disposeInstance(instanceKey, scriptId, null);
+    }
+
+    /** Dispose with the content driver's live snapshot buffer. */
+    public static void disposeInstance(String instanceKey, String scriptId, ByteBuffer snapshot) {
         for (NativeScriptModule module : getModules(scriptId)) {
             String moduleKey = instanceKey + "/module/" + module.nativeHandle;
             synchronized (module) {
                 NativeApiSession.quiesce(moduleKey);
                 try {
-                    if (module.nativeHandle != 0) module.nDisposeInstance(module.nativeHandle, moduleKey);
+                    if (module.nativeHandle != 0) {
+                        /* Hand the LIVE buffer this instance was last rendered
+                           with: the retained copy in the bridge never refreshed
+                           (the reusable buffers keep their address), so dispose()
+                           used to receive the instance's first frame forever. */
+                        ByteBuffer buffer = snapshot;
+                        int len = 0;
+                        if (buffer != null) {
+                            len = buffer.limit();
+                        }
+                        module.nDisposeInstance(module.nativeHandle, moduleKey, buffer, len);
+                    }
+                } finally {
+                    NativeApiSession.dispose(moduleKey);
+                    NativeHost.get().releaseInstance(moduleKey);
+                }
+            }
+        }
+    }
+
+    /** Dispose a vehicle instance: each module gets its OWN ABI-group buffer. */
+    public static void disposeVehicleInstance(String instanceKey, String scriptId, VehicleSnapshotBuffers snapshots) {
+        for (NativeScriptModule module : getModules(scriptId)) {
+            String moduleKey = instanceKey + "/module/" + module.nativeHandle;
+            synchronized (module) {
+                NativeApiSession.quiesce(moduleKey);
+                try {
+                    if (module.nativeHandle != 0) {
+                        ByteBuffer buffer = snapshots == null
+                                ? null : snapshots.peek(NativeSnapshot.groupOf(module.abiVersion));
+                        int len = buffer == null ? 0 : buffer.limit();
+                        module.nDisposeInstance(module.nativeHandle, moduleKey, buffer, len);
+                    }
                 } finally {
                     NativeApiSession.dispose(moduleKey);
                     NativeHost.get().releaseInstance(moduleKey);
@@ -1017,7 +1090,7 @@ public final class NativeScriptManager {
             return sourcePath;
         }
 
-        private native void nDisposeInstance(long handle, String instanceKey);
+        private native void nDisposeInstance(long handle, String instanceKey, java.nio.ByteBuffer snapshot, int snapshotLen);
 
         synchronized NativeFrame render(String instanceKey, ByteBuffer snapshot, int resourceKind) {
             if (nativeHandle == 0) return null;

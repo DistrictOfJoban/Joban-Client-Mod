@@ -37,7 +37,18 @@ public class ScriptInstanceManager {
 
     public int clearDeadInstance() {
         int count = 0;
-        for(Map.Entry<UniqueKey, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
+        if (instances.isEmpty()) return 0;
+        /* Full-map snapshot copy per call (2 manager ticks = 40 copies/sec);
+           only snapshot when the loop actually needs to remove something. */
+        Map<UniqueKey, ScriptInstance> snapshot = null;
+        for(Map.Entry<UniqueKey, ScriptInstance> entry : instances.entrySet()) {
+            if(entry.getValue().shouldInvalidate()) {
+                if (snapshot == null) snapshot = new HashMap<>(instances);
+                break;
+            }
+        }
+        if (snapshot == null) return 0;
+        for(Map.Entry<UniqueKey, ScriptInstance> entry : snapshot.entrySet()) {
             if(entry.getValue().shouldInvalidate()) {
                 ScriptInstance<?> instance = entry.getValue();
                 count++;

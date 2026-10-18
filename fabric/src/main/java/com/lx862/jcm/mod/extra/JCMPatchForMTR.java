@@ -74,6 +74,13 @@ public class JCMPatchForMTR {
         }
     }
 
+    /** Clear every per-world cache (client join): liftInstructions keyed by
+     *  lift id survived server switches and produced stale arrival detection. */
+    public static void clearClientCaches() {
+        cachedRailNodeState.clear();
+        liftInstructions.clear();
+    }
+
     public static void updateRenderingShadow() {
         cachedRenderingShadow = ModShaderHandler.renderingShadows();
     }

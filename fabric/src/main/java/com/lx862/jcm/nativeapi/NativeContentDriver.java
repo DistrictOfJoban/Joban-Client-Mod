@@ -52,10 +52,13 @@ public final class NativeContentDriver {
             NativeScriptManager.render(key,script,state.snapshot,kind,
                 module->state.contexts.computeIfAbsent(module.getNativeHandle(),h->context.get()),wrapper,
                 (module,ctx)->{}).forEach(frame->{
-                    AbstractScriptContext ctx=state.contexts.get(Long.parseLong(frame.instanceKey.substring(frame.instanceKey.lastIndexOf('/')+1)));
+                    AbstractScriptContext ctx=state.contexts.get(parseTrailingLong(frame.instanceKey));
                     apply(frame,ctx);
                 });
-        } catch(Exception ex) {
+        } catch(Throwable ex) {
+            /* Throwable, not Exception: a StackOverflowError from a runaway
+               script must hit the same 4s backoff instead of killing the
+               render thread. */
             state.errorUntil=System.currentTimeMillis()+4000;
             JCMLogger.error("Native {} script {} failed",kind,script,ex);
         }
@@ -76,7 +79,10 @@ public final class NativeContentDriver {
         EyecandyBlockEntityWrapper wrapper=new EyecandyBlockEntityWrapper(block);
         String key=key("eyecandy",script,block.getPos2());
         State previous=STATES.get(key);
-        boolean used=previous!=null&&previous.contexts.values().stream().anyMatch(c->((EyeCandyScriptContext)c).events().onBlockUse.occurred());
+        boolean used=false;
+        if(previous!=null) for(AbstractScriptContext c:previous.contexts.values()) {
+            if(((EyeCandyScriptContext)c).events().onBlockUse.occurred()) { used=true; break; }
+        }
         State state=run(key,script,NativeScriptManager.MTR_RESOURCE_EYECANDY,wrapper,
                 b->NativeContentSnapshot.eyecandy(b,wrapper,used),()->new EyeCandyScriptContext(wrapper));
         for(AbstractScriptContext context:state.contexts.values()) {
@@ -123,6 +129,15 @@ public final class NativeContentDriver {
         State state=STATES.get(key("eyecandy",script,block.getPos2()));
         if(state!=null) for(AbstractScriptContext context:state.contexts.values()) ((EyeCandyScriptContext)context).events().onBlockUse.trigger(event);
         return true;
+    }
+
+    /** Decimal number at the end of a ".../module/<handle>" key, without the
+     *  per-frame substring+parseLong allocation. */
+    private static long parseTrailingLong(String s) {
+        final int end=s.length(); int start=end;
+        while(start>0) { final char c=s.charAt(start-1); if(c>='0'&&c<='9') start--; else break; }
+        if(start==end) return -1;
+        try { return Long.parseLong(s,start,end,10); } catch(NumberFormatException ignored) { return -1; }
     }
 
     private static ScriptRenderManager renderManager(AbstractScriptContext context) {
@@ -198,7 +213,7 @@ public final class NativeContentDriver {
             boolean removed=now-state.touched>5_000_000_000L;
             if(state.wrapper instanceof EyecandyBlockEntityWrapper) removed|=((EyecandyBlockEntityWrapper)state.wrapper).removed();
             if(state.wrapper instanceof LiftWrapper) removed|=((LiftWrapper)state.wrapper).removed();
-            if(removed&&STATES.remove(state.key,state)) NativeScriptManager.disposeInstance(state.key,state.script);
+            if(removed&&STATES.remove(state.key,state)) NativeScriptManager.disposeInstance(state.key,state.script,state.snapshot);
         }
     }
     public static void reset() { STATES.clear(); }

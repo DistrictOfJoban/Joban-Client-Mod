@@ -25,7 +25,10 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
         float offsetX = (float)(0.5 - blockEntity.getOffsetX());
         float offsetY = (float)(0.5 + blockEntity.getOffsetY());
         float offsetZ = (float)(-0.5 - blockEntity.getOffsetZ());
-        boolean showOutline = JCMUtil.playerHoldingBrush(PlayerEntity.cast(MinecraftClient.getInstance().getPlayerMapped()));
+        /* Null player during disconnect/dimension change frames used to NPE
+           here (this renderer runs at any distance via isInRenderDistance). */
+        ClientPlayerEntity player = MinecraftClient.getInstance().getPlayerMapped();
+        boolean showOutline = player != null && JCMUtil.playerHoldingBrush(PlayerEntity.cast(player));
 
         storedMatrixTransformations.add(graphicsHolderNew -> {
             graphicsHolderNew.rotateYDegrees(90);

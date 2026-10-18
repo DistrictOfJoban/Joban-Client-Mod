@@ -40,32 +40,43 @@ public class EyecandyResourceProvider implements ScriptResourceProvider {
             final JsonElement scriptsElement = rootObject.get("objectScripts");
             JsonArray eyecandyObjects = eyecandyElement.getAsJsonArray();
             for(JsonElement jsonElement : eyecandyObjects) {
-                final JsonObject eyecandyEntry = jsonElement.getAsJsonObject();
-                final String id = eyecandyEntry.get("id").getAsString();
-                if(eyecandyEntry.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
-                    String eyecandyScriptId = eyecandyEntry.get("scriptId").getAsString();
-                    eyecandyScriptIds.put(id, eyecandyScriptId);
-                }
-                /* Yanyang: upstream beta.2 renamed the field to isScriptControlled; accept
-                   both so beta.1 resource packs keep working. */
-                if(eyecandyEntry.has("isScriptControlled") ? JsonUtil.getBoolean("isScriptControlled", false, eyecandyEntry) : JsonUtil.getBoolean("isScriptRendered", false, eyecandyEntry)) {
-                    scriptControlledRendering.add(id);
+                try {
+                    final JsonObject eyecandyEntry = jsonElement.getAsJsonObject();
+                    final String id = eyecandyEntry.get("id").getAsString();
+                    if(eyecandyEntry.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
+                        String eyecandyScriptId = eyecandyEntry.get("scriptId").getAsString();
+                        eyecandyScriptIds.put(id, eyecandyScriptId);
+                    }
+                    /* Yanyang: upstream beta.2 renamed the field to isScriptControlled; accept
+                       both so beta.1 resource packs keep working. */
+                    if(eyecandyEntry.has("isScriptControlled") ? JsonUtil.getBoolean("isScriptControlled", false, eyecandyEntry) : JsonUtil.getBoolean("isScriptRendered", false, eyecandyEntry)) {
+                        scriptControlledRendering.add(id);
+                    }
+                } catch (Exception e) {
+                    ScriptResourceProvider.logError("parsing eyecandy object entry in mtr_custom_resources.json (entry skipped)", e);
                 }
             }
 
             if(scriptsElement != null) {
                 JsonArray scriptArray = scriptsElement.getAsJsonArray();
                 for(JsonElement entryElement : scriptArray) {
-                    JsonObject scriptObject = entryElement.getAsJsonObject();
-                    String scriptEntryId = scriptObject.get("id").getAsString();
-                    EyecandyCustomConfig customConfig = parseEyecandyCustomConfig(scriptObject, false);
-                    boolean entryReferenced = eyecandyScriptIds.values().stream().anyMatch(e -> e.equals(scriptEntryId));
+                    try {
+                        JsonObject scriptObject = entryElement.getAsJsonObject();
+                        String scriptEntryId = scriptObject.get("id").getAsString();
+                        EyecandyCustomConfig customConfig = parseEyecandyCustomConfig(scriptObject, false);
+                        boolean entryReferenced = eyecandyScriptIds.values().stream().anyMatch(e -> e.equals(scriptEntryId));
 
-                    if(entryReferenced) {
-                        ParsedScript parsedScript = ScriptResourceProvider.tryParseScript(scriptEntryId, "eyecandy", "Block", scriptObject, true, false);
-                        if(parsedScript != null || NativeScriptManager.isLoaded(scriptEntryId)) eyecandyScripts.put(scriptEntryId, new EyecandyScriptConfiguration(parsedScript, customConfig));
-                    } else {
-                        MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Skip parsing eyecandy script \"{}\", which is not referenced by any eyecandy object!", scriptEntryId);
+                        if(entryReferenced) {
+                            ParsedScript parsedScript = ScriptResourceProvider.tryParseScript(scriptEntryId, "eyecandy", "Block", scriptObject, true, false);
+                            if(parsedScript != null || NativeScriptManager.isLoaded(scriptEntryId)) eyecandyScripts.put(scriptEntryId, new EyecandyScriptConfiguration(parsedScript, customConfig));
+                        } else {
+                            MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Skip parsing eyecandy script \"{}\", which is not referenced by any eyecandy object!", scriptEntryId);
+                        }
+                    } catch (Exception e) {
+                        /* parseEyecandyCustomConfig throws on a missing
+                           customConfigFile — one bad entry must not abort the
+                           whole pack's remaining scripts. */
+                        ScriptResourceProvider.logError("parsing eyecandy script entry '" + VehicleResourceProvider.safeId(entryElement) + "' in mtr_custom_resources.json (entry skipped)", e);
                     }
                 }
             }

@@ -10,6 +10,7 @@
 #pragma once
 
 #include "mtr_native.h"
+#include <stdexcept>
 #include "frame.hpp"
 #include "matrices.hpp"
 #include "util.hpp"
@@ -83,6 +84,7 @@ public:
         StrView getTransportType() const { return type; }
     };
     Interchange interchange(int32_t i) const {
+        if (i < 0 || i >= stop_->interchange_count) throw std::out_of_range("Stop interchange index");
         /* interchanges are stored in the snapshot blob at interchange_offset. */
         const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
         const JcmInterchange* ic = reinterpret_cast<const JcmInterchange*>(base + stop_->interchange_offset) + i;
@@ -101,6 +103,7 @@ public:
         int32_t destination_count;
         /* j-th destination landmark string (JS: getDestinations().get(j)). */
         StrView destination(int32_t j) const {
+            if (j < 0 || j >= destination_count) throw std::out_of_range("Exit destination index");
             const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
             const JcmStrRef* refs = reinterpret_cast<const JcmStrRef*>(base + destination_offset);
             return make_view(reinterpret_cast<const char*>(base + refs[j].offset), refs[j].len);
@@ -110,6 +113,7 @@ public:
         int32_t destination_offset = 0;
     };
     Exit exit(int32_t i) const {
+        if (i < 0 || i >= stop_->exit_count) throw std::out_of_range("Stop exit index");
         const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
         const JcmExit* ex = reinterpret_cast<const JcmExit*>(base + stop_->exit_offset) + i;
         Exit out;
@@ -139,6 +143,7 @@ public:
     bool empty() const { return count_ == 0; }
 
     Stop at(int32_t i) const {
+        if (i < 0 || i >= count_) throw std::out_of_range("StopList index");
         const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
         const JcmStop* arr = reinterpret_cast<const JcmStop*>(base + offset_);
         return Stop(snap_, arr + i);
@@ -205,7 +210,8 @@ public:
     double rail_progress() const { return snap_->rail_progress; }
     double rail_progress(int32_t car) const {
         double p = snap_->rail_progress;
-        const Car c = this->car(car < car_count() ? car : car_count() - 1);
+        if (car_count() == 0) return p; /* car(-1) used to read off the blob */
+        const Car c = this->car(car < 0 ? 0 : (car < car_count() ? car : car_count() - 1));
         return p - static_cast<double>(c.length()) * car;
     }
     double door_value() const { return snap_->door_value; }
@@ -228,6 +234,7 @@ public:
     int64_t in_game_time() const { return snap_->in_game_time; }
 
     Car car(int32_t i) const {
+        if (i < 0 || i >= snap_->car_count) throw std::out_of_range("Train car index");
         const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
         const JcmCar* arr = reinterpret_cast<const JcmCar*>(base + snap_->car_offset);
         return Car(snap_, arr + i);

@@ -27,8 +27,8 @@ public abstract class JCMBlockEntityRenderer<T extends BlockEntityExtension> ext
             BlockPos pos = blockEntity.getPos2();
             if(JCMClientConfig.INSTANCE.disableRendering.value() || world == null) return;
 
-            if(world.getBlockState(pos).isAir()) return;
-            BlockState state = world.getBlockState(pos);
+            BlockState state = world.getBlockState(pos); /* one lookup: this fetched the same state twice per BE per frame */
+            if(state.isAir()) return;
 
             renderCurated(blockEntity, graphicsHolder, world, state, pos, tickDelta, light, i1);
         } catch (Exception e) {

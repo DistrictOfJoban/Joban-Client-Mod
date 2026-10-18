@@ -33,6 +33,11 @@ import java.util.Map;
 public class RenderVehiclesMixin {
     @Inject(method = "render(JLorg/mtr/mapping/holder/Vector3d;)V", at = @At(value = "INVOKE", target = "Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArraySet;forEach(Ljava/util/function/Consumer;)V"))
     private static void jsblock$executeScript(long millisElapsed, Vector3d cameraShakeOffset, CallbackInfo ci) {
+        /* Yanyang: Iris/OptiFine shadow passes re-run RenderVehicles.render;
+           without this guard every script ran TWICE per frame (two snapshot
+           marshals, two whole-canvas repaints, two texture uploads per car). */
+        if(com.lx862.jcm.mod.extra.JCMPatchForMTR.isRenderingShadow()) return;
+        NativeVehicleDriver.beginFrame();
         for(VehicleExtension vehicle : MinecraftClientData.getInstance().vehicles) {
             /* Yanyang: C++ (language=cpp) scripts take the native route and
                never build a VehicleScriptInstance — drive them first so their
@@ -41,14 +46,22 @@ public class RenderVehiclesMixin {
             NativeVehicleDriver.render(vehicle);
 
             ObjectImmutableList<VehicleCar> cars = vehicle.vehicleExtraData.immutableVehicleCars;
-            Object2ObjectOpenHashMap<String, VehicleResourceProvider.VehicleScriptConfiguration> scriptsInVehicle = new Object2ObjectOpenHashMap<>();
 
+            /* Lazily allocated: most trains carry no script at all, and a fresh
+               map per vehicle per frame was pure allocation churn. */
+            Object2ObjectOpenHashMap<String, VehicleResourceProvider.VehicleScriptConfiguration> scriptsInVehicle = null;
             for (VehicleCar vehicleCar : cars) {
                 String scriptEntryId = MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(vehicleCar.getVehicleId());
                 VehicleResourceProvider.VehicleScriptConfiguration script = MtrScriptingResourceManager.vehicle.getVehicleScript(scriptEntryId);
-                if (script == null || scriptsInVehicle.containsKey(scriptEntryId)) continue;
+                if (script == null) continue;
+                if (scriptsInVehicle == null) scriptsInVehicle = new Object2ObjectOpenHashMap<>();
+                if (scriptsInVehicle.containsKey(scriptEntryId)) continue;
                 scriptsInVehicle.put(scriptEntryId, script);
             }
+            if (scriptsInVehicle == null) continue;
+            /* Per-frame car sound positions for BOTH script sides (native
+               replay in invokeCar, JS replay in VehicleResourceMixin). */
+            NativeVehicleDriver.computeCarPositions(vehicle);
 
             for(Map.Entry<String, VehicleResourceProvider.VehicleScriptConfiguration> scriptEntry : scriptsInVehicle.entrySet()) {
                 String scriptEntryId = scriptEntry.getKey();
@@ -61,11 +74,16 @@ public class RenderVehiclesMixin {
                    part above, the JS part here — each side captures into its
                    own replay registry, so draw calls never collide. */
                 if(scriptEntry.getValue().parsedScript() == null) continue;
-                List<Integer> carsForScripts = new ArrayList<>();
+                /* Plain count-then-fill: the stream allocated a pipeline, a
+                   lambda and a builder per script per vehicle per frame. */
+                int scriptCarCount = 0;
                 for(int i = 0; i < cars.size(); i++) {
-                    if(MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(cars.get(i).getVehicleId()).equals(scriptEntryId)) carsForScripts.add(i);
+                    if(scriptEntryId.equals(MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(cars.get(i).getVehicleId()))) scriptCarCount++;
                 }
-                int[] carsArray = carsForScripts.stream().mapToInt(i->i).toArray();
+                int[] carsArray = new int[scriptCarCount];
+                for(int i = 0, j = 0; i < cars.size(); i++) {
+                    if(scriptEntryId.equals(MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(cars.get(i).getVehicleId()))) carsArray[j++] = i;
+                }
 
                 VehicleScriptContext.DataFetchMode dataFetchMode = scriptEntry.getValue().dataFetchMode();
                 VehicleScriptInstance scriptInstance = (VehicleScriptInstance) MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntryId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, scriptEntryId, carsArray), vehicle, scriptEntry.getValue().parsedScript()));

@@ -59,7 +59,12 @@ public abstract class VehicleSelectorScreenMixin extends DashboardListSelectorSc
     @Inject(method = "<init>", at = @At("RETURN"))
     private void jsblock$populateIds(Siding siding, ScreenExtension previousScreenExtension, CallbackInfo ci) {
         oldListSize = 0;
+        /* All three: the other two survived resource pack reloads and kept
+           stale VehicleResource objects (formations computed from old car
+           counts) — and they never shrank across sessions. */
         listIdToVehicleResource.clear();
+        vehicleIdToVehicleResource.clear();
+        vehicleResourceToListId.clear();
         final long[] id = {0};
         CustomResourceLoader.iterateVehicles(siding.getTransportMode(), vehicleResource -> {
             listIdToVehicleResource.put(id[0], vehicleResource);

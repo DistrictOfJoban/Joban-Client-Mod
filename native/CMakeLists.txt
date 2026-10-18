@@ -7,6 +7,9 @@ if(MSVC)
   add_compile_options(/utf-8 /O2 /EHsc /W3)
 else()
   add_compile_options(-O2)
+  # Warnings (not errors) for GCC/Clang — MSVC had /W3, the POSIX side had
+  # nothing, so JNI-boundary and bounds-check regressions compiled silently.
+  add_compile_options(-Wall -Wextra)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fno-gnu-unique)
   endif()

@@ -23,6 +23,9 @@ public final class NativeApiSession {
         return thread;
     });
     private static final Map<String, String> TYPES = new LinkedHashMap<>();
+    /** Values of TYPES, snapshotted once: resolveClass scanned the whole map
+     *  (containsValue) on every class resolution. */
+    private static final Set<String> TYPE_NAMES = new HashSet<>();
     static {
         String util = "com.lx862.mtrscripting.core.util.";
         register("Resources", util + "ScriptResourceUtil");
@@ -50,6 +53,7 @@ public final class NativeApiSession {
         register("VehicleRidingEntity", "org.mtr.core.data.VehicleRidingEntity");
         register("Route.CircularState", "org.mtr.core.data.Route$CircularState");
         register("CircularState", "org.mtr.core.data.Route$CircularState");
+        TYPE_NAMES.addAll(TYPES.values());
     }
 
     private static void register(String alias, String name) { TYPES.put(alias, name); }
@@ -88,8 +92,11 @@ public final class NativeApiSession {
     private final NativeTiming timing = new NativeTiming();
     private volatile Object context;
     private volatile Object wrapper;
-    private JsonElement scriptInput = JsonNull.INSTANCE;
-    private String resourceBase = "minecraft:";
+    /* volatile: bind() writes these on the render thread, dispatch() can run
+       on the "JCM native background worker" thread (Background.submit) — a
+       plain field allowed the worker to read a stale scriptInput/resourceBase. */
+    private volatile JsonElement scriptInput = JsonNull.INSTANCE;
+    private volatile String resourceBase = "minecraft:";
     private volatile boolean closed;
     private volatile boolean callbacksStopped;
 
@@ -122,9 +129,12 @@ public final class NativeApiSession {
         try {
             if (closed) throw new IllegalStateException("native API session is disposed");
             JsonObject reply = new JsonObject();
-            reply.add("value", dispatch(new JsonParser().parse(request).getAsJsonObject()));
+            reply.add("value", dispatch(JsonParser.parseString(request).getAsJsonObject()));
             return JSON.toJson(reply);
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            /* Throwable, not Exception: a StackOverflowError/OOM escaping as a
+               pending JNI exception breaks the JSON reply contract with the
+               C++ caller; degrade to an error reply like every other failure. */
             Throwable cause = e instanceof InvocationTargetException ? ((InvocationTargetException)e).getTargetException() : e;
             JsonObject error = new JsonObject();
             error.addProperty("error", cause.toString());
@@ -209,7 +219,7 @@ public final class NativeApiSession {
 
     private Class<?> resolveClass(String alias) throws ClassNotFoundException {
         String name = TYPES.getOrDefault(alias, alias);
-        if (!TYPES.containsValue(name) && !name.startsWith("java.awt.") && !name.startsWith("java.lang.") && !name.startsWith("java.util.") && !name.startsWith("org.mtr.core.")) {
+        if (!TYPE_NAMES.contains(name) && !name.startsWith("java.awt.") && !name.startsWith("java.lang.") && !name.startsWith("java.util.") && !name.startsWith("org.mtr.core.")) {
             throw new IllegalArgumentException("Class is not a scripting API: " + name);
         }
         return Class.forName(name);
@@ -330,7 +340,7 @@ public final class NativeApiSession {
                 JsonArray parameters = new JsonArray();
                 if (args != null) for (Object arg : args) parameters.add(encode(arg));
                 byte[] result = NativeScriptManager.nativeApiCallback(function, user, JSON.toJson(parameters).getBytes(StandardCharsets.UTF_8));
-                JsonObject reply = new JsonParser().parse(new String(result, StandardCharsets.UTF_8)).getAsJsonObject();
+                JsonObject reply = JsonParser.parseString(new String(result, StandardCharsets.UTF_8)).getAsJsonObject();
                 if (reply.has("error")) throw new IllegalStateException(reply.get("error").getAsString());
                 return method.getReturnType() == void.class ? null : convert(reply.get("value"), method.getReturnType());
             } finally {

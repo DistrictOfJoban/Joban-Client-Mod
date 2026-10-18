@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.data.pids;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.mod.data.pids.preset.JsonPIDSPreset;
@@ -16,7 +17,12 @@ public class PIDSManager {
     private static final Map<String, PIDSPresetBase> presetList = new HashMap<>();
 
     public static void loadJson(JsonObject customResourceJson) {
-        customResourceJson.get("pids_images").getAsJsonArray().forEach(e -> {
+        /* A pack that customizes only other JCM features has no pids_images
+           section — the raw get() NPE'd and was reported as a confusing
+           "Failed to parse custom resource file!" on every reload. */
+        JsonElement pidsImages = customResourceJson.get("pids_images");
+        if (pidsImages == null || !pidsImages.isJsonArray()) return;
+        pidsImages.getAsJsonArray().forEach(e -> {
             String presetId = "(Unknown preset)";
 
             try {

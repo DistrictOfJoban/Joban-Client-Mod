@@ -101,15 +101,27 @@ public final class VehicleCulling {
             for (int p = 0; p < positions.size(); p++) {
                 final ObjectObjectImmutablePair<Vector, Vector> pair = positions.get(p);
                 if (pair == null) continue;
-                for (Vector v : new Vector[] { pair.left(), pair.right() }) {
-                    if (v == null) continue;
+                /* Unrolled: a two-element Vector[] was allocated per bogie pair
+                 * per car per frame for every vehicle in the world. */
+                final Vector left = pair.left();
+                final Vector right = pair.right();
+                if (left != null) {
                     any = true;
-                    if (v.x() < minX) minX = v.x();
-                    if (v.y() < minY) minY = v.y();
-                    if (v.z() < minZ) minZ = v.z();
-                    if (v.x() > maxX) maxX = v.x();
-                    if (v.y() > maxY) maxY = v.y();
-                    if (v.z() > maxZ) maxZ = v.z();
+                    if (left.x() < minX) minX = left.x();
+                    if (left.y() < minY) minY = left.y();
+                    if (left.z() < minZ) minZ = left.z();
+                    if (left.x() > maxX) maxX = left.x();
+                    if (left.y() > maxY) maxY = left.y();
+                    if (left.z() > maxZ) maxZ = left.z();
+                }
+                if (right != null) {
+                    any = true;
+                    if (right.x() < minX) minX = right.x();
+                    if (right.y() < minY) minY = right.y();
+                    if (right.z() < minZ) minZ = right.z();
+                    if (right.x() > maxX) maxX = right.x();
+                    if (right.y() > maxY) maxY = right.y();
+                    if (right.z() > maxZ) maxZ = right.z();
                 }
             }
         }

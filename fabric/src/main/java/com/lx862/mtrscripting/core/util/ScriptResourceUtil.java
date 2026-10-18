@@ -59,6 +59,8 @@ public class ScriptResourceUtil {
     private static final Identifier NOTO_SANS_LOCATION = new Identifier("mtr", "font/noto-sans-semibold.ttf");
     private static final Identifier NOTO_SERIF_LOCATION = new Identifier("mtr", "font/noto-serif-cjk-tc-semibold.ttf");
     private static Font NOTO_SANS_CACHE;
+    /** Sentinel for a font that failed to load (see getSystemFont). */
+    private static final Font FAILED_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 1);
     private static Font NOTO_SANS_CJK_CACHE;
     private static Font NOTO_SERIF_CACHE;
 
@@ -78,8 +80,14 @@ public class ScriptResourceUtil {
     @ApiInternal
     public static void executeScript(Context rhinoCtx, Scriptable scope, Identifier scriptLocation, String script) {
         scriptLocationStack.push(scriptLocation);
-        rhinoCtx.evaluateString(scope, script, scriptLocation.getNamespace() + ":" + scriptLocation.getPath(), 1, null);
-        scriptLocationStack.pop();
+        try {
+            rhinoCtx.evaluateString(scope, script, scriptLocation.getNamespace() + ":" + scriptLocation.getPath(), 1, null);
+        } finally {
+            /* Pop even when the script throws: a leftover entry made every
+               LATER script's idr()/include() resolve relative to the failed
+               script's directory. */
+            scriptLocationStack.pop();
+        }
     }
 
     public static void includeScript(Object pathOrIdentifier) {
@@ -210,29 +218,34 @@ public class ScriptResourceUtil {
                 try {
                     NOTO_SERIF_CACHE = readFont(NOTO_SERIF_LOCATION);
                 } catch (Exception ex) {
+                    /* Sentinel: a plain null retried (and re-logged) the failed
+                       resource read on every call — this is hit from the
+                       native text path every frame. */
+                    NOTO_SERIF_CACHE = FAILED_FONT;
                     MTRScriptingModClient.LOGGER.error("[JCM Scripting] Failed loading font", ex);
-                    return null;
                 }
             }
-            return NOTO_SERIF_CACHE;
+            return NOTO_SERIF_CACHE == FAILED_FONT ? null : NOTO_SERIF_CACHE;
         } else if(fontName.equals("Noto Sans CJK TC Medium")) {
             if(NOTO_SANS_CJK_CACHE == null) {
                 try {
                     NOTO_SANS_CJK_CACHE = readFont(NOTO_SANS_CJK_LOCATION);
                 } catch (Exception ex) {
+                    NOTO_SANS_CJK_CACHE = FAILED_FONT;
                     MTRScriptingModClient.LOGGER.error("[JCM Scripting] Failed to load font", ex);
                 }
             }
-            return NOTO_SANS_CJK_CACHE;
+            return NOTO_SANS_CJK_CACHE == FAILED_FONT ? null : NOTO_SANS_CJK_CACHE;
         } else if(fontName.equals("Noto Sans SemiBold")) {
             if(NOTO_SANS_CACHE == null) {
                 try {
                     NOTO_SANS_CACHE = readFont(NOTO_SANS_LOCATION);
                 } catch (Exception ex) {
+                    NOTO_SANS_CACHE = FAILED_FONT;
                     MTRScriptingModClient.LOGGER.error("[JCM Scripting] Failed to load font", ex);
                 }
             }
-            return NOTO_SANS_CACHE;
+            return NOTO_SANS_CACHE == FAILED_FONT ? null : NOTO_SANS_CACHE;
         } else {
             return new Font(fontName, Font.PLAIN, 1);
         }

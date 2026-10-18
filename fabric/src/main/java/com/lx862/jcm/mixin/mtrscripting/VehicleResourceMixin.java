@@ -1,7 +1,9 @@
 package com.lx862.jcm.mixin.mtrscripting;
 
+import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.nativeapi.NativeVehicleDriver;
 import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
+import org.mtr.mod.client.VehicleRidingMovement;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
@@ -26,6 +28,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class VehicleResourceMixin {
     @Inject(method = "queue(Lorg/mtr/mod/render/StoredMatrixTransformations;Lorg/mtr/mod/data/VehicleExtension;IIIZ)V", at = @At("HEAD"))
     private void jsblock$drawCarScript(StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int totalCars, int light, boolean noOpenDoorways, CallbackInfo ci) {
+        /* Yanyang: the mtrpatch VehicleResourceMixin (priority 900) cancels the
+           original queue() for the ridden car when hideRidingVehicle is on, but
+           this handler still ran and replayed the scripted PIDS/LCD content
+           floating in front of the camera — exactly what that option promises
+           to hide. Each @Inject handler has its own CallbackInfo, so this needs
+           its own guard. */
+        if(JCMClientConfig.INSTANCE.mtrPatch.hideRidingVehicle.value() && VehicleRidingMovement.isRiding(vehicle.getId())) return;
+
         VehicleCar vehicleCar = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber);
         String scriptGroupId = MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(vehicleCar.getVehicleId());
         if(scriptGroupId == null) return;
@@ -49,27 +59,18 @@ public abstract class VehicleResourceMixin {
 
         World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
 
-        double x = 0, y = 0, z = 0;
-        int total = 0;
-        ObjectArrayList<ObjectObjectImmutablePair<Vector, Vector>> bogiePoses = vehicle.getVehicleCarsAndPositions().get(carNumber).right();
-        for(ObjectObjectImmutablePair<Vector, Vector> bogiePos : bogiePoses) {
-            x += bogiePos.left().x;
-            y += bogiePos.left().y;
-            z += bogiePos.left().z;
-            x += bogiePos.right().x;
-            y += bogiePos.right().y;
-            z += bogiePos.right().z;
-            total += 2;
-        }
-
-        Vector bogieMidPos = new Vector(x / total, y / total, z / total);
-        ScriptVector3f soundPos = new ScriptVector3f((float)bogieMidPos.x, (float)bogieMidPos.y, (float)bogieMidPos.z);
+        /* Yanyang: per-car average bogie position, computed once per frame by
+           RenderVehiclesMixin (shared with the native path). This used to
+           rebuild MTR's whole getVehicleCarsAndPositions() tree per car per
+           frame — an N-car train paid 2N+1 full tree builds per frame across
+           culling and replay. */
+        ScriptVector3f soundPos = NativeVehicleDriver.carSoundPosition(vehicle.getHexId(), carNumber);
 
         if(carRenderManager != null) {
             carRenderManager.invoke(world, newTransform, Direction.NORTH, light);
         }
 
-        if(carSoundManager != null) {
+        if(carSoundManager != null && soundPos != null) {
             carSoundManager.invoke(world, soundPos);
         }
     }

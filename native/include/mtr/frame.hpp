@@ -27,20 +27,16 @@ public:
     FrameRecorder(const FrameRecorder&) = delete;
     FrameRecorder& operator=(const FrameRecorder&) = delete;
     ~FrameRecorder() { if (pixel_owned_) std::free(pixel_arena_); }
-    void begin_frame() {
-        record_count_ = 0;
-        records_bytes_ = 0;
-        matrix_bytes_ = 0;
-        string_bytes_ = 0;
-        pixel_bytes_ = 0;
-        float_bytes_ = 0;
-        z_auto_ = 0;
-    }
+    /* ---- shared record defaults ----
+       ONE source of truth for the "unset field" values, used BOTH by the
+       push_* emitters and by the fluent builders (Text/Texture in text.hpp):
+       the builders used to carry a zero-initialised record whose struct copy
+       clobbered these defaults, so an unset .color() drew fully transparent
+       text, unset .scale() drew zero-size text, unset .uv() degenerated the
+       quad and unset .align() centred instead of left-aligning. */
 
-    /* ---- record emitters (bump-allocated, no malloc on hot path) ---- */
-
-    JcmDrawText& push_text() {
-        JcmDrawText& r = push_record<JcmDrawText>(JCM_DRAW_TEXT);
+    static JcmDrawText default_text_record() {
+        JcmDrawText r{};
         r.shadow = r.bold = r.italic = 0;
         r.layer = MTR_LAYER_TEXT;
         r.color = 0xFFFFFFFF;
@@ -56,14 +52,42 @@ public:
         return r;
     }
 
-    JcmDrawTexture& push_texture() {
-        JcmDrawTexture& r = push_record<JcmDrawTexture>(JCM_DRAW_TEXTURE);
+    static JcmDrawTexture default_texture_record() {
+        JcmDrawTexture r{};
         r.layer = MTR_LAYER_LIGHT;
         r.color = 0xFFFFFFFF;
         r.x = r.y = r.w = r.h = 0;
         r.u1 = 0; r.v1 = 0; r.u2 = 1; r.v2 = 1;
         r.z_order = -1;
         r.texture_offset = r.texture_len = 0;
+        return r;
+    }
+
+    void begin_frame() {
+        record_count_ = 0;
+        records_bytes_ = 0;
+        matrix_bytes_ = 0;
+        string_bytes_ = 0;
+        pixel_bytes_ = 0;
+        float_bytes_ = 0;
+        z_auto_ = 0;
+    }
+
+    /* ---- record emitters (bump-allocated, no malloc on hot path) ---- */
+
+    JcmDrawText& push_text() {
+        JcmDrawText& r = push_record<JcmDrawText>(JCM_DRAW_TEXT);
+        const JcmRecordHeader hdr = r.header; /* default_record zeroes it */
+        r = default_text_record();
+        r.header = hdr;
+        return r;
+    }
+
+    JcmDrawTexture& push_texture() {
+        JcmDrawTexture& r = push_record<JcmDrawTexture>(JCM_DRAW_TEXTURE);
+        const JcmRecordHeader hdr = r.header;
+        r = default_texture_record();
+        r.header = hdr;
         return r;
     }
 
@@ -136,7 +160,7 @@ public:
 
     int32_t push_floats(const float* v, int32_t count) {
         if (count <= 0 || !v) return float_bytes_;
-        if (static_cast<int64_t>(count) * sizeof(float) > float_cap_ - float_bytes_) throw std::length_error("Native shape arena capacity exceeded");
+        if (static_cast<int64_t>(count) * static_cast<int64_t>(sizeof(float)) > float_cap_ - float_bytes_) throw std::length_error("Native shape arena capacity exceeded");
         int32_t off = float_bytes_;
         std::memcpy(reinterpret_cast<uint8_t*>(float_arena_) + float_bytes_, v,
                     sizeof(float) * static_cast<size_t>(count));

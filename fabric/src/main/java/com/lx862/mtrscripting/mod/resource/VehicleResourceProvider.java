@@ -73,15 +73,23 @@ public class VehicleResourceProvider implements ScriptResourceProvider {
                 final JsonArray vehiclesArray = vehicleElement.getAsJsonArray();
 
                 for(JsonElement vehicleEntry : vehiclesArray) {
-                    JsonObject vehicleObject = vehicleEntry.getAsJsonObject();
-                    String baseId = vehicleObject.get("id").getAsString();
-                    if(vehicleObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
-                        vehicleScriptIds.put(baseId, vehicleObject.get("scriptId").getAsString());
-                    }
+                    try {
+                        JsonObject vehicleObject = vehicleEntry.getAsJsonObject();
+                        String baseId = vehicleObject.get("id").getAsString();
+                        if(vehicleObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
+                            vehicleScriptIds.put(baseId, vehicleObject.get("scriptId").getAsString());
+                        }
 
-                    boolean shouldHideDisplayCube = vehicleObject.has("hideDisplayParts") && vehicleObject.get("hideDisplayParts").getAsBoolean();
-                    if(shouldHideDisplayCube) {
-                        vehiclesWithDisplayCubeHidden.add(baseId);
+                        boolean shouldHideDisplayCube = vehicleObject.has("hideDisplayParts") && vehicleObject.get("hideDisplayParts").getAsBoolean();
+                        if(shouldHideDisplayCube) {
+                            vehiclesWithDisplayCubeHidden.add(baseId);
+                        }
+                    } catch (Exception e) {
+                        /* Per-entry isolation: one malformed entry used to abort
+                           the whole loop AND every remaining provider of this
+                           pack file (the exception escaped to the per-file catch
+                           in MtrScriptingResourceManager). */
+                        ScriptResourceProvider.logError("parsing vehicle entry in mtr_custom_resources.json (entry skipped)", e);
                     }
                 }
 
@@ -89,6 +97,7 @@ public class VehicleResourceProvider implements ScriptResourceProvider {
                     JsonArray scriptArray = vehicleScriptsElement.getAsJsonArray();
 
                     for(JsonElement entryElement : scriptArray) {
+                      try {
                         JsonObject scriptObject = entryElement.getAsJsonObject();
                         String scriptEntryId = scriptObject.get("id").getAsString();
                         boolean forceLoad = scriptObject.has("forceLoad") && scriptObject.get("forceLoad").getAsBoolean();
@@ -117,6 +126,11 @@ public class VehicleResourceProvider implements ScriptResourceProvider {
                         } else {
                             MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Skip parsing vehicle scripts \"{}\", which is not referenced by any vehicle!", scriptEntryId);
                         }
+                      } catch (Exception e) {
+                        /* e.g. unknown dataFetchMode value, invalid identifier
+                           chars, non-string scriptLocations entries. */
+                        ScriptResourceProvider.logError("parsing vehicle script entry '" + safeId(entryElement) + "' in mtr_custom_resources.json (entry skipped)", e);
+                      }
                     }
                 }
             }
@@ -167,4 +181,13 @@ public class VehicleResourceProvider implements ScriptResourceProvider {
     }
 
     public record VehicleScriptConfiguration(ParsedScript parsedScript, VehicleScriptContext.DataFetchMode dataFetchMode) {}
+
+    static String safeId(JsonElement entryElement) {
+        try {
+            JsonObject o = entryElement.getAsJsonObject();
+            return o != null && o.has("id") ? o.get("id").getAsString() : "?";
+        } catch (Exception e) {
+            return "?";
+        }
+    }
 }

@@ -111,7 +111,18 @@ public class RenderRailsMixin {
             JCMPatchForMTR.cachedRailNodeState.put(pos, bs);
             return bs;
         } else {
-            return JCMPatchForMTR.cachedRailNodeState.getOrDefault(pos, bs);
+            /* The cache exists to keep the rail-building ghost preview alive
+               OUTSIDE the render distance — i.e. where getBlockState returns
+               air because the chunk is not loaded. Serving the cached node for
+               a LOADED chunk whose rail was broken kept the ghost (and its
+               stale angle data) on screen until rejoin, so only fall back to
+               the cache when the chunk really is unavailable. */
+            BlockState cached = JCMPatchForMTR.cachedRailNodeState.get(pos);
+            if(cached != null && !instance.isChunkLoaded(pos.getX() >> 4, pos.getZ() >> 4)) {
+                return cached;
+            }
+            JCMPatchForMTR.cachedRailNodeState.remove(pos);
+            return bs;
         }
     }
 }

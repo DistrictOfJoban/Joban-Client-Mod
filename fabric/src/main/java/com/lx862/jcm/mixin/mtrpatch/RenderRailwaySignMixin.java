@@ -28,7 +28,10 @@ public class RenderRailwaySignMixin {
 
     @ModifyArg(method = "renderCustomText", at = @At(value = "INVOKE", target = "Lorg/mtr/mod/client/DynamicTextureCache;getSignText(Ljava/lang/String;Lorg/mtr/mod/data/IGui$HorizontalAlignment;FII)Lorg/mtr/mod/client/DynamicTextureCache$DynamicResource;"), index = 4)
     private static int jsblock$transformTextColor(int backgroundColor) {
-        return jsblock$curSignTextColor;
+        /* -1 = "no JCM textColor on this sign": replacing the argument anyway
+           overrode the color MTR itself passed (white), changing the look of
+           every non-JCM-configured sign. Pass the original through. */
+        return jsblock$curSignTextColor == -1 ? backgroundColor : jsblock$curSignTextColor;
     }
 
 }

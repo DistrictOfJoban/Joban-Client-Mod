@@ -74,7 +74,10 @@ public:
     void draw(PidsContext& ctx);
 
 private:
-    JcmDrawText rec_{};
+    /* Same defaults as FrameRecorder::push_text — see default_text_record:
+       a plain {} here used to overwrite scale/color/align/uv with zeros on
+       the struct copy in draw(). */
+    JcmDrawText rec_ = FrameRecorder::default_text_record();
     const char* text_ = nullptr;
     int32_t text_len_ = -1;
     const char* font_ = nullptr;
@@ -108,7 +111,8 @@ public:
     void draw(PidsContext& ctx);
 
 private:
-    JcmDrawTexture rec_{};
+    /* See default_text_record: matches FrameRecorder::push_texture defaults. */
+    JcmDrawTexture rec_ = FrameRecorder::default_texture_record();
     const char* tex_ = nullptr;
 };
 

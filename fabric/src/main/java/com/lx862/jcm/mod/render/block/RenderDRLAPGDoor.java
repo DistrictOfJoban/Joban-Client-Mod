@@ -17,6 +17,22 @@ import org.mtr.mod.render.StoredMatrixTransformations;
  * Copied from MTR, PSD/APG is a pain
  */
 public class RenderDRLAPGDoor<T extends APGDoorDRLBlockEntity> extends BlockEntityRenderer<T> implements IGui, IBlock {
+
+    /* Station-hall PSD/APG doors number in the hundreds; these identifiers
+       used to be rebuilt via String.format + new Identifier per door per
+       frame, but only a handful of distinct values exist. */
+    private static final Identifier TEXTURE_APG_DOOR_LIGHT_ON = new Identifier("mtr:textures/block/apg_door_light_on.png");
+    private static final Identifier TEXTURE_APG_DOOR_LIGHT_OFF = new Identifier("mtr:textures/block/apg_door_light_off.png");
+    private static final Identifier TEXTURE_APG_DOOR_TOP_LEFT = new Identifier("jsblock:textures/block/psdapg/drlapg/apg_door_top_left.png");
+    private static final Identifier TEXTURE_APG_DOOR_TOP_RIGHT = new Identifier("jsblock:textures/block/psdapg/drlapg/apg_door_top_right.png");
+    private static final Identifier TEXTURE_APG_DOOR_BOTTOM_LEFT = new Identifier("jsblock:textures/block/psdapg/drlapg/apg_door_bottom_left.png");
+    private static final Identifier TEXTURE_APG_DOOR_BOTTOM_RIGHT = new Identifier("jsblock:textures/block/psdapg/drlapg/apg_door_bottom_right.png");
+
+    private static Identifier drlapgDoorTexture(boolean half, boolean side) {
+        if (half) return side ? TEXTURE_APG_DOOR_TOP_RIGHT : TEXTURE_APG_DOOR_TOP_LEFT;
+        return side ? TEXTURE_APG_DOOR_BOTTOM_RIGHT : TEXTURE_APG_DOOR_BOTTOM_LEFT;
+    }
+
     private final int type;
     private static final ModelSingleCube MODEL_APG_TOP = new ModelSingleCube(34, 9, 0, 15, 1, 16, 8, 1);
     private static final ModelAPGDoorBottom MODEL_APG_BOTTOM = new ModelAPGDoorBottom();
@@ -55,7 +71,7 @@ public class RenderDRLAPGDoor<T extends APGDoorDRLBlockEntity> extends BlockEnti
                 if (half) {
                     final Block block = world.getBlockState(blockPos.offset(side ? facing.rotateYClockwise() : facing.rotateYCounterclockwise())).getBlock();
                     if (block.data instanceof BlockAPGGlass || block.data instanceof BlockAPGGlassEnd) {
-                        MainRenderer.scheduleRender(new Identifier(String.format("mtr:textures/block/apg_door_light_%s.png", open > 0 ? "on" : "off")), false, open > 0 ? QueuedRenderLayer.LIGHT_TRANSLUCENT : QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
+                        MainRenderer.scheduleRender(open > 0 ? TEXTURE_APG_DOOR_LIGHT_ON : TEXTURE_APG_DOOR_LIGHT_OFF, false, open > 0 ? QueuedRenderLayer.LIGHT_TRANSLUCENT : QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
                             storedMatrixTransformationsLight.transform(graphicsHolderNew, offset);
                             graphicsHolderNew.translate(side ? -0.515625 : 0.515625, 0, 0);
                             graphicsHolderNew.scale(0.5F, 1, 1);
@@ -71,7 +87,7 @@ public class RenderDRLAPGDoor<T extends APGDoorDRLBlockEntity> extends BlockEnti
 
         switch (type) {
             case 2:
-                MainRenderer.scheduleRender(new Identifier(String.format("jsblock:textures/block/psdapg/drlapg/apg_door_%s_%s.png", half ? "top" : "bottom", side ? "right" : "left")), false, QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
+                MainRenderer.scheduleRender(drlapgDoorTexture(half, side), false, QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
                     storedMatrixTransformations.transform(graphicsHolderNew, offset);
                     (half ? MODEL_APG_TOP : MODEL_APG_BOTTOM).render(graphicsHolderNew, light, overlay, 1, 1, 1, 1);
                     graphicsHolderNew.pop();

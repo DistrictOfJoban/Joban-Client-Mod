@@ -28,6 +28,7 @@ public class LiftResourceProvider implements ScriptResourceProvider {
         if(liftsElement != null) {
             JsonArray liftsArray = liftsElement.getAsJsonArray();
             for(JsonElement liftEntry : liftsArray) {
+              try {
                 JsonObject liftObject = liftEntry.getAsJsonObject();
                 String liftId = liftObject.get("id").getAsString();
                 if(liftObject.has("scriptId")) { // For MTR 4, we put all scripting related fields into a sub-entry
@@ -38,12 +39,16 @@ public class LiftResourceProvider implements ScriptResourceProvider {
                 if(liftObject.has("isScriptControlled") ? JsonUtil.getBoolean("isScriptControlled", false, liftObject) : JsonUtil.getBoolean("isScriptRendered", false, liftObject)) {
                     scriptControlledRendering.add(liftId);
                 }
+              } catch (Exception e) {
+                ScriptResourceProvider.logError("parsing lift entry in mtr_custom_resources.json (entry skipped)", e);
+              }
             }
 
             if(liftScriptsElement != null) {
                 JsonArray scriptArray = liftScriptsElement.getAsJsonArray();
 
                 for(JsonElement entryElement : scriptArray) {
+                  try {
                     JsonObject scriptObject = entryElement.getAsJsonObject();
                     String scriptEntryId = scriptObject.get("id").getAsString();
                     boolean entryReferenced = liftScriptIds.values().stream().anyMatch(e -> e.equals(scriptEntryId));
@@ -54,8 +59,12 @@ public class LiftResourceProvider implements ScriptResourceProvider {
                             liftScripts.put(scriptEntryId, new LiftScriptConfiguration(parsedScript));
                         }
                     } else {
-                        MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Skip parsing lift scripts \"{}\", which is not referenced by any vehicle!", scriptEntryId);
+                        /* wording: these are LIFT scripts, not vehicle scripts. */
+                        MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Skip parsing lift scripts \"{}\", which is not referenced by any lift!", scriptEntryId);
                     }
+                  } catch (Exception e) {
+                    ScriptResourceProvider.logError("parsing lift script entry '" + VehicleResourceProvider.safeId(entryElement) + "' in mtr_custom_resources.json (entry skipped)", e);
+                  }
                 }
             }
         }

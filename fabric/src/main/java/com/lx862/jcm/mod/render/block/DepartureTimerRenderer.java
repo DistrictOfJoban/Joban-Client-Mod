@@ -30,13 +30,9 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
     public void renderCurated(DepartureTimerBlockEntity blockEntity, GraphicsHolder graphicsHolder, World world, BlockState state, BlockPos pos, float tickDelta, int light, int i1) {
         Direction facing = IBlock.getStatePropertySafe(state, BlockProperties.FACING);
 
-        graphicsHolder.push();
-        graphicsHolder.translate(0.5, 0.5, 0.5);
-        graphicsHolder.scale(0.018F, 0.018F, 0.018F);
-        rotateToBlockDirection(graphicsHolder, blockEntity);
-        graphicsHolder.rotateZDegrees(180);
-        graphicsHolder.translate(-12.5, -2, -4.1);
-
+        /* Data lookups BEFORE the push: three early returns below used to skip
+           the matching pop(), leaking one matrix-stack entry per frame per
+           timer and corrupting every block entity rendered after it. */
         List<Platform> closestPlatforms = new ArrayList<>();
         InitClient.findClosePlatform(pos, 5, closestPlatforms::add);
         Platform closestPlatform = !closestPlatforms.isEmpty() ? closestPlatforms.get(0) : null;
@@ -52,6 +48,13 @@ public class DepartureTimerRenderer extends JCMBlockEntityRenderer<DepartureTime
 
         long seconds = dwellLeft / 1000;
         long mins = seconds / 60;
+
+        graphicsHolder.push();
+        graphicsHolder.translate(0.5, 0.5, 0.5);
+        graphicsHolder.scale(0.018F, 0.018F, 0.018F);
+        rotateToBlockDirection(graphicsHolder, blockEntity);
+        graphicsHolder.rotateZDegrees(180);
+        graphicsHolder.translate(-12.5, -2, -4.1);
 
         TextRenderingManager.draw(graphicsHolder, new TextInfo(String.format("%d:%02d", mins % 10, seconds % 60)).withColor(0xFFEE2233).withFont("jsblock:deptimer"), facing, 0, 0);
         graphicsHolder.pop();

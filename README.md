@@ -15,9 +15,11 @@
 >
 > 详细 C++ SDK 文档见 [`native/README.md`](native/README.md)，完整修改历史见 [CHANGELOG.md](CHANGELOG.md)。
 
-## ✨ 当前版本：2.3.0-beta-2.yanyang.2
+## ✨ 当前版本：2.3.0-beta-2.yanyang.3
 
-`minecraft_custom_resources.json` 的脚本条目**不再需要 `language` 字段**：`scriptLocations` 中的每个路径由模组自动判断语言，且**同一条目可同时混用任意数量的 JavaScript 与 C++ 脚本**——vehicle / lift / eyecandy / pids 四类脚本全部支持。
+**全代码库 bug 与性能审计**（Java + JNI 边界 + C++ 桥接/SDK，yanyang.3）：修复 F3+T 后 C++ 脚本从不重载且渲染线程 use-after-free、模块记录流越界可崩溃 JVM、单个坏脚本条目中断整包解析、C++ `Text`/`Texture` 默认值被清零导致绘制不可见、Forge 端原生车辆脚本只捕获不渲染、Forge 端轨道裁剪逻辑反转（原版上游同样存在）、阴影 pass 脚本双重驱动、骑乘时裁剪冻结玩家、`mtrDispose` 拿到首帧快照等 **7 项关键修复 + 30 余项渲染正确性、性能与加固修复**——详见 [CHANGELOG](CHANGELOG.md)。
+
+（yanyang.2）`minecraft_custom_resources.json` 的脚本条目**不再需要 `language` 字段**：`scriptLocations` 中的每个路径由模组自动判断语言，且**同一条目可同时混用任意数量的 JavaScript 与 C++ 脚本**——vehicle / lift / eyecandy / pids 四类脚本全部支持。
 
 ```json
 "vehicleScripts": [
@@ -82,7 +84,8 @@
 - **消除 C++ 脚本每 500ms GC 卡顿**（yanyang.11）：StopsData 完整数据图按「数据集身份 + 修订号」跨帧复用（原版每帧每车重建数百个 Stop / RouteInterchange 对象）；快照序列化零分配（复用 Builder、持久字符串池、出口 memo）；移除每车每帧 256 KB JNI 快照拷贝；arena `ByteBuffer` 改为每模块缓存 GlobalRef 视图、每帧仅 rewind；有限站点数据 1s TTL + 路线签名缓存；
 - **原生车辆视锥剔除**（yanyang.10，`VehicleCulling`）：整车包络在视锥外的列车不再支付快照序列化 + 整画布重绘 + 纹理上传；与原版 beta.2 的 MTR 层剔除互补，两层脚本都照常执行；
 - 渲染线程零垃圾化：模块列表遍历不再复制、script-id 逐车 memo、字符串池返回打包 `long`、`IntStream` 换成复用缓冲的普通循环、纹理像素直接从 frame arena 拷入既有图像存储；
-- 修复陈旧内置 bridge 导致的 `NoSuchMethodError`（yanyang.10）：JNI 查找失败立即清理并报告，新增 `checkNativeBridges` 构建校验。
+- 修复陈旧内置 bridge 导致的 `NoSuchMethodError`（yanyang.10）：JNI 查找失败立即清理并报告，新增 `checkNativeBridges` 构建校验；
+- **全库热路径审计**（yanyang.3）：每车每帧一棵共享车厢位置树（原先 2N+1 棵，N 节列车 ≈ 每秒 1500 次全树重建）、仅对持有原生脚本的车辆计算视锥盒、零分配一次性追踪日志、`rasterizeText` 直读 `int[]` 光栅、gfx2d 复用草稿缓冲、`SCRIPT_IDS`/`TRACED`/`CAR_POSITIONS` 失效修剪、失败加载负缓存、稳定临时文件名（不再每次重载新增 `deleteOnExit`）、`clearDeadInstance` 不再每秒 40 次全表快照。
 
 ### 5. 原版版本整合策略
 

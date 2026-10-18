@@ -17,7 +17,11 @@ public class McMeta {
 
     public static McMeta parse(JsonObject jsonObject) {
         McMeta mcMeta = new McMeta();
+        /* Most .mcmeta files have no "animation" section — the raw
+           getAsJsonObject() returned null and NPE'd at animation.has(...) on
+           every load of every static texture with a mcmeta file. */
         JsonObject animation = jsonObject.getAsJsonObject("animation");
+        if(animation == null) return mcMeta;
 
         if(animation.has("frametime")) {
             mcMeta.setDefaultFrameTime(animation.get("frametime").getAsInt());
@@ -31,14 +35,20 @@ public class McMeta {
                 JsonElement frameData = customFrameOrderArray.get(i);
                 if(frameData.isJsonObject()) {
                     JsonObject frameDataObject = frameData.getAsJsonObject();
-                    int order = frameDataObject.get("index").getAsInt();
+                    /* "index" is optional in vanilla mcmeta (defaults to the
+                       frame's own position); a missing key NPE'd here. */
+                    int order = frameDataObject.has("index") ? frameDataObject.get("index").getAsInt() : i;
                     int duration = frameDataObject.has("time") ? frameDataObject.get("time").getAsInt() : mcMeta.defaultFrameTime;
                     customFrameOrder[i] = new McMetaFrame(order, duration);
                 } else { // Porbably an int specifying the index
                     customFrameOrder[i] = new McMetaFrame(customFrameOrderArray.get(i).getAsInt(), mcMeta.defaultFrameTime);
                 }
             }
-            mcMeta.setFrames(customFrameOrder);
+            /* "frames": [] (empty array) produced a zero-length array that
+               AIOOBE'd in getUV()/tick(); treat it as ascending order. */
+            if (customFrameOrder.length > 0) {
+                mcMeta.setFrames(customFrameOrder);
+            }
         }
 
         return mcMeta;

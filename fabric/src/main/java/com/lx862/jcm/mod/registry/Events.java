@@ -38,7 +38,7 @@ public class Events {
             /* On behalf of MTR Scripting */
             MTRContentScripting.getScriptManager().scriptErrorNotifier.flush();
             JCMScripting.getScriptManager().scriptErrorNotifier.flush();
-            JCMPatchForMTR.cachedRailNodeState.clear();
+            JCMPatchForMTR.clearClientCaches();
         });
 
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerEndClientTick(() -> {
@@ -80,6 +80,17 @@ public class Events {
     }
 
     public static void onClientReloadResource() {
+        /* Yanyang: reset the C++ script runtime BEFORE the JS side re-parses.
+           Without this, F3+T kept every dlopen'd module running (an updated
+           .so with the same script id was silently ignored — the declaration
+           guard in loadManyFromDeclaration is idempotent), SKIPPED/INPUTS
+           entries for removed packs leaked forever, and NativeHost kept
+           model handles that ModelManagerJS.reset() below was about to
+           close — a use-after-free on the render thread for every native
+           draw call after the reload. reload() disposes the modules,
+           clears the per-instance states, draw registries and driver
+           memos, and drops the NativeHost model/texture references first. */
+        com.lx862.jcm.nativeapi.NativeScriptManager.reload();
         JCMScripting.reset();
         MTRContentScripting.reset();
         ModelManagerJS.reset();

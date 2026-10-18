@@ -156,11 +156,17 @@ public final class NativeHost {
             glyphMasks.put(key, mask);
         }
         pixels.order(java.nio.ByteOrder.nativeOrder());
+        /* Direct int[] view of the mask raster: getRGB(gx,gy) per pixel went
+           through the color-model slow path (allocating a per-call int[1] and
+           a bounds check) for every pixel of every glyph blit, every frame.
+           TYPE_INT_ARGB rasters are backed by a DataBufferInt, so the array
+           read is exact. */
+        final int[] maskPixels = ((java.awt.image.DataBufferInt) mask.getRaster().getDataBuffer()).getData();
         for (int gy = 0; gy < size; gy++) {
             if (y + gy < 0 || y + gy >= height) continue;
             for (int gx = 0; gx < size; gx++) {
                 if (x + gx < 0 || x + gx >= width) continue;
-                final int alpha = mask.getRGB(gx, gy) >>> 24;
+                final int alpha = maskPixels[gy * size + gx] >>> 24;
                 if (alpha == 0) continue;
                 final int offset = ((y + gy) * width + x + gx) * 4;
                 final int dst = pixels.getInt(offset);

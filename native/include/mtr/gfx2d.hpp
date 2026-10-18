@@ -222,12 +222,15 @@ public:
         dirty_union(x0, y0, x1 - 1, y1 - 1);
     }
 
-    /* g.drawRoundRect(x, y, w, h, arcW, arcH) with BasicStroke(lw). */
+    /* g.drawRoundRect(x, y, w, h, arcW, arcH) with BasicStroke(lw).
+       Scratch buffers are members: two heap vectors per call per frame in
+       the render path were avoidable allocation churn. */
     void draw_round_rect(double x, double y, double w, double h,
                          double arc_w, double arc_h, double lw) {
-        std::vector<double> xs, ys;
-        append_round_rect_path(xs, ys, x, y, w, h, arc_w, arc_h, 12);
-        stroke_polyline(xs.data(), ys.data(), static_cast<int32_t>(xs.size()), lw);
+        scratch_xs_.clear(); scratch_ys_.clear();
+        append_round_rect_path(scratch_xs_, scratch_ys_, x, y, w, h, arc_w, arc_h, 12);
+        stroke_polyline(scratch_xs_.data(), scratch_ys_.data(),
+                        static_cast<int32_t>(scratch_xs_.size()), lw);
     }
 
     /* g.fillOval */
@@ -291,7 +294,9 @@ public:
     void fill_polygon(const double* xs, const double* ys, int32_t n) {
         if (n < 3) return;
         double min_x = 1e30, min_y = 1e30, max_x = -1e30, max_y = -1e30;
-        std::vector<double> dxs(n), dys(n);
+        scratch_xs_.clear(); scratch_ys_.clear();
+        scratch_xs_.resize(static_cast<size_t>(n)); scratch_ys_.resize(static_cast<size_t>(n));
+        double* dxs = scratch_xs_.data(); double* dys = scratch_ys_.data();
         for (int32_t i = 0; i < n; i++) {
             dxs[i] = xs[i] * sx_; dys[i] = ys[i] * sy_;
             min_x = std::min(min_x, dxs[i]); max_x = std::max(max_x, dxs[i]);
@@ -299,7 +304,8 @@ public:
         }
         const int32_t y0 = std::max(clip_y0_, static_cast<int32_t>(std::floor(min_y)));
         const int32_t y1 = std::min(clip_y1_ - 1, static_cast<int32_t>(std::ceil(max_y)));
-        std::vector<double> xhits;
+        scratch_hits_.clear();
+        std::vector<double>& xhits = scratch_hits_;
         for (int32_t py = y0; py <= y1; py++) {
             const double fy = py + 0.5;
             xhits.clear();
@@ -422,6 +428,8 @@ public:
     }
 
 private:
+    /* Reusable raster scratch (hot path stays allocation-free). */
+    std::vector<double> scratch_xs_, scratch_ys_, scratch_hits_;
     struct Clip { int32_t x0, y0, x1, y1; };
 
     inline void plot(int32_t px, int32_t py) {

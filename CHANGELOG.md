@@ -1,5 +1,125 @@
 # Changelog
 
+## 2.3.0-beta-2.yanyang.3
+
+Full-codebase bug & performance audit (Java + JNI boundary + C++ bridge/SDK),
+fixing everything found — including two bugs that also exist upstream.
+
+### Critical fixes
+
+- **F3+T never reloaded C++ scripts** (`NativeScriptManager.reload()` was
+  dead code — never called from any reload path): updated `.so`/`.dll` files
+  with the same script id were silently ignored, `SKIPPED`/`INPUTS` entries
+  from removed packs leaked forever, and after any resource reload
+  `NativeHost` kept drawing models `ModelManagerJS.reset()` had already
+  freed — a use-after-free on the render thread for every native draw call.
+  Reload now disposes the modules and re-parses both resource managers.
+- **A malformed record could crash the JVM**: the bridge's
+  `patch_frame_handles` walked the module-provided record stream without
+  bounds validation (a bogus `record_count`/`record_size` read/memmoved past
+  the records arena, in bridge code, outside the module crash guard). Every
+  step is now validated against `records_len`, like the Java replay.
+- **One malformed MTR 4 script entry aborted the whole pack**: the
+  vehicle/eyecandy/lift `parseMtrResources` loops had no per-entry try/catch,
+  so a bad entry dropped every remaining script of that kind AND all eyecandy
+  and lift scripts of the pack file. Every loop is now isolated per entry,
+  and `NativeScriptManager.load()` also catches invalid library identifiers
+  (uppercase paths etc.) instead of escaping into the pack parse.
+- **`Text`/`Texture` C++ draws were invisible unless every field was set**:
+  the fluent builders zero-initialised their record and the struct copy in
+  `draw()` clobbered the recorder defaults — unset `color` drew fully
+  transparent, unset `scale` drew zero-size, unset `uv` degenerated the quad,
+  unset `align` centred instead of left-aligning, and the shipped
+  `examples/pids_arrivals.cpp` was affected. Defaults now come from one
+  shared source of truth (`default_text_record`/`default_texture_record`).
+- **Forge: native vehicle scripts captured but never drawn** — the Forge
+  `VehicleResourceMixin` was never updated for the native replay, so
+  `NativeVehicleDriver.invokeCar` never ran there; Forge now shares the
+  Fabric handler.
+- **Forge: rail culling was inverted** (`!shouldSkipCullingTask`) — rails
+  within the culling limit were ALWAYS rendered (occlusion never consulted)
+  and only the oversized case was tested. Also present upstream; now matches
+  the Fabric semantics.
+- **Vehicle record replay had no exception guard**: a truncated/malformed
+  module record escaped the only try/catch in `renderOne` and killed the
+  render thread; it now breaks out of the record walk safely, and a
+  persistent failure enters the same 4-second backoff `NativeContentDriver`
+  has always had (no more per-frame stack traces).
+- **`mtrDispose` received the instance's FIRST frame forever**: with the
+  reusable ABI-9 snapshot buffers the bridge's retained copy never refreshed
+  (address never changed). `nDisposeInstance` now takes the live buffer from
+  the driver, so dispose sees the snapshot the module actually rendered last.
+
+### Rendering & correctness
+
+- Shadow passes (Iris/OptiFine) drove vehicle and lift scripts TWICE per
+  frame — both `RenderVehiclesMixin`/`RenderLiftsMixin` now skip when
+  `MainRenderer` runs its shadow pass.
+- `hideRidingVehicle` now also suppresses the script-drawn PIDS/LCD content
+  of the ridden car (the mtrscripting `VehicleResourceMixin` replay ignored
+  the mtrpatch cancellation).
+- Lift frustum culling no longer freezes a riding player who looks away in
+  third person (`movePlayer` is gated on `shouldRender`; vehicles always had
+  this escape hatch, lifts did not).
+- The rail-node ghost-preview cache no longer serves stale state for broken
+  rails — it only answers when the chunk is actually unloaded.
+- `DepartureTimerRenderer` leaked one matrix-stack entry per frame on each of
+  its three early returns (data lookups moved before the `push()`).
+- `PlayerEntityMixin` (shift-to-sit) now only applies to the LOCAL player —
+  remote players' eye heights used to drop whenever the local player sat.
+- `RenderRailwaySignMixin` no longer overrides the sign text color MTR passed
+  when the JCM `textColor` is unset (`-1` passes the original through).
+- Lift sound positions are floats, not truncated to block corners; JS and
+  native paths now match.
+- `PIDSProjectorRenderer` no longer NPEs on a null player during disconnect.
+- `PIDSManager` no longer NPEs on a pack without a `pids_images` section;
+  `McMeta` no longer NPEs on a missing `animation` object, treats an empty
+  `frames` array as ascending order and defaults a missing frame `index`.
+- `scriptLocationStack` is popped in a finally, so a throwing script no
+  longer corrupts the next script's `idr()`/`include()` base path.
+
+### Performance
+
+- One car-position tree per vehicle per frame, shared by the native and the
+  JS replay paths (previously `getVehicleCarsAndPositions()` was rebuilt per
+  car — a 12-car train paid 2N+1 full tree builds per frame).
+- The frustum culling box is only computed for vehicles that actually have a
+  native script; script-less trains skip it entirely.
+- Zero-allocation one-shot traces: `traceOnce` call sites no longer build
+  reason concats, varargs arrays or whole-module-list copies per frame.
+- `rasterizeText` reads the glyph mask through its `int[]` raster instead of
+  per-pixel `getRGB` color-model calls.
+- gfx2d `draw_round_rect`/`fill_polygon` use reusable scratch buffers
+  instead of per-call `std::vector` heap churn.
+- `SCRIPT_IDS`/`TRACED`/`CAR_POSITIONS` memos are pruned when their vehicle
+  disappears (they used to grow forever); stable temp files per script id
+  instead of one new extraction + `deleteOnExit` registration per reload.
+- Failed native/font/mcmeta loads are negatively cached instead of re-read
+  (and re-logged) on every query; `clearDeadInstance` no longer copies the
+  whole instance map 40x/second when nothing is dead.
+- `NativeApiSession`: cached `JsonParser`, O(1) class whitelist lookup,
+  volatile `scriptInput`/`resourceBase` (read on the background worker),
+  `Throwable` handling so Errors degrade to the JSON error contract.
+- `ComplexModelStorage` dedupes requests, closes the replaced GL model and
+  clears its request list; `RenderDRLAPGDoor` uses constant texture
+  identifiers instead of `String.format` per door per frame.
+- font5x7 now includes lowercase a-z (lowercase letters used to render
+  blank on the hostless bitmap/LCD paths).
+
+### Hardening
+
+- `host_acquire_model`/`host_release_model` cache their `jmethodID`s and
+  null-guard them (a bridge/jar mismatch used to crash the JVM with a null
+  method id); `host_rasterize_text` clears its pending exception;
+  `host_invoke_api` null-checks the API class/method before calling.
+- C++ SDK accessors (`Stop::interchange/exit`, `Exit::destination`,
+  `StopList::at`, `Train::car`, `Train::rail_progress`) bounds-check their
+  indices — one script off-by-one used to read past the snapshot
+  direct-ByteBuffer and SIGSEGV the JVM.
+- `-Wall -Wextra` enabled for GCC/Clang module builds.
+- Vehicle/eyecandy/lift script-entry loops report the failing entry id and
+  skip it, instead of a generic pack-file error.
+
 ## 2.3.0-beta-2.yanyang.2
 
 `minecraft_custom_resources.json` script entries no longer need a `language`

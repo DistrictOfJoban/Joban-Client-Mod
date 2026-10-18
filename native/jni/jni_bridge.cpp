@@ -206,6 +206,8 @@ jmethodID g_mid_upload_pixels = nullptr;
 jmethodID g_mid_rasterize_text = nullptr;
 jmethodID g_mid_measure_font_text = nullptr;
 jmethodID g_mid_draw_font_text = nullptr;
+jmethodID g_mid_acquire_model = nullptr;
+jmethodID g_mid_release_model = nullptr;
 /* java.nio.ByteBuffer position/limit setters for the cached arena views. */
 jclass g_bb_class = nullptr;
 jmethodID g_bb_position = nullptr;
@@ -245,6 +247,8 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
     g_mid_rasterize_text = nullptr;
     g_mid_measure_font_text = nullptr;
     g_mid_draw_font_text = nullptr;
+    g_mid_acquire_model = nullptr;
+    g_mid_release_model = nullptr;
     if (!host) return;
 
     if (!g_api_class) {
@@ -291,6 +295,14 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
             env->GetMethodID(cls, "measureFontText", "([B[BDDD)[D"));
     g_mid_draw_font_text = jni_lookup(env, "NativeHost.drawFontText",
             env->GetMethodID(cls, "drawFontText", "([B[BDDDDDDIIIIILjava/nio/ByteBuffer;II)[I"));
+    /* Model acquire/release used to look these up PER CALL and never checked
+       the result: a null jmethodID reached CallIntMethod/CallVoidMethod and
+       crashed the JVM. Cached here like the other five host methods; a
+       missing method now degrades to "no model" instead. */
+    g_mid_acquire_model = jni_lookup(env, "NativeHost.acquireModel",
+            env->GetMethodID(cls, "acquireModel", "(Ljava/lang/String;)I"));
+    g_mid_release_model = jni_lookup(env, "NativeHost.releaseModel",
+            env->GetMethodID(cls, "releaseModel", "(I)V"));
     env->DeleteLocalRef(cls);
 
     /* A bridge built from a different revision than the jar it ships in makes
@@ -318,6 +330,8 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
         g_mid_rasterize_text = nullptr;
         g_mid_measure_font_text = nullptr;
         g_mid_draw_font_text = nullptr;
+        g_mid_acquire_model = nullptr;
+        g_mid_release_model = nullptr;
     }
     env->ExceptionClear();
 }
@@ -326,12 +340,12 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
 
 int32_t host_acquire_model(void*, const char* path) {
     JNIEnv* env=nullptr;
-    if(!g_vm||!g_host||g_vm->GetEnv(reinterpret_cast<void**>(&env),JNI_VERSION_1_8)!=JNI_OK) return -1;
-    jclass cls=env->GetObjectClass(g_host);
-    jmethodID method=env->GetMethodID(cls,"acquireModel","(Ljava/lang/String;)I");
+    if(!path || !g_vm || !g_host || !g_mid_acquire_model) return -1;
+    if(g_vm->GetEnv(reinterpret_cast<void**>(&env),JNI_VERSION_1_8)!=JNI_OK) return -1;
     jstring name=env->NewStringUTF(path);
-    jint handle=env->CallIntMethod(g_host,method,name);
-    env->DeleteLocalRef(name); env->DeleteLocalRef(cls);
+    if(!name) return -1;
+    jint handle=env->CallIntMethod(g_host,g_mid_acquire_model,name);
+    env->DeleteLocalRef(name);
     if(env->ExceptionCheck()) {env->ExceptionDescribe();env->ExceptionClear();return -1;}
     return handle<0 ? -1 : handle|0x40000000;
 }
@@ -339,10 +353,11 @@ int32_t host_acquire_model(void*, const char* path) {
 void host_release_model(void* user, int32_t slot) {
     if(slot>=0&&(slot&0x40000000)) {
         JNIEnv* env=nullptr;
-        if(g_vm&&g_host&&g_vm->GetEnv(reinterpret_cast<void**>(&env),JNI_VERSION_1_8)==JNI_OK) {
-            jclass cls=env->GetObjectClass(g_host);
-            jmethodID method=env->GetMethodID(cls,"releaseModel","(I)V");
-            env->CallVoidMethod(g_host,method,slot&~0x40000000); env->DeleteLocalRef(cls);
+        if(g_vm&&g_host&&g_mid_release_model&&g_vm->GetEnv(reinterpret_cast<void**>(&env),JNI_VERSION_1_8)==JNI_OK) {
+            env->CallVoidMethod(g_host,g_mid_release_model,slot&~0x40000000);
+            /* A throwing releaseModel must not leave a pending exception for
+               the rest of the frame. */
+            if(env->ExceptionCheck()) {env->ExceptionDescribe();env->ExceptionClear();}
         }
         return;
     }
@@ -387,7 +402,7 @@ int32_t host_rasterize_text(void*, const char* utf8, int32_t len, int32_t x, int
                                           target, out_w, out_h);
     env->DeleteLocalRef(target);
     env->DeleteLocalRef(text);
-    if (env->ExceptionCheck()) { env->ExceptionDescribe(); return -1; }
+    if (env->ExceptionCheck()) { env->ExceptionDescribe(); env->ExceptionClear(); return -1; }
     return result;
 }
 
@@ -470,6 +485,14 @@ int32_t host_acquire_quad_model(void* user, const float* verts, const float* uv,
 const char* host_invoke_api(void* user, const char* request, int32_t length, int32_t* result_length) {
     thread_local std::string result;
     auto& inst = *static_cast<Instance*>(user);
+    /* Jar/bridge mismatch guard: a null g_vm or a failed NativeApiSession
+       lookup used to reach CallStaticObjectMethod with a null class/method
+       and crash the JVM on the first mtr::Api call. */
+    if (!g_vm || !g_api_class || !g_api_invoke || !result_length) {
+        result = "{\"error\":\"native API bridge is not installed\"}";
+        *result_length = static_cast<int32_t>(result.size());
+        return result.data();
+    }
     JNIEnv* env = nullptr;
     bool attached = false;
     if (g_vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) == JNI_EDETACHED) {
@@ -612,12 +635,21 @@ bool resolve_captured_resources(JNIEnv* env, Instance& inst) {
     records in place; the module owns the arena until the next nRender. */
 void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
                          int32_t* kept_records, int32_t* new_records_len) {
-    uint8_t* p = const_cast<uint8_t*>(static_cast<const uint8_t*>(out.records));
+    uint8_t* base = const_cast<uint8_t*>(static_cast<const uint8_t*>(out.records));
+    const uint8_t* end = base + (out.records_len > 0 ? out.records_len : 0);
+    uint8_t* p = base;
     uint8_t* write = p;
     int32_t kept = 0;
+    /* The record stream is module-provided, and this walk runs in BRIDGE code
+       (outside the module's MTR_GUARDED_BODY crash guard): a bogus record_size
+       used to read/memmove past the records arena and SIGSEGV the whole JVM.
+       Validate every step against out.records_len before touching memory,
+       exactly like the Java replay (NativeContentDriver.apply) already did. */
     for (int32_t i = 0; i < out.record_count; i++) {
+        if (p + sizeof(JcmRecordHeader) > end) break;
         const JcmRecordHeader* h = reinterpret_cast<const JcmRecordHeader*>(p);
         const int32_t size = h->record_size;
+        if (size < static_cast<int32_t>(sizeof(JcmRecordHeader)) || p + size > end) break;
         bool keep = true;
 
         if (h->kind == JCM_DRAW_TEXTURE_UPLOAD) {
@@ -886,7 +918,8 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
 /* ------------------------------------------------------------------ */
 
 extern "C" JNIEXPORT void JNICALL
-JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey) {
+JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
+                        jobject snapshotBuf, jint snapshotLen) {
     auto* mod = reinterpret_cast<BridgeModule*>(handle);
     if (!mod || !instanceKey) return;
     const char* key = env->GetStringUTFChars(instanceKey, nullptr);
@@ -896,13 +929,29 @@ JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey)
     env->ReleaseStringUTFChars(instanceKey, key);
     if (it == mod->instances.end()) return;
 
+    /* The driver hands over the LIVE snapshot buffer it rendered this
+       instance with (Java still owns it — dispose runs between frames).
+       The old retained copy stayed at the instance's FIRST frame forever,
+       because the reusable buffers never changed address, so any dispose()
+       that read car count / ids / speed saw garbage. Falls back to the
+       retained copy only when no buffer is passed. */
+    const void* live = nullptr;
+    if (snapshotBuf) {
+        live = env->GetDirectBufferAddress(snapshotBuf);
+        if (snapshotLen < 0) live = nullptr;
+    }
+
     if (it->second.initialized) {
         JcmHostServices host;
         fill_host(host, it->second);
         JcmFrameInput in{};
         in.abi_version = mod->abi();
         in.resource_kind = it->second.resource_kind;
-        in.snapshot = it->second.last_snapshot.data();
+        if (live) {
+            in.snapshot = live;
+        } else {
+            in.snapshot = it->second.last_snapshot.data();
+        }
         in.state = it->second.state.data();
         in.state_size = it->second.state.size();
         in.host = &host;

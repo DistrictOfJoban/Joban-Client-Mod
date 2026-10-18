@@ -31,6 +31,9 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public class RenderLiftsMixin {
     @Inject(method = "render(JLorg/mtr/mapping/holder/Vector3d;)V", at = @At(value = "INVOKE", target = "Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectCollection;forEach(Ljava/util/function/Consumer;)V"))
     private static void jsblock$executeScript(long millisElapsed, Vector3d cameraShakeOffset, CallbackInfo ci) {
+        /* Yanyang: shadow passes re-run RenderLifts.render — drive the scripts
+           exactly once per frame (see RenderVehiclesMixin). */
+        if(com.lx862.jcm.mod.extra.JCMPatchForMTR.isRenderingShadow()) return;
         for(MinecraftClientData.LiftWrapper liftWrapper : MinecraftClientData.getInstance().liftWrapperList.values()) {
             String style = liftWrapper.getLift().getStyle();
 
@@ -80,7 +83,10 @@ public class RenderLiftsMixin {
             ScriptRenderManager scriptRenderManager = ((LiftScriptInstance)scriptInstance).getRenderManager();
             ScriptSoundManager scriptSoundManager = ((LiftScriptInstance)scriptInstance).getSoundManager();
             scriptRenderManager.invoke(world, storedMatrixTransformations.copy(), Direction.NORTH, absolutePositionAndRotation.light);
-            scriptSoundManager.invoke(world, new ScriptVector3f((int)absolutePositionAndRotation.position.x, (int)absolutePositionAndRotation.position.y, (int)absolutePositionAndRotation.position.z));
+            /* Float, not int: the int casts snapped JS lift sound origins to
+               block corners (up to half a block off); the native path already
+               used floats. */
+            scriptSoundManager.invoke(world, new ScriptVector3f((float)absolutePositionAndRotation.position.x, (float)absolutePositionAndRotation.position.y, (float)absolutePositionAndRotation.position.z));
         }
 
         boolean skipBuiltinRenderer = MtrScriptingResourceManager.lift.isScriptControlledRendering(lift.getStyle());

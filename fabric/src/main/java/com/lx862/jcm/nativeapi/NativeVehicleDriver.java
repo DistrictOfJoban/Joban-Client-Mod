@@ -6,6 +6,10 @@ import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptContext;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper;
 import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.mtrscripting.mod.resource.VehicleResourceProvider;
+import org.mtr.core.data.VehicleCar;
+import org.mtr.core.tool.Vector;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.World;
@@ -54,12 +58,44 @@ public final class NativeVehicleDriver {
         final NativeRenderStats perf = new NativeRenderStats();
         int[] cars = new int[0];
         /** Reused per-frame car-index buffer; sized on first use, never per frame. */
-        int[] carScratch = EMPTY_CARS;        long touched = System.nanoTime();
+        int[] carScratch = EMPTY_CARS;
+        /** Backoff after a persistent failure (wrapper build, module render or
+         *  record replay): the script is skipped until this timestamp passes,
+         * mirroring NativeContentDriver's errorUntil — a throwing script must
+         * not re-log its stack trace every frame. */
+        long errorUntilNanos;
+        long touched = System.nanoTime();
 
         State(String vehicleHexId, String scriptId) {
             this.instanceKey = vehicleHexId + "/" + scriptId;
             this.drawKey = vehicleHexId + "\u0000" + scriptId;
         }
+    }
+
+    /** Per-frame car sound positions shared across a vehicle's scripts.
+     * Keyed by hex id, stamped each frame; entries whose vehicle stopped
+     * rendering for 5s are swept by tick() together with the states. */
+    private static final class CarPositions {
+        final float[] xyz = new float[3];
+        int count;
+        long stamp;
+        /** Frame sequence number that last filled this entry. */
+        long frame;
+    }
+
+    private static final Map<String, CarPositions> CAR_POSITIONS =
+            new ConcurrentHashMap<>();
+
+    /** Frame marker: RenderVehiclesMixin.executeScript bumps this once per
+     * rendered frame so both the native and the JS script path compute the
+     * car positions exactly once per vehicle per frame (time-based guards
+     * misfire at 60fps, where consecutive frames are ~16ms apart). */
+    private static final java.util.concurrent.atomic.AtomicLong FRAME_SEQ =
+            new java.util.concurrent.atomic.AtomicLong();
+
+    /** Call once per rendered frame before vehicles iterate. */
+    public static void beginFrame() {
+        FRAME_SEQ.incrementAndGet();
     }
 
     private static final Map<String, State> STATES = new ConcurrentHashMap<>();
@@ -115,6 +151,12 @@ public final class NativeVehicleDriver {
      * One-shot trace, so a "nothing is drawn" report can be answered from the
      * log instead of guessed at. Every early return in the render path routes
      * through here; each distinct reason is reported once per reload.
+     *
+     * <p>Reasons are CONSTANT strings on purpose: call sites guard the call
+     * with {@code !TRACED.contains(CONSTANT)} so neither the reason concat, the
+     * varargs array nor expensive detail args (getModules(), toString of the
+     * skipped map) are built on frames that would not log anyway — that used
+     * to allocate for every scripted vehicle, every car, every frame.
      */
     private static final java.util.Set<String> TRACED =
             java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -124,6 +166,19 @@ public final class NativeVehicleDriver {
             JCMLogger.info("[native vehicle] {} — {}", reason, format(detail));
         }
     }
+
+    /* Trace reasons — constants, see traceOnce javadoc. */
+    private static final String TRACE_NO_CARS = "vehicle has no cars";
+    private static final String TRACE_VEHICLE = "vehicle (first native frame)";
+    private static final String TRACE_NO_CONFIG = "no VehicleScriptConfiguration (first occurrence)";
+    private static final String TRACE_RENDERING = "rendering (first frame)";
+    private static final String TRACE_WAITING_STOPS = "waiting for the full stop list (first occurrence)";
+    private static final String TRACE_NO_FRAME = "produced no frame (first occurrence)";
+    private static final String TRACE_FRAME_APPLIED = "frame applied (first frame)";
+    private static final String TRACE_REPLAYING = "replaying (first frame)";
+    private static final String TRACE_BAD_RECORD = "malformed native record (first occurrence)";
+
+    private static final long FAILURE_BACKOFF_NANOS = 4_000_000_000L;
 
     private static String format(Object... detail) {
         final StringBuilder sb = new StringBuilder();
@@ -225,9 +280,26 @@ public final class NativeVehicleDriver {
         reportCulled();
         final int carCount = vehicle.vehicleExtraData.immutableVehicleCars.size();
         if (carCount <= 0) {
-            traceOnce("vehicle has no cars", vehicle.getHexId());
+            if (!TRACED.contains(TRACE_NO_CARS)) traceOnce(TRACE_NO_CARS, vehicle.getHexId());
             return 0;
         }
+
+        /* Script-id memo FIRST: the frustum box (MTR's whole car-position
+           tree) used to be built for every vehicle in the world before this
+           check, so script-less trains — the vast majority — paid the full
+           culling cost for a render() that would return 0 anyway. */
+        final List<String> ids = scriptIdsOf(vehicle);
+        // Most vehicles in a city use only JS or no script. Avoid logging each
+        // of those as a missing native module; it hides real native failures.
+        // Plain contains-loop first: ArrayList.removeIf allocates an iterator
+        // plus a BitSet on EVERY call, even when nothing is removed (the memo
+        // is already filtered, so the remove is a guaranteed no-op per frame).
+        boolean allLoaded = true;
+        for (int i = 0; i < ids.size(); i++) {
+            if (!NativeScriptManager.isLoaded(ids.get(i))) { allLoaded = false; break; }
+        }
+        if (!allLoaded) ids.removeIf(id -> !NativeScriptManager.isLoaded(id));
+        if (ids.isEmpty()) return 0;
 
         /* Frustum cull before anything expensive: a train outside the camera
            view would otherwise pay a full snapshot marshal plus a whole-canvas
@@ -239,27 +311,78 @@ public final class NativeVehicleDriver {
             CULLED.incrementAndGet();
             return 0;
         }
+        if (!TRACED.contains(TRACE_VEHICLE)) {
+            traceOnce(TRACE_VEHICLE, "id=" + vehicle.getHexId(), "cars=" + carCount,
+                    "scriptIds=" + ids);
+        }
 
-        final List<String> ids = scriptIdsOf(vehicle);
-        // Most vehicles in a city use only JS or no script. Avoid logging each
-        // of those as a missing native module; it hides real native failures.
-        ids.removeIf(id -> !NativeScriptManager.isLoaded(id));
-        if (ids.isEmpty()) return 0;
-        traceOnce("vehicle " + vehicle.getHexId(), "cars=" + carCount, "scriptIds=" + ids,
-                "nativeModules=" + NativeScriptManager.getModules().size());
+        /* One car-position tree per vehicle per frame: invokeCar() used to
+           rebuild MTR's whole getVehicleCarsAndPositions() tree per car
+           (a 12-car train ≈ 1500 full tree builds per second) just to place
+           car sounds. Cache the per-car average bogie position here. */
+        updateCarPositions(vehicle, carCount);
 
         int rendered = 0;
         for (String scriptId : ids) {
-            /* was this id registered as a native (language=cpp) script? */
-            if (NativeScriptManager.getModules(scriptId).isEmpty()) {
-                traceOnce("no native module registered for id '" + scriptId + "'",
-                        "loaded=" + NativeScriptManager.getModules().size(),
-                        "skipped=" + NativeScriptManager.getSkippedScripts());
-                continue;
-            }
+            /* isLoaded() was checked above; NativeScriptManager.renderVehicle
+               itself returns an empty frame list when the id lost its modules
+               (resource reload), so no per-frame module-list copy is needed
+               here — getModules(scriptId) allocated a synchronized copy per
+               script per vehicle per frame just for an emptiness check. */
             rendered += renderOne(vehicle, scriptId, carCount);
         }
         return rendered;
+    }
+
+    /** Average bogie position per car, once per frame per vehicle.
+     * Public: the JS replay path (VehicleResourceMixin) reads the same
+     * positions so neither side rebuilds MTR's car-position tree per car. */
+    public static void computeCarPositions(VehicleExtension vehicle) {
+        final int carCount = vehicle.vehicleExtraData.immutableVehicleCars.size();
+        if (carCount <= 0) return;
+        updateCarPositions(vehicle, carCount);
+    }
+
+    /** Cached per-car sound position for this frame, or null when the vehicle
+     *  was not scripted this frame (sound replay is skipped then). */
+    public static com.lx862.mtrscripting.core.util.ScriptVector3f carSoundPosition(String vehicleHexId, int carNumber) {
+        final CarPositions pos = CAR_POSITIONS.get(vehicleHexId);
+        if (pos == null || carNumber < 0 || carNumber >= pos.count) return null;
+        return new com.lx862.mtrscripting.core.util.ScriptVector3f(
+                pos.xyz[carNumber * 3], pos.xyz[carNumber * 3 + 1], pos.xyz[carNumber * 3 + 2]);
+    }
+
+    private static void updateCarPositions(VehicleExtension vehicle, int carCount) {
+        /* Same-frame guard: render() (native) and executeScript (JS) both call
+         * this per vehicle; the second call within the SAME frame is a no-op. */
+        final long frame = FRAME_SEQ.get();
+        final CarPositions existing = CAR_POSITIONS.get(vehicle.getHexId());
+        if (existing != null && existing.frame == frame) return;
+        CarPositions pos = CAR_POSITIONS.computeIfAbsent(vehicle.getHexId(), k -> new CarPositions());
+        if (pos.xyz.length < carCount * 3) pos.xyz = new float[Math.max(carCount * 3, 12)];
+        final ObjectArrayList<ObjectObjectImmutablePair<VehicleCar, ObjectArrayList<ObjectObjectImmutablePair<Vector, Vector>>>> cars =
+                vehicle.getVehicleCarsAndPositions();
+        for (int car = 0; car < carCount && car < cars.size(); car++) {
+            final ObjectArrayList<ObjectObjectImmutablePair<Vector, Vector>> positions = cars.get(car).right();
+            double x = 0, y = 0, z = 0;
+            int count = 0;
+            if (positions != null) {
+                for (int p = 0; p < positions.size(); p++) {
+                    final ObjectObjectImmutablePair<Vector, Vector> pair = positions.get(p);
+                    if (pair == null) continue;
+                    final Vector left = pair.left();
+                    final Vector right = pair.right();
+                    if (left != null) { x += left.x(); y += left.y(); z += left.z(); count++; }
+                    if (right != null) { x += right.x(); y += right.y(); z += right.z(); count++; }
+                }
+            }
+            pos.xyz[car * 3] = count == 0 ? 0 : (float) (x / count);
+            pos.xyz[car * 3 + 1] = count == 0 ? 0 : (float) (y / count);
+            pos.xyz[car * 3 + 2] = count == 0 ? 0 : (float) (z / count);
+        }
+        pos.count = carCount;
+        pos.stamp = System.nanoTime();
+        pos.frame = frame;
     }
 
     private static List<String> scriptIdsOf(VehicleExtension vehicle) {
@@ -289,17 +412,27 @@ public final class NativeVehicleDriver {
         final VehicleResourceProvider.VehicleScriptConfiguration config =
                 MtrScriptingResourceManager.vehicle.getVehicleScript(scriptId);
         if (config == null) {
-            traceOnce("no VehicleScriptConfiguration for '" + scriptId + "'",
-                    "(the native entry never reached vehicleScripts)");
+            if (!TRACED.contains(TRACE_NO_CONFIG)) {
+                traceOnce(TRACE_NO_CONFIG, "id=" + scriptId,
+                        "(the native entry never reached vehicleScripts)");
+            }
             return 0;
         }
-        traceOnce("rendering '" + scriptId + "'", "dataFetchMode=" + config.dataFetchMode());
+        if (!TRACED.contains(TRACE_RENDERING)) {
+            traceOnce(TRACE_RENDERING, "id=" + scriptId, "dataFetchMode=" + config.dataFetchMode());
+        }
 
         final VehicleScriptContext.DataFetchMode fetchMode = config.dataFetchMode();
         final State state = STATES.computeIfAbsent(
                 key(vehicle.getHexId(), scriptId), k -> new State(vehicle.getHexId(), scriptId));
 
         state.touched = System.nanoTime();
+        /* Backoff after a failure: the wrapper build, module render and replay
+           paths below used to log a full stack trace every frame for a
+           persistent error (a >256KB route overflow, a throwing module), which
+           is both a log-spam and a performance death spiral. Skip the script
+           until the window passes, like NativeContentDriver. */
+        if (state.touched < state.errorUntilNanos) return 0;
         /* Plain loop: IntStream.range().filter().toArray() allocated a stream,
            a lambda and a builder on the render thread every single frame. */
         if (state.carScratch.length < carCount) state.carScratch = new int[carCount];
@@ -312,7 +445,7 @@ public final class NativeVehicleDriver {
             }
         }
         if (!sameCars(state.cars, ownCars, ownCarCount)) {
-            if (state.cars.length != 0) NativeScriptManager.disposeInstance(state.instanceKey, scriptId);
+            if (state.cars.length != 0) NativeScriptManager.disposeVehicleInstance(state.instanceKey, scriptId, state.snapshots);
             state.contexts.clear();
             state.cars = java.util.Arrays.copyOf(ownCars, ownCarCount);
         }
@@ -324,13 +457,16 @@ public final class NativeVehicleDriver {
                getter and made the failing line impossible to find. */
             JCMLogger.error("Native vehicle script failed to build its route data: {}", t.toString());
             JCMLogger.error("  stack:", t);
+            state.errorUntilNanos = state.touched + FAILURE_BACKOFF_NANOS;
             return 0;
         }
         /* Same contract as the JS path: a MANDATORY script does not draw until
            the full stop list arrived (its header would show an empty route). */
         if (fetchMode == VehicleScriptContext.DataFetchMode.MANDATORY
                 && !wrapper.isStopsDataFullyFetched()) {
-            traceOnce("'" + scriptId + "' waiting for the full stop list", "(MANDATORY)");
+            if (!TRACED.contains(TRACE_WAITING_STOPS)) {
+                traceOnce(TRACE_WAITING_STOPS, "id=" + scriptId, "(MANDATORY)");
+            }
             return 0;
         }
 
@@ -346,11 +482,14 @@ public final class NativeVehicleDriver {
         } catch (Throwable t) {
             JCMLogger.error("Native vehicle script {} threw while rendering: {}", scriptId, t.toString());
             JCMLogger.error("  stack:", t);
+            state.errorUntilNanos = state.touched + FAILURE_BACKOFF_NANOS;
             return 0;
         }
         if (frames.isEmpty()) {
-            traceOnce("'" + scriptId + "' produced no frame",
-                    "(both modules returned null — see the bridge log above)");
+            if (!TRACED.contains(TRACE_NO_FRAME)) {
+                traceOnce(TRACE_NO_FRAME, "id=" + scriptId,
+                        "(both modules returned null — see the bridge log above)");
+            }
             return 0;
         }
 
@@ -359,12 +498,24 @@ public final class NativeVehicleDriver {
                 NativeDrawRegistry.begin(state.drawKey, carCount);
 
         int produced = 0;
-        for (NativeScriptManager.NativeFrame frame : frames) {
-            if (applyFrame(frame, managers, state.contexts.get(frame.moduleHandle), wrapper.isClientPlayerRiding(), state.perf)) produced++;
+        try {
+            for (NativeScriptManager.NativeFrame frame : frames) {
+                if (applyFrame(frame, managers, state.contexts.get(frame.moduleHandle), wrapper.isClientPlayerRiding(), state.perf)) produced++;
+            }
+        } catch (Throwable t) {
+            /* A malformed record (or a throwing draw call) must not kill the
+               render thread — NativeContentDriver.run already had exactly this
+               guard with a backoff; the vehicle path did not. */
+            JCMLogger.error("Native vehicle script {} threw while replaying records: {}", scriptId, t.toString());
+            JCMLogger.error("  stack:", t);
+            state.errorUntilNanos = state.touched + FAILURE_BACKOFF_NANOS;
+            NativeDrawRegistry.begin(state.drawKey, carCount);
         }
         state.perf.frame(scriptId, perfBegin, nativeBegin, replayBegin, allocDelta(allocBegin));
-        traceOnce("'" + scriptId + "' frame applied", "modules=" + frames.size(),
-                "withDrawCalls=" + produced, "carCount=" + carCount);
+        if (!TRACED.contains(TRACE_FRAME_APPLIED)) {
+            traceOnce(TRACE_FRAME_APPLIED, "id=" + scriptId, "modules=" + frames.size(),
+                    "withDrawCalls=" + produced, "carCount=" + carCount);
+        }
         return produced;
     }
 
@@ -393,7 +544,15 @@ public final class NativeVehicleDriver {
             final int size = records.getInt(pos + 4);
             if (size < HDR_SIZE || pos + size > limit) break;   /* malformed: stop */
             int minimum = kind==3 ? 24 : (kind==4||kind==5) ? 40 : kind==6 ? 56 : 8;
-            if (size < minimum) throw new IllegalArgumentException("Truncated native vehicle record");
+            if (size < minimum) {
+                /* Malformed module output: stop walking this frame instead of
+                   throwing out of the replay path (which used to escape the
+                   only try/catch in renderOne and kill the render thread). */
+                if (!TRACED.contains(TRACE_BAD_RECORD)) {
+                    traceOnce(TRACE_BAD_RECORD, "kind=" + kind, "size=" + size, "minimum=" + minimum);
+                }
+                break;
+            }
 
             switch (kind) {
                 case KIND_MODEL: {
@@ -414,7 +573,12 @@ public final class NativeVehicleDriver {
                 case 4:
                 case 5: {
                     int offset=records.getInt(pos+32), length=records.getInt(pos+36);
-                    if(offset<0||length<0||(long)offset+length>frame.stringArena.limit()) throw new IllegalArgumentException("Invalid native sound reference");
+                    if(offset<0||length<0||(long)offset+length>frame.stringArena.limit()) {
+                        if (!TRACED.contains(TRACE_BAD_RECORD)) {
+                            traceOnce(TRACE_BAD_RECORD, "sound ref", "offset=" + offset, "length=" + length);
+                        }
+                        break;
+                    }
                     byte[] utf8=new byte[length]; ByteBuffer text=frame.stringArena.duplicate(); text.position(offset); text.get(utf8);
                     org.mtr.mapping.holder.Identifier sound=new org.mtr.mapping.holder.Identifier(new String(utf8,java.nio.charset.StandardCharsets.UTF_8));
                     if(kind==5) { if(riding) context.playAnnSound(sound,records.getFloat(pos+24),records.getFloat(pos+28)); }
@@ -465,20 +629,26 @@ public final class NativeVehicleDriver {
         if (manager == null) return;
         final World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
         if (world == null) return;
-        traceOnce("replaying '" + scriptId + "' car " + carNumber, vehicle.getHexId());
+        if (!TRACED.contains(TRACE_REPLAYING)) traceOnce(TRACE_REPLAYING, "id=" + vehicle.getHexId(), "car=" + carNumber);
         final StoredMatrixTransformations transform = storedMatrixTransformations.copy();
         transform.add(gh -> gh.translate(0, -1, 0));
         manager.invoke(world, transform, Direction.NORTH, light);
         State state=STATES.get(key(vehicle.getHexId(),scriptId));
         if(state!=null) {
-            double x=0,y=0,z=0; int count=0;
-            for(var pair:vehicle.getVehicleCarsAndPositions().get(carNumber).right()) {
-                x+=pair.left().x+pair.right().x; y+=pair.left().y+pair.right().y; z+=pair.left().z+pair.right().z; count+=2;
-            }
-            com.lx862.mtrscripting.core.util.ScriptVector3f pos=new com.lx862.mtrscripting.core.util.ScriptVector3f((float)(x/Math.max(1,count)),(float)(y/Math.max(1,count)),(float)(z/Math.max(1,count)));
+            /* Per-car average bogie position, computed once per frame by
+               render(): this used to rebuild MTR's whole car-position tree
+               (getVehicleCarsAndPositions()) per car per frame — an N-car
+               train paid 2N+1 full tree builds per frame across culling and
+               replay. */
+            final CarPositions pos = CAR_POSITIONS.get(vehicle.getHexId());
+            final com.lx862.mtrscripting.core.util.ScriptVector3f soundPos =
+                    pos != null && carNumber < pos.count
+                            ? new com.lx862.mtrscripting.core.util.ScriptVector3f(
+                                    pos.xyz[carNumber * 3], pos.xyz[carNumber * 3 + 1], pos.xyz[carNumber * 3 + 2])
+                            : null;
             for(VehicleScriptContext ctx:state.contexts.values()) {
                 var render=ctx.getCarRenderManager(carNumber); if(render!=null) render.invoke(world,transform.copy(),Direction.NORTH,light);
-                var sound=ctx.getCarSoundManager(carNumber); if(sound!=null) sound.invoke(world,pos);
+                var sound=ctx.getCarSoundManager(carNumber); if(sound!=null && soundPos != null) sound.invoke(world,soundPos);
             }
         }
     }
@@ -490,8 +660,12 @@ public final class NativeVehicleDriver {
     /** Forget one vehicle+script (script instance dropped, vehicle gone). */
     public static void forget(String vehicleHexId, String scriptId) {
         State state=STATES.remove(key(vehicleHexId, scriptId));
-        if(state!=null) NativeScriptManager.disposeInstance(state.instanceKey,scriptId);
+        if(state!=null) NativeScriptManager.disposeVehicleInstance(state.instanceKey,scriptId,state.snapshots);
         NativeDrawRegistry.remove(vehicleHexId, scriptId);
+        /* The SCRIPT_IDS memo is only ever consumed together with a state;
+           leaving it keyed by hex id forever leaked one entry (plus its car
+           id array and script id list) for every train that ever spawned. */
+        if (STATES.get(key(vehicleHexId, scriptId)) == null) SCRIPT_IDS.remove(vehicleHexId);
     }
 
     /** Drop every per-vehicle state (resource reload). */
@@ -500,6 +674,9 @@ public final class NativeVehicleDriver {
         for(Map.Entry<String,State> entry:STATES.entrySet()) if(now-entry.getValue().touched>5_000_000_000L) {
             String[] identity=entry.getKey().split("\\u0000",2);
             if(identity.length==2) forget(identity[0],identity[1]);
+        }
+        for(Map.Entry<String,CarPositions> entry:CAR_POSITIONS.entrySet()) {
+            if(now-entry.getValue().stamp>5_000_000_000L) CAR_POSITIONS.remove(entry.getKey());
         }
     }
     public static void invokeBogie(VehicleExtension vehicle,String scriptId,int car,int bogie,StoredMatrixTransformations transforms,int light) {
