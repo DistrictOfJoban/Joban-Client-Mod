@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.scripting.pids;
 
+import com.lx862.jcm.mod.util.CachedIdentifiers;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
@@ -14,6 +15,7 @@ import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
 import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.List;
 
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
@@ -34,6 +36,34 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     protected double marqueeDurationOverride;
     protected boolean naturalLight;
 
+    /** Marquee glyph cache: per-character formatted texts and measured
+     *  widths, rebuilt only when the marquee string <i>or its style</i>
+     *  changes (the formatted text embeds fontId/bold/italic, so the cache
+     *  key must cover them — a JS script may legally mutate those on a
+     *  wrapper it holds across frames). The old loop formatted and measured
+     *  EVERY character TWICE per frame (Style + MutableText +
+     *  String.valueOf per char — a 30-char marquee ≈ 120 objects per wrapper
+     *  per frame). */
+    private String jcm$marqueeStr;
+    private Identifier jcm$marqueeFont;
+    private boolean jcm$marqueeBold, jcm$marqueeItalic;
+    private MutableText[] jcm$marqueeTexts = EMPTY_TEXTS;
+    private int[] jcm$marqueeWidths = EMPTY_WIDTHS;
+
+    /** Free-list for the NATIVE replay path only: JS scripts may legally
+     *  hold a TextWrapper across frames, so create() keeps allocating and
+     *  release() ignores instances that never came from createPooled();
+     *  the native record replay (NativeContentDriver.apply) owns its
+     *  wrappers strictly within one frame and recycles them here. */
+    private static final ArrayDeque<TextWrapper> NATIVE_POOL = new ArrayDeque<>();
+    private static final int NATIVE_POOL_CAP = 64;
+    private boolean jcm$nativePooled;
+    private boolean jcm$inPool;
+
+    private static final MutableText[] EMPTY_TEXTS = new MutableText[0];
+    private static final int[] EMPTY_WIDTHS = new int[0];
+    private static final Identifier DEFAULT_FONT = new Identifier(Init.MOD_ID, "mtr");
+
     protected TextWrapper() {
         super(100, 25);
         this.alignment = -1;
@@ -42,7 +72,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         this.marqueeDurationOverride = -1;
         this.marqueeProgressOverride = -1;
         this.renderType = QueuedRenderLayer.TEXT;
-        this.fontId = new Identifier(Init.MOD_ID, "mtr");
+        this.fontId = DEFAULT_FONT;
     }
 
     public static TextWrapper create() {
@@ -51,6 +81,50 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
 
     public static TextWrapper create(String comment) {
         return create();
+    }
+
+    /** Pooled acquisition for the native record replay (see NATIVE_POOL). */
+    static TextWrapper createPooled() {
+        final TextWrapper pooled = NATIVE_POOL.pollFirst();
+        if (pooled != null) {
+            pooled.jcm$inPool = false;
+            pooled.jcm$resetDefaults();
+            return pooled;
+        }
+        final TextWrapper fresh = new TextWrapper();
+        fresh.jcm$nativePooled = true;
+        return fresh;
+    }
+
+    @Override
+    public void release() {
+        if (!this.jcm$nativePooled || this.jcm$inPool) return;
+        this.jcm$inPool = true;
+        if (NATIVE_POOL.size() < NATIVE_POOL_CAP) NATIVE_POOL.offerFirst(this);
+    }
+
+    private void jcm$resetDefaults() {
+        resetDefaults(100, 25);
+        this.textContent = null;
+        this.fontId = DEFAULT_FONT;
+        this.renderType = QueuedRenderLayer.TEXT;
+        this.shadow = false;
+        this.styleItalic = false;
+        this.styleBold = false;
+        this.scale = 1;
+        this.overflowMode = 0;
+        this.alignment = -1;
+        this.color = 0;
+        this.lineHeight = 1;
+        this.marqueeDurationOverride = -1;
+        this.marqueeProgressOverride = -1;
+        this.naturalLight = false;
+        this.jcm$marqueeStr = null;
+        this.jcm$marqueeFont = null;
+        this.jcm$marqueeBold = false;
+        this.jcm$marqueeItalic = false;
+        this.jcm$marqueeTexts = EMPTY_TEXTS;
+        this.jcm$marqueeWidths = EMPTY_WIDTHS;
     }
 
     public TextWrapper text(String str) {
@@ -124,7 +198,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     }
 
     public TextWrapper font(String fontId) {
-        return font(new Identifier(fontId));
+        return font(CachedIdentifiers.of(fontId));
     }
 
     public TextWrapper font(Identifier fontId) {
@@ -240,13 +314,33 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     }
 
     private void drawMarqueeText(GraphicsHolder graphicsHolder, String str, int color, boolean shadow, int light, double durationOverride, double progressOverride) {
-        int[] textWidths = new int[str.length()];
+        /* Glyph cache: format + measure each character once per CONTENT
+         *  or STYLE change instead of twice per frame. */
+        if (this.jcm$marqueeStr == null || !this.jcm$marqueeStr.equals(str)
+                || this.jcm$marqueeTexts.length < str.length()
+                || this.jcm$marqueeFont != this.fontId
+                || this.jcm$marqueeBold != this.styleBold
+                || this.jcm$marqueeItalic != this.styleItalic) {
+            final int len = str.length();
+            this.jcm$marqueeStr = str;
+            this.jcm$marqueeFont = this.fontId;
+            this.jcm$marqueeBold = this.styleBold;
+            this.jcm$marqueeItalic = this.styleItalic;
+            if (this.jcm$marqueeTexts.length < len) {
+                this.jcm$marqueeTexts = new MutableText[len];
+                this.jcm$marqueeWidths = new int[len];
+            }
+            for (int i = 0; i < len; i++) {
+                this.jcm$marqueeTexts[i] = getFormattedText(String.valueOf(str.charAt(i)));
+                this.jcm$marqueeWidths[i] = GraphicsHolder.getTextWidth(this.jcm$marqueeTexts[i]);
+            }
+        }
+        final MutableText[] charTexts = this.jcm$marqueeTexts;
+        final int[] textWidths = this.jcm$marqueeWidths;
+
         /* textWidth accounts for the duration where the text starts to disappear by clipping to the left edge */
         double textWidth = 0;
-        for(int i = 0; i < str.length(); i++) {
-            String st = String.valueOf(str.charAt(i));
-            final MutableText tx = getFormattedText(st);
-            textWidths[i] += GraphicsHolder.getTextWidth(tx);
+        for (int i = 0; i < str.length(); i++) {
             textWidth += textWidths[i];
         }
 
@@ -256,9 +350,8 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         double marqueeProgress = progressOverride != -1 ? progressOverride : (InitClient.getGameTick() % cycleDuration) / cycleDuration;
 
         double wSoFar = w - (fullWidth * marqueeProgress);
-        for(int i = 0; i < str.length(); i++) {
-            String st = String.valueOf(str.charAt(i));
-            final MutableText tx = getFormattedText(st);
+        for (int i = 0; i < str.length(); i++) {
+            final MutableText tx = charTexts[i];
 
             if(wSoFar >= 0 && wSoFar <= this.w) {
                 graphicsHolder.push();

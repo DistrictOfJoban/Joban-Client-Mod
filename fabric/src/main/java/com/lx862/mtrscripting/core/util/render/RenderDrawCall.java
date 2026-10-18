@@ -11,6 +11,19 @@ import org.mtr.mod.render.StoredMatrixTransformations;
 public abstract class RenderDrawCall<T extends RenderDrawCall<?>> implements ScriptResultCall {
     protected StoredMatrixTransformations storedMatrixTransformations;
 
+    /**
+     * Called when this draw call leaves a render manager's queue
+     * (reset, or a capture taking over the list). Default: no-op.
+     *
+     * <p>Implementations that pool their instances (e.g. the native model
+     * draw call) recycle themselves here; releasing twice must be harmless
+     * (guard with a flag). This is what lets the per-frame draw-call churn
+     * drop to zero without changing the capture/replay semantics.
+     */
+    @ApiInternal
+    public void release() {
+    }
+
     public T matrices(@ValueNullable Matrices matrices) {
         if(matrices != null) {
             this.storedMatrixTransformations = matrices.compileStoredMatrixTransformations();

@@ -21,11 +21,14 @@ public class LiftScriptInstance extends ScriptInstance<LiftWrapper> implements S
     }
 
     public void updateRenderer(ScriptRenderManager renderManager) {
-        this.renderManager = renderManager.copy();
+        /* Swap, not copy: the old line allocated a new manager plus a full
+           list copy per scripted lift per frame; the swapped-in list is
+           released back into the draw-call pool on the next capture. */
+        this.renderManager.takeFrom(renderManager);
     }
 
     public void updateSound(ScriptSoundManager soundManager) {
-        this.soundManager = soundManager.copy();
+        this.soundManager.takeFrom(soundManager);
     }
 
     public ScriptSoundManager getSoundManager() {

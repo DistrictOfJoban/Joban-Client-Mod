@@ -15,9 +15,11 @@
 >
 > 详细 C++ SDK 文档见 [`native/README.md`](native/README.md)，完整修改历史见 [CHANGELOG.md](CHANGELOG.md)。
 
-## ✨ 当前版本：2.3.0-beta-2.yanyang.3
+## ✨ 当前版本：2.3.0-beta-2.yanyang.4
 
-**全代码库 bug 与性能审计**（Java + JNI 边界 + C++ 桥接/SDK，yanyang.3）：修复 F3+T 后 C++ 脚本从不重载且渲染线程 use-after-free、模块记录流越界可崩溃 JVM、单个坏脚本条目中断整包解析、C++ `Text`/`Texture` 默认值被清零导致绘制不可见、Forge 端原生车辆脚本只捕获不渲染、Forge 端轨道裁剪逻辑反转（原版上游同样存在）、阴影 pass 脚本双重驱动、骑乘时裁剪冻结玩家、`mtrDispose` 拿到首帧快照等 **7 项关键修复 + 30 余项渲染正确性、性能与加固修复**——详见 [CHANGELOG](CHANGELOG.md)。
+**GC 与稳态分配优化**（yanyang.4，针对周期性瞬时卡顿）：脚本渲染管线（JS + C++）的「捕获→回放」路径不再每帧重建全部 wrapper / 列表 / lambda / 矩阵容器——变换隔离改为标记/截断（`StoredMatrixTransformationsMixin`）取代逐绘制调用 `copy()`；原生绘制调用池化复用；`takeFrom` 零拷贝捕获取代逐车逐脚本整表复制；原生字符串与 `Identifier` 驻留；跑马灯字形缓存；每 pose 一次的 JOML 矩阵分配改为线程复用。多车地图上年轻代分配速率从「每秒数百 KB～MB 级」降到接近零，从根源上消除 GC 周期性停顿导致的掉帧。同时修复了两个过程中发现的正确性隐患：**跨车辆矩阵 arena 别名**（多车共享脚本模块时的回放串车）与 **WeakHashMap 自引用泄漏**（眼糖变换缓存的 lambda 捕获了键对象）——详见 [CHANGELOG](CHANGELOG.md)。
+
+（yanyang.3）**全代码库 bug 与性能审计**（Java + JNI 边界 + C++ 桥接/SDK）：修复 F3+T 后 C++ 脚本从不重载且渲染线程 use-after-free、模块记录流越界可崩溃 JVM、单个坏脚本条目中断整包解析、C++ `Text`/`Texture` 默认值被清零导致绘制不可见、Forge 端原生车辆脚本只捕获不渲染、Forge 端轨道裁剪逻辑反转（原版上游同样存在）、阴影 pass 脚本双重驱动、骑乘时裁剪冻结玩家、`mtrDispose` 拿到首帧快照等 **7 项关键修复 + 30 余项渲染正确性、性能与加固修复**——详见 [CHANGELOG](CHANGELOG.md)。
 
 **原生脚注扩展至 7 个平台**（yanyang.3）：jar 内置的 C++ 桥新增 **Linux ARM64**（树莓派/Asahi 等 ARM 桌面 + Pojav 类 Android 启动器）、**Android**（arm64-v8a，bionic）与 **iOS / iPadOS**（共用 arm64 Mach-O 镜像）三个目录，与原有 windows-x64 / linux-x64 / macos-x64 / macos-arm64 并列。运行时按 `os.name` + `os.arch` 匹配，Linux+aarch64 环境会依次尝试 linux-arm64 → ios-arm64 → android-arm64 镜像（iOS 沙箱内 JVM 会报 `os.name=Linux`），并修复了平台键把 Linux/Windows ARM64 一律归为 `-x64` 的旧 bug。
 

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScriptSoundManager {
-    private final List<SoundCall> soundCalls;
+    private List<SoundCall> soundCalls;
 
     public ScriptSoundManager() {
         this(new ArrayList<>());
@@ -56,10 +56,13 @@ public class ScriptSoundManager {
     }
 
     public void invoke(World world, ScriptVector3f basePos) {
-        List<SoundCall> soundCalls = new ArrayList<>(this.soundCalls);
-
-        for(SoundCall soundCall : soundCalls) {
-            soundCall.run(world, basePos);
+        /* Snapshot-count loop: soundCall.run never queues new sounds into
+         * THIS manager, so the old defensive ArrayList copy per invoke (per
+         * scripted block/lift/car per frame, even when the list was empty)
+         * bought nothing — removed. */
+        final int count = this.soundCalls.size();
+        for(int i = 0; i < count; i++) {
+            this.soundCalls.get(i).run(world, basePos);
         }
         // Unlike render calls, sounds are one-shot, no need to keep them afterwords.
         reset();
@@ -69,11 +72,28 @@ public class ScriptSoundManager {
         return new ScriptSoundManager(new ArrayList<>(this.soundCalls));
     }
 
+    /** Zero-allocation variant of {@link #copy()} for the render-thread
+     *  capture step: swaps the backing lists instead of copying them, so the
+     *  receiver keeps the queued calls and the source walks away with the
+     *  drained list (the caller resets it right after, as before). */
+    public void takeFrom(ScriptSoundManager other) {
+        final List<SoundCall> mine = this.soundCalls;
+        mine.clear();
+        this.soundCalls = other.soundCalls;
+        other.soundCalls = mine;
+    }
+
     public void addCallsFrom(ScriptSoundManager other) {
         this.soundCalls.addAll(other.soundCalls);
     }
 
     public void reset() {
         this.soundCalls.clear();
+    }
+
+    /** True when no sound call is queued — lets the vehicle capture path
+     *  skip the (previously per-frame) empty sound-manager copy entirely. */
+    public boolean isEmpty() {
+        return this.soundCalls.isEmpty();
     }
 }

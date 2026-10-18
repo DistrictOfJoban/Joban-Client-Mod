@@ -1,11 +1,14 @@
 package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.jcm.mod.util.CachedIdentifiers;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mod.render.MainRenderer;
 import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.render.StoredMatrixTransformations;
+
+import java.util.ArrayDeque;
 
 import static com.lx862.jcm.mod.render.RenderHelper.*;
 
@@ -18,6 +21,14 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
     protected float u2;
     protected float v2;
     protected QueuedRenderLayer renderType;
+
+    /** Free-list for the NATIVE replay path only (see TextWrapper.NATIVE_POOL
+     *  for the rationale: JS scripts may hold wrappers across frames, so
+     *  only instances acquired via createPooled are ever recycled). */
+    private static final ArrayDeque<TextureWrapper> NATIVE_POOL = new ArrayDeque<>();
+    private static final int NATIVE_POOL_CAP = 64;
+    private boolean jcm$nativePooled;
+    private boolean jcm$inPool;
 
     protected TextureWrapper() {
         super(20, 20);
@@ -38,8 +49,40 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
         return create();
     }
 
+    /** Pooled acquisition for the native record replay. */
+    static TextureWrapper createPooled() {
+        final TextureWrapper pooled = NATIVE_POOL.pollFirst();
+        if (pooled != null) {
+            pooled.jcm$inPool = false;
+            pooled.jcm$resetDefaults();
+            return pooled;
+        }
+        final TextureWrapper fresh = new TextureWrapper();
+        fresh.jcm$nativePooled = true;
+        return fresh;
+    }
+
+    @Override
+    public void release() {
+        if (!this.jcm$nativePooled || this.jcm$inPool) return;
+        this.jcm$inPool = true;
+        if (NATIVE_POOL.size() < NATIVE_POOL_CAP) NATIVE_POOL.offerFirst(this);
+    }
+
+    private void jcm$resetDefaults() {
+        resetDefaults(20, 20);
+        this.textureId = null;
+        this.color = ARGB_WHITE;
+        this.u1 = 0;
+        this.v1 = 0;
+        this.u2 = 1;
+        this.v2 = 1;
+        this.naturalLight = false;
+        this.renderType = QueuedRenderLayer.LIGHT_2;
+    }
+
     public TextureWrapper texture(String id) {
-        return texture(new Identifier(id));
+        return texture(CachedIdentifiers.of(id));
     }
 
     public TextureWrapper texture(Identifier id) {

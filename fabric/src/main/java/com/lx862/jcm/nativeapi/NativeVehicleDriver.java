@@ -584,8 +584,10 @@ public final class NativeVehicleDriver {
                         }
                         break;
                     }
-                    byte[] utf8=new byte[length]; ByteBuffer text=frame.stringArena.duplicate(); text.position(offset); text.get(utf8);
-                    org.mtr.mapping.holder.Identifier sound=new org.mtr.mapping.holder.Identifier(new String(utf8,java.nio.charset.StandardCharsets.UTF_8));
+                    /* Interned: the same sound id string is emitted every frame —
+                       the old path allocated a fresh byte[] + String + parsed
+                       Identifier per sound record per car per frame. */
+                    org.mtr.mapping.holder.Identifier sound=NativeStringCache.identifier(frame.stringArena,offset,length);
                     if(kind==5) { if(riding) context.playAnnSound(sound,records.getFloat(pos+24),records.getFloat(pos+28)); }
                     else context.playCarSound(sound,records.get(pos+8)&255,records.getFloat(pos+12),records.getFloat(pos+16),records.getFloat(pos+20),records.getFloat(pos+24),records.getFloat(pos+28));
                     any=true;

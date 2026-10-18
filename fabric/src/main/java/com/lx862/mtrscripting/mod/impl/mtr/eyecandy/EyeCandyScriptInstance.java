@@ -23,11 +23,12 @@ public class EyeCandyScriptInstance extends ScriptInstance<EyecandyBlockEntityWr
     }
 
     public void updateRenderer(ScriptRenderManager renderManager) {
-        this.renderManager = renderManager.copy();
+        /* Swap, not copy (see LiftScriptInstance). */
+        this.renderManager.takeFrom(renderManager);
     }
 
     public void updateSound(ScriptSoundManager soundManager) {
-        this.soundManager = soundManager.copy();
+        this.soundManager.takeFrom(soundManager);
     }
 
     public ScriptSoundManager getSoundManager() {

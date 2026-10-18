@@ -27,11 +27,13 @@ public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> implements S
     }
 
     public void saveRenderCalls(ScriptRenderManager renderManager) {
-        this.renderManager = renderManager.copy();
+        /* Swap, not copy: the old line allocated a new manager plus a full
+           list copy per scripted PIDS per frame. */
+        this.renderManager.takeFrom(renderManager);
     }
 
     public void saveSoundCalls(ScriptSoundManager soundManager) {
-        this.soundManager = soundManager.copy();
+        this.soundManager.takeFrom(soundManager);
     }
 
     public ScriptSoundManager getSoundManager() {

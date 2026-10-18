@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.core.util.render;
 
+import com.lx862.jcm.nativeapi.NativeTransformScope;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.Matrices;
@@ -13,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScriptRenderManager {
-    private final List<RenderDrawCall<?>> drawCalls;
+    private List<RenderDrawCall<?>> drawCalls;
 
     @ApiInternal
     public ScriptRenderManager() {
@@ -48,12 +49,34 @@ public class ScriptRenderManager {
         this.draw(drawCall);
     }
 
+    /**
+     * Replays the captured draw calls.
+     *
+     * <p>Zero steady-state allocation: the previous implementation copied the
+     * draw-call list AND gave every draw call its own
+     * {@code storedMatrixTransformations.copy()} so per-call additions could
+     * not leak into the next call — N list copies plus N matrix-holder copies
+     * (each a fresh ObjectArrayList) per car per frame, which is exactly the
+     * periodic-GC-stutter allocation pattern. The copy-free replacement
+     * marks the transform list length, lets each draw call append what it
+     * needs, and truncates back to the mark, restoring identical isolation.
+     *
+     * <p>Draw calls queued DURING replay (re-entrant draw) are not executed
+     * in this pass, matching the old snapshot-copy semantics exactly.
+     */
     @ApiInternal
     public void invoke(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        List<RenderDrawCall<?>> drawCalls = new ArrayList<>(this.drawCalls);
-
-        for(RenderDrawCall<?> drawCall : drawCalls) {
-            drawCall.run(world, storedMatrixTransformations.copy(), facing, light);
+        final int count = this.drawCalls.size();
+        if (count == 0) return;
+        final NativeTransformScope scope = (NativeTransformScope) (Object) storedMatrixTransformations;
+        final int mark = scope.jcm$mark();
+        try {
+            for (int i = 0; i < count; i++) {
+                this.drawCalls.get(i).run(world, storedMatrixTransformations, facing, light);
+                scope.jcm$truncate(mark);
+            }
+        } finally {
+            scope.jcm$truncate(mark);
         }
     }
 
@@ -62,8 +85,36 @@ public class ScriptRenderManager {
         return new ScriptRenderManager(this.drawCalls);
     }
 
+    /**
+     * Takes the captured draw calls out of {@code other} without copying.
+     *
+     * <p>The JS capture path (VehicleScriptCallsHolder.Captured.capture) used
+     * to {@code copy()} every per-car manager per frame — one new manager plus
+     * a full list copy per car per script per frame, only for the copy to be
+     * thrown away after the replay. This swaps the backing lists instead:
+     * this manager keeps the captured calls, the committer keeps this
+     * manager's (released and drained) list. Draw calls implementing
+     * {@link RenderDrawCall#release()} are recycled into their pool here.
+     *
+     * <p>Render-thread only, like every capture/replay call.
+     */
+    @ApiInternal
+    public void takeFrom(ScriptRenderManager other) {
+        final List<RenderDrawCall<?>> mine = this.drawCalls;
+        for (int i = 0; i < mine.size(); i++) {
+            mine.get(i).release();
+        }
+        mine.clear();
+        this.drawCalls = other.drawCalls;
+        other.drawCalls = mine;
+    }
+
     @ApiInternal
     public void reset() {
-        this.drawCalls.clear();
+        final List<RenderDrawCall<?>> calls = this.drawCalls;
+        for (int i = 0; i < calls.size(); i++) {
+            calls.get(i).release();
+        }
+        calls.clear();
     }
 }

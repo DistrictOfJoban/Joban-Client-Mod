@@ -70,7 +70,9 @@ public final class NativeContentDriver {
                 b->NativeContentSnapshot.pids(b,wrapper),()->new PIDSScriptContext(script));
         for(AbstractScriptContext context:state.contexts.values()) {
             PIDSScriptContext ctx=(PIDSScriptContext)context;
-            ctx.getRenderManager().invoke(world,transform.copy(),facing,light);
+            /* No transform.copy(): invoke isolates per-draw-call additions
+               with mark/truncate — one transform serves every context. */
+            ctx.getRenderManager().invoke(world,transform,facing,light);
             ctx.getSoundManager().invoke(world,wrapper.blockPos());
         }
     }
@@ -90,7 +92,8 @@ public final class NativeContentDriver {
                 b->NativeContentSnapshot.eyecandy(b,wrapper,blockUsed),()->new EyeCandyScriptContext(wrapper));
         for(AbstractScriptContext context:state.contexts.values()) {
             EyeCandyScriptContext ctx=(EyeCandyScriptContext)context;
-            ctx.getRenderManager().invoke(world,transform.copy(),facing,wrapper.getFullBrightness()?GraphicsHolderDefaultLight.VALUE:light);
+            /* No transform.copy(): see the PIDS path above. */
+            ctx.getRenderManager().invoke(world,transform,facing,wrapper.getFullBrightness()?GraphicsHolderDefaultLight.VALUE:light);
             ctx.getSoundManager().invoke(world,wrapper.pos());
             ctx.events().handled();
         }
@@ -109,7 +112,10 @@ public final class NativeContentDriver {
         if(state==null) return;
         for(AbstractScriptContext context:state.contexts.values()) {
             LiftScriptContext ctx=(LiftScriptContext)context;
-            ctx.getRenderManager().invoke(world,transform.copy(),Direction.NORTH,light);
+            /* No per-context transform.copy(): the render manager's invoke
+               isolates per-draw-call additions with mark/truncate, so ONE
+               caller-provided transform serves every context. */
+            ctx.getRenderManager().invoke(world,transform,Direction.NORTH,light);
             ctx.getSoundManager().invoke(world,pos);
         }
     }
@@ -154,9 +160,14 @@ public final class NativeContentDriver {
         return ((LiftScriptContext)context).getSoundManager();
     }
     private static String string(ByteBuffer arena,int offset,int length) {
-        if(arena==null||offset<0||length<0||(long)offset+length>arena.limit()) throw new IllegalArgumentException("Invalid native string reference");
-        byte[] bytes=new byte[length]; ByteBuffer src=arena.duplicate(); src.position(offset); src.get(bytes);
-        return new String(bytes,StandardCharsets.UTF_8);
+        /* Interned: C++ scripts emit the same strings every frame — the
+           arena bytes are hashed directly and the decoded String (and any
+           Identifier derived from it) is reused, so a steady frame decodes
+           nothing. */
+        return NativeStringCache.string(arena,offset,length);
+    }
+    private static org.mtr.mapping.holder.Identifier identifier(ByteBuffer arena,int offset,int length) {
+        return NativeStringCache.identifier(arena,offset,length);
     }
     public static void apply(NativeScriptManager.NativeFrame frame,AbstractScriptContext context) {
         NativeHost.get().setActiveInstance(frame.instanceKey);
@@ -172,9 +183,9 @@ public final class NativeContentDriver {
                 call.pose(frame.matrixArena,records.getInt(pos+16),records.getInt(pos+20));
                 renderManager(context).draw(call);
             } else if(kind==4||kind==5) {
-                String id=string(frame.stringArena,records.getInt(pos+32),records.getInt(pos+36));
-                if(kind==5) soundManager(context).playLocalSound(new Identifier(id),records.getFloat(pos+24),records.getFloat(pos+28));
-                else soundManager(context).playSound(new Identifier(id),new ScriptVector3f(records.getFloat(pos+12),records.getFloat(pos+16),records.getFloat(pos+20)),records.getFloat(pos+24),records.getFloat(pos+28));
+                org.mtr.mapping.holder.Identifier id=identifier(frame.stringArena,records.getInt(pos+32),records.getInt(pos+36));
+                if(kind==5) soundManager(context).playLocalSound(id,records.getFloat(pos+24),records.getFloat(pos+28));
+                else soundManager(context).playSound(id,new ScriptVector3f(records.getFloat(pos+12),records.getFloat(pos+16),records.getFloat(pos+20)),records.getFloat(pos+24),records.getFloat(pos+28));
             } else if(kind==6) {
                 long offset=records.getLong(pos+40),length=records.getLong(pos+48);
                 if(frame.pixelArena==null||offset<0||length<0||length>frame.pixelArena.limit()-offset||length>Integer.MAX_VALUE) throw new IllegalArgumentException("Invalid native pixel arena");
@@ -191,7 +202,11 @@ public final class NativeContentDriver {
                 if(records.get(pos+8)!=0) ((EyeCandyScriptContext)context).setCollisionShape(shape);
                 else ((EyeCandyScriptContext)context).setOutlineShape(shape);
             } else if(kind==1&&context instanceof PIDSScriptContext) {
-                TextWrapper call=TextWrapper.create().text(string(frame.stringArena,records.getInt(pos+96),records.getInt(pos+100)))
+                /* Pooled wrapper + interned strings: a native PIDS with a
+                   steady screen used to allocate a full TextWrapper, an
+                   Identifier per font/texture and two Strings per text
+                   record per frame. */
+                TextWrapper call=TextWrapper.createPooled().text(string(frame.stringArena,records.getInt(pos+96),records.getInt(pos+100)))
                     .color(records.getInt(pos+16)).pos(records.getDouble(pos+32),records.getDouble(pos+40))
                     .size(records.getDouble(pos+48),records.getDouble(pos+56)).scale(records.getDouble(pos+64));
                 if(records.get(pos+8)!=0) call.shadowed(); if(records.get(pos+9)!=0) call.bold(); if(records.get(pos+10)!=0) call.italic();
@@ -201,7 +216,7 @@ public final class NativeContentDriver {
                 int z=records.getInt(pos+28); if(z>=0) call.zOrder(z);
                 ((PIDSScriptContext)context).draw(call);
             } else if(kind==2&&context instanceof PIDSScriptContext) {
-                TextureWrapper call=TextureWrapper.create().texture(string(frame.stringArena,records.getInt(pos+68),records.getInt(pos+72)))
+                TextureWrapper call=TextureWrapper.createPooled().texture(identifier(frame.stringArena,records.getInt(pos+68),records.getInt(pos+72)))
                     .color(records.getInt(pos+12)).pos(records.getDouble(pos+16),records.getDouble(pos+24))
                     .size(records.getDouble(pos+32),records.getDouble(pos+40)).uv(records.getFloat(pos+48),records.getFloat(pos+52),records.getFloat(pos+56),records.getFloat(pos+60));
                 int z=records.getInt(pos+64); if(z>=0) call.zOrder(z); ((PIDSScriptContext)context).draw(call);
@@ -219,5 +234,5 @@ public final class NativeContentDriver {
             if(removed&&STATES.remove(state.key,state)) NativeScriptManager.disposeInstance(state.key,state.script,state.snapshot);
         }
     }
-    public static void reset() { STATES.clear(); }
+    public static void reset() { STATES.clear(); NativeStringCache.clear(); com.lx862.jcm.mod.util.CachedIdentifiers.clear(); }
 }

@@ -19,15 +19,43 @@ public abstract class GraphicsHolderMatrixMixin implements NativeMatrixApplier {
 #else
     private PoseStack matrixStack;
 #endif
+
+#if MC_VERSION >= "11903"
+    /* Pooled JOML scratch (render thread): the old path allocated a fresh
+       Matrix4f + Matrix3f per native pose application — per pose per car
+       per frame. Both objects are fully overwritten by set() before every
+       use and only read within this call, so reuse is safe. */
+    private static final ThreadLocal<org.joml.Matrix4f> jcm$ScratchMatrix4f =
+            ThreadLocal.withInitial(org.joml.Matrix4f::new);
+    private static final ThreadLocal<org.joml.Matrix3f> jcm$ScratchMatrix3f =
+            ThreadLocal.withInitial(org.joml.Matrix3f::new);
+#endif
+
+    /* Scratch for the offset pose variant: one small array per render
+       thread, reused every call. */
+    private static final ThreadLocal<float[]> jcm$NativePoseScratch =
+            ThreadLocal.withInitial(() -> new float[16]);
+
+    @Override public void jcm$multiplyNativeMatrix(float[] values, int floatOffset) {
+        final float[] scratch = jcm$NativePoseScratch.get();
+        System.arraycopy(values, floatOffset, scratch, 0, 16);
+        jcm$multiplyNativeMatrix(scratch);
+    }
     @Override public void jcm$multiplyNativeMatrix(float[] values) {
 #if MC_VERSION >= "11903"
-        org.joml.Matrix4f matrix=new org.joml.Matrix4f().set(values);
+        org.joml.Matrix4f matrix=jcm$ScratchMatrix4f.get();
+        matrix.set(values);
+        org.joml.Matrix3f normal=jcm$ScratchMatrix3f.get();
+        normal.set(matrix.m00(),matrix.m01(),matrix.m02(),
+                   matrix.m10(),matrix.m11(),matrix.m12(),
+                   matrix.m20(),matrix.m21(),matrix.m22());
+        normal.invert().transpose();
 #if LOADER == "fabric"
         matrixStack.peek().getPositionMatrix().mul(matrix);
-        matrixStack.peek().getNormalMatrix().mul(new org.joml.Matrix3f(matrix).invert().transpose());
+        matrixStack.peek().getNormalMatrix().mul(normal);
 #else
         matrixStack.last().pose().mul(matrix);
-        matrixStack.last().normal().mul(new org.joml.Matrix3f(matrix).invert().transpose());
+        matrixStack.last().normal().mul(normal);
 #endif
 #else
 #if LOADER == "fabric"

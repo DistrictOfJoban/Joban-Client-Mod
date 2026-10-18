@@ -1,4 +1,23 @@
-JCM Yanyang `2.3.0-beta-2.yanyang.3` — 全代码库 bug 与性能审计（yanyang.3）：7 项关键修复 + 30 余项正确性/性能/加固修复；原生脚本平台矩阵扩展至 **7 个平台**（新增 Linux ARM64、Android、iOS/iPadOS）。本 Release 同时包含 yanyang.1（原版 2.3.0-beta.2 整合）与 yanyang.2（`scriptLocations` 自动语言判定与 JS + C++ 混合条目）。
+JCM Yanyang `2.3.0-beta-2.yanyang.4` — GC 与稳态分配优化（yanyang.4）：脚本渲染管线（JS + C++）的「捕获→回放」稳态分配降至接近零，从根源消除 GC 周期性停顿导致的瞬时卡顿；含 2 项新发现的正确性修复。本 Release 同时包含 yanyang.3（全代码库审计 + 7 平台原生矩阵）、yanyang.1 与 yanyang.2 的全部内容。
+
+**GC / 分配优化 (yanyang.4)**
+
+- 变换隔离零拷贝：`StoredMatrixTransformationsMixin`（新增 mixin，双加载器）暴露 mark/truncate，`ScriptRenderManager.invoke` 不再为每个绘制调用做 `storedMatrixTransformations.copy()`（每车每帧 N 次「新对象 + 新 ObjectArrayList + 全元素拷贝」）；`NativeContentDriver` 的逐上下文 `transform.copy()` 全部移除。
+- 原生绘制调用池化：`NativeModelDrawCall` / `TextWrapper` / `TextureWrapper`（原生记录回放创建的实例）经空闲链表复用，由每帧本就执行的 `reset()`/`takeFrom()` 释放回收；JS 脚本持有的 wrapper 不受影响。
+- 零拷贝捕获 `takeFrom`：`ScriptRenderManager`/`ScriptSoundManager` 交换内部列表取代逐车逐脚本的 `copy()`（`VehicleScriptCallsHolder.Captured.capture`、`PIDSScriptInstance`、`EyeCandyScriptInstance`、`LiftScriptInstance`）；空声音帧不再分配。
+- 矩阵零分配：`NativeModelDrawCall.pose` 在捕获时把姿态矩阵拷入实例私有可增长存储，持久消费者回放时读取——取代每记录 `float[count][16]` + 每 pose lambda + 新 SMT（6 节列车 10 个模型记录 ≈ 60fps 下 460 KB/s 短命数组）；`GraphicsHolderMatrixMixin` 复用渲染线程 JOML `Matrix4f`/`Matrix3f`。
+- 原生字符串与 `Identifier` 驻留（`NativeStringCache` / `CachedIdentifiers`）：C++ 脚本每帧发出的相同字符串/字体 id/声音 id 不再重复解码与解析。
+- 跑马灯字形缓存（`TextWrapper`）：每字符两次「格式化 + 测量」降为内容或样式变化时一次；`PIDSDrawCall` 的位置/层级消费者改为每实例一次分配。
+
+**正确性修复 (yanyang.4)**
+
+- 跨车辆矩阵 arena 别名：C++ 帧的 arena 由模块持有、仅在下一次该模块渲染前有效，而车辆管线先捕获全部再逐车回放——两辆车共享同一脚本模块时回放会读到最后一辆车的矩阵。现捕获时即拷入实例私有存储，结构上不可能串车。
+- WeakHashMap 自引用泄漏（`RenderEyeCandyMixin`，双加载器）：眼糖变换缓存的 lambda 捕获了作为弱键的方块实体，条目永不可回收。现仅捕获基本类型，且位置平移并入缓存，整个基础变换仅在 NBT 变化时重建。
+- 跑马灯缓存补上样式键（font/粗体/斜体）：跨帧持有 wrapper 并改样式的 JS 脚本不再绘制过期格式。
+
+---
+
+**yanyang.3 — 全代码库 bug 与性能审计：7 项关键修复 + 30 余项正确性/性能/加固修复；原生脚本平台矩阵扩展至 7 个平台（新增 Linux ARM64、Android、iOS/iPadOS）。**
 
 **原生平台扩展 / Native platform matrix (yanyang.3)**
 

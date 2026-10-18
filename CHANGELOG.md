@@ -1,5 +1,94 @@
 # Changelog
 
+## 2.3.0-beta-2.yanyang.4
+
+GC & steady-state allocation overhaul of the scripted render pipeline
+(JS + C++). The capture→replay path used to rebuild every wrapper, list,
+lambda and matrix holder per car/block per frame; on a busy map this is
+a constant young-gen churn rate that surfaces as periodic GC stutter
+(every few seconds the whole render thread stops while the collector
+catches up). This release drops the steady-state allocation of the
+scripted render path to approximately zero without changing
+capture/replay semantics.
+
+### Zero-allocation capture & replay
+
+- **Transform isolation without copies** (new
+  `StoredMatrixTransformationsMixin`, both loaders): `ScriptRenderManager.invoke`
+  used to give every draw call its own `storedMatrixTransformations.copy()`
+  (fresh object + fresh `ObjectArrayList` + element copy, per draw call per
+  car per frame) so per-call additions could not leak into the next call.
+  The replacement marks the transform list length, lets each call append
+  what it needs and truncates back to the mark — identical isolation, zero
+  allocation. All `transform.copy()` per-context sites in
+  `NativeContentDriver` (PIDS/eyecandy/lift) were removed accordingly.
+- **Pooled native draw calls**: `NativeModelDrawCall`, `TextWrapper` and
+  `TextureWrapper` instances created by the native record replay are now
+  recycled through free-lists (released by the manager `reset()`/`takeFrom()`
+  that already ran every frame). JS-created wrappers are unaffected — a JS
+  script may legally hold a wrapper across frames, so only instances that
+  came from the pooled constructors ever recycle.
+- **Zero-copy capture** (`takeFrom`): `ScriptRenderManager`/`ScriptSoundManager`
+  swaps backing lists instead of `copy()`-ing them per car per script per
+  frame (`VehicleScriptCallsHolder.Captured.capture`, `PIDSScriptInstance`,
+  `EyeCandyScriptInstance`, `LiftScriptInstance`). The old
+  per-car `new ScriptRenderManager + full list copy` and the per-block
+  defensive sound-list copy are gone; empty sound frames no longer allocate.
+- **Matrix reads without per-pose allocation**: `NativeModelDrawCall.pose`
+  copies the pose matrices into the pooled call's own growable store at
+  capture time, and persistent per-slot consumers read from it at replay
+  time — replacing the per-record `float[count][16]` + per-pose lambda +
+  fresh `StoredMatrixTransformations` (a 6-car train with 10 model records
+  ≈ 460 KB/s of short-lived arrays at 60 fps). `GraphicsHolderMatrixMixin`
+  now also reuses render-thread JOML `Matrix4f`/`Matrix3f` scratch objects
+  instead of allocating a pair per pose application.
+
+### Correctness guards found during the work
+
+- **Cross-vehicle arena aliasing prevented**: the C++ frame arenas are
+  module-owned and only valid until that module's next render call — the
+  vehicle pipeline captures ALL scripted vehicles before any car replays,
+  so two vehicles sharing one script module would overwrite each other's
+  matrices. The matrix store described above is deliberately capture-time
+  copied into instance-private storage, which cannot alias.
+- **WeakHashMap self-reference leak fixed** (`RenderEyeCandyMixin`, both
+  loaders): the per-block transform cache's consumer lambda captured the
+  block entity — which is also the weak map key — making the entry
+  permanently reachable. The cached transform now captures primitives
+  only, and the position translate joined the cached rotation, so the
+  whole base transform for an eyecandy is rebuilt only on NBT changes.
+- **Marquee glyph cache keyed by style as well as content**
+  (`TextWrapper`): the formatted per-character texts embed
+  font/bold/italic, so a JS script mutating those on a wrapper it holds
+  across frames now correctly invalidates the cache instead of drawing
+  stale formatting.
+
+### Per-frame allocation removals
+
+- **Interned native strings & identifiers** (`NativeStringCache`): C++
+  scripts emit the same strings every frame (destination names, font ids,
+  sound ids); the replay used to decode each into a fresh `byte[]` +
+  `String` (+ parsed `Identifier` for ids) per record per frame. The
+  intern table hashes the arena bytes directly and keeps the decoded
+  artifacts alive — a steady frame decodes nothing.
+- **`CachedIdentifiers`**: `TextWrapper.font(String)` /
+  `TextureWrapper.texture(String)` re-parsed the same `Identifier` every
+  frame; now served from a bounded render-thread cache (cleared on reload
+  alongside the string intern table).
+- **Persistent consumers instead of per-run lambdas** (`PIDSDrawCall`):
+  the position and z-offset consumers are allocated once per draw-call
+  instance and read the mutable fields at replay time; the old code
+  allocated a fresh capturing lambda (plus a fresh
+  `StoredMatrixTransformations` for z-ordering) per draw call per frame.
+- **Marquee glyph cache** (`TextWrapper`): each marquee character used to
+  be formatted and measured TWICE per frame (Style + MutableText +
+  `String.valueOf` per char — a 30-char marquee ≈ 120 objects per wrapper
+  per frame); the formatted texts and widths are now cached per
+  content/style and reused.
+- **Iteration hygiene**: vehicle capture/reset loops use entry-set
+  iteration and plain loops instead of per-frame lambda streams
+  (`forEach` with capturing lambdas, `stream().map(...).toList()`).
+
 ## 2.3.0-beta-2.yanyang.3
 
 Full-codebase bug & performance audit (Java + JNI boundary + C++ bridge/SDK),
