@@ -217,8 +217,10 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
                 inputs.property "mc_door_blockstate", project.door_blockstate
                 inputs.property "condition", merged_mc_version >= 12000 ? "any_of" : "alternative"
 
-                // Release builds supply the four JNI bridges produced by CMake.
-                // Each loader jar then works without a manually installed DLL.
+                // Release builds supply the seven JNI bridges produced by CMake
+                // (windows-x64, linux-x64, linux-arm64, macos-x64, macos-arm64,
+                // android-arm64, ios-arm64). Each loader jar then works without
+                // a manually installed library.
                 if (rootProject.hasProperty("native_bridge_dir")) {
                         def bridges = rootProject.file(rootProject.property("native_bridge_dir"))
                         from(bridges) {

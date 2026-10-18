@@ -15,8 +15,8 @@ def verify(path, version=None):
                 assert not any(token.lower() in data for token in forbidden),(path,name)
         for name in required: assert 'com/lx862/jcm/nativeapi/'+name+'.class' in names,(path,name)
         bridges=[name for name in names if name.startswith('assets/jcm/natives/') and name.endswith(('.dll','.so','.dylib'))]
-        assert len(bridges)==4,(path,bridges)
-        assert {name.split('/')[3] for name in bridges}=={'windows-x64','linux-x64','macos-x64','macos-arm64'}
+        assert len(bridges)==7,(path,bridges)
+        assert {name.split('/')[3] for name in bridges}=={'windows-x64','linux-x64','linux-arm64','macos-x64','macos-arm64','android-arm64','ios-arm64'},(path,bridges)
         assert not any(name.startswith('assets/') and name.endswith(('.cpp','.hpp','.so','.dll','.dylib')) and name not in bridges for name in names)
         config=json.loads(jar.read('mtrscripting.mixins.json'))
         for mixin in ['GraphicsHolderMatrixMixin','GlStateTrackerAccessor','RenderEyeCandyMixin','RenderLiftsMixin','RenderVehiclesMixin']:
@@ -27,7 +27,7 @@ def verify(path, version=None):
         metadata=json.loads(jar.read('build_metadata.json'))
         if version: assert metadata['version']==version,(path,metadata)
         assert re.fullmatch(r'1\.(17\.1|18\.2|19\.2|19\.4|20\.1|20\.4)',metadata['minecraftVersion']),metadata
-    return {'jar':path.name,'version':metadata['version'],'minecraft':metadata['minecraftVersion'],'bridges':4,'resource_pack_scan':'passed'}
+    return {'jar':path.name,'version':metadata['version'],'minecraft':metadata['minecraftVersion'],'bridges':7,'resource_pack_scan':'passed'}
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('paths',nargs='+',type=Path);parser.add_argument('--version');args=parser.parse_args()

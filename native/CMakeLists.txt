@@ -24,6 +24,15 @@ function(mtr_add_script name)
     set_target_properties(${name} PROPERTIES PREFIX "" SUFFIX ".dll")
   elseif(APPLE)
     set_target_properties(${name} PROPERTIES PREFIX "lib" SUFFIX ".dylib")
+    # Modules resolve JNI symbols against the embedding JVM at load time.
+    # CMake's Darwin MODULE create flags have historically included
+    # -undefined dynamic_lookup, but some CMAKE_SYSTEM_NAME=iOS combos drop
+    # it — make it explicit so cross builds link the same way as macOS.
+    target_link_options(${name} PRIVATE "-Wl,-undefined,dynamic_lookup")
+  elseif(ANDROID)
+    # 16 KB page alignment: required in Android 15's 16 KB mode and
+    # harmless everywhere else (lld has understood this since NDK r22).
+    target_link_options(${name} PRIVATE "-Wl,-z,max-page-size=16384")
   endif()
 endfunction()
 # Generic SDK examples remain separate from mod resources and jar contents.
@@ -31,6 +40,23 @@ mtr_add_script(pids_arrivals examples/pids_arrivals.cpp)
 mtr_add_script(eyecandy_signal examples/eyecandy_signal.cpp)
 mtr_add_script(lift_indicator examples/lift_indicator.cpp)
 find_package(JNI QUIET)
+if(NOT JNI_FOUND AND ANDROID)
+  # Cross-compile via the NDK toolchain file: the sysroot already ships
+  # jni.h (bionic's JNI headers are the standard contract), and a MODULE
+  # library resolves its JNI symbols against the embedding JVM at load
+  # time, so there is nothing to link here either.
+  set(JNI_FOUND ON)
+  set(JNI_INCLUDE_DIRS "")
+endif()
+if(NOT JNI_FOUND AND CMAKE_SYSTEM_NAME STREQUAL "iOS")
+  # Cross-compile for iOS: no JVM on the target, but the JNI surface is a
+  # stable interface — compile against the HOST JDK's headers (identical
+  # declarations). Pass -DJCM_JNI_INCLUDE_DIR=$JAVA_HOME/include.
+  if(DEFINED JCM_JNI_INCLUDE_DIR AND EXISTS "${JCM_JNI_INCLUDE_DIR}/jni.h")
+    set(JNI_FOUND ON)
+    set(JNI_INCLUDE_DIRS "${JCM_JNI_INCLUDE_DIR}" "${JCM_JNI_INCLUDE_DIR}/darwin")
+  endif()
+endif()
 if(JNI_FOUND)
   mtr_add_script(jcm_native_bridge jni/jni_bridge.cpp)
   target_include_directories(jcm_native_bridge PRIVATE ${JNI_INCLUDE_DIRS})

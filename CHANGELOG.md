@@ -4,6 +4,34 @@
 
 Full-codebase bug & performance audit (Java + JNI boundary + C++ bridge/SDK),
 fixing everything found — including two bugs that also exist upstream.
+Also expands the bundled JNI bridges from four desktop platforms to seven,
+adding Linux ARM64, Android (arm64-v8a) and iOS/iPadOS (arm64 Mach-O).
+
+### Native platform matrix (yanyang.3)
+
+- **New bundled bridges**: `linux-arm64` (native build on GitHub's ARM64
+  runner — covers Raspberry Pi/Asahi desktops AND Pojav-style Android
+  launchers whose glibc JVM reports `os.name=Linux`), `android-arm64`
+  (NDK cross build, bionic, API 21+, 16 KB page-aligned) and `ios-arm64`
+  (Xcode cross build of a Mach-O dylib; iOS and iPadOS share the same
+  arm64 image, side-loaders re-sign it).
+- **Platform-key bug**: `getPlatformKeyExact()`/`resolveNativeLibraryPath()`
+  classified EVERY Linux/Windows host as `-x64` regardless of `os.arch` —
+  Linux ARM64 hosts resolved to the wrong directory and never loaded
+  anything. Both now derive the arch suffix from `os.arch`.
+- **Linux+aarch64 fallback chain**: JVM-on-iOS sandboxes and bionic
+  launchers also report `os.name=Linux`, so when the primary
+  `linux-arm64` (ELF/glibc) image fails to load, the bridge loader and
+  per-script library loader retry the same library from `ios-arm64`
+  (Mach-O `.dylib`) and `android-arm64` — a pack shipping all ARM
+  variants works everywhere without per-platform declarations.
+- CI: the native test harness (`jvm_test.py`) now preprocesses the
+  Manifold `#if MC_VERSION` conditionals out of the shared sources before
+  bare `javac` (the Gradle build runs them through Manifold; the test
+  pipeline did not, which broke all four native jobs), and its
+  `NativeHost` stub gained `acquireModel`/`releaseModel` so the audited
+  model-lifecycle path is actually exercised instead of silently taking
+  the degraded no-bridge path.
 
 ### Critical fixes
 

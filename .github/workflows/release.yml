@@ -44,6 +44,9 @@ jobs:
           - os: ubuntu-22.04
             platform: linux-x64
             java-arch: x64
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+            java-arch: aarch64
           - os: windows-latest
             platform: windows-x64
             java-arch: x64
@@ -55,6 +58,18 @@ jobs:
             platform: macos-arm64
             java-arch: aarch64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+          # Cross builds: the produced image cannot run on the build host,
+          # so the JVM/JNI ctest suite is skipped there (source-level checks
+          # still run on the four native-platform jobs). Compilation itself
+          # still builds every probe and static-assert target.
+          - os: ubuntu-latest
+            platform: android-arm64
+            cross: android
+            cmake-arch: -DCMAKE_ANDROID_ABI=arm64-v8a
+          - os: macos-latest
+            platform: ios-arm64
+            cross: ios
+            cmake-arch: -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
     runs-on: ${{ matrix.os }}
     env:
       NATIVE_TEST_PLATFORM: ${{ matrix.platform }}
@@ -66,16 +81,34 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-          architecture: ${{ matrix.java-arch }}
+          architecture: ${{ matrix.java-arch || 'x64' }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Configure and build CMake targets
         shell: bash
         run: |
-          cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake-arch }}
+          set -euo pipefail
+          if [ "${{ matrix.cross }}" = "android" ]; then
+            # Cross-compile against the bionic sysroot shipped with the
+            # preinstalled NDK (arm64-v8a, Android 5.0+ / API 21).
+            NDK=$(ls -d /usr/local/lib/android/sdk/ndk/* | sort -V | tail -1)
+            echo "Using NDK: $NDK"
+            cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
+              -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 ${{ matrix.cmake-arch }}
+          elif [ "${{ matrix.cross }}" = "ios" ]; then
+            # Cross-compile a Mach-O arm64 dylib against the iPhoneOS SDK.
+            # jni.h comes from the host JDK (the JNI interface is identical);
+            # side-loaders re-sign the image, so no signing identity here.
+            cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release \
+              -DJCM_JNI_INCLUDE_DIR="$JAVA_HOME/include" ${{ matrix.cmake-arch }}
+          else
+            cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake-arch }}
+          fi
           cmake --build native/build --config Release --parallel 4
       - name: Verify scripts, ABI layout and real JVM JNI integration
+        if: matrix.cross == ''
         run: ctest --test-dir native/build -C Release --output-on-failure
       - name: Collect bridge and generic example libraries
         shell: bash
@@ -117,7 +150,7 @@ jobs:
           pattern: native-*
           path: native-dist
           merge-multiple: true
-      - name: Build both loaders with all four JNI bridges
+      - name: Build both loaders with all seven JNI bridges
         run: |
           chmod +x ./gradlew
           ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}" --console=plain

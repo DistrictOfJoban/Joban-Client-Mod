@@ -1,7 +1,42 @@
 """Production manager/API bridge through actual JNI; Minecraft services are fixtures."""
-import argparse, hashlib, os, platform, shutil, subprocess, urllib.request
+import argparse, hashlib, os, platform, re, shutil, subprocess, urllib.request
 from content_fixtures import STUBS as CONTENT_STUBS
 from pathlib import Path
+
+# Manifold preprocessor subset: the shared nativeapi sources use conditional
+# compilation (e.g. NativeApiSession picks a Gson API by MC version), and the
+# Gradle build runs them through systems.manifold:manifold-preprocessor. This
+# bare-javac harness reproduces the same #if/#else/#endif semantics so the
+# sources under test are byte-identical to what the mod actually ships.
+MANIFOLD_MACROS = {
+    'MC_VERSION': os.environ.get('JVM_TEST_MC_VERSION', '12004'),
+    'LOADER': os.environ.get('JVM_TEST_LOADER', 'fabric'),
+}
+_COND_RE = re.compile(r'(\w+)\s*(<=|>=|==|!=|<|>)\s*"([A-Za-z0-9_.]+)"\s*$')
+
+def _manifold_cond(expr):
+    m=_COND_RE.match(expr.strip())
+    if not m: raise ValueError('jvm_test supports only MACRO OP "literal" conditions, got: '+expr)
+    name,op,lit=m.groups()
+    val=MANIFOLD_MACROS[name]
+    # Manifold compares same-kind values; numeric for zero-padded version keys
+    a,b=(int(val),int(lit)) if val.isdigit() and lit.isdigit() else (val,lit)
+    return {'<=':a<=b,'>=':a>=b,'==':a==b,'!=':a!=b,'<':a<b,'>':a>b}[op]
+
+def manifold_preprocess(text):
+    out=[];stack=[]
+    for line in text.splitlines(keepends=True):
+        m=re.match(r'\s*#(if|else|endif)\b(.*)',line)
+        if m:
+            kw,rest=m.group(1),m.group(2)
+            if kw=='if': stack.append(_manifold_cond(rest))
+            elif kw=='else': stack[-1]=not stack[-1]
+            else: stack.pop()
+            continue
+        if all(stack): out.append(line)
+    if stack: raise ValueError('unbalanced #if/#endif')
+    return ''.join(out)
+
 STUBS = {
  'com/lx862/mtrscripting/core/util/TimingJS.java': 'package com.lx862.mtrscripting.core.util; public class TimingJS { public static double globalElapsed(){return System.nanoTime()/1e9;} }',
  'com/lx862/jcm/mod/util/JCMLogger.java': 'package com.lx862.jcm.mod.util; public class JCMLogger { public static void info(String s,Object... a) {} public static void warn(String s,Object... a) {System.out.println(s);} public static void error(String s,Object... a) {throw new AssertionError(s+java.util.Arrays.toString(a));} public static void debug(String s,Object... a) {} }',
@@ -18,6 +53,7 @@ STUBS = {
  public class NativeHost {
   private static final NativeHost INSTANCE=new NativeHost(); public static NativeHost get(){return INSTANCE;}
   public void reset(){} public void setPendingInstance(String key){} public void releaseInstance(String key){}
+  public int acquireModel(String path){return 0;} public void releaseModel(int handle){}
   public int[] createResources(int[] widths,int[] heights,float[] vertices,float[] uv,int[] slots,int[] stages){return new int[slots.length];}
   public void uploadPixels(int handle,int x,int y,int w,int h,byte[] pixels){}
   public int rasterizeText(byte[] text,int x,int y,int width,int r,int g,int b,java.nio.ByteBuffer data,int w,int h){return -1;}
@@ -36,14 +72,20 @@ def main():
  STUBS.update(CONTENT_STUBS)
  for path,content in STUBS.items():
   f=work/'src'/path;f.parent.mkdir(parents=True,exist_ok=True);f.write_text(content,encoding='utf-8');sources.append(f)
- base=repo/'fabric/src/main/java/com/lx862/jcm/nativeapi'
- sources += [base/'NativeScriptManager.java',base/'NativeApiSession.java',base/'NativeContentSnapshot.java',Path(__file__).with_name('jvm')/'NativeIntegrationTest.java']
+ base=repo/'fabric/src/main/java'
+ for rel in ['com/lx862/jcm/nativeapi/NativeScriptManager.java','com/lx862/jcm/nativeapi/NativeApiSession.java','com/lx862/jcm/nativeapi/NativeContentSnapshot.java']:
+  f=work/'src'/rel;f.parent.mkdir(parents=True,exist_ok=True)
+  f.write_text(manifold_preprocess((base/rel).read_text(encoding='utf-8')),encoding='utf-8');sources.append(f)
+ test=work/'src/com/lx862/jcm/nativeapi/NativeIntegrationTest.java'
+ test.parent.mkdir(parents=True,exist_ok=True)
+ test.write_text(manifold_preprocess((Path(__file__).with_name('jvm')
+  /'NativeIntegrationTest.java').read_text(encoding='utf-8')),encoding='utf-8');sources.append(test)
  classes=work/'classes'; classes.mkdir(exist_ok=True)
  def tool(name): return str(Path(os.environ['JAVA_HOME'])/'bin'/(name+('.exe' if os.name=='nt' else ''))) if os.environ.get('JAVA_HOME') else name
  argfile=work/'sources.txt';argfile.write_text('\n'.join('"'+str(s).replace('\\','/')+'"' for s in sources),encoding='utf-8')
  subprocess.run([tool('javac'),'-encoding','UTF-8','-cp',str(gson),'-d',str(classes),'@'+str(argfile)],check=True)
  libs=build/'Release' if (build/'Release').is_dir() else build
- key=os.environ.get('NATIVE_TEST_PLATFORM') or ('windows-x64' if os.name=='nt' else ('macos-'+('arm64' if platform.machine()=='arm64' else 'x64') if platform.system()=='Darwin' else 'linux-x64'))
+ key=os.environ.get('NATIVE_TEST_PLATFORM') or ('windows-x64' if os.name=='nt' else ('macos-'+('arm64' if platform.machine()=='arm64' else 'x64') if platform.system()=='Darwin' else 'linux-'+('arm64' if platform.machine() in ('aarch64','arm64') else 'x64')))
  bridge='jcm_native_bridge.dll' if os.name=='nt' else 'libjcm_native_bridge.'+('dylib' if platform.system()=='Darwin' else 'so')
  target=classes/'assets/jcm/natives'/key/bridge;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(libs/bridge,target)
  subprocess.run([tool('java'),'-Djava.awt.headless=true','-cp',str(classes)+os.pathsep+str(gson),'com.lx862.jcm.nativeapi.NativeIntegrationTest',str(libs)],check=True)

@@ -19,6 +19,8 @@
 
 **全代码库 bug 与性能审计**（Java + JNI 边界 + C++ 桥接/SDK，yanyang.3）：修复 F3+T 后 C++ 脚本从不重载且渲染线程 use-after-free、模块记录流越界可崩溃 JVM、单个坏脚本条目中断整包解析、C++ `Text`/`Texture` 默认值被清零导致绘制不可见、Forge 端原生车辆脚本只捕获不渲染、Forge 端轨道裁剪逻辑反转（原版上游同样存在）、阴影 pass 脚本双重驱动、骑乘时裁剪冻结玩家、`mtrDispose` 拿到首帧快照等 **7 项关键修复 + 30 余项渲染正确性、性能与加固修复**——详见 [CHANGELOG](CHANGELOG.md)。
 
+**原生脚注扩展至 7 个平台**（yanyang.3）：jar 内置的 C++ 桥新增 **Linux ARM64**（树莓派/Asahi 等 ARM 桌面 + Pojav 类 Android 启动器）、**Android**（arm64-v8a，bionic）与 **iOS / iPadOS**（共用 arm64 Mach-O 镜像）三个目录，与原有 windows-x64 / linux-x64 / macos-x64 / macos-arm64 并列。运行时按 `os.name` + `os.arch` 匹配，Linux+aarch64 环境会依次尝试 linux-arm64 → ios-arm64 → android-arm64 镜像（iOS 沙箱内 JVM 会报 `os.name=Linux`），并修复了平台键把 Linux/Windows ARM64 一律归为 `-x64` 的旧 bug。
+
 （yanyang.2）`minecraft_custom_resources.json` 的脚本条目**不再需要 `language` 字段**：`scriptLocations` 中的每个路径由模组自动判断语言，且**同一条目可同时混用任意数量的 JavaScript 与 C++ 脚本**——vehicle / lift / eyecandy / pids 四类脚本全部支持。
 
 ```json
@@ -42,7 +44,7 @@
 | `scriptLocations` 条目 | 判定结果 |
 | --- | --- |
 | `…​/main.js`（大小写不敏感） | JavaScript |
-| `mtr:my_pack/natives/sp1900_train_num`（无扩展名） | **C++ 平台无关 stem** → 各平台自动解析为 `natives/linux-x64/lib…​.so`、`natives/windows-x64/….dll`、`natives/macos-arm64/lib….dylib` |
+| `mtr:my_pack/natives/sp1900_train_num`（无扩展名） | **C++ 平台无关 stem** → 各平台自动解析为 `natives/linux-x64/lib…​.so`、`natives/linux-arm64/lib…​.so`、`natives/windows-x64/….dll`、`natives/macos-arm64/lib….dylib`、`natives/ios-arm64/lib….dylib` 等（ARM64 Linux 环境自动追加 ios-arm64 / android-arm64 候选） |
 | `…​/libfoo.so` / `…​.dll` / `…​.dylib` | C++ 完整路径（绑定对应平台，其它平台跳过） |
 | `{"windows": …, "linux": …, "macos": …}` | C++ 按平台映射表（支持 `macos-arm64` 等精确键） |
 
@@ -69,7 +71,7 @@
 - **ABI 版本协商**：宿主 ABI 9；ABI 6/7/8 模块按各自原始布局继续加载（按 ABI 分组快照），老资源包无需重编译；
 - **`getTransportType()` / `getTransportMode()`**（C++：`mtr::Train`、`mtr::Stop::Interchange`）：原生读取（无 Java 回调），可识别 MAGIC MTR Addon 线路类型；
 - 每模块 1 MB 起步、按需增长的像素 arena；崩溃防护（`crash_guard`）与渲染错误 4 秒熔断；
-- [native SDK](native/README.md)：头文件 + 构建脚本 + 三个示例模块（车辆/电梯/PIDS/eyecandy）× 4 平台预编译库，随 Release 以 zip 附带。
+- [native SDK](native/README.md)：头文件 + 构建脚本 + 三个示例模块（车辆/电梯/PIDS/eyecandy）× 7 平台预编译库，随 Release 以 zip 附带。
 
 ### 3. 脚本 API（JS / Java 侧）
 
@@ -94,8 +96,8 @@
 
 ### 6. 构建与发布体系
 
-- 单一源码构建 **12 个 jar**（6 个 MC 版本 1.17.1 / 1.18.2 / 1.19.2 / 1.19.4 / 1.20.1 / 1.20.4 × Fabric / Forge），每个 jar 内置 4 个桌面平台的 JNI bridge（`assets/jcm/natives/<platform>/`），用户无需手动安装 DLL；
-- CI（`build.yml`）：每次 push 在 6 个 MC 版本上验证编译；`release.yml`：4 平台 CTest → 12 jar 构建 → `verify_jar.py` + `checkNativeBridges` 资产校验 → 发布 Release（含 native SDK zip）；
+- 单一源码构建 **12 个 jar**（6 个 MC 版本 1.17.1 / 1.18.2 / 1.19.2 / 1.19.4 / 1.20.1 / 1.20.4 × Fabric / Forge），每个 jar 内置 7 个平台的 JNI bridge（`assets/jcm/natives/<platform>/`：windows-x64、linux-x64、linux-arm64、macos-x64、macos-arm64、android-arm64、ios-arm64），用户无需手动安装 DLL；
+- CI（`build.yml`）：每次 push 在 6 个 MC 版本上验证编译；`release.yml`：5 平台原生 CTest（x64/ARM64 Linux、Windows、Intel/Apple macOS）+ 2 个交叉编译（Android NDK arm64-v8a、iOS arm64 Mach-O）→ 12 jar 构建 → `verify_jar.py` + `checkNativeBridges` 资产校验 → 发布 Release（含 native SDK zip）；
 - 原生测试：`native/bench` 下 45 项 JVM 集成检查（真实 OpenJDK 21 JNI bridge）、ABI 布局回归、API 覆盖率探针。
 
 ## 📦 下载与安装
@@ -113,7 +115,7 @@
 
 **前置**：[Minecraft Transit Railway 4.0.5](https://modrinth.com/mod/minecraft-transit-railway) + Fabric API（Fabric 端）。
 
-> 想开发 C++ 脚本？下载 Release 附带的 **`jcm-native-sdk-<版本>.zip`**（含 SDK 头文件、构建脚本、示例模块的四平台预编译库），并阅读 [`native/README.md`](native/README.md)。
+> 想开发 C++ 脚本？下载 Release 附带的 **`jcm-native-sdk-<版本>.zip`**（含 SDK 头文件、构建脚本、示例模块的七平台预编译库），并阅读 [`native/README.md`](native/README.md)。
 
 ## 🔧 C++ 脚本架构与跨平台
 

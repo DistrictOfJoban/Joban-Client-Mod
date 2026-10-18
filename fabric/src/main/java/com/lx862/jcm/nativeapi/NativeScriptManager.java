@@ -176,16 +176,24 @@ public final class NativeScriptManager {
     }
 
     /**
-     * Arch-specific platform key: "windows-x64" | "linux-x64" |
-     * "macos-x64" | "macos-arm64". Matches the directory convention
-     * used by resolveNativeLibraryPath and resource packs.
+     * Arch-specific platform key: "windows-x64" | "windows-arm64" |
+     * "linux-x64" | "linux-arm64" | "macos-x64" | "macos-arm64".
+     * Matches the directory convention used by resolveNativeLibraryPath,
+     * resource packs and the bundled bridges under assets/jcm/natives.
+     *
+     * Linux+aarch64 covers desktop ARM (Raspberry Pi/Asahi), Pojav-style
+     * Android launchers (glibc JVM reports os.name=Linux) and JVM-on-iOS
+     * sandboxes — those two resolve their real image via the sibling
+     * fallback in loadBridge()/siblingLibraryCandidates().
      */
     public static String getPlatformKeyExact() {
         final String arch = System.getProperty("os.arch", "").toLowerCase(Locale.ROOT);
-        if (getPlatformKey().equals("macos")) {
-            return arch.contains("aarch64") || arch.contains("arm64") ? "macos-arm64" : "macos-x64";
+        final boolean arm = arch.contains("aarch64") || arch.contains("arm64");
+        final String os = getPlatformKey();
+        if (os.equals("macos")) {
+            return arm ? "macos-arm64" : "macos-x64";
         }
-        return getPlatformKey() + "-x64";
+        return os + (arm ? "-arm64" : "-x64");
     }
 
     /** Human-readable OS description for log/overlay messages. */
@@ -350,14 +358,37 @@ public final class NativeScriptManager {
             skipScript(scriptId, declared);
             return null;
         }
-        final NativeScriptModule module = load(scriptId, resolved);
-        if (module == null) {
-            /* load() already logged the concrete failure (missing
-               file / ABI mismatch); keep it visible in the debug
-               overlay too. */
-            SKIPPED.put(scriptId, "failed to load " + resolved + " (see latest.log)");
+        for (String candidate : siblingLibraryCandidates(resolved)) {
+            final NativeScriptModule module = load(scriptId, candidate);
+            if (module != null) {
+                return module;
+            }
         }
-        return module;
+        /* load() already logged the concrete failure (missing
+           file / ABI mismatch); keep it visible in the debug
+           overlay too. */
+        SKIPPED.put(scriptId, "failed to load " + resolved + " (see latest.log)");
+        return null;
+    }
+
+    /** Sibling-platform retry list for a resolved library path.
+     *
+     * Linux+aarch64 hosts may not actually be glibc Linux: JVM-on-iOS
+     * sandboxes and some launchers report os.name=Linux while their
+     * dynamic loader wants a Mach-O/bionic image. When the primary
+     * linux-arm64 library fails to load, retry the same library from
+     * the ios-arm64 (.dylib) and android-arm64 directories so a pack
+     * that ships all ARM variants works everywhere without per-platform
+     * declarations. Every other platform resolves to just itself. */
+    private static List<String> siblingLibraryCandidates(String resolved) {
+        if (!resolved.contains("/linux-arm64/") || !getPlatformKeyExact().equals("linux-arm64")) {
+            return Collections.singletonList(resolved);
+        }
+        final List<String> out = new ArrayList<>(3);
+        out.add(resolved);
+        out.add(resolved.replace("/linux-arm64/", "/ios-arm64/").replaceAll("\\.so$", ".dylib"));
+        out.add(resolved.replace("/linux-arm64/", "/android-arm64/"));
+        return out;
     }
 
     /**
@@ -417,7 +448,12 @@ public final class NativeScriptManager {
                 failed.add(String.valueOf(entry));
                 continue;
             }
-            if (load(scriptId, resolved) != null) {
+            NativeScriptModule module = null;
+            for (String candidate : siblingLibraryCandidates(resolved)) {
+                module = load(scriptId, candidate);
+                if (module != null) break;
+            }
+            if (module != null) {
                 loaded++;
             } else {
                 failed.add(resolved);
@@ -561,15 +597,16 @@ public final class NativeScriptManager {
         }
         final String os = System.getProperty("os.name", "").toLowerCase();
         final String arch = System.getProperty("os.arch", "");
+        final boolean arm = arch.contains("aarch64") || arch.contains("arm64");
         final String osDir;
         final String ext;
         final String prefix;
-        if (os.contains("win")) { osDir = "windows-x64"; ext = ".dll"; prefix = ""; }
+        if (os.contains("win")) { osDir = arm ? "windows-arm64" : "windows-x64"; ext = ".dll"; prefix = ""; }
         else if (os.contains("mac") || os.contains("darwin")) {
-            osDir = "aarch64".equals(arch) ? "macos-arm64" : "macos-x64";
+            osDir = arm ? "macos-arm64" : "macos-x64";
             ext = ".dylib"; prefix = "lib";
         }
-        else { osDir = "linux-x64"; ext = ".so"; prefix = "lib"; }
+        else { osDir = arm ? "linux-arm64" : "linux-x64"; ext = ".so"; prefix = "lib"; }
         final int colon = declared.indexOf(':');
         final String ns = colon >= 0 ? declared.substring(0, colon) : "minecraft";
         final String base = colon >= 0 ? declared.substring(colon + 1) : declared;
@@ -888,6 +925,35 @@ public final class NativeScriptManager {
          * loads, the bridge is reported unavailable, and load() returns
          * null with a single actionable log line.
          */
+        /** Bundled bridge search list: {platformDir, fileName} pairs in
+         *  priority order. The first entry matches the native platform;
+         *  Linux aarch64 additionally retries ios-arm64 (Mach-O) and
+         *  android-arm64 (bionic) because JVM-on-iOS / Android launchers
+         *  report os.name=Linux while their dynamic loader needs a
+         *  different image format than glibc's ELF. (Declared BEFORE
+         *  BRIDGE_AVAILABLE: static initializers run in declaration
+         *  order and loadBridge() reads this list.) */
+        private static final List<String[]> BRIDGE_SEARCH = buildBridgeSearch();
+
+        private static List<String[]> buildBridgeSearch() {
+            final String arch = System.getProperty("os.arch", "").toLowerCase(Locale.ROOT);
+            final boolean arm = arch.contains("aarch64") || arch.contains("arm64");
+            final String os = getPlatformKey();
+            final List<String[]> out = new ArrayList<>(3);
+            if (os.equals("windows")) {
+                out.add(new String[]{"windows-x64", "jcm_native_bridge.dll"});
+            } else if (os.equals("macos")) {
+                out.add(new String[]{arm ? "macos-arm64" : "macos-x64", "libjcm_native_bridge.dylib"});
+            } else if (arm) {
+                out.add(new String[]{"linux-arm64", "libjcm_native_bridge.so"});
+                out.add(new String[]{"ios-arm64", "libjcm_native_bridge.dylib"});
+                out.add(new String[]{"android-arm64", "libjcm_native_bridge.so"});
+            } else {
+                out.add(new String[]{"linux-x64", "libjcm_native_bridge.so"});
+            }
+            return Collections.unmodifiableList(out);
+        }
+
         private static final boolean BRIDGE_AVAILABLE = loadBridge();
 
         /**
@@ -910,19 +976,23 @@ public final class NativeScriptManager {
          * {@code mods/.fabric/} nested ones.
          */
         private static boolean loadBridge() {
-            final String bundled = "/assets/jcm/natives/" + getPlatformKeyExact() + "/" + bridgeFileName();
-            try (java.io.InputStream stream = NativeScriptManager.class.getResourceAsStream(bundled)) {
-                if (stream != null) {
-                    final String suffix = bridgeFileName().substring(bridgeFileName().lastIndexOf('.'));
-                    final Path extracted = Files.createTempFile("jcm_native_bridge_", suffix);
-                    extracted.toFile().deleteOnExit();
-                    Files.copy(stream, extracted, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                    System.load(extracted.toAbsolutePath().toString());
-                    JCMLogger.info("Native scripting bridge loaded from bundled {}", bundled);
-                    return installBridgeHost();
+            for (final String[] candidate : BRIDGE_SEARCH) {
+                final String dir = candidate[0];
+                final String fileName = candidate[1];
+                final String bundled = "/assets/jcm/natives/" + dir + "/" + fileName;
+                try (java.io.InputStream stream = NativeScriptManager.class.getResourceAsStream(bundled)) {
+                    if (stream != null) {
+                        final String suffix = fileName.substring(fileName.lastIndexOf('.'));
+                        final Path extracted = Files.createTempFile("jcm_native_bridge_", suffix);
+                        extracted.toFile().deleteOnExit();
+                        Files.copy(stream, extracted, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        System.load(extracted.toAbsolutePath().toString());
+                        JCMLogger.info("Native scripting bridge loaded from bundled {}", bundled);
+                        return installBridgeHost();
+                    }
+                } catch (IOException | UnsatisfiedLinkError e) {
+                    JCMLogger.warn("Bundled native scripting bridge {} failed to load: {}", bundled, e.toString());
                 }
-            } catch (IOException | UnsatisfiedLinkError e) {
-                JCMLogger.warn("Bundled native scripting bridge {} failed to load: {}", bundled, e.toString());
             }
             try {
                 System.loadLibrary("jcm_native_bridge");
@@ -931,25 +1001,28 @@ public final class NativeScriptManager {
                 /* fall through to the explicit search */
             }
 
-            final String fileName = bridgeFileName();
-            final List<File> candidates = bridgeCandidates(fileName);
-            for (File candidate : candidates) {
-                if (!candidate.isFile()) continue;
-                try {
-                    System.load(candidate.getAbsolutePath());
-                    JCMLogger.info("Native scripting bridge loaded from {}", candidate);
-                    return installBridgeHost();
-                } catch (UnsatisfiedLinkError e) {
-                    JCMLogger.warn("Native scripting bridge {} exists but failed to load: {}",
-                            candidate, e.getMessage());
+            final List<File> searched = new ArrayList<>();
+            for (final String[] candidate : BRIDGE_SEARCH) {
+                final List<File> candidates = bridgeCandidates(candidate[1]);
+                searched.addAll(candidates);
+                for (File file : candidates) {
+                    if (!file.isFile()) continue;
+                    try {
+                        System.load(file.getAbsolutePath());
+                        JCMLogger.info("Native scripting bridge loaded from {}", file);
+                        return installBridgeHost();
+                    } catch (UnsatisfiedLinkError e) {
+                        JCMLogger.warn("Native scripting bridge {} exists but failed to load: {}",
+                                file, e.getMessage());
+                    }
                 }
             }
 
             JCMLogger.warn("Native scripting bridge ({}) not found — C++ ('language': 'cpp') "
                     + "scripts cannot run. Drop it into {}{}mods{} (next to the JCM jar) "
                     + "or set -Djava.library.path. Looked in: {}",
-                    fileName, System.getProperty("user.dir"), File.separator, File.separator,
-                    candidates);
+                    bridgeFileName(), System.getProperty("user.dir"), File.separator, File.separator,
+                    searched);
             return false;
         }
 

@@ -1,4 +1,10 @@
-JCM Yanyang `2.3.0-beta-2.yanyang.3` — 全代码库 bug 与性能审计（yanyang.3）：7 项关键修复 + 30 余项正确性/性能/加固修复。本 Release 同时包含 yanyang.1（原版 2.3.0-beta.2 整合）与 yanyang.2（`scriptLocations` 自动语言判定与 JS + C++ 混合条目）。
+JCM Yanyang `2.3.0-beta-2.yanyang.3` — 全代码库 bug 与性能审计（yanyang.3）：7 项关键修复 + 30 余项正确性/性能/加固修复；原生脚本平台矩阵扩展至 **7 个平台**（新增 Linux ARM64、Android、iOS/iPadOS）。本 Release 同时包含 yanyang.1（原版 2.3.0-beta.2 整合）与 yanyang.2（`scriptLocations` 自动语言判定与 JS + C++ 混合条目）。
+
+**原生平台扩展 / Native platform matrix (yanyang.3)**
+
+- 每个新 jar 内置 7 个平台的 JNI bridge：windows-x64、linux-x64、**linux-arm64**（ARM 桌面 + Pojav 类 Android 启动器的 glibc JVM）、macos-x64、macos-arm64、**android-arm64**（NDK arm64-v8a、16 KB page 对齐）、**ios-arm64**（Mach-O dylib，iOS 与 iPadOS 共用，侧载工具负责重签）。
+- 修复平台键把 Linux/Windows ARM64 一律归为 `-x64` 的旧 bug（ARM64 Linux 此前永远解析到错误目录）；Linux+aarch64 环境按 linux-arm64 → ios-arm64 → android-arm64 依次回退，覆盖 iOS 沙箱内 `os.name=Linux` 的 JVM。
+- native SDK zip 同步附带 7 平台的示例模块预编译库。
 
 **关键修复 / Critical fixes (yanyang.3)**
 
