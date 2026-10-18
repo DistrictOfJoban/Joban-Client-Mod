@@ -83,8 +83,11 @@ public final class NativeContentDriver {
         if(previous!=null) for(AbstractScriptContext c:previous.contexts.values()) {
             if(((EyeCandyScriptContext)c).events().onBlockUse.occurred()) { used=true; break; }
         }
+        /* Lambda capture requires an effectively final variable — `used` is
+           reassigned by the loop above, so snapshot it once. */
+        final boolean blockUsed=used;
         State state=run(key,script,NativeScriptManager.MTR_RESOURCE_EYECANDY,wrapper,
-                b->NativeContentSnapshot.eyecandy(b,wrapper,used),()->new EyeCandyScriptContext(wrapper));
+                b->NativeContentSnapshot.eyecandy(b,wrapper,blockUsed),()->new EyeCandyScriptContext(wrapper));
         for(AbstractScriptContext context:state.contexts.values()) {
             EyeCandyScriptContext ctx=(EyeCandyScriptContext)context;
             ctx.getRenderManager().invoke(world,transform.copy(),facing,wrapper.getFullBrightness()?GraphicsHolderDefaultLight.VALUE:light);

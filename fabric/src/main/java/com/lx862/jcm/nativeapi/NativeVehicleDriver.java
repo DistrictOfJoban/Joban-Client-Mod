@@ -76,7 +76,12 @@ public final class NativeVehicleDriver {
      * Keyed by hex id, stamped each frame; entries whose vehicle stopped
      * rendering for 5s are swept by tick() together with the states. */
     private static final class CarPositions {
-        final float[] xyz = new float[3];
+        /** Grown on demand when the train gains cars; reused across frames
+         * (never reallocated per frame — see updateCarPositions). Volatile:
+         * the sound thread reads this via carSoundPosition while the render
+         * thread may swap in a larger array; losing `final` here must not
+         * lose the cross-thread publication guarantee. */
+        volatile float[] xyz = new float[3];
         int count;
         long stamp;
         /** Frame sequence number that last filled this entry. */
