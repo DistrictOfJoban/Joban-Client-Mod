@@ -49,8 +49,9 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
         return create();
     }
 
-    /** Pooled acquisition for the native record replay. */
-    static TextureWrapper createPooled() {
+    /** Pooled acquisition for the native record replay. Public:
+     *  NativeContentDriver lives in com.lx862.jcm.nativeapi. */
+    public static TextureWrapper createPooled() {
         final TextureWrapper pooled = NATIVE_POOL.pollFirst();
         if (pooled != null) {
             pooled.jcm$inPool = false;

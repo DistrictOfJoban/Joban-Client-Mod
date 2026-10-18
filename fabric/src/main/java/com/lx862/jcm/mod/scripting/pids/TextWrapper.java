@@ -83,8 +83,9 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         return create();
     }
 
-    /** Pooled acquisition for the native record replay (see NATIVE_POOL). */
-    static TextWrapper createPooled() {
+    /** Pooled acquisition for the native record replay (see NATIVE_POOL).
+     *  Public: NativeContentDriver lives in com.lx862.jcm.nativeapi. */
+    public static TextWrapper createPooled() {
         final TextWrapper pooled = NATIVE_POOL.pollFirst();
         if (pooled != null) {
             pooled.jcm$inPool = false;
