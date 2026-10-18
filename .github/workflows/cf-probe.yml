@@ -1,0 +1,72 @@
+name: CF Probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: 'Probe note'
+        required: false
+        default: ''
+
+permissions: {}
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe CurseForge endpoints
+        env:
+          CF_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          set -uo pipefail
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+
+          echo "=== A: core /v1/games with author token ==="
+          curl -sS --max-time 30 -o /tmp/a.json -w "HTTP %{http_code} | %{size_download}B\n" \
+            -H "x-api-key: $CF_TOKEN" -H "Accept: application/json" https://api.curseforge.com/v1/games
+          head -c 200 /tmp/a.json; echo; echo
+
+          echo "=== A2: core /v1/games with author token + browser UA ==="
+          curl -sS --max-time 30 -o /tmp/a2.json -w "HTTP %{http_code} | %{size_download}B\n" \
+            -H "x-api-key: $CF_TOKEN" -H "Accept: application/json" -A "$UA" https://api.curseforge.com/v1/games
+          head -c 200 /tmp/a2.json; echo; echo
+
+          echo "=== B: core /v1/game/versions?gameId=432 with author token ==="
+          curl -sS --max-time 60 -o /tmp/b.json -w "HTTP %{http_code} | %{size_download}B\n" \
+            -H "x-api-key: $CF_TOKEN" -H "Accept: application/json" "https://api.curseforge.com/v1/game/versions?gameId=432"
+          head -c 300 /tmp/b.json; echo; echo
+
+          echo "=== C: upload API probe (invalid mod id 999999999, tiny dummy file) ==="
+          echo "dummy" > /tmp/dummy.jar
+          curl -sS --max-time 60 -o /tmp/c.json -w "HTTP %{http_code}\n" -X POST \
+            "https://upload.curseforge.com/v1/minecraft/mods/999999999/upload" \
+            -H "X-Api-Key: $CF_TOKEN" \
+            -F 'metadata={"releaseType":"beta","gameVersions":[]}' \
+            -F "file=@/tmp/dummy.jar"
+          head -c 300 /tmp/c.json; echo; echo
+
+          echo "=== D: legacy minecraft.curseforge.com/api/game/versions ==="
+          curl -sS --max-time 30 -o /tmp/d.json -w "HTTP %{http_code} | %{size_download}B\n" \
+            -A "$UA" "https://minecraft.curseforge.com/api/game/versions"
+          head -c 300 /tmp/d.json; echo; echo
+
+          echo "=== E: www.curseforge.com internal direct API ==="
+          curl -sS --max-time 30 -o /tmp/e.json -w "HTTP %{http_code} | %{size_download}B\n" \
+            -A "$UA" "https://www.curseforge.com/api/v1/direct/game/versions?gameId=432"
+          head -c 300 /tmp/e.json; echo; echo
+
+          echo "=== F: cfwidget MTR project ==="
+          curl -sS --max-time 30 -o /tmp/f.json -w "HTTP %{http_code} | %{size_download}B\n" \
+            "https://api.cfwidget.com/minecraft/mc-mods/minecraft-transit-railway"
+          head -c 300 /tmp/f.json; echo; echo
+
+          echo "=== G: website files page, grep version filter links ==="
+          curl -sS --max-time 60 -o /tmp/g.html -w "HTTP %{http_code} | %{size_download}B\n" \
+            -A "$UA" "https://www.curseforge.com/minecraft/mc-mods/minecraft-transit-railway/files"
+          grep -oE 'filter-game-version=[0-9]+%3A[^"&]*' /tmp/g.html | sort -u | head -30
+          echo "---"
+          grep -oE '"gameVersionId"[^,]*' /tmp/g.html | head -10
+
+          echo "=== H: modrinth version id reference (sodium versions api) ==="
+          curl -sS --max-time 30 "https://api.modrinth.com/v2/project/sodium/version" -o /tmp/h.json -w "HTTP %{http_code}\n"
+          echo "modrinth ok (sanity)"
