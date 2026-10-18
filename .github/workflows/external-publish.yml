@@ -99,7 +99,7 @@ jobs:
           vers = api(f"{LEG}/game/versions")
           byname = {v["name"]: v["id"] for v in vers}
           MC = ["1.17.1", "1.18.2", "1.19.2", "1.19.4", "1.20.1", "1.20.4"]
-          NEED = MC + ["Fabric", "Forge", "Java 16", "Java 17"]
+          NEED = MC + ["Fabric", "Forge", "Java 16", "Java 17", "Client"]
           for n in NEED:
               assert n in byname, f"game version not found: {n}"
           print("game version ids:", {n: byname[n] for n in NEED})
@@ -125,7 +125,7 @@ jobs:
               assert m, f"unparseable jar name: {fn}"
               loader, ver, mc = m.groups()
               lname = "Fabric" if loader == "fabric" else "Forge"
-              gv = [byname[mc], byname[lname], byname[JAVAMAP.get(mc, "Java 17")]]
+              gv = [byname[mc], byname[lname], byname[JAVAMAP.get(mc, "Java 17")], byname["Client"]]
               meta = json.dumps({
                   "changelog": body,
                   "changelogType": "markdown",
