@@ -14,39 +14,27 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe round 5 - duplicate version names
+      - name: Verify CurseForge files are live
         env:
           CF_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
           set -uo pipefail
-          curl -sS --max-time 30 -H "X-Api-Token: $CF_TOKEN" \
-            "https://minecraft.curseforge.com/api/game/version-types" -o /tmp/vt.json
-          curl -sS --max-time 60 -H "X-Api-Token: $CF_TOKEN" \
-            "https://minecraft.curseforge.com/api/game/versions" -o /tmp/vs.json
-          python3 - <<'PYEOF'
-          import json
-          types = {t['id']: t['name'] for t in json.load(open('/tmp/vt.json'))}
-          vers = json.load(open('/tmp/vs.json'))
-          targets = ['1.17.1','1.18.2','1.19.2','1.19.4','1.20.1','1.20.4',
-                     'Fabric','Forge','Java 16','Java 17','Client','Server']
-          byname = {}
-          for v in vers:
-              byname.setdefault(v['name'], []).append(v)
-          print("=== all matches for target names ===")
-          for name in targets:
-              for v in byname.get(name, []):
-                  tname = types.get(v['gameVersionTypeID'], f"OTHERGAME-{v['gameVersionTypeID']}")
-                  print(f"  {name!r}: id={v['id']} type={v['gameVersionTypeID']} ({tname})")
-          print()
-          print("=== minecraft-valid ids (type in minecraft types) ===")
-          mctypes = set(types.keys())
-          valid = {}
-          for name in targets:
-              cands = [v for v in byname.get(name, []) if v['gameVersionTypeID'] in mctypes]
-              for v in cands:
-                  print(f"  {name!r}: id={v['id']} ({types[v['gameVersionTypeID']]})")
-              assert len(cands) == 1, f"{name}: {len(cands)} minecraft candidates!"
-              valid[name] = cands[0]['id']
-          print()
-          print("FINAL MAP:", json.dumps(valid))
-          PYEOF
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+
+          echo "=== V1: legacy API project files list ==="
+          curl -sS --max-time 30 -o /tmp/v1.json -w "HTTP %{http_code} | %{size_download}B\n" \
+            -H "X-Api-Token: $CF_TOKEN" "https://minecraft.curseforge.com/api/projects/1736483/files"
+          head -c 600 /tmp/v1.json; echo; echo
+
+          echo "=== V2: modern CurseForge website project files page ==="
+          curl -sSL --max-time 60 -o /tmp/v2.html -w "HTTP %{http_code} | final %{url_effective} | %{size_download}B\n" \
+            -A "$UA" "https://www.curseforge.com/minecraft/mc-mods/joban-client-mod-yanyang/files"
+          echo "--- JCM file names found in page ---"
+          grep -oE 'JCM-(fabric|forge)-2\.3\.0-beta-2\.yanyang\.4\+[0-9.]+\.jar' /tmp/v2.html | sort -u
+          echo "--- version tags seen near files ---"
+          grep -oE '"gameVersions?":\[[^]]*\]' /tmp/v2.html | head -15 || true
+
+          echo "=== V3: legacy website project page ==="
+          curl -sSL --max-time 60 -o /tmp/v3.html -w "HTTP %{http_code} | final %{url_effective} | %{size_download}B\n" \
+            -A "$UA" "https://minecraft.curseforge.com/projects/joban-client-mod-yanyang/files"
+          grep -oE 'JCM-(fabric|forge)-2\.3\.0-beta-2\.yanyang\.4\+[0-9.]+\.jar' /tmp/v3.html | sort -u | head -15 || echo "(no names found)"
