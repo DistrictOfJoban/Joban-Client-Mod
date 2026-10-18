@@ -22,7 +22,7 @@ public class ModelPropertiesPartMixin extends ModelPropertiesPartSchema {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void jsblock$hideDisplayParts(Identifier texture, StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int[] scrollingDisplayIndexTracker, int light, ObjectArrayList<ObjectDoubleImmutablePair<Box>> openDoorways, boolean fromResourcePackCreator, CallbackInfo ci) {
-        String vehicleId = vehicle.getVehicleCarsAndPositions().get(carNumber).left().getVehicleId();
+        String vehicleId = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber).getVehicleId();
         if(type == PartType.DISPLAY && MTRContentResourceManager.shouldHideDisplayParts(vehicleId)) {
             ci.cancel();
         }

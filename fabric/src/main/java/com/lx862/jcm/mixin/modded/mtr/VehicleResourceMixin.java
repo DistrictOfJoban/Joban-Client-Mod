@@ -5,6 +5,7 @@ import com.lx862.mtrscripting.mod.resource.MTRContentResourceManager;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleRenderDataCache;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleScriptInstance;
 import com.lx862.mtrscripting.core.primitive.ScriptInstance;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
@@ -50,7 +51,7 @@ public abstract class VehicleResourceMixin {
 
         double x = 0, y = 0, z = 0;
         int total = 0;
-        ObjectArrayList<ObjectObjectImmutablePair<Vector, Vector>> bogiePoses = vehicle.getVehicleCarsAndPositions().get(carNumber).right();
+        ObjectArrayList<ObjectObjectImmutablePair<Vector, Vector>> bogiePoses = VehicleRenderDataCache.getVehicleCarsAndPositions(vehicle).get(carNumber).right();
         for(ObjectObjectImmutablePair<Vector, Vector> bogiePos : bogiePoses) {
             x += bogiePos.left().x;
             y += bogiePos.left().y;
