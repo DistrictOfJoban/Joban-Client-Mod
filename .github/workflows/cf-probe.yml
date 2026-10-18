@@ -14,39 +14,33 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe CurseForge endpoints round 3
+      - name: Probe round 4 - version type groups
         env:
           CF_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
           set -uo pipefail
-          echo "dummy-content" > /tmp/dummy.jar
-          META='{"changelog":"probe","changelogType":"markdown","releaseType":"beta","gameVersions":[9994],"displayName":"probe"}'
+          echo "=== full version-types list ==="
+          curl -sS --max-time 30 -H "X-Api-Token: $CF_TOKEN" \
+            "https://minecraft.curseforge.com/api/game/version-types" -o /tmp/vt.json
+          cat /tmp/vt.json; echo; echo
 
-          echo "=== P1: legacy GET /api/projects/1736483 (own project, X-Api-Token) ==="
-          curl -sS --max-time 30 -o /tmp/p1.json -w "HTTP %{http_code} | %{size_download}B\n" \
-            -H "X-Api-Token: $CF_TOKEN" "https://minecraft.curseforge.com/api/projects/1736483"
-          head -c 500 /tmp/p1.json; echo; echo
-
-          echo "=== P2: legacy POST /api/projects/266707/upload-file (MTR, expect permission error) ==="
-          curl -sS --max-time 60 -o /tmp/p2.json -w "HTTP %{http_code}\n" -X POST \
-            -H "X-Api-Token: $CF_TOKEN" \
-            -F "metadata=$META" \
-            -F "file=@/tmp/dummy.jar" \
-            "https://minecraft.curseforge.com/api/projects/266707/upload-file"
-          head -c 500 /tmp/p2.json; echo; echo
-
-          echo "=== P3: new upload API POST /v1/minecraft/mods/266707/upload (full metadata, X-Api-Key) ==="
-          curl -sS --max-time 60 -o /tmp/p3.json -w "HTTP %{http_code}\n" -X POST \
-            -H "X-Api-Key: $CF_TOKEN" \
-            -F "metadata=$META" \
-            -F "file=@/tmp/dummy.jar" \
-            "https://upload.curseforge.com/v1/minecraft/mods/266707/upload"
-          head -c 500 /tmp/p3.json; echo; echo
-
-          echo "=== P4: new upload API POST with X-Api-Token header variant ==="
-          curl -sS --max-time 60 -o /tmp/p4.json -w "HTTP %{http_code}\n" -X POST \
-            -H "X-Api-Token: $CF_TOKEN" \
-            -F "metadata=$META" \
-            -F "file=@/tmp/dummy.jar" \
-            "https://upload.curseforge.com/v1/minecraft/mods/266707/upload"
-          head -c 500 /tmp/p4.json; echo
+          echo "=== versions grouped by type (non-Minecraft families) ==="
+          curl -sS --max-time 60 -H "X-Api-Token: $CF_TOKEN" \
+            "https://minecraft.curseforge.com/api/game/versions" -o /tmp/vs.json
+          python3 - <<'PYEOF'
+          import json
+          types = {t['id']: t['name'] for t in json.load(open('/tmp/vt.json'))}
+          vers = json.load(open('/tmp/vs.json'))
+          groups = {}
+          for v in vers:
+              groups.setdefault(v['gameVersionTypeID'], []).append(v)
+          for tid, items in sorted(groups.items()):
+              tname = types.get(tid, f'UNKNOWN-{tid}')
+              # skip big Minecraft version families, but show small metadata groups fully
+              if len(items) > 40:
+                  print(f"type {tid} ({tname}): {len(items)} versions (MC family, skipped)")
+                  continue
+              print(f"type {tid} ({tname}):")
+              for v in items:
+                  print(f"    id={v['id']} name={v['name']!r} slug={v.get('slug')}")
+          PYEOF
