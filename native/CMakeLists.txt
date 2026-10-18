@@ -41,12 +41,18 @@ mtr_add_script(eyecandy_signal examples/eyecandy_signal.cpp)
 mtr_add_script(lift_indicator examples/lift_indicator.cpp)
 find_package(JNI QUIET)
 if(NOT JNI_FOUND AND ANDROID)
-  # Cross-compile via the NDK toolchain file: the sysroot already ships
-  # jni.h (bionic's JNI headers are the standard contract), and a MODULE
-  # library resolves its JNI symbols against the embedding JVM at load
-  # time, so there is nothing to link here either.
-  set(JNI_FOUND ON)
-  set(JNI_INCLUDE_DIRS "")
+  # The NDK's jni.h is a divergent variant: it lacks JNI_VERSION_1_8 and
+  # declares the C++ AttachCurrentThread with JNIEnv** where OpenJDK's uses
+  # void** (the form the bridge calls, and what every desktop build
+  # compiles against). The JNI interface itself is platform-independent
+  # (LP64 type widths match), so cross-compile against the HOST JDK's
+  # headers passed via -DJCM_JNI_INCLUDE_DIR=$JAVA_HOME/include; module JNI
+  # symbols still resolve against the embedding JVM at load time — nothing
+  # from the JDK is linked into the image.
+  if(DEFINED JCM_JNI_INCLUDE_DIR AND EXISTS "${JCM_JNI_INCLUDE_DIR}/jni.h")
+    set(JNI_FOUND ON)
+    set(JNI_INCLUDE_DIRS "${JCM_JNI_INCLUDE_DIR}" "${JCM_JNI_INCLUDE_DIR}/linux")
+  endif()
 endif()
 if(NOT JNI_FOUND AND CMAKE_SYSTEM_NAME STREQUAL "iOS")
   # Cross-compile for iOS: no JVM on the target, but the JNI surface is a
