@@ -1,0 +1,291 @@
+name: External Publish
+
+# Publishes the 12 release jars (6 MC versions x 2 loaders) to CurseForge
+# and/or Modrinth. Runs on GitHub runners so both upload endpoints are
+# reachable with clean network paths. Tokens come from repository secrets:
+#   CF_API_TOKEN     - CurseForge upload API token
+#   MODRINTH_TOKEN   - Modrinth personal access token (optional until set)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish (e.g. v2.3.0-beta-2.yanyang.4)'
+        required: true
+      target:
+        description: 'Where to publish: curseforge | modrinth | both'
+        required: true
+        default: 'both'
+      cf-project-id:
+        description: 'CurseForge project id'
+        required: false
+        default: '1736483'
+      modrinth-project-id:
+        description: 'Modrinth project id'
+        required: false
+        default: 'kMMJcRqY'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: external-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release jars and notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p jars
+          echo "Downloading assets of release $TAG"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.jar' --dir jars
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body > release_body.md
+          ls -la jars
+          COUNT=$(ls jars/*.jar | wc -l)
+          test "$COUNT" -eq 12
+          echo "Body length: $(wc -c < release_body.md) bytes"
+
+      - name: Publish to CurseForge
+        if: inputs.target == 'curseforge' || inputs.target == 'both'
+        env:
+          CF_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_PROJECT: ${{ inputs.cf-project-id }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CF_TOKEN:-}" ]; then
+            echo "::error::CF_API_TOKEN secret is not set"
+            exit 1
+          fi
+          python3 <<'PYEOF'
+          import json, os, re, sys, time, io, uuid
+          import urllib.request, urllib.error
+
+          CF = "https://api.curseforge.com"
+          UP = "https://upload.curseforge.com"
+          KEY = os.environ["CF_TOKEN"]
+          PROJECT = os.environ["CF_PROJECT"]
+          UA = "jcm-yanyang-external-publisher/1.0 (BugQuantumCore)"
+
+          def api(url, data=None, headers=None, method=None, timeout=180):
+              h = {"x-api-key": KEY, "Accept": "application/json", "User-Agent": UA}
+              if headers:
+                  h.update(headers)
+              req = urllib.request.Request(url, data=data, headers=h, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=timeout) as r:
+                      body = r.read()
+                      if "json" in (r.headers.get("Content-Type") or ""):
+                          return json.loads(body.decode())
+                      return {"raw": body[:500].decode(errors="replace")}
+              except urllib.error.HTTPError as e:
+                  detail = ""
+                  try:
+                      detail = e.read().decode(errors="replace")[:800]
+                  except Exception:
+                      pass
+                  raise RuntimeError(f"HTTP {e.code} for {url}: {detail}")
+
+          # 1. Validate the project before touching it
+          proj = api(f"{CF}/v1/mods/{PROJECT}")["data"]
+          print(f"CurseForge project: {proj['name']} (id {proj['id']}, slug {proj['slug']})")
+
+          # 2. Resolve game version ids (Minecraft game id = 432)
+          vers = api(f"{CF}/v1/game/versions?gameId=432")["data"]
+          byname = {v["name"]: v["id"] for v in vers}
+          MC = ["1.17.1", "1.18.2", "1.19.2", "1.19.4", "1.20.1", "1.20.4"]
+          NEED = MC + ["Fabric", "Forge", "Java 16", "Java 17"]
+          for n in NEED:
+              assert n in byname, f"game version not found on CurseForge: {n}"
+          print("game version ids:", {n: byname[n] for n in NEED})
+
+          # 3. Relations: MTR required, Fabric API required for fabric builds
+          def find(slug):
+              try:
+                  d = api(f"{CF}/v1/mods/search?gameId=432&slug={slug}")["data"]
+                  return d[0] if d else None
+              except Exception as e:
+                  print(f"search failed for {slug}: {e}")
+                  return None
+
+          mtr = find("minecraft-transit-railway")
+          fapi = find("fabric-api")
+          assert mtr, "MTR project not found on CurseForge (slug minecraft-transit-railway)"
+          print(f"relations: MTR -> {mtr['id']} {mtr['name']} | fabric-api -> {(fapi or {}).get('id')}")
+          rel_projects = [{"slug": "minecraft-transit-railway", "type": "requiredDependency"}]
+          if fapi:
+              rel_projects.append({"slug": "fabric-api", "type": "requiredDependency"})
+
+          body = open("release_body.md", encoding="utf-8").read()
+          JAVAMAP = {"1.17.1": "Java 16"}
+
+          def multipart(meta, filename, blob):
+              b = "----jcmypub" + uuid.uuid4().hex
+              out = io.BytesIO()
+              out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"metadata\"\r\n\r\n{meta}\r\n".encode())
+              out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{filename}\"\r\nContent-Type: application/java-archive\r\n\r\n".encode())
+              out.write(blob)
+              out.write(f"\r\n--{b}--\r\n".encode())
+              return out.getvalue(), f"multipart/form-data; boundary={b}"
+
+          jars = sorted(os.listdir("jars"))
+          assert len(jars) == 12, jars
+
+          uploaded = []
+          for fn in jars:
+              m = re.match(r"JCM-(fabric|forge)-(.+)\+(1\.17\.1|1\.18\.2|1\.19\.2|1\.19\.4|1\.20\.1|1\.20\.4)\.jar$", fn)
+              assert m, f"unparseable jar name: {fn}"
+              loader, ver, mc = m.groups()
+              lname = "Fabric" if loader == "fabric" else "Forge"
+              gv = [byname[mc], byname[lname], byname[JAVAMAP.get(mc, "Java 17")]]
+              meta = json.dumps({
+                  "changelog": body,
+                  "changelogType": "markdown",
+                  "releaseType": "beta",
+                  "displayName": f"JCM {ver} ({lname} {mc})",
+                  "gameVersions": gv,
+                  "relations": {"projects": rel_projects},
+              })
+              blob = open(f"jars/{fn}", "rb").read()
+              data, ctype = multipart(meta, fn, blob)
+              resp = None
+              for attempt in range(3):
+                  try:
+                      resp = api(f"{UP}/v1/minecraft/mods/{PROJECT}/upload", data=data,
+                                 headers={"Content-Type": ctype}, method="POST", timeout=600)
+                      break
+                  except Exception as e:
+                      print(f"attempt {attempt + 1} failed for {fn}: {e}")
+                      time.sleep(10)
+              if resp is None:
+                  print(f"FAILED: {fn}")
+                  sys.exit(1)
+              fid = resp.get("id") if isinstance(resp, dict) else None
+              print(f"UPLOADED {fn} -> file id {fid}")
+              uploaded.append((fn, fid))
+              time.sleep(3)
+
+          print("uploaded file ids:", uploaded)
+          with open(os.environ.get("GITHUB_STEP_SUMMARY", "/dev/null"), "a") as s:
+              s.write("## CurseForge upload\n")
+              for fn, fid in uploaded:
+                  s.write(f"- `{fn}` -> file id {fid}\n")
+
+          # 4. Poll until all 12 files are visible on the project
+          missing = list(jars)
+          for attempt in range(12):
+              time.sleep(15)
+              try:
+                  files = api(f"{CF}/v1/mods/{PROJECT}/files?pageSize=50")["data"]
+                  names = {f.get("fileName") for f in files}
+                  missing = [fn for fn in jars if fn not in names]
+                  print(f"visibility check {attempt}: {len(names)} files on project, missing {len(missing)}")
+                  if not missing:
+                      print("ALL 12 FILES VISIBLE ON CURSEFORGE")
+                      break
+              except Exception as e:
+                  print(f"poll error: {e}")
+          if missing:
+              print("FILES NOT VISIBLE:", missing)
+              sys.exit(1)
+          PYEOF
+
+      - name: Publish to Modrinth
+        if: inputs.target == 'modrinth' || inputs.target == 'both'
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MR_PROJECT: ${{ inputs.modrinth-project-id }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MODRINTH_TOKEN:-}" ]; then
+            echo "MODRINTH_TOKEN secret is not set - skipping Modrinth publish"
+            exit 0
+          fi
+          python3 <<'PYEOF'
+          import json, os, re, sys, io, uuid
+          import urllib.request, urllib.error
+
+          MR = "https://api.modrinth.com/v2"
+          TOK = os.environ["MODRINTH_TOKEN"]
+          PROJECT = os.environ["MR_PROJECT"]
+          UA = "jcm-yanyang-external-publisher/1.0 (BugQuantumCore)"
+
+          def get(url):
+              req = urllib.request.Request(url, headers={"User-Agent": UA})
+              with urllib.request.urlopen(req, timeout=60) as r:
+                  return json.loads(r.read().decode())
+
+          def post(url, data, ctype):
+              req = urllib.request.Request(url, data=data, method="POST",
+                  headers={"User-Agent": UA, "Authorization": TOK, "Content-Type": ctype})
+              try:
+                  with urllib.request.urlopen(req, timeout=600) as r:
+                      return r.status, json.loads(r.read().decode())
+              except urllib.error.HTTPError as e:
+                  detail = ""
+                  try:
+                      detail = e.read().decode(errors="replace")[:800]
+                  except Exception:
+                      pass
+                  raise RuntimeError(f"HTTP {e.code} for {url}: {detail}")
+
+          mtr = get(f"{MR}/project/minecraft-transit-railway")
+          try:
+              fapi = get(f"{MR}/project/fabric-api")
+          except Exception:
+              fapi = None
+          print(f"deps: MTR -> {mtr['id']} {mtr['title']} | fabric-api -> {fapi and fapi['id']}")
+
+          proj = get(f"{MR}/project/{PROJECT}")
+          print(f"Modrinth project: {proj['title']} (id {proj['id']}, slug {proj['slug']}, status {proj.get('status')})")
+
+          body = open("release_body.md", encoding="utf-8").read()
+
+          def multipart(data_json, filename, blob):
+              b = "----jcmypub" + uuid.uuid4().hex
+              out = io.BytesIO()
+              out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"data\"\r\n\r\n{data_json}\r\n".encode())
+              out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"files\"; filename=\"{filename}\"\r\nContent-Type: application/java-archive\r\n\r\n".encode())
+              out.write(blob)
+              out.write(f"\r\n--{b}--\r\n".encode())
+              return out.getvalue(), f"multipart/form-data; boundary={b}"
+
+          jars = sorted(os.listdir("jars"))
+          assert len(jars) == 12, jars
+
+          uploaded = []
+          for fn in jars:
+              m = re.match(r"JCM-(fabric|forge)-(.+)\+(1\.17\.1|1\.18\.2|1\.19\.2|1\.19\.4|1\.20\.1|1\.20\.4)\.jar$", fn)
+              assert m, f"unparseable jar name: {fn}"
+              loader, ver, mc = m.groups()
+              deps = [{"project_id": mtr["id"], "dependency_type": "required"}]
+              if loader == "fabric" and fapi:
+                  deps.append({"project_id": fapi["id"], "dependency_type": "required"})
+              vnum = f"{ver}+{mc}-{loader}"
+              data = json.dumps({
+                  "name": f"JCM {ver} ({loader.capitalize()} {mc})",
+                  "version_number": vnum,
+                  "changelog": body,
+                  "version_type": "beta",
+                  "game_versions": [mc],
+                  "loaders": [loader],
+                  "featured": False,
+                  "dependencies": deps,
+              })
+              blob = open(f"jars/{fn}", "rb").read()
+              payload, ctype = multipart(data, fn, blob)
+              st, resp = post(f"{MR}/project/{PROJECT}/version", payload, ctype)
+              print(f"UPLOADED {fn} -> version id {resp.get('id')} ({st})")
+              uploaded.append((fn, vnum, resp.get("id")))
+
+          print("uploaded versions:", uploaded)
+          with open(os.environ.get("GITHUB_STEP_SUMMARY", "/dev/null"), "a") as s:
+              s.write("## Modrinth upload\n")
+              for fn, vnum, vid in uploaded:
+                  s.write(f"- `{fn}` -> version `{vnum}` (id {vid})\n")
+          PYEOF
