@@ -246,8 +246,8 @@ public final class NativeScriptManager {
                     + "(scriptLocations entries without .js, or \"language\": \"cpp\" + nativeLibrary)");
             return;
         }
-        JCMLogger.info("Native scripts: {} module(s) loaded, {} declaration(s) skipped",
-                total, SKIPPED.size());
+        JCMLogger.info("Native scripts: {} module(s) loaded, {} declaration(s) skipped (transport: {})",
+                total, SKIPPED.size(), NativeChannel.describe());
         for (Map.Entry<String, List<NativeScriptModule>> e : MODULES.entrySet()) {
             for (NativeScriptModule m : e.getValue()) {
                 JCMLogger.info("  id '{}' <- {} ({})", e.getKey(), m.getScriptId(), m.getSourcePath());
@@ -844,9 +844,10 @@ public final class NativeScriptManager {
     }
 
     /**
-     * Dispose without a live snapshot: the module falls back to the snapshot
-     * copy retained at its first frame. Prefer the overloads that hand over
-     * the real buffer.
+     * Dispose without a live snapshot: the module then receives its
+     * module-owned ZEROED fallback snapshot (a valid ABI struct with zero
+     * counts — an "empty" train/PIDS/lift) instead of real data. Prefer
+     * the overloads that hand over the actual buffer.
      */
     public static void disposeInstance(String instanceKey, String scriptId) {
         disposeInstance(instanceKey, scriptId, null);

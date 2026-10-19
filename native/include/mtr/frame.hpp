@@ -14,6 +14,7 @@
 #pragma once
 
 #include "mtr_native.h"
+#include <algorithm>
 #include <cstring>
 #include <cstdlib>
 #include <new>
@@ -64,6 +65,12 @@ public:
     }
 
     void begin_frame() {
+        /* Deterministic reclaim first: a spike frame that grew the pixel
+           arena must not pin native memory for the whole session (the old
+           arena kept the session's LARGEST size forever — a Java-mode
+           "keep it until GC" habit). Safe point: the previous frame's
+           replay is complete (same discipline as grow_pixels). */
+        shrink_pixels_if_idle();
         record_count_ = 0;
         records_bytes_ = 0;
         matrix_bytes_ = 0;
@@ -168,11 +175,14 @@ public:
         return off;
     }
 
-    /* ---- pixel arena (BGRA8) — grows on demand ----
+    /* ---- pixel arena (BGRA8) — grows on demand, decays back when idle
 
        The host installs an initial static buffer (zero-cost BSS);
-       frames that need more texture data transparently switch to a heap buffer that persists for
-       the module lifetime. The steady-state hot path never allocates. */
+       frames that need more texture data transparently switch to a heap
+       buffer. The steady-state hot path never allocates — and the heap
+       arena is handed BACK to the allocator once the sustained demand no
+       longer justifies its size (see shrink_pixels_if_idle), instead of
+       sitting at the session's largest frame until the process exits. */
     int64_t push_pixels(const uint8_t* px, int64_t len) {
         /* Hard invariant. A negative/absurd len here reaches memcpy as a
            size_t and faults inside the CRT far away from the real mistake
@@ -218,6 +228,9 @@ public:
         out.string_arena_capacity = string_cap_;
         out.pixel_arena_capacity = pixel_cap_;
         out.float_arena_capacity = float_cap_;
+        /* Feed the decayed-usage tracker that drives the idle shrink
+           (mutable bookkeeping on a const method, like a stats counter). */
+        note_pixel_usage();
     }
 
     /* Host installs external buffers before first use (zero shared
@@ -256,6 +269,45 @@ private:
         pixel_owned_ = true;
     }
 
+    /* Decay-driven idle shrink for the pixel arena. pixel_decay_ tracks a
+       decaying peak of per-frame pixel usage (halved roughly every 34
+       frames). The reclaim target is 2x that sustained demand, floored at
+       the host-installed 1 MB arena; once the arena exceeds the target by
+       more than 1.5x the excess is returned to the allocator at the start
+       of the next frame. The 1.5x band is hysteresis: after a shrink the
+       arena sits AT the target and cannot thrash per frame — the next
+       possible shrink is a decay halving (~34 frames) away. Brief
+       re-spikes just re-grow; a long quiet period collapses the arena
+       back to the floor. */
+    static constexpr double PIXEL_DECAY = 0.98;
+    static constexpr int64_t PIXEL_SHRINK_FLOOR = 1LL << 20;
+    static constexpr double PIXEL_SHRINK_MARGIN = 1.5;
+
+    void shrink_pixels_if_idle() {
+        if (!pixel_owned_ || pixel_cap_ <= PIXEL_SHRINK_FLOOR) return;
+        const double sustained = std::max(pixel_decay_, 1.0);
+        int64_t target = static_cast<int64_t>(2.0 * sustained);
+        if (target < PIXEL_SHRINK_FLOOR) target = PIXEL_SHRINK_FLOOR;
+        /* Idle (demand long gone): converge exactly to the floor. Otherwise
+           only act beyond the hysteresis band so a steady workload never
+           sees a shrink per frame. */
+        const bool idle = pixel_decay_ < static_cast<double>(PIXEL_SHRINK_FLOOR) / 2.0;
+        if (!idle && pixel_cap_ <= static_cast<int64_t>(PIXEL_SHRINK_MARGIN * static_cast<double>(target))) return;
+        if (idle && pixel_cap_ <= target) return;
+        uint8_t* shrunk = static_cast<uint8_t*>(std::malloc(static_cast<size_t>(target)));
+        if (!shrunk) return;   /* allocation failure: keep the current arena */
+        std::free(pixel_arena_);
+        pixel_arena_ = shrunk;
+        pixel_cap_ = target;
+        /* Nothing to carry over: begin_frame resets pixel_bytes_ right
+           after this call, so the smaller arena starts the frame empty. */
+    }
+
+    void note_pixel_usage() const {
+        const double used = static_cast<double>(pixel_bytes_);
+        pixel_decay_ = used > pixel_decay_ ? used : pixel_decay_ * PIXEL_DECAY;
+    }
+
     template <typename T>
     T& push_record(uint8_t kind) {
         constexpr int32_t padded = (sizeof(T) + 7) & ~7;
@@ -277,6 +329,7 @@ private:
 
     int64_t pixel_cap_ = 0;
     bool pixel_owned_ = false;
+    mutable double pixel_decay_ = 0.0;   /* decaying peak usage; drives idle shrink */
     int32_t record_cap_ = 0, matrix_cap_ = 0, string_cap_ = 0, float_cap_ = 0;
 
     int32_t record_count_ = 0;

@@ -129,6 +129,30 @@ public final class NativeChannel {
         return transport;
     }
 
+    /** One-line human summary of the ACTIVE transport, for the post-reload
+     *  census in latest.log — so a player can verify from the log that the
+     *  "Java 与 C++ 通信方式" selection really engaged (and see when the
+     *  shared-memory channel degraded to JNI). */
+    public static String describe() {
+        final Transport selected = transport;
+        final NativeShm region = shm;
+        final StringBuilder sb = new StringBuilder();
+        if (selected == Transport.SHARED_MEMORY) {
+            sb.append(region != null ? "shared-memory" : "shared-memory (region not started yet)");
+        } else if (selected == Transport.PANAMA_FFM) {
+            sb.append("panama-ffm (falls back to shared-memory)");
+        } else {
+            sb.append("jni");
+        }
+        if (shmBroken && selected != Transport.JNI) {
+            sb.append(" [unavailable this session — JNI calls]");
+        }
+        if (region != null) {
+            sb.append(", region ").append(region.size() / 1024).append(" KB");
+        }
+        return sb.toString();
+    }
+
     /** Effective transport for THIS session (PANAMA_FFM degrades to shm). */
     static Transport effectiveTransport() {
         final Transport t = transport;

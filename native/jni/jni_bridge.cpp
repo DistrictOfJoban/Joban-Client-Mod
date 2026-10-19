@@ -82,16 +82,18 @@ namespace {
 
 struct Instance {
     std::vector<uint8_t> state;         /* mtrStateSize() zeroed block  */
-    /* Snapshot retained ONLY for dispose()-time rebuild. The live buffer is
-       passed to mtrRender directly (the Java driver blocks inside the JNI
-       call while the module reads it); the copy is refreshed when the driver
-       hands over a DIFFERENT buffer (reallocated direct buffer), which for
-       vehicles never happens after the first frame. This used to be a
-       full 256 KB memcpy per vehicle per frame — pure native churn that
-       contributed to the reported periodic stutter. */
-    std::vector<uint8_t> last_snapshot;
-    const void* snapshot_address = nullptr;
-    int64_t snapshot_capacity = 0;
+    /* Length of the last snapshot the module actually consumed — used ONLY
+       to size the module-owned zeroed fallback snapshot that dispose()
+       receives when the driver hands over no live buffer. There is NO
+       per-instance copy of the snapshot: with reusable driver buffers the
+       retained copy used to be taken once at the first frame and then never
+       refreshed (a Java-mode "keep a copy around, someone will collect it"
+       habit), so it both cost ~snapshot-size bytes per instance for the
+       instance's whole life and fed dispose() stale first-frame data. The
+       C++-mode contract is now: live buffer when available, otherwise ONE
+       shared, zero-filled snapshot per module (deterministic "empty"
+       vehicle/PIDS instead of ancient garbage). */
+    int64_t snapshot_len = 0;
     std::string api_key;
     int32_t resource_kind = MTR_RESOURCE_VEHICLE;
     bool created = false;               /* mtrCreate called?            */
@@ -128,6 +130,14 @@ struct BridgeModule {
        Registered once per instance via nativeShmRegisterInstance, scanned
        off when the string-keyed instance is disposed. */
     std::unordered_map<int64_t, std::string> shm_ids;
+    /* ZEROED fallback snapshot shared by every dispose that arrives without
+       a live buffer (module teardown, no-buffer dispose calls). One buffer
+       per module instead of one stale copy per instance; sized to the
+       largest snapshot this module has consumed and reused for its whole
+       lifetime (RAII-freed with the module). A zeroed snapshot is a valid
+       ABI struct whose counts are 0 — modules see an "empty" train/PIDS,
+       which is both safer and more honest than a stale first-frame copy. */
+    std::vector<uint8_t> zero_snapshot;
 
     uint32_t (*abi)(void) = nullptr;
     const char* (*type)(void) = nullptr;
@@ -509,6 +519,12 @@ int32_t host_acquire_quad_model(void* user, const float* verts, const float* uv,
 
 const char* host_invoke_api(void* user, const char* request, int32_t length, int32_t* result_length) {
     thread_local std::string result;
+    /* Release an oversized reply left over from a PREVIOUS call before any
+       new reply is built: transient memory goes back to the allocator
+       (C++-mode hygiene) instead of being pinned until thread exit. The
+       current reply is handed to the caller below and reclaimed the same
+       way on the next invocation. */
+    if (result.capacity() > (1u << 20)) std::string().swap(result);
     auto& inst = *static_cast<Instance*>(user);
     /* Jar/bridge mismatch guard: a null g_vm or a failed NativeApiSession
        lookup used to reach CallStaticObjectMethod with a null class/method
@@ -712,6 +728,22 @@ void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
         static_cast<const uint8_t*>(out.records)));
 }
 
+/** Module-owned zeroed fallback for dispose-without-live-buffer: grown to
+    the largest snapshot this module has consumed, reused by every instance
+    of the module (callers hold mod->mutex). Deterministic C++ lifetime —
+    created lazily, freed with the module. A zeroed block reads as a valid
+    ABI struct with zero counts ("empty" train / PIDS / lift). */
+const void* fallback_snapshot(BridgeModule& mod, const Instance& inst) {
+    /* 256 B floor so scalar/header reads stay in bounds even when an
+       instance never recorded a length (defensive: uninitialized instances
+       skip mtrDispose anyway). */
+    const int64_t want = inst.snapshot_len > 256 ? inst.snapshot_len : 256;
+    if (static_cast<int64_t>(mod.zero_snapshot.size()) < want) {
+        mod.zero_snapshot.assign(static_cast<size_t>(want), 0);
+    }
+    return mod.zero_snapshot.data();
+}
+
 /* Rewind/rebuild one cached arena ByteBuffer to (position 0, limit len).
    Returns the cached global ref, or a fresh local ref when the module did
    not report a capacity (pre-ABI-9 modules) — matching the old per-frame
@@ -836,9 +868,12 @@ JNI_M(nStateSize)(JNIEnv*, jobject, jlong handle) {
    like the JNI-only bridge did, so both transports share one behaviour. */
 int32_t run_frame_locked(JNIEnv* env, BridgeModule& mod, const char* key,
                          const void* snapshot, int64_t snapshotLen,
-                         int64_t snapshotCapacity, jint kind, JcmFrameOutput& out) {
+                         jint kind, JcmFrameOutput& out) {
     Instance& inst = mod.instances[key];
-    inst.api_key = key;
+    /* Assign only on change: instance keys are stable for the whole life of
+       an instance, and they exceed SSO length, so the old unconditional
+       assign was a hidden malloc + copy on EVERY frame of EVERY instance. */
+    if (inst.api_key != key) inst.api_key = key;
     inst.resource_kind = kind;
     if (inst.failed) return JCM_SHM_ERR_CREATE;
 
@@ -846,15 +881,11 @@ int32_t run_frame_locked(JNIEnv* env, BridgeModule& mod, const char* key,
         inst.state.assign(mod.state_size(), 0);
     }
 
-    /* Snapshot retention for dispose()-time rebuild: refreshed only when the
-       driver hands over a different buffer (see the note in nRender). The
-       live buffer is read in place — zero copies on both transports. */
-    if (inst.snapshot_address != snapshot || inst.snapshot_capacity != snapshotCapacity) {
-        inst.last_snapshot.assign(static_cast<const uint8_t*>(snapshot),
-                                  static_cast<const uint8_t*>(snapshot) + snapshotLen);
-        inst.snapshot_address = snapshot;
-        inst.snapshot_capacity = snapshotCapacity;
-    }
+    /* No snapshot retention: the live buffer is read in place (the Java
+       driver is blocked inside this call), and dispose without a live
+       buffer receives the shared zeroed fallback instead of a per-instance
+       first-frame copy that never refreshed. */
+    inst.snapshot_len = snapshotLen;
 
     JcmHostServices host;
     fill_host(host, inst);
@@ -923,7 +954,6 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
        the module reads the live buffer while the Java driver is blocked
        inside this call. */
     const void* snap = env->GetDirectBufferAddress(snapshotBuf);
-    const jlong snap_capacity = env->GetDirectBufferCapacity(snapshotBuf);
     if (!snap || snapshotLen <= 0) {
         env->ReleaseStringUTFChars(instanceKey, key);
         return nullptr;
@@ -931,7 +961,7 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
 
     JcmFrameOutput out{};
     const int32_t status = run_frame_locked(env, *mod, key, snap, snapshotLen,
-                                            snap_capacity, resourceKind, out);
+                                            resourceKind, out);
     env->ReleaseStringUTFChars(instanceKey, key);
     if (status != 0) return nullptr;
 
@@ -1064,7 +1094,6 @@ Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmKick(JNIEnv* env, jclass) {
     const int32_t status = run_frame_locked(env, *mod, idIt->second.c_str(),
             reinterpret_cast<const void*>(static_cast<uintptr_t>(snapAddr)),
             static_cast<int64_t>(snapLen),
-            static_cast<int64_t>(snapLen),
             static_cast<jint>(kind), out);
     if (status != 0) {
         writeResult(seq, status);
@@ -1142,10 +1171,10 @@ JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
 
     /* The driver hands over the LIVE snapshot buffer it rendered this
        instance with (Java still owns it — dispose runs between frames).
-       The old retained copy stayed at the instance's FIRST frame forever,
-       because the reusable buffers never changed address, so any dispose()
-       that read car count / ids / speed saw garbage. Falls back to the
-       retained copy only when no buffer is passed. */
+       When no buffer is passed the module-owned ZEROED fallback snapshot is
+       used: the old per-instance retained copy was taken at the instance's
+       FIRST frame and never refreshed, so it fed dispose() stale data while
+       costing snapshot-size bytes per instance. */
     const void* live = nullptr;
     if (snapshotBuf) {
         live = env->GetDirectBufferAddress(snapshotBuf);
@@ -1161,7 +1190,9 @@ JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
         if (live) {
             in.snapshot = live;
         } else {
-            in.snapshot = it->second.last_snapshot.data();
+            /* No live buffer: the module-owned zeroed fallback replaces the
+               old per-instance retained copy (stale first-frame data). */
+            in.snapshot = fallback_snapshot(*mod, it->second);
         }
         in.state = it->second.state.data();
         in.state_size = it->second.state.size();
@@ -1196,7 +1227,9 @@ JNI_M(nClose)(JNIEnv* env, jobject, jlong handle) {
             JcmFrameInput in{};
             in.abi_version = mod->abi();
             in.resource_kind = kv.second.resource_kind;
-            in.snapshot = kv.second.last_snapshot.data();
+            /* Module teardown has no live buffers anymore: every instance
+               disposes against the shared zeroed fallback snapshot. */
+            in.snapshot = fallback_snapshot(*mod, kv.second);
             in.state = kv.second.state.data();
             in.state_size = kv.second.state.size();
             in.host = &host;

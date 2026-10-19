@@ -78,7 +78,10 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         this.scriptShowLogSourceButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.showLogSource);
 
         this.javaCppCommunication = JCMClientConfig.INSTANCE.scripting.javaCppCommunication.value();
-        this.javaCppCommunicationButton = new ButtonWidgetExtension(0, 0, 0, 20,
+        /* Width MUST be non-zero: ListViewWidget anchors the widget at
+         * entryX - getWidth() and a zero-width button is both invisible and
+         * unclickable — the row showed no value and could not be changed. */
+        this.javaCppCommunicationButton = new ButtonWidgetExtension(0, 0, 60, 20,
                 TextUtil.translatable(TextCategory.GUI, "config.java_cpp_communication.shared_memory"), (btn) -> cycleJavaCppCommunication());
         refreshJavaCppCommunication();
     }

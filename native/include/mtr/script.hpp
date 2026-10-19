@@ -56,11 +56,12 @@ struct HostBuffers {
     alignas(64) uint8_t records[sizeof(JcmDrawText) * MAX_RECORDS];
     alignas(64) float  matrix_arena[MAX_MATRICES * 16];
     alignas(64) char   string_arena[MAX_STRING];
-    /* 1 MB initial pixel arena (512x512 BGRA8) — the recorder grows it on
-       demand up to MAX_PIXEL (see FrameRecorder::push_pixels), keeping the
-       per-module footprint small when scripts paint little or nothing. This
-       used to be a flat 16 MB per module, which dominated the reported
-       native memory usage. */
+    /* 1 MB initial pixel arena (512x512 BGRA8) — grows on demand up to
+       MAX_PIXEL (see FrameRecorder::push_pixels) and DECAYS back toward
+       this floor after the spike has passed (FrameRecorder's idle shrink),
+       keeping the per-module footprint small when scripts paint little or
+       nothing. This used to be a flat 16 MB per module, which dominated
+       the reported native memory usage. */
     alignas(64) uint8_t pixel_arena[512 * 512 * 4];
     alignas(64) float  float_arena[MAX_FLOAT];
 };
