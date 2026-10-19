@@ -86,10 +86,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * to the JS route — JS and native scripts coexist in the same world, in
  * the same train, and in the same script entry.
  *
- * Compact snapshot data and draw records share one JNI call per frame.
- * ABI 8 also offers direct Java API calls; those use additional JNI calls
- * and cached reflection. Scripts can use the compact path for frequent
- * operations and keep Java objects in their per-instance state.
+ * Compact snapshot data and draw records historically shared one JNI call
+ * per frame; since the transport options landed this is configured by
+ * "Java 与 C++ 通信方式" (see NativeChannel): the default shared-memory
+ * transport keeps the JNI call as an empty-argument trigger and moves ALL
+ * data into a file-backed mapped region instead. ABI 8 also offers direct
+ * Java API calls; those use additional JNI calls and cached reflection.
+ * Scripts can use the compact path for frequent operations and keep Java
+ * objects in their per-instance state.
  */
 public final class NativeScriptManager {
     /* Must match MTR_NATIVE_ABI_VERSION in native/include/mtr/mtr_native.h.
@@ -222,6 +226,10 @@ public final class NativeScriptManager {
            so the handles would dangle. */
         NativeVehicleDriver.reset();
         NativeHost.get().reset();
+        /* Channel teardown LAST: the driver resets above release their shm
+           snapshot windows, so closing the mapping here leaves no live
+           wrappers pointing into unmapped memory. */
+        NativeChannel.reset();
         /* Actual discovery walks the same mtr_custom_resources.json
            entries as MTRContentResourceManager: scriptLocations entries
            without .js (auto-detected C++), or the legacy language=cpp +
@@ -772,9 +780,11 @@ public final class NativeScriptManager {
         private final Map<Integer, GroupBuffer> groups = new java.util.LinkedHashMap<>();
 
         public static final class GroupBuffer {
-            final ByteBuffer buffer = ByteBuffer
-                    .allocateDirect(NativeSnapshot.CAPACITY)
-                    .order(ByteOrder.nativeOrder());
+            /* Channel-provided buffer: a window of the shared memory region
+               when the shm transport is active (so C++ reads Java's data
+               straight out of the shared mapping), a plain direct buffer
+               otherwise. Capacity is the snapshot worst case either way. */
+            final ByteBuffer buffer = NativeChannel.newSnapshotBuffer(NativeSnapshot.CAPACITY);
             final NativeSnapshot.Builder builder = new NativeSnapshot.Builder();
         }
 
@@ -794,6 +804,17 @@ public final class NativeScriptManager {
         ByteBuffer peek(int group) {
             final GroupBuffer groupBuffer = groups.get(group);
             return groupBuffer == null ? null : groupBuffer.buffer;
+        }
+
+        /** Frees every group's shm window (plain direct buffers are a
+         *  no-op). Called when the owning state dies — vehicle forget or
+         *  driver reset — AFTER disposeVehicleInstance, which reads the
+         *  live buffers one last time. */
+        void release() {
+            for (GroupBuffer groupBuffer : groups.values()) {
+                NativeChannel.releaseSnapshotBuffer(groupBuffer.buffer);
+            }
+            groups.clear();
         }
     }
 
@@ -866,20 +887,35 @@ public final class NativeScriptManager {
      * creates the same MainRenderer.scheduleRender calls the JS
      * pipeline issues; see native/jni_bridge.cpp for the struct
      * layouts (they are plain C structs over this ByteBuffer).
+     *
+     * <p>Fields are mutable ON PURPOSE: the shared-memory transport reuses
+     * ONE frame object per module and re-points it at each frame's arenas
+     * (see NativeChannel.finishFrame), keeping the per-frame hot path at
+     * zero allocations. Frames are consumed synchronously by the replay
+     * driver before the next render — the same capture-then-replay
+     * discipline that bounds the JNI path's cached arena views.</p>
      */
     public static final class NativeFrame {
         /** Host resource owner; set before the frame reaches the replay driver. */
         public String instanceKey;
         /** Owning module's native handle; avoids re-parsing instanceKey. */
         public long moduleHandle;
-        public final ByteBuffer records;   /* JcmDraw* array */
-        public final int recordCount;
-        public final ByteBuffer stringArena;
-        public final ByteBuffer pixelArena;
-        public final ByteBuffer matrixArena;
-        public final ByteBuffer floatArena;
+        public ByteBuffer records;   /* JcmDraw* array */
+        public int recordCount;
+        public ByteBuffer stringArena;
+        public ByteBuffer pixelArena;
+        public ByteBuffer matrixArena;
+        public ByteBuffer floatArena;
+
+        NativeFrame() {
+        }
 
         NativeFrame(ByteBuffer records, int recordCount, ByteBuffer stringArena,
+                    ByteBuffer pixelArena, ByteBuffer matrixArena, ByteBuffer floatArena) {
+            assign(records, recordCount, stringArena, pixelArena, matrixArena, floatArena);
+        }
+
+        void assign(ByteBuffer records, int recordCount, ByteBuffer stringArena,
                     ByteBuffer pixelArena, ByteBuffer matrixArena, ByteBuffer floatArena) {
             this.records = records;
             this.recordCount = recordCount;
@@ -1073,7 +1109,6 @@ public final class NativeScriptManager {
         public static boolean isBridgeAvailable() {
             return BRIDGE_AVAILABLE;
         }
-
         private long nativeHandle;       /* dlopen handle */
 
         final int abiVersion;
@@ -1092,8 +1127,10 @@ public final class NativeScriptManager {
         private native String nScriptType(long handle);
         private native String nScriptId(long handle);
         private native long nStateSize(long handle);
-        private native NativeFrame nRender(long handle, String instanceKey,
-                                           ByteBuffer snapshot, int snapshotLength, int resourceKind);
+        /* Package-private: NativeChannel falls back to this when the
+           shared-memory transport is unavailable or disabled. */
+        native NativeFrame nRender(long handle, String instanceKey,
+                                   ByteBuffer snapshot, int snapshotLength, int resourceKind);
 
         NativeScriptModule(String scriptId, String path, String resourceBase) {
             this.resourceBase = resourceBase;
@@ -1173,7 +1210,10 @@ public final class NativeScriptManager {
                length is passed explicitly; the bridge no longer infers it
                from the buffer (which would report the full 256 KB capacity). */
             snapshot.order(ByteOrder.nativeOrder());
-            return nRender(nativeHandle, instanceKey, snapshot, snapshot.limit(), resourceKind);
+            /* Transport dispatch (JNI / shared memory / Panama FFM stub):
+               NativeChannel owns the how; everything else in the pipeline
+               is transport-agnostic. */
+            return NativeChannel.render(this, instanceKey, snapshot, snapshot.limit(), resourceKind);
         }
 
         synchronized void dispose() {

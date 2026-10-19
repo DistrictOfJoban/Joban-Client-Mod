@@ -26,7 +26,10 @@ public final class NativeContentDriver {
     private static final class State {
         final String key, script;
         final Map<Long, AbstractScriptContext> contexts = new LinkedHashMap<>();
-        ByteBuffer snapshot=ByteBuffer.allocateDirect(16*1024).order(ByteOrder.nativeOrder());
+        /* Channel-provided: a shm window when the shared-memory transport is
+           active (C++ then reads the snapshot straight out of the shared
+           mapping), a plain direct buffer otherwise. */
+        ByteBuffer snapshot=NativeChannel.newSnapshotBuffer(16*1024);
         long touched=System.nanoTime();
         Object wrapper;
         long errorUntil;
@@ -46,7 +49,9 @@ public final class NativeContentDriver {
                 try { snapshot.apply(state.snapshot); break; }
                 catch(BufferOverflowException|IndexOutOfBoundsException ex) {
                     if(state.snapshot.capacity()>=4*1024*1024) throw ex;
-                    state.snapshot=ByteBuffer.allocateDirect(state.snapshot.capacity()*2).order(ByteOrder.nativeOrder());
+                    /* Channel growth frees the old shm window (for plain
+                       direct buffers the old one simply becomes garbage). */
+                    state.snapshot=NativeChannel.growSnapshotBuffer(state.snapshot);
                 }
             }
             NativeScriptManager.render(key,script,state.snapshot,kind,
@@ -231,8 +236,16 @@ public final class NativeContentDriver {
             boolean removed=now-state.touched>5_000_000_000L;
             if(state.wrapper instanceof EyecandyBlockEntityWrapper) removed|=((EyecandyBlockEntityWrapper)state.wrapper).removed();
             if(state.wrapper instanceof LiftWrapper) removed|=((LiftWrapper)state.wrapper).removed();
-            if(removed&&STATES.remove(state.key,state)) NativeScriptManager.disposeInstance(state.key,state.script,state.snapshot);
+            if(removed&&STATES.remove(state.key,state)) {
+                NativeScriptManager.disposeInstance(state.key,state.script,state.snapshot);
+                /* dispose hands the LIVE buffer to mtrDispose one last time;
+                   release the shm window only after it has come back. */
+                NativeChannel.releaseSnapshotBuffer(state.snapshot);
+            }
         }
     }
-    public static void reset() { STATES.clear(); NativeStringCache.clear(); com.lx862.jcm.mod.util.CachedIdentifiers.clear(); }
+    public static void reset() {
+        for(State state:STATES.values()) NativeChannel.releaseSnapshotBuffer(state.snapshot);
+        STATES.clear(); NativeStringCache.clear(); com.lx862.jcm.mod.util.CachedIdentifiers.clear();
+    }
 }

@@ -279,3 +279,26 @@ Java2D, synchronous/asynchronous callbacks, state isolation, disposal/reload,
 PIDS/lift/eyecandy snapshot fields, create-time shapes, and ABI 6/7 loading.
 Game-specific visibility, user content and final appearance still require
 testing in a running Minecraft instance.
+
+## Java ↔ C++ transports ("Java 与 C++ 通信方式")
+
+Since 2.3.0-beta-2.yanyang.5 the JVM-side host can exchange per-frame data
+with the script modules through three selectable mechanisms (Mod Menu →
+Joban Client Mod Config → Scripting, config key
+`scripting.javaCppCommunication`):
+
+| Option | What it does | Config description |
+| --- | --- | --- |
+| **共享内存** (default) | Snapshot marshalling writes into a window of a file-backed shared region (`FileChannel#map` → `MappedByteBuffer`); C++ reads Java's data straight out of that mapping. The per-frame trigger is an **empty-argument** JNI call and the output arenas are published in the region as raw descriptors, which Java re-binds into *reused* `ByteBuffer` views each frame. Zero JNI data marshalling, zero copies, zero hot-path allocations. The region is accessed with `sun.misc.Unsafe` on JDK 16..21 and with the Foreign Function & Memory API + `VarHandle` (`MemorySegment.ofBuffer`, `ValueLayout` var handles) from JDK 22 on, selected automatically at runtime. | 性能最好，但小概率出现稳定性问题 |
+| **JNI** | The original pipeline: the snapshot `ByteBuffer` and the five output arenas ride the per-frame `nRender` call. | 性能差，但兼容性和稳定性最好 |
+| **Panama FFM（未完成）** | Scaffold for a Foreign Function & Memory API future where the per-frame trigger itself becomes an FFM downcall (`SymbolLookup` + `Linker.downcallHandle`); unfinished — selecting it currently falls back to shared memory with a log line. | 性能中等，需 JDK 22 以上，未完成 |
+
+The shared-memory channel is fully self-contained: the region lives in the
+system temp directory (`jcm_shm_<pid>…`), is unmapped (`invokeCleaner`) and
+deleted on every resource reload, driver snapshot windows are freed on
+instance dispose/tick-out/reset, and any failure (missing bridge exports on
+an old binary, a full region, a JVM without the required internals) degrades
+transparantly to the JNI path with a one-line log instead of failing scripts.
+
+Transport layout: `native/include/mtr/shm_channel.h` (mirrored by
+`com.lx862.jcm.nativeapi.NativeShm`).

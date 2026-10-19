@@ -58,6 +58,7 @@
 
 #include <jni.h>
 #include <mtr/mtr_native.h>
+#include <mtr/shm_channel.h>
 
 #include <cstdio>
 #include <cstring>
@@ -123,6 +124,10 @@ struct ArenaView {
 
 struct BridgeModule {
     void* dl = nullptr;
+    /* Shm transport: long instance id -> instance key ("instanceKey/module/<handle>").
+       Registered once per instance via nativeShmRegisterInstance, scanned
+       off when the string-keyed instance is disposed. */
+    std::unordered_map<int64_t, std::string> shm_ids;
 
     uint32_t (*abi)(void) = nullptr;
     const char* (*type)(void) = nullptr;
@@ -197,6 +202,26 @@ namespace {
 
 JavaVM* g_vm = nullptr;
 jobject g_host = nullptr;                 /* global ref, or null      */
+
+/* ---- shared-memory channel state (see include/mtr/shm_channel.h) ----
+   The region is created + mapped by Java (FileChannel#map); this bridge
+   only receives the mapping's base address ONCE via nativeShmInit and
+   then reads/writes the control/result slots through that pointer — it
+   never opens or mmaps the file itself, so there is nothing here to leak
+   and no platform-specific mapping code to maintain. All exchanges are
+   sequential on the render thread (Java writes request -> empty-argument
+   nativeShmKick() -> C++ writes result before returning). */
+struct ShmState {
+    uint8_t* base = nullptr;    /* mapping base, set by nativeShmInit */
+    int64_t size = 0;           /* validated region size               */
+};
+ShmState g_shm;
+/* handle -> BridgeModule registry so the shm kick (which learns the
+   module from the CONTROL SLOT, not from a JNI argument) can find it.
+   Populated in nOpen, removed in nClose; a tiny mutex because module
+   load/unload happens off the render thread. */
+std::unordered_map<jlong, BridgeModule*> g_modules;
+std::mutex g_modules_mutex;
 jclass g_api_class = nullptr;
 jmethodID g_api_invoke = nullptr;
 jclass g_frame_class = nullptr;
@@ -763,6 +788,12 @@ JNI_M(nOpen)(JNIEnv* env, jobject, jstring path) {
         delete mod;
         return 0;
     }
+    /* Register for the shm transport, which learns the module from the
+       CONTROL SLOT instead of a JNI argument (see nativeShmKick). */
+    {
+        std::lock_guard<std::mutex> lk(g_modules_mutex);
+        g_modules[reinterpret_cast<jlong>(mod)] = mod;
+    }
     return reinterpret_cast<jlong>(mod);
 }
 
@@ -791,7 +822,87 @@ JNI_M(nStateSize)(JNIEnv*, jobject, jlong handle) {
 }
 
 /* ------------------------------------------------------------------ */
-/* per-frame render                                                    */
+/* per-frame pipeline (shared by the JNI and shm transports)           */
+/* ------------------------------------------------------------------ */
+
+/* Runs the per-frame pipeline for (module, instance key, snapshot) while
+   the caller holds mod->mutex: lazy instance lookup, ABI-6 state init,
+   mtrCreate on first use, mtrRender, host resource resolution and
+   record-handle patching.
+
+   On JCM_SHM_OK, `out` holds the module-owned, PATCHED arena descriptors
+   (record_count / records_len adjusted) and stays valid until the next
+   render on this module. Any failure marks the instance failed exactly
+   like the JNI-only bridge did, so both transports share one behaviour. */
+int32_t run_frame_locked(JNIEnv* env, BridgeModule& mod, const char* key,
+                         const void* snapshot, int64_t snapshotLen,
+                         int64_t snapshotCapacity, jint kind, JcmFrameOutput& out) {
+    Instance& inst = mod.instances[key];
+    inst.api_key = key;
+    inst.resource_kind = kind;
+    if (inst.failed) return JCM_SHM_ERR_CREATE;
+
+    if (inst.state.empty() && mod.state_size() > 0) {
+        inst.state.assign(mod.state_size(), 0);
+    }
+
+    /* Snapshot retention for dispose()-time rebuild: refreshed only when the
+       driver hands over a different buffer (see the note in nRender). The
+       live buffer is read in place — zero copies on both transports. */
+    if (inst.snapshot_address != snapshot || inst.snapshot_capacity != snapshotCapacity) {
+        inst.last_snapshot.assign(static_cast<const uint8_t*>(snapshot),
+                                  static_cast<const uint8_t*>(snapshot) + snapshotLen);
+        inst.snapshot_address = snapshot;
+        inst.snapshot_capacity = snapshotCapacity;
+    }
+
+    JcmHostServices host;
+    fill_host(host, inst);
+
+    JcmFrameInput in{};
+    in.abi_version = mod.abi();
+    in.resource_kind = kind;
+    in.snapshot = snapshot;
+    in.state = inst.state.data();
+    in.state_size = inst.state.size();
+    in.host = &host;
+
+    if (!inst.created) {
+        /* ABI 6: let the module construct its State object inside the block
+           BEFORE create() runs. The block is raw zeroed memory, which is not
+           a valid State when State holds std::string / std::vector — on
+           libstdc++ that is an immediate null dereference, so this is not
+           optional for modules that export mtrInit. */
+        if (mod.init) {
+            mod.init(&in);
+        }
+        inst.initialized = true;
+
+        if (mod.create(&in) != 0) {
+            /* same failure semantics as a JS script that throws in
+               create(): drop the instance, let the host cool it down */
+            inst.failed = true;
+            return JCM_SHM_ERR_CREATE;
+        }
+        inst.created = true;
+    }
+
+    if (mod.render(&in, &out) != 0) { inst.failed = true; return JCM_SHM_ERR_RENDER; }
+    // Scripts may allocate or rebuild resources during render().
+    if (!resolve_captured_resources(env, inst)) return JCM_SHM_ERR_RESOURCES;
+
+    /* v4/v5: swap the script's slot handles for the real JVM handles and
+       drop records that have nothing to draw/upload into. */
+    int32_t keptRecords = out.record_count;
+    int32_t keptLen = 0;
+    patch_frame_handles(inst, out, &keptRecords, &keptLen);
+    out.record_count = keptRecords;
+    out.records_len = keptLen;
+    return JCM_SHM_OK;
+}
+
+/* ------------------------------------------------------------------ */
+/* per-frame render (JNI transport: the data rides the JNI call itself) */
 /* ------------------------------------------------------------------ */
 
 extern "C" JNIEXPORT jobject JNICALL
@@ -807,76 +918,22 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
        module lock, mirroring JCM's per-script single-thread executor */
     std::lock_guard<std::mutex> lock(mod->mutex);
 
-    Instance& inst = mod->instances[key];
-    inst.api_key = key;
-    inst.resource_kind = resourceKind;
-    env->ReleaseStringUTFChars(instanceKey, key);
-    if (inst.failed) return nullptr;
-
-    if (inst.state.empty() && mod->state_size() > 0) {
-        inst.state.assign(mod->state_size(), 0);
-    }
-
     /* snapshot: direct ByteBuffer written sequentially by the Java side.
        snapshotLen is the WRITTEN length (buffer position 0 / limit = len);
        the module reads the live buffer while the Java driver is blocked
-       inside this call. The retained copy for dispose() is refreshed only
-       when the driver hands over a different buffer, replacing what used
-       to be a 256 KB memcpy per vehicle per frame. */
+       inside this call. */
     const void* snap = env->GetDirectBufferAddress(snapshotBuf);
     const jlong snap_capacity = env->GetDirectBufferCapacity(snapshotBuf);
-    if (!snap || snapshotLen <= 0) return nullptr;
-    if (inst.snapshot_address != snap || inst.snapshot_capacity != snap_capacity) {
-        inst.last_snapshot.assign(static_cast<const uint8_t*>(snap),
-                                  static_cast<const uint8_t*>(snap) + snapshotLen);
-        inst.snapshot_address = snap;
-        inst.snapshot_capacity = snap_capacity;
-    }
-
-    JcmHostServices host;
-    fill_host(host, inst);
-
-    JcmFrameInput in{};
-    in.abi_version = mod->abi();
-    in.resource_kind = resourceKind;
-    in.snapshot = snap;
-    in.state = inst.state.data();
-    in.state_size = inst.state.size();
-    in.host = &host;
-
-    if (!inst.created) {
-        /* ABI 6: let the module construct its State object inside the block
-           BEFORE create() runs. The block is raw zeroed memory, which is not a
-           valid State when State holds std::string / std::vector — on
-           libstdc++ that is an immediate null dereference, so this is not
-           optional for modules that export mtrInit. */
-        if (mod->init) {
-            mod->init(&in);
-        }
-        inst.initialized = true;
-
-        if (mod->create(&in) != 0) {
-            /* same failure semantics as a JS script that throws in
-               create(): drop the instance, let the host cool it down */
-            inst.failed = true;
-            return nullptr;
-        }
-        inst.created = true;
-
+    if (!snap || snapshotLen <= 0) {
+        env->ReleaseStringUTFChars(instanceKey, key);
+        return nullptr;
     }
 
     JcmFrameOutput out{};
-    if (mod->render(&in, &out) != 0) { inst.failed = true; return nullptr; }
-    // Scripts may allocate or rebuild resources during render().
-    if (!resolve_captured_resources(env, inst)) return nullptr;
-
-    /* v4/v5: swap the script's slot handles for the real JVM handles and
-       drop records that have nothing to draw/upload into. */
-    int32_t keptRecords = out.record_count;
-    int32_t keptLen = 0;
-    patch_frame_handles(inst, out, &keptRecords, &keptLen);
-    out.record_count = keptRecords;
-    out.records_len = keptLen;
+    const int32_t status = run_frame_locked(env, *mod, key, snap, snapshotLen,
+                                            snap_capacity, resourceKind, out);
+    env->ReleaseStringUTFChars(instanceKey, key);
+    if (status != 0) return nullptr;
 
     /* wrap the module-owned arenas as NIO ByteBuffers. ABI 9+ modules report
        arena capacities, so the five wrapper objects are cached per module and
@@ -896,7 +953,7 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
                                   out.matrix_arena_capacity);
 
     jobject floats = arena_view(env, *mod, 4, out.float_arena, out.float_arena_len,
-                                out.float_arena_capacity);
+                                 out.float_arena_capacity);
     jobject result = env->NewObject(g_frame_class, g_frame_ctor, records,
                           static_cast<jint>(out.record_count),
                           strings, pixels, matrices, floats);
@@ -911,6 +968,142 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
     if (matrices && matrices != mod->views[3].ref) env->DeleteLocalRef(matrices);
     if (floats && floats != mod->views[4].ref) env->DeleteLocalRef(floats);
     return result;
+}
+
+/* ------------------------------------------------------------------ */
+/* shared-memory channel natives (NativeChannel.java)                  */
+/*                                                                     */
+/* The per-frame exchange lives in a file-backed region mapped by Java */
+/* (MappedByteBuffer). Java writes the request into the CONTROL slot   */
+/* and makes an EMPTY-ARGUMENT nativeShmKick() call; this handler reads */
+/* the request (the snapshot ADDRESS travels per frame and points at    */
+/* the shared mapping for driver-owned buffers), runs the same pipeline */
+/* as nRender, then writes the result descriptors (arena addresses,     */
+/* lengths and capacities — the arenas are module-owned and stable)     */
+/* into the RESULT slot. No jstring, no NewDirectByteBuffer, no         */
+/* NativeFrame construction on this path.                               */
+/* ------------------------------------------------------------------ */
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmInit(JNIEnv*, jclass, jlong base, jlong size) {
+    if (base == 0 || size < JCM_SHM_WINDOWS_OFFSET + 4096) {
+        g_shm.base = nullptr;
+        g_shm.size = 0;
+        return JCM_SHM_ERR_BAD_LAYOUT;
+    }
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(base);
+    uint64_t magic = 0;
+    uint32_t version = 0;
+    uint64_t regionSize = 0;
+    std::memcpy(&magic, p + JCM_SHM_HDR_MAGIC, sizeof(magic));
+    std::memcpy(&version, p + JCM_SHM_HDR_VERSION, sizeof(version));
+    std::memcpy(&regionSize, p + JCM_SHM_HDR_SIZE, sizeof(regionSize));
+    if (magic != JCM_SHM_MAGIC || version != JCM_SHM_LAYOUT_VERSION
+            || static_cast<int64_t>(regionSize) != size) {
+        g_shm.base = nullptr;
+        g_shm.size = 0;
+        return JCM_SHM_ERR_BAD_LAYOUT;
+    }
+    g_shm.base = reinterpret_cast<uint8_t*>(base);
+    g_shm.size = size;
+    return JCM_SHM_OK;
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmKick(JNIEnv* env, jclass) {
+    if (!g_shm.base) return JCM_SHM_ERR_NOT_INIT;
+    const uint8_t* ctl = g_shm.base + JCM_SHM_CONTROL_OFFSET;
+    uint64_t seq = 0, handle = 0, instanceId = 0, snapAddr = 0;
+    uint32_t kind = 0, snapLen = 0;
+    std::memcpy(&seq, ctl + JCM_SHM_CTL_SEQ, sizeof(seq));
+    std::memcpy(&handle, ctl + JCM_SHM_CTL_MODULE, sizeof(handle));
+    std::memcpy(&instanceId, ctl + JCM_SHM_CTL_INSTANCE, sizeof(instanceId));
+    std::memcpy(&kind, ctl + JCM_SHM_CTL_KIND, sizeof(kind));
+    std::memcpy(&snapLen, ctl + JCM_SHM_CTL_SNAP_LEN, sizeof(snapLen));
+    std::memcpy(&snapAddr, ctl + JCM_SHM_CTL_SNAP_ADDR, sizeof(snapAddr));
+    if (seq == 0 || kind > MTR_RESOURCE_LIFT) return JCM_SHM_ERR_REQUEST;
+    if (!snapAddr || snapLen == 0) return JCM_SHM_ERR_SNAPSHOT;
+
+    BridgeModule* mod = nullptr;
+    {
+        std::lock_guard<std::mutex> lk(g_modules_mutex);
+        auto it = g_modules.find(static_cast<jlong>(handle));
+        if (it != g_modules.end()) mod = it->second;
+    }
+    if (!mod) return JCM_SHM_ERR_MODULE;
+
+    uint8_t* res = g_shm.base + JCM_SHM_RESULT_OFFSET;
+    auto writeResult = [&](uint64_t echo, int32_t status) {
+        std::memcpy(res + JCM_SHM_RES_SEQ, &echo, sizeof(echo));
+        std::memcpy(res + JCM_SHM_RES_STATUS, &status, sizeof(status));
+    };
+
+    std::lock_guard<std::mutex> lock(mod->mutex);
+    const auto idIt = mod->shm_ids.find(static_cast<int64_t>(instanceId));
+    if (idIt == mod->shm_ids.end()) return JCM_SHM_ERR_INSTANCE;
+
+    JcmFrameOutput out{};
+    const int32_t status = run_frame_locked(env, *mod, idIt->second.c_str(),
+            reinterpret_cast<const void*>(static_cast<uintptr_t>(snapAddr)),
+            static_cast<int64_t>(snapLen),
+            static_cast<int64_t>(snapLen),
+            static_cast<jint>(kind), out);
+    if (status != 0) {
+        writeResult(seq, status);
+        return status;
+    }
+
+    /* Publish the module-owned arena descriptors; Java wraps them into
+       REUSED NIO ByteBuffers (NativeArenaView) — zero JNI objects created. */
+    struct ArenaDesc { uint64_t addr, len, cap; };
+    const ArenaDesc arenas[5] = {
+        { reinterpret_cast<uintptr_t>(out.records),      static_cast<uint64_t>(out.records_len),      static_cast<uint64_t>(out.records_capacity) },
+        { reinterpret_cast<uintptr_t>(out.string_arena), static_cast<uint64_t>(out.string_arena_len), static_cast<uint64_t>(out.string_arena_capacity) },
+        { reinterpret_cast<uintptr_t>(out.pixel_arena),  static_cast<uint64_t>(out.pixel_arena_len),  static_cast<uint64_t>(out.pixel_arena_capacity) },
+        { reinterpret_cast<uintptr_t>(out.matrix_arena), static_cast<uint64_t>(out.matrix_arena_len), static_cast<uint64_t>(out.matrix_arena_capacity) },
+        { reinterpret_cast<uintptr_t>(out.float_arena),  static_cast<uint64_t>(out.float_arena_len),  static_cast<uint64_t>(out.float_arena_capacity) },
+    };
+    static const int arenaOffsets[5] = {
+        JCM_SHM_RES_RECORDS, JCM_SHM_RES_STRINGS, JCM_SHM_RES_PIXELS,
+        JCM_SHM_RES_MATRICES, JCM_SHM_RES_FLOATS
+    };
+    int32_t count = out.record_count;
+    std::memcpy(res + JCM_SHM_RES_COUNT, &count, sizeof(count));
+    for (int i = 0; i < 5; i++) {
+        std::memcpy(res + arenaOffsets[i], &arenas[i], sizeof(ArenaDesc));
+    }
+    /* seq echo LAST: a stale reader can never mistake a half-written
+       result for this frame's (same-thread discipline makes this a
+       belt-and-suspenders guard, not a correctness requirement). */
+    writeResult(seq, JCM_SHM_OK);
+    return JCM_SHM_OK;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmRegisterInstance(JNIEnv* env, jclass,
+        jlong handle, jlong instanceId, jstring instanceKey) {
+    BridgeModule* mod = nullptr;
+    {
+        std::lock_guard<std::mutex> lk(g_modules_mutex);
+        auto it = g_modules.find(handle);
+        if (it != g_modules.end()) mod = it->second;
+    }
+    if (!mod || !instanceKey) return;
+    const char* utf = env->GetStringUTFChars(instanceKey, nullptr);
+    if (!utf) return;
+    {
+        std::lock_guard<std::mutex> lock(mod->mutex);
+        mod->shm_ids[static_cast<int64_t>(instanceId)] = utf;
+    }
+    env->ReleaseStringUTFChars(instanceKey, utf);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmShutdown(JNIEnv*, jclass) {
+    /* The mapping itself is owned and unmapped by Java (NativeShm.close);
+       the bridge only forgets the base address here. */
+    g_shm.base = nullptr;
+    g_shm.size = 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -957,7 +1150,19 @@ JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
         in.host = &host;
         mod->dispose(&in);
     }
+    /* Capture the key BEFORE the instance map entry dies: the shm id scan
+       below compares against it (erase invalidates the iterator). */
+    const std::string disposed_api_key = it->second.api_key;
     mod->instances.erase(it);
+    /* The shm transport keeps a long-id -> key entry for this instance;
+       forget it with the instance so ids never outlive their instances. */
+    for (auto sit = mod->shm_ids.begin(); sit != mod->shm_ids.end();) {
+        if (sit->second == disposed_api_key) {
+            sit = mod->shm_ids.erase(sit);
+        } else {
+            ++sit;
+        }
+    }
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -987,6 +1192,12 @@ JNI_M(nClose)(JNIEnv* env, jobject, jlong handle) {
             view.address = nullptr;
             view.capacity = 0;
         }
+        /* Drop the shm instance-id table with the module it belongs to. */
+        mod->shm_ids.clear();
+    }
+    {
+        std::lock_guard<std::mutex> lk(g_modules_mutex);
+        g_modules.erase(handle);
     }
     /* dlclose happens in ~BridgeModule */
     delete mod;

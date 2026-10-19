@@ -6,7 +6,6 @@ import folk.sisby.kaleido.lib.quiltconfig.api.annotations.ChangeWarning;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayName;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
-
 @DisplayName("Joban Client Mod Config")
 public class JCMClientConfig extends ReflectiveConfig {
     public static final JCMClientConfig INSTANCE = createToml(LoaderImpl.getConfigPath(), "jsblock", "client", JCMClientConfig.class);
@@ -20,6 +19,22 @@ public class JCMClientConfig extends ReflectiveConfig {
 
     @Comment("Config related to the scripting feature in JCM")
     public final Scripting scripting = new Scripting();
+
+    /**
+     * "Java 与 C++ 通信方式" — how the JVM exchanges per-frame data with
+     * the C++ script modules. Constant names mirror
+     * com.lx862.jcm.nativeapi.NativeChannel.Transport one-to-one; the
+     * config screen cycles through them and JCMClient maps them onto the
+     * channel at boot (and on save).
+     */
+    public enum JavaCppCommunication {
+        /** 性能差，但兼容性和稳定性最好 */
+        JNI,
+        /** 性能中等，需 JDK 22 以上，未完成 */
+        PANAMA_FFM,
+        /** 性能最好，但小概率出现稳定性问题 */
+        SHARED_MEMORY
+    }
 
     @Comment("Config related to MTR modifications made by JCM")
     public final MTRPatch mtrPatch = new MTRPatch();
@@ -38,6 +53,11 @@ public class JCMClientConfig extends ReflectiveConfig {
 
         @Comment("When using print() statement or the Console API in scripts, also output the script file & line the print statement is triggered at.")
         public final TrackedValue<Boolean> showLogSource = value(false);
+
+        @Comment("How Java exchanges per-frame data with C++ script modules.")
+        @Comment("SHARED_MEMORY (default) maps a file-backed region and lets C++ read Java's snapshot straight out of it - fastest, tiny stability risk.")
+        @Comment("JNI passes everything through per-frame JNI calls - slowest, best compatibility. PANAMA_FFM is an unfinished JDK 22+ scaffold that falls back to shared memory.")
+        public final TrackedValue<JavaCppCommunication> javaCppCommunication = value(JavaCppCommunication.SHARED_MEMORY);
     }
 
     @DisplayName("MTR Enhancements")

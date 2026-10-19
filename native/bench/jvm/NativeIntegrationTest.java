@@ -52,8 +52,27 @@ public class NativeIntegrationTest {
   check(first.marks.equals(List.of("create","render","render","dispose")),"dispose can still call the API");
   first.retained.accept(1);
   check(first.marks.size()==4,"retained callback is disabled before state destruction");
+  /* ---- shared-memory transport specifics ---- */
+  check(NativeChannel.activeTransport()==NativeChannel.Transport.SHARED_MEMORY,"default transport is shared memory");
+  ByteBuffer windowA=NativeChannel.newSnapshotBuffer(4096);
+  long addressA=NativeArenaView.addressOf(windowA);
+  check(addressA!=0,"snapshot buffer lives in native memory");
+  NativeChannel.releaseSnapshotBuffer(windowA);
+  ByteBuffer windowB=NativeChannel.newSnapshotBuffer(4096);
+  check(NativeArenaView.addressOf(windowB)==addressA,"released shm window is immediately reused");
+  NativeChannel.releaseSnapshotBuffer(windowB);
+  /* The same LIVE instance must keep its state across a transport switch:
+     shm renders so far, one JNI render, then back to shm. */
+  NativeChannel.configure(NativeChannel.Transport.JNI);
+  var jniFrames=NativeScriptManager.render("fixture1","test:probe",snapshot,0,m->second,second,null);
+  check(jniFrames.size()==1,"JNI transport renders the same live instance");
+  check(second.marks.equals(List.of("create","render","render","render")),"JNI render reuses instance state");
+  NativeChannel.configure(NativeChannel.Transport.SHARED_MEMORY);
+  var shmFrames=NativeScriptManager.render("fixture1","test:probe",snapshot,0,m->second,second,null);
+  check(shmFrames.size()==1,"shared memory transport resumes");
+  check(second.marks.equals(List.of("create","render","render","render","render")),"shm render reuses instance state");
   NativeScriptManager.reload();
-  check(second.marks.equals(List.of("create","render","render","dispose")),"reload disposes each instance with live APIs");
+  check(second.marks.equals(List.of("create","render","render","render","render","dispose")),"reload disposes each instance with live APIs");
   check(!NativeScriptManager.isLoaded("test:probe"),"reload unloads module");
   for(int kind=1;kind<=3;kind++) {
    String id="test:content"+kind;
