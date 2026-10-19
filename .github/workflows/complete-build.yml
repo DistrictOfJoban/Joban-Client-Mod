@@ -1,0 +1,216 @@
+# Complete Build — produces fully importable, game-ready jars.
+#
+# Unlike the push/PR `build` workflow (which compiles the mod WITHOUT the
+# native bridges for speed), this pipeline mirrors the release pipeline:
+# it first builds the jcm_native_bridge on all seven platforms, then
+# bundles all seven bridges into every jar. The resulting 12 jars
+# (6 Minecraft versions x fabric/forge) can be dropped straight into a
+# live game and will load resource-pack C++ scripts such as vehicle
+# natives — the plain CI jars cannot, and the mod will log
+# "native bridge unavailable" for every native script instead.
+#
+# This workflow never tags, never creates a GitHub Release and never
+# publishes anywhere: the jars are only uploaded as workflow artifacts
+# for in-game testing. Reuse it whenever a branch needs complete jars.
+name: Complete Build
+on:
+  workflow_dispatch:
+    inputs:
+      mod-version:
+        type: string
+        required: true
+        description: Mod version string stamped into the jars (e.g. 2.3.0-beta-2.yanyang.4-shmtest1)
+      retention-days:
+        type: number
+        required: false
+        default: 14
+        description: Artifact retention in days
+permissions:
+  contents: read
+jobs:
+  natives:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            platform: linux-x64
+            java-arch: x64
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+            java-arch: aarch64
+          - os: windows-latest
+            platform: windows-x64
+            java-arch: x64
+          - os: macos-15-intel
+            platform: macos-x64
+            java-arch: x64
+            cmake-arch: -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+          - os: macos-latest
+            platform: macos-arm64
+            java-arch: aarch64
+            cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+          # Cross builds: the produced image cannot run on the build host,
+          # so the JVM/JNI ctest suite is skipped there (source-level checks
+          # still run on the four native-platform jobs). Compilation itself
+          # still builds every probe and static-assert target.
+          - os: ubuntu-latest
+            platform: android-arm64
+            cross: android
+            cmake-arch: -DCMAKE_ANDROID_ABI=arm64-v8a
+          - os: macos-latest
+            platform: ios-arm64
+            cross: ios
+            cmake-arch: -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
+    runs-on: ${{ matrix.os }}
+    env:
+      NATIVE_TEST_PLATFORM: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          architecture: ${{ matrix.java-arch || 'x64' }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Configure and build CMake targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.cross }}" = "android" ]; then
+            # Cross-compile against the preinstalled NDK (arm64-v8a,
+            # Android 5.0+ / API 21). jni.h comes from the HOST JDK — the
+            # NDK's own jni.h is a divergent variant (no JNI_VERSION_1_8,
+            # different C++ AttachCurrentThread signature).
+            NDK=$(ls -d /usr/local/lib/android/sdk/ndk/* | sort -V | tail -1)
+            echo "Using NDK: $NDK"
+            cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
+              -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 \
+              -DJCM_JNI_INCLUDE_DIR="$JAVA_HOME/include" ${{ matrix.cmake-arch }}
+          elif [ "${{ matrix.cross }}" = "ios" ]; then
+            # Cross-compile a Mach-O arm64 dylib against the iPhoneOS SDK.
+            # jni.h comes from the host JDK (the JNI interface is identical);
+            # side-loaders re-sign the image, so no signing identity here.
+            cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release \
+              -DJCM_JNI_INCLUDE_DIR="$JAVA_HOME/include" ${{ matrix.cmake-arch }}
+          else
+            cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake-arch }}
+          fi
+          cmake --build native/build --config Release --parallel 4
+      - name: Verify scripts, ABI layout and real JVM JNI integration
+        if: matrix.cross == ''
+        run: ctest --test-dir native/build -C Release --output-on-failure
+      - name: Collect bridge and generic example libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "dist/bridges/${{ matrix.platform }}" "dist/examples/${{ matrix.platform }}"
+          find native/build -type f \( -name '*jcm_native_bridge.dll' -o -name '*jcm_native_bridge.so' -o -name '*jcm_native_bridge.dylib' \) -exec cp {} "dist/bridges/${{ matrix.platform }}/" \;
+          for module in pids_arrivals eyecandy_signal lift_indicator; do
+            find native/build -type f \( -name "$module.dll" -o -name "lib$module.so" -o -name "lib$module.dylib" \) -exec cp {} "dist/examples/${{ matrix.platform }}/" \;
+          done
+          test "$(find dist/bridges -type f | wc -l | tr -d ' ')" = 1
+          test "$(find dist/examples -type f | wc -l | tr -d ' ')" = 3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.platform }}
+          path: dist/
+          retention-days: 1
+          if-no-files-found: error
+  build:
+    needs: natives
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: [1.17.1, 1.18.2, 1.19.2, 1.19.4, 1.20.1, 1.20.4]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: native-dist
+          merge-multiple: true
+      - name: Require all seven bridges before building
+        run: |
+          set -euo pipefail
+          found=$(find native-dist/bridges -type f | wc -l | tr -d ' ')
+          test "$found" = 7
+          echo "All 7 platform bridges present: $(find native-dist/bridges -type f -printf '%p\n' | sort | xargs -n1 basename | tr '\n' ' ')"
+      - name: Build both loaders with all seven JNI bridges
+        run: |
+          chmod +x ./gradlew
+          ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}" --console=plain
+          ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="${{ inputs.mod-version }}" -Pnative_bridge_dir=native-dist/bridges --console=plain
+      - name: Audit documented Java API declarations
+        run: |
+          find .gradle ~/.gradle -name '*4.0.5*.jar' -type f > native/build-api-jars.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import sys, json
+          sys.path.insert(0,'native/bench')
+          from api_coverage import audit
+          jars=[Path(line) for line in Path('native/build-api-jars.txt').read_text().splitlines()]
+          manifest=json.loads(Path('native/bench/api-coverage.json').read_text())
+          for loader in ('fabric','forge'):
+              audit(Path(loader+'/build/classes/java/main'),jars,manifest)
+          PY
+      - name: Verify jar contents and absence of user resource packs
+        run: python3 native/bench/verify_jar.py --version "${{ inputs.mod-version }}" build/*.jar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: complete-jars-${{ matrix.minecraft }}
+          path: build/*.jar
+          retention-days: ${{ inputs.retention-days }}
+          if-no-files-found: error
+  sdk:
+    # Bundles the native script SDK (headers + sources + the three example
+    # modules compiled for all seven platforms) the same way the release
+    # pipeline does, so pack authors can test against this exact build.
+    needs: natives
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: native-dist
+          merge-multiple: true
+      - name: Package the native SDK
+        run: |
+          set -euo pipefail
+          test "$(find native-dist/examples -type f | wc -l | tr -d ' ')" = 21
+          python3 - <<'PY'
+          import subprocess,zipfile
+          from pathlib import Path
+          files=subprocess.check_output(['git','ls-files','native'],text=True).splitlines()
+          with zipfile.ZipFile('jcm-native-sdk-${{ inputs.mod-version }}.zip','w',zipfile.ZIP_DEFLATED) as archive:
+              archive.write('LICENSE')
+              for name in files:
+                  path=Path(name)
+                  if path.is_file(): archive.write(path,path)
+              for path in Path('native-dist/examples').rglob('*'):
+                  if path.is_file(): archive.write(path,path.relative_to('native-dist'))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jcm-native-sdk-${{ inputs.mod-version }}
+          path: jcm-native-sdk-*.zip
+          retention-days: ${{ inputs.retention-days }}
+          if-no-files-found: error
