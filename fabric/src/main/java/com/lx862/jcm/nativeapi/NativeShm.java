@@ -216,6 +216,23 @@ final class NativeShm {
         }
     }
 
+    /** Diagnostic name for a status code (see shm_channel.h). */
+    static String statusText(int status) {
+        switch (status) {
+            case STATUS_OK: return "ok";
+            case ERR_NOT_INIT: return "channel not initialized";
+            case ERR_BAD_LAYOUT: return "layout mismatch (bridge and jar disagree)";
+            case ERR_MODULE: return "module not registered";
+            case ERR_INSTANCE: return "instance not registered";
+            case ERR_CREATE: return "mtrCreate failed";
+            case ERR_RENDER: return "mtrRender failed";
+            case ERR_RESOURCES: return "host resources failed";
+            case ERR_REQUEST: return "bad request";
+            case ERR_SNAPSHOT: return "invalid snapshot";
+            default: return "unknown";
+        }
+    }
+
     /* ------------------------------------------------------------------ */
     /* header/control/result slot access (region-relative offsets)         */
     /* ------------------------------------------------------------------ */

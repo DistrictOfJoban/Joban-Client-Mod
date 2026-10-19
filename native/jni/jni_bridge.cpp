@@ -1021,8 +1021,16 @@ Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmKick(JNIEnv* env, jclass) {
     std::memcpy(&kind, ctl + JCM_SHM_CTL_KIND, sizeof(kind));
     std::memcpy(&snapLen, ctl + JCM_SHM_CTL_SNAP_LEN, sizeof(snapLen));
     std::memcpy(&snapAddr, ctl + JCM_SHM_CTL_SNAP_ADDR, sizeof(snapAddr));
-    if (seq == 0 || kind > MTR_RESOURCE_LIFT) return JCM_SHM_ERR_REQUEST;
-    if (!snapAddr || snapLen == 0) return JCM_SHM_ERR_SNAPSHOT;
+    if (seq == 0 || kind > MTR_RESOURCE_LIFT) {
+        std::fprintf(stderr, "[jcm_native_bridge] shm kick: bad request (seq %llu, kind %u)\n",
+                     (unsigned long long)seq, kind);
+        return JCM_SHM_ERR_REQUEST;
+    }
+    if (!snapAddr || snapLen == 0) {
+        std::fprintf(stderr, "[jcm_native_bridge] shm kick: invalid snapshot (addr %llu, len %u)\n",
+                     (unsigned long long)snapAddr, snapLen);
+        return JCM_SHM_ERR_SNAPSHOT;
+    }
 
     BridgeModule* mod = nullptr;
     {
@@ -1030,7 +1038,11 @@ Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmKick(JNIEnv* env, jclass) {
         auto it = g_modules.find(static_cast<jlong>(handle));
         if (it != g_modules.end()) mod = it->second;
     }
-    if (!mod) return JCM_SHM_ERR_MODULE;
+    if (!mod) {
+        std::fprintf(stderr, "[jcm_native_bridge] shm kick: module handle %llu not registered (%zu modules)\n",
+                     (unsigned long long)handle, g_modules.size());
+        return JCM_SHM_ERR_MODULE;
+    }
 
     uint8_t* res = g_shm.base + JCM_SHM_RESULT_OFFSET;
     auto writeResult = [&](uint64_t echo, int32_t status) {
@@ -1040,7 +1052,11 @@ Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmKick(JNIEnv* env, jclass) {
 
     std::lock_guard<std::mutex> lock(mod->mutex);
     const auto idIt = mod->shm_ids.find(static_cast<int64_t>(instanceId));
-    if (idIt == mod->shm_ids.end()) return JCM_SHM_ERR_INSTANCE;
+    if (idIt == mod->shm_ids.end()) {
+        std::fprintf(stderr, "[jcm_native_bridge] shm kick: instance id %llu not registered (%zu ids)\n",
+                     (unsigned long long)instanceId, mod->shm_ids.size());
+        return JCM_SHM_ERR_INSTANCE;
+    }
 
     JcmFrameOutput out{};
     const int32_t status = run_frame_locked(env, *mod, idIt->second.c_str(),

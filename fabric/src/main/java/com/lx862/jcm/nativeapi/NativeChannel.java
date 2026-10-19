@@ -326,7 +326,7 @@ public final class NativeChannel {
                 final NativeShm created = NativeShm.open(defaultRegionSize());
                 final int status = nativeShmInit(created.base(), created.size());
                 if (status != NativeShm.STATUS_OK) {
-                    JCMLogger.warn("Native shared memory channel rejected by the bridge (status {}) — falling back to JNI transport", status);
+                    JCMLogger.warn("Native shared memory channel rejected by the bridge (status " + status + " " + NativeShm.statusText(status) + ") - falling back to JNI transport");
                     created.close();
                     shmBroken = true;
                     return null;
@@ -338,7 +338,7 @@ public final class NativeChannel {
                 return created;
             } catch (Throwable t) {
                 shmBroken = true;
-                JCMLogger.warn("Native shared memory channel unavailable ({}), falling back to JNI transport", t.toString());
+                JCMLogger.warn("Native shared memory channel unavailable (" + t + "), falling back to JNI transport");
                 return null;
             }
         }
@@ -384,7 +384,9 @@ public final class NativeChannel {
         final int bit = 1 << Math.min(status, 31);
         if ((loggedStatuses & bit) != 0) return;
         loggedStatuses |= bit;
-        JCMLogger.warn("Native shared-memory channel reported status {} ({})", status, statusText(status));
+        /* Pre-concatenated on purpose: the bare-javac test stub prints the
+           template raw, and ctest needs the actual number in the log. */
+        JCMLogger.warn("Native shared-memory channel reported status " + status + " (" + statusText(status) + ")");
     }
 
     private static String statusText(int status) {
@@ -407,7 +409,7 @@ public final class NativeChannel {
     private static void noteShmFailure(String where, Throwable t) {
         if (!shmBroken) {
             shmBroken = true;
-            JCMLogger.warn("Native shared-memory transport failed at {} ({}); falling back to JNI for this session", where, t.toString());
+            JCMLogger.warn("Native shared-memory transport failed at " + where + " (" + t + "); falling back to JNI for this session");
         }
     }
 }
