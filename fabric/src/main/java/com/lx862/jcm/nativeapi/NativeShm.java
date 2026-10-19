@@ -234,7 +234,13 @@ final class NativeShm {
     }
 
     /* ------------------------------------------------------------------ */
-    /* header/control/result slot access (region-relative offsets)         */
+    /* slot access                                                          */
+    /*                                                                     */
+    /* The raw putLong/getLong below are REGION-relative (header writes);  */
+    /* the control/result wrappers bake in the slot base offsets so the   */
+    /* channel can address slots with their FIELD offsets directly — the  */
+    /* bug class where CTL_* was silently applied to the header area is   */
+    /* exactly why these exist.                                            */
     /* ------------------------------------------------------------------ */
 
     void putLong(long offset, long value) {
@@ -259,6 +265,30 @@ final class NativeShm {
 
     int getInt(long offset) {
         return fields.getInt(offset);
+    }
+
+    void putControlLong(int field, long value) {
+        fields.putLong(CONTROL_OFFSET + field, value);
+    }
+
+    void putControlLongRelease(int field, long value) {
+        fields.putLongRelease(CONTROL_OFFSET + field, value);
+    }
+
+    void putControlInt(int field, int value) {
+        fields.putInt(CONTROL_OFFSET + field, value);
+    }
+
+    long getResultLongAcquire(int field) {
+        return fields.getLongAcquire(RESULT_OFFSET + field);
+    }
+
+    int getResultInt(int field) {
+        return fields.getInt(RESULT_OFFSET + field);
+    }
+
+    long getResultLong(int field) {
+        return fields.getLong(RESULT_OFFSET + field);
     }
 
     /* ------------------------------------------------------------------ */

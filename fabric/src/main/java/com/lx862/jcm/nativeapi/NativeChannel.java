@@ -214,12 +214,12 @@ public final class NativeChannel {
                     return module.nRender(module.getNativeHandle(), instanceKey, snapshot, snapshotLen, resourceKind);
                 }
                 seq = controlSeq++;
-                region.putLong(NativeShm.CTL_MODULE, handle);
-                region.putLong(NativeShm.CTL_INSTANCE, instanceId);
-                region.putInt(NativeShm.CTL_KIND, resourceKind);
-                region.putInt(NativeShm.CTL_SNAP_LEN, snapshotLen);
-                region.putLong(NativeShm.CTL_SNAP_ADDR, address);
-                region.putLongRelease(NativeShm.CTL_SEQ, seq);   /* request publish LAST */
+                region.putControlLong(NativeShm.CTL_MODULE, handle);
+                region.putControlLong(NativeShm.CTL_INSTANCE, instanceId);
+                region.putControlInt(NativeShm.CTL_KIND, resourceKind);
+                region.putControlInt(NativeShm.CTL_SNAP_LEN, snapshotLen);
+                region.putControlLong(NativeShm.CTL_SNAP_ADDR, address);
+                region.putControlLongRelease(NativeShm.CTL_SEQ, seq);   /* request publish LAST */
                 status = nativeShmKick();
                 frame = status == NativeShm.STATUS_OK ? finishFrame(region, handle, seq) : null;
             }
@@ -238,16 +238,16 @@ public final class NativeChannel {
 
     /** Reads the result slot and re-binds the per-module views; monitor held. */
     private static NativeScriptManager.NativeFrame finishFrame(NativeShm region, long moduleHandle, long seq) {
-        if (region.getLongAcquire(NativeShm.RES_SEQ) != seq) {
+        if (region.getResultLongAcquire(NativeShm.RES_SEQ) != seq) {
             noteStatus(STATUS_STALE_ECHO);
             return null;
         }
-        final int status = region.getInt(NativeShm.RES_STATUS);
+        final int status = region.getResultInt(NativeShm.RES_STATUS);
         if (status != NativeShm.STATUS_OK) {
             noteStatus(status);
             return null;
         }
-        final int recordCount = region.getInt(NativeShm.RES_COUNT);
+        final int recordCount = region.getResultInt(NativeShm.RES_COUNT);
         Views views = null;
         for (int i = 0; i < VIEWS.size(); i++) {
             final Views candidate = VIEWS.get(i);
@@ -265,15 +265,16 @@ public final class NativeChannel {
         bindArena(views.pixels, region, NativeShm.RES_PIXELS);
         bindArena(views.matrices, region, NativeShm.RES_MATRICES);
         bindArena(views.floats, region, NativeShm.RES_FLOATS);
+        /* (bindArena resolves each arena triple through the result slot) */
         views.frame.assign(views.records, recordCount, views.strings, views.pixels,
                 views.matrices, views.floats);
         return views.frame;
     }
 
     private static void bindArena(ByteBuffer view, NativeShm region, int resultOffset) {
-        final long address = region.getLong(resultOffset + NativeShm.ARENA_ADDR);
-        final long len = region.getLong(resultOffset + NativeShm.ARENA_LEN);
-        final long cap = region.getLong(resultOffset + NativeShm.ARENA_CAP);
+        final long address = region.getResultLong(resultOffset + NativeShm.ARENA_ADDR);
+        final long len = region.getResultLong(resultOffset + NativeShm.ARENA_LEN);
+        final long cap = region.getResultLong(resultOffset + NativeShm.ARENA_CAP);
         if (address == 0 || len < 0) {
             NativeArenaView.bind(view, 0, 0, 0);
             return;

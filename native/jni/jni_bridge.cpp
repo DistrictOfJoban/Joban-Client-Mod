@@ -1006,6 +1006,8 @@ Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmInit(JNIEnv*, jclass, jlong 
     }
     g_shm.base = reinterpret_cast<uint8_t*>(base);
     g_shm.size = size;
+    std::fprintf(stderr, "[jcm_native_bridge] shm init: base %llu size %llu\n",
+                 (unsigned long long)base, (unsigned long long)size);
     return JCM_SHM_OK;
 }
 
