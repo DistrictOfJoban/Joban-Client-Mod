@@ -170,10 +170,16 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
                         return null
                 }
                 def ctors = declaredMethods(candidates[0]).findAll { it[0] == '<init>' }
-                if (ctors.size() != 1) {
-                        throw new GradleException("Expected exactly one NativeFrame constructor, found ${ctors}")
+                // The bridge-facing constructor is the 6-argument ByteBuffer one.
+                // NativeFrame also carries a package-private no-arg constructor
+                // since the shared-memory transport (NativeChannel reuses one
+                // frame object per module), so select by descriptor shape
+                // instead of requiring the class to have a single constructor.
+                def bridgeFacing = ctors.findAll { it[1].contains("java/nio/ByteBuffer") }
+                if (bridgeFacing.size() != 1) {
+                        throw new GradleException("Expected exactly one bridge-facing NativeFrame constructor, found ${ctors}")
                 }
-                return ctors[0][1]
+                return bridgeFacing[0][1]
         }
 
         tasks.register("checkNativeBridges") {
