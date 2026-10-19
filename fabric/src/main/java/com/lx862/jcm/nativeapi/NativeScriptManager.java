@@ -361,6 +361,10 @@ public final class NativeScriptManager {
      * @return the loaded module, or null when skipped/failed.
      */
     public static NativeScriptModule loadFromDeclaration(String scriptId, JsonElement declared) {
+        if (!NativeScriptModule.isBridgeAvailable()) {
+            skipNoBridge(scriptId);
+            return null;
+        }
         final String resolved = resolvePlatformLibrary(declared);
         if (resolved == null) {
             skipScript(scriptId, declared);
@@ -428,6 +432,10 @@ public final class NativeScriptManager {
             skipScript(scriptId, declared);
             return 0;
         }
+        if (!NativeScriptModule.isBridgeAvailable()) {
+            skipNoBridge(scriptId);
+            return 0;
+        }
         /* Idempotent on purpose. MtrScriptingResourceManager parses
            mtr_custom_resources.json TWICE per reload — once for the normal file
            and once for the pending-migration variant — so every native
@@ -483,6 +491,23 @@ public final class NativeScriptManager {
             SKIPPED.remove(scriptId);
         }
         return loaded;
+    }
+
+    /* A jar built without -Pnative_bridge_dir (the plain push/PR CI
+       build, or a bare `gradlew build`) ships no jcm_native_bridge at
+       all. Without the bridge NO C++ module can ever load, so say that
+       plainly up front — the generic "no nativeLibrary entry could be
+       loaded" census line sends users hunting for a bug in their
+       resource pack when the mod jar itself is the thing missing its
+       bridge binary. */
+    private static void skipNoBridge(String scriptId) {
+        final String reason = "native bridge unavailable — this jar contains no "
+                + "jcm_native_bridge for " + getPlatformKeyExact()
+                + " (built without -Pnative_bridge_dir; use a complete-build/release jar)";
+        SKIPPED.put(scriptId, reason);
+        JCMLogger.warn("Native script {}: {}. The declared libraries are fine — "
+                + "the mod jar itself is missing its bridge binary.", scriptId, reason);
+        notifyDebug("Native script " + scriptId + ": " + reason);
     }
 
     private static void skipScript(String scriptId, JsonElement declared) {
