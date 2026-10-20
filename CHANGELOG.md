@@ -24,8 +24,9 @@ This is an interim beta release.
 
 ## Technical
 
-### General
+### Scripting
 - Add `MinecraftClient.getCameraMode()` to return the perspective of the player's camera. (F5)
+- Add `GraphicsTexture.fullAA()` and `GraphicsTexture.noAA()` for configuring anti-aliasing behaviour.
 - Add light parameter overload for `RenderManager.drawModel()`, for rendering a model with a particular light.
   - light value can be obtained via the newly added `MinecraftClient.lightAt(pos: Vector3f)`, which returns an integer value consisted of both the block & sky light level.
 
