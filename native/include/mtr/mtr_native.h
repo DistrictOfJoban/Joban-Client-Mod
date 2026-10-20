@@ -42,7 +42,15 @@ extern "C" {
 /* Version / module identity                                           */
 /* ------------------------------------------------------------------ */
 
-/* ABI 9 appends the canonical transport TYPE ids to the vehicle header
+/* ABI 10 appends JcmHostServices.defer_free: a background reclamation
+   hook so scripts can hand DEAD native blocks to the host's off-thread
+   reclaimer instead of freeing them synchronously inside mtrRender/mtrDispose
+   (which runs on a JVM-owned thread — see the ABI 10 comment on defer_free).
+   ABI 10 modules compiled against the new header call a host function slot
+   that does not exist in an ABI 9 host (the struct grew), so an old host
+   must refuse them — hence the bump. ABI 9 modules are unaffected: the
+   bridge still serves their layout and feeds their own ABI number back.
+   ABI 9 appends the canonical transport TYPE ids to the vehicle header
    (vehicle_type_offset/len) and to every interchange (type_offset/len),
    exposing the MAGIC MTR Addon's route types alongside the four base modes.
    ABI 9 hosts also stop copying the snapshot per frame and reuse the arena
@@ -59,7 +67,7 @@ extern "C" {
    the newer header call a host function slot that does not exist in an
    older host (the struct grew), so an old host must refuse the module
    instead of reading past it. */
-#define MTR_NATIVE_ABI_VERSION 9
+#define MTR_NATIVE_ABI_VERSION 10
 
 /* Resource kinds, identical to JCM script contexts. */
 enum MtrResourceKind {
@@ -551,6 +559,34 @@ struct JcmHostServices {
        valid on this thread until the next invocation; no Rhino evaluation. */
     const char* (*invoke_api)(void* user, const char* request, int32_t length,
                              int32_t* result_length);
+
+    /* ---- ABI 10: deferred reclamation (off-JVM-thread free) --------------
+
+       Hands a DEAD native block to the host's background reclaimer thread.
+       Use this instead of a synchronous free()/operator delete for any
+       non-trivial block that dies inside mtrCreate/mtrRender/mtrDispose:
+       those entry points run on a JVM-owned thread, and a multi-megabyte
+       free (arena shrink, buffer teardown) bills its full cost to the
+       frame — and a Java thread that is inside native code additionally
+       blocks on any GC safepoint at the call's exit boundary, so long
+       native work turns into whole-JVM jitter.
+
+       Contract (the module MUST satisfy all of it):
+         - `pointer` was allocated with malloc() and is currently owned by
+           the caller (or nullptr, which the hook MUST ignore);
+         - the block is trivially destructible (no C++ object with a
+           destructor lives in it — run module destructors first);
+         - NO thread reads or writes the block after this call, including
+           the host's Java-side replay of the CURRENT frame. In practice:
+           defer only blocks that became dead BEFORE mtrRender filled the
+           output arenas that the host is about to read.
+         - `size` is informational (the host may use it for stats).
+
+       NULL hook: host predates ABI 10 — free synchronously, exactly as
+       before. The SDK's FrameRecorder follows this rule for its pixel
+       arena shrink, so a module only needs this hook to benefit if it
+       frees its OWN large buffers inside render(). */
+    void (*defer_free)(void* user, void* pointer, size_t size);
 };
 
 /* ------------------------------------------------------------------ */

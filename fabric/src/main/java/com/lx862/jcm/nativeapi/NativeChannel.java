@@ -32,10 +32,14 @@ import java.util.Map;
  *       on the hot path. Small residual risk by design — raw-address
  *       views depend on the module reporting honest arena sizes — hence
  *       the config description "性能最好，但小概率出现稳定性问题".</li>
- *   <li><b>{@link Transport#PANAMA_FFM}</b> — reserved for the
- *       Foreign Function &amp; Memory API downcall transport
- *       ({@link PanamaFfmChannel}); unfinished, falls back to shared
- *       memory with a one-line warning.</li>
+ *   <li><b>{@link Transport#PANAMA_FFM}</b> — the Foreign Function &amp;
+ *       Memory API downcall transport ({@link PanamaFfmChannel}, ABI 10):
+ *       same shared-memory data plane, but every bridge invocation
+ *       (module lifecycle + the per-frame kick) is an FFM downcall into
+ *       the bridge's plain-C exports instead of a JNI native method.
+ *       Needs JDK 22+ (final java.lang.foreign) — on older JVMs it
+ *       degrades to the JNI-triggered shared-memory channel with a
+ *       one-line reason in the census.</li>
  * </ul>
  *
  * <h2>Threading</h2>
@@ -68,7 +72,44 @@ public final class NativeChannel {
        because renders also hold the monitor. */
     private static NativeShm shm;
     private static boolean shmBroken;
-    private static boolean panamaWarned;
+
+    /* ------------------------------------------------------------------ */
+    /* invocation-plane dispatch (JNI natives vs FFM downcalls)            */
+    /* ------------------------------------------------------------------ */
+
+    /** True when the Panama FFM downcall layer is installed and linked. */
+    static boolean ffmActive() {
+        return PanamaFfmChannel.ready();
+    }
+
+    /* The four shm natives + the module lifecycle dispatch through these
+       package-private wrappers: PANAMA_FFM (or any session where the FFM
+       layer linked) uses the jcm_* downcalls; otherwise the JNI natives.
+       All sites hold the class monitor (render/reset), so no extra sync. */
+
+    static int shmInitCall(long base, long size) {
+        return ffmActive() ? PanamaFfmChannel.shmInit(base, size) : nativeShmInit(base, size);
+    }
+
+    static int shmKickCall() {
+        return ffmActive() ? PanamaFfmChannel.shmKick() : nativeShmKick();
+    }
+
+    static void shmRegisterInstanceCall(long moduleHandle, long instanceId, String instanceKey) {
+        if (ffmActive()) {
+            PanamaFfmChannel.shmRegisterInstance(moduleHandle, instanceId, instanceKey);
+        } else {
+            nativeShmRegisterInstance(moduleHandle, instanceId, instanceKey);
+        }
+    }
+
+    static void shmShutdownCall() {
+        if (ffmActive()) {
+            PanamaFfmChannel.shmShutdown();
+        } else {
+            nativeShmShutdown();
+        }
+    }
 
     /* moduleKey -> shm instance id. Render-thread only (cleared on reset);
        ids stay stable for an instance's whole life so the C++ side only
@@ -140,7 +181,12 @@ public final class NativeChannel {
         if (selected == Transport.SHARED_MEMORY) {
             sb.append(region != null ? "shared-memory" : "shared-memory (region not started yet)");
         } else if (selected == Transport.PANAMA_FFM) {
-            sb.append("panama-ffm (falls back to shared-memory)");
+            if (PanamaFfmChannel.ready()) {
+                sb.append("panama-ffm (FFM downcalls, shared-memory data plane)");
+            } else {
+                sb.append("panama-ffm (unavailable: ").append(PanamaFfmChannel.reason())
+                        .append("; using JNI-triggered shared-memory)");
+            }
         } else {
             sb.append("jni");
         }
@@ -208,9 +254,6 @@ public final class NativeChannel {
     static NativeScriptManager.NativeFrame render(NativeScriptManager.NativeScriptModule module,
                                                   String instanceKey, ByteBuffer snapshot,
                                                   int snapshotLen, int resourceKind) {
-        if (transport == Transport.PANAMA_FFM) {
-            PanamaFfmChannel.warnOnce();
-        }
         final Transport selected = effectiveTransport();
         if (selected != Transport.SHARED_MEMORY || shmBroken) {
             return module.nRender(module.getNativeHandle(), instanceKey, snapshot, snapshotLen, resourceKind);
@@ -244,7 +287,7 @@ public final class NativeChannel {
                 region.putControlInt(NativeShm.CTL_SNAP_LEN, snapshotLen);
                 region.putControlLong(NativeShm.CTL_SNAP_ADDR, address);
                 region.putControlLongRelease(NativeShm.CTL_SEQ, seq);   /* request publish LAST */
-                status = nativeShmKick();
+                status = shmKickCall();
                 frame = status == NativeShm.STATUS_OK ? finishFrame(region, handle, seq) : null;
             }
             if (status != NativeShm.STATUS_OK) {
@@ -317,7 +360,7 @@ public final class NativeChannel {
         if (existing != null) return existing;
         final long id = nextInstanceId++;
         INSTANCE_IDS.put(moduleKey, id);
-        nativeShmRegisterInstance(moduleHandle, id, moduleKey);
+        shmRegisterInstanceCall(moduleHandle, id, moduleKey);
         return id;
     }
 
@@ -349,7 +392,7 @@ public final class NativeChannel {
                     return null;
                 }
                 final NativeShm created = NativeShm.open(defaultRegionSize());
-                final int status = nativeShmInit(created.base(), created.size());
+                final int status = shmInitCall(created.base(), created.size());
                 if (status != NativeShm.STATUS_OK) {
                     JCMLogger.warn("Native shared memory channel rejected by the bridge (status " + status + " " + NativeShm.statusText(status) + ") - falling back to JNI transport");
                     created.close();
@@ -382,12 +425,11 @@ public final class NativeChannel {
             VIEWS.clear();
             controlSeq = 1;
             loggedStatuses = 0;
-            panamaWarned = false;
             final NativeShm region = shm;
             shm = null;
             if (region != null) {
                 try {
-                    nativeShmShutdown();
+                    shmShutdownCall();
                 } catch (Throwable ignored) {
                     // an old bridge without the export: nothing to forget
                 }

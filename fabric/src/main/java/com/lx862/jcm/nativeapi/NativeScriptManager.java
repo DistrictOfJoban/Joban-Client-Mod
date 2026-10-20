@@ -108,11 +108,15 @@ public final class NativeScriptManager {
        v8 appends direct Java API access and interchange transport modes.
        v9 appends the canonical transport TYPE ids (MAGIC MTR Addon route
        types) to the vehicle header and to every interchange, and removes the
-       per-frame snapshot memcpy + ByteBuffer churn on the JNI bridge. */
-    private static final int ABI_VERSION = 9;
+       per-frame snapshot memcpy + ByteBuffer churn on the JNI bridge.
+       v10 appends JcmHostServices.defer_free (background reclamation hook)
+       plus the bridge's plain-C jcm_* export surface for the Panama FFM
+       downcall transport; ABI 9 modules keep their snapshot layout and are
+       still served (groupOf maps 10 to the ABI 9 blob). */
+    private static final int ABI_VERSION = 10;
 
     private static boolean supportedAbi(int version) {
-        return version == 6 || version == 7 || version == 8 || version == ABI_VERSION;
+        return version == 6 || version == 7 || version == 8 || version == 9 || version == ABI_VERSION;
     }
 
     /* Route.CircularState mapping (v2 snapshots). */
@@ -156,6 +160,8 @@ public final class NativeScriptManager {
     private static native void nativeSetHost(NativeHost host);
     static native byte[] nativeApiCallback(long function, long user, byte[] parameters);
     private static final Map<String, JsonElement> INPUTS = new ConcurrentHashMap<>();
+    /** Fresh temp-file counter for module extractions (see load()). */
+    private static final java.util.concurrent.atomic.AtomicLong EXTRACT_SEQ = new java.util.concurrent.atomic.AtomicLong();
     private static final Map<String, String> RESOURCE_BASES = new ConcurrentHashMap<>();
     public static void configure(String id, JsonElement input, String base) {
         INPUTS.put(id, input == null ? com.google.gson.JsonNull.INSTANCE : input);
@@ -164,7 +170,21 @@ public final class NativeScriptManager {
 
     private static boolean installBridgeHost() {
         nativeSetHost(NativeHost.get());
+        /* Link the FFM downcall layer while the freshly loaded bridge is
+           the classloader's library: PanamaFfmChannel picks the jcm_* C
+           exports up (libraryLookup on the same file, or loaderLookup).
+           Failure is non-fatal — the JNI natives stay the call plane. */
+        PanamaFfmChannel.attemptInstall();
         return true;
+    }
+
+    /** Absolute path of the loaded bridge (null when only a bare
+     *  System.loadLibrary name resolved). PanamaFfmChannel prefers it for
+     *  SymbolLookup.libraryLookup. */
+    static String loadedBridgePath;
+
+    private static void noteBridgePath(String path) {
+        if (path != null && loadedBridgePath == null) loadedBridgePath = path;
     }
 
     /* ------------------------------------------------------------------ */
@@ -276,23 +296,22 @@ public final class NativeScriptManager {
                 return null;
             }
 
-            /* Extract to a STABLE temp file — dlopen needs a real file.
-               A fresh createTempFile per reload left one deleted-on-exit
-               file (and one deleteOnExit registration) per script per
-               F3+T forever; a stable name per script id is overwritten
-               in place, and dispose() (reload path) has already
-               FreeLibrary/dlclose'd the old mapping by the time we get
-               here. Locked-file platforms fall back to a fresh temp name. */
+            /* Extract to a FRESH temp file per load — dlopen needs a real
+               file, and reusing a name whose previous extraction may still
+               be MAPPED is forbidden: glibc defers a dlclose'd DSO's unload
+               while any live thread still has TLS destructors pending from
+               it (and ABI 10 deliberately keeps module mappings loaded on
+               close as well), so overwriting the file in place would
+               rewrite the pages under a live mapping and corrupt the ELF
+               tables the next symbol lookup walks — a crash the first
+               reload cycle surfaced in the FFM integration test. A per-load
+               counter keeps names unique (and old files are simply
+               deleteOnExit'd). */
             final String realName = libId.getPath().substring(libId.getPath().lastIndexOf('/') + 1);
-            Path extracted;
-            try {
-                extracted = Paths.get(System.getProperty("java.io.tmpdir"),
-                        "jcm_native_" + sanitize(scriptId) + "_" + realName);
-                Files.write(extracted, lib);
-            } catch (IOException locked) {
-                extracted = Files.createTempFile("jcm_native_" + sanitize(scriptId) + "_", "_" + realName);
-                Files.write(extracted, lib);
-            }
+            final Path extracted = Files.createTempFile(
+                    "jcm_native_" + sanitize(scriptId) + "_" + EXTRACT_SEQ.incrementAndGet() + "_",
+                    "_" + realName);
+            Files.write(extracted, lib);
             extracted.toFile().deleteOnExit();
 
             final NativeScriptModule module = new NativeScriptModule(scriptId, extracted.toAbsolutePath().toString(), libraryPath);
@@ -870,7 +889,7 @@ public final class NativeScriptManager {
                         if (buffer != null) {
                             len = buffer.limit();
                         }
-                        module.nDisposeInstance(module.nativeHandle, moduleKey, buffer, len);
+                        module.disposeInstanceNative(moduleKey, buffer, len);
                     }
                 } finally {
                     NativeApiSession.dispose(moduleKey);
@@ -891,7 +910,7 @@ public final class NativeScriptManager {
                         ByteBuffer buffer = snapshots == null
                                 ? null : snapshots.peek(NativeSnapshot.groupOf(module.abiVersion));
                         int len = buffer == null ? 0 : buffer.limit();
-                        module.nDisposeInstance(module.nativeHandle, moduleKey, buffer, len);
+                        module.disposeInstanceNative(moduleKey, buffer, len);
                     }
                 } finally {
                     NativeApiSession.dispose(moduleKey);
@@ -1048,7 +1067,9 @@ public final class NativeScriptManager {
                         final Path extracted = Files.createTempFile("jcm_native_bridge_", suffix);
                         extracted.toFile().deleteOnExit();
                         Files.copy(stream, extracted, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        System.load(extracted.toAbsolutePath().toString());
+                        final String absolute = extracted.toAbsolutePath().toString();
+                        System.load(absolute);
+                        noteBridgePath(absolute);
                         JCMLogger.info("Native scripting bridge loaded from bundled {}", bundled);
                         return installBridgeHost();
                     }
@@ -1070,7 +1091,9 @@ public final class NativeScriptManager {
                 for (File file : candidates) {
                     if (!file.isFile()) continue;
                     try {
-                        System.load(file.getAbsolutePath());
+                        final String absolute = file.getAbsolutePath();
+                        System.load(absolute);
+                        noteBridgePath(absolute);
                         JCMLogger.info("Native scripting bridge loaded from {}", file);
                         return installBridgeHost();
                     } catch (UnsatisfiedLinkError e) {
@@ -1160,26 +1183,34 @@ public final class NativeScriptManager {
 
         NativeScriptModule(String scriptId, String path, String resourceBase) {
             this.resourceBase = resourceBase;
-            this.nativeHandle = nOpen(path);
-            if (this.nativeHandle == 0) {
-                /* nOpen already logged the concrete dlopen/LoadLibrary
-                   failure; surface the script fields as unknown so the
-                   caller can skip the module instead of NPE-ing. */
-                this.abiVersion = 0;
-                this.scriptType = "";
-                this.scriptId = scriptId;
-                this.stateSize = 0;
-                this.loadedPlatform = getPlatformKeyExact();
-                this.sourcePath = path;
-                return;
+            /* Module lifecycle stays on the battle-tested JNI natives: they
+               share the same open_module/dispose cores with the jcm_* C
+               exports, and module open/close are COLD (reload-time) calls —
+               the FFM plane is reserved for the per-frame hot path where it
+               pays off. Single-assignment style so every final field is
+               definitely assigned on every path. */
+            long handle = nOpen(path);
+            int abi = 0;
+            String type = "";
+            String id = scriptId;
+            long state = 0;
+            if (handle != 0) {
+                abi = nAbiVersion(handle);
+                type = nScriptType(handle);
+                id = nScriptId(handle);
+                state = nStateSize(handle);
             }
-            this.abiVersion = nAbiVersion(nativeHandle);
-            this.scriptType = nScriptType(nativeHandle);
-            this.scriptId = nScriptId(nativeHandle);
-            this.stateSize = nStateSize(nativeHandle);
+            /* handle == 0: open_module already logged the concrete
+               dlopen/LoadLibrary failure; the fields stay "unknown" so the
+               caller can skip the module instead of NPE-ing. */
+            this.nativeHandle = handle;
+            this.abiVersion = abi;
+            this.scriptType = type;
+            this.scriptId = id;
+            this.stateSize = state;
             this.loadedPlatform = getPlatformKeyExact();
             this.sourcePath = path;
-            if (!scriptId.equals(this.scriptId)) {
+            if (handle != 0 && !scriptId.equals(this.scriptId)) {
                 /* Expected, not a problem: MTR's vehicle schema carries ONE
                    scriptId, so a pack that needs several libraries declares them
                    together under one entry ("demo:vehicle") while each library keeps
@@ -1227,6 +1258,18 @@ public final class NativeScriptManager {
         }
 
         private native void nDisposeInstance(long handle, String instanceKey, java.nio.ByteBuffer snapshot, int snapshotLen);
+
+        /**
+         * Per-instance dispose. Cold (vehicle despawn) path: stays on the JNI
+         * native, which routes through the same dispose_instance_core as
+         * the jcm_module_dispose_instance export — including the deferred
+         * reclamation of the instance's payloads. Called with `this`
+         * monitored.
+         */
+        void disposeInstanceNative(String moduleKey, java.nio.ByteBuffer snapshot, int len) {
+            if (nativeHandle == 0) return;
+            nDisposeInstance(nativeHandle, moduleKey, snapshot, len);
+        }
 
         synchronized NativeFrame render(String instanceKey, ByteBuffer snapshot, int resourceKind) {
             if (nativeHandle == 0) return null;

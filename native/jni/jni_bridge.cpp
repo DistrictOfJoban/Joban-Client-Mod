@@ -60,11 +60,16 @@
 #include <mtr/mtr_native.h>
 #include <mtr/shm_channel.h>
 
+#include <condition_variable>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <deque>
+#include <functional>
 #include <mutex>
 #include <new>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -160,17 +165,13 @@ struct BridgeModule {
        wrapper objects serve every frame of every instance. */
     ArenaView views[5];
 
-    ~BridgeModule() { close_library(); }
+    /* ABI 10 lifetime policy — the DSO STAYS LOADED when the module closes:
+       ~BridgeModule forgets the bookkeeping but does NOT dlclose. See the
+       keep-loaded registry note in open_module(). */
+    ~BridgeModule() = default;
 
     void close_library() {
-        if (dl) {
-#if defined(_WIN32)
-            FreeLibrary(static_cast<HMODULE>(dl));
-#else
-            dlclose(dl);
-#endif
-            dl = nullptr;
-        }
+        dl = nullptr;
     }
 };
 
@@ -247,6 +248,156 @@ jmethodID g_mid_release_model = nullptr;
 jclass g_bb_class = nullptr;
 jmethodID g_bb_position = nullptr;
 jmethodID g_bb_limit = nullptr;
+
+/* ---- C++-mode background reclamation ----------------------------------
+ *
+ * Every non-trivial free that used to run synchronously inside a JNI entry
+ * point — per-instance state blocks at dispose, the module-owned zeroed
+ * fallback snapshot at close, oversized API reply buffers, and (via
+ * JcmHostServices.defer_free, ABI 10) the SDK FrameRecorder's replaced
+ * pixel arenas — is handed to this single worker thread instead.
+ *
+ * Why this exists: all those entry points execute on JVM-OWNED threads.
+ * A thread executing native code does not by itself stop the GC from
+ * running, but:
+ *   (a) the free cost is billed straight to the frame — a multi-hundred-KB
+ *       free()/munmap inside nDisposeInstance/nClose/mtrRender is a direct
+ *       frame-time spike;
+ *   (b) while a GC safepoint is pending, a Java thread returning from
+ *       native BLOCKS at the JNI exit boundary until the safepoint
+ *       completes — so a long native call turns an ordinary GC pause into
+ *       whole-JVM jitter (every Java thread waits, the render thread waits
+ *       twice);
+ *   (c) freeing large arenas can also make the allocator return pages to
+ *       the OS (munmap) and fault adjacent pages — invisible work that
+ *       still lands on the frame budget.
+ *
+ * The reclaimer is a PLAIN C++ thread: the JVM does not know it exists —
+ * no safepoint polls, no GC coupling, no JNI. Callers only do an O(1)
+ * enqueue; the actual free()/operator delete runs concurrently off every
+ * JVM thread. Tickets are rare (dispose / close / arena-shrink events), so
+ * a mutex + condvar queue beats a lock-free ring on simplicity and
+ * debuggability. Deterministic C++ lifetime throughout: the worker is
+ * created lazily on the first ticket and joined in the destructor. */
+class Reclaimer final {
+public:
+    Reclaimer() = default;
+    Reclaimer(const Reclaimer&) = delete;
+    Reclaimer& operator=(const Reclaimer&) = delete;
+
+    ~Reclaimer() {
+        {
+            std::unique_lock<std::mutex> lk(m_);
+            stop_ = true;
+            if (!worker_.joinable()) return;   /* never used: nothing to join */
+            lk.unlock();
+            cv_.notify_all();
+            worker_.join();
+        }
+    }
+
+    /** Enqueue one reclamation job. The callable runs on the worker thread;
+     *  keep it trivial (no JNI, no locks the render thread might hold). */
+    void defer(std::function<void()>&& job) {
+        {
+            std::lock_guard<std::mutex> lk(m_);
+            jobs_.emplace_back(std::move(job));
+            ++pending_;
+        }
+        {
+            std::lock_guard<std::mutex> lk(m_);
+            if (!worker_.joinable()) {
+                worker_ = std::thread([this] { run(); });
+            }
+        }
+        cv_.notify_one();
+    }
+
+    /** Container flavour: the closure's captured container is DESTROYED on
+     *  the worker thread, which is where the allocator free executes.
+     *  The containers' destructors are pure allocator calls (libstdc++/libc++
+     *  code, no module code) and the payloads are dead by contract. */
+    void defer_bytes(std::vector<uint8_t>&& dead) {
+        defer([dead = std::move(dead)] {});
+    }
+
+    template <typename T>
+    void defer_container(std::vector<T>&& dead) {
+        defer([dead = std::move(dead)] {});
+    }
+
+    void defer_str(std::string&& dead) {
+        defer([dead = std::move(dead)] {});
+    }
+
+    /** Raw malloc block (SDK pixel arenas via host->defer_free). */
+    void defer_malloc(void* pointer) {
+        if (!pointer) return;
+        defer([pointer] { std::free(pointer); });
+    }
+
+    /** Tickets submitted but not completed yet (diagnostics/tests). */
+    int64_t pending() const {
+        std::lock_guard<std::mutex> lk(m_);
+        return pending_;
+    }
+
+    /** Total tickets completed (diagnostics/tests). */
+    int64_t completed() const {
+        std::lock_guard<std::mutex> lk(m_);
+        return completed_;
+    }
+
+    /** Deterministic drain: returns when the queue is empty AND every
+     *  ticket finished. Used by tests and by jcm_reclaimer_quiesce. */
+    void quiesce() {
+        std::unique_lock<std::mutex> lk(m_);
+        cv_done_.wait(lk, [this] { return pending_ == 0; });
+    }
+
+private:
+    void run() {
+        std::unique_lock<std::mutex> lk(m_);
+        for (;;) {
+            cv_.wait(lk, [this] { return stop_ || !jobs_.empty(); });
+            if (jobs_.empty()) {
+                if (stop_) return;
+                continue;
+            }
+            std::function<void()> job = std::move(jobs_.front());
+            jobs_.pop_front();
+            /* Run with the lock released: the worker never contends with
+             * enqueuers longer than the ticket swap itself. */
+            lk.unlock();
+            job();
+            lk.lock();
+            --pending_;
+            ++completed_;
+            if (pending_ == 0) {
+                cv_done_.notify_all();
+            }
+        }
+    }
+
+    mutable std::mutex m_;
+    std::condition_variable cv_;
+    std::condition_variable cv_done_;
+    std::deque<std::function<void()>> jobs_;
+    std::thread worker_;
+    bool stop_ = false;
+    int64_t pending_ = 0;
+    int64_t completed_ = 0;
+};
+
+Reclaimer g_reclaimer;
+
+/* ABI 10 host hook: SDK modules hand their dead heap blocks here instead
+ * of freeing them inside mtrRender/mtrDispose (JVM-owned threads). */
+void host_defer_free(void*, void* pointer, size_t size) {
+    (void)size;
+    g_reclaimer.defer_malloc(pointer);
+}
+
 
 /* (still inside the anonymous namespace opened with the bookkeeping structs) */
 
@@ -520,11 +671,16 @@ int32_t host_acquire_quad_model(void* user, const float* verts, const float* uv,
 const char* host_invoke_api(void* user, const char* request, int32_t length, int32_t* result_length) {
     thread_local std::string result;
     /* Release an oversized reply left over from a PREVIOUS call before any
-       new reply is built: transient memory goes back to the allocator
-       (C++-mode hygiene) instead of being pinned until thread exit. The
-       current reply is handed to the caller below and reclaimed the same
-       way on the next invocation. */
-    if (result.capacity() > (1u << 20)) std::string().swap(result);
+       new reply is built: the transient memory goes back to the allocator
+       (C++-mode hygiene) instead of being pinned until thread exit — and
+       via the background reclaimer, so even a multi-MB reply's free never
+       lands on this (JVM-owned) thread. The current reply is handed to
+       the caller below and reclaimed the same way on the next invocation. */
+    if (result.capacity() > (1u << 20)) {
+        std::string dead;
+        dead.swap(result);
+        g_reclaimer.defer_str(std::move(dead));
+    }
     auto& inst = *static_cast<Instance*>(user);
     /* Jar/bridge mismatch guard: a null g_vm or a failed NativeApiSession
        lookup used to reach CallStaticObjectMethod with a null class/method
@@ -568,6 +724,7 @@ void fill_host(JcmHostServices& host, Instance& inst) {
     host.measure_font_text = host_measure_font_text;
     host.draw_font_text = host_draw_font_text;
     host.invoke_api = host_invoke_api;
+    host.defer_free = host_defer_free;
 }
 
 #if !defined(_WIN32)
@@ -782,27 +939,46 @@ jobject arena_view(JNIEnv* env, BridgeModule& mod, int slot,
 } /* anonymous namespace */
 
 /* ------------------------------------------------------------------ */
-/* lifecycle natives                                                   */
+/* lifecycle natives                                                     */
 /* ------------------------------------------------------------------ */
 
-extern "C" JNIEXPORT jlong JNICALL
-JNI_M(nOpen)(JNIEnv* env, jobject, jstring path) {
-    const char* utf = env->GetStringUTFChars(path, nullptr);
-    if (!utf) return 0;
-    void* lib = load_library(utf);
+/** Shared dlopen + symbol resolution + shm-registry entry for one module
+ *  library (both the JNI nativeShmChannel and the FFM jcm_module_open
+ *  land here). Returns null on failure (reason already logged).
+ *
+ *  ABI 10 keep-loaded policy: successfully opened DSOs are NEVER dlclosed.
+ *  The bridge keeps the dlopen refcount for the process lifetime and only
+ *  deletes the per-module bookkeeping (BridgeModule) on close. The JVM
+ *  itself never dlclose's its own JNI libraries for the same reason: the
+ *  dynamic loader's scope bookkeeping is a process-wide lazily-rebuilt
+ *  structure, and unload/reload cycles under a JVM (which keeps its own
+ *  secondary references and churns DSOs concurrently) can leave a
+ *  reopened library's scope lists in a state its own dlsym walk faults
+ *  on. Keeping the mapping also makes F3+T resource-pack reloads cheaper
+ *  (no relocations) and cannot leak unboundedly: the number of distinct
+ *  module files per session is small, and re-opens return the SAME live
+ *  mapping instead of re-mapping. */
+BridgeModule* open_module(const char* path) {
+    void* lib = load_library(path);
     if (!lib) {
         std::fprintf(stderr, "[jcm_native_bridge] dlopen failed: %s (%s)\n",
-                     utf, last_error());
-        env->ReleaseStringUTFChars(path, utf);
-        return 0;
+                     path, last_error());
+        return nullptr;
     }
-    env->ReleaseStringUTFChars(path, utf);
-
     auto* mod = new (std::nothrow) BridgeModule();
-    if (!mod) return 0;
+    if (!mod) {
+        std::fprintf(stderr, "[jcm_native_bridge] out of memory loading %s\n", path);
+#if defined(_WIN32)
+        FreeLibrary(static_cast<HMODULE>(lib));
+#else
+        dlclose(lib);
+#endif
+        return nullptr;
+    }
     mod->dl = lib;
 
     mod->abi        = reinterpret_cast<uint32_t (*)(void)>(load_symbol(lib, "mtrNativeAbiVersion"));
+
     mod->type       = reinterpret_cast<const char* (*)(void)>(load_symbol(lib, "mtrScriptType"));
     mod->id         = reinterpret_cast<const char* (*)(void)>(load_symbol(lib, "mtrScriptId"));
     mod->state_size = reinterpret_cast<size_t (*)(void)>(load_symbol(lib, "mtrStateSize"));
@@ -816,9 +992,19 @@ JNI_M(nOpen)(JNIEnv* env, jobject, jstring path) {
     if (!mod->abi || !mod->type || !mod->id || !mod->state_size ||
         !mod->create || !mod->render || !mod->dispose) {
         std::fprintf(stderr, "[jcm_native_bridge] module misses mtr* exports\n");
-        mod->close_library();
+        /* Failure path (no keep-loaded registration happened yet): actually
+           unload the dlopen'd library so a bad module file cannot leak a
+           mapping per reload attempt. */
+        if (mod->dl) {
+#if defined(_WIN32)
+            FreeLibrary(static_cast<HMODULE>(mod->dl));
+#else
+            dlclose(mod->dl);
+#endif
+            mod->dl = nullptr;
+        }
         delete mod;
-        return 0;
+        return nullptr;
     }
     /* Register for the shm transport, which learns the module from the
        CONTROL SLOT instead of a JNI argument (see nativeShmKick). */
@@ -826,6 +1012,15 @@ JNI_M(nOpen)(JNIEnv* env, jobject, jstring path) {
         std::lock_guard<std::mutex> lk(g_modules_mutex);
         g_modules[reinterpret_cast<jlong>(mod)] = mod;
     }
+    return mod;
+}
+
+extern "C" JNIEXPORT jlong JNICALL
+JNI_M(nOpen)(JNIEnv* env, jobject, jstring path) {
+    const char* utf = env->GetStringUTFChars(path, nullptr);
+    if (!utf) return 0;
+    BridgeModule* mod = open_module(utf);
+    env->ReleaseStringUTFChars(path, utf);
     return reinterpret_cast<jlong>(mod);
 }
 
@@ -1014,8 +1209,24 @@ JNI_M(nRender)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
 /* NativeFrame construction on this path.                               */
 /* ------------------------------------------------------------------ */
 
+/* Shared cores behind the JNI natives and the FFM C exports (bodies
+   below — forward-declared so the JNI wrappers may appear first).
+   File-scope like run_frame_locked: they reach the anonymous-namespace
+   state (g_shm, g_modules, run_frame_locked) in the same TU. */
+int32_t shm_init_core(int64_t base, int64_t size);
+int32_t shm_kick_core(JNIEnv* env);
+void shm_register_core(int64_t handle, int64_t instance_id, const char* key);
+
 extern "C" JNIEXPORT jint JNICALL
 Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmInit(JNIEnv*, jclass, jlong base, jlong size) {
+    return shm_init_core(static_cast<int64_t>(base), static_cast<int64_t>(size));
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmKick(JNIEnv* env, jclass) {
+    return shm_kick_core(env);
+}
+int32_t shm_init_core(int64_t base, int64_t size) {
     if (base == 0 || size < JCM_SHM_WINDOWS_OFFSET + 4096) {
         g_shm.base = nullptr;
         g_shm.size = 0;
@@ -1041,8 +1252,7 @@ Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmInit(JNIEnv*, jclass, jlong 
     return JCM_SHM_OK;
 }
 
-extern "C" JNIEXPORT jint JNICALL
-Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmKick(JNIEnv* env, jclass) {
+int32_t shm_kick_core(JNIEnv* env) {
     if (!g_shm.base) return JCM_SHM_ERR_NOT_INIT;
     const uint8_t* ctl = g_shm.base + JCM_SHM_CONTROL_OFFSET;
     uint64_t seq = 0, handle = 0, instanceId = 0, snapAddr = 0;
@@ -1126,22 +1336,26 @@ Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmKick(JNIEnv* env, jclass) {
     return JCM_SHM_OK;
 }
 
-extern "C" JNIEXPORT void JNICALL
-Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmRegisterInstance(JNIEnv* env, jclass,
-        jlong handle, jlong instanceId, jstring instanceKey) {
+void shm_register_core(int64_t handle, int64_t instance_id, const char* key) {
+    if (!key) return;
     BridgeModule* mod = nullptr;
     {
         std::lock_guard<std::mutex> lk(g_modules_mutex);
-        auto it = g_modules.find(handle);
+        auto it = g_modules.find(static_cast<jlong>(handle));
         if (it != g_modules.end()) mod = it->second;
     }
-    if (!mod || !instanceKey) return;
+    if (!mod) return;
+    std::lock_guard<std::mutex> lock(mod->mutex);
+    mod->shm_ids[instance_id] = key;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmRegisterInstance(JNIEnv* env, jclass,
+        jlong handle, jlong instanceId, jstring instanceKey) {
+    if (!instanceKey) return;
     const char* utf = env->GetStringUTFChars(instanceKey, nullptr);
     if (!utf) return;
-    {
-        std::lock_guard<std::mutex> lock(mod->mutex);
-        mod->shm_ids[static_cast<int64_t>(instanceId)] = utf;
-    }
+    shm_register_core(static_cast<int64_t>(handle), static_cast<int64_t>(instanceId), utf);
     env->ReleaseStringUTFChars(instanceKey, utf);
 }
 
@@ -1154,32 +1368,22 @@ Java_com_lx862_jcm_nativeapi_NativeChannel_nativeShmShutdown(JNIEnv*, jclass) {
 }
 
 /* ------------------------------------------------------------------ */
-/* dispose                                                             */
+/* dispose                                                              */
 /* ------------------------------------------------------------------ */
 
-extern "C" JNIEXPORT void JNICALL
-JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
-                        jobject snapshotBuf, jint snapshotLen) {
-    auto* mod = reinterpret_cast<BridgeModule*>(handle);
-    if (!mod || !instanceKey) return;
-    const char* key = env->GetStringUTFChars(instanceKey, nullptr);
-    if (!key) return;
+/** Shared dispose pipeline (the JNI nDisposeInstance and the FFM
+ *  jcm_module_dispose_instance both land here). `live_snapshot` is the
+ *  LIVE driver buffer when available, else null (the module's zeroed
+ *  fallback snapshot substitutes — the bridge never retained a
+ *  per-instance copy; see BridgeModule::zero_snapshot). */
+void dispose_instance_core(BridgeModule* mod, const char* key,
+                           const void* live_snapshot, int64_t live_len) {
+    if (!mod || !key) return;
     std::lock_guard<std::mutex> lock(mod->mutex);
     auto it = mod->instances.find(key);
-    env->ReleaseStringUTFChars(instanceKey, key);
     if (it == mod->instances.end()) return;
 
-    /* The driver hands over the LIVE snapshot buffer it rendered this
-       instance with (Java still owns it — dispose runs between frames).
-       When no buffer is passed the module-owned ZEROED fallback snapshot is
-       used: the old per-instance retained copy was taken at the instance's
-       FIRST frame and never refreshed, so it fed dispose() stale data while
-       costing snapshot-size bytes per instance. */
-    const void* live = nullptr;
-    if (snapshotBuf) {
-        live = env->GetDirectBufferAddress(snapshotBuf);
-        if (snapshotLen < 0) live = nullptr;
-    }
+    const void* live = live_len >= 0 ? live_snapshot : nullptr;
 
     if (it->second.initialized) {
         JcmHostServices host;
@@ -1202,6 +1406,25 @@ JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
     /* Capture the key BEFORE the instance map entry dies: the shm id scan
        below compares against it (erase invalidates the iterator). */
     const std::string disposed_api_key = it->second.api_key;
+
+    /* C++-mode reclamation: mtrDispose above already ran the module's State
+       destructor, so every remaining payload here is TRIVIALLY destructible
+       raw memory (state block, key string, resource slot vectors — their
+       destructors are pure allocator calls, no module code involved).
+       Handing them to the background reclaimer keeps those frees —
+       potentially hundreds of KB per instance — off this JVM-owned thread,
+       which is the point of the stutter-free reclaim design. */
+    g_reclaimer.defer_bytes(std::move(it->second.state));
+    g_reclaimer.defer_str(std::move(it->second.api_key));
+    g_reclaimer.defer_container(std::move(it->second.tex_slot_handles));
+    g_reclaimer.defer_container(std::move(it->second.model_slot_handles));
+    g_reclaimer.defer_container(std::move(it->second.tex_w));
+    g_reclaimer.defer_container(std::move(it->second.tex_h));
+    g_reclaimer.defer_container(std::move(it->second.quad_verts));
+    g_reclaimer.defer_container(std::move(it->second.quad_uv));
+    g_reclaimer.defer_container(std::move(it->second.quad_slot));
+    g_reclaimer.defer_container(std::move(it->second.quad_stage));
+
     mod->instances.erase(it);
     /* The shm transport keeps a long-id -> key entry for this instance;
        forget it with the instance so ids never outlive their instances. */
@@ -1212,6 +1435,22 @@ JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
             ++sit;
         }
     }
+}
+
+extern "C" JNIEXPORT void JNICALL
+JNI_M(nDisposeInstance)(JNIEnv* env, jobject, jlong handle, jstring instanceKey,
+                        jobject snapshotBuf, jint snapshotLen) {
+    auto* mod = reinterpret_cast<BridgeModule*>(handle);
+    if (!mod || !instanceKey) return;
+    const char* key = env->GetStringUTFChars(instanceKey, nullptr);
+    if (!key) return;
+    const void* live = nullptr;
+    if (snapshotBuf) {
+        live = env->GetDirectBufferAddress(snapshotBuf);
+        if (snapshotLen < 0) live = nullptr;
+    }
+    dispose_instance_core(mod, key, live, snapshotLen);
+    env->ReleaseStringUTFChars(instanceKey, key);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1245,12 +1484,35 @@ JNI_M(nClose)(JNIEnv* env, jobject, jlong handle) {
         }
         /* Drop the shm instance-id table with the module it belongs to. */
         mod->shm_ids.clear();
+        /* C++-mode reclamation: the dispose loop above already ran every
+           module State destructor, so the remaining payloads (state
+           blocks, key strings, resource slot vectors, the zeroed fallback
+           snapshot) are trivially destructible raw memory. Extract and
+           defer them to the background reclaimer instead of billing their
+           frees to this JVM-owned thread; the map nodes themselves are
+           small and die with `delete mod` below. */
+        for (auto& kv : mod->instances) {
+            Instance& dead = kv.second;
+            g_reclaimer.defer_bytes(std::move(dead.state));
+            g_reclaimer.defer_str(std::move(dead.api_key));
+            g_reclaimer.defer_container(std::move(dead.tex_slot_handles));
+            g_reclaimer.defer_container(std::move(dead.model_slot_handles));
+            g_reclaimer.defer_container(std::move(dead.tex_w));
+            g_reclaimer.defer_container(std::move(dead.tex_h));
+            g_reclaimer.defer_container(std::move(dead.quad_verts));
+            g_reclaimer.defer_container(std::move(dead.quad_uv));
+            g_reclaimer.defer_container(std::move(dead.quad_slot));
+            g_reclaimer.defer_container(std::move(dead.quad_stage));
+        }
+        mod->instances.clear();
+        g_reclaimer.defer_bytes(std::move(mod->zero_snapshot));
     }
     {
         std::lock_guard<std::mutex> lk(g_modules_mutex);
         g_modules.erase(handle);
     }
-    /* dlclose happens in ~BridgeModule */
+    /* Bookkeeping deleted; the DSO mapping deliberately STAYS LOADED (ABI 10
+       keep-loaded policy — see open_module). */
     delete mod;
 }
 
@@ -1269,4 +1531,206 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeApiCallback(JNIEnv* env, 
     const char* result = reinterpret_cast<Callback>(static_cast<uintptr_t>(function))(
         reinterpret_cast<void*>(static_cast<uintptr_t>(user)), bytes.data(), static_cast<int32_t>(bytes.size()), &length);
     return utf8_array(env, result, length);
+}
+
+/* ------------------------------------------------------------------ */
+/* Panama FFM entry surface — plain C exports                            */
+/* ------------------------------------------------------------------ */
+/* The "Panama FFM" transport (PanamaFfmChannel.java) reaches the bridge
+   through java.lang.foreign downcalls instead of JNI. The data plane is
+   the SAME shared-memory protocol (jcm_shm_* control the same slots the
+   JNI natives drive); only the invocation plane differs.
+ *
+ * ABI conventions of this surface:
+ *   - raw ADDRESSES travel as int64 values (the FFM channel passes them
+ *     as JAVA_LONG — identical register assignment to a pointer argument
+ *     on every supported C ABI), so no MemorySegment.ofAddress/reinterpret
+ *     (restricted methods) is ever needed for them;
+ *   - the three Java-allocated byte buffers (module paths, instance keys,
+ *     output string buffers) ARE real pointer arguments, backed by
+ *     Arena-allocated MemorySegments on the caller side;
+ *   - every export is visibility("default") so it survives the bridge's
+ *     hidden-visibility build preset, and dllexport'ed on Windows.
+ *
+ * Old bridges predate this surface; the FFM channel detects a missing
+ * symbol and degrades to the JNI natives with a one-line reason. */
+#if defined(_WIN32)
+#  define JCM_BRIDGE_EXPORT extern "C" __declspec(dllexport)
+#else
+#  define JCM_BRIDGE_EXPORT extern "C" __attribute__((visibility("default")))
+#endif
+
+/** Attach the bridge's JavaVM to the calling thread if needed, and hand
+ *  back the JNIEnv the (JVM-owned) caller thread already has. FFM
+ *  downcalls run on the calling thread — the same thread the JNI natives
+ *  would run on — so this never attaches a foreign thread. Null when no
+ *  JVM is around (headless native tests). */
+static JNIEnv* current_jni_env() {
+    JNIEnv* env = nullptr;
+    if (!g_vm) return nullptr;
+    if (g_vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) == JNI_OK) return env;
+    return nullptr;
+}
+
+/* ---- module lifecycle -------------------------------------------------- */
+
+JCM_BRIDGE_EXPORT int64_t jcm_module_open(const char* path, int32_t path_len) {
+    if (!path || path_len <= 0) return 0;
+    const std::string owned(path, static_cast<size_t>(path_len));
+    BridgeModule* mod = open_module(owned.c_str());
+    return reinterpret_cast<int64_t>(mod);
+}
+
+JCM_BRIDGE_EXPORT void jcm_module_close(int64_t handle) {
+    auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
+    if (!mod) return;
+    /* The FFM caller thread is a JVM thread: the cached arena-view GLOBAL
+       REFS are Java heap objects and must be deleted WITH a JNIEnv (the
+       JNI native route does this through its own env parameter). */
+    JNIEnv* env = current_jni_env();
+    {
+        std::lock_guard<std::mutex> lock(mod->mutex);
+        JcmHostServices host;
+        for (auto& kv : mod->instances) {
+            if (!kv.second.initialized) continue;
+            fill_host(host, kv.second);
+            JcmFrameInput in{};
+            in.abi_version = mod->abi();
+            in.resource_kind = kv.second.resource_kind;
+            in.snapshot = fallback_snapshot(*mod, kv.second);
+            in.state = kv.second.state.data();
+            in.state_size = kv.second.state.size();
+            in.host = &host;
+            mod->dispose(&in);
+        }
+        if (env) {
+            for (ArenaView& view : mod->views) {
+                if (view.ref) env->DeleteGlobalRef(view.ref);
+                view.ref = nullptr;
+                view.address = nullptr;
+                view.capacity = 0;
+            }
+        } else {
+            /* No JNIEnv (headless native driver): just clear the bookkeeping;
+               the refs die with the process. */
+            for (ArenaView& view : mod->views) {
+                view.ref = nullptr;
+                view.address = nullptr;
+                view.capacity = 0;
+            }
+        }
+        mod->shm_ids.clear();
+        /* Same C++-mode deferred reclamation as the JNI nClose (an FFM
+           caller thread is still a JVM-owned thread — the rule applies). */
+        for (auto& kv : mod->instances) {
+            Instance& dead = kv.second;
+            g_reclaimer.defer_bytes(std::move(dead.state));
+            g_reclaimer.defer_str(std::move(dead.api_key));
+            g_reclaimer.defer_container(std::move(dead.tex_slot_handles));
+            g_reclaimer.defer_container(std::move(dead.model_slot_handles));
+            g_reclaimer.defer_container(std::move(dead.tex_w));
+            g_reclaimer.defer_container(std::move(dead.tex_h));
+            g_reclaimer.defer_container(std::move(dead.quad_verts));
+            g_reclaimer.defer_container(std::move(dead.quad_uv));
+            g_reclaimer.defer_container(std::move(dead.quad_slot));
+            g_reclaimer.defer_container(std::move(dead.quad_stage));
+        }
+        mod->instances.clear();
+        g_reclaimer.defer_bytes(std::move(mod->zero_snapshot));
+    }
+    {
+        std::lock_guard<std::mutex> lk(g_modules_mutex);
+        g_modules.erase(static_cast<jlong>(handle));
+    }
+    /* Bookkeeping deleted; the DSO mapping deliberately STAYS LOADED (ABI 10
+       keep-loaded policy — see open_module). */
+    delete mod;
+}
+
+JCM_BRIDGE_EXPORT int32_t jcm_module_abi(int64_t handle) {
+    auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
+    return (mod && mod->abi) ? static_cast<int32_t>(mod->abi()) : 0;
+}
+
+/** Writes the module's NUL-terminated identity string (script type or
+ *  script id) into the caller-provided buffer; returns the written byte
+ *  length, or -1 on a bad argument. Caller-buffer on purpose: keeps the
+ *  FFM channel clear of C-string-returning (restricted) reads. */
+static int32_t copy_module_string(int64_t handle, const char* (* (BridgeModule::*field))(void),
+                                  char* out, int32_t cap) {
+    auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
+    if (!out || cap <= 0) return -1;
+    /* BridgeModule keeps PLAIN function pointers as data members (resolved
+       at dlopen time), so the selector is a pointer-to-data-member. */
+    const char* (*fn)(void) = mod ? (mod->*field) : nullptr;
+    const char* s = fn ? fn() : nullptr;
+    if (!s) return -1;
+    int32_t n = 0;
+    for (; s[n] && n < cap - 1; ++n) out[n] = s[n];
+    out[n] = '\0';
+    return n;
+}
+
+JCM_BRIDGE_EXPORT int32_t jcm_module_script_type(int64_t handle, char* out, int32_t cap) {
+    return copy_module_string(handle, &BridgeModule::type, out, cap);
+}
+
+JCM_BRIDGE_EXPORT int32_t jcm_module_script_id(int64_t handle, char* out, int32_t cap) {
+    return copy_module_string(handle, &BridgeModule::id, out, cap);
+}
+
+JCM_BRIDGE_EXPORT int64_t jcm_module_state_size(int64_t handle) {
+    auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
+    return (mod && mod->state_size) ? static_cast<int64_t>(mod->state_size()) : 0;
+}
+
+/** Dispose one instance. `snap_addr`/`snap_len` carry the LIVE driver
+ *  buffer when the caller has one (raw address + written length);
+ *  snap_addr 0 makes the bridge substitute the module's zeroed fallback
+ *  snapshot, exactly like the JNI path does for a null ByteBuffer. */
+JCM_BRIDGE_EXPORT void jcm_module_dispose_instance(int64_t handle, const char* key, int32_t key_len,
+                                                   int64_t snap_addr, int64_t snap_len) {
+    auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
+    if (!mod || !key || key_len <= 0) return;
+    const std::string owned(key, static_cast<size_t>(key_len));
+    const void* live = snap_addr ? reinterpret_cast<const void*>(static_cast<uintptr_t>(snap_addr)) : nullptr;
+    dispose_instance_core(mod, owned.c_str(), live, live ? snap_len : -1);
+}
+
+/* ---- shared-memory channel control (same slots the JNI natives drive) -- */
+
+JCM_BRIDGE_EXPORT int32_t jcm_shm_init(int64_t base, int64_t size) {
+    return shm_init_core(base, size);
+}
+
+JCM_BRIDGE_EXPORT int32_t jcm_shm_kick(void) {
+    JNIEnv* env = current_jni_env();
+    if (!env) {
+        /* No JVM on this thread: the host-resource step of the pipeline
+           needs a JNIEnv, so refuse the frame instead of crashing. */
+        return JCM_SHM_ERR_NOT_INIT;
+    }
+    return shm_kick_core(env);
+}
+
+JCM_BRIDGE_EXPORT void jcm_shm_register_instance(int64_t handle, int64_t instance_id,
+                                                 const char* key, int32_t key_len) {
+    if (!key || key_len <= 0) return;
+    const std::string owned(key, static_cast<size_t>(key_len));
+    shm_register_core(handle, instance_id, owned.c_str());
+}
+
+JCM_BRIDGE_EXPORT void jcm_shm_shutdown(void) {
+    g_shm.base = nullptr;
+    g_shm.size = 0;
+}
+
+/* ---- background reclaimer (diagnostics + deterministic drain) ---------- */
+
+JCM_BRIDGE_EXPORT int64_t jcm_reclaimer_pending(void) {
+    return g_reclaimer.pending();
+}
+
+JCM_BRIDGE_EXPORT void jcm_reclaimer_quiesce(void) {
+    g_reclaimer.quiesce();
 }

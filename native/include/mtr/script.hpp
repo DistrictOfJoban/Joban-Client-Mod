@@ -302,6 +302,14 @@ struct ScriptBox {
         if (in->abi_version != MTR_NATIVE_ABI_VERSION) return -2;
         if (in->resource_kind != Adapter::RESOURCE_ID) return -3;
 
+        /* ABI 10: publish the host's deferred-reclamation hook BEFORE the
+           frame runs — begin_frame() (inside install_frame) may shrink a
+           spike-grown pixel arena, and the replaced block's free belongs
+           on the host's reclaimer thread, not this JVM-owned one. Hosts
+           predating ABI 10 leave host->defer_free null: the recorder then
+           keeps the synchronous free and behaves exactly like ABI 9. */
+        recorder().set_defer_hook(in->host);
+
         if constexpr (Phase == 1) {
             if (create_records_state != in->state || in->state == nullptr) install_frame();
             create_records_state = nullptr;

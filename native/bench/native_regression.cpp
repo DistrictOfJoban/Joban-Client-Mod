@@ -100,5 +100,85 @@ int main() {
         std::printf("NATIVE REGRESSION OK: pixel arena %lld KB -> %lld KB after idle, data intact\n",
                     static_cast<long long>(peak / 1024), static_cast<long long>(idle / 1024));
     }
+
+    /* ABI 10 deferred reclamation: with JcmHostServices.defer_free installed,
+       a replaced pixel arena must be handed to the HOST (pointer + size),
+       never freed on the calling thread; the recorder must also keep
+       working when the hook is absent (older host) and when the hook frees
+       eagerly. Guards the stutter-free reclaim policy against regressing
+       into a synchronous free inside begin_frame(). */
+    {
+        mtr::FrameRecorder rec;
+        static uint8_t big_records[sizeof(JcmDrawText) * 256];
+        static float big_mats[128 * 16];
+        static char big_strings[32 * 1024];
+        static uint8_t big_pixels[1 << 20];
+        static float big_floats[1024];
+        rec.attach(big_records, big_mats, big_strings, big_pixels, sizeof(big_pixels), big_floats);
+
+        struct DeferStats { int calls; int64_t bytes; } defer{0, 0};
+        JcmFrameOutput defer_out{};
+        JcmHostServices host{};
+        host.user = &defer;
+        host.defer_free = [](void* user, void* pointer, size_t size) {
+            auto* stats = static_cast<DeferStats*>(user);
+            if (!pointer) return;
+            stats->calls++;
+            stats->bytes += static_cast<int64_t>(size);
+            std::free(pointer);   /* the test host IS the reclaimer */
+        };
+        rec.set_defer_hook(&host);
+
+        std::vector<uint8_t> spike(8 << 20);
+        rec.begin_frame();
+        rec.push_pixels(spike.data(), static_cast<int64_t>(spike.size()));
+        rec.write_output(defer_out);
+        const int64_t peak = rec.pixel_capacity();
+        if (defer.calls != 0) {
+            std::fprintf(stderr, "FAIL: first grow deferred the ATTACHED static arena\n");
+            return 1;
+        }
+        for (int i = 0; i < 600; i++) { rec.begin_frame(); rec.write_output(defer_out); }
+        const int64_t idle = rec.pixel_capacity();
+        if (idle > (1152 << 10)) {
+            std::fprintf(stderr, "FAIL: deferred path did not shrink the pixel arena\n");
+            return 1;
+        }
+        if (defer.calls < 1 || defer.bytes < (7LL << 20)) {
+            std::fprintf(stderr, "FAIL: replaced arenas freed WITHOUT the defer hook "
+                                 "(%d calls, %lld bytes)\n", defer.calls,
+                         static_cast<long long>(defer.bytes));
+            return 1;
+        }
+        uint8_t small[4096];
+        std::memset(small, 0xAB, sizeof(small));
+        rec.begin_frame();
+        const int64_t off = rec.push_pixels(small, sizeof(small));
+        rec.write_output(defer_out);
+        if (defer_out.pixel_arena_len != sizeof(small)
+                || std::memcmp(defer_out.pixel_arena + off, small, sizeof(small)) != 0) {
+            std::fprintf(stderr, "FAIL: pixel data lost across deferred shrink\n");
+            return 1;
+        }
+        /* Hook removed -> synchronous free again (older host behaviour). */
+        rec.set_defer_hook(nullptr);
+        const int defer_calls_before = defer.calls;
+        std::vector<uint8_t> spike2(8 << 20);
+        rec.begin_frame();
+        rec.push_pixels(spike2.data(), static_cast<int64_t>(spike2.size()));
+        rec.write_output(defer_out);
+        for (int i = 0; i < 600; i++) { rec.begin_frame(); rec.write_output(defer_out); }
+        if (rec.pixel_capacity() > (1152 << 10)) {
+            std::fprintf(stderr, "FAIL: synchronous shrink path regressed\n");
+            return 1;
+        }
+        if (defer.calls != defer_calls_before) {
+            std::fprintf(stderr, "FAIL: null hook still deferred (must free synchronously)\n");
+            return 1;
+        }
+        std::printf("NATIVE REGRESSION OK: %d arena replacement(s) (%lld KB) deferred to host reclaimer, %lld KB -> %lld KB, data intact\n",
+                    defer.calls, static_cast<long long>(defer.bytes / 1024),
+                    static_cast<long long>(peak / 1024), static_cast<long long>(idle / 1024));
+    }
     return 0;
 }

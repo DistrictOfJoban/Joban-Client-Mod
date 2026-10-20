@@ -88,5 +88,15 @@ def main():
  key=os.environ.get('NATIVE_TEST_PLATFORM') or ('windows-x64' if os.name=='nt' else ('macos-'+('arm64' if platform.machine()=='arm64' else 'x64') if platform.system()=='Darwin' else 'linux-'+('arm64' if platform.machine() in ('aarch64','arm64') else 'x64')))
  bridge='jcm_native_bridge.dll' if os.name=='nt' else 'libjcm_native_bridge.'+('dylib' if platform.system()=='Darwin' else 'so')
  target=classes/'assets/jcm/natives'/key/bridge;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(libs/bridge,target)
- subprocess.run([tool('java'),'-Djava.awt.headless=true','-cp',str(classes)+os.pathsep+str(gson),'com.lx862.jcm.nativeapi.NativeIntegrationTest',str(libs)],check=True)
+ # JDK >= 21 can exercise the REAL java.lang.foreign preview API (the
+ # Panama FFM transport) by running with --enable-preview plus the opt-in
+ # property; on 22+ the final API needs no flag at all. Older JDKs just
+ # degrade to the fallback assertions inside the test.
+ jvm_flags=[]
+ ver_out=subprocess.run([tool('java'),'-version'],capture_output=True,text=True)
+ major=0
+ m=re.search(r'version "(\d+)',ver_out.stderr or ver_out.stdout)
+ if m: major=int(m.group(1))
+ if major>=21: jvm_flags=['--enable-preview','-Djcm.ffm.allow_preview=true']
+ subprocess.run([tool('java'),'-Djava.awt.headless=true',*jvm_flags,'-cp',str(classes)+os.pathsep+str(gson),'com.lx862.jcm.nativeapi.NativeIntegrationTest',str(libs)],check=True)
 if __name__=='__main__': main()

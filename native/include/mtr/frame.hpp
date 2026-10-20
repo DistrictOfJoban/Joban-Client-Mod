@@ -22,6 +22,18 @@
 
 namespace mtr {
 
+/* ABI 10 deferred-reclamation policy for the pixel arena:
+
+   grow_pixels()/shrink_pixels_if_idle() free the REPLACED heap block at a
+   moment where that block is provably dead (the swap already happened,
+   nothing references the old address, and the host's replay of earlier
+   frames finished before this frame began). Freeing it on the calling
+   thread would bill a multi-megabyte free()/munmap to the FRAME (this
+   code runs inside mtrRender, on a JVM-owned thread); handing it to the
+   host's background reclaimer (JcmHostServices.defer_free, ABI 10) moves
+   that cost off the JVM entirely. A null hook (older host, benchmark
+   driver) keeps the synchronous free — identical behaviour to ABI 9. */
+
 class FrameRecorder {
 public:
     FrameRecorder() = default;
@@ -254,7 +266,27 @@ public:
         string_cap_ = string_cap; float_cap_ = float_cap;
     }
 
+    /* ABI 10: install the host's deferred-reclamation hook for replaced
+       pixel arenas (see the policy note at the top of the file). Called
+       from the SDK glue every lifecycle phase with the CURRENT host table;
+       passing null (or never calling) restores the synchronous free. */
+    void set_defer_hook(const JcmHostServices* host) {
+        defer_free_ = host ? host->defer_free : nullptr;
+        defer_user_ = host ? host->user : nullptr;
+    }
+
 private:
+    /* Release a replaced, DEAD pixel-arena block: to the host reclaimer
+       when installed, synchronously otherwise. Only called for
+       pixel_owned_ blocks (the attached static buffer is never ours). */
+    void release_pixel_arena(uint8_t* dead, int64_t dead_cap) {
+        if (!dead) return;
+        if (defer_free_) {
+            defer_free_(defer_user_, dead, static_cast<size_t>(dead_cap));
+        } else {
+            std::free(dead);
+        }
+    }
     void grow_pixels(int64_t need) {
         int64_t new_cap = pixel_cap_ > 0 ? pixel_cap_ : (1LL << 20);
         while (new_cap < need) new_cap *= 2;
@@ -263,10 +295,17 @@ private:
         if (pixel_bytes_ > 0 && pixel_arena_) {
             std::memcpy(grown, pixel_arena_, static_cast<size_t>(pixel_bytes_));
         }
-        if (pixel_owned_) std::free(pixel_arena_);
+        /* The replaced block is DEAD from here (nothing references the old
+           address anymore) — and only the HEAP block may be released: the
+           attach()ed static buffer is owned by the caller. Capture the own
+           flag BEFORE overwriting it. */
+        const bool replaced_owned = pixel_owned_;
+        uint8_t* replaced = pixel_arena_;
+        const int64_t replaced_cap = pixel_cap_;
         pixel_arena_ = grown;
         pixel_cap_ = new_cap;
         pixel_owned_ = true;
+        if (replaced_owned) release_pixel_arena(replaced, replaced_cap);
     }
 
     /* Decay-driven idle shrink for the pixel arena. pixel_decay_ tracks a
@@ -296,9 +335,14 @@ private:
         if (idle && pixel_cap_ <= target) return;
         uint8_t* shrunk = static_cast<uint8_t*>(std::malloc(static_cast<size_t>(target)));
         if (!shrunk) return;   /* allocation failure: keep the current arena */
-        std::free(pixel_arena_);
+        /* The oversized block is DEAD from here (nothing carries over:
+           begin_frame resets pixel_bytes_ right after this call), so its
+         release goes through the host reclaimer when installed. */
+        uint8_t* replaced = pixel_arena_;
+        const int64_t replaced_cap = pixel_cap_;
         pixel_arena_ = shrunk;
         pixel_cap_ = target;
+        release_pixel_arena(replaced, replaced_cap);
         /* Nothing to carry over: begin_frame resets pixel_bytes_ right
            after this call, so the smaller arena starts the frame empty. */
     }
@@ -330,6 +374,9 @@ private:
     int64_t pixel_cap_ = 0;
     bool pixel_owned_ = false;
     mutable double pixel_decay_ = 0.0;   /* decaying peak usage; drives idle shrink */
+    /* ABI 10 deferred-reclamation hook (see release_pixel_arena). */
+    void (*defer_free_)(void*, void*, size_t) = nullptr;
+    void* defer_user_ = nullptr;
     int32_t record_cap_ = 0, matrix_cap_ = 0, string_cap_ = 0, float_cap_ = 0;
 
     int32_t record_count_ = 0;

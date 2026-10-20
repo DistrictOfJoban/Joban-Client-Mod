@@ -87,7 +87,7 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     }
 
     /** Cycles "Java 与 C++ 通信方式" in declaration order:
-     *  JNI -> Panama FFM（未完成） -> 共享内存 -> JNI. */
+     *  JNI -> Panama FFM（FFM downcall，需 JDK 22+） -> 共享内存 -> JNI. */
     private void cycleJavaCppCommunication() {
         final JCMClientConfig.JavaCppCommunication[] order = JCMClientConfig.JavaCppCommunication.values();
         final int next = javaCppCommunication.ordinal() + 1;
