@@ -31,6 +31,7 @@ This is an interim beta release.
   - light value can be obtained via the newly added `MinecraftClient.lightAt(pos: Vector3f)`, which returns an integer value consisted of both the block & sky light level.
 - Script instance whose execution time took more than 5s is now enlisted as **(Not Responding...)** in the Script Debug Overlay.
 - Script that entered a loop spanning more than 10 seconds will now get aborted, for recovery from infinite loop.
+- In-game script parsing error now contains the exception message when hovering over it, instead of requiring to view it in the Console.
 - Fix `VanillaText.withHoverText()` using an erroneous type (MutableText instead of VanillaText) as its argument. Now it should behave according to the docs.
 
 ### Vehicle Scripting

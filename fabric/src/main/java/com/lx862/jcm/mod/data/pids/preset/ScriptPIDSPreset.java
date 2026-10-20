@@ -10,6 +10,7 @@ import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptInstance;
 import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
 import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptContent;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
@@ -127,7 +128,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             JCMLogger.error("[JCM] Error while " + action + "!", e);
 
             JCMScripting.getScriptManager().scriptErrorNotifier.queue(() -> {
-                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("[JCM] Error while " + action + "!"), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(VanillaTextWrapper.literal("[JCM] Error while " + action + "!").withColor("RED").withHoverText(VanillaTextWrapper.literal(e.getMessage()).withColor("RED")).impl()), false);
                 MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
             });
         } else {

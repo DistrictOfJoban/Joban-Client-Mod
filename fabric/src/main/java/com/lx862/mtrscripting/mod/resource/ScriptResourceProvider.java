@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.mod.resource;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptContent;
 import com.lx862.mtrscripting.mod.MTRScriptingMod;
@@ -75,7 +76,7 @@ public interface ScriptResourceProvider {
         if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             MTRScriptingModClient.LOGGER.error("[MTR Scripting] Error while {}!", action, e);
             MTRContentScripting.getScriptManager().scriptErrorNotifier.queue(() -> {
-                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("[MTR] Error while " + action + "!"), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(VanillaTextWrapper.literal("[MTR] Error while " + action + "!").withColor("RED").withHoverText(VanillaTextWrapper.literal(e.getMessage()).withColor("RED")).impl()), false);
                 MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
             });
         } else {
