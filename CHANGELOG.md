@@ -29,6 +29,7 @@ This is an interim beta release.
 - Add `GraphicsTexture.fullAA()` and `GraphicsTexture.noAA()` for configuring anti-aliasing behaviour.
 - Add light parameter overload for `RenderManager.drawModel()`, for rendering a model with a particular light.
   - light value can be obtained via the newly added `MinecraftClient.lightAt(pos: Vector3f)`, which returns an integer value consisted of both the block & sky light level.
+- Add the `rateLimit` property to script entries, which applies a global rate limit per-instance.
 - Script instance whose execution time took more than 5s is now enlisted as **(Not Responding...)** in the Script Debug Overlay.
 - Script that entered a loop spanning more than 10 seconds will now get aborted, for recovery from infinite loop.
 - In-game script parsing error now contains the exception message when hovering over it, instead of requiring to view it in the Console.

@@ -31,6 +31,8 @@ public interface ScriptResourceProvider {
         final String scriptFilesKey = isParsingMTR4 ? "scriptLocations" : useSnakeCase ? "script_files" : "scriptFiles";
         final String scriptTextsKey = isParsingMTR4 ? "prependExpressions" : useSnakeCase ? "script_texts" : "scriptTexts";
         final String scriptInputKey = isParsingMTR4 ? "input" : "scriptInput";
+        final String rateLimitKey = isParsingMTR4 ? "rateLimit" : useSnakeCase ? "rate_limit" : "rateLimit";
+        double rateLimit = jsonObject.has(rateLimitKey) ? jsonObject.get(rateLimitKey).getAsDouble() : 0;
 
         if (jsonObject.has(scriptFilesKey) || jsonObject.has(scriptTextsKey)) {
             // Parse script input and pass to the script
@@ -65,7 +67,7 @@ public interface ScriptResourceProvider {
         }
 
         try {
-            return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
+            return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value(), rateLimit);
         } catch (Exception e) {
             ScriptResourceProvider.logError("parsing " + scriptType + " script (" + id + ")", e);
             return null;

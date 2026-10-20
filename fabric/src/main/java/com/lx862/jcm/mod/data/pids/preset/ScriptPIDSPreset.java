@@ -44,6 +44,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         final Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : DEFAULT_THUMBNAIL;
 
         final List<ScriptContent> scripts = new ObjectArrayList<>();
+        final double scriptRateLimit = rootJsonObject.has("scriptRateLimit") ? rootJsonObject.get("scriptRateLimit").getAsDouble() : 0;
         // Parse script input and pass to the script
         if(rootJsonObject.has("scriptInput")) {
             String str = rootJsonObject.get("scriptInput").toString();
@@ -83,7 +84,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         }
 
         try {
-            ParsedScript script = scripts.isEmpty() ? null : JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
+            ParsedScript script = scripts.isEmpty() ? null : JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value(), scriptRateLimit);
             return script == null ? null : new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, script);
         } catch (Exception e) {
             logError("parsing PIDS script (" + id + ")", e);

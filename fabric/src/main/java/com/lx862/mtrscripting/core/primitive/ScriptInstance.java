@@ -47,10 +47,6 @@ public abstract class ScriptInstance<T> {
         wrapperObject = obj;
     }
 
-    public void setLastExecutionDurationMs(long nanoSec) {
-        this.lastExecutionDurationMs = nanoSec / 1000000.0;
-    }
-
     public void beginTrackExecuteTime() {
         this.beginExecuteTime = System.nanoTime();
     }

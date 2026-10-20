@@ -28,13 +28,15 @@ public class ParsedScript {
     private final TimingJS timing;
     private final ExecutorService executorService;
     private final List<ScriptContent> scriptContents;
+    private final double rateLimit;
     private Exception capturedScriptException = null;
     private long lastFailedTime = -1;
 
-    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scriptContents, boolean verboseLogging) throws NoSuchMethodException {
+    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scriptContents, boolean verboseLogging, double rateLimit) throws NoSuchMethodException {
         this.displayName = displayName;
         this.scriptManager = scriptManager;
         this.scriptContents = scriptContents;
+        this.rateLimit = rateLimit;
         this.timing = new TimingJS();
         this.createFunctions = new ArrayList<>();
         this.renderFunctions = new ArrayList<>();
@@ -98,6 +100,10 @@ public class ParsedScript {
         return this.scriptContents;
     }
 
+    public double getRateLimit() {
+        return this.rateLimit;
+    }
+
     public Future<?> invokeCreateFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
         return invokeFunctions(instance, createFunctions, () -> {
                 finishCallback.run();
@@ -128,6 +134,7 @@ public class ParsedScript {
         if(duringFailCooldown()) {
             return null;
         }
+        if(TimingJS.globalElapsed() - scriptInstance.lastExecuteTime < rateLimit) return null;
 
         return scriptManager.submitScriptTask(executorService, () -> {
             if(duringFailCooldown()) return;

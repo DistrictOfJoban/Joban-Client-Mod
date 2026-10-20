@@ -68,9 +68,9 @@ public class ScriptManager {
         return this.classShutter;
     }
 
-    public ParsedScript parseScript(String displayName, String contextName, List<ScriptContent> scripts, boolean verboseLogging) {
+    public ParsedScript parseScript(String displayName, String contextName, List<ScriptContent> scripts, boolean verboseLogging, double rateLimit) {
         try {
-            ParsedScript parsedScript = new ParsedScript(this, displayName, contextName, scripts, verboseLogging);
+            ParsedScript parsedScript = new ParsedScript(this, displayName, contextName, scripts, verboseLogging, rateLimit);
             finishParseScriptEvent.invoke(e -> e.accept(parsedScript));
             return parsedScript;
         } catch (NoSuchMethodException e) {

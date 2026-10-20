@@ -28,6 +28,7 @@ public class RenderEyeCandyMixin {
     public void renderScript(BlockEyeCandy.BlockEntity blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int overlay, CallbackInfo ci) {
         World world = blockEntity.getWorld2();
         if(world == null) return;
+        if(world.getBlockEntity(blockEntity.getPos2()) == null) return; // Cached BE can continue to render outside the render distance
 
         String eyecandyId = blockEntity.getModelId();
         EyecandyResourceProvider.EyecandyScriptConfiguration eyecandyScriptEntry = MtrScriptingResourceManager.eyecandy.getScriptEntry(eyecandyId);
