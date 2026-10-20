@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.mod;
 import com.lx862.jcm.mod.JCM;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
+import com.lx862.mtrscripting.core.primitive.MTRScriptingContextFactory;
 import com.lx862.mtrscripting.mod.network.packet.EyecandyCustomConfigUpdateC2SPacket;
 import com.lx862.mtrscripting.mod.network.packet.data.MTRDataS2CPacket;
 import com.lx862.mtrscripting.mod.network.packet.data.RequestMTRDataC2SPacket;
@@ -23,6 +24,7 @@ public class MTRScriptingMod {
 
     public static void init() {
         MTRScriptingAPI.registerAddonVersion(MOD_ID, VERSION);
+        MTRScriptingContextFactory.init();
 
         // Register packet
         Networking.registerPacket(EyecandyCustomConfigUpdateC2SPacket.class, EyecandyCustomConfigUpdateC2SPacket::new);

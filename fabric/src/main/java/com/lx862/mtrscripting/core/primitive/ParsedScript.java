@@ -131,14 +131,15 @@ public class ParsedScript {
 
         return scriptManager.submitScriptTask(executorService, () -> {
             if(duringFailCooldown()) return;
+            if(Thread.currentThread().isInterrupted()) return;
 
-            timing.prepareForScript(scriptInstance);
             try {
-                Scriptable scope = getScope();
                 Context cx = Context.enter();
+                Scriptable scope = getScope();
                 cx.setLanguageVersion(Context.VERSION_ES6);
                 cx.setClassShutter(scriptManager.getClassShutter());
-                long startTime = System.nanoTime();
+                timing.prepareForScript(scriptInstance);
+                scriptInstance.beginTrackExecuteTime();
                 for(Function func : functions) {
                     func.call(cx, scope, scope, new Object[] {
                         scriptInstance.getContextObject(),
@@ -146,13 +147,13 @@ public class ParsedScript {
                         scriptInstance.getWrapperObject()
                     });
                 }
-                scriptInstance.setLastExecutionDurationMs(System.nanoTime() - startTime);
             } catch (Exception e) {
                 scriptManager.getLogger().error("[MTR Scripting via JCM {}] Error executing script {}!", MTRScriptingMod.VERSION, displayName, e);
                 lastFailedTime = System.currentTimeMillis();
                 capturedScriptException = e;
                 if(errorCallback != null) errorCallback.run();
             } finally {
+                scriptInstance.endTrackExecuteTime();
                 Context.exit();
             }
 

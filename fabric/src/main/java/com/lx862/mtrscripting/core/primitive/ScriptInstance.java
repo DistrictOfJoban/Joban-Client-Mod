@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 
 @ApiInternal
 public abstract class ScriptInstance<T> {
+    private static final long TIMEOUT_THRESHOLD = 5000L * 1000000;
     private final AbstractScriptContext contextObject;
     private Scriptable stateObject;
     private T wrapperObject;
@@ -17,6 +18,7 @@ public abstract class ScriptInstance<T> {
     private double lastExecutionDurationMs;
     public Future<?> scriptTask;
     public double lastExecuteTime;
+    private double beginExecuteTime = -1;
     private boolean createFunctionInvoked = false;
 
     public ScriptInstance(AbstractScriptContext contextObject, ParsedScript script) {
@@ -28,11 +30,6 @@ public abstract class ScriptInstance<T> {
         return contextObject;
     }
 
-    public Scriptable getOrCreateStateObject(Context cx, Scriptable scope) {
-        if(this.stateObject == null) this.stateObject = cx.newObject(scope);
-        return stateObject;
-    }
-
     public T getWrapperObject() {
         return wrapperObject;
     }
@@ -41,12 +38,26 @@ public abstract class ScriptInstance<T> {
         return parsedScript;
     }
 
+    public Scriptable getOrCreateStateObject(Context cx, Scriptable scope) {
+        if(this.stateObject == null) this.stateObject = cx.newObject(scope);
+        return stateObject;
+    }
+
     public void setWrapperObject(T obj) {
         wrapperObject = obj;
     }
 
     public void setLastExecutionDurationMs(long nanoSec) {
         this.lastExecutionDurationMs = nanoSec / 1000000.0;
+    }
+
+    public void beginTrackExecuteTime() {
+        this.beginExecuteTime = System.nanoTime();
+    }
+
+    public void endTrackExecuteTime() {
+        this.lastExecutionDurationMs = (System.nanoTime() - this.beginExecuteTime) / 1000000.0;
+        this.beginExecuteTime = -1;
     }
 
     public double getLastExecutionDurationMs() {
@@ -59,6 +70,10 @@ public abstract class ScriptInstance<T> {
 
     public boolean isCreateFunctionInvoked() {
         return this.createFunctionInvoked;
+    }
+
+    public boolean executionTimedOut(int thresholdMs) {
+        return this.beginExecuteTime > 0 && (System.nanoTime() - this.beginExecuteTime) > (thresholdMs * 1000000L);
     }
 
     public abstract boolean shouldInvalidate();
