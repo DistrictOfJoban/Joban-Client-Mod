@@ -1,10 +1,26 @@
 /**
  * jni_bridge.cpp — C-side dispatcher behind NativeScriptManager.java.
  *
- * Java side (fabric/src/main/java/com/lx862/jcm/nativeapi/
- * NativeScriptManager.java) does:
+ * TWO invocation planes reach the same cores:
  *
- *     static { System.loadLibrary("jcm_native_bridge"); }
+ *   JNI natives (Java_com_lx862_..._nOpen / nRender / nativeShm* / ...) —
+ *   the legacy plane, registered by System.load and still the only one on
+ *   JDK 16..21 where java.lang.foreign does not exist (final on 22+,
+ *   preview on 21). Kept byte-compatible with every shipped jar.
+ *
+ *   Plain-C jcm_* exports (see the FFM surface at the bottom) — the
+ *   JNI-FREE plane used by PanamaFfmChannel.java on JDK 22+ (21 preview
+ *   for the test harness): jcm_module_* lifecycle, jcm_shm_* control,
+ *   jcm_module_render per-frame fallback, jcm_module_invoke_api, and the
+ *   JcmFfmHostVtable upcalls installed via jcm_ffm_init. A session that
+ *   installs the vtable never touches a JNIEnv — the bridge is loaded
+ *   with SymbolLookup.libraryLookup, JNI_OnLoad never runs, and every
+ *   host service call (models, fonts, resources, api) crosses back into
+ *   Java through a java.lang.foreign upcall stub.
+ *
+ * Java side (fabric/src/main/java/com/lx862/jcm/nativeapi/
+ * NativeScriptManager.java) declares:
+ *
  *     private native long   nOpen(String path);
  *     private native void   nClose(long handle);
  *     private native int    nAbiVersion(long handle);
@@ -15,32 +31,32 @@
  *                                        ByteBuffer snapshot, int resourceKind);
  *     private native void   nDisposeInstance(long handle, String instanceKey);
  *
- * This file implements exactly those entry points on top of the C ABI in
- * include/mtr/mtr_native.h:
+ * This file implements those entry points (legacy plane) on top of the C
+ * ABI in include/mtr/mtr_native.h, plus the plain-C twins:
  *
- *   nOpen      — dlopen the script module, resolve the 5 mtr* exports,
- *                keep a per-instance state map (one zeroed block of
- *                mtrStateSize() bytes per instanceKey, mirroring JCM's
+ *   nOpen / jcm_module_open — dlopen the script module, resolve the 5 mtr*
+ *                exports, keep a per-instance state map (one zeroed block
+ *                of mtrStateSize() bytes per instanceKey, mirroring JCM's
  *                per-ScriptInstance `state` JS object).
- *   nRender    — ONE boundary crossing per frame:
- *                  direct ByteBuffer snapshot → JcmFrameInput (the last
- *                  snapshot is kept per instance so dispose can rebuild
- *                  the full input), lazy mtrCreate on first use,
- *                  mtrRender, then the output arenas are wrapped as NIO
- *                  ByteBuffers into a NativeFrame — zero copies.
- *   nDisposeInstance / nClose — mtrDispose for one / all instances,
- *                then dlclose.
+ *   nRender / jcm_module_render — ONE boundary crossing per frame:
+ *                  direct snapshot → JcmFrameInput, lazy mtrCreate on
+ *                  first use, mtrRender, then the output arenas are
+ *                  wrapped as NIO ByteBuffers (JNI) / raw descriptors
+ *                  (FFM) — zero copies.
+ *   nDisposeInstance / jcm_module_dispose_instance / nClose /
+ *   jcm_module_close — mtrDispose for one / all instances, then the
+ *                bookkeeping is dropped (the DSO stays mapped; ABI 10
+ *                keep-loaded policy).
  *
- * Host services (reference implementation): model/texture handles are
- * opaque ids handed out by this bridge (a production host replaces these
- * with real ModelJS / GraphicsTexture registries through its own JNI
- * callbacks — the function-table shape is identical); rasterize_text
- * returns -1 so scripts fall back to their built-in bitmap font; log
- * goes to stderr.
+ * Host services (the script -> Java direction): the JNI plane installs
+ * jmethodIDs via nativeSetHost; the FFM plane receives an upcall-stub
+ * vtable via jcm_ffm_init (see include/mtr/ffm_host.h). Every host
+ * service checks the vtable FIRST, so the planes never mix in one call.
  *
  * Threading: JCM serializes script execution per module on one
  * background executor (same model as the JS pipeline); the bridge adds
- * a per-module mutex so reload paths stay safe.
+ * a per-module mutex so reload paths stay safe. The background
+ * Reclaimer thread never performs upcalls.
  *
  * Build (per platform):
  *   Linux   : g++ -std=c++17 -O2 -fPIC -shared -I<java_include> \
@@ -59,6 +75,7 @@
 #include <jni.h>
 #include <mtr/mtr_native.h>
 #include <mtr/shm_channel.h>
+#include <mtr/ffm_host.h>
 
 #include <condition_variable>
 #include <cstdio>
@@ -213,6 +230,21 @@ namespace {
 
 JavaVM* g_vm = nullptr;
 jobject g_host = nullptr;                 /* global ref, or null      */
+
+/* ---- Panama FFM host vtable (JNI-free upcalls) ------------------
+   Installed once via the jcm_ffm_init export by PanamaFfmChannel.java
+   AFTER it creates java.lang.foreign upcall stubs. When an entry is
+   non-null the bridge prefers it over the JNIEnv path, so a bridge
+   loaded WITHOUT System.load (pure FFM mode) never needs a JNIEnv at
+   all. Mixed mode (System.load + downcall-only FFM) also installs this
+   table when the stub machinery is available. */
+JcmFfmHostVTable g_ffm_host = {};
+/* Function pointers do not implicitly convert to void* in C++, so the
+   presence check takes the entry by its own pointer type. */
+template <typename Entry>
+static inline bool ffm_has(Entry entry) {
+    return g_ffm_host.abi == JCM_FFM_HOST_ABI && entry != nullptr;
+}
 
 /* ---- shared-memory channel state (see include/mtr/shm_channel.h) ----
    The region is created + mapped by Java (FileChannel#map); this bridge
@@ -525,8 +557,14 @@ Java_com_lx862_jcm_nativeapi_NativeScriptManager_nativeSetHost(JNIEnv* env, jcla
 /* ---- host services handed to the script module (see mtr_native.h) ---- */
 
 int32_t host_acquire_model(void*, const char* path) {
+    if(!path) return -1;
+    if (ffm_has(g_ffm_host.acquire_model)) {
+        const int64_t handle = g_ffm_host.acquire_model(path,
+                static_cast<int32_t>(std::strlen(path)));
+        return handle < 0 ? -1 : static_cast<int32_t>(handle) | 0x40000000;
+    }
     JNIEnv* env=nullptr;
-    if(!path || !g_vm || !g_host || !g_mid_acquire_model) return -1;
+    if(!g_vm || !g_host || !g_mid_acquire_model) return -1;
     if(g_vm->GetEnv(reinterpret_cast<void**>(&env),JNI_VERSION_1_8)!=JNI_OK) return -1;
     jstring name=env->NewStringUTF(path);
     if(!name) return -1;
@@ -538,6 +576,10 @@ int32_t host_acquire_model(void*, const char* path) {
 
 void host_release_model(void* user, int32_t slot) {
     if(slot>=0&&(slot&0x40000000)) {
+        if (ffm_has(g_ffm_host.release_model)) {
+            g_ffm_host.release_model(slot & ~0x40000000);
+            return;
+        }
         JNIEnv* env=nullptr;
         if(g_vm&&g_host&&g_mid_release_model&&g_vm->GetEnv(reinterpret_cast<void**>(&env),JNI_VERSION_1_8)==JNI_OK) {
             env->CallVoidMethod(g_host,g_mid_release_model,slot&~0x40000000);
@@ -575,8 +617,13 @@ void host_release_texture(void* user, int32_t slot) {
 int32_t host_rasterize_text(void*, const char* utf8, int32_t len, int32_t x, int32_t y,
                             int32_t max_w, uint8_t r, uint8_t g, uint8_t b, uint8_t* pixels,
                             int32_t out_w, int32_t out_h) {
-    if (!g_vm || !g_host || !g_mid_rasterize_text || !pixels || len <= 0
-            || out_w <= 0 || out_h <= 0) return -1;
+    if (!pixels || len <= 0 || out_w <= 0 || out_h <= 0) return -1;
+    if (ffm_has(g_ffm_host.rasterize_text)) {
+        return g_ffm_host.rasterize_text(utf8, len, x, y, max_w,
+                                        static_cast<int32_t>(r), static_cast<int32_t>(g),
+                                        static_cast<int32_t>(b), pixels, out_w, out_h);
+    }
+    if (!g_vm || !g_host || !g_mid_rasterize_text) return -1;
     JNIEnv* env = nullptr;
     if (g_vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) != JNI_OK) return -1;
     jbyteArray text = env->NewByteArray(len);
@@ -604,7 +651,16 @@ jbyteArray utf8_array(JNIEnv* env, const char* text, int32_t len) {
 
 int32_t host_measure_font_text(void*, const char* font, const char* utf8, int32_t len,
                                 double size, double sx, double sy, JcmFontMetrics* out) {
-    if (!g_vm || !g_host || !g_mid_measure_font_text || !font || !utf8 || len < 0 || !out) return -1;
+    if (!font || !utf8 || len < 0 || !out) return -1;
+    if (ffm_has(g_ffm_host.measure_font_text)) {
+        double metrics[4] = {0, 0, 0, 0};
+        const int32_t status = g_ffm_host.measure_font_text(font,
+                static_cast<int32_t>(std::strlen(font)), utf8, len, size, sx, sy, metrics);
+        if (status == 0) { out->width = metrics[0]; out->ascent = metrics[1];
+                           out->descent = metrics[2]; out->height = metrics[3]; }
+        return status;
+    }
+    if (!g_vm || !g_host || !g_mid_measure_font_text) return -1;
     JNIEnv* env = nullptr;
     if (g_vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) != JNI_OK) return -1;
     if (env->PushLocalFrame(4) < 0) return -1;
@@ -630,8 +686,13 @@ int32_t host_draw_font_text(void*, const char* font, const char* utf8, int32_t l
                              double compression, uint32_t argb, int32_t clip_x0, int32_t clip_y0,
                              int32_t clip_x1, int32_t clip_y1, uint8_t* pixels,
                              int32_t width, int32_t height, int32_t* bounds) {
-    if (!g_vm || !g_host || !g_mid_draw_font_text || !font || !utf8 || len < 0
-            || !pixels || width <= 0 || height <= 0 || !bounds) return -1;
+    if (!font || !utf8 || len < 0 || !pixels || width <= 0 || height <= 0 || !bounds) return -1;
+    if (ffm_has(g_ffm_host.draw_font_text)) {
+        return g_ffm_host.draw_font_text(font, static_cast<int32_t>(std::strlen(font)),
+                utf8, len, size, x, baseline, sx, sy, compression, argb,
+                clip_x0, clip_y0, clip_x1, clip_y1, pixels, width, height, bounds);
+    }
+    if (!g_vm || !g_host || !g_mid_draw_font_text) return -1;
     JNIEnv* env = nullptr;
     if (g_vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) != JNI_OK) return -1;
     if (env->PushLocalFrame(5) < 0) return -1;
@@ -682,6 +743,24 @@ const char* host_invoke_api(void* user, const char* request, int32_t length, int
         g_reclaimer.defer_str(std::move(dead));
     }
     auto& inst = *static_cast<Instance*>(user);
+    if (ffm_has(g_ffm_host.invoke_api) && result_length) {
+        /* JNI-free upcall: Java owns a per-thread REUSED reply buffer, so
+           the returned address stays valid until the next invoke_api entry
+           on this thread — the copy below completes the exchange
+           synchronously, mirroring the jbyteArray copy of the JNI path. */
+        int32_t reply_len = -1;
+        const int64_t reply_addr = g_ffm_host.invoke_api(inst.api_key.data(),
+                static_cast<int32_t>(inst.api_key.size()), request, length, &reply_len);
+        if (reply_addr == 0 || reply_len < 0) {
+            result = "{\"error\":\"Java native API invocation failed\"}";
+        } else {
+            result.assign(reply_len, '\0');
+            std::memcpy(&result[0], reinterpret_cast<const void*>(static_cast<uintptr_t>(reply_addr)),
+                        static_cast<size_t>(reply_len));
+        }
+        *result_length = static_cast<int32_t>(result.size());
+        return result.data();
+    }
     /* Jar/bridge mismatch guard: a null g_vm or a failed NativeApiSession
        lookup used to reach CallStaticObjectMethod with a null class/method
        and crash the JVM on the first mtr::Api call. */
@@ -763,6 +842,36 @@ bool resolve_captured_resources(JNIEnv* env, Instance& inst) {
         inst.resources_ready = true;
         inst.resources_dirty = false;
         return true;   /* nothing to build (pure-record script) */
+    }
+    if (ffm_has(g_ffm_host.create_resources)) {
+        /* JNI-free upcall. Inputs are read in place from the bridge's own
+           vectors (this thread is blocked inside the call); the Java side
+           writes the real handles into out_handles before returning. */
+        const jsize texCount = static_cast<jsize>(inst.tex_w.size());
+        const jsize quadCount = static_cast<jsize>(inst.quad_slot.size());
+        std::vector<int32_t> out(static_cast<size_t>(texCount + quadCount), -1);
+        const int32_t status = g_ffm_host.create_resources(
+                static_cast<int32_t>(texCount), static_cast<int32_t>(quadCount),
+                inst.tex_w.data(), inst.tex_h.data(),
+                inst.quad_verts.data(), inst.quad_uv.data(),
+                inst.quad_slot.data(), inst.quad_stage.data(), out.data());
+        if (status != 0) {
+            std::fprintf(stderr, "[jcm_native_bridge] host createResources failed "
+                                 "(%d textures / %d quads)\n", texCount, quadCount);
+            return false;
+        }
+        inst.tex_slot_handles.assign(out.begin(), out.begin() + texCount);
+        inst.model_slot_handles.assign(out.begin() + texCount, out.end());
+        inst.resources_ready = true;
+        inst.resources_dirty = false;
+        return true;
+    }
+    if (env == nullptr) {
+        /* No JNIEnv and no vtable: headless / pure-FFM fallback. Keep the
+           placeholder handles — the replay step drops those records, the
+           script still runs end-to-end. */
+        inst.resources_ready = false;
+        return true;
     }
     if (!g_host || !g_mid_create_resources) {
         /* No host installed: keep the placeholder handles. Frame records
@@ -1684,6 +1793,69 @@ JCM_BRIDGE_EXPORT int64_t jcm_module_state_size(int64_t handle) {
     return (mod && mod->state_size) ? static_cast<int64_t>(mod->state_size()) : 0;
 }
 
+/** Direct per-frame render WITHOUT the shared-memory region: the caller
+ *  passes the instance key, the raw snapshot address and the resource kind,
+ *  and the bridge writes a compact frame descriptor into `out_desc`:
+ *
+ *      +0  int32 status      (JCM_SHM_* ; 0 = ok)
+ *      +4  int32 record_count
+ *      +8  5 x { u64 address, u64 length, u64 capacity }  arena triples
+ *
+ *  (>= 128 bytes; the arenas are module-owned and stay valid until the
+ *  next render/dispose on this module — the same discipline as the shm
+ *  result slot). This is the FFM twin of the JNI nRender native: same
+ *  pipeline, same failure codes, descriptors instead of ByteBuffers. */
+JCM_BRIDGE_EXPORT int32_t jcm_module_render(int64_t handle, const char* key, int32_t key_len,
+                                             int64_t snap_addr, int64_t snap_len,
+                                             int32_t kind, uint8_t* out_desc) {
+    auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
+    if (!mod || !key || key_len <= 0 || snap_addr == 0 || snap_len <= 0
+            || !out_desc || kind < 0 || kind > MTR_RESOURCE_LIFT) {
+        return JCM_SHM_ERR_REQUEST;
+    }
+    if (snap_len > 0x7fffffffLL) return JCM_SHM_ERR_SNAPSHOT;
+    const std::string owned(key, static_cast<size_t>(key_len));
+    std::lock_guard<std::mutex> lock(mod->mutex);
+    JcmFrameOutput out{};
+    const int32_t status = run_frame_locked(current_jni_env(), *mod, owned.c_str(),
+            reinterpret_cast<const void*>(static_cast<uintptr_t>(snap_addr)),
+            snap_len, static_cast<jint>(kind), out);
+    std::memcpy(out_desc + 0, &status, sizeof(status));
+    int32_t count = status == JCM_SHM_OK ? out.record_count : 0;
+    std::memcpy(out_desc + 4, &count, sizeof(count));
+    if (status == JCM_SHM_OK) {
+        struct ArenaDesc { uint64_t addr, len, cap; };
+        const ArenaDesc arenas[5] = {
+            { reinterpret_cast<uintptr_t>(out.records),      static_cast<uint64_t>(out.records_len),      static_cast<uint64_t>(out.records_capacity) },
+            { reinterpret_cast<uintptr_t>(out.string_arena), static_cast<uint64_t>(out.string_arena_len), static_cast<uint64_t>(out.string_arena_capacity) },
+            { reinterpret_cast<uintptr_t>(out.pixel_arena),  static_cast<uint64_t>(out.pixel_arena_len),  static_cast<uint64_t>(out.pixel_arena_capacity) },
+            { reinterpret_cast<uintptr_t>(out.matrix_arena), static_cast<uint64_t>(out.matrix_arena_len), static_cast<uint64_t>(out.matrix_arena_capacity) },
+            { reinterpret_cast<uintptr_t>(out.float_arena),  static_cast<uint64_t>(out.float_arena_len),  static_cast<uint64_t>(out.float_arena_capacity) },
+        };
+        std::memcpy(out_desc + 8, arenas, sizeof(arenas));
+    }
+    return status;
+}
+
+/** Invoke one module api callback (the FFM twin of the JNI nativeApiCallback
+ *  native): `function`/`user` are the C function pointer + user payload a
+ *  module handed to Java (mtr::Api::Callback), `params` is the JSON request
+ *  and the reply is returned as a raw address whose byte length is written
+ *  to *(int32_t*)out_len_addr before returning. Reply lifetime: the
+ *  callback's thread_local buffer — stable until the next call on the
+ *  same thread, which is exactly how the Java caller consumes it. */
+JCM_BRIDGE_EXPORT int64_t jcm_module_invoke_api(int64_t function, int64_t user,
+                                                 const char* params, int32_t params_len,
+                                                 int64_t out_len_addr) {
+    using Callback = const char* (*)(void*, const char*, int32_t, int32_t*);
+    if (!function || !params || params_len < 0 || !out_len_addr) return 0;
+    int32_t length = 0;
+    const char* result = reinterpret_cast<Callback>(static_cast<uintptr_t>(function))(
+        reinterpret_cast<void*>(static_cast<uintptr_t>(user)), params, params_len, &length);
+    std::memcpy(reinterpret_cast<void*>(static_cast<uintptr_t>(out_len_addr)), &length, sizeof(length));
+    return reinterpret_cast<int64_t>(result);
+}
+
 /** Dispose one instance. `snap_addr`/`snap_len` carry the LIVE driver
  *  buffer when the caller has one (raw address + written length);
  *  snap_addr 0 makes the bridge substitute the module's zeroed fallback
@@ -1704,13 +1876,12 @@ JCM_BRIDGE_EXPORT int32_t jcm_shm_init(int64_t base, int64_t size) {
 }
 
 JCM_BRIDGE_EXPORT int32_t jcm_shm_kick(void) {
-    JNIEnv* env = current_jni_env();
-    if (!env) {
-        /* No JVM on this thread: the host-resource step of the pipeline
-           needs a JNIEnv, so refuse the frame instead of crashing. */
-        return JCM_SHM_ERR_NOT_INIT;
-    }
-    return shm_kick_core(env);
+    /* The frame pipeline only needs a JNIEnv for the legacy host upcalls;
+     * the FFM vtable replaces those, so a pure-FFM session (bridge loaded
+     * with libraryLookup, JNI_OnLoad never ran) kicks fine with a null
+     * env — run_frame_locked degrades the resource step to the no-host
+     * path when neither plane is installed. */
+    return shm_kick_core(current_jni_env());
 }
 
 JCM_BRIDGE_EXPORT void jcm_shm_register_instance(int64_t handle, int64_t instance_id,
@@ -1733,4 +1904,28 @@ JCM_BRIDGE_EXPORT int64_t jcm_reclaimer_pending(void) {
 
 JCM_BRIDGE_EXPORT void jcm_reclaimer_quiesce(void) {
     g_reclaimer.quiesce();
+}
+
+/* ---- JNI-free host vtable installation ---------------------------------- */
+
+/** Installs (or clears) the Panama FFM host upcall table. `vtable_bytes`
+ *  is the caller-side sizeof(JcmFfmHostVTable) so a smaller bridge-side
+ *  prefix never reads past the caller's buffer; an `abi` the bridge does
+ *  not know is REJECTED (never partially trusted). Passing a null table
+ *  atomically restores the legacy JNI plane. */
+JCM_BRIDGE_EXPORT int32_t jcm_ffm_init(const JcmFfmHostVTable* vtable, int32_t vtable_bytes) {
+    if (!vtable) {
+        g_ffm_host = JcmFfmHostVTable{};
+        return 0;
+    }
+    if (vtable_bytes < static_cast<int32_t>(sizeof(JcmFfmHostVTable))) {
+        return JCM_SHM_ERR_BAD_LAYOUT;
+    }
+    if (vtable->abi != JCM_FFM_HOST_ABI) {
+        return JCM_SHM_ERR_BAD_LAYOUT;
+    }
+    JcmFfmHostVTable copy;
+    std::memcpy(&copy, vtable, sizeof(copy));
+    g_ffm_host = copy;
+    return 0;
 }

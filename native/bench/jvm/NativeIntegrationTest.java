@@ -118,39 +118,52 @@ public class NativeIntegrationTest {
 
   /* ---- Panama FFM transport ----
      When the FFM layer linked (JDK 22+ final API, or the 21 preview with
-     --enable-preview + -Djcm.ffm.allow_preview=true), exercise the HOT
-     invocation plane through real java.lang.foreign downcalls: the
-     per-frame kick, instance registration and the background-reclaimer
-     drain all cross into the bridge via the jcm_* exports. Module
-     lifecycle deliberately stays on the JNI natives (identical C cores,
-     cold path). On older JVMs the section degrades to checking the
-     one-line reason so the fallback stays honest. */
+     --enable-preview + -Djcm.ffm.allow_preview=true), the WHOLE session has
+     been running on the JNI-free plane from the first load above: the
+     bridge was libraryLookup'd (no System.load, no JNI native bound),
+     module lifecycle went through jcm_module_* downcalls, frames kicked
+     via jcm_shm_kick downcalls, and every script->Java host service call
+     (api, fonts, resources, models) crossed back through the upcall
+     vtable. This section pins those properties down explicitly. On older
+     JVMs it degrades to checking the one-line reason. */
   if(PanamaFfmChannel.ready()) {
+   check(!NativeScriptManager.jniPlaneActive,"pure FFM session never bound the JNI natives");
+   check(PanamaFfmChannel.hostReady(),"host upcall vtable installed (no-JNI host services)");
    NativeChannel.configure(NativeChannel.Transport.PANAMA_FFM);
    check(NativeChannel.activeTransport()==NativeChannel.Transport.PANAMA_FFM,"PANAMA_FFM selected");
+   check(NativeChannel.describe().contains("no JNI"),"census advertises the JNI-free invocation plane");
    module=NativeScriptManager.loadFromDeclaration("test:probe",new JsonPrimitive("test:"+prefix+"api_probe"+ext));
-   check(module!=null&&module.getAbiVersion()==10,"module loads for the FFM session");
-   check("test:api_probe".equals(module.getScriptId()),"module identity readable");
+   check(module!=null&&module.getAbiVersion()==10,"module loads over jcm_module_open");
+   check("test:api_probe".equals(module.getScriptId()),"module identity via jcm_module_script_id");
    NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
    Fixture ffm=new Fixture();
    var ffmFrames=NativeScriptManager.render("ffm","test:probe",snapshot,0,m->ffm,ffm,null);
-   check(ffmFrames.size()==1,"FFM downcall kick renders a frame");
-   check(ffm.marks.equals(List.of("create","render")),"FFM lifecycle create/render");
-   check(ffm.latch.await(5,TimeUnit.SECONDS),"FFM async API callback");
+   check(ffmFrames.size()==1,"FFM kick renders a frame");
+   check(ffm.marks.equals(List.of("create","render")),"FFM lifecycle create/render (api via upcall vtable)");
+   check(ffm.latch.await(5,TimeUnit.SECONDS),"FFM async API callback (BackgroundWorker thread downcall->upcall)");
    NativeScriptManager.render("ffm","test:probe",snapshot,0,m->ffm,ffm,null);
    check(ffm.marks.equals(List.of("create","render","render")),"FFM persistent state");
+   /* Direct-render downcall (the "JNI" transport on a JNI-less session):
+     same instance, same state, arena descriptors into the reused buffer. */
+   NativeChannel.configure(NativeChannel.Transport.JNI);
+   var directFrames=NativeScriptManager.render("ffm","test:probe",snapshot,0,m->ffm,ffm,null);
+   check(directFrames.size()==1,"jcm_module_render renders the same live instance");
+   check(ffm.marks.equals(List.of("create","render","render","render")),"direct render reuses instance state");
+   check(directFrames.get(0).recordCount==ffmFrames.get(0).recordCount,"direct render reports the same records");
+   NativeChannel.configure(NativeChannel.Transport.PANAMA_FFM);
    NativeScriptManager.disposeInstance("ffm","test:probe");
-   check(ffm.marks.equals(List.of("create","render","render","dispose")),"per-instance dispose under FFM session");
+   check(ffm.marks.equals(List.of("create","render","render","render","dispose")),"per-instance dispose under FFM session");
    PanamaFfmChannel.reclaimerQuiesce();
    check(PanamaFfmChannel.reclaimerPending()==0,"deferred instance memory drained off-thread");
    NativeScriptManager.reload();
    PanamaFfmChannel.reclaimerQuiesce();
    check(PanamaFfmChannel.reclaimerPending()==0,"deferred module memory drained off-thread");
-   check(!NativeScriptManager.isLoaded("test:probe"),"reload unloads the module");
+   check(!NativeScriptManager.isLoaded("test:probe"),"reload unloads the module over jcm_module_close");
    NativeChannel.configure(NativeChannel.Transport.SHARED_MEMORY);
-   System.out.println("Panama FFM transport exercised (real java.lang.foreign downcalls)");
+   System.out.println("Panama FFM transport exercised (JNI-free session: libraryLookup + downcalls + upcall vtable)");
   } else {
    check(PanamaFfmChannel.reason()!=null&&!PanamaFfmChannel.reason().isEmpty(),"FFM unavailability has a reason");
+   check(NativeScriptManager.jniPlaneActive,"legacy JVM keeps the System.load'd JNI plane");
    System.out.println("Panama FFM transport not exercisable on this JVM: "+PanamaFfmChannel.reason());
   }
   NativeScriptManager.reload();

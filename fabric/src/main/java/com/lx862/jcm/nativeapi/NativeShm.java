@@ -291,6 +291,19 @@ final class NativeShm {
         return fields.getLong(RESULT_OFFSET + field);
     }
 
+    /**
+     * Bulk-copies {@code byteLength} bytes of the result slot (starting at
+     * {@code field}) into {@code out} at index 0 — used by
+     * NativeChannel.finishFrame to mirror the arena triples into the same
+     * 128-byte descriptor buffer the direct-render downcall writes, so one
+     * parser serves both planes.
+     */
+    void readResultInto(ByteBuffer out, int field, int byteLength) {
+        for (int i = 0; i < byteLength; i += 8) {
+            out.putLong(fields.getLong(RESULT_OFFSET + field + i));
+        }
+    }
+
     /* ------------------------------------------------------------------ */
     /* window allocator                                                    */
     /* ------------------------------------------------------------------ */

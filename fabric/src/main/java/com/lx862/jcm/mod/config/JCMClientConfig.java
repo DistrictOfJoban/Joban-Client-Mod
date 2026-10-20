@@ -28,9 +28,9 @@ public class JCMClientConfig extends ReflectiveConfig {
      * channel at boot (and on save).
      */
     public enum JavaCppCommunication {
-        /** 性能差，但兼容性和稳定性最好 */
+        /** 快照随每次调用传输 —— 性能差，但兼容性和稳定性最好（旧 JVM 的原生调用面） */
         JNI,
-        /** 性能中等，需 JDK 22 以上，未完成 */
+        /** 性能中等；JDK 22+ 完全零 JNI（加载/调用/回调全部走 Foreign Function & Memory API），旧 JVM 自动回退共享内存 */
         PANAMA_FFM,
         /** 性能最好，但小概率出现稳定性问题 */
         SHARED_MEMORY
@@ -56,7 +56,7 @@ public class JCMClientConfig extends ReflectiveConfig {
 
         @Comment("How Java exchanges per-frame data with C++ script modules.")
         @Comment("SHARED_MEMORY (default) maps a file-backed region and lets C++ read Java's snapshot straight out of it - fastest, tiny stability risk.")
-        @Comment("JNI passes everything through per-frame JNI calls - slowest, best compatibility. PANAMA_FFM is an unfinished JDK 22+ scaffold that falls back to shared memory.")
+        @Comment("JNI passes the snapshot through each per-frame call - slowest, best compatibility. PANAMA_FFM runs the whole pipeline JNI-free on JDK 22+ (libraryLookup + FFM downcalls + upcall-stub host services) and degrades to shared memory on older JVMs.")
         public final TrackedValue<JavaCppCommunication> javaCppCommunication = value(JavaCppCommunication.SHARED_MEMORY);
     }
 

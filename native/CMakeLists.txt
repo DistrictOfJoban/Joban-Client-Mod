@@ -93,5 +93,19 @@ if(BUILD_TESTING)
   if(JNI_FOUND AND Python3_FOUND)
     add_test(NAME native_jvm_integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/bench/jvm_test.py --build ${CMAKE_CURRENT_BINARY_DIR})
   endif()
+  if(JNI_FOUND)
+    # Headless regression for the JNI-FREE plane: the bridge TU is linked
+    # into the executable with NO JVM anywhere (JNI_OnLoad never runs), a
+    # fake vtable stands in for the java.lang.foreign upcall stubs, and the
+    # whole jcm_* plain-C surface + shm slot protocol is exercised. Runs on
+    # every CI platform — the only coverage the plain-C exports get without
+    # a JDK 22+ FFM session. Probe paths travel as COMMAND arguments
+    # (never -D string literals) so Windows paths survive verbatim.
+    add_executable(native_ffm_test bench/native_ffm_test.cpp jni/jni_bridge.cpp)
+    target_include_directories(native_ffm_test PRIVATE ${JNI_INCLUDE_DIRS})
+    target_link_libraries(native_ffm_test PRIVATE ${CMAKE_DL_LIBS} mtr_script_sdk)
+    add_test(NAME native_ffm_test COMMAND native_ffm_test
+        "$<TARGET_FILE:legacy_probe_6>" "$<TARGET_FILE:content_probe_1>")
+  endif()
 endif()
 install(DIRECTORY include/ DESTINATION include)

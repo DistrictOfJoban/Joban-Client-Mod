@@ -38,6 +38,13 @@ import java.nio.ByteOrder;
  */
 final class NativeArenaView {
     private static final sun.misc.Unsafe UNSAFE = unsafe();
+    /** Package-private Unsafe access for the FFM upcall adapters and the
+     *  PanamaFfmChannel vtable builder — raw-address reads/writes without
+     *  a single restricted FFM method. */
+    static sun.misc.Unsafe rawAccess() {
+        return UNSAFE;
+    }
+    private static final int BYTE_ARRAY_BASE = UNSAFE.arrayBaseOffset(byte[].class);
     /**
      * Derived from a LIVE instance instead of a hard-coded name: the
      * concrete direct-buffer class moved between packages across JDK
@@ -132,6 +139,46 @@ final class NativeArenaView {
      */
     static long addressOf(ByteBuffer buffer) {
         return buffer == null || !buffer.isDirect() ? 0L : UNSAFE.getLong(buffer, ADDRESS_OFFSET);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* raw native-memory helpers (FFM upcall marshalling)                  */
+    /* ------------------------------------------------------------------ */
+
+    /** Copies {@code length} bytes at raw {@code address} into a fresh array. */
+    static byte[] readBytes(long address, int length) {
+        final byte[] out = new byte[length];
+        if (length > 0 && address != 0) {
+            UNSAFE.copyMemory(null, address, out, BYTE_ARRAY_BASE, length);
+        }
+        return out;
+    }
+
+    /** Copies {@code src} to raw {@code address} (bulk Unsafe, no per-byte loop). */
+    static void writeBytes(long address, byte[] src) {
+        if (address != 0 && src.length > 0) {
+            UNSAFE.copyMemory(src, BYTE_ARRAY_BASE, null, address, src.length);
+        }
+    }
+
+    /** Reads {@code out.length} int32s from raw {@code address}. */
+    static void readInts(long address, int[] out) {
+        for (int i = 0; i < out.length; i++) out[i] = UNSAFE.getInt(address + 4L * i);
+    }
+
+    /** Reads {@code out.length} floats from raw {@code address}. */
+    static void readFloats(long address, float[] out) {
+        for (int i = 0; i < out.length; i++) out[i] = UNSAFE.getFloat(address + 4L * i);
+    }
+
+    /** Writes an int32 at raw {@code address}. */
+    static void putInt(long address, int value) {
+        UNSAFE.putInt(address, value);
+    }
+
+    /** Writes a double at raw {@code address}. */
+    static void putDouble(long address, double value) {
+        UNSAFE.putDouble(address, value);
     }
 
     /**

@@ -12,34 +12,38 @@ import java.util.Map;
  * script modules. Configurable from the Mod Menu config screen
  * ("Java 与 C++ 通信方式"); the default is {@link Transport#SHARED_MEMORY}.
  *
- * <h2>Transports</h2>
+ * <h2>Transports (data plane)</h2>
  * <ul>
- *   <li><b>{@link Transport#JNI}</b> — the original pipeline: the snapshot
- *       ByteBuffer and the five output arenas ride the per-frame JNI call
- *       ({@code nRender}). Slower — one JNI transition plus a jstring, a
- *       NativeFrame object and (pre-ABI-9) fresh ByteBuffer wrappers per
- *       module per frame — but battle-tested, and it is the automatic
- *       fallback whenever the shared-memory path cannot start.</li>
+ *   <li><b>{@link Transport#JNI}</b> — the "direct" pipeline: the snapshot
+ *       and the five output arenas ride each per-frame call. On JDK 16..21
+ *       that is the battle-tested nRender JNI native; on an FFM session
+ *       (22+) the same exchange is the jcm_module_render downcall —
+ *       identical pipeline, failure codes and instance semantics, just a
+ *       JNI-free crossing. Slowest (one transition with data in tow per
+ *       module per frame), and the automatic fallback whenever the
+ *       shared-memory path cannot start.</li>
  *   <li><b>{@link Transport#SHARED_MEMORY}</b> — the default. The
  *       per-frame snapshot is marshalled into a window of a file-backed
  *       shared region ({@link NativeShm}, a MappedByteBuffer) and C++
  *       reads it straight from that mapping; Java then writes a request
- *       into the CONTROL slot and makes an EMPTY-ARGUMENT
- *       {@code nativeShmKick()} call. The C++ bridge runs the identical
- *       render pipeline and writes the output arena descriptors into the
- *       RESULT slot, which Java re-binds into REUSED ByteBuffer views
- *       ({@link NativeArenaView}). Zero allocations and zero data copies
- *       on the hot path. Small residual risk by design — raw-address
- *       views depend on the module reporting honest arena sizes — hence
- *       the config description "性能最好，但小概率出现稳定性问题".</li>
+ *       into the CONTROL slot and makes an EMPTY-ARGUMENT trigger call
+ *       (an FFM downcall on 22+, the nativeShmKick native otherwise).
+ *       The C++ bridge runs the identical render pipeline and writes the
+ *       output arena descriptors into the RESULT slot, which Java re-binds
+ *       into REUSED ByteBuffer views ({@link NativeArenaView}). Zero
+ *       allocations and zero data copies on the hot path. Small residual
+ *       risk by design — raw-address views depend on the module reporting
+ *       honest arena sizes — hence the config description "性能最好，但小
+ *       概率出现稳定性问题".</li>
  *   <li><b>{@link Transport#PANAMA_FFM}</b> — the Foreign Function &amp;
- *       Memory API downcall transport ({@link PanamaFfmChannel}, ABI 10):
- *       same shared-memory data plane, but every bridge invocation
- *       (module lifecycle + the per-frame kick) is an FFM downcall into
- *       the bridge's plain-C exports instead of a JNI native method.
- *       Needs JDK 22+ (final java.lang.foreign) — on older JVMs it
- *       degrades to the JNI-triggered shared-memory channel with a
- *       one-line reason in the census.</li>
+ *       Memory API transport ({@link PanamaFfmChannel}): the same
+ *       shared-memory data plane, with the ENTIRE invocation plane on
+ *       java.lang.foreign — bridge loading (libraryLookup, no
+ *       System.load), module lifecycle, the per-frame kick, the
+ *       script-&gt;Java host services (upcall-stub vtable) and the API
+ *       callbacks. On JDK 22+ a session is fully JNI-free; older JVMs
+ *       degrade to the shared-memory channel above with a one-line
+ *       reason in the census.</li>
  * </ul>
  *
  * <h2>Threading</h2>
@@ -47,7 +51,7 @@ import java.util.Map;
  * region, the instance registry) is guarded by the {@link NativeChannel}
  * class monitor: one uncontended lock acquisition per frame. The module
  * mutex in the bridge serializes per-module work as before, and all
- * render/dispose lifecycle semantics are identical to the JNI transport.
+ * render/dispose lifecycle semantics are identical on every transport.
  *
  * <p>Package-private helpers (buffer facade, render dispatch) are used by
  * NativeScriptManager / the drivers; the public surface is the transport
@@ -137,7 +141,8 @@ public final class NativeChannel {
 
     private static native void nativeShmShutdown();
 
-    /** Reusable per-module frame surfaces: five arena views + one frame. */
+    /** Reusable per-module frame surfaces: five arena views, one frame and
+     *  one 128-byte direct-render descriptor buffer. */
     private static final class Views {
         final long handle;
         final ByteBuffer records = NativeArenaView.allocate();
@@ -146,6 +151,11 @@ public final class NativeChannel {
         final ByteBuffer matrices = NativeArenaView.allocate();
         final ByteBuffer floats = NativeArenaView.allocate();
         final NativeScriptManager.NativeFrame frame = new NativeScriptManager.NativeFrame();
+        /** Frame descriptor for the direct-render downcall (status +
+         *  record count + five arena triples) — written by the bridge,
+         *  parsed by finishDescriptorFrame. */
+        final ByteBuffer renderOut = java.nio.ByteBuffer.allocateDirect(128)
+                .order(ByteOrder.nativeOrder());
 
         Views(long handle) {
             this.handle = handle;
@@ -173,7 +183,9 @@ public final class NativeChannel {
     /** One-line human summary of the ACTIVE transport, for the post-reload
      *  census in latest.log — so a player can verify from the log that the
      *  "Java 与 C++ 通信方式" selection really engaged (and see when the
-     *  shared-memory channel degraded to JNI). */
+     *  shared-memory channel degraded to the direct call). The invocation
+     *  plane (Panama FFM downcalls vs JNI natives) rides along so a
+     *  JNI-free session is visible at a glance. */
     public static String describe() {
         final Transport selected = transport;
         final NativeShm region = shm;
@@ -188,10 +200,19 @@ public final class NativeChannel {
                         .append("; using JNI-triggered shared-memory)");
             }
         } else {
-            sb.append("jni");
+            sb.append("direct (snapshot rides the per-frame call)");
         }
+        sb.append(PanamaFfmChannel.ready() && !NativeScriptManager.jniPlaneActive
+                ? ", invocations: panama-ffm (no JNI)"
+                : PanamaFfmChannel.ready()
+                        ? PanamaFfmChannel.hostReady()
+                                ? ", invocations: panama-ffm upcalls (JNI plane loaded)"
+                                : PanamaFfmChannel.extendedSurface()
+                                        ? ", invocations: panama-ffm downcalls (JNI host upcalls)"
+                                        : ", invocations: panama-ffm kick (legacy bridge: render/api on JNI)"
+                        : ", invocations: jni natives");
         if (shmBroken && selected != Transport.JNI) {
-            sb.append(" [unavailable this session — JNI calls]");
+            sb.append(" [unavailable this session — direct calls]");
         }
         if (region != null) {
             sb.append(", region ").append(region.size() / 1024).append(" KB");
@@ -256,18 +277,18 @@ public final class NativeChannel {
                                                   int snapshotLen, int resourceKind) {
         final Transport selected = effectiveTransport();
         if (selected != Transport.SHARED_MEMORY || shmBroken) {
-            return module.nRender(module.getNativeHandle(), instanceKey, snapshot, snapshotLen, resourceKind);
+            return renderDirect(module, instanceKey, snapshot, snapshotLen, resourceKind);
         }
         try {
             final long address = NativeArenaView.addressOf(snapshot);
             if (address == 0) {
                 /* heap buffer (test fixtures / exotic callers): the shm
-                   protocol only speaks raw addresses — use the JNI call. */
-                return module.nRender(module.getNativeHandle(), instanceKey, snapshot, snapshotLen, resourceKind);
+                   protocol only speaks raw addresses — use the direct call. */
+                return renderDirect(module, instanceKey, snapshot, snapshotLen, resourceKind);
             }
             final NativeShm region = ensureShm();
             if (region == null) {
-                return module.nRender(module.getNativeHandle(), instanceKey, snapshot, snapshotLen, resourceKind);
+                return renderDirect(module, instanceKey, snapshot, snapshotLen, resourceKind);
             }
             final long handle = module.getNativeHandle();
             final long instanceId = instanceIdFor(handle, instanceKey);
@@ -278,7 +299,7 @@ public final class NativeChannel {
                monitor also excludes reset() closing the region mid-frame. */
             synchronized (NativeChannel.class) {
                 if (shm != region || shmBroken) {
-                    return module.nRender(module.getNativeHandle(), instanceKey, snapshot, snapshotLen, resourceKind);
+                    return renderDirect(module, instanceKey, snapshot, snapshotLen, resourceKind);
                 }
                 seq = controlSeq++;
                 region.putControlLong(NativeShm.CTL_MODULE, handle);
@@ -296,10 +317,10 @@ public final class NativeChannel {
             return frame;
         } catch (Throwable t) {
             /* Old bridge binary (missing shm exports), broken region, or an
-               unexpected condition: degrade to the JNI path for the rest of
-               the session instead of failing scripts. */
+               unexpected condition: degrade to the direct call for the rest
+               of the session instead of failing scripts. */
             noteShmFailure("render", t);
-            return module.nRender(module.getNativeHandle(), instanceKey, snapshot, snapshotLen, resourceKind);
+            return renderDirect(module, instanceKey, snapshot, snapshotLen, resourceKind);
         }
     }
 
@@ -315,33 +336,72 @@ public final class NativeChannel {
             return null;
         }
         final int recordCount = region.getResultInt(NativeShm.RES_COUNT);
-        Views views = null;
-        for (int i = 0; i < VIEWS.size(); i++) {
-            final Views candidate = VIEWS.get(i);
-            if (candidate.handle == moduleHandle) {
-                views = candidate;
-                break;
+        final Views views = viewsFor(moduleHandle);
+        views.renderOut.clear();
+        region.readResultInto(views.renderOut, NativeShm.RES_RECORDS, 5 * 24);
+        return finishDescriptorFrame(views, recordCount);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* direct per-frame call (no shm region)                               */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Per-frame render WITHOUT the shared-memory region ("JNI" transport,
+     * heap snapshots, or a shm failure): on an FFM session this is the
+     * jcm_module_render downcall writing the frame descriptor into the
+     * module's reused 128-byte buffer; on legacy JVMs it is the nRender
+     * JNI native. Same pipeline, same failure codes on both planes.
+     */
+    private static NativeScriptManager.NativeFrame renderDirect(NativeScriptManager.NativeScriptModule module,
+                                                                String instanceKey, ByteBuffer snapshot,
+                                                                int snapshotLen, int resourceKind) {
+        /* Extended-surface gate (not plain ready()): in a mixed session with
+           an older bridge the jcm_module_render export is absent and the
+           System.load'd nRender native remains the direct-call plane. */
+        if (!PanamaFfmChannel.extendedSurface()) {
+            return module.nRender(module.getNativeHandle(), instanceKey, snapshot, snapshotLen, resourceKind);
+        }
+        final long handle = module.getNativeHandle();
+        final long address = NativeArenaView.addressOf(snapshot);
+        if (address == 0 || snapshotLen <= 0) {
+            return null;   /* heap snapshot: the raw-address call cannot see it */
+        }
+        try {
+            synchronized (NativeChannel.class) {
+                final Views views = viewsFor(handle);
+                views.renderOut.clear();
+                final int status = PanamaFfmChannel.moduleRender(handle, instanceKey,
+                        address, snapshotLen, resourceKind, views.renderOut);
+                if (status != NativeShm.STATUS_OK) {
+                    noteStatus(status);
+                    return null;
+                }
+                return finishDescriptorFrame(views, views.renderOut.getInt(4));
             }
+        } catch (Throwable t) {
+            noteShmFailure("render-direct", t);
+            return null;
         }
-        if (views == null) {
-            views = new Views(moduleHandle);
-            VIEWS.add(views);
+    }
+
+    /** Binds the five arena views from one frame descriptor (shm result
+     *  slot or direct-render out buffer share the triple layout) and
+     *  assigns the reused NativeFrame; monitor held by the caller. */
+    private static NativeScriptManager.NativeFrame finishDescriptorFrame(Views views, int recordCount) {
+        final ByteBuffer source = views.renderOut;
+        for (int i = 0; i < 5; i++) {
+            final int base = i * 24;
+            bindArena(views, i, source.getLong(base), source.getLong(base + 8), source.getLong(base + 16));
         }
-        bindArena(views.records, region, NativeShm.RES_RECORDS);
-        bindArena(views.strings, region, NativeShm.RES_STRINGS);
-        bindArena(views.pixels, region, NativeShm.RES_PIXELS);
-        bindArena(views.matrices, region, NativeShm.RES_MATRICES);
-        bindArena(views.floats, region, NativeShm.RES_FLOATS);
-        /* (bindArena resolves each arena triple through the result slot) */
         views.frame.assign(views.records, recordCount, views.strings, views.pixels,
                 views.matrices, views.floats);
         return views.frame;
     }
 
-    private static void bindArena(ByteBuffer view, NativeShm region, int resultOffset) {
-        final long address = region.getResultLong(resultOffset + NativeShm.ARENA_ADDR);
-        final long len = region.getResultLong(resultOffset + NativeShm.ARENA_LEN);
-        final long cap = region.getResultLong(resultOffset + NativeShm.ARENA_CAP);
+    private static void bindArena(Views views, int slot, long address, long len, long cap) {
+        final ByteBuffer view = slot == 0 ? views.records : slot == 1 ? views.strings
+                : slot == 2 ? views.pixels : slot == 3 ? views.matrices : views.floats;
         if (address == 0 || len < 0) {
             NativeArenaView.bind(view, 0, 0, 0);
             return;
@@ -352,6 +412,17 @@ public final class NativeChannel {
         NativeArenaView.bind(view, address,
                 (int) Math.min(len, Integer.MAX_VALUE),
                 (int) Math.min(capacity, Integer.MAX_VALUE));
+    }
+
+    /** The (reused) views of one module, allocated on first frame. */
+    private static Views viewsFor(long moduleHandle) {
+        for (int i = 0; i < VIEWS.size(); i++) {
+            final Views candidate = VIEWS.get(i);
+            if (candidate.handle == moduleHandle) return candidate;
+        }
+        final Views created = new Views(moduleHandle);
+        VIEWS.add(created);
+        return created;
     }
 
     /** Long instance id per moduleKey; registers with the bridge on first use. */
