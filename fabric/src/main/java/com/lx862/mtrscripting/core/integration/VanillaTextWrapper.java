@@ -72,8 +72,17 @@ public class VanillaTextWrapper {
         return this;
     }
 
+    /**
+     * MutableText is not the intended argument type, scripts should not be exposed to internal details.
+     */
+    @Deprecated
     public VanillaTextWrapper withHoverText(MutableText content) {
         this.style = LoaderImpl.withHoverContentText(style, content);
+        return this;
+    }
+
+    public VanillaTextWrapper withHoverText(VanillaTextWrapper content) {
+        this.style = LoaderImpl.withHoverContentText(style, content.impl());
         return this;
     }
 
