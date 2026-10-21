@@ -1119,8 +1119,12 @@ const char* host_invoke_api(void* user, const char* request, int32_t length, int
     if (poller().svc_available() && result_length) {
         /* SVC round-trip: word 4 is the address of a local length slot the
            Java adapter writes through (shared address space), and the RET
-           word carries the reply ADDRESS — Java's thread-local reused
-           reply buffer, read out synchronously below. */
+           word carries the reply ADDRESS — Java's PER-RING-SLOT reused
+           reply buffer (one bucket per nesting depth, see
+           PanamaFfmUpcalls.RING_REPLIES: while this call waits, the same
+           Java thread may answer NESTED deeper-slot requests whose bytes
+           must never touch this slot's pending reply), read out
+           synchronously below. */
         int32_t reply_len = -1;
         const uint64_t words[5] = {
             reinterpret_cast<uintptr_t>(inst.api_key.data()),

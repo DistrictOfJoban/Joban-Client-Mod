@@ -233,7 +233,7 @@ final class ShmPoller {
             long ret = 0;
             try {
                 final int id = active.getInt(block + NativeShm.SVC_ID);
-                ret = dispatchService(active, block, id);
+                ret = dispatchService(active, block, slot, id);
             } catch (Throwable t) {
                 /* A service may NEVER stall the protocol: publish a failure
                    return (the adapters degrade on their own, but belt and
@@ -254,7 +254,7 @@ final class ShmPoller {
         }
     }
 
-    private static long dispatchService(NativeShm active, long block, int id) {
+    private static long dispatchService(NativeShm active, long block, int slot, int id) {
         final long args = block + NativeShm.SVC_ARGS;
         switch (id) {
             case NativeShm.SVC_ACQUIRE_MODEL:
@@ -302,10 +302,15 @@ final class ShmPoller {
                         active.getLong(args + 48), active.getLong(args + 56),
                         active.getLong(args + 64));
             case NativeShm.SVC_INVOKE_API:
-                return PanamaFfmUpcalls.cbInvokeApi(
+                /* ringSlot: the reply must go to the PER-DEPTH bucket — the
+                   poller copies it out only after its spin matches, and this
+                   same thread may meanwhile answer nested (deeper-slot)
+                   requests whose replies must never touch this slot's
+                   bytes (see PanamaFfmUpcalls.RING_REPLIES). */
+                return PanamaFfmUpcalls.cbInvokeApiRing(
                         active.getLong(args), (int) active.getLong(args + 8),
                         active.getLong(args + 16), (int) active.getLong(args + 24),
-                        active.getLong(args + 32));
+                        active.getLong(args + 32), slot);
             default:
                 JCMLogger.warn("Native host service request {} has no dispatcher; degrading", id);
                 return 0;

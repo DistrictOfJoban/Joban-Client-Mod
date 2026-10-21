@@ -328,7 +328,14 @@ static bool create_region(Region* region, uint32_t epoch) {
     if (!dir.empty() && dir.back() != '\\' && dir.back() != '/') sep = "\\";
     region->file = dir + sep + "jcm_shmp_" + std::to_string(pid) + ".tmp";
     const std::wstring wide(region->file.begin(), region->file.end());
-    HANDLE file = CreateFileW(wide.c_str(), GENERIC_READ | GENERIC_WRITE, 0,
+    /* Share-mode is load-bearing: the bridge's poller co-opens the region
+       file with GENERIC_READ|GENERIC_WRITE + share-all — a handle opened
+       with share mode 0 denies it (ERROR_SHARING_VIOLATION) and the poller
+       can never attach (the old code failed all 23 checks of this test on
+       every Windows CI run; Java's Files APIs share by default, which is
+       why the JVM-path attach worked). */
+    HANDLE file = CreateFileW(wide.c_str(), GENERIC_READ | GENERIC_WRITE,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                               nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file == INVALID_HANDLE_VALUE) return false;
     LARGE_INTEGER li;

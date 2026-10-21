@@ -55,7 +55,27 @@ final class PanamaFfmUpcalls {
     /* per-thread reusable marshalling surfaces                            */
     /* ------------------------------------------------------------------ */
 
-    /** Growable reply buffer for invoke_api (grow-once-on-demand). */
+    /**
+     * Growable reply buffers for invoke_api, one per SVC ring slot. The
+     * poller plane answers a request by publishing the buffer ADDRESS and
+     * only the POLLER thread copies the bytes out (later, once its spin
+     * matches). While it waits, the SAME Java thread may pump NESTED
+     * requests (a CBQ-executed task calling back into the api) — nested
+     * answers used to reuse the single thread-local buffer and OVERWROTE
+     * the outer request's not-yet-copied reply bytes (observed as the
+     * poller copying a fresh reply's 14-byte prefix of a stale wrapper
+     * reply: run 39605511063, the '{"value":{"$ha' parse errors on
+     * win-x64/linux-arm64/macos-arm64). Per-slot buckets make every
+     * nesting depth own its bytes: a slot's buffer is only reused for the
+     * NEXT request on the SAME slot, which by construction happens after
+     * the poller copied the previous one (it issues nothing on that slot
+     * while it still holds the reply).
+     */
+    private static final ThreadLocal<ByteBuffer[]> RING_REPLIES = new ThreadLocal<>();
+
+    /** Legacy single reply buffer: the FFM-plane upcalls ONLY (the C++ side
+     *  copies synchronously inside the same downcall, so a single reused
+     *  buffer is exactly the documented contract there). */
     private static final ThreadLocal<ByteBuffer> REPLY = new ThreadLocal<>();
     /** Reused direct-buffer wrapper for the rasterize/draw pixel window. */
     private static final ThreadLocal<ByteBuffer> PIXEL_VIEW = new ThreadLocal<>();
@@ -66,6 +86,25 @@ final class PanamaFfmUpcalls {
             final int capacity = Math.max(1024, Integer.highestOneBit(Math.max(required, 1) * 2 - 1) << 1);
             buffer = ByteBuffer.allocateDirect(capacity).order(ByteOrder.nativeOrder());
             REPLY.set(buffer);
+        }
+        return buffer;
+    }
+
+    /** Per-SVC-slot reply buffer for the SHM-POLLER answer path (see
+     *  {@link #RING_REPLIES}): one bucket per nesting depth. */
+    private static ByteBuffer ringReplyBuffer(int ringSlot, int required) {
+        final int slots = NativeShm.SVC_SLOTS;
+        ByteBuffer[] buffers = RING_REPLIES.get();
+        if (buffers == null) {
+            buffers = new ByteBuffer[slots];
+            RING_REPLIES.set(buffers);
+        }
+        if (ringSlot < 0 || ringSlot >= slots) ringSlot = 0;
+        ByteBuffer buffer = buffers[ringSlot];
+        if (buffer == null || buffer.capacity() < required) {
+            final int capacity = Math.max(1024, Integer.highestOneBit(Math.max(required, 1) * 2 - 1) << 1);
+            buffer = ByteBuffer.allocateDirect(capacity).order(ByteOrder.nativeOrder());
+            buffers[ringSlot] = buffer;
         }
         return buffer;
     }
@@ -227,11 +266,35 @@ final class PanamaFfmUpcalls {
             final int length = reply == null ? 0 : reply.length;
             final ByteBuffer buffer = replyBuffer(length);
             if (length > 0) NativeArenaView.writeBytes(NativeArenaView.addressOf(buffer), reply);
-            /* Volatile form: the length slot lives on the C++ poller thread's
-               stack; the store-release orders the reply-byte copy above
-               before it, so a length observed through RSP always implies
-               its full reply is visible (paired with the full fence the
-               ShmPoller spins before publishing the SVC answer). */
+            /* Volatile form: orders the reply-byte copy above before it, so
+               a length observed through RSP always implies its full reply is
+               visible (pairs with the ShmPoller's pre-publication full fence). */
+            NativeArenaView.putIntVolatile(outLengthAddress, length);
+            return NativeArenaView.addressOf(buffer);
+        } catch (Throwable t) {
+            degrade("invoke_api", t);
+            return 0;
+        }
+    }
+
+    /**
+     * The SHM-POLLER answer path twin of {@link #cbInvokeApi}: identical
+     * exchange, but the reply bytes go to the PER-SLOT bucket (see
+     * {@link #ringReplyBuffer}) because the poller thread copies them out
+     * LATER — after this thread may already have answered nested
+     * (deeper-slot) requests that must not touch the outer slot's bytes.
+     */
+    public static long cbInvokeApiRing(long keyAddress, int keyLength,
+                                      long requestAddress, int requestLength,
+                                      long outLengthAddress, int ringSlot) {
+        try {
+            if (requestLength < 0 || outLengthAddress == 0) return 0;
+            final byte[] key = NativeArenaView.readBytes(keyAddress, keyLength);
+            final byte[] request = NativeArenaView.readBytes(requestAddress, requestLength);
+            final byte[] reply = NativeApiSession.invoke(key, request);
+            final int length = reply == null ? 0 : reply.length;
+            final ByteBuffer buffer = ringReplyBuffer(ringSlot, length);
+            if (length > 0) NativeArenaView.writeBytes(NativeArenaView.addressOf(buffer), reply);
             NativeArenaView.putIntVolatile(outLengthAddress, length);
             return NativeArenaView.addressOf(buffer);
         } catch (Throwable t) {
