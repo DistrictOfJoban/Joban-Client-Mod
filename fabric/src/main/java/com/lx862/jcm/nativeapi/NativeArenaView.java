@@ -177,6 +177,32 @@ final class NativeArenaView {
         UNSAFE.putInt(address, value);
     }
 
+    /**
+     * Writes an int32 at raw {@code address} with volatile (store-release)
+     * semantics. Used for the ONE cross-thread plain write that targets
+     * ANOTHER THREAD'S memory (the invoke_api out-length slot lives on the
+     * C++ poller thread's stack): the release form orders the reply-byte
+     * copyMemory stores before it on every architecture, so the length
+     * can never be observed without its bytes.
+     */
+    static void putIntVolatile(long address, int value) {
+        UNSAFE.putIntVolatile(null, address, value);
+    }
+
+    /**
+     * Full memory fence (Unsafe.fullFence). Spun before the SVC-ring
+     * answer publication: the reply bytes, the out-length slot and the
+     * RET word may be plain Unsafe stores, and the volatile store that
+     * publishes the answer must not overtake them on weakly-ordered cores
+     * (observed truncating replies on Apple silicon, run 39601831557:
+     * the poller consumed the answered RSP before the reply's tail and
+     * length had become visible, read a stale length and copied a
+     * mid-flight reply prefix).
+     */
+    static void fullFence() {
+        UNSAFE.fullFence();
+    }
+
     /** Writes a double at raw {@code address}. */
     static void putDouble(long address, double value) {
         UNSAFE.putDouble(address, value);

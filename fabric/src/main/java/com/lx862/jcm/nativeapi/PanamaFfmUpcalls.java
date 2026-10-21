@@ -227,7 +227,12 @@ final class PanamaFfmUpcalls {
             final int length = reply == null ? 0 : reply.length;
             final ByteBuffer buffer = replyBuffer(length);
             if (length > 0) NativeArenaView.writeBytes(NativeArenaView.addressOf(buffer), reply);
-            NativeArenaView.putInt(outLengthAddress, length);
+            /* Volatile form: the length slot lives on the C++ poller thread's
+               stack; the store-release orders the reply-byte copy above
+               before it, so a length observed through RSP always implies
+               its full reply is visible (paired with the full fence the
+               ShmPoller spins before publishing the SVC answer). */
+            NativeArenaView.putIntVolatile(outLengthAddress, length);
             return NativeArenaView.addressOf(buffer);
         } catch (Throwable t) {
             degrade("invoke_api", t);

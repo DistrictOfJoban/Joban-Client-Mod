@@ -77,6 +77,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+#include <process.h>
 #else
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -864,18 +865,20 @@ Poller& poller() {
  * on demand, strictly after all static initialization. */
 #if defined(_WIN32)
 static INIT_ONCE g_poller_boot_once = INIT_ONCE_STATIC_INIT;
-static DWORD WINAPI poller_thread_entry(LPVOID) {
+static unsigned __stdcall poller_thread_entry(void*) {
     poller().run_outer();
     return 0;
 }
 static BOOL CALLBACK poller_boot_impl(PINIT_ONCE, PVOID, PVOID*) {
-    /* Create the thread WITHOUT waiting for it — the documented
-       loader-lock contract for DllMain. Closing the handle makes it fully
-       detached: it dies with the process, exactly like the poller loop's
-       own lifecycle (the shutdown command detaches the region, never the
-       thread). */
-    HANDLE thread = CreateThreadW(nullptr, 0, poller_thread_entry, nullptr, 0, nullptr);
-    if (thread) CloseHandle(thread);
+    /* _beginthreadex (CRT, always declared) instead of CreateThreadW: on
+       some SDK/toolchain combos the raw CreateThreadW declaration is not
+       reachable from a TU that leans on lean windows.h inclusion chains
+       (workflow run 39601831557, error C3861). The handle is closed right
+       away: fully detached, it dies with the process — created WITHOUT
+       waiting for it, per the documented DllMain loader-lock contract. */
+    const uintptr_t thread = _beginthreadex(nullptr, 0, poller_thread_entry,
+                                             nullptr, 0, nullptr);
+    if (thread != 0) CloseHandle(reinterpret_cast<HANDLE>(thread));
     return TRUE;
 }
 #else

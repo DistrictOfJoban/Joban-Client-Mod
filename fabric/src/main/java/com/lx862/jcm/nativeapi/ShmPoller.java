@@ -230,18 +230,26 @@ final class ShmPoller {
             final long last = served.get();
             if (seq <= last) continue;
             if (!served.compareAndSet(last, seq)) continue;   /* another waiter took it */
+            long ret = 0;
             try {
                 final int id = active.getInt(block + NativeShm.SVC_ID);
-                long ret = dispatchService(active, block, id);
-                active.putLong(block + NativeShm.SVC_RET, ret);
+                ret = dispatchService(active, block, id);
             } catch (Throwable t) {
                 /* A service may NEVER stall the protocol: publish a failure
                    return (the adapters degrade on their own, but belt and
                    braces for dispatch-level errors). */
                 JCMLogger.warn("Native host service dispatch failed ({}); the script call degrades", t.toString());
-                active.putLong(block + NativeShm.SVC_RET, 0);
+                ret = 0;
             }
-            /* Publish the answer LAST: the poller spins on SVC_RSP. */
+            /* Publish the answer LAST: the poller spins on SVC_RSP.
+               The full fence is load-bearing on weakly-ordered cores: the
+               reply bytes (Unsafe.copyMemory) and the out-length slot write
+               are PLAIN stores, and the RSP publication must never overtake
+               them — Apple silicon observed exactly that (the poller
+               consumed RSP, read a stale length and copied a mid-flight
+               reply prefix; see run 39601831557). */
+            NativeArenaView.fullFence();
+            active.putLong(block + NativeShm.SVC_RET, ret);
             active.putLongRelease(block + NativeShm.SVC_RSP, seq);
         }
     }
