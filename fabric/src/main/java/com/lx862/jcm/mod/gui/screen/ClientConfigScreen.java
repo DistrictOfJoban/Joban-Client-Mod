@@ -176,6 +176,14 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting_class_restriction"), new MappedWidget(disableScriptingClassRestrictionButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.script_debug_mode"), new MappedWidget(scriptDebugModeButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.script_show_log_source"), new MappedWidget(scriptShowLogSourceButton));
+        /* The widget must ALSO be a direct child of the screen: MC only
+         * dispatches mouse input to screen children, and ListViewWidget
+         * merely *renders* list entries without forwarding clicks. Every
+         * other list-embedded widget (checkboxes here, all widgets in
+         * SoundLooperScreen etc.) is registered via addChild — the cycling
+         * button used to be added to the list only, so it was drawn but
+         * clicks never reached it and the value could not be changed. */
+        addChild(new ClickableWidget(javaCppCommunicationButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.java_cpp_communication"), new MappedWidget(javaCppCommunicationButton));
         /* The per-option description line follows the current selection. */
         listViewWidget.add(new DynamicTextItem(() -> javaCppCommunicationDescription, 12));

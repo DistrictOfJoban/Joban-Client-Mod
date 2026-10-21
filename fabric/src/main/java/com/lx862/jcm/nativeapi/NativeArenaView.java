@@ -30,11 +30,12 @@ import java.nio.ByteOrder;
  * The field layout of {@code java.nio.Buffer} has been stable since Java 9
  * (and identical in spirit since 1.4). {@link #selfCheck()} verifies the
  * offsets at runtime against a freshly allocated memory block; any
- * mismatch disables the shared-memory transport and falls back to JNI, so
- * an exotic JVM can never ship a broken wrapping path.
+ * mismatch disables the shared-memory transports and falls back to the
+ * direct-call plane, so an exotic JVM can never ship a broken wrapping
+ * path.
  *
  * <p>Package-private, JDK-only (no Minecraft classes): compiled into the
- * bare-javac JNI test harness alongside NativeScriptManager.
+ * bare-javac harness alongside NativeScriptManager.
  */
 final class NativeArenaView {
     private static final sun.misc.Unsafe UNSAFE = unsafe();

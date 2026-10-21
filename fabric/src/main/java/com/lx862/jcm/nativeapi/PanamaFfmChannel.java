@@ -53,14 +53,13 @@ import java.util.Optional;
  * 22; the 21 preview is opted in for the test harness with
  * {@code --enable-preview} plus {@code -Djcm.ffm.allow_preview=true}).
  * {@link #installFromExtractedPath} is attempted FIRST by the bridge
- * loader: when it succeeds, the session is pure FFM and nothing ever
- * binds the JNI natives. When it cannot run (JDK 16..21, or a
- * pre-ABI-10 bridge binary without the {@code jcm_*} exports), the
- * loader falls back to {@code System.load} + the legacy JNI natives, and
- * this channel still tries to link the DOWNCALL half
- * ({@link #attemptInstall}) so the shm control plane upgrades where the
- * runtime allows — with the upcall vtable as a best-effort bonus on top
- * of the (also installed) JNI host.
+ * loader: when it succeeds, the session is pure FFM and nothing else is
+ * ever loaded. When it cannot run (JDK 16..21, or a pre-poller bridge
+ * binary without the full {@code jcm_*} surface), the loader falls back
+ * to {@code System.load} — which merely runs the bridge's constructor
+ * and starts the JNI-free shared-memory poller plane ({@link ShmPoller})
+ * — and this channel reports its one-line reason. There is no mixed
+ * mode anymore: the JNI plane it used to upgrade no longer exists.
  *
  * <h2>How it stays Java-17-compatible</h2>
  * Minecraft 1.17.1-1.20.4 runs on Java 16/17, where
@@ -223,12 +222,16 @@ final class PanamaFfmChannel {
     /**
      * PURE-FFM install: called by the bridge loader BEFORE any
      * System.load, with the freshly extracted bridge file. On success
-     * the bridge is fully driven from this channel and the JNI natives
-     * are never bound. The host vtable is REQUIRED here — without it a
+     * the bridge is fully driven from this channel and nothing else is
+     * loaded. The host vtable is REQUIRED here — without it a
      * System.load-less session could not serve host services at all.
      */
     static boolean installFromExtractedPath(String bridgePath) {
         if (ready) return true;
+        if (Boolean.getBoolean("jcm.ffm.disable")) {
+            unavailableReason = "disabled via -Djcm.ffm.disable";
+            return false;
+        }
         if (!supportedRuntime()) {
             unavailableReason = "requires JDK 22+ (java.lang.foreign)";
             return false;
@@ -252,57 +255,9 @@ final class PanamaFfmChannel {
         } catch (Throwable t) {
             ready = false;
             unavailableReason = trimToReason(t);
-            JCMLogger.warn("Panama FFM transport unavailable ({}); falling back to the JNI bridge",
+            JCMLogger.warn("Panama FFM transport unavailable ({}); using the shared-memory poller plane",
                     unavailableReason);
             return false;
-        }
-    }
-
-    /**
-     * Mixed-mode install after System.load succeeded (old JDK or an
-     * installFromExtractedPath failure): links the DOWNCALL half on the
-     * already-loaded bridge — loaderLookup sees it — and adds the upcall
-     * vtable as a best-effort upgrade on top of the JNI host. Failure of
-     * the downcalls degrades the whole channel to the legacy natives with
-     * a one-line reason.
-     */
-    static void attemptInstall() {
-        if (ready) return;
-        try {
-            if (!supportedRuntime()) {
-                unavailableReason = "requires JDK 22+ (java.lang.foreign)";
-                return;
-            }
-            resolveFfmApi();
-            final Object lookup = openLookupOnLoadedBridge();
-            /* Mixed mode tolerates a bridge WITHOUT the extended surface
-               (jcm_module_render / jcm_module_invoke_api / jcm_ffm_init,
-               added after the first ABI 10 bridges): such a pairing keeps
-               the e4ee023-era behaviour — FFM kick + JNI everything else. */
-            if (!linkDowncalls(lookup, false)) {
-                return;
-            }
-            if (moduleSurfaceReady) {
-                try {
-                    installHostVtable();
-                } catch (Throwable t) {
-                    hostUnavailableReason = trimToReason(t);
-                    /* Downcalls alone still upgrade the shm control plane;
-                       the JNI host keeps serving the script->Java services. */
-                    JCMLogger.warn("Panama FFM host upcalls unavailable ({}); script->Java services stay on the JNI host",
-                            hostUnavailableReason);
-                }
-            }
-            ready = true;
-            unavailableReason = null;
-            JCMLogger.info("Panama FFM downcalls ready{}",
-                    hostInstalled ? " (host upcalls too — no JNI on the frame path)"
-                            : moduleSurfaceReady ? "" : " (legacy bridge: render/api stay on the JNI plane)");
-        } catch (Throwable t) {
-            ready = false;
-            unavailableReason = trimToReason(t);
-            JCMLogger.warn("Panama FFM transport unavailable ({}); the config option falls back to the JNI-triggered shared-memory channel",
-                    unavailableReason);
         }
     }
 
@@ -423,31 +378,6 @@ final class PanamaFfmChannel {
             }
         }
         throw new NoSuchMethodException("SymbolLookup.libraryLookup(String, Arena)");
-    }
-
-    /** loaderLookup (bridge was System.load'ed) or libraryLookup on the
-     *  recorded path — the mixed-mode lookup. */
-    private static Object openLookupOnLoadedBridge() throws ReflectiveOperationException {
-        final String path = bridgePathOrNull();
-        if (path == null) {
-            return Class.forName("java.lang.foreign.SymbolLookup")
-                    .getMethod("loaderLookup").invoke(null);
-        }
-        try {
-            return libraryLookupFromPath(path);
-        } catch (Throwable t) {
-            return Class.forName("java.lang.foreign.SymbolLookup")
-                    .getMethod("loaderLookup").invoke(null);
-        }
-    }
-
-    private static String bridgePathOrNull() {
-        try {
-            final String path = NativeScriptManager.loadedBridgePath;
-            return path != null && !path.isEmpty() ? path : null;
-        } catch (Throwable t) {
-            return null;
-        }
     }
 
     /**

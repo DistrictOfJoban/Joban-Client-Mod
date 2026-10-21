@@ -29,7 +29,7 @@
  *   - invoke_api returns a raw address of the reply (owned by Java's
  *     per-thread reused reply buffer) valid until the NEXT invoke_api
  *     entry on the same thread; the bridge copies it out immediately,
- *     exactly like the JNI path copied the returned jbyteArray.
+ *     exactly like the poller plane copies it out of the SVC reply.
  *
  * ABI rules
  * --------
@@ -37,9 +37,9 @@
  *     larger vtable_bytes are still accepted (the bridge only reads the
  *     prefix it knows); the byte size is validated so a truncated table
  *     never reads past the caller's buffer.
- *   - Null entries are legal: the bridge falls back to the legacy JNI
- *     host (when one is installed) or to the "no host" degradation the
- *     headless path already uses.
+ *   - Null entries are legal: the bridge falls back to the shared-memory
+ *     poller plane's SVC requests (when the poller is attached) or to
+ *     the "no host" degradation the headless path already uses.
  *
  * License: MIT (aligned with Joban Client Mod's LICENSE)
  */

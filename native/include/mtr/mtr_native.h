@@ -3,10 +3,12 @@
  *
  * Mirrors the Joban Client Mod v2.3 (Rhino/JavaScript) scripting surface
  * for vehicle / eye_candy / pids resources, but executes user code as a
- * native shared library loaded through JNI.
+ * native shared library — loaded and driven WITHOUT any JNI since layout
+ * v2 (the bridge's Panama FFM plane on JDK 22+, or its shared-memory
+ * poller plane on any JVM).
  *
  * Design goals (vs. the JS pipeline):
- *   1. ONE JNI boundary crossing per frame per instance:
+ *   1. ONE host crossing per frame per instance:
  *      the host marshals a POD snapshot in, the script returns a flat
  *      array of draw-call records out. (JS: hundreds of reflective
  *      NativeJavaObject getter calls per frame.)
@@ -54,7 +56,7 @@ extern "C" {
    (vehicle_type_offset/len) and to every interchange (type_offset/len),
    exposing the MAGIC MTR Addon's route types alongside the four base modes.
    ABI 9 hosts also stop copying the snapshot per frame and reuse the arena
-   ByteBuffers on the JNI boundary (see jni_bridge.cpp).
+   views on the host boundary (see jni_bridge.cpp).
    ABI 8 appends invoke_api, Lift snapshots and typed interchange modes.
    ABI 6/7 modules retain their original host prefix and snapshot layouts.
    ABI 7 appends resource-font metrics and baseline text rasterization to

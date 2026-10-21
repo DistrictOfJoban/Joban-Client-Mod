@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * NativeScriptManager — JNI host for C++ script modules.
+ * NativeScriptManager — the JNI-free host for C++ script modules.
  *
  * Drop-in companion to JCM v2.3's ScriptManager/Rhino pipeline:
  * resource packs declare native scripts in mtr_custom_resources.json.
@@ -87,16 +87,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * the same train, and in the same script entry.
  *
  * Compact snapshot data and draw records historically shared one JNI call
- * per frame; since the transport options landed this is configured by
- * "Java 与 C++ 通信方式" (see NativeChannel): the default shared-memory
- * transport keeps one empty-argument trigger call per frame and moves ALL
- * data into a file-backed mapped region instead — and on JDK 22+ even
- * the trigger, the module lifecycle and every script->Java host service
- * cross the boundary through the java.lang.foreign (Panama FFM) plane
- * (PanamaFfmChannel): a fully JNI-free session. ABI 8 also offers direct
- * Java API calls; those ride the same api upcall (vtable on 22+,
- * JNIEnv on older JVMs). Scripts can use the compact path for frequent
- * operations and keep Java objects in their per-instance state.
+ * per frame; since 2.3.0-beta-2.yanyang.2 (layout v2) the mod contains
+ * NO JNI at all — the "Java 与 C++ 通信方式" setting (see NativeChannel)
+ * selects between two JNI-free invocation planes: the Panama FFM plane
+ * (libraryLookup + downcalls + upcall vtable, JDK 22+) and the
+ * shared-memory poller plane (filesystem handshake + shared-page commands
+ * + SVC host services + CBQ api re-entry, every JVM from 16 up). The
+ * default shared-memory transport keeps one trigger per frame on the FFM
+ * plane and not even that on the poller plane.
  */
 public final class NativeScriptManager {
     /* Must match MTR_NATIVE_ABI_VERSION in native/include/mtr/mtr_native.h.
@@ -160,42 +158,17 @@ public final class NativeScriptManager {
 
     private NativeScriptManager() {}
 
-    private static native void nativeSetHost(NativeHost host);
-    static native byte[] nativeApiCallback(long function, long user, byte[] parameters);
-
     /** Dispatches the JS-proxy -> module C++ callback: an FFM session uses
-     *  the jcm_module_invoke_api downcall, legacy JVMs the JNI native.
-     *  Extended-surface gate: an older bridge in a mixed session keeps the
-     *  nativeApiCallback native. */
+     *  the jcm_module_invoke_api downcall, older JVMs the shared-memory
+     *  callback queue (drained by the bridge's poller thread). Both are
+     *  JNI-free planes. */
     static byte[] apiCallbackDispatch(long function, long user, byte[] parameters) {
         if (PanamaFfmChannel.extendedSurface()) {
             return PanamaFfmChannel.moduleInvokeApi(function, user, parameters);
         }
-        return nativeApiCallback(function, user, parameters);
+        return ShmPoller.invokeCallback(function, user, parameters);
     }
 
-    /** True when the bridge was System.load'ed (the legacy plane is bound);
-     *  false on a pure-FFM session where the JNI natives were never
-     *  registered. Diagnostic surface for the census and the tests. */
-    static boolean jniPlaneActive;
-    private static final Map<String, JsonElement> INPUTS = new ConcurrentHashMap<>();
-    /** Fresh temp-file counter for module extractions (see load()). */
-    private static final java.util.concurrent.atomic.AtomicLong EXTRACT_SEQ = new java.util.concurrent.atomic.AtomicLong();
-    private static final Map<String, String> RESOURCE_BASES = new ConcurrentHashMap<>();
-    public static void configure(String id, JsonElement input, String base) {
-        INPUTS.put(id, input == null ? com.google.gson.JsonNull.INSTANCE : input);
-        if(base!=null) RESOURCE_BASES.put(id,base);
-    }
-
-    private static boolean installBridgeHost() {
-        nativeSetHost(NativeHost.get());
-        /* Link the FFM downcall layer while the freshly loaded bridge is
-           the classloader's library: PanamaFfmChannel picks the jcm_* C
-           exports up (libraryLookup on the same file, or loaderLookup).
-           Failure is non-fatal — the JNI natives stay the call plane. */
-        PanamaFfmChannel.attemptInstall();
-        return true;
-    }
     /** Absolute path of the loaded bridge (null when only a bare
      *  System.loadLibrary name resolved). PanamaFfmChannel prefers it for
      *  SymbolLookup.libraryLookup. */
@@ -203,6 +176,15 @@ public final class NativeScriptManager {
 
     private static void noteBridgePath(String path) {
         if (path != null && loadedBridgePath == null) loadedBridgePath = path;
+    }
+
+    private static final Map<String, JsonElement> INPUTS = new ConcurrentHashMap<>();
+    /** Fresh temp-file counter for module extractions (see load()). */
+    private static final java.util.concurrent.atomic.AtomicLong EXTRACT_SEQ = new java.util.concurrent.atomic.AtomicLong();
+    private static final Map<String, String> RESOURCE_BASES = new ConcurrentHashMap<>();
+    public static void configure(String id, JsonElement input, String base) {
+        INPUTS.put(id, input == null ? com.google.gson.JsonNull.INSTANCE : input);
+        if(base!=null) RESOURCE_BASES.put(id,base);
     }
 
     /* ------------------------------------------------------------------ */
@@ -1088,21 +1070,22 @@ public final class NativeScriptManager {
                         final String absolute = extracted.toAbsolutePath().toString();
                         /* PURE-FFM FIRST (JDK 22+): the bridge is driven
                            entirely by java.lang.foreign — libraryLookup +
-                           downcalls + upcall vtable. No System.load, so the
-                           JNI natives are never registered and JNI_OnLoad
-                           never runs: the legacy plane stays completely
-                           inert for the session. */
+                           downcalls + upcall vtable. No System.load, so no
+                           JNI native-method registration ever runs. */
                         if (PanamaFfmChannel.installFromExtractedPath(absolute)) {
                             noteBridgePath(absolute);
-                            jniPlaneActive = false;
                             JCMLogger.info("Native scripting bridge loaded from bundled {} (Panama FFM, no JNI)", bundled);
                             return true;
                         }
+                        /* JDK 16..21: System.load exists ONLY to run the
+                           bridge's constructor, which starts the JNI-free
+                           poller thread. The library has no JNI exports
+                           and this class declares no native methods, so
+                           nothing ever binds through the JNI machinery. */
                         System.load(absolute);
                         noteBridgePath(absolute);
-                        jniPlaneActive = true;
-                        JCMLogger.info("Native scripting bridge loaded from bundled {}", bundled);
-                        return installBridgeHost();
+                        JCMLogger.info("Native scripting bridge loaded from bundled {} (System.load for the poller constructor; no JNI surface)", bundled);
+                        return true;
                     }
                 } catch (IOException | UnsatisfiedLinkError e) {
                     JCMLogger.warn("Bundled native scripting bridge {} failed to load: {}", bundled, e.toString());
@@ -1110,8 +1093,7 @@ public final class NativeScriptManager {
             }
             try {
                 System.loadLibrary("jcm_native_bridge");
-                jniPlaneActive = true;
-                return installBridgeHost();
+                return true;
             } catch (UnsatisfiedLinkError e) {
                 /* fall through to the explicit search */
             }
@@ -1125,20 +1107,17 @@ public final class NativeScriptManager {
                     try {
                         final String absolute = file.getAbsolutePath();
                         /* Same FFM-first treatment for user-placed bridges: a
-                           current bridge runs JNI-free, an older binary
-                           (missing the jcm_* surface) falls back to
-                           System.load + the legacy natives. */
+                           current bridge runs JNI-free via java.lang.foreign,
+                           an older JVM loads it for the poller constructor. */
                         if (PanamaFfmChannel.installFromExtractedPath(absolute)) {
                             noteBridgePath(absolute);
-                            jniPlaneActive = false;
                             JCMLogger.info("Native scripting bridge loaded from {} (Panama FFM, no JNI)", file);
                             return true;
                         }
                         System.load(absolute);
                         noteBridgePath(absolute);
-                        jniPlaneActive = true;
-                        JCMLogger.info("Native scripting bridge loaded from {}", file);
-                        return installBridgeHost();
+                        JCMLogger.info("Native scripting bridge loaded from {} (System.load for the poller constructor; no JNI surface)", file);
+                        return true;
                     } catch (UnsatisfiedLinkError e) {
                         JCMLogger.warn("Native scripting bridge {} exists but failed to load: {}",
                                 file, e.getMessage());
@@ -1213,26 +1192,15 @@ public final class NativeScriptManager {
         final String sourcePath;
         final String resourceBase;
 
-        private native long nOpen(String path);
-        private native void nClose(long handle);
-        private native int nAbiVersion(long handle);
-        private native String nScriptType(long handle);
-        private native String nScriptId(long handle);
-        private native long nStateSize(long handle);
-        /* Package-private: NativeChannel falls back to this when the
-           shared-memory transport is unavailable or disabled. */
-        native NativeFrame nRender(long handle, String instanceKey,
-                                   ByteBuffer snapshot, int snapshotLength, int resourceKind);
-
         NativeScriptModule(String scriptId, String path, String resourceBase) {
             this.resourceBase = resourceBase;
             /* Lifecycle dispatch: an FFM session drives the whole module
-               lifecycle through the jcm_module_* downcalls (identical C
-               open_module/dispose cores, cold reload-time calls); legacy
-               JVMs keep the battle-tested JNI natives. Single-assignment
-               style so every final field is definitely assigned on every
-               path. */
-            long handle;
+               lifecycle through the jcm_module_* downcalls; every other
+               JVM drives it through the shared-memory poller commands
+               (ShmPoller) — both JNI-free, both landing on the identical C
+               open_module/dispose cores. Single-assignment style so every
+               final field is definitely assigned on every path. */
+            long handle = 0;
             int abi = 0;
             String type = "";
             String id = scriptId;
@@ -1245,13 +1213,17 @@ public final class NativeScriptManager {
                     id = PanamaFfmChannel.moduleScriptId(handle);
                     state = PanamaFfmChannel.moduleStateSize(handle);
                 }
-            } else {
-                handle = nOpen(path);
+            } else if (NativeChannel.ensurePollerPlane()) {
+                /* Module open is the FIRST command the poller must serve,
+                   so the region (and the poller attach) has to exist
+                   before any module loads. */
+                final com.lx862.jcm.nativeapi.NativeShm region = ShmPoller.region();
+                handle = ShmPoller.openModule(region, path);
                 if (handle != 0) {
-                    abi = nAbiVersion(handle);
-                    type = nScriptType(handle);
-                    id = nScriptId(handle);
-                    state = nStateSize(handle);
+                    abi = ShmPoller.moduleAbi(region, handle);
+                    type = ShmPoller.moduleIdentity(region, handle, NativeShm.CMD_SCRIPT_TYPE);
+                    id = ShmPoller.moduleIdentity(region, handle, NativeShm.CMD_SCRIPT_ID);
+                    state = ShmPoller.moduleStateSize(region, handle);
                 }
             }
             /* handle == 0: open_module already logged the concrete
@@ -1311,14 +1283,12 @@ public final class NativeScriptManager {
             return sourcePath;
         }
 
-        private native void nDisposeInstance(long handle, String instanceKey, java.nio.ByteBuffer snapshot, int snapshotLen);
-
         /**
          * Per-instance dispose. Cold (vehicle despawn) path: dispatches to the
          * jcm_module_dispose_instance downcall on an FFM session and to the
-         * JNI native otherwise — both route through the same
-         * dispose_instance_core, including the deferred reclamation of the
-         * instance's payloads. Called with `this` monitored.
+         * shared-memory poller command otherwise — both route through the
+         * same dispose_instance_core, including the deferred reclamation
+         * of the instance's payloads. Called with `this` monitored.
          */
         void disposeInstanceNative(String moduleKey, java.nio.ByteBuffer snapshot, int len) {
             if (nativeHandle == 0) return;
@@ -1328,7 +1298,10 @@ public final class NativeScriptManager {
                         address == 0 ? -1 : len);
                 return;
             }
-            nDisposeInstance(nativeHandle, moduleKey, snapshot, len);
+            final NativeShm region = ShmPoller.region();
+            if (region != null && ShmPoller.active()) {
+                ShmPoller.disposeInstance(region, nativeHandle, moduleKey, snapshot, len);
+            }
         }
 
         synchronized NativeFrame render(String instanceKey, ByteBuffer snapshot, int resourceKind) {
@@ -1339,7 +1312,7 @@ public final class NativeScriptManager {
                length is passed explicitly; the bridge no longer infers it
                from the buffer (which would report the full 256 KB capacity). */
             snapshot.order(ByteOrder.nativeOrder());
-            /* Transport dispatch (JNI / shared memory / Panama FFM stub):
+            /* Transport dispatch (direct call / shared memory / Panama FFM):
                NativeChannel owns the how; everything else in the pipeline
                is transport-agnostic. */
             return NativeChannel.render(this, instanceKey, snapshot, snapshot.limit(), resourceKind);
@@ -1350,7 +1323,10 @@ public final class NativeScriptManager {
                 if (PanamaFfmChannel.ready()) {
                     PanamaFfmChannel.moduleClose(nativeHandle);
                 } else {
-                    nClose(nativeHandle);
+                    final NativeShm region = ShmPoller.region();
+                    if (region != null && ShmPoller.active()) {
+                        ShmPoller.closeModule(region, nativeHandle);
+                    }
                 }
                 nativeHandle = 0;
             }

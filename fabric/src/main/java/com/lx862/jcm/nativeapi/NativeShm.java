@@ -15,24 +15,45 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * NativeShm — the file-backed shared memory region behind the
- * "shared memory" Java-C++ transport.
+ * "shared memory" Java-C++ transports (layout v2).
  *
  * <h2>Region anatomy (mirrors native/include/mtr/shm_channel.h)</h2>
  * <pre>
- *   [ header 0..16K )        magic / version / geometry, written once
- *   [ control slot @8K )     per-frame REQUEST written by Java
- *   [ result slot  @8K+128 )  per-frame RESULT written by C++
- *   [ windows 16K..end )       bump-allocated snapshot buffers
+ *   [ header 0..16K )        magic / version / geometry / epoch / mode,
+ *                            written once by Java; HDR_READY is published
+ *                            by the C++ poller when it attaches
+ *   [ control slot @8K )      per-frame REQUEST / command, written by Java
+ *   [ result slot  @8K+128 )  per-frame RESULT / command reply, written by C++
+ *   [ svc ring      @8576 )    script->Java host-service requests (poller plane)
+ *   [ cbq ring      @9856 )    Java->C++ module api callback ring (poller plane)
+ *   [ windows 16K..end )      bump-allocated snapshot buffers
  * </pre>
  *
- * The file is mapped ONCE with {@code FileChannel#map} — a
- * {@link MappedByteBuffer} — and stays strongly referenced for the
- * lifetime of the transport. C++ reaches the same pages through the
- * mapping's base address, which it receives once via
- * {@code NativeChannel.nativeShmInit}; it never opens the file itself.
+ * <h2>Two attachment modes</h2>
+ * <ul>
+ *   <li><b>FFM mode (JDK 22+)</b> — the region is a plain mapped temp file;
+ *       Java hands the mapping's base address to the bridge once via the
+ *       jcm_shm_init downcall and every kick is a synchronous FFM call.
+ *       HDR_MODE is 0; the background poller never attaches to it.</li>
+ *   <li><b>Poller mode (JDK 16..21)</b> — the region file gets the fixed
+ *       name {@code jcm_shmp_<pid>.tmp} and Java writes HANDSHAKE POINTER
+ *       FILES ("jcm_shm_hs_<pid>": region path, size, epoch) into every
+ *       temp directory the C++ poller scans. The poller opens and maps
+ *       the file itself, validates the header and publishes its epoch
+ *       into HDR_READY — from that point the whole session (commands,
+ *       renders, host services, api re-entry) travels ONLY through the
+ *       shared pages: no native call in either direction.</li>
+ * </ul>
+ *
+ * Two MAP_SHARED views of one file are coherent on every supported OS
+ * (Linux/macOS page cache; Windows section views), so the poller's own
+ * mapping sees Java's writes immediately and vice versa.
  *
  * <h2>Accessor auto-detection (Unsafe vs FFM + VarHandle)</h2>
  * The header/control/result fields are written and read through the
@@ -60,26 +81,38 @@ import java.nio.file.StandardOpenOption;
  * call them from every dispose/reset site. When the region is exhausted
  * the callers transparently fall back to plain
  * {@code ByteBuffer.allocateDirect} buffers, so a huge world degrades to
- * the JNI-style input path instead of crashing.
+ * the direct-call input path instead of crashing.
  *
  * <p>Threading: allocations happen on the render thread, frees also come
  * from the client tick thread (driver dispose) — both funnel through a
  * coarse {@code synchronized}, which is uncontended in steady state
  * (zero allocator traffic per frame once buffers exist).
  *
- * <p>Package-private, JDK-only: compiled into the bare-javac JNI test
- * harness and exercised by NativeIntegrationTest on every CI OS.
+ * <p>Package-private, JDK-only: compiled into the bare-javac test harness
+ * and exercised by NativeIntegrationTest on every CI OS.
  */
 final class NativeShm {
-    /* ---- layout, MUST match native/include/mtr/shm_channel.h ---- */
-    static final long MAGIC = 0x314D48534D59434AL; /* "JCMYSHM1" LE */
-    static final int LAYOUT_VERSION = 1;
+    /* ---- layout, MUST match native/include/mtr/shm_channel.h (v2) ---- */
+    static final long MAGIC = 0x324D48534D59434AL; /* "JCMYSHM2" LE */
+    static final int LAYOUT_VERSION = 2;
     static final int HEADER_SIZE = 8192;
     static final int CONTROL_OFFSET = 8192;
     static final int CONTROL_SIZE = 128;
     static final int RESULT_OFFSET = 8320;
     static final int RESULT_SIZE = 256;
+    static final int SVC_OFFSET = 8576;
+    static final int CBQ_OFFSET = 9856;
+    static final int CBQ_SLOT_BYTES = 128;
+    static final int CBQ_SLOTS = 8;
     static final int WINDOWS_OFFSET = 16384;
+
+    /* header fields (offsets from the region base) */
+    static final int HDR_MAGIC = 0;
+    static final int HDR_VERSION = 8;
+    static final int HDR_SIZE = 16;
+    static final int HDR_EPOCH = 44;
+    static final int HDR_READY = 48;
+    static final int HDR_MODE = 56;
 
     /* control slot */
     static final int CTL_SEQ = 0;
@@ -88,6 +121,10 @@ final class NativeShm {
     static final int CTL_KIND = 24;
     static final int CTL_SNAP_LEN = 28;
     static final int CTL_SNAP_ADDR = 32;
+    static final int CTL_ARG_ADDR = 40;
+    static final int CTL_ARG_LEN = 48;
+    static final int CTL_RPLY_ADDR = 56;
+    static final int CTL_RPLY_LEN = 64;
 
     /* result slot */
     static final int RES_SEQ = 0;
@@ -98,7 +135,52 @@ final class NativeShm {
     static final int RES_PIXELS = 64;
     static final int RES_MATRICES = 88;
     static final int RES_FLOATS = 112;
+    static final int RES_EXTRA = 128;
     static final int ARENA_ADDR = 0, ARENA_LEN = 8, ARENA_CAP = 16;
+
+    /* service block ring (poller plane) — per-slot offsets; the block
+       base is SVC_OFFSET + slot * SVC_SLOT_BYTES */
+    static final int SVC_SEQ = 0;
+    static final int SVC_RSP = 8;
+    static final int SVC_ID = 16;
+    static final int SVC_ARGS = 24;
+    static final int SVC_RET = 280;
+    static final int SVC_WORDS = 32;
+    static final int SVC_SLOT_BYTES = 320;
+    static final int SVC_SLOTS = 4;
+
+    /* callback-queue ring slots (poller plane) */
+    static final int CBQ_SEQ = 0;
+    static final int CBQ_RSP = 8;
+    static final int CBQ_FN = 16;
+    static final int CBQ_USER = 24;
+    static final int CBQ_REQ_ADDR = 32;
+    static final int CBQ_REQ_LEN = 40;
+    static final int CBQ_RPLY_ADDR = 48;
+    static final int CBQ_RPLY_CAP = 56;
+    static final int CBQ_RPLY_LEN = 64;
+
+    /* command ids */
+    static final int CMD_BASE = 0x8000;
+    static final int CMD_OPEN = 0x8001;
+    static final int CMD_CLOSE = 0x8002;
+    static final int CMD_ABI = 0x8003;
+    static final int CMD_SCRIPT_TYPE = 0x8004;
+    static final int CMD_SCRIPT_ID = 0x8005;
+    static final int CMD_STATE_SIZE = 0x8006;
+    static final int CMD_DISPOSE = 0x8007;
+    static final int CMD_REGISTER = 0x8008;
+    static final int CMD_SHUTDOWN = 0x800A;
+    static final int CMD_RECLAIMER = 0x800B;
+
+    /* service ids (mirror the JcmFfmHostVTable entries) */
+    static final int SVC_ACQUIRE_MODEL = 0;
+    static final int SVC_RELEASE_MODEL = 1;
+    static final int SVC_RASTERIZE_TEXT = 2;
+    static final int SVC_MEASURE_FONT_TEXT = 3;
+    static final int SVC_DRAW_FONT_TEXT = 4;
+    static final int SVC_CREATE_RESOURCES = 5;
+    static final int SVC_INVOKE_API = 6;
 
     /* status codes (JCM_SHM_* in the header) */
     static final int STATUS_OK = 0;
@@ -111,12 +193,19 @@ final class NativeShm {
     static final int ERR_RESOURCES = 7;
     static final int ERR_REQUEST = 8;
     static final int ERR_SNAPSHOT = 9;
+    static final int ERR_OVERFLOW = 10;
+    static final int ERR_DETACHED = 11;
+
+    /** Fresh region epoch per creation (nonzero, fits the header's u32). */
+    private static final AtomicLong EPOCH_SEQ = new AtomicLong(1);
 
     private final Path file;
     private final MappedByteBuffer mapped;
     private final long base;
     private final long size;
     private final Fields fields;
+    /** Poller mode: the handshake pointer files (all deleted on close). */
+    private final List<Path> handshakeFiles;
 
     /* window allocator state. freeOffsets/freeSizes hold ABSOLUTE
        addresses; entries are kept unique and coalesced on free. */
@@ -125,12 +214,14 @@ final class NativeShm {
     private long[] freeSizes = new long[16];
     private int freeCount;
 
-    private NativeShm(Path file, MappedByteBuffer mapped, long base, long size, Fields fields) {
+    private NativeShm(Path file, MappedByteBuffer mapped, long base, long size, Fields fields,
+                      List<Path> handshakeFiles) {
         this.file = file;
         this.mapped = mapped;
         this.base = base;
         this.size = size;
         this.fields = fields;
+        this.handshakeFiles = handshakeFiles;
     }
 
     long base() {
@@ -145,10 +236,27 @@ final class NativeShm {
     /* creation / teardown                                                 */
     /* ------------------------------------------------------------------ */
 
-    static NativeShm open(long requestedSize) throws IOException {
+    /**
+     * Creates + maps the region. FFM mode keeps the classic random temp
+     * name (the address travels via the jcm_shm_init downcall); poller
+     * mode uses the fixed discoverable name and writes the handshake
+     * pointer files the C++ poller scans for.
+     */
+    static NativeShm open(long requestedSize, boolean pollerMode) throws IOException {
         final long size = Math.max(WINDOWS_OFFSET + 4096L, requestedSize);
+        final long pid = ProcessHandle.current().pid();
         final Path dir = Paths.get(System.getProperty("java.io.tmpdir", "."));
-        final Path file = Files.createTempFile(dir, "jcm_shm_" + ProcessHandle.current().pid() + "_", ".tmp");
+        final Path file;
+        final List<Path> handshake = new ArrayList<>();
+        if (pollerMode) {
+            file = dir.resolve("jcm_shmp_" + pid + ".tmp");
+            /* A stale file from a crashed earlier run with a reused pid must
+               never be mistaken for a live region: remove, then create. */
+            try { Files.deleteIfExists(file); } catch (IOException ignored) {}
+            Files.createFile(file);
+        } else {
+            file = Files.createTempFile(dir, "jcm_shm_" + pid + "_", ".tmp");
+        }
         file.toFile().deleteOnExit();
         try (FileChannel channel = FileChannel.open(file,
                 StandardOpenOption.READ, StandardOpenOption.WRITE)) {
@@ -161,19 +269,72 @@ final class NativeShm {
                 throw new IOException("MappedByteBuffer has no raw address on this JVM");
             }
             final Fields fields = Fields.forMapped(mapped);
-            /* Publish the header BEFORE nativeShmInit reads it. */
-            fields.putLong(0, MAGIC);
-            fields.putInt(8, LAYOUT_VERSION);
+            final int epoch = (int) EPOCH_SEQ.getAndIncrement();
+            /* Publish the header BEFORE any reader sees the region. */
+            fields.putLong(HDR_MAGIC, MAGIC);
+            fields.putInt(HDR_VERSION, LAYOUT_VERSION);
             fields.putInt(12, 0);
-            fields.putLong(16, size);
+            fields.putLong(HDR_SIZE, size);
             fields.putLong(24, CONTROL_OFFSET);
             fields.putLong(32, RESULT_OFFSET);
             fields.putLong(40, WINDOWS_OFFSET);
-            return new NativeShm(file, mapped, base, size, fields);
+            fields.putInt(HDR_EPOCH, epoch);
+            fields.putLong(HDR_READY, 0);            /* the poller publishes this */
+            fields.putLong(HDR_MODE, pollerMode ? 1 : 0);
+            fields.putLong(64, SVC_OFFSET);
+            fields.putLong(72, CBQ_OFFSET);
+            if (pollerMode) {
+                writeHandshakeFiles(dir, file, size, epoch, handshake);
+            }
+            return new NativeShm(file, mapped, base, size, fields, handshake);
         } catch (Throwable t) {
+            for (Path hs : handshake) {
+                try { Files.deleteIfExists(hs); } catch (IOException ignored) {}
+            }
             try { Files.deleteIfExists(file); } catch (IOException ignored) {}
             if (t instanceof IOException) throw (IOException) t;
             throw new IOException("Cannot create shared memory region: " + t, t);
+        }
+    }
+
+    /**
+     * Writes the handshake pointer file (region path / size / epoch) into
+     * every candidate directory the C++ poller scans (TMPDIR / TEMP, /tmp,
+     * /var/tmp on POSIX — the poller probes the same list, so at least one
+     * copy is always found on every supported platform). The env-var
+     * override {@code JCM_SHM_HANDSHAKE_DIR} is honored by both sides.
+     */
+    private static void writeHandshakeFiles(Path defaultDir, Path regionFile, long size,
+                                            int epoch, List<Path> out) {
+        final String content = regionFile.toAbsolutePath() + "\n" + size + "\n" + epoch + "\n";
+        final List<Path> dirs = new ArrayList<>();
+        final String override = System.getenv("JCM_SHM_HANDSHAKE_DIR");
+        if (override != null && !override.isEmpty()) dirs.add(Paths.get(override));
+        dirs.add(defaultDir);
+        final String tmpdir = System.getenv("TMPDIR");
+        final boolean windows = System.getProperty("os.name", "").toLowerCase().contains("win");
+        if (!windows) {
+            if (tmpdir != null && !tmpdir.isEmpty()) dirs.add(Paths.get(tmpdir));
+            dirs.add(Paths.get("/tmp"));
+            dirs.add(Paths.get("/var/tmp"));
+        } else {
+            final String temp = System.getenv("TEMP");
+            final String tmp = System.getenv("TMP");
+            if (temp != null && !temp.isEmpty()) dirs.add(Paths.get(temp));
+            if (tmp != null && !tmp.isEmpty()) dirs.add(Paths.get(tmp));
+        }
+        for (Path dir : dirs) {
+            try {
+                final Path hs = dir.resolve("jcm_shm_hs_" + ProcessHandle.current().pid());
+                Files.writeString(hs, content);
+                hs.toFile().deleteOnExit();
+                if (!out.contains(hs)) out.add(hs);
+            } catch (IOException e) {
+                /* One candidate being unwritable is fine — the others (or
+                   the default, which equals TMPDIR/TEMP on every stock
+                   Linux/macOS/Windows JVM) carry the handshake. */
+                JCMLogger.debug("Native shared memory handshake write to {} failed: {}", dir, e.toString());
+            }
         }
     }
 
@@ -199,11 +360,16 @@ final class NativeShm {
     }
 
     /**
-     * Unmaps the region and deletes the file. Callers must guarantee that
-     * no wrapper (arena view or window) is used afterwards — the driver
-     * reset order in NativeScriptManager.reload() does.
+     * Unmaps the region, deletes the handshake pointer files and the region
+     * file. Callers must guarantee that no wrapper (arena view or window)
+     * is used afterwards — the driver reset order in
+     * NativeScriptManager.reload() does.
      */
     void close() {
+        for (Path hs : handshakeFiles) {
+            try { Files.deleteIfExists(hs); } catch (IOException ignored) {}
+        }
+        handshakeFiles.clear();
         try {
             invokeCleaner(mapped);
         } catch (Throwable t) {
@@ -229,6 +395,8 @@ final class NativeShm {
             case ERR_RESOURCES: return "host resources failed";
             case ERR_REQUEST: return "bad request";
             case ERR_SNAPSHOT: return "invalid snapshot";
+            case ERR_OVERFLOW: return "reply window too small";
+            case ERR_DETACHED: return "poller detached";
             default: return "unknown";
         }
     }
@@ -237,10 +405,8 @@ final class NativeShm {
     /* slot access                                                          */
     /*                                                                     */
     /* The raw putLong/getLong below are REGION-relative (header writes);  */
-    /* the control/result wrappers bake in the slot base offsets so the   */
-    /* channel can address slots with their FIELD offsets directly — the  */
-    /* bug class where CTL_* was silently applied to the header area is   */
-    /* exactly why these exist.                                            */
+    /* the control/result wrappers bake in the slot base offsets so the    */
+    /* channel can address slots with their FIELD offsets directly.       */
     /* ------------------------------------------------------------------ */
 
     void putLong(long offset, long value) {

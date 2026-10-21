@@ -25,14 +25,16 @@ public class JCMClientConfig extends ReflectiveConfig {
      * the C++ script modules. Constant names mirror
      * com.lx862.jcm.nativeapi.NativeChannel.Transport one-to-one; the
      * config screen cycles through them and JCMClient maps them onto the
-     * channel at boot (and on save).
+     * channel at boot (and on save). The name "JNI" is kept ONLY for
+     * existing config-file compatibility — the option is a direct-call
+     * transport that runs JNI-free on every plane.
      */
     public enum JavaCppCommunication {
-        /** 快照随每次调用传输 —— 性能差，但兼容性和稳定性最好（旧 JVM 的原生调用面） */
+        /** 快照随每次调用传输（FFM downcall）—— 性能一般，行为最直观；旧 JVM 自动降级共享内存（同样零 JNI） */
         JNI,
-        /** 性能中等；JDK 22+ 完全零 JNI（加载/调用/回调全部走 Foreign Function & Memory API），旧 JVM 自动回退共享内存 */
+        /** 性能中等；JDK 22+ 全程零 JNI（加载/调用/回调全部走 Foreign Function & Memory API），旧 JVM 自动使用共享内存轮询平面（同样零 JNI） */
         PANAMA_FFM,
-        /** 性能最好，但小概率出现稳定性问题 */
+        /** 性能最好，但小概率出现稳定性问题；两个调用平面（FFM / 轮询）均零 JNI */
         SHARED_MEMORY
     }
 
@@ -56,7 +58,7 @@ public class JCMClientConfig extends ReflectiveConfig {
 
         @Comment("How Java exchanges per-frame data with C++ script modules.")
         @Comment("SHARED_MEMORY (default) maps a file-backed region and lets C++ read Java's snapshot straight out of it - fastest, tiny stability risk.")
-        @Comment("JNI passes the snapshot through each per-frame call - slowest, best compatibility. PANAMA_FFM runs the whole pipeline JNI-free on JDK 22+ (libraryLookup + FFM downcalls + upcall-stub host services) and degrades to shared memory on older JVMs.")
+        @Comment("Every transport now runs JNI-free on every JVM: the FFM plane (libraryLookup + downcalls + upcall vtable, JDK 22+) or the shared-memory poller plane (filesystem handshake + shared-page commands + SVC host services, JDK 16+). The 'JNI' name is kept only so existing config files keep parsing.")
         public final TrackedValue<JavaCppCommunication> javaCppCommunication = value(JavaCppCommunication.SHARED_MEMORY);
     }
 

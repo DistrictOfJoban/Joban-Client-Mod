@@ -6,44 +6,52 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * NativeChannel — selects and drives HOW Java exchanges data with the C++
  * script modules. Configurable from the Mod Menu config screen
  * ("Java 与 C++ 通信方式"); the default is {@link Transport#SHARED_MEMORY}.
  *
- * <h2>Transports (data plane)</h2>
+ * <h2>Transports (data plane) — all of them JNI-free</h2>
  * <ul>
- *   <li><b>{@link Transport#JNI}</b> — the "direct" pipeline: the snapshot
- *       and the five output arenas ride each per-frame call. On JDK 16..21
- *       that is the battle-tested nRender JNI native; on an FFM session
- *       (22+) the same exchange is the jcm_module_render downcall —
- *       identical pipeline, failure codes and instance semantics, just a
- *       JNI-free crossing. Slowest (one transition with data in tow per
- *       module per frame), and the automatic fallback whenever the
- *       shared-memory path cannot start.</li>
+ *   <li><b>{@link Transport#JNI}</b> (name kept for config-file
+ *       compatibility; the UI calls it "direct call") — the snapshot and
+ *       the five output arenas ride each per-frame call. On an FFM session
+ *       (JDK 22+) that is the jcm_module_render downcall writing a 128-byte
+ *       frame descriptor — a JNI-free crossing. On older JVMs there is no
+ *       direct-call plane at all, so the render degrades to the
+ *       shared-memory request below (the census says so).</li>
  *   <li><b>{@link Transport#SHARED_MEMORY}</b> — the default. The
  *       per-frame snapshot is marshalled into a window of a file-backed
  *       shared region ({@link NativeShm}, a MappedByteBuffer) and C++
  *       reads it straight from that mapping; Java then writes a request
- *       into the CONTROL slot and makes an EMPTY-ARGUMENT trigger call
- *       (an FFM downcall on 22+, the nativeShmKick native otherwise).
- *       The C++ bridge runs the identical render pipeline and writes the
- *       output arena descriptors into the RESULT slot, which Java re-binds
- *       into REUSED ByteBuffer views ({@link NativeArenaView}). Zero
- *       allocations and zero data copies on the hot path. Small residual
- *       risk by design — raw-address views depend on the module reporting
- *       honest arena sizes — hence the config description "性能最好，但小
- *       概率出现稳定性问题".</li>
- *   <li><b>{@link Transport#PANAMA_FFM}</b> — the Foreign Function &amp;
- *       Memory API transport ({@link PanamaFfmChannel}): the same
- *       shared-memory data plane, with the ENTIRE invocation plane on
- *       java.lang.foreign — bridge loading (libraryLookup, no
+ *       into the CONTROL slot and either makes an EMPTY-ARGUMENT trigger
+ *       call (an FFM downcall on 22+) or — new — simply WAITS: the
+ *       bridge's poller thread picks the request up out of the mapped
+ *       pages, runs the identical render pipeline and writes the output
+ *       arena descriptors into the RESULT slot, which Java re-binds into
+ *       REUSED ByteBuffer views ({@link NativeArenaView}). Zero
+ *       allocations and zero data copies on the hot path, and on every
+ *       JVM from 16 to 22+ the whole session is JNI-free.</li>
+ *   <li><b>{@link Transport#PANAMA_FFM}</b> — the everything-through-FFM
+ *       selection: shared-memory data plane, with the ENTIRE invocation
+ *       plane on java.lang.foreign — bridge loading (libraryLookup, no
  *       System.load), module lifecycle, the per-frame kick, the
  *       script-&gt;Java host services (upcall-stub vtable) and the API
  *       callbacks. On JDK 22+ a session is fully JNI-free; older JVMs
- *       degrade to the shared-memory channel above with a one-line
+ *       degrade to the shared-memory poller channel with a one-line
  *       reason in the census.</li>
+ * </ul>
+ *
+ * <h2>Invocation planes</h2>
+ * Two, and only two — the JNI plane is gone:
+ * <ul>
+ *   <li><b>Panama FFM</b> (JDK 22+): libraryLookup + downcalls + the
+ *       upcall-stub host vtable ({@link PanamaFfmChannel}).</li>
+ *   <li><b>Shared-memory poller</b> (any JDK): commands, renders, host
+ *       services and api re-entry travel the mapped region only
+ *       ({@link ShmPoller}).</li>
  * </ul>
  *
  * <h2>Threading</h2>
@@ -56,9 +64,8 @@ import java.util.Map;
  * <p>Package-private helpers (buffer facade, render dispatch) are used by
  * NativeScriptManager / the drivers; the public surface is the transport
  * enum plus configure/reset for the config screen bootstrap. JDK-only: no
- * Minecraft classes, so the bare-javac JNI test harness compiles it and
- * NativeIntegrationTest exercises the whole shared-memory path on every
- * CI platform.
+ * Minecraft classes, so the bare-javac harness compiles it and
+ * NativeIntegrationTest exercises both planes on every CI platform.
  */
 public final class NativeChannel {
 
@@ -66,7 +73,7 @@ public final class NativeChannel {
         JNI, PANAMA_FFM, SHARED_MEMORY
     }
 
-    /** Config default: shared memory ("性能最好，但小概率出现稳定性问题"). */
+    /** Config default: shared memory ("性能最好"). */
     public static final Transport DEFAULT = Transport.SHARED_MEMORY;
 
     private static volatile Transport transport = DEFAULT;
@@ -78,7 +85,7 @@ public final class NativeChannel {
     private static boolean shmBroken;
 
     /* ------------------------------------------------------------------ */
-    /* invocation-plane dispatch (JNI natives vs FFM downcalls)            */
+    /* invocation-plane dispatch (Panama FFM downcalls vs shm poller)      */
     /* ------------------------------------------------------------------ */
 
     /** True when the Panama FFM downcall layer is installed and linked. */
@@ -86,41 +93,21 @@ public final class NativeChannel {
         return PanamaFfmChannel.ready();
     }
 
-    /* The four shm natives + the module lifecycle dispatch through these
-       package-private wrappers: PANAMA_FFM (or any session where the FFM
-       layer linked) uses the jcm_* downcalls; otherwise the JNI natives.
-       All sites hold the class monitor (render/reset), so no extra sync. */
-
-    static int shmInitCall(long base, long size) {
-        return ffmActive() ? PanamaFfmChannel.shmInit(base, size) : nativeShmInit(base, size);
-    }
-
-    static int shmKickCall() {
-        return ffmActive() ? PanamaFfmChannel.shmKick() : nativeShmKick();
-    }
-
-    static void shmRegisterInstanceCall(long moduleHandle, long instanceId, String instanceKey) {
-        if (ffmActive()) {
-            PanamaFfmChannel.shmRegisterInstance(moduleHandle, instanceId, instanceKey);
-        } else {
-            nativeShmRegisterInstance(moduleHandle, instanceId, instanceKey);
-        }
-    }
-
-    static void shmShutdownCall() {
-        if (ffmActive()) {
-            PanamaFfmChannel.shmShutdown();
-        } else {
-            nativeShmShutdown();
-        }
+    /** True when the shared-memory poller plane is attached and ready. */
+    static boolean pollerActive() {
+        return ShmPoller.active();
     }
 
     /* moduleKey -> shm instance id. Render-thread only (cleared on reset);
        ids stay stable for an instance's whole life so the C++ side only
        ever receives the (rare) registration, never per-frame strings. */
     private static final Map<String, Long> INSTANCE_IDS = new HashMap<>();
-    private static long nextInstanceId = 1;
-    private static long controlSeq = 1;
+
+    /* Shared control-slot sequence for renders AND lifecycle commands —
+       the poller serves both from one slot, so both must draw from one
+       monotonically increasing counter (renders under the class monitor,
+       commands under ShmPoller's command lock). */
+    private static final AtomicLong CONTROL_SEQ = new AtomicLong(1);
 
     /* Reusable per-module frame views, keyed by native handle and scanned
        linearly: modules are few (single digits per pack), and a primitive
@@ -131,15 +118,8 @@ public final class NativeChannel {
     /* diagnostics */
     private static int loggedStatuses;
     private static boolean warnedExhausted;
+    private static boolean warnedNoDirectPlane;
     private static final int STATUS_STALE_ECHO = 64;
-
-    private static native int nativeShmInit(long base, long size);
-
-    private static native int nativeShmKick();
-
-    private static native void nativeShmRegisterInstance(long handle, long instanceId, String instanceKey);
-
-    private static native void nativeShmShutdown();
 
     /** Reusable per-module frame surfaces: five arena views, one frame and
      *  one 128-byte direct-render descriptor buffer. */
@@ -173,7 +153,7 @@ public final class NativeChannel {
     public static void configure(Transport selected) {
         transport = selected == null ? DEFAULT : selected;
         JCMLogger.info("Java-C++ transport: {}", transport == Transport.SHARED_MEMORY
-                ? "shared memory" : transport == Transport.PANAMA_FFM ? "Panama FFM" : "JNI");
+                ? "shared memory" : transport == Transport.PANAMA_FFM ? "Panama FFM" : "direct calls");
     }
 
     public static Transport activeTransport() {
@@ -183,9 +163,9 @@ public final class NativeChannel {
     /** One-line human summary of the ACTIVE transport, for the post-reload
      *  census in latest.log — so a player can verify from the log that the
      *  "Java 与 C++ 通信方式" selection really engaged (and see when the
-     *  shared-memory channel degraded to the direct call). The invocation
-     *  plane (Panama FFM downcalls vs JNI natives) rides along so a
-     *  JNI-free session is visible at a glance. */
+     *  shared-memory channel degraded to direct calls). The invocation
+     *  plane (Panama FFM downcalls vs the shared-memory poller) rides
+     *  along so a JNI-free session is visible at a glance. */
     public static String describe() {
         final Transport selected = transport;
         final NativeShm region = shm;
@@ -197,20 +177,20 @@ public final class NativeChannel {
                 sb.append("panama-ffm (FFM downcalls, shared-memory data plane)");
             } else {
                 sb.append("panama-ffm (unavailable: ").append(PanamaFfmChannel.reason())
-                        .append("; using JNI-triggered shared-memory)");
+                        .append("; degraded to the shared-memory poller)");
             }
         } else {
-            sb.append("direct (snapshot rides the per-frame call)");
+            sb.append(PanamaFfmChannel.ready() ? "direct (snapshot rides the FFM downcall)"
+                    : "direct (degraded to the shared-memory poller on this JVM)");
         }
-        sb.append(PanamaFfmChannel.ready() && !NativeScriptManager.jniPlaneActive
+        sb.append(PanamaFfmChannel.ready()
                 ? ", invocations: panama-ffm (no JNI)"
-                : PanamaFfmChannel.ready()
-                        ? PanamaFfmChannel.hostReady()
-                                ? ", invocations: panama-ffm upcalls (JNI plane loaded)"
-                                : PanamaFfmChannel.extendedSurface()
-                                        ? ", invocations: panama-ffm downcalls (JNI host upcalls)"
-                                        : ", invocations: panama-ffm kick (legacy bridge: render/api on JNI)"
-                        : ", invocations: jni natives");
+                : ShmPoller.active()
+                        ? ", invocations: " + ShmPoller.describePlane()
+                        : ", invocations: none (bridge unavailable: "
+                                + (PanamaFfmChannel.reason() != null ? PanamaFfmChannel.reason() : "")
+                                + (ShmPoller.reason() != null && !ShmPoller.active() ? "; " + ShmPoller.reason() : "")
+                                + ")");
         if (shmBroken && selected != Transport.JNI) {
             sb.append(" [unavailable this session — direct calls]");
         }
@@ -225,6 +205,7 @@ public final class NativeChannel {
         final Transport t = transport;
         return t == Transport.PANAMA_FFM ? Transport.SHARED_MEMORY : t;
     }
+
     /* ------------------------------------------------------------------ */
     /* driver buffer facade                                                */
     /* ------------------------------------------------------------------ */
@@ -232,7 +213,8 @@ public final class NativeChannel {
     /**
      * Snapshot buffer for a driver state. Shared-memory mode hands out a
      * window of the mapped region (so C++ reads Java's data directly out
-     * of the shared mapping); JNI mode keeps plain direct buffers.
+     * of the shared mapping); the direct-call transport keeps plain
+     * direct buffers.
      */
     public static ByteBuffer newSnapshotBuffer(int capacity) {
         if (effectiveTransport() == Transport.SHARED_MEMORY && !shmBroken) {
@@ -279,6 +261,19 @@ public final class NativeChannel {
         if (selected != Transport.SHARED_MEMORY || shmBroken) {
             return renderDirect(module, instanceKey, snapshot, snapshotLen, resourceKind);
         }
+        return renderViaShm(module, instanceKey, snapshot, snapshotLen, resourceKind);
+    }
+
+    /**
+     * The shared-memory render path, shared by the SHARED_MEMORY transport
+     * and the old-JVM degradation of the direct transport: publishes the
+     * request into the control slot, then either makes the synchronous FFM
+     * kick downcall (22+) or waits for the poller thread to serve it out of
+     * the mapped pages (16..21), servicing host requests meanwhile.
+     */
+    private static NativeScriptManager.NativeFrame renderViaShm(NativeScriptManager.NativeScriptModule module,
+                                                                 String instanceKey, ByteBuffer snapshot,
+                                                                 int snapshotLen, int resourceKind) {
         try {
             final long address = NativeArenaView.addressOf(snapshot);
             if (address == 0) {
@@ -301,14 +296,18 @@ public final class NativeChannel {
                 if (shm != region || shmBroken) {
                     return renderDirect(module, instanceKey, snapshot, snapshotLen, resourceKind);
                 }
-                seq = controlSeq++;
+                seq = nextControlSeq();
                 region.putControlLong(NativeShm.CTL_MODULE, handle);
                 region.putControlLong(NativeShm.CTL_INSTANCE, instanceId);
                 region.putControlInt(NativeShm.CTL_KIND, resourceKind);
                 region.putControlInt(NativeShm.CTL_SNAP_LEN, snapshotLen);
                 region.putControlLong(NativeShm.CTL_SNAP_ADDR, address);
                 region.putControlLongRelease(NativeShm.CTL_SEQ, seq);   /* request publish LAST */
-                status = shmKickCall();
+                if (ffmActive()) {
+                    status = PanamaFfmChannel.shmKick();
+                } else {
+                    status = ShmPoller.awaitResult(region, seq);
+                }
                 frame = status == NativeShm.STATUS_OK ? finishFrame(region, handle, seq) : null;
             }
             if (status != NativeShm.STATUS_OK) {
@@ -316,9 +315,9 @@ public final class NativeChannel {
             }
             return frame;
         } catch (Throwable t) {
-            /* Old bridge binary (missing shm exports), broken region, or an
-               unexpected condition: degrade to the direct call for the rest
-               of the session instead of failing scripts. */
+            /* Old bridge binary (no poller), broken region, or an unexpected
+               condition: degrade to the direct call for the rest of the
+               session instead of failing scripts. */
             noteShmFailure("render", t);
             return renderDirect(module, instanceKey, snapshot, snapshotLen, resourceKind);
         }
@@ -347,20 +346,28 @@ public final class NativeChannel {
     /* ------------------------------------------------------------------ */
 
     /**
-     * Per-frame render WITHOUT the shared-memory region ("JNI" transport,
+     * Per-frame render WITHOUT the shared-memory region ("direct" transport,
      * heap snapshots, or a shm failure): on an FFM session this is the
      * jcm_module_render downcall writing the frame descriptor into the
-     * module's reused 128-byte buffer; on legacy JVMs it is the nRender
-     * JNI native. Same pipeline, same failure codes on both planes.
+     * module's reused 128-byte buffer. Older JVMs have no direct-call
+     * plane anymore (the JNI natives are gone), so the render degrades to
+     * the shared-memory request path — identical pipeline, same failure
+     * codes.
      */
     private static NativeScriptManager.NativeFrame renderDirect(NativeScriptManager.NativeScriptModule module,
                                                                 String instanceKey, ByteBuffer snapshot,
                                                                 int snapshotLen, int resourceKind) {
-        /* Extended-surface gate (not plain ready()): in a mixed session with
-           an older bridge the jcm_module_render export is absent and the
-           System.load'd nRender native remains the direct-call plane. */
         if (!PanamaFfmChannel.extendedSurface()) {
-            return module.nRender(module.getNativeHandle(), instanceKey, snapshot, snapshotLen, resourceKind);
+            /* No direct-call plane on this session (old JDK): the
+               shared-memory poller serves the identical pipeline. */
+            if (ShmPoller.active() && !shmBroken) {
+                return renderViaShm(module, instanceKey, snapshot, snapshotLen, resourceKind);
+            }
+            if (!warnedNoDirectPlane) {
+                warnedNoDirectPlane = true;
+                JCMLogger.warn("Direct Java-C++ calls unavailable on this JVM and the shared-memory poller is not attached — native frames degrade this session");
+            }
+            return null;
         }
         final long handle = module.getNativeHandle();
         final long address = NativeArenaView.addressOf(snapshot);
@@ -407,7 +414,7 @@ public final class NativeChannel {
             return;
         }
         /* Pre-ABI-9 modules report capacity 0: wrap at the exact length
-           (the same behaviour the JNI bridge had for them). */
+           (the same behaviour the bridge had for them). */
         final long capacity = cap > 0 ? cap : len;
         NativeArenaView.bind(view, address,
                 (int) Math.min(len, Integer.MAX_VALUE),
@@ -429,10 +436,37 @@ public final class NativeChannel {
     private static long instanceIdFor(long moduleHandle, String moduleKey) {
         final Long existing = INSTANCE_IDS.get(moduleKey);
         if (existing != null) return existing;
-        final long id = nextInstanceId++;
+        final long id = CONTROL_SEQ.getAndIncrement();
         INSTANCE_IDS.put(moduleKey, id);
-        shmRegisterInstanceCall(moduleHandle, id, moduleKey);
+        registerInstanceWithBridge(moduleHandle, id, moduleKey);
         return id;
+    }
+
+    /** Instance registration on whichever invocation plane is live. */
+    private static void registerInstanceWithBridge(long moduleHandle, long id, String key) {
+        if (ffmActive()) {
+            PanamaFfmChannel.shmRegisterInstance(moduleHandle, id, key);
+        } else {
+            final NativeShm region = shm;
+            if (region != null && ShmPoller.active()) {
+                ShmPoller.registerInstance(region, moduleHandle, id, key);
+            }
+        }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* control-slot sequence                                               */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Monotonic request seq shared by renders and lifecycle commands —
+     * both publish into the single control slot and the C++ servers claim
+     * requests exactly-once against this counter (see shm_channel.h).
+     * Called under the class monitor (renders) or ShmPoller's command
+     * lock (commands) — the AtomicLong only needs uniqueness.
+     */
+    static long nextControlSeq() {
+        return CONTROL_SEQ.getAndIncrement();
     }
 
     /* ------------------------------------------------------------------ */
@@ -458,54 +492,91 @@ public final class NativeChannel {
             if (shmBroken) return null;
             try {
                 if (!NativeArenaView.selfCheck()) {
-                    JCMLogger.warn("Native arena views unavailable on this JVM — falling back to JNI transport");
+                    JCMLogger.warn("Native arena views unavailable on this JVM — shared-memory transports degraded");
                     shmBroken = true;
                     return null;
                 }
-                final NativeShm created = NativeShm.open(defaultRegionSize());
-                final int status = shmInitCall(created.base(), created.size());
-                if (status != NativeShm.STATUS_OK) {
-                    JCMLogger.warn("Native shared memory channel rejected by the bridge (status " + status + " " + NativeShm.statusText(status) + ") - falling back to JNI transport");
-                    created.close();
-                    shmBroken = true;
-                    return null;
+                final boolean pollerPlane = !ffmActive();
+                final NativeShm created = NativeShm.open(defaultRegionSize(), pollerPlane);
+                if (pollerPlane) {
+                    /* JDK 16..21: the bridge's poller thread discovers the
+                       region through the handshake and attaches by itself —
+                       no native call carries the address. */
+                    if (!ShmPoller.attach(created)) {
+                        created.close();
+                        shmBroken = true;
+                        return null;
+                    }
+                } else {
+                    final int status = PanamaFfmChannel.shmInit(created.base(), created.size());
+                    if (status != NativeShm.STATUS_OK) {
+                        JCMLogger.warn("Native shared memory channel rejected by the bridge (status " + status + " " + NativeShm.statusText(status) + ") - falling back to direct calls");
+                        created.close();
+                        shmBroken = true;
+                        return null;
+                    }
                 }
                 shm = created;
-                JCMLogger.info("Native shared memory channel ready ({} KB region, MappedByteBuffer + {} accessor)",
+                JCMLogger.info("Native shared memory channel ready ({} KB region, MappedByteBuffer + {} accessor, {} plane)",
                         created.size() / 1024,
-                        Runtime.version().feature() >= 22 ? "FFM/VarHandle" : "sun.misc.Unsafe");
+                        Runtime.version().feature() >= 22 ? "FFM/VarHandle" : "sun.misc.Unsafe",
+                        pollerPlane ? "poller" : "FFM kick");
                 return created;
             } catch (Throwable t) {
                 shmBroken = true;
-                JCMLogger.warn("Native shared memory channel unavailable (" + t + "), falling back to JNI transport");
+                JCMLogger.warn("Native shared memory channel unavailable (" + t + "), falling back to direct calls");
                 return null;
             }
         }
     }
 
     /**
+     * Ensures the POLLER plane is up (region created + poller attached).
+     * Called by the module lifecycle when the FFM layer is unavailable —
+     * module open is the FIRST command the poller must serve, so the
+     * region has to exist before any module loads. Returns false when the
+     * plane cannot start (old bridge, broken tmpdir, ...); the caller
+     * reports the module as skipped.
+     */
+    static boolean ensurePollerPlane() {
+        if (ffmActive()) return false;   /* not the poller plane's session */
+        if (shmBroken) return false;
+        ensureShm();
+        return ShmPoller.active();
+    }
+
+    /**
      * Full teardown for NativeScriptManager.reload(): closes the region
-     * (unmap + delete), forgets instances and views, and re-arms the
-     * fallback so a later reload can retry. Drivers must have reset their
-     * states (which release their windows) before this runs —
-     * NativeScriptManager.reload() orders it that way.
+     * (unmap + delete, including the poller handshake files), forgets
+     * instances and views, and re-arms the fallback so a later reload can
+     * retry. Drivers must have reset their states (which release their
+     * windows) before this runs — NativeScriptManager.reload() orders it
+     * that way.
      */
     public static void reset() {
         synchronized (NativeChannel.class) {
             INSTANCE_IDS.clear();
             VIEWS.clear();
-            controlSeq = 1;
             loggedStatuses = 0;
             final NativeShm region = shm;
             shm = null;
             if (region != null) {
-                try {
-                    shmShutdownCall();
-                } catch (Throwable ignored) {
-                    // an old bridge without the export: nothing to forget
+                if (ffmActive()) {
+                    try {
+                        PanamaFfmChannel.shmShutdown();
+                    } catch (Throwable ignored) {
+                        // an old bridge without the export: nothing to forget
+                    }
+                } else {
+                    /* Poller plane: CMD_SHUTDOWN makes the poller detach
+                       itself; the region close below removes the files, and
+                       a poller that somehow misses the command self-detaches
+                       on its next header revalidation. */
+                    ShmPoller.requestShutdown(region);
                 }
                 region.close();
             }
+            ShmPoller.detach();
             /* shmBroken stays sticky across reloads for genuine
                incompatibilities but a fresh F3+T may retry after a
                transient failure (tmpdir full etc.) — clearing it is safe
@@ -539,6 +610,8 @@ public final class NativeChannel {
             case NativeShm.ERR_RESOURCES: return "host resources failed";
             case NativeShm.ERR_REQUEST: return "bad request";
             case NativeShm.ERR_SNAPSHOT: return "invalid snapshot";
+            case NativeShm.ERR_OVERFLOW: return "reply window too small";
+            case NativeShm.ERR_DETACHED: return "poller detached";
             case STATUS_STALE_ECHO: return "stale result echo";
             default: return "unknown";
         }
@@ -547,7 +620,7 @@ public final class NativeChannel {
     private static void noteShmFailure(String where, Throwable t) {
         if (!shmBroken) {
             shmBroken = true;
-            JCMLogger.warn("Native shared-memory transport failed at " + where + " (" + t + "); falling back to JNI for this session");
+            JCMLogger.warn("Native shared-memory transport failed at " + where + " (" + t + "); falling back to direct calls for this session");
         }
     }
 }

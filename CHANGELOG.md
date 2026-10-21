@@ -1,5 +1,60 @@
 # Changelog
 
+## 2.3.0-beta-2.yanyang.4-shmtest5
+
+**The mod now contains no JNI anywhere — every Java↔C++ transport runs
+JNI-free on every supported JVM (Java 16 through 22+).** Layout v2
+(`native/include/mtr/shm_channel.h`): the JNI invocation plane was removed
+completely and replaced by two JNI-free planes:
+
+### The shared-memory poller plane (new — JDK 16..21)
+
+Minecraft 1.17.1–1.20.4 run on stock Java 16/17/21, where no native-call
+API exists to replace JNI (the final `java.lang.foreign` needs 22+). The
+new plane removes the need for one entirely: the bridge is `System.load`ed
+purely to run its **constructor**, which starts a background poller
+thread. The poller finds the shared region through **filesystem handshake
+pointer files** (`jcm_shm_hs_<pid>`), opens and maps the region file
+itself, and then serves everything from the shared pages — module
+lifecycle **commands**, per-frame renders, the script→Java **host
+services** (posted as SVC requests that the waiting Java thread answers
+through the same raw-address adapters the FFM vtable uses) and the
+Java→C++ api re-entry (a **CBQ ring** drained in every wait loop). No
+native call crosses in either direction; SVC slots are taken by nesting
+depth and CBQ entries round-robin so no reentrancy combination can
+deadlock, and the shutdown command poisons the region header so a stale
+mapping can never be re-attached.
+
+### Panama FFM plane (JDK 22+, unchanged behavior)
+
+`libraryLookup` loading, `jcm_module_*` lifecycle downcalls, the
+per-frame `jcm_shm_kick` trigger, direct `jcm_module_render` calls and
+the `JcmFfmHostVTable` upcall stubs — a fully JNI-free session.
+
+### Config screen
+
+- **Fixed: "Java 与 C++ 通信方式" could not be changed** — the cycling
+  button was only added to the list widget (which draws entries but does
+  not dispatch mouse input); it is now also registered as a screen child,
+  so clicks reach it and the value cycles/saves.
+- The old `JNI` config value is kept for file compatibility but is now
+  labeled **直连调用 / Direct Calls** — it is a direct-call transport
+  served by the FFM downcall on 22+ and degrades to the shared-memory
+  poller plane on older JVMs. All three options run JNI-free everywhere.
+
+### Bridge cleanup
+
+- `jni_bridge.cpp` is now **JDK-free** (no `jni.h`): every JNI export,
+  `JNI_OnLoad`, the cached `JNIEnv*`/`jmethodID` host machinery, the
+  `NewDirectByteBuffer` arena wrappers and the `nativeApiCallback` native
+  are gone; the unified `close_module_core`/`serve_request` cores serve
+  both planes, and a served-seq claim-CAS guarantees exactly-once request
+  handling. SDK modules (ABI 6–10) are unaffected.
+- Tests: the JVM harness now runs **both planes** on every CI platform
+  (70 checks FFM / 67 checks poller), a new `native_poller_test` drives
+  the whole plane headlessly (28 checks), and the bridge builds without a
+  JDK installed.
+
 ## 2.3.0-beta-2.yanyang.4
 
 GC & steady-state allocation overhaul of the scripted render pipeline
