@@ -32,6 +32,7 @@ import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 
@@ -45,7 +46,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.text.AttributedString;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Stack;
 
 @SuppressWarnings("unused")
@@ -83,7 +86,7 @@ public class ScriptResourceUtil {
     }
 
     public static void includeScript(Object pathOrIdentifier) {
-        if (activeContext == null) throw new RuntimeException(
+        if (!isParsingStage()) throw new RuntimeException(
             "Cannot use include() in Runtime Stage, as all scripts has been parsed and finalized at this point!"
         );
         Identifier identifier;
@@ -171,7 +174,7 @@ public class ScriptResourceUtil {
         byte[][] fileBytes = new byte[][]{null};
         ResourceManagerHelper.readResource(identifier, is -> {
             try {
-                fileBytes[0] = is.readAllBytes();
+                fileBytes[0] = IOUtils.toByteArray(is);
             } catch (IOException e) {
                 MTRScriptingModClient.LOGGER.error("[JCM Scripting] Error while reading data {}", identifier);
             }
@@ -294,6 +297,12 @@ public class ScriptResourceUtil {
         return 2; // Hardcoded for backward compat
     }
 
+    @ApiInternal
+    private static boolean isParsingStage() {
+        return activeContext != null;
+    }
+
+    @ApiInternal
     private static Identifier resolveRelativePath(Identifier baseFile, String relative) {
         String result = relative.toLowerCase(Locale.ROOT).replace('\\', '/');
         if (result.contains(":")) {

@@ -2,6 +2,8 @@ package com.lx862.mtrscripting.core.util.model;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
+import com.lx862.mtrscripting.core.util.DataReaderJS;
+import com.lx862.mtrscripting.core.util.ScriptResourceUtil;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.apache.commons.io.IOUtils;
@@ -20,20 +22,13 @@ import java.util.Map;
 public class ModelManagerJS {
     private static final ResourceProvider RESOURCE_PROVIDER = new ResourceProvider() {
         public String get(Identifier id) {
-            return ResourceManagerHelper.readResource(id);
+            DataReaderJS dataReaderJS = ScriptResourceUtil.read(id);
+            return dataReaderJS == null ? "" : dataReaderJS.asString();
         }
 
         public byte[] getBytes(Identifier id) {
-            byte[][] bytes = new byte[1][];
-            ResourceManagerHelper.readResource(id, (inputStreamx) -> {
-                try {
-                    bytes[0] = IOUtils.toByteArray(inputStreamx);
-                } catch (Exception e) {
-                    Init.LOGGER.error("", e);
-                }
-
-            });
-            return bytes[0] == null ? new byte[0] : bytes[0];
+            DataReaderJS dataReaderJS = ScriptResourceUtil.read(id);
+            return dataReaderJS == null ? null : dataReaderJS.asByteArray();
         }
     };
 

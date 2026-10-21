@@ -19,8 +19,10 @@ public class MTRScriptingContextFactory extends ContextFactory {
 
     @Override
     protected void observeInstructionCount(Context ctx, int instructionCount) {
+        long startTime = ((MTRScriptingContext) ctx).startTime;
+        if(startTime == -1) return;
         long currentTime = System.currentTimeMillis();
-        long executionTime = (currentTime - ((MTRScriptingContext) ctx).startTime);
+        long executionTime = (currentTime - startTime);
         if(executionTime > MAX_EXECUTION_TIME) {
             throw new RuntimeException("[MTR Scripting] Script execution exceeded maximum of " + (MAX_EXECUTION_TIME / 1000) + "s!");
         }

@@ -4,7 +4,7 @@ import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.ContextFactory;
 
 public class MTRScriptingContext extends Context {
-    long startTime;
+    long startTime = -1;
 
     public MTRScriptingContext(ContextFactory contextFactory) {
         super(contextFactory);
