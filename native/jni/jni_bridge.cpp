@@ -397,15 +397,21 @@ public:
     Poller(const Poller&) = delete;
     Poller& operator=(const Poller&) = delete;
 
-    /** Idempotent start from the library constructor / DllMain. NEVER
-     *  waits for the started thread (Windows loader-lock contract: a
-     *  thread created inside DllMain must not be waited on there). */
-    void start() {
-        std::lock_guard<std::mutex> lk(start_mutex_);
-        if (thread_.joinable()) return;
-        thread_ = std::thread([this] { run(); });
-    }
-
+    /* NOTE: no start() here, and no std::thread/std::mutex members. The
+     * boot path (poller_boot() below) runs from the library constructor /
+     * DllMain, which the linker places BEFORE the translation unit's
+     * _GLOBAL__sub_I_* static constructors — i.e. while every namespace-
+     * scope C++ object is still raw .bss zeros. std::mutex/std::thread are
+     * C++ objects, so touching them from there was reading an unconstructed
+     * zeroed pthread_mutex_t: glibc treats all-zero as a valid default
+     * mutex (silently worked), but macOS does NOT (its pthread mutex needs
+     * the _PTHREAD_MUTEX_SIG signature) and pthread_mutex_lock returned
+     * EINVAL → uncaught std::system_error → SIGABRT on every macOS CI job
+     * (see workflow run 39597883900). The boot therefore uses ONLY C
+     * primitives — pthread_once/InitOnceExecuteOnce + a detached
+     * pthread_create/CreateThread — and the Poller object itself is a
+     * Meyers singleton constructed lazily INSIDE the booted thread, long
+     * after every static constructor has run. */
     /** True when the poller is attached to a live region in poller mode.
      *  Host services gate their SVC tier on this. */
     bool svc_available() const {
@@ -508,6 +514,21 @@ public:
                             reply, static_cast<size_t>(n));
             }
             wr64(q + JCM_SHM_CBQ_RSP, seq);
+        }
+    }
+
+    /* ---- main loop entry (public: called by the boot trampolines) -- */
+
+    void run_outer() {
+        try {
+            run_inner();
+        } catch (const std::exception& e) {
+            /* An exception escaping the raw thread entry would terminate
+               the process — the poller must survive ANY allocation hiccup
+               and keep scanning; report once and keep the plane degraded. */
+            std::fprintf(stderr, "[jcm_native_bridge] poller thread exception: %s\n", e.what());
+        } catch (...) {
+            std::fprintf(stderr, "[jcm_native_bridge] poller thread unknown exception\n");
         }
     }
 
@@ -756,19 +777,6 @@ private:
 
     /* ---- main loop ------------------------------------------------ */
 
-    void run() {
-        try {
-            run_inner();
-        } catch (const std::exception& e) {
-            /* An exception escaping a std::thread entry is std::terminate —
-               the poller must survive ANY allocation hiccup and keep
-               scanning; report once and keep the plane degraded. */
-            std::fprintf(stderr, "[jcm_native_bridge] poller thread exception: %s\n", e.what());
-        } catch (...) {
-            std::fprintf(stderr, "[jcm_native_bridge] poller thread unknown exception\n");
-        }
-    }
-
     void run_inner() {
         long idleRounds = 0;
         for (;;) {
@@ -822,8 +830,6 @@ private:
         }
     }
 
-    std::mutex start_mutex_;
-    std::thread thread_;
     std::atomic<uint8_t*> attached_{nullptr};
     std::atomic<bool> detach_requested_{false};
     RegionFile attached_region_{};
@@ -833,7 +839,71 @@ private:
     uint64_t cbq_served_[JCM_CBQ_SLOTS] = {0, 0, 0, 0, 0, 0, 0, 0};
 };
 
-Poller g_poller;
+/* Meyers singleton. A function-local static is guarded (cxa_guard) and
+ * is NEVER re-constructed by _GLOBAL__sub_I_* — which is what silently
+ * zeroed the old namespace-scope object right after the constructor-
+ * attribute boot had already written it (leaking its thread on glibc and
+ * crashing with EINVAL on macOS). The first poller() call happens on the
+ * booted poller thread itself, so construction order can never matter
+ * again. */
+Poller& poller() {
+    static Poller instance;
+    return instance;
+}
+
+/* ---- init-order-safe boot (C primitives ONLY) ---------------------- */
+/*
+ * Runs from the library constructor / DllMain — a context in which every
+ * C++ static object of this translation unit is still unconstructed (the
+ * constructor attribute is ordered BEFORE _GLOBAL__sub_I_*), so it must
+ * not touch any of them. pthread_once_t / INIT_ONCE are plain C objects
+ * with static initializers (all-zero) that no C++ constructor ever
+ * re-writes, and pthread_create / CreateThread create the poller thread
+ * WITHOUT any std::thread bookkeeping. The thread itself enters the
+ * Meyers singleton above, so every C++ object it uses is constructed
+ * on demand, strictly after all static initialization. */
+#if defined(_WIN32)
+static INIT_ONCE g_poller_boot_once = INIT_ONCE_STATIC_INIT;
+static DWORD WINAPI poller_thread_entry(LPVOID) {
+    poller().run_outer();
+    return 0;
+}
+static BOOL CALLBACK poller_boot_impl(PINIT_ONCE, PVOID, PVOID*) {
+    /* Create the thread WITHOUT waiting for it — the documented
+       loader-lock contract for DllMain. Closing the handle makes it fully
+       detached: it dies with the process, exactly like the poller loop's
+       own lifecycle (the shutdown command detaches the region, never the
+       thread). */
+    HANDLE thread = CreateThreadW(nullptr, 0, poller_thread_entry, nullptr, 0, nullptr);
+    if (thread) CloseHandle(thread);
+    return TRUE;
+}
+#else
+static pthread_once_t g_poller_boot_once = PTHREAD_ONCE_INIT;
+static void* poller_thread_entry(void*) {
+    poller().run_outer();
+    return nullptr;
+}
+static void poller_boot_impl(void) {
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_t tid;
+    const int rc = pthread_create(&tid, &attr, poller_thread_entry, nullptr);
+    (void)rc;   /* a failed create leaves the plane degraded, never aborts */
+    pthread_attr_destroy(&attr);
+}
+#endif
+
+/** Idempotent, init-order-safe poller boot. Safe to call from ANY
+ *  context — module initializers, DllMain, runtime entry points. */
+inline void poller_boot() {
+#if defined(_WIN32)
+    InitOnceExecuteOnce(&g_poller_boot_once, poller_boot_impl, nullptr, nullptr);
+#else
+    pthread_once(&g_poller_boot_once, poller_boot_impl);
+#endif
+}
 
 /* ------------------------------------------------------------------ */
 /* host services handed to the script module (see mtr_native.h)        */
@@ -850,13 +920,13 @@ int32_t host_acquire_model(void*, const char* path) {
                 static_cast<int32_t>(std::strlen(path)));
         return handle < 0 ? -1 : static_cast<int32_t>(handle) | 0x40000000;
     }
-    if (g_poller.svc_available()) {
+    if (poller().svc_available()) {
         const uint64_t words[2] = {
             reinterpret_cast<uintptr_t>(path),
             std::strlen(path),
         };
         uint64_t ret = 0;
-        if (g_poller.svc_call(JCM_SVC_ACQUIRE_MODEL, words, 2, &ret)) {
+        if (poller().svc_call(JCM_SVC_ACQUIRE_MODEL, words, 2, &ret)) {
             return static_cast<int32_t>(ret) < 0 ? -1
                     : (static_cast<int32_t>(ret) | 0x40000000);
         }
@@ -870,10 +940,10 @@ void host_release_model(void* user, int32_t slot) {
             g_ffm_host.release_model(slot & ~0x40000000);
             return;
         }
-        if (g_poller.svc_available()) {
+        if (poller().svc_available()) {
             const uint64_t words[1] = { static_cast<uint64_t>(
                     static_cast<uint32_t>(slot & ~0x40000000)) };
-            g_poller.svc_call(JCM_SVC_RELEASE_MODEL, words, 1, nullptr);
+            poller().svc_call(JCM_SVC_RELEASE_MODEL, words, 1, nullptr);
         }
         return;
     }
@@ -911,7 +981,7 @@ int32_t host_rasterize_text(void*, const char* utf8, int32_t len, int32_t x, int
                                         static_cast<int32_t>(r), static_cast<int32_t>(g),
                                         static_cast<int32_t>(b), pixels, out_w, out_h);
     }
-    if (g_poller.svc_available()) {
+    if (poller().svc_available()) {
         const uint64_t words[11] = {
             reinterpret_cast<uintptr_t>(utf8), static_cast<uint32_t>(len),
             static_cast<uint32_t>(x), static_cast<uint32_t>(y),
@@ -921,7 +991,7 @@ int32_t host_rasterize_text(void*, const char* utf8, int32_t len, int32_t x, int
             static_cast<uint32_t>(out_w), static_cast<uint32_t>(out_h),
         };
         uint64_t ret = 0;
-        if (g_poller.svc_call(JCM_SVC_RASTERIZE_TEXT, words, 11, &ret)) {
+        if (poller().svc_call(JCM_SVC_RASTERIZE_TEXT, words, 11, &ret)) {
             return static_cast<int32_t>(ret);
         }
     }
@@ -943,7 +1013,7 @@ int32_t host_measure_font_text(void*, const char* font, const char* utf8, int32_
                            out->descent = metrics[2]; out->height = metrics[3]; }
         return status;
     }
-    if (g_poller.svc_available()) {
+    if (poller().svc_available()) {
         uint64_t words[8] = {
             reinterpret_cast<uintptr_t>(font), std::strlen(font),
             reinterpret_cast<uintptr_t>(utf8), static_cast<uint32_t>(len),
@@ -954,7 +1024,7 @@ int32_t host_measure_font_text(void*, const char* font, const char* utf8, int32_
         std::memcpy(&words[5], &sx, sizeof(double));
         std::memcpy(&words[6], &sy, sizeof(double));
         uint64_t ret = 0;
-        if (g_poller.svc_call(JCM_SVC_MEASURE_FONT_TEXT, words, 8, &ret)) {
+        if (poller().svc_call(JCM_SVC_MEASURE_FONT_TEXT, words, 8, &ret)) {
             return static_cast<int32_t>(ret);
         }
     }
@@ -972,7 +1042,7 @@ int32_t host_draw_font_text(void*, const char* font, const char* utf8, int32_t l
                 utf8, len, size, x, baseline, sx, sy, compression, argb,
                 clip_x0, clip_y0, clip_x1, clip_y1, pixels, width, height, bounds);
     }
-    if (g_poller.svc_available()) {
+    if (poller().svc_available()) {
         uint64_t words[19] = {
             reinterpret_cast<uintptr_t>(font), std::strlen(font),
             reinterpret_cast<uintptr_t>(utf8), static_cast<uint32_t>(len),
@@ -991,7 +1061,7 @@ int32_t host_draw_font_text(void*, const char* font, const char* utf8, int32_t l
         std::memcpy(&words[8], &sy, sizeof(double));
         std::memcpy(&words[9], &compression, sizeof(double));
         uint64_t ret = 0;
-        if (g_poller.svc_call(JCM_SVC_DRAW_FONT_TEXT, words, 19, &ret)) {
+        if (poller().svc_call(JCM_SVC_DRAW_FONT_TEXT, words, 19, &ret)) {
             return static_cast<int32_t>(ret);
         }
     }
@@ -1043,7 +1113,7 @@ const char* host_invoke_api(void* user, const char* request, int32_t length, int
         *result_length = static_cast<int32_t>(result.size());
         return result.data();
     }
-    if (g_poller.svc_available() && result_length) {
+    if (poller().svc_available() && result_length) {
         /* SVC round-trip: word 4 is the address of a local length slot the
            Java adapter writes through (shared address space), and the RET
            word carries the reply ADDRESS — Java's thread-local reused
@@ -1057,7 +1127,7 @@ const char* host_invoke_api(void* user, const char* request, int32_t length, int
             reinterpret_cast<uintptr_t>(&reply_len),
         };
         uint64_t reply_addr = 0;
-        const bool answered = g_poller.svc_call(JCM_SVC_INVOKE_API, words, 5, &reply_addr);
+        const bool answered = poller().svc_call(JCM_SVC_INVOKE_API, words, 5, &reply_addr);
         if (!answered || reply_addr == 0 || reply_len < 0) {
             result = "{\"error\":\"Java native API invocation failed\"}";
         } else {
@@ -1141,7 +1211,7 @@ bool resolve_captured_resources(Instance& inst) {
         inst.resources_dirty = false;
         return true;
     }
-    if (g_poller.svc_available()) {
+    if (poller().svc_available()) {
         std::vector<int32_t> out(static_cast<size_t>(texCount + quadCount), -1);
         const uint64_t words[9] = {
             static_cast<uint32_t>(texCount), static_cast<uint32_t>(quadCount),
@@ -1154,7 +1224,7 @@ bool resolve_captured_resources(Instance& inst) {
             reinterpret_cast<uintptr_t>(out.data()),
         };
         uint64_t status = 0;
-        const bool answered = g_poller.svc_call(JCM_SVC_CREATE_RESOURCES, words, 9, &status);
+        const bool answered = poller().svc_call(JCM_SVC_CREATE_RESOURCES, words, 9, &status);
         if (!answered || static_cast<int32_t>(status) != 0) {
             std::fprintf(stderr, "[jcm_native_bridge] host createResources failed "
                                  "(%d textures / %d quads)\n", texCount, quadCount);
@@ -1650,7 +1720,7 @@ int32_t serve_request(uint8_t* base, uint64_t seq) {
                region for attachment, so the poller idles on its cheap scan
                until the next (genuine) handshake appears. */
             wr64(base + JCM_SHM_HDR_MODE, 0);
-            g_poller.request_detach();
+            poller().request_detach();
             return JCM_SHM_ERR_DETACHED;
         }
         default:
@@ -1943,7 +2013,11 @@ JCM_BRIDGE_EXPORT void jcm_reclaimer_quiesce(void) {
 /* ---- poller plane diagnostics (tests; harmless in production) --------- */
 
 JCM_BRIDGE_EXPORT int32_t jcm_poller_attached(void) {
-    return g_poller.svc_available() ? 1 : 0;
+    /* Boot check too: a runtime entry point is a always-safe place to
+       ensure the poller exists (self-healing for exotic loaders that
+       never ran the constructor; a no-op once it already has). */
+    poller_boot();
+    return poller().svc_available() ? 1 : 0;
 }
 
 /* ---- FFM host vtable installation -------------------------------------- */
@@ -1954,6 +2028,7 @@ JCM_BRIDGE_EXPORT int32_t jcm_poller_attached(void) {
  *  not know is REJECTED (never partially trusted). Passing a null table
  *  atomically clears the plane. */
 JCM_BRIDGE_EXPORT int32_t jcm_ffm_init(const JcmFfmHostVTable* vtable, int32_t vtable_bytes) {
+    poller_boot();   /* runtime entry: cheap idempotent boot check */
     if (!vtable) {
         g_ffm_host = JcmFfmHostVTable{};
         return 0;
@@ -1978,6 +2053,14 @@ JCM_BRIDGE_EXPORT int32_t jcm_ffm_init(const JcmFfmHostVTable* vtable, int32_t v
 /* handshake there, so the thread idles in its cheap 250 ms scan and    */
 /* never attaches (a poller-mode region also requires HDR_MODE == 1).   */
 /*                                                                     */
+/* INIT-ORDER SAFETY: this runs BEFORE the TU's _GLOBAL__sub_I_*        */
+/* static constructors (the linker orders unprioritized constructor    */
+/* attributes ahead of them), so it must not touch ANY C++ static —    */
+/* see poller_boot() above. Only pthread_once/InitOnceExecuteOnce and   */
+/* pthread_create/CreateThread run here, all C primitives whose own     */
+/* static state lives inside libpthread/kernel32, initialized long       */
+/* before any image's initializers.                                    */
+/*                                                                     */
 /* Windows: the thread is created inside DllMain WITHOUT waiting for    */
 /* it (the documented loader-lock contract); its DLL_THREAD_ATTACH      */
 /* completes after DllMain returns.                                    */
@@ -1986,16 +2069,13 @@ JCM_BRIDGE_EXPORT int32_t jcm_ffm_init(const JcmFfmHostVTable* vtable, int32_t v
 #if defined(_WIN32)
 extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) {
-        /* Create the poller WITHOUT waiting for it — the loader-lock
-           contract; the thread's own initialization completes after this
-           DllMain returns. */
         DisableThreadLibraryCalls(instance);
-        g_poller.start();
+        poller_boot();
     }
     return TRUE;
 }
 #else
 __attribute__((constructor)) static void jcm_bridge_autostart() {
-    g_poller.start();
+    poller_boot();
 }
 #endif
