@@ -85,132 +85,51 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
         /* ------------------------------------------------------------------
          * Native bridge / Java ABI guard.
          *
-         * jni_bridge.cpp resolves NativeScriptManager$NativeFrame's constructor
-         * and five NativeHost methods by exact JNI descriptor. A bridge built
-         * from a different revision than the classes it ships with makes those
-         * lookups fail, and the failure surfaces as
+         * Since layout v2 the bridge is JDK-FREE: the jar-facing contract is
+         * the plain-C jcm_* export surface (FFM downcalls: jcm_module_open /
+         * jcm_module_render / jcm_ffm_init; shared-memory control:
+         * jcm_shm_kick) plus the filesystem-handshake poller. A stale bridge
+         * from before the JNI removal still embeds the old
+         * NativeScriptManager$NativeFrame JNI constructor descriptor but
+         * carries NONE of the jcm_* exports, so bundling it would surface as
+         * "native bridge unavailable" for every native script at runtime —
+         * the same silent-mismatch this guard has always existed to catch
+         * (the yanyang.9 incident: a bridge from before d26c842 with
+         * classes that expected a newer NativeFrame).
          *
-         *   java.lang.NoSuchMethodError: <init>
-         *     at NativeScriptManager$NativeScriptModule.nRender(Native Method)
-         *
-         * while rendering — which says nothing about the real cause. The
-         * yanyang.9 jars shipped exactly that: a bridge from before commit
-         * d26c842 (NativeFrame had 4 ByteBuffers) with classes that had 5.
-         *
-         * So before packaging, read the constructor descriptor out of the
-         * compiled class and assert that every bridge we are about to bundle
-         * embeds it.
+         * So before packaging, assert that every bridge we are about to
+         * bundle exports the plain-C surface; anything else is stale.
          * ------------------------------------------------------------------ */
 
-        /** [(name, descriptor)] declared by a class file, read straight from the class bytes. */
-        def declaredMethods = { File classFile ->
-                byte[] b = classFile.bytes
-                if (b.length < 10 || (b[0] & 0xff) != 0xca || (b[1] & 0xff) != 0xfe) {
-                        throw new GradleException("Not a class file: ${classFile}")
-                }
-                def u2 = { int off -> ((b[off] & 0xff) << 8) | (b[off + 1] & 0xff) }
-                def u4 = { int off ->
-                        ((b[off] & 0xff) << 24) | ((b[off + 1] & 0xff) << 16) |
-                        ((b[off + 2] & 0xff) << 8) | (b[off + 3] & 0xff)
-                }
-                int cpCount = u2(8)
-                Map<Integer, String> utf8 = [:]
-                int i = 10
-                int n = 1
-                while (n < cpCount) {
-                        int tag = b[i] & 0xff
-                        i += 1
-                        if (tag == 1) {
-                                int len = u2(i); i += 2
-                                utf8[n] = new String(b, i, len, 'UTF-8'); i += len
-                        } else if (tag in [7, 8, 16, 19, 20]) {
-                                i += 2
-                        } else if (tag == 15) {
-                                i += 3
-                        } else if (tag in [3, 4, 9, 10, 11, 12, 17, 18]) {
-                                i += 4
-                        } else if (tag in [5, 6]) {
-                                i += 8; n += 1
-                        } else {
-                                throw new GradleException("Unexpected constant pool tag ${tag} in ${classFile}")
-                        }
-                        n += 1
-                }
-                i += 6                                  // access_flags, this_class, super_class
-                i += 2 + 2 * u2(i)                      // interfaces
-                int fields = u2(i); i += 2
-                for (int f = 0; f < fields; f++) {
-                        int attrs = u2(i + 6); i += 8
-                        for (int a = 0; a < attrs; a++) { i += 6 + u4(i + 2) }
-                }
-                int methods = u2(i); i += 2
-                def out = []
-                for (int m = 0; m < methods; m++) {
-                        String name = utf8[u2(i + 2)]
-                        String desc = utf8[u2(i + 4)]
-                        int attrs = u2(i + 6); i += 8
-                        for (int a = 0; a < attrs; a++) { i += 6 + u4(i + 2) }
-                        out << [name, desc]
-                }
-                return out
-        }
-
-        def nativeFrameCtorDescriptor = {
-                // Layouts differ slightly across Gradle/MC versions; search rather
-                // than assume, so this guard can never fail a build on its own.
-                def candidates = []
-                def buildDir = layout.buildDirectory.get().asFile
-                for (String root : ["classes/java/main", "classes/java/client"]) {
-                        def f = new File(buildDir, "${root}/com/lx862/jcm/nativeapi/NativeScriptManager\$NativeFrame.class")
-                        if (f.isFile()) candidates << f
-                }
-                if (candidates.isEmpty()) {
-                        logger.lifecycle("[native-bridge] compiled NativeFrame not found under " +
-                                "${buildDir}/classes; skipping ABI check")
-                        return null
-                }
-                def ctors = declaredMethods(candidates[0]).findAll { it[0] == '<init>' }
-                // The bridge-facing constructor is the 6-argument ByteBuffer one.
-                // NativeFrame also carries a package-private no-arg constructor
-                // since the shared-memory transport (NativeChannel reuses one
-                // frame object per module), so select by descriptor shape
-                // instead of requiring the class to have a single constructor.
-                def bridgeFacing = ctors.findAll { it[1].contains("java/nio/ByteBuffer") }
-                if (bridgeFacing.size() != 1) {
-                        throw new GradleException("Expected exactly one bridge-facing NativeFrame constructor, found ${ctors}")
-                }
-                return bridgeFacing[0][1]
-        }
-
         tasks.register("checkNativeBridges") {
-                description = "Asserts the JNI bridges bundled into this jar match the compiled NativeFrame/NativeHost ABI"
+                description = "Asserts the native bridges bundled into this jar expose the JNI-free plain-C surface"
                 group = "verification"
-                dependsOn tasks.named("compileJava")
                 doLast {
-                        def descriptor = nativeFrameCtorDescriptor()
-                        if (descriptor == null) return
                         if (!rootProject.hasProperty("native_bridge_dir")) {
                                 logger.lifecycle("[native-bridge] no -Pnative_bridge_dir; " +
-                                        "expects ${descriptor} in whatever bridge is on java.library.path")
+                                        "expects the jcm_* plain-C exports in whatever bridge is on java.library.path")
                                 return
                         }
                         def bridges = rootProject.file(rootProject.property("native_bridge_dir"))
                         def binaries = fileTree(bridges) { include "**/*.dll", "**/*.so", "**/*.dylib" }.files
                         if (binaries.isEmpty()) {
-                                throw new GradleException("No JNI bridges found under ${bridges}")
+                                throw new GradleException("No native bridges found under ${bridges}")
                         }
-                        def bad = binaries.findAll {
-                                !new String(it.bytes, 'ISO-8859-1').contains(descriptor)
+                        def required = ["jcm_module_open", "jcm_module_render",
+                                        "jcm_ffm_init", "jcm_shm_kick", "jcm_poller_attached"]
+                        def bad = binaries.findAll { binary ->
+                                def bytes = new String(binary.bytes, 'ISO-8859-1')
+                                required.any { !bytes.contains(it) }
                         }
                         if (bad) {
                                 throw new GradleException(
-                                        "Stale JNI bridge(s) — these do not embed the NativeFrame constructor " +
-                                        "${descriptor} that this jar's classes declare:\n" +
+                                        "Stale native bridge(s) — these do not export the JNI-free " +
+                                        "plain-C surface (${required.join(' ')}) this jar requires:\n" +
                                         bad.collect { "  ${it}" }.join("\n") +
-                                        "\nRebuild them from native/jni/jni_bridge.cpp " +
-                                        "(see bridge/README.md; repair-api/build-bridges.ps1 cross-compiles all four).")
+                                        "\nRebuild them from native/jni/jni_bridge.cpp (see bridge/README.md; " +
+                                        "repair-api/build-bridges.ps1 cross-compiles all four).")
                         }
-                        logger.lifecycle("[native-bridge] ${binaries.size()} bridge(s) match ${descriptor}")
+                        logger.lifecycle("[native-bridge] ${binaries.size()} bridge(s) expose the JNI-free plain-C surface")
                 }
         }
 
