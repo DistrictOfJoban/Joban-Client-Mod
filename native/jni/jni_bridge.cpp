@@ -72,6 +72,7 @@
 #include <new>
 #include <string>
 #include <thread>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -928,22 +929,29 @@ private:
        this plane; the FFM plane always takes the vtable first and never
        falls through to svc_call). The guard turns any exotic mixed-state
        misuse into a clean degrade instead of a data race. */
-    void record_thread_id() {
-#ifdef _WIN32
-        poller_thread_id_.store(GetCurrentThreadId(), std::memory_order_release);
+    static uint64_t current_thread_id() {
+#if defined(_WIN32)
+        return static_cast<uint64_t>(GetCurrentThreadId());
 #else
-        poller_thread_id_.store(reinterpret_cast<uint64_t>(pthread_self()),
-                                std::memory_order_release);
+        /* pthread_t is a POINTER on some platforms (Darwin) and a scalar
+           long on others (glibc, bionic). reinterpret_cast is only legal
+           for the pointer flavour — the Android NDK clang rejects an
+           integral reinterpret_cast outright — so pick the conversion the
+           type actually supports (release run 39763063552). */
+        pthread_t self = pthread_self();
+        if constexpr (std::is_pointer_v<pthread_t>) {
+            return static_cast<uint64_t>(reinterpret_cast<uintptr_t>(self));
+        } else {
+            return static_cast<uint64_t>(self);
+        }
 #endif
+    }
+    void record_thread_id() {
+        poller_thread_id_.store(current_thread_id(), std::memory_order_release);
     }
     bool on_poller_thread() const {
         return poller_thread_id_.load(std::memory_order_acquire) != 0
-#ifdef _WIN32
-                && poller_thread_id_.load(std::memory_order_acquire) == GetCurrentThreadId();
-#else
-                && poller_thread_id_.load(std::memory_order_acquire)
-                        == reinterpret_cast<uint64_t>(pthread_self());
-#endif
+                && poller_thread_id_.load(std::memory_order_acquire) == current_thread_id();
     }
 
     std::atomic<uint8_t*> attached_{nullptr};
