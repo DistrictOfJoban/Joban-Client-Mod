@@ -4,9 +4,11 @@ import com.lx862.jcm.mod.JCM;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.amberui.gui.GuiHelper;
 import com.lx862.amberui.gui.screen.TitledScreen;
+import com.lx862.amberui.gui.widget.DynamicTextItem;
 import com.lx862.amberui.gui.widget.ListViewWidget;
 import com.lx862.amberui.gui.widget.MappedWidget;
 import com.lx862.amberui.gui.widget.WidgetSet;
+import com.lx862.jcm.nativeapi.NativeChannel;
 import com.lx862.jcm.mod.scripting.JCMScripting;
 import com.lx862.mtrscripting.mod.gui.screen.ScriptRestrictionWarningScreen;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
@@ -45,6 +47,9 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
     private final CheckboxWidgetExtension disableScriptingClassRestrictionButton;
     private final CheckboxWidgetExtension scriptDebugModeButton;
     private final CheckboxWidgetExtension scriptShowLogSourceButton;
+    private final ButtonWidgetExtension javaCppCommunicationButton;
+    private MutableText javaCppCommunicationDescription;
+    private JCMClientConfig.JavaCppCommunication javaCppCommunication;
     private final Map<CheckboxWidgetExtension, TrackedValue<Boolean>> linkedConfig;
 
     private boolean discardConfig = false;
@@ -71,6 +76,30 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
         this.scriptDebugModeButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.scriptDebugMode);
         this.scriptShowLogSourceButton = checkboxForConfig(JCMClientConfig.INSTANCE.scripting.showLogSource);
+
+        this.javaCppCommunication = JCMClientConfig.INSTANCE.scripting.javaCppCommunication.value();
+        /* Width MUST be non-zero: ListViewWidget anchors the widget at
+         * entryX - getWidth() and a zero-width button is both invisible and
+         * unclickable — the row showed no value and could not be changed. */
+        this.javaCppCommunicationButton = new ButtonWidgetExtension(0, 0, 60, 20,
+                TextUtil.translatable(TextCategory.GUI, "config.java_cpp_communication.shared_memory"), (btn) -> cycleJavaCppCommunication());
+        refreshJavaCppCommunication();
+    }
+
+    /** Cycles "Java 与 C++ 通信方式" in declaration order:
+     *  JNI -> Panama FFM（FFM downcall，需 JDK 22+） -> 共享内存 -> JNI. */
+    private void cycleJavaCppCommunication() {
+        final JCMClientConfig.JavaCppCommunication[] order = JCMClientConfig.JavaCppCommunication.values();
+        final int next = javaCppCommunication.ordinal() + 1;
+        javaCppCommunication = order[next >= order.length ? 0 : next];
+        JCMClientConfig.INSTANCE.scripting.javaCppCommunication.setOverride(javaCppCommunication);
+        refreshJavaCppCommunication();
+    }
+
+    private void refreshJavaCppCommunication() {
+        final String key = "config.java_cpp_communication." + javaCppCommunication.name().toLowerCase(java.util.Locale.ROOT);
+        javaCppCommunicationButton.setMessage2(Text.cast(TextUtil.translatable(TextCategory.GUI, key)));
+        javaCppCommunicationDescription = TextUtil.translatable(TextCategory.GUI, key + ".desc");
     }
 
     private CheckboxWidgetExtension checkboxForConfig(TrackedValue<Boolean> trackedValue) {
@@ -147,6 +176,17 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.disable_scripting_class_restriction"), new MappedWidget(disableScriptingClassRestrictionButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.script_debug_mode"), new MappedWidget(scriptDebugModeButton));
         listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.script_show_log_source"), new MappedWidget(scriptShowLogSourceButton));
+        /* The widget must ALSO be a direct child of the screen: MC only
+         * dispatches mouse input to screen children, and ListViewWidget
+         * merely *renders* list entries without forwarding clicks. Every
+         * other list-embedded widget (checkboxes here, all widgets in
+         * SoundLooperScreen etc.) is registered via addChild — the cycling
+         * button used to be added to the list only, so it was drawn but
+         * clicks never reached it and the value could not be changed. */
+        addChild(new ClickableWidget(javaCppCommunicationButton));
+        listViewWidget.add(TextUtil.translatable(TextCategory.GUI, "config.listview.title.java_cpp_communication"), new MappedWidget(javaCppCommunicationButton));
+        /* The per-option description line follows the current selection. */
+        listViewWidget.add(new DynamicTextItem(() -> javaCppCommunicationDescription, 12));
     }
 
 
@@ -173,6 +213,8 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
                 value.setValue(value.getDefaultValue());
             }
             setEntryStateFromClientConfig();
+            javaCppCommunication = JCMClientConfig.INSTANCE.scripting.javaCppCommunication.value();
+            refreshJavaCppCommunication();
         });
 
         addChild(new ClickableWidget(latestLogButton));
@@ -225,6 +267,16 @@ public class ClientConfigScreen extends TitledScreen implements GuiHelper {
 
                 JCMScripting.getScriptManager().getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
                 MTRContentScripting.getScriptManager().getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
+
+                /* "Java 与 C++ 通信方式": apply the transport switch live.
+                   The full native-pipeline reload releases every shm window
+                   / JNI buffer of the previous transport and re-creates
+                   them with the new one (the same path as F3+T). */
+                final NativeChannel.Transport before = NativeChannel.activeTransport();
+                com.lx862.jcm.mod.JCMClient.configureNativeTransportFromConfig();
+                if (NativeChannel.activeTransport() != before) {
+                    com.lx862.jcm.mod.registry.Events.onClientReloadResource();
+                }
             } else {
                 // Discard all overriden values (pending changes)
                 for(TrackedValue value : JCMClientConfig.INSTANCE.values()) {

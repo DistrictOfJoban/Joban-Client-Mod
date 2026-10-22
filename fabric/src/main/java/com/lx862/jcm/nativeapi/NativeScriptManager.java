@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * NativeScriptManager — JNI host for C++ script modules.
+ * NativeScriptManager — the JNI-free host for C++ script modules.
  *
  * Drop-in companion to JCM v2.3's ScriptManager/Rhino pipeline:
  * resource packs declare native scripts in mtr_custom_resources.json.
@@ -86,10 +86,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * to the JS route — JS and native scripts coexist in the same world, in
  * the same train, and in the same script entry.
  *
- * Compact snapshot data and draw records share one JNI call per frame.
- * ABI 8 also offers direct Java API calls; those use additional JNI calls
- * and cached reflection. Scripts can use the compact path for frequent
- * operations and keep Java objects in their per-instance state.
+ * Compact snapshot data and draw records historically shared one JNI call
+ * per frame; since 2.3.0-beta-2.yanyang.2 (layout v2) the mod contains
+ * NO JNI at all — the "Java 与 C++ 通信方式" setting (see NativeChannel)
+ * selects between two JNI-free invocation planes: the Panama FFM plane
+ * (libraryLookup + downcalls + upcall vtable, JDK 22+) and the
+ * shared-memory poller plane (filesystem handshake + shared-page commands
+ * + SVC host services + CBQ api re-entry, every JVM from 16 up). The
+ * default shared-memory transport keeps one trigger per frame on the FFM
+ * plane and not even that on the poller plane.
  */
 public final class NativeScriptManager {
     /* Must match MTR_NATIVE_ABI_VERSION in native/include/mtr/mtr_native.h.
@@ -104,11 +109,15 @@ public final class NativeScriptManager {
        v8 appends direct Java API access and interchange transport modes.
        v9 appends the canonical transport TYPE ids (MAGIC MTR Addon route
        types) to the vehicle header and to every interchange, and removes the
-       per-frame snapshot memcpy + ByteBuffer churn on the JNI bridge. */
-    private static final int ABI_VERSION = 9;
+       per-frame snapshot memcpy + ByteBuffer churn on the JNI bridge.
+       v10 appends JcmHostServices.defer_free (background reclamation hook)
+       plus the bridge's plain-C jcm_* export surface for the Panama FFM
+       downcall transport; ABI 9 modules keep their snapshot layout and are
+       still served (groupOf maps 10 to the ABI 9 blob). */
+    private static final int ABI_VERSION = 10;
 
     private static boolean supportedAbi(int version) {
-        return version == 6 || version == 7 || version == 8 || version == ABI_VERSION;
+        return version == 6 || version == 7 || version == 8 || version == 9 || version == ABI_VERSION;
     }
 
     /* Route.CircularState mapping (v2 snapshots). */
@@ -149,18 +158,33 @@ public final class NativeScriptManager {
 
     private NativeScriptManager() {}
 
-    private static native void nativeSetHost(NativeHost host);
-    static native byte[] nativeApiCallback(long function, long user, byte[] parameters);
+    /** Dispatches the JS-proxy -> module C++ callback: an FFM session uses
+     *  the jcm_module_invoke_api downcall, older JVMs the shared-memory
+     *  callback queue (drained by the bridge's poller thread). Both are
+     *  JNI-free planes. */
+    static byte[] apiCallbackDispatch(long function, long user, byte[] parameters) {
+        if (PanamaFfmChannel.extendedSurface()) {
+            return PanamaFfmChannel.moduleInvokeApi(function, user, parameters);
+        }
+        return ShmPoller.invokeCallback(function, user, parameters);
+    }
+
+    /** Absolute path of the loaded bridge (null when only a bare
+     *  System.loadLibrary name resolved). PanamaFfmChannel prefers it for
+     *  SymbolLookup.libraryLookup. */
+    static String loadedBridgePath;
+
+    private static void noteBridgePath(String path) {
+        if (path != null && loadedBridgePath == null) loadedBridgePath = path;
+    }
+
     private static final Map<String, JsonElement> INPUTS = new ConcurrentHashMap<>();
+    /** Fresh temp-file counter for module extractions (see load()). */
+    private static final java.util.concurrent.atomic.AtomicLong EXTRACT_SEQ = new java.util.concurrent.atomic.AtomicLong();
     private static final Map<String, String> RESOURCE_BASES = new ConcurrentHashMap<>();
     public static void configure(String id, JsonElement input, String base) {
         INPUTS.put(id, input == null ? com.google.gson.JsonNull.INSTANCE : input);
         if(base!=null) RESOURCE_BASES.put(id,base);
-    }
-
-    private static boolean installBridgeHost() {
-        nativeSetHost(NativeHost.get());
-        return true;
     }
 
     /* ------------------------------------------------------------------ */
@@ -222,6 +246,10 @@ public final class NativeScriptManager {
            so the handles would dangle. */
         NativeVehicleDriver.reset();
         NativeHost.get().reset();
+        /* Channel teardown LAST: the driver resets above release their shm
+           snapshot windows, so closing the mapping here leaves no live
+           wrappers pointing into unmapped memory. */
+        NativeChannel.reset();
         /* Actual discovery walks the same mtr_custom_resources.json
            entries as MTRContentResourceManager: scriptLocations entries
            without .js (auto-detected C++), or the legacy language=cpp +
@@ -238,8 +266,8 @@ public final class NativeScriptManager {
                     + "(scriptLocations entries without .js, or \"language\": \"cpp\" + nativeLibrary)");
             return;
         }
-        JCMLogger.info("Native scripts: {} module(s) loaded, {} declaration(s) skipped",
-                total, SKIPPED.size());
+        JCMLogger.info("Native scripts: {} module(s) loaded, {} declaration(s) skipped (transport: {})",
+                total, SKIPPED.size(), NativeChannel.describe());
         for (Map.Entry<String, List<NativeScriptModule>> e : MODULES.entrySet()) {
             for (NativeScriptModule m : e.getValue()) {
                 JCMLogger.info("  id '{}' <- {} ({})", e.getKey(), m.getScriptId(), m.getSourcePath());
@@ -268,23 +296,22 @@ public final class NativeScriptManager {
                 return null;
             }
 
-            /* Extract to a STABLE temp file — dlopen needs a real file.
-               A fresh createTempFile per reload left one deleted-on-exit
-               file (and one deleteOnExit registration) per script per
-               F3+T forever; a stable name per script id is overwritten
-               in place, and dispose() (reload path) has already
-               FreeLibrary/dlclose'd the old mapping by the time we get
-               here. Locked-file platforms fall back to a fresh temp name. */
+            /* Extract to a FRESH temp file per load — dlopen needs a real
+               file, and reusing a name whose previous extraction may still
+               be MAPPED is forbidden: glibc defers a dlclose'd DSO's unload
+               while any live thread still has TLS destructors pending from
+               it (and ABI 10 deliberately keeps module mappings loaded on
+               close as well), so overwriting the file in place would
+               rewrite the pages under a live mapping and corrupt the ELF
+               tables the next symbol lookup walks — a crash the first
+               reload cycle surfaced in the FFM integration test. A per-load
+               counter keeps names unique (and old files are simply
+               deleteOnExit'd). */
             final String realName = libId.getPath().substring(libId.getPath().lastIndexOf('/') + 1);
-            Path extracted;
-            try {
-                extracted = Paths.get(System.getProperty("java.io.tmpdir"),
-                        "jcm_native_" + sanitize(scriptId) + "_" + realName);
-                Files.write(extracted, lib);
-            } catch (IOException locked) {
-                extracted = Files.createTempFile("jcm_native_" + sanitize(scriptId) + "_", "_" + realName);
-                Files.write(extracted, lib);
-            }
+            final Path extracted = Files.createTempFile(
+                    "jcm_native_" + sanitize(scriptId) + "_" + EXTRACT_SEQ.incrementAndGet() + "_",
+                    "_" + realName);
+            Files.write(extracted, lib);
             extracted.toFile().deleteOnExit();
 
             final NativeScriptModule module = new NativeScriptModule(scriptId, extracted.toAbsolutePath().toString(), libraryPath);
@@ -353,6 +380,10 @@ public final class NativeScriptManager {
      * @return the loaded module, or null when skipped/failed.
      */
     public static NativeScriptModule loadFromDeclaration(String scriptId, JsonElement declared) {
+        if (!NativeScriptModule.isBridgeAvailable()) {
+            skipNoBridge(scriptId);
+            return null;
+        }
         final String resolved = resolvePlatformLibrary(declared);
         if (resolved == null) {
             skipScript(scriptId, declared);
@@ -420,6 +451,10 @@ public final class NativeScriptManager {
             skipScript(scriptId, declared);
             return 0;
         }
+        if (!NativeScriptModule.isBridgeAvailable()) {
+            skipNoBridge(scriptId);
+            return 0;
+        }
         /* Idempotent on purpose. MtrScriptingResourceManager parses
            mtr_custom_resources.json TWICE per reload — once for the normal file
            and once for the pending-migration variant — so every native
@@ -475,6 +510,23 @@ public final class NativeScriptManager {
             SKIPPED.remove(scriptId);
         }
         return loaded;
+    }
+
+    /* A jar built without -Pnative_bridge_dir (the plain push/PR CI
+       build, or a bare `gradlew build`) ships no jcm_native_bridge at
+       all. Without the bridge NO C++ module can ever load, so say that
+       plainly up front — the generic "no nativeLibrary entry could be
+       loaded" census line sends users hunting for a bug in their
+       resource pack when the mod jar itself is the thing missing its
+       bridge binary. */
+    private static void skipNoBridge(String scriptId) {
+        final String reason = "native bridge unavailable — this jar contains no "
+                + "jcm_native_bridge for " + getPlatformKeyExact()
+                + " (built without -Pnative_bridge_dir; use a complete-build/release jar)";
+        SKIPPED.put(scriptId, reason);
+        JCMLogger.warn("Native script {}: {}. The declared libraries are fine — "
+                + "the mod jar itself is missing its bridge binary.", scriptId, reason);
+        notifyDebug("Native script " + scriptId + ": " + reason);
     }
 
     private static void skipScript(String scriptId, JsonElement declared) {
@@ -772,9 +824,11 @@ public final class NativeScriptManager {
         private final Map<Integer, GroupBuffer> groups = new java.util.LinkedHashMap<>();
 
         public static final class GroupBuffer {
-            final ByteBuffer buffer = ByteBuffer
-                    .allocateDirect(NativeSnapshot.CAPACITY)
-                    .order(ByteOrder.nativeOrder());
+            /* Channel-provided buffer: a window of the shared memory region
+               when the shm transport is active (so C++ reads Java's data
+               straight out of the shared mapping), a plain direct buffer
+               otherwise. Capacity is the snapshot worst case either way. */
+            final ByteBuffer buffer = NativeChannel.newSnapshotBuffer(NativeSnapshot.CAPACITY);
             final NativeSnapshot.Builder builder = new NativeSnapshot.Builder();
         }
 
@@ -795,12 +849,24 @@ public final class NativeScriptManager {
             final GroupBuffer groupBuffer = groups.get(group);
             return groupBuffer == null ? null : groupBuffer.buffer;
         }
+
+        /** Frees every group's shm window (plain direct buffers are a
+         *  no-op). Called when the owning state dies — vehicle forget or
+         *  driver reset — AFTER disposeVehicleInstance, which reads the
+         *  live buffers one last time. */
+        void release() {
+            for (GroupBuffer groupBuffer : groups.values()) {
+                NativeChannel.releaseSnapshotBuffer(groupBuffer.buffer);
+            }
+            groups.clear();
+        }
     }
 
     /**
-     * Dispose without a live snapshot: the module falls back to the snapshot
-     * copy retained at its first frame. Prefer the overloads that hand over
-     * the real buffer.
+     * Dispose without a live snapshot: the module then receives its
+     * module-owned ZEROED fallback snapshot (a valid ABI struct with zero
+     * counts — an "empty" train/PIDS/lift) instead of real data. Prefer
+     * the overloads that hand over the actual buffer.
      */
     public static void disposeInstance(String instanceKey, String scriptId) {
         disposeInstance(instanceKey, scriptId, null);
@@ -823,7 +889,7 @@ public final class NativeScriptManager {
                         if (buffer != null) {
                             len = buffer.limit();
                         }
-                        module.nDisposeInstance(module.nativeHandle, moduleKey, buffer, len);
+                        module.disposeInstanceNative(moduleKey, buffer, len);
                     }
                 } finally {
                     NativeApiSession.dispose(moduleKey);
@@ -844,7 +910,7 @@ public final class NativeScriptManager {
                         ByteBuffer buffer = snapshots == null
                                 ? null : snapshots.peek(NativeSnapshot.groupOf(module.abiVersion));
                         int len = buffer == null ? 0 : buffer.limit();
-                        module.nDisposeInstance(module.nativeHandle, moduleKey, buffer, len);
+                        module.disposeInstanceNative(moduleKey, buffer, len);
                     }
                 } finally {
                     NativeApiSession.dispose(moduleKey);
@@ -866,20 +932,35 @@ public final class NativeScriptManager {
      * creates the same MainRenderer.scheduleRender calls the JS
      * pipeline issues; see native/jni_bridge.cpp for the struct
      * layouts (they are plain C structs over this ByteBuffer).
+     *
+     * <p>Fields are mutable ON PURPOSE: the shared-memory transport reuses
+     * ONE frame object per module and re-points it at each frame's arenas
+     * (see NativeChannel.finishFrame), keeping the per-frame hot path at
+     * zero allocations. Frames are consumed synchronously by the replay
+     * driver before the next render — the same capture-then-replay
+     * discipline that bounds the JNI path's cached arena views.</p>
      */
     public static final class NativeFrame {
         /** Host resource owner; set before the frame reaches the replay driver. */
         public String instanceKey;
         /** Owning module's native handle; avoids re-parsing instanceKey. */
         public long moduleHandle;
-        public final ByteBuffer records;   /* JcmDraw* array */
-        public final int recordCount;
-        public final ByteBuffer stringArena;
-        public final ByteBuffer pixelArena;
-        public final ByteBuffer matrixArena;
-        public final ByteBuffer floatArena;
+        public ByteBuffer records;   /* JcmDraw* array */
+        public int recordCount;
+        public ByteBuffer stringArena;
+        public ByteBuffer pixelArena;
+        public ByteBuffer matrixArena;
+        public ByteBuffer floatArena;
+
+        NativeFrame() {
+        }
 
         NativeFrame(ByteBuffer records, int recordCount, ByteBuffer stringArena,
+                    ByteBuffer pixelArena, ByteBuffer matrixArena, ByteBuffer floatArena) {
+            assign(records, recordCount, stringArena, pixelArena, matrixArena, floatArena);
+        }
+
+        void assign(ByteBuffer records, int recordCount, ByteBuffer stringArena,
                     ByteBuffer pixelArena, ByteBuffer matrixArena, ByteBuffer floatArena) {
             this.records = records;
             this.recordCount = recordCount;
@@ -986,9 +1067,25 @@ public final class NativeScriptManager {
                         final Path extracted = Files.createTempFile("jcm_native_bridge_", suffix);
                         extracted.toFile().deleteOnExit();
                         Files.copy(stream, extracted, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        System.load(extracted.toAbsolutePath().toString());
-                        JCMLogger.info("Native scripting bridge loaded from bundled {}", bundled);
-                        return installBridgeHost();
+                        final String absolute = extracted.toAbsolutePath().toString();
+                        /* PURE-FFM FIRST (JDK 22+): the bridge is driven
+                           entirely by java.lang.foreign — libraryLookup +
+                           downcalls + upcall vtable. No System.load, so no
+                           JNI native-method registration ever runs. */
+                        if (PanamaFfmChannel.installFromExtractedPath(absolute)) {
+                            noteBridgePath(absolute);
+                            JCMLogger.info("Native scripting bridge loaded from bundled {} (Panama FFM, no JNI)", bundled);
+                            return true;
+                        }
+                        /* JDK 16..21: System.load exists ONLY to run the
+                           bridge's constructor, which starts the JNI-free
+                           poller thread. The library has no JNI exports
+                           and this class declares no native methods, so
+                           nothing ever binds through the JNI machinery. */
+                        System.load(absolute);
+                        noteBridgePath(absolute);
+                        JCMLogger.info("Native scripting bridge loaded from bundled {} (System.load for the poller constructor; no JNI surface)", bundled);
+                        return true;
                     }
                 } catch (IOException | UnsatisfiedLinkError e) {
                     JCMLogger.warn("Bundled native scripting bridge {} failed to load: {}", bundled, e.toString());
@@ -996,7 +1093,7 @@ public final class NativeScriptManager {
             }
             try {
                 System.loadLibrary("jcm_native_bridge");
-                return installBridgeHost();
+                return true;
             } catch (UnsatisfiedLinkError e) {
                 /* fall through to the explicit search */
             }
@@ -1008,9 +1105,19 @@ public final class NativeScriptManager {
                 for (File file : candidates) {
                     if (!file.isFile()) continue;
                     try {
-                        System.load(file.getAbsolutePath());
-                        JCMLogger.info("Native scripting bridge loaded from {}", file);
-                        return installBridgeHost();
+                        final String absolute = file.getAbsolutePath();
+                        /* Same FFM-first treatment for user-placed bridges: a
+                           current bridge runs JNI-free via java.lang.foreign,
+                           an older JVM loads it for the poller constructor. */
+                        if (PanamaFfmChannel.installFromExtractedPath(absolute)) {
+                            noteBridgePath(absolute);
+                            JCMLogger.info("Native scripting bridge loaded from {} (Panama FFM, no JNI)", file);
+                            return true;
+                        }
+                        System.load(absolute);
+                        noteBridgePath(absolute);
+                        JCMLogger.info("Native scripting bridge loaded from {} (System.load for the poller constructor; no JNI surface)", file);
+                        return true;
                     } catch (UnsatisfiedLinkError e) {
                         JCMLogger.warn("Native scripting bridge {} exists but failed to load: {}",
                                 file, e.getMessage());
@@ -1073,7 +1180,6 @@ public final class NativeScriptManager {
         public static boolean isBridgeAvailable() {
             return BRIDGE_AVAILABLE;
         }
-
         private long nativeHandle;       /* dlopen handle */
 
         final int abiVersion;
@@ -1086,37 +1192,51 @@ public final class NativeScriptManager {
         final String sourcePath;
         final String resourceBase;
 
-        private native long nOpen(String path);
-        private native void nClose(long handle);
-        private native int nAbiVersion(long handle);
-        private native String nScriptType(long handle);
-        private native String nScriptId(long handle);
-        private native long nStateSize(long handle);
-        private native NativeFrame nRender(long handle, String instanceKey,
-                                           ByteBuffer snapshot, int snapshotLength, int resourceKind);
-
         NativeScriptModule(String scriptId, String path, String resourceBase) {
             this.resourceBase = resourceBase;
-            this.nativeHandle = nOpen(path);
-            if (this.nativeHandle == 0) {
-                /* nOpen already logged the concrete dlopen/LoadLibrary
-                   failure; surface the script fields as unknown so the
-                   caller can skip the module instead of NPE-ing. */
-                this.abiVersion = 0;
-                this.scriptType = "";
-                this.scriptId = scriptId;
-                this.stateSize = 0;
-                this.loadedPlatform = getPlatformKeyExact();
-                this.sourcePath = path;
-                return;
+            /* Lifecycle dispatch: an FFM session drives the whole module
+               lifecycle through the jcm_module_* downcalls; every other
+               JVM drives it through the shared-memory poller commands
+               (ShmPoller) — both JNI-free, both landing on the identical C
+               open_module/dispose cores. Single-assignment style so every
+               final field is definitely assigned on every path. */
+            long handle = 0;
+            int abi = 0;
+            String type = "";
+            String id = scriptId;
+            long state = 0;
+            if (PanamaFfmChannel.ready()) {
+                handle = PanamaFfmChannel.moduleOpen(path);
+                if (handle != 0) {
+                    abi = PanamaFfmChannel.moduleAbi(handle);
+                    type = PanamaFfmChannel.moduleScriptType(handle);
+                    id = PanamaFfmChannel.moduleScriptId(handle);
+                    state = PanamaFfmChannel.moduleStateSize(handle);
+                }
+            } else if (NativeChannel.ensurePollerPlane()) {
+                /* Module open is the FIRST command the poller must serve,
+                   so the region (and the poller attach) has to exist
+                   before any module loads. */
+                final com.lx862.jcm.nativeapi.NativeShm region = ShmPoller.region();
+                handle = ShmPoller.openModule(region, path);
+                if (handle != 0) {
+                    abi = ShmPoller.moduleAbi(region, handle);
+                    type = ShmPoller.moduleIdentity(region, handle, NativeShm.CMD_SCRIPT_TYPE);
+                    id = ShmPoller.moduleIdentity(region, handle, NativeShm.CMD_SCRIPT_ID);
+                    state = ShmPoller.moduleStateSize(region, handle);
+                }
             }
-            this.abiVersion = nAbiVersion(nativeHandle);
-            this.scriptType = nScriptType(nativeHandle);
-            this.scriptId = nScriptId(nativeHandle);
-            this.stateSize = nStateSize(nativeHandle);
+            /* handle == 0: open_module already logged the concrete
+               dlopen/LoadLibrary failure; the fields stay "unknown" so the
+               caller can skip the module instead of NPE-ing. */
+            this.nativeHandle = handle;
+            this.abiVersion = abi;
+            this.scriptType = type;
+            this.scriptId = id;
+            this.stateSize = state;
             this.loadedPlatform = getPlatformKeyExact();
             this.sourcePath = path;
-            if (!scriptId.equals(this.scriptId)) {
+            if (handle != 0 && !scriptId.equals(this.scriptId)) {
                 /* Expected, not a problem: MTR's vehicle schema carries ONE
                    scriptId, so a pack that needs several libraries declares them
                    together under one entry ("demo:vehicle") while each library keeps
@@ -1163,7 +1283,38 @@ public final class NativeScriptManager {
             return sourcePath;
         }
 
-        private native void nDisposeInstance(long handle, String instanceKey, java.nio.ByteBuffer snapshot, int snapshotLen);
+        /**
+         * Per-instance dispose. Cold (vehicle despawn) path: dispatches to the
+         * jcm_module_dispose_instance downcall on an FFM session and to the
+         * shared-memory poller command otherwise — both route through the
+         * same dispose_instance_core, including the deferred reclamation
+         * of the instance's payloads. Called with `this` monitored.
+         *
+         * TRANSPORT FAILURES ARE CONTAINED HERE: a wedged poller or a broken
+         * FFM downcall used to throw IllegalStateException straight into the
+         * vehicle-forget / driver-reset path — i.e. a transport hiccup at
+         * despawn time could crash the game tick loop. Despawn degrades
+         * quietly: the instance is dropped either way, and the bridge's
+         * close_module_core sweep disposes leftovers at reload.
+         */
+        void disposeInstanceNative(String moduleKey, java.nio.ByteBuffer snapshot, int len) {
+            if (nativeHandle == 0) return;
+            try {
+                if (PanamaFfmChannel.ready()) {
+                    final long address = snapshot == null ? 0 : NativeArenaView.addressOf(snapshot);
+                    PanamaFfmChannel.moduleDisposeInstance(nativeHandle, moduleKey, address,
+                            address == 0 ? -1 : len);
+                    return;
+                }
+                final NativeShm region = ShmPoller.region();
+                if (region != null && ShmPoller.active()) {
+                    ShmPoller.disposeInstance(region, nativeHandle, moduleKey, snapshot, len);
+                }
+            } catch (Throwable t) {
+                JCMLogger.warn("Native dispose for {} degraded ({}); the instance is dropped anyway",
+                        moduleKey, t.toString());
+            }
+        }
 
         synchronized NativeFrame render(String instanceKey, ByteBuffer snapshot, int resourceKind) {
             if (nativeHandle == 0) return null;
@@ -1173,12 +1324,30 @@ public final class NativeScriptManager {
                length is passed explicitly; the bridge no longer infers it
                from the buffer (which would report the full 256 KB capacity). */
             snapshot.order(ByteOrder.nativeOrder());
-            return nRender(nativeHandle, instanceKey, snapshot, snapshot.limit(), resourceKind);
+            /* Transport dispatch (direct call / shared memory / Panama FFM):
+               NativeChannel owns the how; everything else in the pipeline
+               is transport-agnostic. */
+            return NativeChannel.render(this, instanceKey, snapshot, snapshot.limit(), resourceKind);
         }
 
         synchronized void dispose() {
             if (nativeHandle != 0) {
-                nClose(nativeHandle);
+                /* Same containment as disposeInstanceNative: reload() drives
+                   this for every module, so a wedged transport here could
+                   abort the whole teardown halfway through. */
+                try {
+                    if (PanamaFfmChannel.ready()) {
+                        PanamaFfmChannel.moduleClose(nativeHandle);
+                    } else {
+                        final NativeShm region = ShmPoller.region();
+                        if (region != null && ShmPoller.active()) {
+                            ShmPoller.closeModule(region, nativeHandle);
+                        }
+                    }
+                } catch (Throwable t) {
+                    JCMLogger.warn("Native module close degraded ({}); the bookkeeping is dropped",
+                            t.toString());
+                }
                 nativeHandle = 0;
             }
         }

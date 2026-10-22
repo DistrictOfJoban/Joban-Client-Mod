@@ -30,8 +30,9 @@ import java.util.Map;
  * methods here are plain array indexing rather than hash lookups on the hot
  * path, and why a stale instance releases by SLOT too.
  *
- * <p>Both entry points are looked up by JNI signature from the bridge — the
- * strings live in {@code jni_bridge.cpp} and must be updated in lockstep:
+ * <p>Both entry points are reached through the bridge's invocation planes
+ * (the Panama FFM upcall vtable, or the poller plane's SVC adapters —
+ * both delegate to the SAME static adapters in PanamaFfmUpcalls):
  * <pre>
  *   int[] createResources(int[] widths, int[] heights,
  *                         float[] quadVertices, float[] quadUv,
@@ -112,7 +113,8 @@ public final class NativeHost {
     private final java.util.Map<String, java.awt.image.BufferedImage> glyphMasks = new java.util.HashMap<>();
     private final NativeFontRenderer fontRenderer = new NativeFontRenderer();
 
-    /** ABI 7 font callbacks. JNI passes resource IDs and text as UTF-8. */
+    /** ABI 7 font callbacks. The invocation planes pass resource IDs and
+     *     text as UTF-8 raw addresses. */
     public double[] measureFontText(byte[] font, byte[] text, double size, double sx, double sy) {
         return fontRenderer.measure(font, text, size, sx, sy);
     }

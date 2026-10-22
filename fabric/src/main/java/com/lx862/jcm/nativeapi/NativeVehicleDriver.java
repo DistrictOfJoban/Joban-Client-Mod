@@ -667,7 +667,13 @@ public final class NativeVehicleDriver {
     /** Forget one vehicle+script (script instance dropped, vehicle gone). */
     public static void forget(String vehicleHexId, String scriptId) {
         State state=STATES.remove(key(vehicleHexId, scriptId));
-        if(state!=null) NativeScriptManager.disposeVehicleInstance(state.instanceKey,scriptId,state.snapshots);
+        if(state!=null) {
+            NativeScriptManager.disposeVehicleInstance(state.instanceKey,scriptId,state.snapshots);
+            /* The shm windows inside `snapshots` are explicitly managed
+               memory — release AFTER dispose (mtrDispose reads the live
+               buffers one last time). Plain direct buffers are a no-op. */
+            state.snapshots.release();
+        }
         NativeDrawRegistry.remove(vehicleHexId, scriptId);
         /* The SCRIPT_IDS memo is only ever consumed together with a state;
            leaving it keyed by hex id forever leaked one entry (plus its car
@@ -694,6 +700,7 @@ public final class NativeVehicleDriver {
         }
     }
     public static void reset() {
+        for(State state:STATES.values()) state.snapshots.release();
         STATES.clear();
         SCRIPT_IDS.clear();
         NativeDrawRegistry.clear();

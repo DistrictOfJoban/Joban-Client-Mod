@@ -350,7 +350,7 @@ public final class NativeApiSession {
                 if (closed || callbacksStopped) return method.getReturnType().isPrimitive() ? primitiveDefault(method.getReturnType()) : null;
                 JsonArray parameters = new JsonArray();
                 if (args != null) for (Object arg : args) parameters.add(encode(arg));
-                byte[] result = NativeScriptManager.nativeApiCallback(function, user, JSON.toJson(parameters).getBytes(StandardCharsets.UTF_8));
+                byte[] result = NativeScriptManager.apiCallbackDispatch(function, user, JSON.toJson(parameters).getBytes(StandardCharsets.UTF_8));
                 JsonObject reply = parseJson(new String(result, StandardCharsets.UTF_8)).getAsJsonObject();
                 if (reply.has("error")) throw new IllegalStateException(reply.get("error").getAsString());
                 return method.getReturnType() == void.class ? null : convert(reply.get("value"), method.getReturnType());

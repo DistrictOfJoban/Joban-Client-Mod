@@ -6,7 +6,6 @@ import folk.sisby.kaleido.lib.quiltconfig.api.annotations.ChangeWarning;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayName;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
-
 @DisplayName("Joban Client Mod Config")
 public class JCMClientConfig extends ReflectiveConfig {
     public static final JCMClientConfig INSTANCE = createToml(LoaderImpl.getConfigPath(), "jsblock", "client", JCMClientConfig.class);
@@ -20,6 +19,24 @@ public class JCMClientConfig extends ReflectiveConfig {
 
     @Comment("Config related to the scripting feature in JCM")
     public final Scripting scripting = new Scripting();
+
+    /**
+     * "Java 与 C++ 通信方式" — how the JVM exchanges per-frame data with
+     * the C++ script modules. Constant names mirror
+     * com.lx862.jcm.nativeapi.NativeChannel.Transport one-to-one; the
+     * config screen cycles through them and JCMClient maps them onto the
+     * channel at boot (and on save). The name "JNI" is kept ONLY for
+     * existing config-file compatibility — the option is a direct-call
+     * transport that runs JNI-free on every plane.
+     */
+    public enum JavaCppCommunication {
+        /** 快照随每次调用传输（FFM downcall）—— 性能一般，行为最直观；旧 JVM 自动降级共享内存（同样零 JNI） */
+        JNI,
+        /** 性能中等；JDK 22+ 全程零 JNI（加载/调用/回调全部走 Foreign Function & Memory API），旧 JVM 自动使用共享内存轮询平面（同样零 JNI） */
+        PANAMA_FFM,
+        /** 性能最好，但小概率出现稳定性问题；两个调用平面（FFM / 轮询）均零 JNI */
+        SHARED_MEMORY
+    }
 
     @Comment("Config related to MTR modifications made by JCM")
     public final MTRPatch mtrPatch = new MTRPatch();
@@ -38,6 +55,11 @@ public class JCMClientConfig extends ReflectiveConfig {
 
         @Comment("When using print() statement or the Console API in scripts, also output the script file & line the print statement is triggered at.")
         public final TrackedValue<Boolean> showLogSource = value(false);
+
+        @Comment("How Java exchanges per-frame data with C++ script modules.")
+        @Comment("SHARED_MEMORY (default) maps a file-backed region and lets C++ read Java's snapshot straight out of it - fastest, tiny stability risk.")
+        @Comment("Every transport now runs JNI-free on every JVM: the FFM plane (libraryLookup + downcalls + upcall vtable, JDK 22+) or the shared-memory poller plane (filesystem handshake + shared-page commands + SVC host services, JDK 16+). The 'JNI' name is kept only so existing config files keep parsing.")
+        public final TrackedValue<JavaCppCommunication> javaCppCommunication = value(JavaCppCommunication.SHARED_MEMORY);
     }
 
     @DisplayName("MTR Enhancements")

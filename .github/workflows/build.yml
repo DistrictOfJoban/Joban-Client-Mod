@@ -2,6 +2,12 @@
 # and submitted pull request. This can help catch issues that only occur on
 # certain platforms or Java versions, and provides a first line of defence
 # against bad commits.
+#
+# NOTE: these are FAST CI JARS — they are built WITHOUT the native bridges
+# (-Pnative_bridge_dir is not passed), so they cannot load any resource-pack
+# C++ script in a live game; every native script logs "native bridge
+# unavailable". For game-ready jars use the "Complete Build" workflow or a
+# Release, both of which bundle all seven platform bridges.
 
 name: build
 on: [pull_request, push]
@@ -33,6 +39,23 @@ jobs:
         run: |
           NOW=$(date '+%Y-%m-%d-%H.%M')
           ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Partifact_date=".artifact_$NOW"
+      - name: Stamp CI-jar warning into the artifact
+        run: |
+          cat > build/README-IMPORT-WARNING.txt <<'EOF'
+          THIS IS A FAST CI BUILD, NOT A GAME-READY JAR.
+
+          These jars are compiled WITHOUT the native bridge binaries
+          (-Pnative_bridge_dir is not passed in the push/PR CI pipeline),
+          so in a live game every resource-pack C++ script (vehicle/lift/
+          eyecandy/PIDS natives) is skipped with
+          "native bridge unavailable (jcm_native_bridge not loaded)".
+
+          For jars that can actually run native scripts:
+            * Run the "Complete Build" workflow (workflow_dispatch) and
+              download its complete-jars-* artifacts, or
+            * download a Release jar (all release jars bundle the seven
+              platform bridges under assets/jcm/natives/).
+          EOF
       - name: Upload Artifacts to GitHub
         uses: actions/upload-artifact@v5
         with:

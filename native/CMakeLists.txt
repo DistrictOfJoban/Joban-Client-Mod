@@ -39,36 +39,17 @@ endfunction()
 mtr_add_script(pids_arrivals examples/pids_arrivals.cpp)
 mtr_add_script(eyecandy_signal examples/eyecandy_signal.cpp)
 mtr_add_script(lift_indicator examples/lift_indicator.cpp)
+# The bridge is JDK-FREE since layout v2 (no jni.h, no JNI exports): it is
+# driven either by the plain-C jcm_* FFM surface (Java 22+ downcalls) or by
+# the background poller thread that finds the shared region through the
+# filesystem handshake (any JVM). find_package(JNI) is only a "is a JDK
+# around" signal for the JVM integration test below.
 find_package(JNI QUIET)
-if(ANDROID)
-  # UNCONDITIONALLY override whatever FindJNI picked under the NDK
-  # toolchain: FindJNI resolves against the NDK sysroot and reports
-  # success, but that jni.h is a divergent variant (no JNI_VERSION_1_8,
-  # C++ AttachCurrentThread takes JNIEnv** where OpenJDK's takes void** —
-  # the form the bridge and every desktop build use). The JNI interface
-  # declarations themselves are platform-independent (LP64 widths match),
-  # so compile against the HOST JDK headers passed via
-  # -DJCM_JNI_INCLUDE_DIR=$JAVA_HOME/include; -I comes before the sysroot,
-  # and module JNI symbols still resolve against the embedding JVM at
-  # load time — nothing from the JDK is linked into the image.
-  if(DEFINED JCM_JNI_INCLUDE_DIR AND EXISTS "${JCM_JNI_INCLUDE_DIR}/jni.h")
-    set(JNI_FOUND ON)
-    set(JNI_INCLUDE_DIRS "${JCM_JNI_INCLUDE_DIR}" "${JCM_JNI_INCLUDE_DIR}/linux")
-  endif()
-endif()
-if(NOT JNI_FOUND AND CMAKE_SYSTEM_NAME STREQUAL "iOS")
-  # Cross-compile for iOS: no JVM on the target, but the JNI surface is a
-  # stable interface — compile against the HOST JDK's headers (identical
-  # declarations). Pass -DJCM_JNI_INCLUDE_DIR=$JAVA_HOME/include.
-  if(DEFINED JCM_JNI_INCLUDE_DIR AND EXISTS "${JCM_JNI_INCLUDE_DIR}/jni.h")
-    set(JNI_FOUND ON)
-    set(JNI_INCLUDE_DIRS "${JCM_JNI_INCLUDE_DIR}" "${JCM_JNI_INCLUDE_DIR}/darwin")
-  endif()
-endif()
-if(JNI_FOUND)
-  mtr_add_script(jcm_native_bridge jni/jni_bridge.cpp)
-  target_include_directories(jcm_native_bridge PRIVATE ${JNI_INCLUDE_DIRS})
-  target_link_libraries(jcm_native_bridge PRIVATE ${CMAKE_DL_LIBS})
+mtr_add_script(jcm_native_bridge jni/jni_bridge.cpp)
+target_link_libraries(jcm_native_bridge PRIVATE ${CMAKE_DL_LIBS})
+if(UNIX AND NOT APPLE AND NOT ANDROID)
+  find_package(Threads REQUIRED)
+  target_link_libraries(jcm_native_bridge PRIVATE Threads::Threads)
 endif()
 include(CTest)
 if(BUILD_TESTING)
@@ -93,5 +74,21 @@ if(BUILD_TESTING)
   if(JNI_FOUND AND Python3_FOUND)
     add_test(NAME native_jvm_integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/bench/jvm_test.py --build ${CMAKE_CURRENT_BINARY_DIR})
   endif()
+  # Headless regression for the JNI-FREE planes. The bridge TU is linked
+  # into the executables with NO JVM anywhere: a fake vtable stands in for
+  # the java.lang.foreign upcall stubs (native_ffm_test), and
+  # native_poller_test drives the FULL poller plane — region file,
+  # handshake, commands, host-service requests answered by a simulated
+  # Java side, api re-entry through the CBQ ring — exactly the flow the
+  # bridge's constructor-started thread serves on JDK 16..21. Runs on
+  # every CI platform.
+  add_executable(native_ffm_test bench/native_ffm_test.cpp jni/jni_bridge.cpp)
+  target_link_libraries(native_ffm_test PRIVATE ${CMAKE_DL_LIBS} mtr_script_sdk)
+  add_test(NAME native_ffm_test COMMAND native_ffm_test
+      "$<TARGET_FILE:legacy_probe_6>" "$<TARGET_FILE:content_probe_1>")
+  add_executable(native_poller_test bench/native_poller_test.cpp jni/jni_bridge.cpp)
+  target_link_libraries(native_poller_test PRIVATE ${CMAKE_DL_LIBS} mtr_script_sdk)
+  add_test(NAME native_poller_test COMMAND native_poller_test
+      "$<TARGET_FILE:legacy_probe_6>" "$<TARGET_FILE:content_probe_1>")
 endif()
 install(DIRECTORY include/ DESTINATION include)

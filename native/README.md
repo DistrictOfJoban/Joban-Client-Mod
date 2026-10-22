@@ -13,7 +13,8 @@ cmake --build native/build --config Release --parallel 4
 ctest --test-dir native/build -C Release --output-on-failure
 ```
 
-Set `JAVA_HOME` to a JDK for the JNI bridge and JVM tests. Python 3 is required
+Set `JAVA_HOME` to a JDK for the JVM integration tests (the bridge itself is
+JDK-free since layout v2 — no jni.h anywhere). Python 3 is required
 for the JVM tests. CMake produces Windows x64 DLLs, Linux x64 shared objects,
 and macOS x64/arm64 dylibs. Select a macOS target with
 `-DCMAKE_OSX_ARCHITECTURES=x86_64` or `arm64`.
@@ -274,8 +275,53 @@ vehicle per frame, and the pixel arena starts at 1 MB and grows on demand
 instead of a flat 16 MB per module. These reduce concrete overhead; no
 universal FPS multiplier is claimed.
 
-Tests cover JNI execution for all four script kinds, UTF-8, 64-bit IDs, enums,
-Java2D, synchronous/asynchronous callbacks, state isolation, disposal/reload,
-PIDS/lift/eyecandy snapshot fields, create-time shapes, and ABI 6/7 loading.
+Tests cover BOTH JNI-free invocation planes (Panama FFM and the
+shared-memory poller) for all four script kinds, UTF-8, 64-bit IDs, enums,
+Java2D, synchronous/asynchronous callbacks, state isolation,
+disposal/reload, PIDS/lift/eyecandy snapshot fields, create-time shapes,
+and ABI 6/7 loading.
 Game-specific visibility, user content and final appearance still require
 testing in a running Minecraft instance.
+
+## Java ↔ C++ transports ("Java 与 C++ 通信方式")
+
+Since 2.3.0-beta-2.yanyang.6 (layout v2) the mod contains **no JNI at all**.
+The JVM-side host exchanges per-frame data with the script modules through
+three selectable transports (Mod Menu → Joban Client Mod Config →
+Scripting, config key `scripting.javaCppCommunication`) — and EVERY one of
+them runs JNI-free on EVERY JVM:
+
+| Option | What it does | Config description |
+| --- | --- | --- |
+| **共享内存** (default) | Snapshot marshalling writes into a window of a file-backed shared region (`FileChannel#map` → `MappedByteBuffer`); C++ reads Java's data straight out of that mapping. The per-frame trigger is an empty-argument **FFM downcall** on JDK 22+, or — on JDK 16..21 — not even that: the bridge's constructor-started **poller thread** discovers the region through a filesystem handshake, opens the very same file and serves the request from the shared pages. The output arenas are published as raw descriptors, which Java re-binds into *reused* `ByteBuffer` views each frame. Zero copies, zero hot-path allocations, zero native-call APIs on old JVMs. | 性能最好，但小概率出现稳定性问题 |
+| **直连调用** (config name `JNI`, kept for old config files) | The snapshot and the five output arenas ride the per-frame call: the `jcm_module_render` FFM downcall on JDK 22+. Older JVMs degrade to the shared-memory path above. | 快照随每次调用传输（JDK 22+ 走 FFM 调用）—— 旧 Java 自动降级共享内存轮询平面，同样全程零 JNI |
+| **Panama FFM** | The everything-through-FFM selection on JDK 22+: `SymbolLookup.libraryLookup` loading (no `System.load`), `jcm_module_*` lifecycle downcalls, the per-frame `jcm_shm_kick` trigger and the script→Java host services through the `JcmFfmHostVTable` upcall stubs (`Linker.upcallStub`). Older JVMs use the JNI-free shared-memory poller plane automatically. | JDK 22+ 上全程零 JNI；旧 JDK 使用零 JNI 的共享内存轮询平面 |
+
+The two **invocation planes** behind every transport:
+
+* **Panama FFM plane** (JDK 22+; 21 with `--enable-preview` for the test
+  harness): `libraryLookup` + `jcm_*` downcalls + the upcall vtable.
+* **Shared-memory poller plane** (any JDK ≥ 16 — the production
+  configuration of Minecraft 1.17.1-1.20.4 on stock Java 16/17/21):
+  the bridge is `System.load`ed purely to run its CONSTRUCTOR, which
+  starts a background poller thread. The poller finds the region through
+  handshake pointer files (`jcm_shm_hs_<pid>`) in the temp directories,
+  maps the region file itself, and then serves **everything** from the
+  shared pages: module lifecycle commands, per-frame renders, the
+  script→Java host services (posted back as SVC requests that the
+  waiting Java thread answers through the very same raw-address adapters
+  the FFM vtable uses) and the Java→C++ api re-entry (a small CBQ ring
+  that the poller drains in every wait loop). No native call crosses in
+  either direction — see `shm_channel.h` (layout v2).
+
+The channel is fully self-contained: the region lives in the system temp
+directory, is unmapped (`invokeCleaner`) and deleted on every resource
+reload (the shutdown command poisons the region header first so the
+poller can never re-attach a stale mapping), driver snapshot windows are
+freed on instance dispose/tick-out/reset, and any failure (missing bridge
+exports on an old binary, a full region, a JVM without the required
+internals) degrades transparently with a one-line log instead of failing
+scripts.
+
+Transport layout: `native/include/mtr/shm_channel.h` (mirrored by
+`com.lx862.jcm.nativeapi.NativeShm`).

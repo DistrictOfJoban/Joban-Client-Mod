@@ -56,11 +56,12 @@ struct HostBuffers {
     alignas(64) uint8_t records[sizeof(JcmDrawText) * MAX_RECORDS];
     alignas(64) float  matrix_arena[MAX_MATRICES * 16];
     alignas(64) char   string_arena[MAX_STRING];
-    /* 1 MB initial pixel arena (512x512 BGRA8) — the recorder grows it on
-       demand up to MAX_PIXEL (see FrameRecorder::push_pixels), keeping the
-       per-module footprint small when scripts paint little or nothing. This
-       used to be a flat 16 MB per module, which dominated the reported
-       native memory usage. */
+    /* 1 MB initial pixel arena (512x512 BGRA8) — grows on demand up to
+       MAX_PIXEL (see FrameRecorder::push_pixels) and DECAYS back toward
+       this floor after the spike has passed (FrameRecorder's idle shrink),
+       keeping the per-module footprint small when scripts paint little or
+       nothing. This used to be a flat 16 MB per module, which dominated
+       the reported native memory usage. */
     alignas(64) uint8_t pixel_arena[512 * 512 * 4];
     alignas(64) float  float_arena[MAX_FLOAT];
 };
@@ -300,6 +301,14 @@ struct ScriptBox {
         if (!in) return -1;
         if (in->abi_version != MTR_NATIVE_ABI_VERSION) return -2;
         if (in->resource_kind != Adapter::RESOURCE_ID) return -3;
+
+        /* ABI 10: publish the host's deferred-reclamation hook BEFORE the
+           frame runs — begin_frame() (inside install_frame) may shrink a
+           spike-grown pixel arena, and the replaced block's free belongs
+           on the host's reclaimer thread, not this JVM-owned one. Hosts
+           predating ABI 10 leave host->defer_free null: the recorder then
+           keeps the synchronous free and behaves exactly like ABI 9. */
+        recorder().set_defer_hook(in->host);
 
         if constexpr (Phase == 1) {
             if (create_records_state != in->state || in->state == nullptr) install_frame();
