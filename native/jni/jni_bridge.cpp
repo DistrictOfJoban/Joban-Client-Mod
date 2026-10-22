@@ -72,7 +72,6 @@
 #include <new>
 #include <string>
 #include <thread>
-#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -928,22 +927,22 @@ private:
        on the poller thread (the sole thread that ever runs module code on
        this plane; the FFM plane always takes the vtable first and never
        falls through to svc_call). The guard turns any exotic mixed-state
-       misuse into a clean degrade instead of a data race. */
+       misuse into a clean degrade instead of a data race.
+
+       Discriminator portability note: pthread_t is a POINTER on Darwin and
+       a scalar long on glibc/bionic, and in a NON-TEMPLATE context
+       if-constexpr still fully type-checks BOTH branches — so neither
+       reinterpret_cast nor static_cast can cover all three toolchains
+       (two release runs failed exactly there). std::hash<std::thread::id>
+       is required to be consistent within one execution, and the poller
+       thread never exits, so its id is never reused — a perfect
+       discriminator with zero platform-dependent casts. */
     static uint64_t current_thread_id() {
 #if defined(_WIN32)
         return static_cast<uint64_t>(GetCurrentThreadId());
 #else
-        /* pthread_t is a POINTER on some platforms (Darwin) and a scalar
-           long on others (glibc, bionic). reinterpret_cast is only legal
-           for the pointer flavour — the Android NDK clang rejects an
-           integral reinterpret_cast outright — so pick the conversion the
-           type actually supports (release run 39763063552). */
-        pthread_t self = pthread_self();
-        if constexpr (std::is_pointer_v<pthread_t>) {
-            return static_cast<uint64_t>(reinterpret_cast<uintptr_t>(self));
-        } else {
-            return static_cast<uint64_t>(self);
-        }
+        return static_cast<uint64_t>(
+                std::hash<std::thread::id>{}(std::this_thread::get_id()));
 #endif
     }
     void record_thread_id() {
