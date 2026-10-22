@@ -632,6 +632,108 @@ int main(int argc, char** argv) {
               "CBQ entry drained by the poller, reply copied back");
     }
 
+    /* ---- abandon + self-heal (poison discipline, yanyang.5) ----------------
+     *
+     * ShmPoller poisons HDR_MODE=0 when a Java waiter gives up on the
+     * region. Three things must follow, all exercised here:
+     *
+     *   1. a poller stuck inside a host-service wait (this render's
+     *      create() needs the api round-trip, and the fake Java side
+     *      deliberately STOPS answering) must bail out through the
+     *      svc_call MODE check and publish a degraded result — instead
+     *      of wedging the request for the full wait budget;
+     *   2. the idle-path liveness revalidation must then detach the
+     *      poller from the poisoned region (the reset() contract);
+     *   3. a FRESH region with a new epoch must re-attach and serve
+     *      commands again — the plane self-heals after an abandon.
+     */
+    {
+        int64_t handle = 0;
+        CHECK(command(base, JCM_CMD_OPEN, 0, apiPath, std::strlen(apiPath),
+                      nullptr, 0, &handle) == JCM_SHM_OK && handle != 0,
+              "abandon scenario: api probe re-opened");
+        const uint64_t api = static_cast<uint64_t>(handle);
+
+        uint8_t args[8 + 3];
+        uint64_t id = 2;
+        std::memcpy(args, &id, sizeof(id));
+        std::memcpy(args + 8, "api", 3);
+        CHECK(command(base, JCM_CMD_REGISTER, api, args, sizeof(args),
+                      nullptr, 0, &extra) == JCM_SHM_OK,
+              "abandon scenario: instance registered");
+
+        /* Publish the render, then STOP answering service requests and
+           poison after a grace period — exactly a ShmPoller timeout. */
+        uint8_t* ctl = base + JCM_SHM_CONTROL_OFFSET;
+        const uint64_t seq = ++g_ctl_seq;
+        put64(ctl + JCM_SHM_CTL_MODULE, api);
+        put64(ctl + JCM_SHM_CTL_INSTANCE, 2);
+        put32(ctl + JCM_SHM_CTL_KIND, 1);
+        put32(ctl + JCM_SHM_CTL_SNAP_LEN, 256);
+        put64(ctl + JCM_SHM_CTL_SNAP_ADDR, reinterpret_cast<uint64_t>(snapshot));
+        wr64(ctl + JCM_SHM_CTL_SEQ, seq);
+
+        int32_t status = -1;
+        bool poisoned = false;
+        const auto started = std::chrono::steady_clock::now();
+        for (;;) {
+            /* deliberately NOT calling service_svc: the waiter abandoned it */
+            if (rd64(base + JCM_SHM_RESULT_OFFSET + JCM_SHM_RES_SEQ) == seq) {
+                status = static_cast<int32_t>(
+                        rd32(base + JCM_SHM_RESULT_OFFSET + JCM_SHM_RES_STATUS));
+                break;
+            }
+            const auto now = std::chrono::steady_clock::now();
+            if (!poisoned && now - started > std::chrono::milliseconds(300)) {
+                wr64(base + JCM_SHM_HDR_MODE, 0);   /* the abandon poison */
+                poisoned = true;
+            }
+            if (now - started > std::chrono::milliseconds(8000)) break;
+            std::this_thread::sleep_for(std::chrono::microseconds(200));
+        }
+        CHECK(status != -1, "poller unwound the abandoned request after the poison (no wedge)");
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - started).count();
+        CHECK(elapsed < 4000, "poison bail-out is fast (svc_call MODE check, not the 8 s budget)");
+
+        /* The idle-path liveness revalidation must detach from the poison. */
+        bool detached = false;
+        for (int i = 0; i < 300 && !detached; i++) {
+            if (jcm_poller_attached() == 0) detached = true;
+            else std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        CHECK(detached, "poller self-detached from the poisoned region (idle revalidation)");
+
+        /* Self-heal: a fresh region (new epoch) re-attaches and serves. */
+        destroy_region(&region);
+        Region fresh;
+        fresh.size = 1 << 20;
+        const uint32_t epoch2 = 0xBEEF;
+        CHECK(create_region(&fresh, epoch2), "self-heal: fresh region + handshake created");
+        bool reattached = false;
+        for (int i = 0; i < 200 && !reattached; i++) {
+            uint64_t ready = 0;
+            std::memcpy(&ready, fresh.base + JCM_SHM_HDR_READY, sizeof(ready));
+            if (ready == epoch2) reattached = true;
+            else std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        CHECK(reattached, "self-heal: poller re-attached to the fresh region");
+        /* Mirror ShmPoller.attach(): the per-slot served-seq bookkeeping
+           belongs to the REGION, so it resets with the attach — otherwise
+           the fresh region's first SVC request (seq restarts at 1) would
+           alias the abandoned region's seqs and be skipped forever. */
+        for (int i = 0; i < JCM_SVC_SLOTS; i++) g_last_served_svc[i] = 0;
+        CHECK(command(fresh.base, JCM_CMD_RECLAIMER, 0, nullptr, 0, nullptr, 0, &extra)
+              == JCM_SHM_OK && extra == 0,
+              "self-heal: the fresh region serves commands again");
+        CHECK(command(fresh.base, JCM_CMD_CLOSE, api, nullptr, 0, nullptr, 0, &extra)
+              == JCM_SHM_OK,
+              "self-heal: api probe closed over the fresh region");
+
+        region = fresh;   /* the shutdown tail below runs against the fresh region */
+        base = region.base;
+    }
+
     /* ---- legacy module close + shutdown ---------------------------------- */
     CHECK(command(base, JCM_CMD_CLOSE, legacy, nullptr, 0, nullptr, 0, &extra)
           == JCM_SHM_OK, "legacy module closed over CMD_CLOSE");

@@ -110,11 +110,23 @@ extern "C" {
 #define JCM_SHM_HDR_SIZE      16  /* u64 = total region size               */
 #define JCM_SHM_HDR_CONTROL   24  /* u64 = JCM_SHM_CONTROL_OFFSET          */
 #define JCM_SHM_HDR_RESULT    32  /* u64 = JCM_SHM_RESULT_OFFSET           */
-#define JCM_SHM_HDR_WINDOWS   40  /* u64 = JCM_SHM_WINDOWS_OFFSET          */
-#define JCM_SHM_HDR_EPOCH     44  /* u32 = region epoch (fresh per create) */
+#define JCM_SHM_HDR_WINDOWS   40  /* u64: LOW u32 = JCM_SHM_WINDOWS_OFFSET;
+                                     the HIGH u32 aliases HDR_EPOCH below
+                                     (only the low half is meaningful — the
+                                     geometry constants are compile-time) */
+#define JCM_SHM_HDR_EPOCH     44  /* u32 = region epoch (fresh per create;
+                                     overlaps the HIGH half of HDR_WINDOWS) */
 #define JCM_SHM_HDR_READY     48  /* u64 = poller publish: attached epoch  */
-#define JCM_SHM_HDR_MODE      56  /* u64 = 1 when the POLLER plane owns the
-                                     region (0 on the FFM-kick plane)     */
+#define JCM_SHM_HDR_MODE      56  /* u64 = region liveness bit:
+                                     1 = poller-plane region, live and
+                                         servable (REQUIRED for attach);
+                                     0 = FFM-kick plane (never attached)
+                                         OR POISONED — set to 0 by the
+                                         CMD_SHUTDOWN handler and by any
+                                         Java waiter that gives up on the
+                                         region (timeout), so both servers
+                                         stop serving an abandoned region
+                                         and the poller detaches + rescans */
 #define JCM_SHM_HDR_SVC       64  /* u64 = JCM_SHM_SVC_OFFSET              */
 #define JCM_SHM_HDR_CBQ       72  /* u64 = JCM_SHM_CBQ_OFFSET              */
 

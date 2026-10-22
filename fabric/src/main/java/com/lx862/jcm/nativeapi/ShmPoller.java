@@ -103,10 +103,31 @@ final class ShmPoller {
         return region;
     }
 
-    /** True when the poller plane is live (region created + poller ready). */
+    /** True when the poller plane is live (region created + poller ready).
+     *  HDR_MODE is the region's liveness bit: a waiter that gives up poisons
+     *  it, so callers degrade immediately instead of timing out against a
+     *  region the poller has (or will) detach from. */
     static boolean active() {
         final NativeShm current = region;
-        return current != null && ready && current.getLongAcquire(NativeShm.HDR_READY) == epoch;
+        return current != null && ready
+                && current.getLongAcquire(NativeShm.HDR_READY) == epoch
+                && current.getLong(NativeShm.HDR_MODE) == 1;
+    }
+
+    /** Marks the region DEAD for BOTH servers (HDR_MODE liveness bit).
+     *  Called when a Java waiter gives up on the region: the poller's wait
+     *  loops and its idle-path revalidation observe the poison, bail out of
+     *  module code, detach and rescan — so an abandoned region can never
+     *  wedge the poller thread spinning forever (or a missed shutdown
+     *  command leave it attached to a deleted file). */
+    private static void poisonRegion(NativeShm active, String why) {
+        try {
+            active.putLongRelease(NativeShm.HDR_MODE, 0);
+            JCMLogger.warn("Native poller region poisoned ({}); the bridge will self-detach", why);
+        } catch (Throwable t) {
+            /* Header writes are plain memory stores; any failure here means
+               the mapping is already gone — nothing left to poison. */
+        }
     }
 
     /** One-line reason when not active (census / config screen). */
@@ -189,6 +210,12 @@ final class ShmPoller {
             }
             if ((++spins & 0x3FF) == 0) {
                 if (System.nanoTime() > deadline) {
+                    /* Poison FIRST: the poller may be stuck in a host-service
+                     *  wait whose answer only THIS thread would have written.
+                     *  Without the poison it would spin on a dead region
+                     *  forever; with it, the poller's own MODE checks detach
+                     *  and the plane is reusable after the next reload. */
+                    poisonRegion(active, "request " + seq + " not answered within " + COMMAND_WAIT_MS + " ms");
                     throw new IllegalStateException("poller did not answer request " + seq);
                 }
                 if (active.getLongAcquire(NativeShm.HDR_READY) != epoch || region != active) {
@@ -475,6 +502,34 @@ final class ShmPoller {
     private static final byte[] CALLBACK_ERROR =
             "{\"error\":\"native callback unavailable\"}".getBytes(StandardCharsets.UTF_8);
 
+    /* Per-(thread, slot) RETAINED request/reply buffers for the CBQ ring.
+     * Replacing per-call allocateDirect here closes a real crash vector:
+     * after a CBQ wait timed out (poller wedged, Java degraded), the fresh
+     * direct buffers became unreachable and the Cleaner could munmap them
+     * while the poller thread was STILL holding their raw addresses for the
+     * late drain — an unmapped reply window is a SIGSEGV that takes the
+     * whole JVM down. Retained buffers can never be unmapped under the
+     * poller's feet (they live until the thread dies), and the hot path
+     * stops allocating two direct buffers per proxy call. Growth is
+     * bounded by the largest request/reply each slot has ever carried. */
+    private static final ThreadLocal<ByteBuffer[]> CBQ_REQUESTS = new ThreadLocal<>();
+    private static final ThreadLocal<ByteBuffer[]> CBQ_REPLIES = new ThreadLocal<>();
+
+    private static ByteBuffer cbqBuffer(ThreadLocal<ByteBuffer[]> set, int slot, int required) {
+        ByteBuffer[] buffers = set.get();
+        if (buffers == null) {
+            buffers = new ByteBuffer[NativeShm.CBQ_SLOTS];
+            set.set(buffers);
+        }
+        ByteBuffer buffer = buffers[slot];
+        if (buffer == null || buffer.capacity() < required) {
+            final int capacity = Math.max(1024, Integer.highestOneBit(Math.max(required, 1) * 2 - 1) << 1);
+            buffer = ByteBuffer.allocateDirect(capacity).order(ByteOrder.nativeOrder());
+            buffers[slot] = buffer;
+        }
+        return buffer;
+    }
+
     /**
      * Invokes one module C++ api callback (the JS-proxy re-entry). Blocks
      * until the poller has drained the queue entry. The re-entrant
@@ -484,7 +539,7 @@ final class ShmPoller {
      */
     static byte[] invokeCallback(long function, long user, byte[] parameters) {
         final NativeShm active = region;
-        if (active == null || !ready) return CALLBACK_ERROR;
+        if (active == null || !active()) return CALLBACK_ERROR;
         synchronized (COMMAND_LOCK) {
             /* Nested publish from the same thread (service handler -> proxy
                -> service handler ...): pick the next ring slot BEFORE the
@@ -492,13 +547,12 @@ final class ShmPoller {
             final int slot = (int) (cbqCounter % NativeShm.CBQ_SLOTS);
             cbqCounter++;
             final byte[] params = parameters == null ? new byte[0] : parameters;
-            final ByteBuffer request = ByteBuffer.allocateDirect(params.length + 1)
-                    .order(ByteOrder.nativeOrder());
+            final ByteBuffer request = cbqBuffer(CBQ_REQUESTS, slot, params.length + 1);
+            request.clear();
             request.put(params).put((byte) 0);
             final int replyCapacity = (int) Math.min(4L << 20,
                     Math.max(4096L, (long) params.length * 4 + 65_536L));
-            final ByteBuffer reply = ByteBuffer.allocateDirect(replyCapacity)
-                    .order(ByteOrder.nativeOrder());
+            final ByteBuffer reply = cbqBuffer(CBQ_REPLIES, slot, replyCapacity);
             final long slotAddress = NativeShm.CBQ_OFFSET
                     + (long) slot * NativeShm.CBQ_SLOT_BYTES;
             final long seq = ++cbqSeq;   /* globally unique, never 0, guarded by COMMAND_LOCK */
@@ -508,7 +562,7 @@ final class ShmPoller {
             active.putLong(slotAddress + NativeShm.CBQ_REQ_ADDR, NativeArenaView.addressOf(request));
             active.putLong(slotAddress + NativeShm.CBQ_REQ_LEN, params.length);
             active.putLong(slotAddress + NativeShm.CBQ_RPLY_ADDR, NativeArenaView.addressOf(reply));
-            active.putLong(slotAddress + NativeShm.CBQ_RPLY_CAP, replyCapacity);
+            active.putLong(slotAddress + NativeShm.CBQ_RPLY_CAP, reply.capacity());
             active.putLongRelease(slotAddress + NativeShm.CBQ_SEQ, seq);
 
             final long deadline = System.nanoTime() + CBQ_WAIT_MS * 1_000_000L;
@@ -519,12 +573,16 @@ final class ShmPoller {
                     final long length = active.getLong(slotAddress + NativeShm.CBQ_RPLY_LEN);
                     if (length <= 0) return CALLBACK_ERROR;
                     return NativeArenaView.readBytes(NativeArenaView.addressOf(reply),
-                            (int) Math.min(length, replyCapacity));
+                            (int) Math.min(length, reply.capacity()));
                 }
                 if ((++spins & 0x3FF) == 0) {
                     if (System.nanoTime() > deadline) {
                         JCMLogger.warn("Native poller did not drain callback queue slot {} within {} ms; degrading",
                                 slot, CBQ_WAIT_MS);
+                        /* Same poison discipline as awaitResult: the poller
+                           may still be about to run this slot's callback, and
+                           nobody will ever collect its answer. */
+                        poisonRegion(active, "callback queue slot " + slot + " not drained");
                         return CALLBACK_ERROR;
                     }
                     if (active.getLongAcquire(NativeShm.HDR_READY) != epoch || region != active) {

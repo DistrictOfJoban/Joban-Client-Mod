@@ -81,6 +81,7 @@
 #else
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -300,13 +301,14 @@ public:
     }
 
     void defer(std::function<void()>&& job) {
+        /* One lock scope for the push AND the worker launch: two sequential
+           acquisitions only widened a race window for nothing (the worker
+           itself takes the same mutex, so a single scope is both correct
+           and cheaper on the enqueue hot path). */
         {
             std::lock_guard<std::mutex> lk(m_);
             jobs_.emplace_back(std::move(job));
             ++pending_;
-        }
-        {
-            std::lock_guard<std::mutex> lk(m_);
             if (!worker_.joinable()) {
                 worker_ = std::thread([this] { run(); });
             }
@@ -429,8 +431,10 @@ public:
     /** Publishes one host-service request into the SVC ring and waits
      *  for the Java answer (a waiting Java thread services it). Only
      *  ever called from THIS poller thread — the only thread that runs
-     *  module code on the poller plane. */
+     *  module code on the poller plane (guarded below: a stray call from
+     *  any other thread would race svc_depth_/svc_seq_ for nothing). */
     bool svc_call(uint32_t id, const uint64_t* words, int word_count, uint64_t* ret) {
+        if (!on_poller_thread()) return false;   /* wrong-thread misuse: degrade */
         uint8_t* base = attached_.load(std::memory_order_acquire);
         if (!base) return false;
         /* REENTRANCY: a service answered by Java may re-enter C++ (a CBQ
@@ -473,6 +477,15 @@ public:
                 if (attached_.load(std::memory_order_acquire) != base) {
                     return false;   /* region reset from under us */
                 }
+                /* Abandoned-region detection: when a Java waiter gives up
+                   (awaitResult timeout) it poisons HDR_MODE, so a poller
+                   whose waiter is never coming back bails out of module
+                   code instead of spinning on a dead region forever. */
+                if (rd64(base + JCM_SHM_HDR_MODE) != 1) {
+                    std::fprintf(stderr, "[jcm_native_bridge] poller: region poisoned "
+                                         "while waiting for host service %u; degrading\n", id);
+                    return false;
+                }
                 std::this_thread::sleep_for(std::chrono::microseconds(120));
             } else {
                 cpu_pause();
@@ -481,7 +494,10 @@ public:
     }
 
     /** Drains pending Java->C++ callback-queue slots (if any). Cheap to
-     *  call from any of this thread's loops. */
+     *  call from any of this thread's loops. A throwing module callback
+     *  is contained PER SLOT: the ring slot still gets its (error) answer
+     *  so the Java publisher can never hang on a poisoned callback, and
+     *  one bad module cannot take the poller thread down. */
     void drain_cbq(uint8_t* base) {
         for (int slot = 0; slot < JCM_CBQ_SLOTS; slot++) {
             uint8_t* q = base + JCM_SHM_CBQ_OFFSET
@@ -501,14 +517,27 @@ public:
             int32_t replyLen = -1;
             const char* reply = nullptr;
             if (fn && rplyAddr && reqAddr) {
-                reply = fn(reinterpret_cast<void*>(static_cast<uintptr_t>(user)),
-                           reinterpret_cast<const char*>(static_cast<uintptr_t>(reqAddr)),
-                           reqLen, &replyLen);
+                try {
+                    reply = fn(reinterpret_cast<void*>(static_cast<uintptr_t>(user)),
+                               reinterpret_cast<const char*>(static_cast<uintptr_t>(reqAddr)),
+                               reqLen, &replyLen);
+                } catch (const std::exception& e) {
+                    std::fprintf(stderr, "[jcm_native_bridge] module callback threw (%s); "
+                                         "answering with an error reply\n", e.what());
+                } catch (...) {
+                    std::fprintf(stderr, "[jcm_native_bridge] module callback threw; "
+                                         "answering with an error reply\n");
+                }
             }
             /* Publish the reply length and echo the seq LAST; Java spins
-               on the rsp field and consumes the reply bytes after it. */
+               on the rsp field and consumes the reply bytes after it.
+               Length sanity: a module that returns a non-null reply without
+               a positive length used to publish (uint32)-1, which Java read
+               as ~4 GB and min()ed into its full scratch buffer — publish
+               0 for every non-positive length instead. */
             wr64(q + JCM_SHM_CBQ_RPLY_LEN,
-                 reply ? static_cast<uint64_t>(static_cast<uint32_t>(replyLen)) : 0);
+                 (reply && replyLen > 0)
+                         ? static_cast<uint64_t>(static_cast<uint32_t>(replyLen)) : 0);
             if (reply && replyLen > 0 && rplyCap > 0) {
                 const int64_t n = std::min<int64_t>(replyLen, static_cast<int64_t>(rplyCap));
                 std::memcpy(reinterpret_cast<void*>(static_cast<uintptr_t>(rplyAddr)),
@@ -767,18 +796,21 @@ private:
     }
 
     bool revalidate(const uint8_t* base) const {
-        uint64_t magic = 0, ready = 0;
+        uint64_t magic = 0, ready = 0, mode = 0;
         uint32_t epoch = 0;
         std::memcpy(&magic, base + JCM_SHM_HDR_MAGIC, sizeof(magic));
         std::memcpy(&epoch, base + JCM_SHM_HDR_EPOCH, sizeof(epoch));
         std::memcpy(&ready, base + JCM_SHM_HDR_READY, sizeof(ready));
+        std::memcpy(&mode, base + JCM_SHM_HDR_MODE, sizeof(mode));
         return magic == JCM_SHM_MAGIC && epoch == attached_epoch_
-                && static_cast<uint32_t>(ready) == attached_epoch_;
+                && static_cast<uint32_t>(ready) == attached_epoch_
+                && mode == 1;   /* poisoned (abandoned) regions never revalidate */
     }
 
     /* ---- main loop ------------------------------------------------ */
 
     void run_inner() {
+        record_thread_id();
         long idleRounds = 0;
         for (;;) {
             uint8_t* base = attached_.load(std::memory_order_acquire);
@@ -806,7 +838,31 @@ private:
                         detach();
                         continue;
                     }
-                    const int32_t status = serve_request(base, seq);
+                    /* EXCEPTION CONTAINMENT: an allocation failure (or any
+                       other C++ exception raised while serving — module code
+                       runs inside run_frame_locked) used to escape to
+                       run_outer and PERMANENTLY kill the poller thread,
+                       taking the whole poller plane down with it (the
+                       attached region would never be served again). Serve
+                       per-request instead: publish an error result so the
+                       waiting Java thread degrades instead of hanging, and
+                       keep the loop alive. */
+                    int32_t status;
+                    try {
+                        status = serve_request(base, seq);
+                    } catch (const std::exception& e) {
+                        std::fprintf(stderr, "[jcm_native_bridge] poller: request %llu "
+                                             "threw (%s); publishing error result\n",
+                                     static_cast<unsigned long long>(seq), e.what());
+                        publish_error_result(base, seq);
+                        status = JCM_SHM_ERR_REQUEST;
+                    } catch (...) {
+                        std::fprintf(stderr, "[jcm_native_bridge] poller: request %llu "
+                                             "threw; publishing error result\n",
+                                     static_cast<unsigned long long>(seq));
+                        publish_error_result(base, seq);
+                        status = JCM_SHM_ERR_REQUEST;
+                    }
                     if (status == JCM_SHM_ERR_DETACHED
                             || detach_requested_.load(std::memory_order_acquire)) {
                         detach();
@@ -814,25 +870,85 @@ private:
                     }
                 }
             }
-            drain_cbq(base);
+            {
+                /* CBQ drain gets the same containment: a throwing module
+                   callback must not kill the plane (drain_cbq already
+                   contains per-slot exceptions; this guards its own scan
+                   bookkeeping). */
+                try {
+                    drain_cbq(base);
+                } catch (...) {
+                    /* nothing to publish — the next loop re-scans */
+                }
+            }
 
             if (attached_.load(std::memory_order_acquire) != base) continue;
 
-            /* Adaptive wait: right after activity a short spin keeps frame
-               latency at microseconds; a quiet region backs off so an idle
-               world costs almost nothing. */
+            /* Liveness revalidation on the quiet path: a poller that missed
+               the shutdown command (Java timed out, or the command slot was
+               overwritten mid-teardown) used to sit on a DEAD region
+               forever — the reset() comment promised header revalidation
+               "on its next request", but a dead region never sees another
+               request. Poison (HDR_MODE=0) or a header epoch mismatch now
+               detaches within a few quiet rounds, and the scan loop then
+               picks up the NEXT region's handshake. ~10 ms worst case at
+               the 150 us quiet cadence. */
             if (busy) {
                 idleRounds = 0;
-            } else if ((++idleRounds & 3) != 0) {
-                cpu_pause();
             } else {
-                std::this_thread::sleep_for(std::chrono::microseconds(150));
+                if ((++idleRounds & 63) == 0 && !revalidate(base)) {
+                    std::fprintf(stderr, "[jcm_native_bridge] poller: region died "
+                                         "while idle; detaching and rescanning\n");
+                    detach();
+                    continue;
+                }
+                if ((idleRounds & 3) != 0) {
+                    cpu_pause();
+                } else {
+                    std::this_thread::sleep_for(std::chrono::microseconds(150));
+                }
             }
         }
     }
 
+    /* Publishes an error result slot for a request that died mid-service
+       so the waiting Java thread sees a finished exchange instead of
+       spinning to its 15 s budget. Idempotent fields + seq echo; harmless
+       if serve_request already published before throwing. */
+    static void publish_error_result(uint8_t* base, uint64_t seq) {
+        uint8_t* res = base + JCM_SHM_RESULT_OFFSET;
+        write_i32(res + JCM_SHM_RES_STATUS, JCM_SHM_ERR_REQUEST);
+        write_u64(res + JCM_SHM_RES_EXTRA, 0);
+        wr64(res + JCM_SHM_RES_SEQ, seq);   /* echo LAST */
+    }
+
+    /* ---- wrong-thread misuse guard ---------------------------------- */
+    /* svc_call mutates svc_depth_/svc_seq_ WITHOUT atomics — correct only
+       on the poller thread (the sole thread that ever runs module code on
+       this plane; the FFM plane always takes the vtable first and never
+       falls through to svc_call). The guard turns any exotic mixed-state
+       misuse into a clean degrade instead of a data race. */
+    void record_thread_id() {
+#ifdef _WIN32
+        poller_thread_id_.store(GetCurrentThreadId(), std::memory_order_release);
+#else
+        poller_thread_id_.store(reinterpret_cast<uint64_t>(pthread_self()),
+                                std::memory_order_release);
+#endif
+    }
+    bool on_poller_thread() const {
+        return poller_thread_id_.load(std::memory_order_acquire) != 0
+#ifdef _WIN32
+                && poller_thread_id_.load(std::memory_order_acquire) == GetCurrentThreadId();
+#else
+                && poller_thread_id_.load(std::memory_order_acquire)
+                        == reinterpret_cast<uint64_t>(pthread_self());
+#endif
+    }
+
     std::atomic<uint8_t*> attached_{nullptr};
     std::atomic<bool> detach_requested_{false};
+    std::atomic<uint64_t> poller_thread_id_{0};
     RegionFile attached_region_{};
     uint32_t attached_epoch_ = 0;
     uint64_t svc_seq_ = 0;
@@ -1146,7 +1262,9 @@ const char* host_invoke_api(void* user, const char* request, int32_t length, int
         return result.data();
     }
     result = "{\"error\":\"native API bridge is not installed\"}";
-    *result_length = static_cast<int32_t>(result.size());
+    /* Both planes above require a non-null result_length; this fallback is
+       reachable with a null one, and used to dereference it unguarded. */
+    if (result_length) *result_length = static_cast<int32_t>(result.size());
     return result.data();
 }
 
@@ -1928,7 +2046,13 @@ JCM_BRIDGE_EXPORT int32_t jcm_module_render(int64_t handle, const char* key, int
         return JCM_SHM_ERR_REQUEST;
     }
     if (snap_len > 0x7fffffffLL) return JCM_SHM_ERR_SNAPSHOT;
-    const std::string owned(key, static_cast<size_t>(key_len));
+    /* Reused per-thread key storage: assign() keeps the capacity of the
+       previous frame, so after the first frame the direct-call transport's
+       hot path performs NO allocation (a fresh std::string here malloc'd
+       on every module every frame). Instance keys are stable per module,
+       so the common case is a same-length overwrite in place. */
+    static thread_local std::string owned;
+    owned.assign(key, static_cast<size_t>(key_len));
     std::lock_guard<std::mutex> lock(mod->mutex);
     JcmFrameOutput out{};
     const int32_t status = run_frame_locked(*mod, owned.c_str(),

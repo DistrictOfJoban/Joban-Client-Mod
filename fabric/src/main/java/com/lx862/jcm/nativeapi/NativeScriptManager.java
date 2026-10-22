@@ -1289,18 +1289,30 @@ public final class NativeScriptManager {
          * shared-memory poller command otherwise — both route through the
          * same dispose_instance_core, including the deferred reclamation
          * of the instance's payloads. Called with `this` monitored.
+         *
+         * TRANSPORT FAILURES ARE CONTAINED HERE: a wedged poller or a broken
+         * FFM downcall used to throw IllegalStateException straight into the
+         * vehicle-forget / driver-reset path — i.e. a transport hiccup at
+         * despawn time could crash the game tick loop. Despawn degrades
+         * quietly: the instance is dropped either way, and the bridge's
+         * close_module_core sweep disposes leftovers at reload.
          */
         void disposeInstanceNative(String moduleKey, java.nio.ByteBuffer snapshot, int len) {
             if (nativeHandle == 0) return;
-            if (PanamaFfmChannel.ready()) {
-                final long address = snapshot == null ? 0 : NativeArenaView.addressOf(snapshot);
-                PanamaFfmChannel.moduleDisposeInstance(nativeHandle, moduleKey, address,
-                        address == 0 ? -1 : len);
-                return;
-            }
-            final NativeShm region = ShmPoller.region();
-            if (region != null && ShmPoller.active()) {
-                ShmPoller.disposeInstance(region, nativeHandle, moduleKey, snapshot, len);
+            try {
+                if (PanamaFfmChannel.ready()) {
+                    final long address = snapshot == null ? 0 : NativeArenaView.addressOf(snapshot);
+                    PanamaFfmChannel.moduleDisposeInstance(nativeHandle, moduleKey, address,
+                            address == 0 ? -1 : len);
+                    return;
+                }
+                final NativeShm region = ShmPoller.region();
+                if (region != null && ShmPoller.active()) {
+                    ShmPoller.disposeInstance(region, nativeHandle, moduleKey, snapshot, len);
+                }
+            } catch (Throwable t) {
+                JCMLogger.warn("Native dispose for {} degraded ({}); the instance is dropped anyway",
+                        moduleKey, t.toString());
             }
         }
 
@@ -1320,13 +1332,21 @@ public final class NativeScriptManager {
 
         synchronized void dispose() {
             if (nativeHandle != 0) {
-                if (PanamaFfmChannel.ready()) {
-                    PanamaFfmChannel.moduleClose(nativeHandle);
-                } else {
-                    final NativeShm region = ShmPoller.region();
-                    if (region != null && ShmPoller.active()) {
-                        ShmPoller.closeModule(region, nativeHandle);
+                /* Same containment as disposeInstanceNative: reload() drives
+                   this for every module, so a wedged transport here could
+                   abort the whole teardown halfway through. */
+                try {
+                    if (PanamaFfmChannel.ready()) {
+                        PanamaFfmChannel.moduleClose(nativeHandle);
+                    } else {
+                        final NativeShm region = ShmPoller.region();
+                        if (region != null && ShmPoller.active()) {
+                            ShmPoller.closeModule(region, nativeHandle);
+                        }
                     }
+                } catch (Throwable t) {
+                    JCMLogger.warn("Native module close degraded ({}); the bookkeeping is dropped",
+                            t.toString());
                 }
                 nativeHandle = 0;
             }

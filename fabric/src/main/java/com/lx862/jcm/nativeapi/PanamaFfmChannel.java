@@ -809,6 +809,15 @@ final class PanamaFfmChannel {
             if (replyAddress == 0 || length < 0) {
                 return "{\"error\":\"native callback unavailable\"}".getBytes(StandardCharsets.UTF_8);
             }
+            /* The length is MODULE-controlled (jcm_module_invoke_api writes
+               whatever the callback set). A buggy or hostile module that
+               leaves a huge length would turn readBytes into an unbounded
+               raw-memory read + byte[] allocation — clamp it and degrade
+               instead of letting a module fault the JVM. */
+            if (length > (16 << 20)) {
+                return "{\"error\":\"native callback reply exceeds 16 MB; degrading\"}"
+                        .getBytes(StandardCharsets.UTF_8);
+            }
             return NativeArenaView.readBytes(replyAddress, length);
         } catch (Throwable t) {
             throw new IllegalStateException("jcm_module_invoke_api downcall failed", t);

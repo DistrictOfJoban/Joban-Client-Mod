@@ -1,5 +1,72 @@
 # Changelog
 
+## 2.3.0-beta-2.yanyang.5
+
+**Robustness + optimization pass over both JNI-free transport planes.**
+Nine real defects found by full-source audit were fixed, and every fix is
+covered by a new or extended headless regression (the poller suite gains a
+whole "abandon + self-heal" scenario). No transport layout change — the
+shm region protocol (layout v2) is untouched.
+
+### Poller-plane survivability (the headline fixes)
+
+- **A throwing request no longer kills the poller thread forever.** Any
+  C++ exception raised while serving a request (module code runs inside
+  the render pipeline, allocation failures included) used to escape to
+  the thread entry, permanently killing the ONLY thread that serves the
+  region — every subsequent command then hit its 15 s budget and the
+  whole plane degraded until a reload. Serving is now per-request
+  contained: the waiting Java side receives an error result immediately
+  and the loop stays alive.
+- **Abandoned regions now heal.** `HDR_MODE` is the region's liveness
+  bit: when a Java waiter gives up (request/command timeout) it poisons
+  the region before degrading. The poller observes the poison in its
+  host-service wait loop (a stuck SVC round-trip unwinds in ~ms instead
+  of spinning forever) and on its idle-path liveness revalidation
+  (detaching from a dead region even when it never sees another request,
+  then resuming the handshake scan so the NEXT region attaches cleanly).
+  Previously a poller that missed the shutdown command sat attached to
+  a deleted file forever.
+- **CBQ timeout no longer risks a JVM crash.** The Java→C++ callback
+  ring used per-call `allocateDirect` buffers: after a wait timeout the
+  Cleaner could munmap the reply window while the poller thread still
+  held its raw address — an unmapped write is a SIGSEGV that takes the
+  whole JVM down. The ring now uses per-(thread, slot) retained buffers,
+  which also removes two direct-buffer allocations per proxy call.
+- **Module-controlled reply lengths are sane on every path.** A CBQ
+  callback returning a non-null reply with a non-positive length used to
+  publish `(uint32)-1` — Java read it as ~4 GB and copied its full
+  scratch buffer of garbage; it now publishes 0. The FFM
+  `jcm_module_invoke_api` reply length (also module-controlled) is
+  clamped at 16 MB on the Java side instead of performing an unbounded
+  raw read + allocation.
+- **Despawn can no longer crash the game.** A transport hiccup at
+  vehicle-forget / module-close time used to throw
+  `IllegalStateException` straight into the game's tick path; both
+  `disposeInstanceNative` and `NativeScriptModule.dispose` now contain
+  transport failures (the instance/module is dead either way).
+- **`host_invoke_api` no-host fallback** dereferenced a null
+  `result_length` pointer when neither plane was installed; guarded.
+
+### Optimizations
+
+- The direct-call transport (`jcm_module_render`) no longer mallocs a
+  fresh `std::string` for the instance key on every module every frame —
+  the key lands in a reused per-thread buffer (assign-in-place).
+- The Reclaimer's enqueue takes one mutex scope instead of two back-to-back.
+- CBQ proxy calls reuse their request/reply windows (see above).
+
+### Verification
+
+- `native_poller_test` gains an end-to-end abandon scenario: an
+  unanswered SVC round-trip, poison, fast unwind (≪ the 8 s budget),
+  idle-path self-detach, fresh-region re-attach and command service —
+  all asserted.
+- JVM harness: FFM plane 70 checks, poller plane 67 checks, both green
+  on the reworked sources; `native_regression`, `native_sdk_test`,
+  `native_abi_layout`, `native_ffm_test` and the full poller suite green
+  with `-Wall -Wextra` clean.
+
 ## 2.3.0-beta-2.yanyang.4-shmtest5
 
 **The mod now contains no JNI anywhere — every Java↔C++ transport runs
