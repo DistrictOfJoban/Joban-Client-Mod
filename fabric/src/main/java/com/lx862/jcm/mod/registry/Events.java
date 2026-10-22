@@ -68,6 +68,17 @@ public class Events {
                     JCMScripting.reset();
                     JCMResourceManager.reload();
                 } else {
+                    /* Yanyang: reset the C++ runtime on this path too — the
+                       same reasons onClientReloadResource() does it apply
+                       here, only worse: without it this keybind re-parses
+                       the JS scripts while every dlopen'd C++ module stays
+                       running (an updated .so with the same script id is
+                       silently ignored), and the native instance-id cache
+                       keeps serving ids the bridge has long forgotten
+                       (ERR_INSTANCE, permanently blank train LCDs) — the
+                       user pressing this very key to "fix" a dead LCD
+                       could never revive it. */
+                    com.lx862.jcm.nativeapi.NativeScriptManager.reload();
                     MTRContentScripting.reset();
                     MtrScriptingResourceManager.reload();
                 }

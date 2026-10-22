@@ -894,6 +894,11 @@ public final class NativeScriptManager {
                 } finally {
                     NativeApiSession.dispose(moduleKey);
                     NativeHost.get().releaseInstance(moduleKey);
+                    /* The bridge forgot the shm instance id together with the
+                       instance ("ids never outlive their instances") — drop
+                       the Java cache entry in the same breath, or the next
+                       render ships a dead id (ERR_INSTANCE, blank LCD). */
+                    NativeChannel.forgetInstance(moduleKey);
                 }
             }
         }
@@ -915,6 +920,9 @@ public final class NativeScriptManager {
                 } finally {
                     NativeApiSession.dispose(moduleKey);
                     NativeHost.get().releaseInstance(moduleKey);
+                    /* Same as disposeInstance: the bridge's shm id dies with
+                       the instance, so the Java cache entry must die too. */
+                    NativeChannel.forgetInstance(moduleKey);
                 }
             }
         }

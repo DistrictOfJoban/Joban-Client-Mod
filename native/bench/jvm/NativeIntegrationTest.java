@@ -85,6 +85,20 @@ public class NativeIntegrationTest {
   check(first.marks.equals(List.of("create","render","render","dispose")),"dispose can still call the API");
   first.retained.accept(1);
   check(first.marks.size()==4,"retained callback is disabled before state destruction");
+  /* Yanyang regression ("LCD无法显示"): the vehicle driver sweeps states
+     whose train left the camera frustum for >5s, disposing the bridge
+     instance — and the bridge forgets the shm instance id together with it.
+     The Java-side id cache (NativeChannel.INSTANCE_IDS) used to keep the
+     stale id, so every later frame of that vehicle shipped a dead id, the
+     bridge answered ERR_INSTANCE ("instance not registered") and both
+     modules returned null — forever, no self-healing. Disposing must
+     forget the cached id; the next render re-registers it and the script
+     starts over (fresh create). */
+  var revived=NativeScriptManager.render("fixture0","test:probe",snapshot,0,m->first,first,null);
+  check(revived.size()==1,"re-render after dispose re-registers the shm instance id (stale-id regression)");
+  check(first.marks.equals(List.of("create","render","render","dispose","create","render")),"revived instance is a fresh create");
+  NativeScriptManager.disposeInstance("fixture0","test:probe");
+  check(first.marks.equals(List.of("create","render","render","dispose","create","render","dispose")),"revived instance disposes cleanly");
   /* ---- shared-memory transport specifics ---- */
   check(NativeChannel.activeTransport()==NativeChannel.Transport.SHARED_MEMORY,"default transport is shared memory");
   ByteBuffer windowA=NativeChannel.newSnapshotBuffer(4096);

@@ -232,6 +232,11 @@ final class NativeShm {
         return size;
     }
 
+    /** The memory-access route this region actually uses (census text). */
+    String accessorName() {
+        return fields.accessorName();
+    }
+
     /* ------------------------------------------------------------------ */
     /* creation / teardown                                                 */
     /* ------------------------------------------------------------------ */
@@ -579,6 +584,12 @@ final class NativeShm {
 
         int getInt(long offset);
 
+        /** For the "channel ready" census line — the accessor that was
+         * actually installed (not the one the JDK version suggests). */
+        default String accessorName() {
+            return "sun.misc.Unsafe";
+        }
+
         static Fields forMapped(MappedByteBuffer mapped) {
             if (Runtime.version().feature() >= 22) {
                 try {
@@ -657,6 +668,11 @@ final class NativeShm {
      * per-frame access cost is a plain (JIT-inlinable) interface call.
      */
     private static final class FfmFields implements Fields {
+        /* The four must be PUBLIC: MethodHandleProxies.asInterfaceInstance
+         * refuses non-public interfaces ("not a public interface: ...") —
+         * the accessor silently degraded to sun.misc.Unsafe on every JDK
+         * 22+ session until they were. Nested inside a private class they
+         * still are not visible outside NativeShm. */
         private final LongWriter longRelease;
         private final LongReader longAcquire;
         private final LongWriter longSet;
@@ -664,19 +680,19 @@ final class NativeShm {
         private final IntWriter intSet;
         private final IntReader intGet;
 
-        interface LongWriter {
+        public interface LongWriter {
             void set(long offset, long value);
         }
 
-        interface LongReader {
+        public interface LongReader {
             long get(long offset);
         }
 
-        interface IntWriter {
+        public interface IntWriter {
             void set(long offset, int value);
         }
 
-        interface IntReader {
+        public interface IntReader {
             int get(long offset);
         }
 
@@ -749,6 +765,11 @@ final class NativeShm {
         @Override
         public int getInt(long offset) {
             return intGet.get(offset);
+        }
+
+        @Override
+        public String accessorName() {
+            return "FFM/VarHandle";
         }
     }
 }

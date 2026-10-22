@@ -4,7 +4,6 @@ import com.lx862.jcm.mod.util.JCMLogger;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -98,10 +97,15 @@ public final class NativeChannel {
         return ShmPoller.active();
     }
 
-    /* moduleKey -> shm instance id. Render-thread only (cleared on reset);
+    /* moduleKey -> shm instance id. Render-thread only historically
+       (cleared on reset); now a ConcurrentHashMap because the dispose
+       paths (NativeScriptManager.disposeInstance / disposeVehicleInstance)
+       also REMOVE entries from wherever they run, and the vehicle sweep
+       (tick -> forget) can race a reload's reset() — the plain HashMap
+       was fine only while nothing ever removed an entry outside reset.
        ids stay stable for an instance's whole life so the C++ side only
        ever receives the (rare) registration, never per-frame strings. */
-    private static final Map<String, Long> INSTANCE_IDS = new HashMap<>();
+    private static final Map<String, Long> INSTANCE_IDS = new java.util.concurrent.ConcurrentHashMap<>();
 
     /* Shared control-slot sequence for renders AND lifecycle commands —
        the poller serves both from one slot, so both must draw from one
@@ -119,6 +123,7 @@ public final class NativeChannel {
     private static int loggedStatuses;
     private static boolean warnedExhausted;
     private static boolean warnedNoDirectPlane;
+    private static boolean warnedStaleInstanceId;
     private static final int STATUS_STALE_ECHO = 64;
 
     /** Reusable per-module frame surfaces: five arena views, one frame and
@@ -312,6 +317,21 @@ public final class NativeChannel {
             }
             if (status != NativeShm.STATUS_OK) {
                 noteStatus(status);
+                if (status == NativeShm.ERR_INSTANCE) {
+                    /* Self-heal — the defense in depth behind forgetInstance():
+                       the bridge forgot this id (the instance was disposed
+                       without the cache learning, e.g. a vector this build
+                       does not know about yet). Drop the cached id; the very
+                       next frame re-registers a fresh one and the bridge
+                       rebuilds the instance lazily from the stable string
+                       key, so the outage is exactly one frame instead of
+                       the rest of the session. */
+                    INSTANCE_IDS.remove(instanceKey);
+                    if (!warnedStaleInstanceId) {
+                        warnedStaleInstanceId = true;
+                        JCMLogger.info("Native shared-memory: instance {} was forgotten by the bridge — re-registering on the next frame", instanceKey);
+                    }
+                }
             }
             return frame;
         } catch (Throwable t) {
@@ -454,6 +474,21 @@ public final class NativeChannel {
         }
     }
 
+    /**
+     * The bridge-side instance id dies with EVERY instance dispose (the
+     * bridge forgets it in the same critical section — "ids never outlive
+     * their instances", jni_bridge.cpp dispose_instance_core). The Java
+     * cache must forget it at exactly the same moments, or the NEXT render
+     * of this key ships a dead id and the bridge answers ERR_INSTANCE for
+     * every remaining frame of the session — which is how a train that
+     * leaves the camera frustum for >5s (the driver's state sweep disposes
+     * it) came back to permanently blank LCDs. Called by
+     * NativeScriptManager.disposeInstance / disposeVehicleInstance.
+     */
+    static void forgetInstance(String moduleKey) {
+        INSTANCE_IDS.remove(moduleKey);
+    }
+
     /* ------------------------------------------------------------------ */
     /* control-slot sequence                                               */
     /* ------------------------------------------------------------------ */
@@ -519,7 +554,7 @@ public final class NativeChannel {
                 shm = created;
                 JCMLogger.info("Native shared memory channel ready ({} KB region, MappedByteBuffer + {} accessor, {} plane)",
                         created.size() / 1024,
-                        Runtime.version().feature() >= 22 ? "FFM/VarHandle" : "sun.misc.Unsafe",
+                        created.accessorName(),
                         pollerPlane ? "poller" : "FFM kick");
                 return created;
             } catch (Throwable t) {
@@ -558,6 +593,7 @@ public final class NativeChannel {
             INSTANCE_IDS.clear();
             VIEWS.clear();
             loggedStatuses = 0;
+            warnedStaleInstanceId = false;
             final NativeShm region = shm;
             shm = null;
             if (region != null) {

@@ -1,5 +1,72 @@
 # Changelog
 
+## 2.3.0-beta-2.yanyang.6
+
+**Fix for permanently blank train LCDs ("LCD无法显示").** A train that
+left the camera frustum for more than 5 seconds came back with a dead
+LCD: every later frame shipped an instance id the bridge had already
+forgotten, the bridge answered `ERR_INSTANCE (4)` ("instance not
+registered") and both modules returned null — for the rest of the
+session, with no self-healing. Data kept flowing (stops, siding and
+resource fetches all worked), which is why the LCD looked "powered but
+blank" rather than errored.
+
+### The failure chain (all three links now cut)
+
+- **The vehicle state sweep disposes instances the id cache still
+  believes in.** `NativeVehicleDriver.tick()` sweeps any state whose
+  vehicle stopped rendering for >5s (frustum cull) and disposes its
+  native instances; the bridge forgets the shm instance id together
+  with the instance ("ids never outlive their instances"). The Java
+  `INSTANCE_IDS` cache was never told, so the moment the train
+  re-entered the view its first render shipped the stale id →
+  `ERR_INSTANCE` → null frames forever. Disposes
+  (`NativeScriptManager.disposeInstance` /
+  `disposeVehicleInstance`) now drop the cache entry in the same
+  critical section, so the next render re-registers a fresh id and
+  the bridge lazily rebuilds the instance — the revived script runs
+  `mtrCreate` again, exactly like a first render.
+- **`ERR_INSTANCE` now self-heals within one frame.** As defense in
+  depth, a render that still comes back with status 4 removes its own
+  cached id, so the very next frame re-registers instead of repeating
+  the dead request until a reload. (The dispose hooks make this path
+  near-impossible to hit; it covers deregistration vectors this build
+  does not know about.)
+- **The "Reloading all MTR Scripts..." keybind never reset the C++
+  runtime.** It re-parsed the JS scripts while every dlopen'd C++
+  module kept running (an updated `.so` with the same script id was
+  silently ignored) and the stale native id cache survived — pressing
+  this key to revive a dead LCD could never work. The keybind now
+  routes through the same `NativeScriptManager.reload()` teardown +
+  re-discovery as `F3+T`.
+
+### Also fixed
+
+- **The JDK 22+ shared-memory accessor actually installs now.**
+  `MethodHandleProxies.asInterfaceInstance` refuses non-public
+  interfaces, and `NativeShm.FfmFields`' four tiny writer/reader
+  interfaces were package-private — every Java 22+ session logged
+  "FFM/VarHandle accessor unavailable (…not a public interface…), using
+  sun.misc.Unsafe" and silently fell back to `Unsafe`'s more
+  conservative full-fence ordering. The four interfaces are `public`
+  now (still invisible outside `NativeShm`), so JDK 22+ gets the real
+  FFM/VarHandle route with true acquire/release semantics.
+- **The "channel ready" census line reports the accessor that was
+  actually installed** (it used to guess from the JDK version — a
+  fallback session claimed "FFM/VarHandle" right after the fallback
+  WARN).
+- `NativeChannel.INSTANCE_IDS` moved from `HashMap` to
+  `ConcurrentHashMap`: the dispose paths now remove entries from
+  wherever they run, which would have raced a reload's `reset()` on
+  the old plain map.
+
+### Regression coverage
+
+`native_jvm_integration` (both invocation planes) renders, disposes and
+**re-renders** the same instance: the re-render must re-register the id
+and produce a fresh create (this exact check failed against the
+pre-fix bridge, reproducing the in-game status-4 log line verbatim).
+
 ## 2.3.0-beta-2.yanyang.5
 
 **Robustness + optimization pass over both JNI-free transport planes.**
