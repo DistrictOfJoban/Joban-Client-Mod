@@ -14,5 +14,12 @@
     "block.jsblock.circle_wall_5": "Balla Ciorclach 5",
     "block.jsblock.circle_wall_6": "Balla Ciorclach 6",
     "block.jsblock.circle_wall_7": "Balla Ciorclach 7",
-    "block.jsblock.departure_pole": "Cuaille (Beartaithe do Thiner Imeachta)"
+    "block.jsblock.departure_pole": "Cuaille (Beartaithe do Thiner Imeachta)",
+    "block.jsblock.departure_timer": "Clog Imeachta",
+    "block.jsblock.exit_sign_even": "Comhartha Scoir (Cothrom)",
+    "block.jsblock.exit_sign_odd": "Comhartha Scoir",
+    "block.jsblock.fare_saver": "Pointe Laghdaithe Praghsanna",
+    "block.jsblock.fire_alarm": "rabhadh dóiteáin",
+    "block.jsblock.helpline_1": "Idirchumarsáid (ina bhfuil greamán)",
+    "block.jsblock.helpline_2": "Idirchumarsáid"
 }
