@@ -7,7 +7,7 @@ public interface WallAttachedBlockBehavior {
         BlockPos wallBlockPos = pos.offset(directionTowardsWall);
         BlockState wallBlock = world.getBlockState(wallBlockPos);
 
-        return wallBlock.isSideSolidFullSquare(BlockView.cast(world), pos, directionTowardsWall);
+        return wallBlock.isSideSolidFullSquare(BlockView.cast(world), pos, directionTowardsWall.getOpposite());
     }
 
     default Direction getWallDirection(Direction defaultDirection) {

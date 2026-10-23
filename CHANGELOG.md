@@ -12,6 +12,9 @@
 This is an interim beta release.
 
 ## General
+### Blocks
+- Fix: Wall-attached blocks may now be attached to the backside of stairs, which is fully solid.
+
 ### MTR Patch
 - (Fabric-only) Preserves rail preview of long-running rail (i.e. Outside the render distance), instead of disappearing.
 - For MTR's multi-item selection screen, you can now hold `Shift` to exclusively select one item, instead of needing to add the new item then removing the existing item.
