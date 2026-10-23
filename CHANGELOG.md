@@ -1,4 +1,4 @@
-# JCM v2.3.0-beta.2 for MTR 4.0.5 has been released!
+# JCM v2.3.0-beta.3 for MTR 4.0.5 has been released!
 
 > **Beta Notice**
 > 
@@ -16,7 +16,7 @@
 ## Technical
 
 ### Scripting
-- **Perf Fix: Skip executing scripts during render pass.** (BugQuantumCore)
+- Perf Fix: Skip executing scripts during shadow render pass. (BugQuantumCore)
   - Some misc refactoring is also made to reduce performance impact of non-scripted elements.
 - Add `MinecraftClient.getCameraMode()` to return the perspective of the player's camera. (F5)
 - Add `GraphicsTexture.fullAA()` and `GraphicsTexture.noAA()` for configuring anti-aliasing behaviour.
@@ -30,7 +30,9 @@
 
 ## Translations
 Thanks to the following people who have contributed translations for this release! (No particular order):
-
+- DelphoxOTS (ja_jp)
+- Smile-Wood (zh_cn)
+- Paaaaddy (ga_ie)
 
 Translations for JCM is now hosted on [ZiYue's Weblate](https://weblate.ziyuesinicization.site/projects/joban-client-mod/)
 
