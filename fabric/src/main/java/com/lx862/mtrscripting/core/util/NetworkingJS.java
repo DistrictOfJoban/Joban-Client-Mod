@@ -128,7 +128,7 @@ public class NetworkingJS {
         }
 
         if(body != null) {
-            byte[] bodyByte = body.getBytes();
+            byte[] bodyByte = body.getBytes(StandardCharsets.UTF_8);
             long contentLength = bodyByte.length;
             connection.setRequestProperty("Content-Length", String.valueOf(contentLength));
             connection.setDoOutput(true);

@@ -1,13 +1,11 @@
 package com.lx862.jcm.mod.render.block;
 
 import com.lx862.jcm.mod.block.base.DirectionalBlock;
-import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.resource.ComplexModelStorage;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.BlockEntityExtension;
 import org.mtr.mapping.mapper.BlockEntityRenderer;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mod.block.BlockEyeCandy;
 import org.mtr.mod.client.CustomResourceLoader;
 import org.mtr.mod.render.MainRenderer;
 import org.mtr.mod.render.QueuedRenderLayer;
@@ -20,7 +18,7 @@ public class ComplexModelRenderer<T extends BlockEntityExtension> extends BlockE
     public ComplexModelRenderer(Identifier modelLocation, BlockEntityRenderer.Argument dispatcher) {
         super(dispatcher);
         this.modelLocation = modelLocation;
-        ComplexModelStorage.requestModelLoad(modelLocation);
+        ComplexModelStorage.requireModel(modelLocation);
     }
 
     public void render(T blockEntity, float tickDelta, GraphicsHolder graphicsHolder, int light, int overlay) {
