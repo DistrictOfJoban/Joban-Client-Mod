@@ -29,8 +29,7 @@ import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
 
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
+import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
@@ -46,16 +45,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.text.AttributedString;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Stack;
 
 @SuppressWarnings("unused")
 public class ScriptResourceUtil {
     private static final Stack<Identifier> scriptLocationStack = new Stack<>();
-    private static Context activeContext;
-    private static Scriptable activeScope;
+    private static ParsedScript activeParsingScript;
 
     private static final FontRenderContext FONT_CONTEXT = new FontRenderContext(new AffineTransform(), true, false);
     private static final Identifier NOTO_SANS_CJK_LOCATION = new Identifier("mtr", "font/noto-sans-cjk-tc-medium.otf");
@@ -66,22 +62,20 @@ public class ScriptResourceUtil {
     private static Font NOTO_SERIF_CACHE;
 
     @ApiInternal
-    public static void beginParseScript(Context context, Scriptable scope) {
-        if(activeContext != null || activeScope != null) throw new IllegalStateException("Must call finishParseScript() before beginParseScript()!");
-        activeContext = context;
-        activeScope = scope;
+    public static void beginParseScript(ParsedScript parsedScript) {
+        if(activeParsingScript != null) throw new IllegalStateException("Must call finishParseScript() before beginParseScript()!");
+        activeParsingScript = parsedScript;
     }
 
     @ApiInternal
     public static void finishParseScript() {
-        activeContext = null;
-        activeScope = null;
+        activeParsingScript = null;
     }
 
     @ApiInternal
-    public static void executeScript(Context rhinoCtx, Scriptable scope, Identifier scriptLocation, String script) {
+    public static void executeScript(ParsedScript script, Identifier scriptLocation, String scriptContent) {
         scriptLocationStack.push(scriptLocation);
-        rhinoCtx.evaluateString(scope, script, scriptLocation.getNamespace() + ":" + scriptLocation.getPath(), 1, null);
+        script.parseScriptContent(scriptContent, scriptLocation.getNamespace() + ":" + scriptLocation.getPath());
         scriptLocationStack.pop();
     }
 
@@ -97,7 +91,7 @@ public class ScriptResourceUtil {
         }
         DataReaderJS scriptFile = read(identifier);
         if(scriptFile == null) throw new IllegalStateException(String.format("Failed to include script %s:%s as it is not found.", identifier.getNamespace(), identifier.getPath()));
-        executeScript(activeContext, activeScope, identifier, scriptFile.asString());
+        executeScript(activeParsingScript, identifier, scriptFile.asString());
     }
 
     public static void print(@ValueNullable Object... objs) {
@@ -299,7 +293,7 @@ public class ScriptResourceUtil {
 
     @ApiInternal
     private static boolean isParsingStage() {
-        return activeContext != null;
+        return activeParsingScript != null;
     }
 
     @ApiInternal

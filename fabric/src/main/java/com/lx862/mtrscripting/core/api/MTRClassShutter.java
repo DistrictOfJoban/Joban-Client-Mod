@@ -1,7 +1,6 @@
 package com.lx862.mtrscripting.core.api;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.ClassShutter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,7 +10,7 @@ import java.util.List;
  * Limit the usage of arbitrary java class for security reason
  */
 @ApiInternal
-public class MTRClassShutter implements ClassShutter {
+public class MTRClassShutter {
     /** Whether the class shutter is active or not. If false, it will allow all class through (Except itself) as if no restrictions is put in place. */
     private boolean shutterEnabled;
     private final List<ClassRule> allowedScriptClasses = new ArrayList<>();
@@ -76,12 +75,11 @@ public class MTRClassShutter implements ClassShutter {
         deniedScriptClasses.addAll(Arrays.asList(classRules));
     }
 
-    @Override
     public boolean visibleToScripts(String fullClassName) {
         return !fullClassName.equals(MTRClassShutter.class.getName()) && isClassAllowed(fullClassName);
     }
 
-    private boolean isClassAllowed(String className) {
+    public boolean isClassAllowed(String className) {
         if(!shutterEnabled) return true;
 
         if(className.startsWith("[")) { // Array

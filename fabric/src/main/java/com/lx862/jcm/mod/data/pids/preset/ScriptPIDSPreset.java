@@ -10,6 +10,7 @@ import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptInstance;
 import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
 import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.mtrscripting.core.api.ScriptingLanguage;
 import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptContent;
@@ -44,6 +45,13 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         final String name = rootJsonObject.has("name") ? rootJsonObject.get("name").getAsString() : null;
         final boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
         final Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : DEFAULT_THUMBNAIL;
+        List<String> blackList = new ArrayList<>();
+        if(rootJsonObject.has("blacklist")) {
+            JsonArray blacklistedPIDS = rootJsonObject.getAsJsonArray("blacklist");
+            for(int i = 0; i < blacklistedPIDS.size(); i++) {
+                blackList.add(blacklistedPIDS.get(i).getAsString());
+            }
+        }
 
         final List<ScriptContent> scripts = new ObjectArrayList<>();
         final double scriptRateLimit = rootJsonObject.has("scriptRateLimit") ? rootJsonObject.get("scriptRateLimit").getAsDouble() : 0;
@@ -77,16 +85,10 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             }
         }
 
-        List<String> blackList = new ArrayList<>();
-        if(rootJsonObject.has("blacklist")) {
-            JsonArray blacklistedPIDS = rootJsonObject.getAsJsonArray("blacklist");
-            for(int i = 0; i < blacklistedPIDS.size(); i++) {
-                blackList.add(blacklistedPIDS.get(i).getAsString());
-            }
-        }
-
+        final String scriptLang = rootJsonObject.has("scriptLang") ? rootJsonObject.get("scriptLang").getAsString() : ScriptingLanguage.RHINO_JS;
+        ParsedScript.Configuration scriptConfiguration = ParsedScript.Configuration.create(scripts, scriptLang, scriptRateLimit);
         try {
-            ParsedScript script = scripts.isEmpty() ? null : JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value(), scriptRateLimit);
+            ParsedScript script = scripts.isEmpty() ? null : JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scriptConfiguration, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
             return script == null ? null : new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, script);
         } catch (Exception e) {
             logError("parsing PIDS script (" + id + ")", e);

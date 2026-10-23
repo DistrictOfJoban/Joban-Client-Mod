@@ -2,7 +2,6 @@ package com.lx862.mtrscripting.core.util;
 
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import org.apache.commons.io.IOUtils;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeObject;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -26,7 +25,7 @@ public class NetworkingJS {
         return fetch(urlStr, null);
     }
 
-    public static NetworkResponse<DataReaderJS> fetch(String urlStr, NativeObject requestObject) throws IOException {
+    public static NetworkResponse<DataReaderJS> fetch(String urlStr, Map<?, ?> requestObject) throws IOException {
         URL url = new URL(urlStr);
         HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
         urlConnection.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
@@ -47,7 +46,7 @@ public class NetworkingJS {
     }
 
     @Deprecated
-    public static NetworkResponse<?> fetchString(String urlStr, NativeObject requestObject) throws IOException {
+    public static NetworkResponse<?> fetchString(String urlStr, Map<?, ?> requestObject) throws IOException {
         URL url = new URL(urlStr);
         HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
         urlConnection.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
@@ -68,7 +67,7 @@ public class NetworkingJS {
     }
 
     @Deprecated
-    public static NetworkResponse<BufferedImage> fetchImage(String urlStr, NativeObject requestObject) throws IOException {
+    public static NetworkResponse<BufferedImage> fetchImage(String urlStr, Map<?, ?> requestObject) throws IOException {
         URL url = new URL(urlStr);
         HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
         urlConnection.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
@@ -82,7 +81,7 @@ public class NetworkingJS {
         }
     }
 
-    private static void processRequestObject(NativeObject requestObject, HttpURLConnection connection) throws IOException {
+    private static void processRequestObject(Map<?, ?> requestObject, HttpURLConnection connection) throws IOException {
         String body = null;
 
         // Default UA
@@ -111,7 +110,7 @@ public class NetworkingJS {
                 }
             }
             if(requestObject.containsKey("headers")) {
-                NativeObject headerObject = (NativeObject)requestObject.get("headers");
+                Map<Object, Object> headerObject = (Map<Object, Object>)requestObject.get("headers");
                 for(Map.Entry<Object, Object> header : headerObject.entrySet()) {
                     connection.setRequestProperty((String)header.getKey(), (String)header.getValue());
                 }

@@ -2,24 +2,22 @@ package com.lx862.mtrscripting.core.primitive;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.api.AbstractScriptContext;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
 
 import java.util.concurrent.Future;
+import java.util.function.Supplier;
 
 @ApiInternal
 public abstract class ScriptInstance<T> {
-    private static final long TIMEOUT_THRESHOLD = 5000L * 1000000;
     private final AbstractScriptContext contextObject;
-    private Scriptable stateObject;
+    private Object stateObject;
     private T wrapperObject;
 
     private final ParsedScript parsedScript;
     private double lastExecutionDurationMs;
-    public Future<?> scriptTask;
-    public double lastExecuteTime;
     private double beginExecuteTime = -1;
     private boolean createFunctionInvoked = false;
+    public Future<?> scriptTask;
+    public double lastExecuteTime;
 
     public ScriptInstance(AbstractScriptContext contextObject, ParsedScript script) {
         this.contextObject = contextObject;
@@ -38,8 +36,8 @@ public abstract class ScriptInstance<T> {
         return parsedScript;
     }
 
-    public Scriptable getOrCreateStateObject(Context cx, Scriptable scope) {
-        if(this.stateObject == null) this.stateObject = cx.newObject(scope);
+    public Object getOrCreateStateObject(Supplier<Object> createState) {
+        if(this.stateObject == null) this.stateObject = createState.get();
         return stateObject;
     }
 

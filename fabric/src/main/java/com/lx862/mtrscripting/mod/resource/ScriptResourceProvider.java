@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.mod.resource;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.mtrscripting.core.api.ScriptingLanguage;
 import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptContent;
@@ -31,7 +32,9 @@ public interface ScriptResourceProvider {
         final String scriptFilesKey = isParsingMTR4 ? "scriptLocations" : useSnakeCase ? "script_files" : "scriptFiles";
         final String scriptTextsKey = isParsingMTR4 ? "prependExpressions" : useSnakeCase ? "script_texts" : "scriptTexts";
         final String scriptInputKey = isParsingMTR4 ? "input" : "scriptInput";
-        final String rateLimitKey = isParsingMTR4 ? "rateLimit" : useSnakeCase ? "rate_limit" : "rateLimit";
+        final String rateLimitKey = isParsingMTR4 ? "rateLimit" : useSnakeCase ? "script_rate_limit" : "scriptRateLimit";
+        final String languageKey = isParsingMTR4 ? "language" : useSnakeCase ? "script_lang" : "scriptLang";
+        String scriptLang = jsonObject.has(languageKey) ? jsonObject.get(languageKey).getAsString() : ScriptingLanguage.RHINO_JS;
         double rateLimit = jsonObject.has(rateLimitKey) ? jsonObject.get(rateLimitKey).getAsDouble() : 0;
 
         if (jsonObject.has(scriptFilesKey) || jsonObject.has(scriptTextsKey)) {
@@ -67,7 +70,8 @@ public interface ScriptResourceProvider {
         }
 
         try {
-            return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value(), rateLimit);
+            ParsedScript.Configuration configuration = ParsedScript.Configuration.create(scripts, scriptLang, rateLimit);
+            return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, configuration, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
         } catch (Exception e) {
             ScriptResourceProvider.logError("parsing " + scriptType + " script (" + id + ")", e);
             return null;

@@ -3,10 +3,8 @@ package com.lx862.mtrscripting.core.api;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 public abstract class AbstractScriptContext {
     private final String name;

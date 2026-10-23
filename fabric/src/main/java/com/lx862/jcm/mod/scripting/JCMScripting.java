@@ -13,7 +13,6 @@ import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.core.ScriptManager;
 import com.lx862.mtrscripting.core.api.ClassRule;
 import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeJavaClass;
 import org.mtr.mod.client.MinecraftClientData;
 
 public class JCMScripting {
@@ -29,15 +28,15 @@ public class JCMScripting {
         scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.jcm.mod.scripting.pids.*"));
         scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.mtrscripting.mod.impl.mtr.*"));
 
-        scriptManager.parseScriptEvent.register((contextName, context, scriptable) -> {
-            scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
-            scriptable.put("MTR", scriptable, new NativeJavaClass(scriptable, MTRWrapper.class));
-            scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtilJS.class));
+        scriptManager.parseScriptEvent.register((contextName, parsedScript) -> {
+            parsedScript.exposeClass("MTRClientData", MinecraftClientData.class);
+            parsedScript.exposeClass("MTR", MTRWrapper.class);
+            parsedScript.exposeClass("TextUtil", TextUtilJS.class);
 
             if (contextName.equals("pids")) {
-                scriptable.put("Text", scriptable, new NativeJavaClass(scriptable, TextWrapper.class));
-                scriptable.put("Texture", scriptable, new NativeJavaClass(scriptable, TextureWrapper.class));
-                scriptable.put("Rectangle", scriptable, new NativeJavaClass(scriptable, RectangleWrapper.class));
+                parsedScript.exposeClass("Text", TextWrapper.class);
+                parsedScript.exposeClass("Texture", TextureWrapper.class);
+                parsedScript.exposeClass("Rectangle", RectangleWrapper.class);
             }
         });
 

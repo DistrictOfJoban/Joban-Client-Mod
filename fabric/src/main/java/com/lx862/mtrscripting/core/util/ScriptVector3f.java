@@ -137,6 +137,10 @@ public class ScriptVector3f {
         return new Vector(x(), y(), z());
     }
 
+    public Position rawTscPosition() {
+        return new Position((int)x(), (int)y(), (int)z());
+    }
+
     @Override
     public int hashCode() {
         return impl.hashCode();

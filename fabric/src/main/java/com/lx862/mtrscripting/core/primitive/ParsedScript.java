@@ -2,78 +2,40 @@ package com.lx862.mtrscripting.core.primitive;
 
 import com.lx862.mtrscripting.core.ScriptManager;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import com.lx862.mtrscripting.core.rhinojs.RhinoParsedScript;
 import com.lx862.mtrscripting.core.util.*;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
-import com.lx862.mtrscripting.mod.MTRScriptingMod;
-import org.mtr.mapping.holder.Identifier;
 
-import java.util.ArrayList;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
  * Represent a script which has been parsed/executed and ready for functions to be invoked.
+ * For implementation details, please check {@link RhinoParsedScript }
  */
 @ApiInternal
-public class ParsedScript {
+public abstract class ParsedScript {
     private static final int SCRIPT_RESET_TIME = 4000;
 
-    private final String displayName;
-    private final ScriptManager scriptManager;
-    private final List<Function> createFunctions;
-    private final List<Function> renderFunctions;
-    private final List<Function> disposeFunctions;
-    private final Scriptable scope;
-    private final TimingJS timing;
-    private final ExecutorService executorService;
-    private final List<ScriptContent> scriptContents;
-    private final double rateLimit;
-    private Exception capturedScriptException = null;
-    private long lastFailedTime = -1;
+    protected final String displayName;
+    protected final String contextName;
+    protected final ScriptManager scriptManager;
+    protected final TimingJS timing;
+    protected final ExecutorService executorService;
+    protected final List<ScriptContent> scriptContents;
+    protected final double rateLimit;
+    protected Exception capturedScriptException = null;
+    protected long lastFailedTime = -1;
 
-    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, List<ScriptContent> scriptContents, boolean verboseLogging, double rateLimit) throws NoSuchMethodException {
+    public ParsedScript(ScriptManager scriptManager, String displayName, String contextName, Configuration scriptConfiguration) {
         this.displayName = displayName;
+        this.contextName = contextName;
         this.scriptManager = scriptManager;
-        this.scriptContents = scriptContents;
-        this.rateLimit = rateLimit;
+        this.scriptContents = scriptConfiguration.content();
+        this.rateLimit = scriptConfiguration.rateLimit();
         this.timing = new TimingJS();
-        this.createFunctions = new ArrayList<>();
-        this.renderFunctions = new ArrayList<>();
-        this.disposeFunctions = new ArrayList<>();
         this.executorService = scriptManager.getDesignatedScriptExecutor();
-
-        try {
-            Context cx = Context.enter();
-            cx.setLanguageVersion(Context.VERSION_ES6);
-            cx.setClassShutter(scriptManager.getClassShutter());
-            scope = new ImporterTopLevel(cx);
-
-            /* Init global variables */
-            ScriptResourceUtil.beginParseScript(cx, scope);
-
-            scriptManager.parseScriptEvent.invoke(e -> e.accept(contextName, cx, scope));
-            cx.evaluateString(scope, "\"use strict\";", "", 1, null);
-            scope.put("Timing", scope, new NativeJavaObject(scope, timing, com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
-
-            for(ScriptContent scriptEntry : scriptContents) {
-                final Identifier scriptLocation = scriptEntry.location();
-                final String scriptContent = scriptEntry.content();
-
-                ScriptResourceUtil.executeScript(cx, scope, scriptLocation, scriptContent);
-
-                tryAndAddFunction("create", scope, createFunctions);
-                tryAndAddFunction("render", scope, renderFunctions);
-                tryAndAddFunction("dispose", scope, disposeFunctions);
-
-                if(verboseLogging) {
-                    scriptManager.getLogger().info("[MTR Scripting via JCM] Loaded script: {}:{}", scriptLocation.getNamespace(), scriptLocation.getPath());
-                }
-            }
-        } finally {
-            ScriptResourceUtil.finishParseScript();
-            Context.exit();
-        }
     }
 
     /**
@@ -92,95 +54,42 @@ public class ParsedScript {
         return this.displayName;
     }
 
-    public Scriptable getScope() {
-        return scope;
-    }
+    public abstract ParsedScript parse(boolean verboseLogging);
+    public abstract void parseScriptContent(String str, String source);
 
-    public List<ScriptContent> getScriptContents() {
-        return this.scriptContents;
-    }
+    public abstract Future<?> invokeCreateFunctions(ScriptInstance<?> instance, Runnable finishCallback);
+    public abstract void invokeRenderFunctions(ScriptInstance<?> instance, Runnable finishCallback);
+    public abstract void invokeDisposeFunctions(ScriptInstance<?> instance, Runnable finishCallback);
 
-    public double getRateLimit() {
-        return this.rateLimit;
-    }
+    public abstract void exposeClassMethod(String name, Method method);
+    public abstract void exposeClass(String name, Class<?> cl);
+    public abstract void exposeClassInstance(String name, Object classInstance);
 
-    public Future<?> invokeCreateFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
-        return invokeFunctions(instance, createFunctions, () -> {
-                finishCallback.run();
-                instance.setCreateFunctionInvoked(true);
-        },
-                // Ensure create function is re-invoked after error.
-                // Note: This will leak memory when the create function is invoked again, but not sure if there's a good solution without manually introducing checkpoint for disposing.
-                () -> instance.setCreateFunctionInvoked(false)
-        );
-    }
+    public static class Configuration {
+        private final List<ScriptContent> content;
+        private final String scriptingLanguage;
+        private final double rateLimit;
 
-    public void invokeRenderFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
-        if(instance.shouldInvalidate() || instance.scriptTask != null && !instance.scriptTask.isDone()) {
-            return;
+        private Configuration(List<ScriptContent> content, String scriptingLanguage, double rateLimit) {
+            this.content = content;
+            this.scriptingLanguage = scriptingLanguage;
+            this.rateLimit = rateLimit;
         }
-        if(instance.isCreateFunctionInvoked()) {
-            instance.scriptTask = invokeFunctions(instance, renderFunctions, finishCallback, null);
-        } else {
-            instance.scriptTask = invokeCreateFunctions(instance, finishCallback);
+
+        public static Configuration create(List<ScriptContent> content, String scriptingLanguage, double rateLimit) {
+            return new Configuration(content, scriptingLanguage, rateLimit);
         }
-    }
 
-    public void invokeDisposeFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
-        invokeFunctions(instance, disposeFunctions, finishCallback, null);
-    }
-
-    public Future<?> invokeFunctions(ScriptInstance<?> scriptInstance, List<Function> functions, Runnable finishExecutionCallback, Runnable errorCallback) {
-        if(duringFailCooldown()) {
-            return null;
+        public String scriptingLanguage() {
+            return this.scriptingLanguage;
         }
-        if(TimingJS.globalElapsed() - scriptInstance.lastExecuteTime < rateLimit) return null;
 
-        return scriptManager.submitScriptTask(executorService, () -> {
-            if(duringFailCooldown()) return;
-            if(Thread.currentThread().isInterrupted()) return;
+        public double rateLimit() {
+            return this.rateLimit;
+        }
 
-            try {
-                Context cx = Context.enter();
-                Scriptable scope = getScope();
-                cx.setLanguageVersion(Context.VERSION_ES6);
-                cx.setClassShutter(scriptManager.getClassShutter());
-                timing.prepareForScript(scriptInstance);
-                scriptInstance.beginTrackExecuteTime();
-                for(Function func : functions) {
-                    func.call(cx, scope, scope, new Object[] {
-                        scriptInstance.getContextObject(),
-                        scriptInstance.getOrCreateStateObject(cx, scope),
-                        scriptInstance.getWrapperObject()
-                    });
-                }
-            } catch (Exception e) {
-                scriptManager.getLogger().error("[MTR Scripting via JCM {}] Error executing script {}!", MTRScriptingMod.VERSION, displayName, e);
-                lastFailedTime = System.currentTimeMillis();
-                capturedScriptException = e;
-                if(errorCallback != null) errorCallback.run();
-            } finally {
-                scriptInstance.endTrackExecuteTime();
-                Context.exit();
-            }
-
-            if(finishExecutionCallback != null) {
-                try {
-                    finishExecutionCallback.run();
-                } catch (Exception e) {
-                    scriptManager.getLogger().fatal("[MTR Scripting via JCM] Internal error during finalization work after script execution, this is a bug!", e);
-                }
-            }
-        });
-    }
-
-    private void tryAndAddFunction(String name, Scriptable scope, List<Function> listToAdd) {
-        Object func = scope.get(name, scope);
-        if(func != Scriptable.NOT_FOUND) {
-            if(func instanceof Function) {
-                listToAdd.add((Function)func);
-            }
-            scope.delete(name);
+        public List<ScriptContent> content() {
+            return this.content;
         }
     }
 }
