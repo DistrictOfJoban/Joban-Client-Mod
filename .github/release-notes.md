@@ -1,75 +1,22 @@
-JCM Yanyang `2.3.0-beta-2.yanyang.4` — GC 与稳态分配优化（yanyang.4）：脚本渲染管线（JS + C++）的「捕获→回放」稳态分配降至接近零，从根源消除 GC 周期性停顿导致的瞬时卡顿；含 2 项新发现的正确性修复。本 Release 同时包含 yanyang.3（全代码库审计 + 7 平台原生矩阵）、yanyang.1 与 yanyang.2 的全部内容。
+JCM Yanyang `2.3.0-beta-2.yanyang.7` — 修复间歇性卡顿（yanyang.5 / yanyang.6 已随各自 tag 发布，此处一并概述）。
 
-**GC / 分配优化 (yanyang.4)**
+**间歇性卡顿修复 (yanyang.7)**
 
-- 变换隔离零拷贝：`StoredMatrixTransformationsMixin`（新增 mixin，双加载器）暴露 mark/truncate，`ScriptRenderManager.invoke` 不再为每个绘制调用做 `storedMatrixTransformations.copy()`（每车每帧 N 次「新对象 + 新 ObjectArrayList + 全元素拷贝」）；`NativeContentDriver` 的逐上下文 `transform.copy()` 全部移除。
-- 原生绘制调用池化：`NativeModelDrawCall` / `TextWrapper` / `TextureWrapper`（原生记录回放创建的实例）经空闲链表复用，由每帧本就执行的 `reset()`/`takeFrom()` 释放回收；JS 脚本持有的 wrapper 不受影响。
-- 零拷贝捕获 `takeFrom`：`ScriptRenderManager`/`ScriptSoundManager` 交换内部列表取代逐车逐脚本的 `copy()`（`VehicleScriptCallsHolder.Captured.capture`、`PIDSScriptInstance`、`EyeCandyScriptInstance`、`LiftScriptInstance`）；空声音帧不再分配。
-- 矩阵零分配：`NativeModelDrawCall.pose` 在捕获时把姿态矩阵拷入实例私有可增长存储，持久消费者回放时读取——取代每记录 `float[count][16]` + 每 pose lambda + 新 SMT（6 节列车 10 个模型记录 ≈ 60fps 下 460 KB/s 短命数组）；`GraphicsHolderMatrixMixin` 复用渲染线程 JOML `Matrix4f`/`Matrix3f`。
-- 原生字符串与 `Identifier` 驻留（`NativeStringCache` / `CachedIdentifiers`）：C++ 脚本每帧发出的相同字符串/字体 id/声音 id 不再重复解码与解析。
-- 跑马灯字形缓存（`TextWrapper`）：每字符两次「格式化 + 测量」降为内容或样式变化时一次；`PIDSDrawCall` 的位置/层级消费者改为每实例一次分配。
+旧实例清扫把「离开视野」误当成「已销毁」：列车离开相机视锥 5 秒后，原生脚本实例即被整体释放（十余张 GL 纹理、全部已上传模型、脚本画布）；重新入镜的第一帧一次性支付 `mtrCreate` + `createResources` + 整幅画布重绘。转头一次即触发多列车同时重建——多毫秒级掉帧、反复出现、日志无报错。
 
-**正确性修复 (yanyang.4)**
+- 清扫区分「存在」与「可见」：镜头后的列车实例保持热态，重新入镜零成本；仅当车辆真正离开客户端车辆列表 5 秒后才销毁（与 JS 车辆脚本行为一致）。
+- 空闲阀门 `-Djcm.nativeIdleMillis`（默认 90000）与热实例上限 `-Djcm.nativeIdleMax`（默认 32）约束不可见实例的内存占用；`0` 分别表示不按时限释放 / 不设上限。
+- 每 tick 销毁预算 2 个（旧者先），批量退出（世界卸载 / 切维度 / 断线）仍一次性冲刷；PIDS / 装饰 / 电梯清扫套用同一阀门。
+- 清扫工作以每分钟一行的聚合日志输出，销毁流量可直接观测。
 
-- 跨车辆矩阵 arena 别名：C++ 帧的 arena 由模块持有、仅在下一次该模块渲染前有效，而车辆管线先捕获全部再逐车回放——两辆车共享同一脚本模块时回放会读到最后一辆车的矩阵。现捕获时即拷入实例私有存储，结构上不可能串车。
-- WeakHashMap 自引用泄漏（`RenderEyeCandyMixin`，双加载器）：眼糖变换缓存的 lambda 捕获了作为弱键的方块实体，条目永不可回收。现仅捕获基本类型，且位置平移并入缓存，整个基础变换仅在 NBT 变化时重建。
-- 跑马灯缓存补上样式键（font/粗体/斜体）：跨帧持有 wrapper 并改样式的 JS 脚本不再绘制过期格式。
+**LCD 黑屏修复 (yanyang.6)**
 
----
+列车离开视锥后 LCD 永久黑屏（数据正常、无报错）的根因是实例销毁与 Java 侧 id 缓存不同步：重新入镜后每帧携带已被桥遗忘的 id，桥返回 `ERR_INSTANCE(4)`。现销毁与缓存删除在同一临界区完成，快捷键重载亦接入完整 C++ 卸载路径；JDK 22+ 的共享内存访问器安装失败静默回退问题同步修复。
 
-**yanyang.3 — 全代码库 bug 与性能审计：7 项关键修复 + 30 余项正确性/性能/加固修复；原生脚本平台矩阵扩展至 7 个平台（新增 Linux ARM64、Android、iOS/iPadOS）。**
+**传输平面健壮性 (yanyang.5)**
 
-**原生平台扩展 / Native platform matrix (yanyang.3)**
+poller 线程不再被单次异常杀死、被放弃的共享内存区域自愈、CBQ 回调缓冲保留化消除 JVM 崩溃风险、模块回复长度全路径钳制；修复时序缺陷共 9 处，shm 协议（layout v2）不变。
 
-- 每个新 jar 内置 7 个平台的 JNI bridge：windows-x64、linux-x64、**linux-arm64**（ARM 桌面 + Pojav 类 Android 启动器的 glibc JVM）、macos-x64、macos-arm64、**android-arm64**（NDK arm64-v8a、16 KB page 对齐）、**ios-arm64**（Mach-O dylib，iOS 与 iPadOS 共用，侧载工具负责重签）。
-- 修复平台键把 Linux/Windows ARM64 一律归为 `-x64` 的旧 bug（ARM64 Linux 此前永远解析到错误目录）；Linux+aarch64 环境按 linux-arm64 → ios-arm64 → android-arm64 依次回退，覆盖 iOS 沙箱内 `os.name=Linux` 的 JVM。
-- native SDK zip 同步附带 7 平台的示例模块预编译库。
+**交付物**
 
-**关键修复 / Critical fixes (yanyang.3)**
-
-- F3+T 资源重载从未真正重载 C++ 脚本：`NativeScriptManager.reload()` 是死代码——更新后的 `.so`/`.dll` 被静默忽略，且重载后 `NativeHost` 继续引用已被 `ModelManagerJS.reset()` 释放的模型（渲染线程 use-after-free）。现在重载会先释放全部模块再重新解析。
-- 模组记录流越界可崩溃整个 JVM：桥接层 `patch_frame_handles` 无边界校验地遍历模块提供的 `record_count`/`record_size`（在模块崩溃保护之外执行 memmove）。现已逐步校验。
-- 单个损坏的 MTR 4 脚本条目会中止整个资源包的解析（vehicle/eyecandy/lift 三类全部受牵连）；`NativeScriptManager.load()` 遇到非法库标识符（大写路径等）直接逃逸。现逐条目隔离并跳过。
-- C++ `Text`/`Texture` 未设置的字段被清零覆盖：未设 `color` 完全透明、未设 `scale` 尺寸为零、未设 `uv` 退化、未设 `align` 居中——官方示例 `pids_arrivals.cpp` 即受影响。默认值现由单一来源提供。
-- Forge 端原生车辆脚本只捕获不渲染（`VehicleResourceMixin` 从未接入原生回放）；Forge 端轨道裁剪逻辑反转（限内轨道永远渲染、从不遮挡剔除——原版上游同样存在）。
-- 阴影 pass（Iris/OptiFine）下车辆/电梯脚本每帧被驱动两次；骑乘中被视锥裁剪的电梯会冻结玩家；`mtrDispose` 永远拿到实例首帧的快照。
-- C++ SDK 访问器（`Stop::interchange/exit`、`Exit::destination`、`StopList::at`、`Train::car`、`Train::rail_progress`）全部补齐越界检查——脚本差一即越界读取快照 direct-ByteBuffer 并 SIGSEGV 整个 JVM。
-
-**性能 / Performance (yanyang.3)**：每车每帧一棵共享车厢位置树（原先每车 2N+1 棵，12 节列车 ≈ 每秒 1500 次全树重建）、仅对持有原生脚本的车辆计算视锥盒、零分配一次性追踪、`rasterizeText` 直读 `int[]`、gfx2d 复用草稿缓冲、泄漏修剪（`SCRIPT_IDS`/`TRACED`/`CAR_POSITIONS`）、失败加载负缓存、稳定临时文件名、`clearDeadInstance` 去快照化；font5x7 补齐小写 a-z（原先小写渲染为空白）。
-
----
-
-**yanyang.2 — `minecraft_custom_resources.json` 脚本条目不再需要 `language` 字段：`scriptLocations` 逐条目自动判定语言，同一条目可混用任意数量的 JavaScript 与 C++ 脚本。
-
-**新版声明格式 / New declaration format**
-
-```json
-"vehicleScripts": [
-    {
-        "id": "cst_sp1900_lcd",
-        "prependExpressions": ["print('Hello world')"],
-        "scriptLocations": ["mtr:my_pack/js/sp1900_lcd/main.js", "mtr:my_pack/natives/sp1900_train_num"],
-        "input": { "yearEra": 2004 },
-        "dataFetchMode": "ALL"
-    }
-]
-```
-
-- `*.js`（大小写不敏感）→ JavaScript；无扩展名 → C++ 平台无关 stem（`natives/{platform}/lib*.so|*.dll|lib*.dylib` 自动解析）；`.so/.dll/.dylib` 完整路径与按平台映射表亦可用。
-- **vehicle / lift / eyecandy / pids 四类脚本全部支持混合**：JS 部分连接成单一 ParsedScript，C++ 模块全部挂到同一脚本 id；两侧各自捕获、各自回放，互不冲突；某一侧缺失或失败只跳过该侧（附提示），另一侧照常渲染。
-- PIDS 预设（`joban_custom_resources.json`）新增同样的 `scriptLocations` 键，与老的 `scriptFiles` 并存。
-- 老格式完全兼容：`"language": "cpp"` + `nativeLibrary`/`nativeLibraries` 仍是纯 C++ 条目（也可与 `.js` 混用）；`"language": "javascript"` 强制全 JS；MTR 3 `script_files` 语义不变。
-- 混合电梯条目下内置渲染只抑制一次、乘坐移动每帧只应用一次；eyecandy 方块使用事件同时送达 JS 与 C++。
-
-**En (summary)**: script entries no longer declare `language` — each `scriptLocations` entry is auto-classified (`*.js` = JavaScript, anything else = a C++ module) and any number of both may be mixed in one entry. Vehicles, lifts, eyecandies and PIDS all support it; each side captures into its own replay registry (no draw-call conflicts) and a failed part degrades gracefully. Legacy `language: "cpp"` / `nativeLibrary` declarations keep working and may be combined with `.js` entries. PIDS presets gain the same `scriptLocations` key.
-
-**翻译对齐原版 / Translations aligned with upstream**
-
-- 语言文件与原版 JCM（同样由 BugQuantumCore 维护翻译）逐键对齐、原版优先；本版采纳原版 `main` 的爱尔兰语（ga_ie）占位与捷克语新键。
-
-**保留的全部晏阳能力 / All Yanyang features retained**
-
-- `getTransportType()` 返回 MAGIC MTR Addon 车辆类型 + 4 种基础类型（JS / Java / C++，ABI 9；可选反射集成，无硬依赖）。
-- 原生脚本零 GC 卡顿：StopsData 跨帧复用、零分配快照 Builder、JNI 边界收窄（无 256 KB 拷贝）、1 MB 按需像素 arena。
-- 原生车辆视锥剔除（`VehicleCulling`）与原版 beta.2 的 MTR 层剔除互补；ABI 6/7/8 模块与 ABI 9 并存。
-- 12 jar（6 MC 版本 × Fabric/Forge，各 ~24.6 MB，内置 4 平台 bridge）+ native SDK zip，随本 Release 附带。
+12 个 jar（6 个 MC 版本 × Fabric/Forge，均内置 7 平台原生桥：windows-x64 / linux-x64 / linux-arm64 / android-arm64 / macos-x64 / macos-arm64 / ios-arm64）+ native SDK zip，见本 Release 附件与 Actions 产物。
