@@ -156,9 +156,4 @@ public class EyecandyBlockEntityWrapper {
     public boolean modelChanged(String modelId) {
         return !modelId.equals(be.getModelId());
     }
-
-    @ApiInternal
-    public boolean removed() {
-        return be.isRemoved2() || be.getWorld2().getBlockEntity(blockPos().rawBlockPos()) == null;
-    }
 }

@@ -14,13 +14,13 @@ import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.core.integration.VoxelShapeWrapper;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.VoxelShape;
+import org.mtr.mod.block.BlockEyeCandy;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("unused")
 public class EyeCandyScriptContext extends MTRScriptContext {
-    private final EyecandyBlockEntityWrapper blockEntity;
     private final List<ModelDrawCall> drawCalls = new ArrayList<>();
     private final EyecandyEvents events;
     private VoxelShapeWrapper outlineShape;
@@ -29,9 +29,8 @@ public class EyeCandyScriptContext extends MTRScriptContext {
     protected final ScriptRenderManager renderManager;
 
     @ApiInternal
-    public EyeCandyScriptContext(EyecandyBlockEntityWrapper blockEntity) {
+    public EyeCandyScriptContext(BlockEyeCandy.BlockEntity blockEntity) {
         super(blockEntity.getModelId());
-        this.blockEntity = blockEntity;
         this.events = new EyecandyEvents();
         this.outlineShape = null;
         this.soundManager = new ScriptSoundManager();

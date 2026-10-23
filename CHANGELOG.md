@@ -16,6 +16,8 @@
 ## Technical
 
 ### Scripting
+- **Perf Fix: Skip executing scripts during render pass.** (BugQuantumCore)
+  - Some misc refactoring is also made to reduce performance impact of non-scripted elements.
 - Add `MinecraftClient.getCameraMode()` to return the perspective of the player's camera. (F5)
 - Add `GraphicsTexture.fullAA()` and `GraphicsTexture.noAA()` for configuring anti-aliasing behaviour.
 - Add light parameter overload for `RenderManager.drawModel()`, for rendering a model with a particular light.

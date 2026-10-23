@@ -14,6 +14,7 @@ import org.mtr.core.data.VehicleCar;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectImmutableList;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.render.*;
@@ -32,6 +33,8 @@ import java.util.Map;
 public class RenderVehiclesMixin {
     @Inject(method = "render(JLorg/mtr/mapping/holder/Vector3d;)V", at = @At(value = "INVOKE", target = "Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArraySet;forEach(Ljava/util/function/Consumer;)V"))
     private static void jsblock$executeScript(long millisElapsed, Vector3d cameraShakeOffset, CallbackInfo ci) {
+        if(OptimizedRenderer.renderingShadows()) return;
+
         for(VehicleExtension vehicle : MinecraftClientData.getInstance().vehicles) {
             ObjectImmutableList<VehicleCar> cars = vehicle.vehicleExtraData.immutableVehicleCars;
             Object2ObjectOpenHashMap<String, VehicleResourceProvider.VehicleScriptConfiguration> scriptsInVehicle = new Object2ObjectOpenHashMap<>();
@@ -45,11 +48,11 @@ public class RenderVehiclesMixin {
 
             for(Map.Entry<String, VehicleResourceProvider.VehicleScriptConfiguration> scriptEntry : scriptsInVehicle.entrySet()) {
                 String scriptEntryId = scriptEntry.getKey();
-                List<Integer> carsForScripts = new ArrayList<>();
+                List<Integer> associatedCarIndices = new ArrayList<>();
                 for(int i = 0; i < cars.size(); i++) {
-                    if(MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(cars.get(i).getVehicleId()).equals(scriptEntryId)) carsForScripts.add(i);
+                    if(MtrScriptingResourceManager.vehicle.getVehicleScriptEntryId(cars.get(i).getVehicleId()).equals(scriptEntryId)) associatedCarIndices.add(i);
                 }
-                int[] carsArray = carsForScripts.stream().mapToInt(i->i).toArray();
+                int[] carsArray = associatedCarIndices.stream().mapToInt(i->i).toArray();
 
                 VehicleScriptContext.DataFetchMode dataFetchMode = scriptEntry.getValue().dataFetchMode();
                 VehicleScriptInstance scriptInstance = (VehicleScriptInstance) MTRContentScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("vehicle", vehicle.getHexId(), scriptEntryId), () -> new VehicleScriptInstance(new VehicleScriptContext(vehicle, scriptEntryId, carsArray), vehicle, scriptEntry.getValue().parsedScript()));

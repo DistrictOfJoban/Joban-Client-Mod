@@ -15,11 +15,13 @@ import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptContent;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.core.primitive.ScriptInstance;
+import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mod.render.StoredMatrixTransformations;
@@ -94,23 +96,25 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, LongImmutableList targetPlatformIds, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height, int light) {
-        PIDSWrapper pidsWrapper = new PIDSWrapper(be, targetPlatformIds, arrivals, width, height);
-        ScriptInstance<PIDSWrapper> scriptInstance = JCMScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("pids", getId(), pos.getX(), pos.getY(), pos.getZ()), () -> new PIDSScriptInstance(be, parsedScripts, pidsWrapper));
+        ScriptInstance<PIDSWrapper> scriptInstance = JCMScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("pids", getId(), pos.getX(), pos.getY(), pos.getZ()), () -> new PIDSScriptInstance(be, parsedScripts));
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;
             PIDSScriptContext scriptContext = (PIDSScriptContext)scriptInstance.getContextObject();
 
-            scriptInstance.setWrapperObject(pidsWrapper);
-            scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
-                pidsScriptInstance.saveRenderCalls(scriptContext.renderManager());
-                pidsScriptInstance.saveSoundCalls(scriptContext.soundManager());
-                scriptContext.resetForNextRun();
-            });
+            if(!OptimizedRenderer.renderingShadows()) {
+                PIDSWrapper pidsWrapper = new PIDSWrapper(be, targetPlatformIds, arrivals, width, height);
+                scriptInstance.setWrapperObject(pidsWrapper);
+                scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
+                    pidsScriptInstance.saveRenderCalls(scriptContext.renderManager());
+                    pidsScriptInstance.saveSoundCalls(scriptContext.soundManager());
+                    scriptContext.resetForNextRun();
+                });
+            }
 
             graphicsHolder.translate(0, 0, -0.005);
             pidsScriptInstance.getRenderManager().invoke(world, storedMatrixTransformations, facing, light);
-            pidsScriptInstance.getSoundManager().invoke(world, pidsWrapper.blockPos());
+            pidsScriptInstance.getSoundManager().invoke(world, new ScriptVector3f(pos));
         }
     }
 
