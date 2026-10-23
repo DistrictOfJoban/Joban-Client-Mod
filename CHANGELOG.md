@@ -1,5 +1,76 @@
 # Changelog
 
+## 2.3.0-beta-2.yanyang.7
+
+**Fix for intermittent stuttering after yanyang.6 ("间歇性卡顿", no
+errors in the log).** The yanyang.6 fix revived train LCDs that the old
+stale-id bug had killed — and with them, a cost the bug had been
+accidentally suppressing. Every train that left the camera frustum for
+more than 5 seconds had its native script instance fully disposed (a
+dozen-plus GL textures, 60–90 uploaded quad models, the whole script
+canvas); the moment it re-entered view, ONE frame paid the entire
+rebuild — `mtrCreate`, the `createResources` host upcall (fresh texture
+and model allocations) and a full-canvas repaint upload, all on the
+render thread. Turning the camera re-entered several trains at once:
+multi-millisecond hitches, several per minute, nothing in the log. The
+frustum cull that triggers this is doing its job (out-of-view trains
+skip all render work) — the bug was the sweep conflating "not rendered"
+with "gone".
+
+### What changed
+
+- **The vehicle sweep now separates existence from visibility.**
+  `NativeVehicleDriver.render()` runs for every vehicle the client
+  knows about, every frame — culled or not — so it now stamps a `seen`
+  marker before the frustum check. The per-tick sweep disposes a state
+  only when the vehicle has not been *seen* for 5s (it left the
+  client's vehicle list — a real despawn, unchanged semantics). A train
+  that is merely behind the camera keeps its instance warm and resumes
+  for free, exactly like a JavaScript vehicle script, whose instance
+  MTR keeps until the vehicle is actually removed.
+- **Idle valve bounds the warm set** (`-Djcm.nativeIdleMillis=<ms>`,
+  default 90000): a vehicle that still exists but has not been
+  *rendered* (frustum-culled, far away) for that long has its instance
+  released after all — the C++ state and the GL textures are real
+  memory, and an invisible train has no pixels to lose. It rebuilds
+  lazily if it ever becomes visible again. `0` disables time-based
+  eviction (full JS parity).
+- **Warm-instance retention cap** (`-Djcm.nativeIdleMax=<count>`,
+  default 32): at most this many instances stay warm while unrendered;
+  beyond the cap the least-recently-rendered is released (in-view
+  rendering is never capped). `0` disables the cap.
+- **Per-tick disposal budget (2/tick, oldest first).** A mass expiry
+  used to dispose every stale instance in a single client tick — one
+  frame could tear down dozens of instances' worth of GL objects
+  (hundreds of `glDelete` calls), the same silent hitch as the rebuild.
+  Genuine mass teardowns (world unload, dimension switch, disconnect —
+  more than 8 at once with nothing rendering) still flush at once,
+  where the hitch is invisible behind a loading screen.
+- **The content sweep (PIDS / eyecandy / lifts) got the same valve.**
+  Block-entity renderers only run for *visible* blocks, so a PIDS
+  behind the camera for 5s was disposed and rebuilt on re-entry just
+  like the trains. Wrappers with an explicit removal flag (eyecandy,
+  lifts) still dispose immediately; time-based expiry now waits out the
+  shared 90s valve instead of 5s.
+- **The sweep logs its work** as one aggregated line per minute
+  (`[native vehicle] sweep in the last 60s: N despawned, M
+  idle-released …`) instead of being invisible — disposal churn is now
+  diagnosable from `latest.log`. The old sweep also allocated a regex
+  `split()` per stale state per tick; states carry their identity
+  fields now.
+
+### Why no new tests
+
+The sweep logic lives in `NativeVehicleDriver`, which is coupled to MTR
+render hooks and is not covered by the bare-javac native integration
+harness (that harness exercises the transport planes, which this
+release does not touch). The behavior is observable in-game via the new
+sweep log line: with yanyang.6, parking a scripted train off-screen for
+6+ seconds and turning the camera back logged a fresh
+`NativeHost: resources for …` line per train on the re-entry frame;
+with yanyang.7 the same maneuver logs nothing and the LCD resumes
+instantly.
+
 ## 2.3.0-beta-2.yanyang.6
 
 **Fix for permanently blank train LCDs ("LCD无法显示").** A train that

@@ -52,8 +52,12 @@ public final class NativeVehicleDriver {
         final NativeScriptManager.VehicleSnapshotBuffers snapshots =
                 new NativeScriptManager.VehicleSnapshotBuffers();
         final String instanceKey;
-        /** Precomputed "hexId\u0000scriptId" for the draw registry. */
+        /* Combined map key ("hexId + NUL + scriptId") for the draw registry. */
         final String drawKey;
+        /* Identity kept as fields: the sweep used to split them back out of
+         * the map key with a regex for every stale entry, every tick. */
+        final String vehicleHexId;
+        final String scriptId;
         final Map<Long, VehicleScriptContext> contexts = new java.util.LinkedHashMap<>();
         final NativeRenderStats perf = new NativeRenderStats();
         int[] cars = new int[0];
@@ -65,8 +69,14 @@ public final class NativeVehicleDriver {
          * not re-log its stack trace every frame. */
         long errorUntilNanos;
         long touched = System.nanoTime();
+        /** Last frame the VEHICLE was seen by render() — culled or not. The
+         *  existence signal the sweep keys on; `touched` above is the RENDERED
+         *  signal (frustum-passing) that the idle valve uses. */
+        long seen = System.nanoTime();
 
         State(String vehicleHexId, String scriptId) {
+            this.vehicleHexId = vehicleHexId;
+            this.scriptId = scriptId;
             this.instanceKey = vehicleHexId + "/" + scriptId;
             this.drawKey = vehicleHexId + "\u0000" + scriptId;
         }
@@ -305,6 +315,25 @@ public final class NativeVehicleDriver {
         }
         if (!allLoaded) ids.removeIf(id -> !NativeScriptManager.isLoaded(id));
         if (ids.isEmpty()) return 0;
+
+        /* Existence vs. rendering: state.touched only advances inside
+           renderOne, which the frustum cull below skips — but THIS method
+           runs for every vehicle the client knows about, every frame. Bump
+           `seen` before the cull so the tick sweep can tell "train behind
+           the camera" (keep the instance: textures, models and the script
+           canvas stay warm, resuming costs nothing) from "train despawned"
+           (dispose, exactly as before). Without this, a train that spent 5 s
+           out of view was fully disposed and paid its whole rebuild
+           (mtrCreate + createResources + a full-canvas repaint) in the
+           FIRST frame after re-entering view — a multi-millisecond hitch
+           per train, several at once when the camera turns, and silent in
+           the log. */
+        final String vehicleHexId = vehicle.getHexId();
+        final long nowSeen = System.nanoTime();
+        for (int i = 0; i < ids.size(); i++) {
+            final State existing = STATES.get(key(vehicleHexId, ids.get(i)));
+            if (existing != null) existing.seen = nowSeen;
+        }
 
         /* Frustum cull before anything expensive: a train outside the camera
            view would otherwise pay a full snapshot marshal plus a whole-canvas
@@ -664,6 +693,39 @@ public final class NativeVehicleDriver {
     /* Lifetime                                                            */
     /* ------------------------------------------------------------------ */
 
+    /** Grace after the last sighting before a vehicle is declared despawned. */
+    private static final long UNSEEN_FORGET_NANOS = 5_000_000_000L;
+
+    /**
+     * Disposes per client tick are capped: one instance teardown frees about
+     * a dozen GL textures and 60–90 uploaded models, so a mass expiry used
+     * to land all of that in a single frame — a silent hitch exactly like
+     * the re-entry rebuild. Candidates beyond the budget simply wait for
+     * the next tick; the sweep re-derives the candidate set every tick.
+     */
+    private static final int MAX_FORGETS_PER_TICK = 2;
+
+    /**
+     * A mass expiry bigger than this in one tick is a teardown (world
+     * unload, dimension switch, disconnect): nothing is rendering then, so
+     * the whole burst is paid at once instead of dripping GL deletions
+     * across the following seconds of a loading screen.
+     */
+    private static final int MASS_EXPIRY_FLUSH = 8;
+
+    /** Oldest-seen-first (despawned candidates). */
+    private static final java.util.Comparator<State> SEEN_ORDER =
+            java.util.Comparator.comparingLong(s -> s.seen);
+
+    /** Oldest-rendered-first (idle candidates). */
+    private static final java.util.Comparator<State> TOUCHED_ORDER =
+            java.util.Comparator.comparingLong(s -> s.touched);
+
+    /* Throttled sweep reporting (once a minute, aggregated). */
+    private static long sweepLastLog = System.nanoTime();
+    private static int sweepDespawnedSinceLog;
+    private static int sweepIdleSinceLog;
+
     /** Forget one vehicle+script (script instance dropped, vehicle gone). */
     public static void forget(String vehicleHexId, String scriptId) {
         State state=STATES.remove(key(vehicleHexId, scriptId));
@@ -681,17 +743,113 @@ public final class NativeVehicleDriver {
         if (STATES.get(key(vehicleHexId, scriptId)) == null) SCRIPT_IDS.remove(vehicleHexId);
     }
 
-    /** Drop every per-vehicle state (resource reload). */
+    /**
+     * Per-tick sweep. Two distinct conditions, deliberately:
+     * <ol>
+     *   <li><b>despawned</b> — the vehicle has not been SEEN by
+     *       {@link #render} for {@link #UNSEEN_FORGET_NANOS}: it left the
+     *       client's vehicle list, so its state is dropped exactly as
+     *       before (the 5 s grace is unchanged);</li>
+     *   <li><b>idle</b> — the vehicle still exists but has not been
+     *       RENDERED (frustum-culled, far away) for the idle-valve horizon
+     *       ({@code jcm.nativeIdleMillis}, default 90 s), or the warm
+     *       unrendered set exceeds the retention cap
+     *       ({@code jcm.nativeIdleMax}, default 32). The instance is
+     *       released to bound memory; it rebuilds lazily (one first-frame
+     *       burst) if the train becomes visible again.</li>
+     * </ol>
+     * Until yanyang.7 condition (2) fired after 5 s of invisibility, so
+     * every train crossing the camera frustum was disposed and rebuilt at
+     * full cost — the reported intermittent stutter. Culled-but-alive
+     * trains now resume for free, like JavaScript vehicle scripts, which
+     * keep their instances until the vehicle is actually removed.
+     */
     public static void tick() {
-        long now=System.nanoTime();
-        for(Map.Entry<String,State> entry:STATES.entrySet()) if(now-entry.getValue().touched>5_000_000_000L) {
-            String[] identity=entry.getKey().split("\\u0000",2);
-            if(identity.length==2) forget(identity[0],identity[1]);
-        }
+        final long now=System.nanoTime();
+        /* Car sound-position cache: stamped for every scripted vehicle every
+           frame (culled or not, via computeCarPositions), so the 5 s expiry
+           here really does mean "vehicle gone". */
         for(Map.Entry<String,CarPositions> entry:CAR_POSITIONS.entrySet()) {
-            if(now-entry.getValue().stamp>5_000_000_000L) CAR_POSITIONS.remove(entry.getKey());
+            if(now-entry.getValue().stamp>UNSEEN_FORGET_NANOS) CAR_POSITIONS.remove(entry.getKey());
+        }
+        /* Candidates collected first (no dispose-while-iterating, and the
+           lists need re-ranking); two tiny lists per tick is nothing. */
+        java.util.ArrayList<State> despawned = null;
+        java.util.ArrayList<State> idle = null;
+        int warmIdle = 0;   /* alive + unrendered beyond the despawn grace */
+        for(State state:STATES.values()) {
+            final boolean alive = now - state.seen <= UNSEEN_FORGET_NANOS;
+            if (!alive) {
+                if (despawned == null) despawned = new java.util.ArrayList<>();
+                despawned.add(state);
+            } else if (now - state.touched > UNSEEN_FORGET_NANOS) {
+                warmIdle++;
+                if (now - state.touched > NativeScriptManager.IDLE_DISPOSE_NANOS) {
+                    if (idle == null) idle = new java.util.ArrayList<>();
+                    idle.add(state);
+                }
+            }
+        }
+        /* Retention cap: keep at most IDLE_RETAIN_MAX instances warm while
+           unrendered (LRU). Counted over the same warm set the time valve
+           sees, so the cap cannot dispose a train that rendered moments ago.
+           A cap of 0 disables it (keep every living vehicle's instance). */
+        if (NativeScriptManager.IDLE_RETAIN_MAX > 0 && warmIdle > NativeScriptManager.IDLE_RETAIN_MAX) {
+            java.util.ArrayList<State> warm = new java.util.ArrayList<>(warmIdle);
+            for(State state:STATES.values()) {
+                if (now - state.seen <= UNSEEN_FORGET_NANOS
+                        && now - state.touched > UNSEEN_FORGET_NANOS) warm.add(state);
+            }
+            warm.sort(TOUCHED_ORDER);
+            final int overflow = warm.size() - NativeScriptManager.IDLE_RETAIN_MAX;
+            if (idle == null) idle = new java.util.ArrayList<>();
+            for (int i = 0; i < overflow && i < warm.size(); i++) {
+                if (!idle.contains(warm.get(i))) idle.add(warm.get(i));
+            }
+        }
+
+        if (despawned == null && idle == null) {
+            sweepReport(now, 0, 0);
+            return;
+        }
+        final int despawnedCount = despawned == null ? 0 : despawned.size();
+        final int idleCount = idle == null ? 0 : idle.size();
+        if (despawnedCount > 0) despawned.sort(SEEN_ORDER);
+        if (idleCount > 0) idle.sort(TOUCHED_ORDER);
+
+        /* Teardown fast-path (see MASS_EXPIRY_FLUSH). */
+        int budget = despawnedCount > MASS_EXPIRY_FLUSH
+                ? Integer.MAX_VALUE : MAX_FORGETS_PER_TICK;
+        int forgotten = 0, idleReleased = 0;
+        for (int i = 0; i < despawnedCount && budget > 0; i++) {
+            forget(despawned.get(i).vehicleHexId, despawned.get(i).scriptId);
+            budget--; forgotten++;
+        }
+        for (int i = 0; i < idleCount && budget > 0; i++) {
+            forget(idle.get(i).vehicleHexId, idle.get(i).scriptId);
+            budget--; idleReleased++;
+        }
+        sweepReport(now, forgotten, idleReleased);
+    }
+
+    /** Once-a-minute aggregate line so the sweep's work is visible in logs
+     *  without per-dispose spam (it can legally fire every tick). */
+    private static void sweepReport(long now, int despawnedNow, int idleNow) {
+        sweepDespawnedSinceLog += despawnedNow;
+        sweepIdleSinceLog += idleNow;
+        if (now - sweepLastLog < 60_000_000_000L) return;
+        sweepLastLog = now;
+        final int despawnedTotal = sweepDespawnedSinceLog;
+        final int idleTotal = sweepIdleSinceLog;
+        sweepDespawnedSinceLog = 0;
+        sweepIdleSinceLog = 0;
+        if (despawnedTotal > 0 || idleTotal > 0) {
+            JCMLogger.info("[native vehicle] sweep in the last 60s: {} despawned, {} idle-released "
+                    + "(idle = alive but unrendered beyond the valve; instances rebuild on next visibility)",
+                    despawnedTotal, idleTotal);
         }
     }
+
     public static void invokeBogie(VehicleExtension vehicle,String scriptId,int car,int bogie,StoredMatrixTransformations transforms,int light) {
         State state=STATES.get(key(vehicle.getHexId(),scriptId)); if(state==null) return;
         World world=World.cast(MinecraftClient.getInstance().getWorldMapped()); if(world==null) return;

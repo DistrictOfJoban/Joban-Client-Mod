@@ -233,9 +233,20 @@ public final class NativeContentDriver {
     public static void tick() {
         long now=System.nanoTime();
         for(State state:STATES.values()) {
-            boolean removed=now-state.touched>5_000_000_000L;
-            if(state.wrapper instanceof EyecandyBlockEntityWrapper) removed|=((EyecandyBlockEntityWrapper)state.wrapper).removed();
-            if(state.wrapper instanceof LiftWrapper) removed|=((LiftWrapper)state.wrapper).removed();
+            /* Explicit removal flags (eyecandy/lift wrappers) dispose at
+               once — a real despawn signal. Time-based expiry is now the
+               shared IDLE VALVE, not the old 5 s rule: block-entity
+               renderers only run for VISIBLE blocks, so "not rendered" used
+               to mean "behind the camera" at least as often as "gone" — a
+               PIDS that left the frustum for 5 s was disposed and rebuilt
+               (mtrCreate + texture/model churn + full repaint) in the first
+               frame after re-entering view, the same silent stutter the
+               vehicle sweep had. Living blocks keep their instance until
+               the valve horizon (jcm.nativeIdleMillis, default 90 s). */
+            boolean removed=false;
+            if(state.wrapper instanceof EyecandyBlockEntityWrapper) removed=((EyecandyBlockEntityWrapper)state.wrapper).removed();
+            else if(state.wrapper instanceof LiftWrapper) removed=((LiftWrapper)state.wrapper).removed();
+            if(!removed&&now-state.touched>NativeScriptManager.IDLE_DISPOSE_NANOS) removed=true;
             if(removed&&STATES.remove(state.key,state)) {
                 NativeScriptManager.disposeInstance(state.key,state.script,state.snapshot);
                 /* dispose hands the LIVE buffer to mtrDispose one last time;

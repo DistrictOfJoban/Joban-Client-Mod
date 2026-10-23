@@ -934,6 +934,68 @@ public final class NativeScriptManager {
     public static final int MTR_RESOURCE_EYECANDY = 2;
     public static final int MTR_RESOURCE_LIFT = 3;
 
+    /* ------------------------------------------------------------------ */
+    /* shared sweep tuning (NativeVehicleDriver / NativeContentDriver)    */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Idle valve, shared by both driver sweeps.
+     *
+     * <p>Both sweeps used to dispose a script instance after 5 s without a
+     * RENDER. But render hooks only run for things that are actually being
+     * drawn: a train behind the camera frustum, or a PIDS on the far side of
+     * a wall, is invisible — not gone. The 5 s rule disposed its instance
+     * (about a dozen GL textures and 60–90 uploaded quad models for a real
+     * LCD script), and the moment it re-entered view one single frame paid
+     * the whole rebuild: mtrCreate + the createResources host upcall + a
+     * full-canvas repaint upload. Turning the camera was therefore a burst
+     * of multi-millisecond hitches with nothing in the log — the "intermittent
+     * stutter" reported against yanyang.6.
+     *
+     * <p>The valve separates the two conditions: an instance is disposed
+     * promptly only when its owner is provably gone (vehicle despawned /
+     * block-entity removed); an instance that is merely UNRENDERED is kept
+     * warm so resuming it costs nothing, and is released only after it has
+     * been idle for this long (or, for vehicles, past the warm-instance
+     * retention cap below).
+     *
+     * <p>{@code -Djcm.nativeIdleMillis=<ms>} overrides; {@code 0} disables
+     * time-based eviction entirely (instances of living owners are then kept
+     * until the owner is removed — JavaScript-script parity).
+     */
+    static final long IDLE_DISPOSE_NANOS = idleDisposeNanos();
+
+    /**
+     * How many vehicle instances may stay warm while unrendered (behind the
+     * camera, far away) before the oldest is released. In-view rendering is
+     * never capped — only the invisible warm set is. Bounded so a huge world
+     * cannot pin unbounded VRAM forever; generous enough that a normal
+     * world's whole fleet stays warm and frustum re-entry is always free.
+     *
+     * <p>{@code -Djcm.nativeIdleMax=<count>} overrides (0 = no cap).
+     */
+    static final int IDLE_RETAIN_MAX = idleRetainMax();
+
+    private static long idleDisposeNanos() {
+        long millis = 90_000L;
+        try {
+            final String property = System.getProperty("jcm.nativeIdleMillis");
+            if (property != null) millis = Long.parseLong(property.trim());
+        } catch (Throwable ignored) {
+        }
+        return millis <= 0 ? Long.MAX_VALUE : Math.min(millis, 3_600_000L) * 1_000_000L;
+    }
+
+    private static int idleRetainMax() {
+        int max = 32;
+        try {
+            final String property = System.getProperty("jcm.nativeIdleMax");
+            if (property != null) max = Integer.parseInt(property.trim());
+        } catch (Throwable ignored) {
+        }
+        return Math.max(0, Math.min(max, 1024));
+    }
+
     /**
      * NativeFrame — draw-call records + arenas read back from the
      * module. The replay step (render thread) walks the records and
