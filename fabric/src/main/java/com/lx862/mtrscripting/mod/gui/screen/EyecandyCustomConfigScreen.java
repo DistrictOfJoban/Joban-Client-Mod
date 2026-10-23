@@ -8,12 +8,14 @@ import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.amberui.gui.screen.SavableScreen;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
+import com.lx862.mtrscripting.mod.gui.widget.ConfigCheckbox;
 import com.lx862.mtrscripting.mod.gui.widget.ConfigIntegerField;
 import com.lx862.mtrscripting.mod.gui.widget.ConfigTextField;
 import com.lx862.mtrscripting.mod.gui.widget.ValidatableWidget;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import com.lx862.mtrscripting.mod.network.packet.EyecandyCustomConfigUpdateC2SPacket;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.CheckboxWidgetExtension;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.TextFieldWidgetExtension;
 import org.mtr.mapping.tool.TextCase;
@@ -116,9 +118,9 @@ public class EyecandyCustomConfigScreen extends SavableScreen implements RenderH
     private void addEntry(EyecandyCustomConfig.Entry entry) {
         HorizontalWidgetSet widgetSet = new HorizontalWidgetSet();
 
-        String originalValue = this.storedConfigEntries.get(entry.id());
-        String currentValue = this.storedConfigEntriesPending.get(entry.id());
         String defaultValue = entry.defaultValue() == null ? "" : entry.defaultValue();
+        String originalValue = this.storedConfigEntries.getOrDefault(entry.id(), defaultValue);
+        String currentValue = this.storedConfigEntriesPending.getOrDefault(entry.id(), originalValue);
 
         if(entry.type() == EyecandyCustomConfig.Entry.Type.STRING) {
             ConfigTextField textField = new ConfigTextField(0, 0, 120, 20, 600, TextCase.DEFAULT, null, null, entry.validationCallback());
@@ -126,20 +128,33 @@ public class EyecandyCustomConfigScreen extends SavableScreen implements RenderH
                 this.storedConfigEntriesPending.put(entry.id(), newStr);
             });
             textField.setOriginalValue(originalValue);
-            textField.setText2(currentValue == null ? defaultValue : currentValue);
+            textField.setText2(currentValue);
             widgetSet.addWidget(new MappedWidget(textField));
             addChild(new ClickableWidget(textField));
             validatableWidgets.add(textField);
         } else if(entry.type() == EyecandyCustomConfig.Entry.Type.INTEGER) {
+            int parsedCurrentValue = parseInt(currentValue, 0);
+            int parsedOriginalValue = parseInt(originalValue, 0);
+
             ConfigIntegerField textField = new ConfigIntegerField(0, 0, 120, 20, entry.validationCallback());
             textField.onChange((newValue) -> {
                 this.storedConfigEntriesPending.put(entry.id(), String.valueOf(newValue));
             });
-            textField.setOriginalValue(parseInt(originalValue, 0));
-            textField.setValue(parseInt(originalValue, 0));
+            textField.setOriginalValue(parsedOriginalValue);
+            textField.setValue(parsedCurrentValue);
             widgetSet.addWidget(new MappedWidget(textField));
             addChild(new ClickableWidget(textField));
             validatableWidgets.add(textField);
+        } else if(entry.type() == EyecandyCustomConfig.Entry.Type.BOOLEAN) {
+            boolean parsedCurrentValue = Objects.equals(currentValue, "true");
+            boolean parsedOriginalValue = Objects.equals(originalValue, "true");
+            ConfigCheckbox checkbox = new ConfigCheckbox(0, 0, 20, 20, (bl) -> {
+                this.storedConfigEntriesPending.put(entry.id(), String.valueOf(bl));
+            });
+            checkbox.setOriginalValue(parsedOriginalValue);
+            checkbox.setChecked(parsedCurrentValue);
+            widgetSet.addWidget(new MappedWidget(checkbox));
+            addChild(new ClickableWidget(checkbox));
         }
 
         widgetSet.setXYSize(0, 0, 120, 20);

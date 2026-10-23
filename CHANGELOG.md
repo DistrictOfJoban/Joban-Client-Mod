@@ -8,22 +8,10 @@
 
 
 > This release contains breaking changes to JCM's internal codebase. Common addons have been tested against, however some addon depending on JCM may break.
- 
-This is an interim beta release.
 
 ## General
 ### Blocks
 - Fix: Wall-attached blocks may now be attached to the backside of stairs, which is fully solid.
-
-### MTR Patch
-- (Fabric-only) Preserves rail preview of long-running rail (i.e. Outside the render distance), instead of disappearing.
-- For MTR's multi-item selection screen, you can now hold `Shift` to exclusively select one item, instead of needing to add the new item then removing the existing item.
-- **Introduce experimental Frustum culling**
-  - MTR 4 uses occlusion culling, which would perform tracing to check whether elements behind terrains are visible from the player's position.
-  - This update adds Frustum Culling as another layer on top of Occlusion Culling, which simply checks whether the elements are within the camera bound at all. Therefore if you aren't looking at the element, it will skip being rendered. (Scripts will continue to be invoked just like Occlusion Culling.)
-  - If you see any visual artifacts caused by this, please report.
-- Re-add camera-lowering feature from MTR 3 by sneaking. (Previously branded as "sitting")
-  - May be turned off in JCM Settings (Revert to MTR 4 behaviour)
 
 ## Technical
 
@@ -38,24 +26,9 @@ This is an interim beta release.
 - In-game script parsing error now contains the exception message when hovering over it, instead of requiring to view it in the Console.
 - Fix `VanillaText.withHoverText()` using an erroneous type (MutableText instead of VanillaText) as its argument. Now it should behave according to the docs.
 
-### Vehicle Scripting
-- Add `VehicleWrapper.isDoorOpenable()` and `VehicleWrapper.isDoorOpen()`, given the car number and a position relative to the center of the car.
-
-### Lift Scripting
-- Fix `isScriptRendered` not allowing player to board the lift.
-- Rename `isScriptRendered` to `isScriptControlled`
-- Add `LiftWrapper.isDoorway1Openable()`, `LiftWrapper.isDoorway2Openable()`, `LiftWrapper.isDoorway1Open()` and `LiftWrapper.isDoorway2Open()` for checking open doorways.
-
-### Eyecandy Scripting
-- Rename `isScriptRendered` to `isScriptControlled`
-- Add `EyecandyWrapper.facingAngle()`, which returns the block facing angle directly.
-  - Please use this instead of relying on `EyecandyWrapper.facing().asRotation()`, which will no longer work in MTR 4.1.
-
 ## Translations
 Thanks to the following people who have contributed translations for this release! (No particular order):
-- BugQuantumCore & Mewzica (zh_cn)
-- DelphoxOTS (ja_jp)
-- Fed (it_it)
+
 
 Translations for JCM is now hosted on [ZiYue's Weblate](https://weblate.ziyuesinicization.site/projects/joban-client-mod/)
 
