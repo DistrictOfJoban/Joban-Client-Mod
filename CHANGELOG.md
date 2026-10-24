@@ -9,6 +9,7 @@
 
 ### Scripting
 - Compiled scripts are now re-used during parsing stage, which may speed up parsing time for packs with many reference to a single script.
+- When passing in JS objects in `print()` or `console` functions, they will now output the corresponding JSON string instead of `[object Object]`.
 - `StateTracker.setState()` would now return a boolean on whether the state is changed or not, instead of needing a separate check.
 
 ## Translations

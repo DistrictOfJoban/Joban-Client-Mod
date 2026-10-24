@@ -3,6 +3,8 @@ package com.lx862.mtrscripting.core.util;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeJSON;
+import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeObject;
 import com.lx862.mtrscripting.lib.org.mozilla.javascript.RhinoException;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 
@@ -83,28 +85,42 @@ public class ConsoleJS {
         }
     }
 
-    public static void log(String... str) {
-        String s = String.join(" ", str);
-        MTRScriptingModClient.LOGGER.info("{} {}", buildLogPrefix(), s);
+    public static void log(Object... str) {
+        MTRScriptingModClient.LOGGER.info("{} {}", buildLogPrefix(), buildArgument(str));
     }
 
-    public static void warn(String... str) {
-        String s = String.join(" ", str);
-        MTRScriptingModClient.LOGGER.warn("{} {}", buildLogPrefix(), s);
+    public static void warn(Object... str) {
+        MTRScriptingModClient.LOGGER.warn("{} {}", buildLogPrefix(), buildArgument(str));
     }
 
-    public static void error(String... str) {
-        String s = String.join(" ", str);
-        MTRScriptingModClient.LOGGER.error("{} {}", buildLogPrefix(), s);
+    public static void error(Object... str) {
+        MTRScriptingModClient.LOGGER.error("{} {}", buildLogPrefix(), buildArgument(str));
     }
 
-    public static void debug(String... str) {
+    public static void debug(Object... str) {
         if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
-            String s = String.join(" ", str);
-            MTRScriptingModClient.LOGGER.error("{} {}", buildLogPrefix(), s);
+            MTRScriptingModClient.LOGGER.error("{} {}", buildLogPrefix(), buildArgument(str));
         }
     }
 
+    @ApiInternal
+    private static String buildArgument(Object... objs) {
+        StringBuilder sb = new StringBuilder();
+        if(objs == null) {
+            sb.append("null");
+        } else {
+            for(Object obj : objs) {
+                if(obj instanceof NativeObject) {
+                    sb.append(NativeJSON.stringify(Context.getCurrentContext(), (NativeObject)obj, obj, null, " "));
+                } else {
+                    sb.append(obj);
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    @ApiInternal
     private static String buildLogPrefix() {
         StringBuilder sb = new StringBuilder("[MTR Scripting via JCM]");
 

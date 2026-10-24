@@ -100,15 +100,7 @@ public class ScriptResourceUtil {
     }
 
     public static void print(@ValueNullable Object... objs) {
-        StringBuilder sb = new StringBuilder();
-        if(objs == null) {
-            sb.append("null");
-        } else {
-            for(Object obj : objs) {
-                sb.append(obj);
-            }
-        }
-        ConsoleJS.log(sb.toString());
+        ConsoleJS.log(objs);
     }
 
     @Deprecated
