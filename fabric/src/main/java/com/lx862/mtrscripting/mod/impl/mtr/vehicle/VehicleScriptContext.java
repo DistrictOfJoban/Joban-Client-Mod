@@ -9,6 +9,7 @@ import com.lx862.mtrscripting.core.util.model.ModelJS;
 import com.lx862.mtrscripting.core.util.Matrices;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mod.client.VehicleRidingMovement;
@@ -80,7 +81,7 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public void playCarSound(String soundId, int carIndex, float x, float y, float z, float volume, float pitch) {
-        playCarSound(new Identifier(soundId), carIndex, x, y, z, volume, pitch);
+        playCarSound(JSUtil.parseId(soundId), carIndex, x, y, z, volume, pitch);
     }
 
     public void playCarSound(Identifier soundId, int carIndex, float x, float y, float z, float volume, float pitch) {
@@ -89,7 +90,7 @@ public class VehicleScriptContext extends MTRScriptContext {
     }
 
     public void playAnnSound(String soundId, float volume, float pitch) {
-        playAnnSound(new Identifier(soundId), volume, pitch);
+        playAnnSound(JSUtil.parseId(soundId), volume, pitch);
     }
 
     public void playAnnSound(Identifier soundId, float volume, float pitch) {

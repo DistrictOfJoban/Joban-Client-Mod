@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.core.util.model;
 import com.lx862.jcm.mixin.mtrscripting.VertexAttributeStateAccessor;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.Vector3f;
 import org.mtr.mapping.render.batch.MaterialProperties;
@@ -21,7 +22,7 @@ public class RawMeshBuilderJS {
     private Vertex buildingVertex = new Vertex();
 
     public RawMeshBuilderJS(int faceSize, String renderType, String textureId) {
-        this(faceSize, renderType, new Identifier(textureId));
+        this(faceSize, renderType, JSUtil.parseId(textureId));
     }
 
     public RawMeshBuilderJS(int faceSize, String renderType, Identifier textureId) {

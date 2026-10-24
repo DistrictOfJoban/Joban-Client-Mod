@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.core.util.sound;
 
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.*;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ public class ScriptSoundManager {
     }
 
     public void playLocalSound(String id, float volume, float pitch) {
-        playLocalSound(new Identifier(id), volume, pitch);
+        playLocalSound(JSUtil.parseId(id), volume, pitch);
     }
 
     public void playLocalSound(Identifier id, float volume, float pitch) {
@@ -26,7 +27,7 @@ public class ScriptSoundManager {
     }
 
     public void playLocalSound(String id, float volume, float pitch, String soundCategory) {
-        playLocalSound(new Identifier(id), volume, pitch, soundCategory);
+        playLocalSound(JSUtil.parseId(id), volume, pitch, soundCategory);
     }
 
     public void playLocalSound(Identifier id, float volume, float pitch, String soundCategory) {
@@ -34,7 +35,7 @@ public class ScriptSoundManager {
     }
 
     public void playSound(String id, ScriptVector3f pos, float volume, float pitch) {
-        playSound(new Identifier(id), pos, volume, pitch);
+        playSound(JSUtil.parseId(id), pos, volume, pitch);
     }
 
     public void playSound(Identifier id, ScriptVector3f pos, float volume, float pitch) {
@@ -42,7 +43,7 @@ public class ScriptSoundManager {
     }
 
     public void playSound(String id, ScriptVector3f pos, float volume, float pitch, String soundCategory) {
-        playSound(new Identifier(id), pos, volume, pitch, soundCategory);
+        playSound(JSUtil.parseId(id), pos, volume, pitch, soundCategory);
     }
 
     public void playSound(Identifier id, ScriptVector3f pos, float volume, float pitch, String soundCategory) {

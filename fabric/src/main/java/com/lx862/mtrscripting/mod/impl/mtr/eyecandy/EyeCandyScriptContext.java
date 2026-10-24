@@ -12,6 +12,7 @@ import com.lx862.mtrscripting.core.util.model.ModelJS;
 import com.lx862.mtrscripting.core.util.Matrices;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.core.integration.VoxelShapeWrapper;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.VoxelShape;
 import org.mtr.mod.block.BlockEyeCandy;
@@ -89,7 +90,7 @@ public class EyeCandyScriptContext extends MTRScriptContext {
     }
 
     public void playSound(String id, float volume, float pitch) {
-        playSound(new Identifier(id), volume, pitch);
+        playSound(JSUtil.parseId(id), volume, pitch);
     }
 
     public void playSound(Identifier id, float volume, float pitch) {

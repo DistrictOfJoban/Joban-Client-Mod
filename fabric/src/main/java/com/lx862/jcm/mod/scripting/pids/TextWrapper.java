@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.util.TextUtil;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
@@ -124,7 +125,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     }
 
     public TextWrapper font(String fontId) {
-        return font(new Identifier(fontId));
+        return font(JSUtil.parseId(fontId));
     }
 
     public TextWrapper font(Identifier fontId) {

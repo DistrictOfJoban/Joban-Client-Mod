@@ -2,6 +2,7 @@ package com.lx862.mtrscripting.core.integration;
 
 import com.lx862.jcm.mapping.LoaderImpl;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.TextHelper;
 
@@ -41,7 +42,7 @@ public class VanillaTextWrapper {
     }
 
     public VanillaTextWrapper withFont(String id) {
-        return withFont(new Identifier(id));
+        return withFont(JSUtil.parseId(id));
     }
 
     public VanillaTextWrapper withFont(Identifier id) {

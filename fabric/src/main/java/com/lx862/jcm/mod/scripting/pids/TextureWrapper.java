@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.render.RenderHelper;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mod.render.MainRenderer;
@@ -39,7 +40,7 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
     }
 
     public TextureWrapper texture(String id) {
-        return texture(new Identifier(id));
+        return texture(JSUtil.parseId(id));
     }
 
     public TextureWrapper texture(Identifier id) {

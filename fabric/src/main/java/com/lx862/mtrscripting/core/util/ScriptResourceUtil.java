@@ -31,6 +31,7 @@ import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
 
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
@@ -160,7 +161,7 @@ public class ScriptResourceUtil {
     }
 
     public static @ValueNullable DataReaderJS read(String id) {
-        return read(new Identifier(id));
+        return read(JSUtil.parseId(id));
     }
 
     public static @ValueNullable DataReaderJS read(Identifier id) {
@@ -187,7 +188,7 @@ public class ScriptResourceUtil {
     }
 
     public static boolean exist(String id) {
-        return exist(new Identifier(id));
+        return exist(JSUtil.parseId(id));
     }
 
     public static boolean exist(Identifier id) {

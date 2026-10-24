@@ -5,6 +5,7 @@ import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.DataReaderJS;
 import com.lx862.mtrscripting.core.util.ScriptResourceUtil;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.apache.commons.io.IOUtils;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -54,7 +55,7 @@ public class ModelManagerJS {
     }
 
     public static RawModelJS loadModel(String id) {
-        return loadModel(new Identifier(id));
+        return loadModel(JSUtil.parseId(id));
     }
 
     public static RawModelJS loadModel(Identifier id) {
@@ -62,7 +63,7 @@ public class ModelManagerJS {
     }
 
     public static RawModelJS loadModel(String id, boolean flipTextureV) {
-        return loadModel(new Identifier(id), flipTextureV);
+        return loadModel(JSUtil.parseId(id), flipTextureV);
     }
 
     public static RawModelJS loadModel(Identifier id, boolean flipTextureV) {
@@ -81,7 +82,7 @@ public class ModelManagerJS {
     }
 
     public static Map<String, RawModelJS> loadModelParts(String modelLocation, boolean flipTextureV) {
-        return loadModelParts(new Identifier(modelLocation), flipTextureV);
+        return loadModelParts(JSUtil.parseId(modelLocation), flipTextureV);
     }
 
     public static Map<String, RawModelJS> loadModelParts(Identifier modelLocation, boolean flipTextureV) {
@@ -103,7 +104,7 @@ public class ModelManagerJS {
     }
 
     public static RawModelJS loadModelPart(String modelName, String modelLocation) {
-        return loadModelPart(modelName, new Identifier(modelLocation));
+        return loadModelPart(modelName, JSUtil.parseId(modelLocation));
     }
 
     public static RawModelJS loadModelPart(String modelName, Identifier modelLocation) {
@@ -111,7 +112,7 @@ public class ModelManagerJS {
     }
 
     public static RawModelJS loadModelPart(String modelName, String modelLocation, boolean flipTextureV) {
-        return loadModelPart(modelName, new Identifier(modelLocation), flipTextureV);
+        return loadModelPart(modelName, JSUtil.parseId(modelLocation), flipTextureV);
     }
 
     public static RawModelJS loadModelPart(String modelName, Identifier modelLocation, boolean flipTextureV) {
