@@ -113,11 +113,19 @@ public final class NativeScriptManager {
        v10 appends JcmHostServices.defer_free (background reclamation hook)
        plus the bridge's plain-C jcm_* export surface for the Panama FFM
        downcall transport; ABI 9 modules keep their snapshot layout and are
-       still served (groupOf maps 10 to the ABI 9 blob). */
-    private static final int ABI_VERSION = 10;
+       still served (groupOf maps 10 to the ABI 9 blob).
+       v11 promotes the vehicle snapshot's _pad0 flags byte to
+       door_direction (0 "not", 1 "left", 2 "right", 3 "all" — mirrors
+       VehicleWrapper.getDirectionOfDoorOpening(), the JCM door-opening-side
+       extension). The byte already existed (zero-filled) in every ABI≤10
+       layout and older modules never read it, so the snapshot layout and
+       the group-9 blob sharing are unchanged; the bump only keeps ABI 11
+       modules away from ABI 10 hosts that would feed them a constant 0. */
+    private static final int ABI_VERSION = 11;
 
     private static boolean supportedAbi(int version) {
-        return version == 6 || version == 7 || version == 8 || version == 9 || version == ABI_VERSION;
+        /* 10 is kept explicit: the previous host's own version, still loadable. */
+        return version == 6 || version == 7 || version == 8 || version == 9 || version == 10 || version == ABI_VERSION;
     }
 
     /* Route.CircularState mapping (v2 snapshots). */

@@ -10,6 +10,9 @@ int main() {
   static_assert(sizeof(JcmVehicleSnapshot)==192);
   static_assert(offsetof(JcmVehicleSnapshot,vehicle_type_offset)==184);
   static_assert(offsetof(JcmVehicleSnapshot,vehicle_type_len)==188);
+  /* ABI 11: the former _pad0 flags byte is promoted to door_direction at
+     the same offset — struct size and every other field keep their layout. */
+  static_assert(offsetof(JcmVehicleSnapshot,door_direction)==83);
   static_assert(sizeof(JcmPidsSnapshot)==104);
   static_assert(sizeof(JcmArrival)==96);
   static_assert(sizeof(JcmEyecandySnapshot)==88);
@@ -43,6 +46,23 @@ int main() {
   if (type == mtr::transport_type::TRAIN) return 12;
   mtr::Train legacy(snap); /* alias compiles and reads the same snapshot */
   if (legacy.getTransportMode() != mtr::TransportMode::TRAIN) return 13;
+
+  /* ABI 11: door_direction byte → typed enum + string form. Zeroed blob
+     (memset above) must read as "not" — that is also what an ABI≤10 host
+     zero-fills for modules that predate the field. */
+  if (vehicle.doorDirection() != mtr::DoorDirection::NOT) return 18;
+  if (!(vehicle.getDirectionOfDoorOpening() == mtr::door_direction::NOT)) return 19;
+  snap->door_direction = MTR_DOOR_DIRECTION_RIGHT;
+  if (vehicle.doorDirection() != mtr::DoorDirection::RIGHT) return 20;
+  if (!(vehicle.getDirectionOfDoorOpening() == mtr::door_direction::RIGHT)) return 21;
+  if (legacy.getDirectionOfDoorOpening().str() != vehicle.getDirectionOfDoorOpening().str()) return 22;
+  snap->door_direction = MTR_DOOR_DIRECTION_ALL;
+  if (vehicle.doorDirection() != mtr::DoorDirection::ALL
+      || !(vehicle.getDirectionOfDoorOpening() == mtr::door_direction::ALL)) return 23;
+  snap->door_direction = MTR_DOOR_DIRECTION_LEFT;
+  if (vehicle.doorDirection() != mtr::DoorDirection::LEFT
+      || !(vehicle.getDirectionOfDoorOpening() == mtr::door_direction::LEFT)) return 24;
+  snap->door_direction = 0; /* restore for the sections below */
 
   auto* ic = reinterpret_cast<JcmInterchange*>(blob + icOffset);
   ic->color = 0xFF00FF;

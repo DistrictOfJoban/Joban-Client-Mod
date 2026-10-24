@@ -44,7 +44,17 @@ extern "C" {
 /* Version / module identity                                           */
 /* ------------------------------------------------------------------ */
 
-/* ABI 10 appends JcmHostServices.defer_free: a background reclamation
+/* ABI 11 promotes the vehicle snapshot's _pad0 flags byte (offset 83) to
+   door_direction — the JCM door-opening-side extension mirroring
+   VehicleWrapper.getDirectionOfDoorOpening(): 0 "not", 1 "left",
+   2 "right", 3 "all" (see JcmVehicleSnapshot). The byte was already
+   reserved padding in every ABI≤10 layout and no older module reads it, so
+   the struct size/offsets and the group-9 blob sharing are unchanged;
+   the bump exists so an ABI 11 module is refused by ABI 10 hosts, which
+   would otherwise feed it a constant 0 ("not"). ABI 10 modules are
+   unaffected and still served (their header declares the same offset as
+   _pad0).
+   ABI 10 appends JcmHostServices.defer_free: a background reclamation
    hook so scripts can hand DEAD native blocks to the host's off-thread
    reclaimer instead of freeing them synchronously inside mtrRender/mtrDispose
    (which runs on a JVM-owned thread — see the ABI 10 comment on defer_free).
@@ -69,7 +79,7 @@ extern "C" {
    the newer header call a host function slot that does not exist in an
    older host (the struct grew), so an old host must refuse the module
    instead of reading past it. */
-#define MTR_NATIVE_ABI_VERSION 10
+#define MTR_NATIVE_ABI_VERSION 11
 
 /* Resource kinds, identical to JCM script contexts. */
 enum MtrResourceKind {
@@ -312,6 +322,17 @@ typedef struct JcmArrival {
     int32_t  platform_name_len;
 } JcmArrival;
 
+/* Mirrors VehicleWrapper.getDirectionOfDoorOpening() — which side(s) of
+   the vehicle the doors can open on, relative to the vehicle HEAD (bogie-1
+   end), unaffected by travel direction or reversing. See
+   JcmVehicleSnapshot.door_direction. */
+enum MtrDoorDirection {
+    MTR_DOOR_DIRECTION_NOT   = 0,
+    MTR_DOOR_DIRECTION_LEFT  = 1,
+    MTR_DOOR_DIRECTION_RIGHT = 2,
+    MTR_DOOR_DIRECTION_ALL   = 3
+};
+
 /* Mirrors VehicleWrapper + NTETrainWrapper flattened. */
 typedef struct JcmVehicleSnapshot {
     int64_t  vehicle_id;
@@ -332,7 +353,16 @@ typedef struct JcmVehicleSnapshot {
     uint8_t  manual_allowed;
     uint8_t  client_player_riding;
     uint8_t  any_car_rendered;
-    uint8_t  _pad0;
+    /* v11 (was _pad0): which side(s) the vehicle's doors can open on —
+       mirrors VehicleWrapper.getDirectionOfDoorOpening() (JS:
+       vehicle.getDirectionOfDoorOpening()). While dwelling at a platform
+       this is reported identically regardless of the current door phase;
+       while running it predicts the NEXT stop. Left/right are relative to
+       the vehicle head (bogie-1 end), unaffected by reversing. Values: 0
+       "not", 1 "left", 2 "right", 3 "all" — see MtrDoorDirection and
+       mtr::door_direction. Purely informational: MTR still owns which
+       doors actually open. */
+    uint8_t  door_direction;
     double   total_dwell_time_millis;
     double   elapsed_dwell_time_millis;
     int64_t  game_time_millis;    /* host wall clock (System.currentTimeMillis) */

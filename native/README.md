@@ -183,6 +183,36 @@ Shapes persist across frames. Empty collision shapes are supported; nonempty
 collision shapes retain the Java limit of 1.5 blocks in height. Native drawing
 records use the same in-world transformations as the JavaScript renderer.
 
+## Door-opening direction (ABI 11)
+
+`vehicle.getDirectionOfDoorOpening()` reports which side(s) of the vehicle the
+doors can open on, as one of `"not"`, `"left"`, `"right"`, `"all"`. While the
+vehicle dwells at a platform the value is phase-independent (not-yet-open,
+partially open, closing and fully-closed doors all report the fully-open
+answer); while it runs on the mainline it *predicts* the next stop by laying
+the vehicle out at its stopping point and running MTR's own
+`RenderVehicleHelper#canOpenDoors` block scan there, per car. As soon as one
+car on a side finds an openable platform block, that whole side counts as
+openable. Left/right are relative to the vehicle head (bogie-1 end), so
+neither travel direction nor reversing flips them. The call is purely
+informational — MTR still owns which doors actually open.
+
+```cpp
+switch (vehicle.doorDirection()) {                       // typed (mtr::DoorDirection)
+    case mtr::DoorDirection::LEFT:  rotateLeftLcd();  break;
+    case mtr::DoorDirection::RIGHT: rotateRightLcd(); break;
+    case mtr::DoorDirection::ALL:   rotateBothLcds(); break;
+    default: /* NOT */ showFullRouteMapOnBoth();
+}
+if (vehicle.getDirectionOfDoorOpening() == mtr::door_direction::ALL) { /* ... */ }
+```
+
+The string form matches the JS wrapper verbatim; JavaScript calls the same
+method directly: `vehicle.getDirectionOfDoorOpening()`. Snapshot field:
+`JcmVehicleSnapshot.door_direction` (byte, ABI 11; values 0..3 as in
+`MtrDoorDirection`) — it replaces the former `_pad0`, so older modules and
+the ABI 9/10 layouts are unaffected.
+
 ## Interchange transport mode and type
 
 JavaScript now supports `interchange.getTransportMode()` plus

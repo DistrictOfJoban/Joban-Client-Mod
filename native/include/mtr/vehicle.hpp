@@ -41,6 +41,30 @@ namespace transport_type {
     constexpr const char* TRAIN_SBAHN = "train_sbahn";
 }
 
+/*
+ * Door-opening direction ids (ABI 11) — the exact strings the JS wrapper's
+ * getDirectionOfDoorOpening() returns, so scripts compare identically on
+ * both sides. "left"/"right" are relative to the vehicle head (bogie-1
+ * end); "all" means both sides open (e.g. an island or double-sided
+ * platform); "not" means no door will open at the platform being served
+ * or predicted next.
+ */
+namespace door_direction {
+    constexpr const char* NOT = "not";
+    constexpr const char* LEFT = "left";
+    constexpr const char* RIGHT = "right";
+    constexpr const char* ALL = "all";
+}
+
+/* Typed form of JcmVehicleSnapshot.door_direction (values match
+   MtrDoorDirection in mtr_native.h). */
+enum class DoorDirection : uint8_t {
+    NOT   = 0,
+    LEFT  = 1,
+    RIGHT = 2,
+    ALL   = 3
+};
+
 class Stop {
 public:
     Stop(const JcmVehicleSnapshot* snap, const JcmStop* stop)
@@ -278,6 +302,31 @@ public:
      */
     StrView getTransportType() const {
         return pool(snap_->vehicle_type_offset, snap_->vehicle_type_len);
+    }
+
+    /*
+     * v11: which side(s) of the vehicle the doors can open on (JS:
+     * vehicle.getDirectionOfDoorOpening()). While the vehicle dwells at a
+     * platform the value is reported the same regardless of the current
+     * door phase; while running on the mainline it PREDICTS the next stop
+     * by laying the vehicle out at its stopping point and scanning the
+     * world blocks there. Left/right are relative to the vehicle head
+     * (bogie-1 end) — unaffected by travel direction or reversing. Never
+     * affects which doors MTR actually opens.
+     */
+    DoorDirection doorDirection() const {
+        return static_cast<DoorDirection>(snap_->door_direction);
+    }
+
+    /* String form of doorDirection(): "not" / "left" / "right" / "all" —
+       compare with the mtr::door_direction constants. */
+    StrView getDirectionOfDoorOpening() const {
+        switch (snap_->door_direction) {
+            case 1: return make_view(door_direction::LEFT, 4);
+            case 2: return make_view(door_direction::RIGHT, 5);
+            case 3: return make_view(door_direction::ALL, 3);
+            default: return make_view(door_direction::NOT, 3);
+        }
     }
 
     /* v2: siding name (JS: vehicle.getSiding().getName()). */

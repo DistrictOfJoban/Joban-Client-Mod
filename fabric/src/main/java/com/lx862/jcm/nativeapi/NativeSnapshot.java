@@ -25,7 +25,7 @@ import java.util.Map;
  * sequential write here, and the script then reads plain memory.
  *
  * <p><b>The byte layout must match {@code native/include/mtr/mtr_native.h}
- * (ABI 6..9).</b> Offsets are written through named constants rather than a
+ * (ABI 6..11).</b> Offsets are written through named constants rather than a
  * chain of relative {@code put} calls, so an accidental reorder becomes a
  * name error instead of silent corruption. {@link #selfCheck()} validates
  * the struct sizes at load time.
@@ -75,6 +75,7 @@ public final class NativeSnapshot {
     private static final int OFF_DOOR_VALUE = 64;
     private static final int OFF_NOTCH_LEVEL = 72;
     private static final int OFF_FLAGS = 76;
+    private static final int OFF_DOOR_DIRECTION = 83; /* ABI 11: _pad0 byte promoted; layout unchanged */
     private static final int OFF_TOTAL_DWELL = 88;
     private static final int OFF_ELAPSED_DWELL = 96;
     private static final int OFF_GAME_TIME = 104;
@@ -150,12 +151,21 @@ public final class NativeSnapshot {
      * Snapshot layout group for a module ABI: 9 (extended types), 8 (typed
      * interchanges) or 7 (the shared legacy 6/7 layout). Modules in one group
      * can share a snapshot buffer; different groups need their own because
-     * the interchange stride differs.
+     * the interchange stride differs. ABI 11 keeps the ABI 9 layout — its
+     * door_direction byte replaces the former _pad0 — so 11 maps to group 9.
      */
     public static int groupOf(int abiVersion) {
         if (abiVersion >= 9) return 9;
         if (abiVersion == 8) return 8;
         return 7;
+    }
+
+    /** VehicleWrapper door-direction string → JcmVehicleSnapshot byte. */
+    private static byte doorDirectionCode(String direction) {
+        if (VehicleWrapper.DOOR_DIRECTION_ALL.equals(direction)) return 3;
+        if (VehicleWrapper.DOOR_DIRECTION_LEFT.equals(direction)) return 1;
+        if (VehicleWrapper.DOOR_DIRECTION_RIGHT.equals(direction)) return 2;
+        return 0;
     }
 
     private static int interchangeSize(int abi) {
@@ -348,7 +358,11 @@ public final class NativeSnapshot {
         out.put(OFF_FLAGS + 4, (byte) (v.isManualAllowed() ? 1 : 0));
         out.put(OFF_FLAGS + 5, (byte) (v.isClientPlayerRiding() ? 1 : 0));
         out.put(OFF_FLAGS + 6, (byte) (v.isRendered() ? 1 : 0));
-        out.put(OFF_FLAGS + 7, (byte) 0);
+        /* ABI 11 (door direction) is written for every layout group: the byte
+           is the ABI≤10 header's _pad0, which older modules never read, so
+           sharing the group-9 blob keeps ABI 9/10 modules byte-compatible
+           while ABI 11 modules see live values. */
+        out.put(OFF_DOOR_DIRECTION, doorDirectionCode(v.getDirectionOfDoorOpening()));
         out.putDouble(OFF_TOTAL_DWELL, v.getTotalDwellTime());
         out.putDouble(OFF_ELAPSED_DWELL, v.getElapsedDwellTime());
         out.putLong(OFF_GAME_TIME, System.currentTimeMillis());

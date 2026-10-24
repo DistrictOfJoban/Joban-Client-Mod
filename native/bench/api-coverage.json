@@ -4974,6 +4974,16 @@
       "page": "type_vehicle",
       "type": "VehicleWrapper",
       "kind": "method",
+      "member": "getDirectionOfDoorOpening",
+      "arities": [
+        0
+      ],
+      "signature": "VehicleWrapper.getDirectionOfDoorOpening(): String"
+    },
+    {
+      "page": "type_vehicle",
+      "type": "VehicleWrapper",
+      "kind": "method",
       "member": "isCurrentlyManual",
       "arities": [
         0

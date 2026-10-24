@@ -49,6 +49,10 @@ Java ↔ C++ 之间完全不经 JNI：JDK 16–21 使用共享内存 poller 平�
 
 `getTransportType()`（JS / Java / C++ 三侧一致）：除 MTR 基础类型（`train` / `boat` / `cable_car` / `airplane`）外，可识别 MAGIC MTR Addon 线路类型（`train_metro`、`train_light_rail`、`train_high_speed`、`train_bus`、`train_tram`、`train_sbahn`、`train_normal` 等）——经可选反射集成，无硬依赖。
 
+### 开门方向 API
+
+`vehicle.getDirectionOfDoorOpening()`（JS / C++ 一致，返回 `"not"` / `"left"` / `"right"` / `"all"`）：识别车辆在**当前站**（停靠时，与车门开闭阶段无关）或**下一站**（正线运行时预测）的开门侧。同侧任一车门可开即整侧可开；左右相对车头，不受倒行影响；纯查询，不改变 MTR 实际开门行为。
+
 ### 相对原版的大量修复
 
 对原版 JCM 与本分支全代码库（Java + 桥接边界 + C++ SDK）做过多轮审计修复：F3+T 后 C++ 脚本从不重载、Forge 端车辆脚本只捕获不渲染、轨道裁剪条件反转、渲染线程 use-after-free、模块记录流越界可崩溃 JVM 等**关键修复 + 30 余项渲染正确性 / 性能 / 加固修复**——全部细节见 [CHANGELOG.md](CHANGELOG.md)。

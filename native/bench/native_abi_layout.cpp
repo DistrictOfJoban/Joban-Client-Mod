@@ -23,6 +23,7 @@ int main() {
     FIELD(OFF_DOOR_VALUE, JcmVehicleSnapshot, door_value);
     FIELD(OFF_NOTCH_LEVEL, JcmVehicleSnapshot, notch_level);
     FIELD(OFF_FLAGS, JcmVehicleSnapshot, reversed);
+    FIELD(OFF_DOOR_DIRECTION, JcmVehicleSnapshot, door_direction);
     FIELD(OFF_TOTAL_DWELL, JcmVehicleSnapshot, total_dwell_time_millis);
     FIELD(OFF_ELAPSED_DWELL, JcmVehicleSnapshot, elapsed_dwell_time_millis);
     FIELD(OFF_GAME_TIME, JcmVehicleSnapshot, game_time_millis);
