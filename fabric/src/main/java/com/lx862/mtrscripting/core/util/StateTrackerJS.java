@@ -33,7 +33,7 @@ public class StateTrackerJS {
     private double currentStateTime;
     private boolean firstTimeCurrentState;
 
-    public void setState(Object newValue) {
+    public boolean setState(Object newValue) {
         if (!Objects.equals(newValue, currentState)) {
             lastState = currentState;
             currentState = newValue;
@@ -42,6 +42,7 @@ public class StateTrackerJS {
         } else {
             firstTimeCurrentState = false;
         }
+        return this.firstTimeCurrentState;
     }
 
     public Object stateNow() {
