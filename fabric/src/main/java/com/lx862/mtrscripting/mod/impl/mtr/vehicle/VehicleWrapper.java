@@ -850,10 +850,13 @@ public class VehicleWrapper {
      *         be resolved on the client (caller gives up with "not")
      */
     private boolean addBogiePosition(ObjectArrayList<PositionAndRotation> out, double value, double lowerBound, double upperBound, boolean reversed, boolean hasPitch) {
-        final double clampedValue = Utilities.clampSafe(value, lowerBound, upperBound);
-        final double clamp = Utilities.clampSafe(Math.min(Math.abs(clampedValue - lowerBound), Math.abs(clampedValue - upperBound)), 0.1, 1);
-        final double value1 = Utilities.clampSafe(clampedValue + (reversed ? -clamp : clamp), lowerBound, upperBound - 0.001);
-        final double value2 = Utilities.clampSafe(clampedValue - (reversed ? -clamp : clamp), lowerBound, upperBound - 0.001);
+        /* Math.clamp mirrors MTR's own getBogiePositions clamping (the
+           double overload of Utilities.clampSafe post-dates the TSC build
+           MTR 4.0.5 ships, so plain JDK 21 Math.clamp is the portable pick). */
+        final double clampedValue = Math.clamp(value, lowerBound, upperBound);
+        final double clamp = Math.clamp(Math.min(Math.abs(clampedValue - lowerBound), Math.abs(clampedValue - upperBound)), 0.1, 1);
+        final double value1 = Math.clamp(clampedValue + (reversed ? -clamp : clamp), lowerBound, upperBound - 0.001);
+        final double value2 = Math.clamp(clampedValue - (reversed ? -clamp : clamp), lowerBound, upperBound - 0.001);
         final Vector position1 = positionAt(value1);
         final Vector position2 = positionAt(value2);
         if(position1 == null || position2 == null) return false;
@@ -867,7 +870,11 @@ public class VehicleWrapper {
         if(path.isEmpty()) return null;
         final PathData pathData = Utilities.getElement(path, Utilities.getIndexFromConditionalList(path, railProgress));
         if(pathData == null) return null;
-        final Vehicle.PositionAndTiltAngle positionAndTiltAngle = pathData.getPositionAndTiltAngle(MinecraftClientData.getInstance(), railProgress - pathData.getStartDistance());
-        return positionAndTiltAngle == null ? null : positionAndTiltAngle.position();
+        /* PathData.getPosition(rawValue) — the position API of the TSC build
+           shipped inside MTR 4.0.5 (the newer getPositionAndTiltAngle is
+           not in it). The mod warms each path segment's rail cache on every
+           vehicle sync (PacketUpdateData / PacketUpdateVehiclesLifts), so
+           this follows the real rail geometry, not just the endpoint line. */
+        return pathData.getPosition(railProgress - pathData.getStartDistance());
     }
 }
