@@ -2,9 +2,13 @@
 
 > This release contains breaking changes to JCM's internal codebase. Common addons have been tested against, however some addon depending on JCM may break.
 
+## General
+- Fix Forge crashing on launch
+
 ## Technical
 
 ### Scripting
+- Compiled scripts are now re-used during parsing stage, which may speed up parsing time for packs with many reference to a single script.
 - `StateTracker.setState()` would now return a boolean on whether the state is changed or not, instead of needing a separate check.
 
 ## Translations

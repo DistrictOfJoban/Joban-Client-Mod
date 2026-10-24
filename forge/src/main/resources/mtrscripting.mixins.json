@@ -32,5 +32,5 @@
   "injectors": {
     "defaultRequire": 1
   },
-  "refmap": "mtrscripting.refmap.json"
+  "refmap": "jsblock.refmap.json"
 }

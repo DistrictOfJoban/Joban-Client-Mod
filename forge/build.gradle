@@ -40,12 +40,6 @@ dependencies {
 mixin {
     add sourceSets.main, "jsblock.refmap.json"
     config "jsblock.mixins.json"
-    debug.verbose = true
-    debug.export = true
-}
-
-mixin {
-    add sourceSets.main, "mtrscripting.refmap.json"
     config "mtrscripting.mixins.json"
     debug.verbose = true
     debug.export = true
