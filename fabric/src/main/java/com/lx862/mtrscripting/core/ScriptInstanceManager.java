@@ -3,6 +3,8 @@ package com.lx862.mtrscripting.core;
 import com.lx862.mtrscripting.core.primitive.ScriptInstance;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
+import com.lx862.mtrscripting.core.util.DataReaderJS;
+import com.lx862.mtrscripting.core.util.ScriptResourceUtil;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -13,6 +15,7 @@ import java.util.function.Supplier;
 @ApiInternal
 public class ScriptInstanceManager {
     private final Map<UniqueKey, ScriptInstance> instances = new HashMap<>();
+    private int elapsedTick = 0;
 
     public <T> ScriptInstance<T> getInstance(UniqueKey id, Supplier<ScriptInstance<T>> getInstance) {
         ScriptInstance<T> existingInstance = getInstance(id);
@@ -35,19 +38,24 @@ public class ScriptInstanceManager {
 
 
 
-    public int clearDeadInstance() {
-        int count = 0;
+    public int tick() {
+        elapsedTick++;
+        int removedInstance = 0;
         for(Map.Entry<UniqueKey, ScriptInstance> entry : new HashMap<>(instances).entrySet()) {
             if(entry.getValue().shouldInvalidate()) {
                 ScriptInstance<?> instance = entry.getValue();
-                count++;
+                removedInstance++;
                 instances.remove(entry.getKey());
                 if(instance.isCreateFunctionInvoked()) {
                     instance.getScript().invokeDisposeFunctions(instance, null);
                 }
             }
         }
-        return count;
+
+        if(elapsedTick % DataReaderJS.CACHE_TIMEOUT_TICK == 0) {
+            ScriptResourceUtil.resetCache();
+        }
+        return removedInstance;
     }
 
     /**

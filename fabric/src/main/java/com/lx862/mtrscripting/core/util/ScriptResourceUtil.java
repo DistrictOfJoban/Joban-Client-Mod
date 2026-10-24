@@ -45,8 +45,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.text.AttributedString;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Stack;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class ScriptResourceUtil {
@@ -60,6 +63,8 @@ public class ScriptResourceUtil {
     private static Font NOTO_SANS_CACHE;
     private static Font NOTO_SANS_CJK_CACHE;
     private static Font NOTO_SERIF_CACHE;
+
+    private static final Map<String, DataReaderJS> dataCache = new HashMap<>();
 
     @ApiInternal
     public static void beginParseScript(ParsedScript parsedScript) {
@@ -142,43 +147,47 @@ public class ScriptResourceUtil {
     }
 
     @Deprecated
-    public static @ValueNullable String readString(Identifier identifier) {
-        DataReaderJS dataReader = read(identifier);
-        if(dataReader == null) return null;
-        return dataReader.asString();
+    public static @ValueNullable String readString(Identifier id) {
+        DataReaderJS dataReaderJS = read(id);
+        if(dataReaderJS == null) return null;
+        return dataReaderJS.asString();
     }
 
     @Deprecated
     public static @ValueNullable BufferedImage readBufferedImage(Identifier id) {
-        DataReaderJS dataReader = read(id);
-        if(dataReader == null) return null;
-        return dataReader.asBufferedImage();
+        DataReaderJS dataReaderJS = read(id);
+        if(dataReaderJS == null) return null;
+        return dataReaderJS.asBufferedImage();
     }
 
     @Deprecated
     public static @ValueNullable Font readFont(Identifier id) {
-        DataReaderJS dataReader = read(id);
-        if(dataReader == null) return null;
-        return dataReader.asFont();
+        DataReaderJS dataReaderJS = read(id);
+        if(dataReaderJS == null) return null;
+        return dataReaderJS.asFont();
     }
 
     public static @ValueNullable DataReaderJS read(Identifier identifier) {
-        // HACK: MC Mappings always uses a callback for the InputStream and auto-closes it after, so we can't pass it around later on
-        // For now, we just save the full file bytes, then wrap it in another ByteArrayInputStream...
-        byte[][] fileBytes = new byte[][]{null};
-        ResourceManagerHelper.readResource(identifier, is -> {
-            try {
-                fileBytes[0] = IOUtils.toByteArray(is);
-            } catch (IOException e) {
-                MTRScriptingModClient.LOGGER.error("[JCM Scripting] Error while reading data {}", identifier);
+        String idStr = identifier.getNamespace() + ":" + identifier.getPath();
+
+        return cacheOrGet(idStr, () -> {
+            // HACK: MC Mappings always uses a callback for the InputStream and auto-closes it after, so we can't pass it around later on
+            // For now, we just save the full file bytes, then wrap it in another ByteArrayInputStream...
+            byte[][] fileBytes = new byte[][]{null};
+            ResourceManagerHelper.readResource(identifier, is -> {
+                try {
+                    fileBytes[0] = IOUtils.toByteArray(is);
+                } catch (IOException e) {
+                    MTRScriptingModClient.LOGGER.error("[JCM Scripting] Error while reading data {}", identifier);
+                }
+            });
+
+            if(fileBytes[0] != null) {
+                return new DataReaderJS(() -> new ByteArrayInputStream(fileBytes[0]));
+            } else {
+                return null;
             }
         });
-
-        if(fileBytes[0] != null) {
-            return new DataReaderJS(() -> new ByteArrayInputStream(fileBytes[0]));
-        } else {
-            return null;
-        }
     }
 
     public static boolean exist(Identifier id) {
@@ -311,5 +320,15 @@ public class ScriptResourceUtil {
 
             return new Identifier(baseFile.getNamespace(), FileSystems.getDefault().getPath(baseFile.getPath()).getParent().resolve(result).normalize().toString().replace('\\', '/'));
         }
+    }
+
+    @ApiInternal
+    private static DataReaderJS cacheOrGet(String key, Supplier<DataReaderJS> supplier) {
+        return dataCache.computeIfAbsent(key, (k) -> supplier.get());
+    }
+
+    @ApiInternal
+    public static void resetCache() {
+        dataCache.clear();
     }
 }

@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.mod.resource;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.mtrscripting.core.util.ScriptResourceUtil;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import com.lx862.mtrscripting.core.util.ConsoleJS;
@@ -25,6 +26,7 @@ public class MtrScriptingResourceManager {
         vehicle.reset();
         eyecandy.reset();
         lift.reset();
+        ScriptResourceUtil.resetCache();
 
         MTRContentScripting.getScriptManager().scriptErrorNotifier.reset();
 

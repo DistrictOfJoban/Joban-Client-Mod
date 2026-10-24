@@ -61,7 +61,7 @@ public class MTRContentScripting {
     }
 
     public static void tick() {
-        int clearedInstance = scriptManager.getInstanceManager().clearDeadInstance();
+        int clearedInstance = scriptManager.getInstanceManager().tick();
         if(clearedInstance > 0 && JCMClientConfig.INSTANCE.debugMode.value()) {
             MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Removed {} dead MTR script instance", clearedInstance);
         }

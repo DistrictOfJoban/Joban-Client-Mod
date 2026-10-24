@@ -49,7 +49,7 @@ public class JCMScripting {
     }
 
     public static void tick() {
-        int clearedInstance = scriptManager.getInstanceManager().clearDeadInstance();
+        int clearedInstance = scriptManager.getInstanceManager().tick();
         if(clearedInstance > 0 && JCMClientConfig.INSTANCE.debugMode.value()) {
             JCMLogger.info("Removed {} dead JCM script instance", clearedInstance);
         }
