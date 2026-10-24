@@ -6,7 +6,7 @@ struct ProbeState {
 };
 struct ApiProbe : mtr::VehicleScript<ProbeState> {
     static constexpr auto ID="test:api_probe";
-    void create(mtr::VehicleContext& ctx,ProbeState& state,const mtr::Train&) override {
+    void create(mtr::VehicleContext& ctx,ProbeState& state,const mtr::Vehicle&) override {
         mtr::Api api(ctx.input());
         auto wrapper=api.wrapper();
         if(wrapper.call("largeId").as<int64_t>()!=9223372036854775000LL) throw std::runtime_error("int64 roundtrip");
@@ -36,12 +36,12 @@ struct ApiProbe : mtr::VehicleScript<ProbeState> {
         api.root("BackgroundWorker").call("submit",{*state.task});
         wrapper.call("mark",{"create"});
     }
-    void render(mtr::VehicleContext& ctx,ProbeState& state,const mtr::Train&) override {
+    void render(mtr::VehicleContext& ctx,ProbeState& state,const mtr::Vehicle&) override {
         mtr::Api api(ctx.input());
         if(state.calls!=7) throw std::runtime_error("Consumer callback");
         api.wrapper().call("mark",{"render"});
     }
-    void dispose(mtr::VehicleContext& ctx,ProbeState&,const mtr::Train&) override {
+    void dispose(mtr::VehicleContext& ctx,ProbeState&,const mtr::Vehicle&) override {
         mtr::Api api(ctx.input()); api.wrapper().call("mark",{"dispose"});
     }
 };

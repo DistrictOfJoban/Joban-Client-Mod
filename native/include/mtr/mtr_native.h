@@ -364,7 +364,8 @@ typedef struct JcmVehicleSnapshot {
        pool — the base mode ("train", "boat", "cable_car", "airplane") or a
        MAGIC MTR Addon route type ("train_metro", ...). Mirrors
        VehicleWrapper.getTransportType(); scripts read it through
-       mtr::Train::getTransportType(). Empty when unresolved. */
+       mtr::Vehicle::getTransportType() (legacy alias: mtr::Train).
+       Empty when unresolved. */
     int32_t  vehicle_type_offset;
     int32_t  vehicle_type_len;
 } JcmVehicleSnapshot;

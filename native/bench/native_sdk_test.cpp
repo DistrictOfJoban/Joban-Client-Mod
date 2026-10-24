@@ -33,11 +33,16 @@ int main() {
   snap->vehicle_type_len = typeNameLen;
   snap->string_pool_offset = poolOffset;
 
-  mtr::Train train(snap);
-  if (train.getTransportMode() != mtr::TransportMode::TRAIN) return 10;
-  mtr::StrView type = train.getTransportType();
+  /* The wrapper is mtr::Vehicle (MTR 4 terminology); the MTR 3-era name
+     mtr::Train must remain a working source alias. */
+  static_assert(std::is_same<mtr::Train, mtr::Vehicle>::value);
+  mtr::Vehicle vehicle(snap);
+  if (vehicle.getTransportMode() != mtr::TransportMode::TRAIN) return 10;
+  mtr::StrView type = vehicle.getTransportType();
   if (type.len != typeNameLen || !(type == mtr::transport_type::TRAIN_METRO)) return 11;
   if (type == mtr::transport_type::TRAIN) return 12;
+  mtr::Train legacy(snap); /* alias compiles and reads the same snapshot */
+  if (legacy.getTransportMode() != mtr::TransportMode::TRAIN) return 13;
 
   auto* ic = reinterpret_cast<JcmInterchange*>(blob + icOffset);
   ic->color = 0xFF00FF;

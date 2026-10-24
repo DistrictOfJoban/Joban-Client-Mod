@@ -9,9 +9,9 @@
  *       static constexpr auto ID = "demo:vehicle";
  *
  *       void create(VehicleContext& ctx, MyVehicleState& state,
- *                   const Train& train) override { ... }
+ *                   const Vehicle& vehicle) override { ... }
  *       void render(VehicleContext& ctx, MyVehicleState& state,
- *                   const Train& train) override { ... }
+ *                   const Vehicle& vehicle) override { ... }
  *   };
  *
  *   MTR_REGISTER_VEHICLE_SCRIPT(MyVehicleScript)
@@ -102,13 +102,13 @@ struct VehicleAdapter {
     static constexpr int RESOURCE_ID = MTR_RESOURCE_VEHICLE;
     static constexpr const char* TYPE = "vehicle";
     using Context = VehicleContext;
-    using Wrapper = Train;
+    using Wrapper = Vehicle;
     using Snapshot = JcmVehicleSnapshot;
     static VehicleContext make_context(FrameRecorder& f, const JcmFrameInput& in) {
         return VehicleContext(f, in);
     }
-    static Train make_wrapper(const void* snap) {
-        return Train(static_cast<const JcmVehicleSnapshot*>(static_cast<const void*>(snap)));
+    static Vehicle make_wrapper(const void* snap) {
+        return Vehicle(static_cast<const JcmVehicleSnapshot*>(static_cast<const void*>(snap)));
     }
 };
 

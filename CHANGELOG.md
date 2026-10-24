@@ -1,5 +1,9 @@
 # 更新日志 / Changelog
 
+## 未发布
+
+- SDK 术语对齐 MTR 4：车辆快照包装类由 `mtr::Train` 更名为 `mtr::Vehicle`（与 `VehicleWrapper` / `vehicleScripts` 命名一致）；`mtr::Train` 保留为源码兼容别名，老模块无需修改即可继续编译。C ABI 与二进制布局不变。
+
 ## 2.3.0-beta-2.yanyang.7
 
 修复 yanyang.6 之后的间歇性卡顿（日志无报错）。旧清扫把「离开视野」误当成「已销毁」：列车离开相机视锥 5 秒后，原生实例即被整体释放（十余张 GL 纹理、全部已上传模型、脚本画布）；重新入镜的第一帧一次性支付 `mtrCreate` + `createResources` + 整幅画布重绘，转头一次即触发多列车同时重建，形成多毫秒级掉帧。

@@ -191,13 +191,17 @@ private:
 };
 
 /**
- * Train — mirrors VehicleWrapper + NTETrainWrapper as seen by JS.
+ * Vehicle — mirrors VehicleWrapper + NTETrainWrapper as seen by JS.
  * All accessors are trivial reads into the snapshot (no JNI, no
  * reflection, no boxing — this is the whole performance story).
+ *
+ * Named Vehicle after MTR 4's scripting terminology (vehicleScripts /
+ * VehicleWrapper). The MTR 3-era name `mtr::Train` is kept as an alias
+ * below so modules written against older SDK revisions keep compiling.
  */
-class Train {
+class Vehicle {
 public:
-    explicit Train(const JcmVehicleSnapshot* snap) : snap_(snap) {}
+    explicit Vehicle(const JcmVehicleSnapshot* snap) : snap_(snap) {}
 
     int64_t id() const { return snap_->vehicle_id; }
     int64_t siding_id() const { return snap_->siding_id; }
@@ -234,7 +238,7 @@ public:
     int64_t in_game_time() const { return snap_->in_game_time; }
 
     Car car(int32_t i) const {
-        if (i < 0 || i >= snap_->car_count) throw std::out_of_range("Train car index");
+        if (i < 0 || i >= snap_->car_count) throw std::out_of_range("Vehicle car index");
         const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
         const JcmCar* arr = reinterpret_cast<const JcmCar*>(base + snap_->car_offset);
         return Car(snap_, arr + i);
@@ -291,6 +295,10 @@ private:
 
     const JcmVehicleSnapshot* snap_;
 };
+
+/* MTR 3-era name for the vehicle snapshot wrapper — kept for source
+   compatibility with modules written against older SDK revisions. */
+using Train = Vehicle;
 
 /**
  * VehicleContext — mirrors VehicleScriptContext as seen by JS.

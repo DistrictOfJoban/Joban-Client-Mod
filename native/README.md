@@ -58,10 +58,13 @@ one registration macro:
 
 | Resource | Base | Registration | Wrapper |
 | --- | --- | --- | --- |
-| Vehicle | `mtr::VehicleScript<State>` | `MTR_REGISTER_VEHICLE_SCRIPT` | `mtr::Train` |
+| Vehicle | `mtr::VehicleScript<State>` | `MTR_REGISTER_VEHICLE_SCRIPT` | `mtr::Vehicle` (alias: `mtr::Train`) |
 | PIDS | `mtr::PidsScript<State>` | `MTR_REGISTER_PIDS_SCRIPT` | `mtr::Pids` |
 | Lift | `mtr::LiftScript<State>` | `MTR_REGISTER_LIFT_SCRIPT` | `mtr::Lift` |
 | Eyecandy | `mtr::EyecandyScript<State>` | `MTR_REGISTER_EYECANDY_SCRIPT` | `mtr::EyeCandy` |
+
+The vehicle data wrapper follows MTR 4 terminology (`VehicleWrapper`,
+`vehicleScripts`); the MTR 3-era name `mtr::Train` is kept as a source alias.
 
 Place textures, models, callbacks and mutable instance data in `State`.
 Members of the script class are shared by every instance of that module.
