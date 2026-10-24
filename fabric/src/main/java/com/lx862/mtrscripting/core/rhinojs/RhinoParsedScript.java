@@ -132,7 +132,17 @@ public class RhinoParsedScript extends ParsedScript {
                     });
                 }
             } catch (Exception e) {
-                scriptManager.getLogger().error("[MTR Scripting via JCM {}] Error executing JS Script {}!", MTRScriptingMod.VERSION, displayName, e);
+                scriptManager.getLogger().error("[MTR Scripting via JCM {}] Error executing JS Script {}!", MTRScriptingMod.VERSION, displayName);
+                if(e instanceof RhinoException) {
+                    RhinoException re = ((RhinoException)e);
+                    scriptManager.getLogger().error(re.getMessage());
+                    for(String ste : re.getScriptStackTrace().split("\n")) {
+                        scriptManager.getLogger().error("{}", ste);
+                    }
+                } else {
+                    scriptManager.getLogger().error("", e);
+                }
+
                 lastFailedTime = System.currentTimeMillis();
                 capturedScriptException = e;
                 if(errorCallback != null) errorCallback.run();
