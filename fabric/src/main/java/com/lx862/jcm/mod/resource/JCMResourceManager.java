@@ -8,6 +8,7 @@ import com.lx862.jcm.mod.JCMClient;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.scripting.JCMScripting;
 import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.mtrscripting.core.rhinojs.RhinoParsedScript;
 import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MinecraftClient;
@@ -21,6 +22,7 @@ public class JCMResourceManager {
         JCMClient.getMcMetaManager().reset();
         PIDSManager.reset();
         ComplexModelStorage.reset();
+        RhinoParsedScript.clearScriptCache();
         loadCustomResources();
     }
 

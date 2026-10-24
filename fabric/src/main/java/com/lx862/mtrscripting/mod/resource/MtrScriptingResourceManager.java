@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.mod.resource;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.mtrscripting.core.rhinojs.RhinoParsedScript;
 import com.lx862.mtrscripting.core.util.ScriptResourceUtil;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
@@ -27,6 +28,7 @@ public class MtrScriptingResourceManager {
         eyecandy.reset();
         lift.reset();
         ScriptResourceUtil.resetCache();
+        RhinoParsedScript.clearScriptCache();
 
         MTRContentScripting.getScriptManager().scriptErrorNotifier.reset();
 
