@@ -65,7 +65,7 @@ public class EyecandyCustomConfigScreen extends SavableScreen implements RenderH
 
     @Override
     public MutableText getScreenTitle() {
-        return TextUtil.translatable("Eyecandy Custom Config");
+        return TextUtil.translatable(TextCategory.GUI, "eyecandy.custom_config.title");
     }
 
     @Override
