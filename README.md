@@ -6,105 +6,62 @@
   Joban Client Mod — Yanyang（晏阳）
 </h1>
 
-<p align="center">Joban Client Mod 的晏阳技术组维护分支：在原版（[DistrictOfJoban/Joban-Client-Mod](https://github.com/DistrictOfJoban/Joban-Client-Mod)）之上为 Minecraft Transit Railway 4.0 带来<strong>自动识别语言的 JS + C++ 混合脚本</strong>、<strong>换乘线路类型 API</strong>与一系列<strong>渲染性能修复</strong>。</p>
+<p align="center">Joban Client Mod 的晏阳技术组维护分支：在原版（[DistrictOfJoban/Joban-Client-Mod](https://github.com/DistrictOfJoban/Joban-Client-Mod)）之上，为 Minecraft Transit Railway 4.0 带来<strong>JS + C++ 混合脚本</strong>、<strong>零 JNI 原生运行时</strong>、<strong>换乘线路类型 API</strong>与一系列<strong>渲染性能修复</strong>。</p>
 
-<a align="center" href="https://weblate.ziyuesinicization.site/engage/joban-client-mod/"><img src="https://weblate.ziyuesinicization.site/widget/joban-client-mod/svg-badge.svg" alt="Translation status"></a>
+<p align="center">
+  <a href="https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/releases"><img src="https://img.shields.io/github/v/release/BugQuantumCore/Joban-Client-Mod-Yanyang?include_prereleases" alt="Latest release"></a>
+  <a href="https://bugquantumcore.github.io/Joban-Client-Mod-Yanyang/"><img src="https://img.shields.io/badge/docs-C%2B%2B_scripting-teal" alt="C++ scripting docs"></a>
+  <a href="https://weblate.ziyuesinicization.site/engage/joban-client-mod/"><img src="https://weblate.ziyuesinicization.site/widget/joban-client-mod/svg-badge.svg" alt="Translation status"></a>
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
+</p>
 
 > [!IMPORTANT]
-> 本分支跟踪整合原版 JCM 的每个版本（当前基线：[2.3.0-beta.2](https://github.com/DistrictOfJoban/Joban-Client-Mod)），并保持向后兼容：原版资源包、`language: "cpp"` 老格式资源包均无需修改即可继续使用。
->
-> 详细 C++ SDK 文档见 [`native/README.md`](native/README.md)，完整修改历史见 [CHANGELOG.md](CHANGELOG.md)。
+> - 本分支与原版 Joban Client Mod 使用同一 mod id（`jsblock`），**二者互斥，只能安装其一**。
+> - 分支持续跟踪整合原版 JCM 的每个版本（当前基线：[2.3.0-beta.2](https://github.com/DistrictOfJoban/Joban-Client-Mod)），并保持向后兼容：原版 JCM 资源包、`language: "cpp"` 老格式资源包均无需修改即可继续使用。
+> - C++ 脚本开发文档：**[网页版开发文档](https://bugquantumcore.github.io/Joban-Client-Mod-Yanyang/)** · [native/README.md](native/README.md)；完整修改历史见 [CHANGELOG.md](CHANGELOG.md)。
 
-## ✨ 当前版本：2.3.0-beta-2.yanyang.4
+## ✨ 核心特性
 
-**GC 与稳态分配优化**（yanyang.4，针对周期性瞬时卡顿）：脚本渲染管线（JS + C++）的「捕获→回放」路径不再每帧重建全部 wrapper / 列表 / lambda / 矩阵容器——变换隔离改为标记/截断（`StoredMatrixTransformationsMixin`）取代逐绘制调用 `copy()`；原生绘制调用池化复用；`takeFrom` 零拷贝捕获取代逐车逐脚本整表复制；原生字符串与 `Identifier` 驻留；跑马灯字形缓存；每 pose 一次的 JOML 矩阵分配改为线程复用。多车地图上年轻代分配速率从「每秒数百 KB～MB 级」降到接近零，从根源上消除 GC 周期性停顿导致的掉帧。同时修复了两个过程中发现的正确性隐患：**跨车辆矩阵 arena 别名**（多车共享脚本模块时的回放串车）与 **WeakHashMap 自引用泄漏**（眼糖变换缓存的 lambda 捕获了键对象）——详见 [CHANGELOG](CHANGELOG.md)。
+### JS + C++ 混合脚本
 
-（yanyang.3）**全代码库 bug 与性能审计**（Java + JNI 边界 + C++ 桥接/SDK）：修复 F3+T 后 C++ 脚本从不重载且渲染线程 use-after-free、模块记录流越界可崩溃 JVM、单个坏脚本条目中断整包解析、C++ `Text`/`Texture` 默认值被清零导致绘制不可见、Forge 端原生车辆脚本只捕获不渲染、Forge 端轨道裁剪逻辑反转（原版上游同样存在）、阴影 pass 脚本双重驱动、骑乘时裁剪冻结玩家、`mtrDispose` 拿到首帧快照等 **7 项关键修复 + 30 余项渲染正确性、性能与加固修复**——详见 [CHANGELOG](CHANGELOG.md)。
+vehicle / PIDS / lift / eyecandy 四类脚本均可用 C++ 编写，并与 JavaScript **在同一条目中自由混用、同时渲染**：
 
-**原生脚注扩展至 7 个平台**（yanyang.3）：jar 内置的 C++ 桥新增 **Linux ARM64**（树莓派/Asahi 等 ARM 桌面 + Pojav 类 Android 启动器）、**Android**（arm64-v8a，bionic）与 **iOS / iPadOS**（共用 arm64 Mach-O 镜像）三个目录，与原有 windows-x64 / linux-x64 / macos-x64 / macos-arm64 并列。运行时按 `os.name` + `os.arch` 匹配，Linux+aarch64 环境会依次尝试 linux-arm64 → ios-arm64 → android-arm64 镜像（iOS 沙箱内 JVM 会报 `os.name=Linux`），并修复了平台键把 Linux/Windows ARM64 一律归为 `-x64` 的旧 bug。
+- `scriptLocations` 逐条目自动判定语言，无需声明 `language` 字段；
+- 两侧各自捕获绘制指令、各自回放，互不干扰；某一侧缺失或加载失败时仅该侧跳过（latest.log / 调试模式提示），另一侧照常工作；
+- C++ 与 JS 共享同一 `create` / `render` / `dispose` 生命周期与逐实例持久状态（`State`），`mtr::Api` 可调用 JavaScript 脚本能访问的全部公开 Java API。
 
-（yanyang.2）`minecraft_custom_resources.json` 的脚本条目**不再需要 `language` 字段**：`scriptLocations` 中的每个路径由模组自动判断语言，且**同一条目可同时混用任意数量的 JavaScript 与 C++ 脚本**——vehicle / lift / eyecandy / pids 四类脚本全部支持。
+### 零 JNI 原生运行时
 
-```json
-"vehicleScripts": [
-    {
-        "id": "cst_sp1900_lcd",
-        "prependExpressions": ["print('Hello world')"],
-        "scriptLocations": ["mtr:my_pack/js/sp1900_lcd/main.js", "mtr:my_pack/natives/sp1900_train_num"],
-        "input": {
-            "yearEra": 2004
-        },
-        "dataFetchMode": "ALL"
-    }
-]
-```
+Java ↔ C++ 之间完全不经 JNI：JDK 16–21 使用共享内存 poller 平面，JDK 22+ 使用 Panama FFM 平面（配置界面可切换）。渲染、状态机、图形指令记录、纹理像素处理全部留在 C++ 侧完成——热路径零 Java 对象分配，不参与 JVM GC。
 
-示例中 `mtr:my_pack/js/sp1900_lcd/main.js` 是 JS 脚本，`mtr:my_pack/natives/sp1900_train_num` 是 C++ 模块，两个脚本**同时加载、同时渲染**。其余字段（`prependExpressions` / `input` / `dataFetchMode` 等）与原版 2.3 文档一致：[Vehicle](https://jcm.joban.org/v2.3/dev/scripting/type/vehicle/) · [Lift](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) · [Eyecandy](https://jcm.joban.org/v2.3/dev/scripting/type/eyecandy/) · [PIDS](https://jcm.joban.org/v2.3/dev/scripting/type/pids/)。
+### 7 平台原生桥，开箱即用
 
-### 逐条目语言判定规则
+每个 jar 内置七个平台的原生桥（`assets/jcm/natives/`）：**windows-x64 / linux-x64 / linux-arm64 / macos-x64 / macos-arm64 / android-arm64 / ios-arm64**。运行时按系统与架构自动匹配（ARM64 Linux 自动回退链），无需手动安装任何 DLL / so。
 
-| `scriptLocations` 条目 | 判定结果 |
-| --- | --- |
-| `…​/main.js`（大小写不敏感） | JavaScript |
-| `mtr:my_pack/natives/sp1900_train_num`（无扩展名） | **C++ 平台无关 stem** → 各平台自动解析为 `natives/linux-x64/lib…​.so`、`natives/linux-arm64/lib…​.so`、`natives/windows-x64/….dll`、`natives/macos-arm64/lib….dylib`、`natives/ios-arm64/lib….dylib` 等（ARM64 Linux 环境自动追加 ios-arm64 / android-arm64 候选） |
-| `…​/libfoo.so` / `…​.dll` / `…​.dylib` | C++ 完整路径（绑定对应平台，其它平台跳过） |
-| `{"windows": …, "linux": …, "macos": …}` | C++ 按平台映射表（支持 `macos-arm64` 等精确键） |
+### 帧稳定性工程
 
-- **混合运行不冲突**：JS 部分照常连接成单一 `ParsedScript`，C++ 部分全部挂到同一脚本 id；两侧各自捕获绘制指令、各自回放，互不干扰。某一侧缺失或加载失败时仅该侧跳过（附 latest.log / 调试模式提示），另一侧照常工作。
-- **老格式完全兼容**：`"language": "cpp"` + `nativeLibrary` / `nativeLibraries` 仍是纯 C++ 条目；这些字段也可与 `.js` 的 `scriptLocations` 混用；`"language": "javascript"` 可强制全部按 JS 解析（无扩展名 JS 路径的逃生口）；MTR 3 老格式的 `script_files` 语义不变（无扩展名仍按 JS，`.so/.dll/.dylib` 与平台映射表按 C++）。
-- **PIDS 预设**（`joban_custom_resources.json` 的 `pids_images`）同样支持 `scriptLocations` 自动判定，与老的 `scriptFiles` 并存。
-- **电梯语义**：混合条目下内置渲染只被抑制一次、乘坐玩家移动每帧只应用一次（不会叠加）；eyecandy 的方块使用事件同时送达 JS 与 C++ 两侧。
+- 捕获→回放管线**稳态零分配**：变换标记/截断隔离取代逐绘制调用拷贝、绘制调用池化、字符串驻留，从根源消除 GC 周期性停顿；
+- **原生车辆视锥剔除**：视锥外列车不再支付快照封送、画布重绘与纹理上传；
+- 脏矩形纹理上传 + 逐模块像素 arena（1 MB 起步按需增长）+ 离线程内存回收；
+- **实例热保持**：列车离开视锥不再销毁，重新入镜零重建；空闲阀门 `-Djcm.nativeIdleMillis` 与热实例上限 `-Djcm.nativeIdleMax` 约束内存占用。
 
-## 🛠 晏阳版对原版的全部修改
+### 换乘线路类型 API
 
-以下为本分支相对原版 JCM 的**完整修改清单**（按层次划分；详细技术细节见各版本 [CHANGELOG](CHANGELOG.md) 条目）。
+`getTransportType()`（JS / Java / C++ 三侧一致）：除 MTR 基础类型（`train` / `boat` / `cable_car` / `airplane`）外，可识别 MAGIC MTR Addon 线路类型（`train_metro`、`train_light_rail`、`train_high_speed`、`train_bus`、`train_tram`、`train_sbahn`、`train_normal` 等）——经可选反射集成，无硬依赖。
 
-### 1. 资源包声明格式（`minecraft_custom_resources.json` / `joban_custom_resources.json`）
+### 相对原版的大量修复
 
-- `scriptLocations` **逐条目语言自动判定**，无 `language` 字段，同一条目可混用任意数量的 JS 与 C++ 脚本（本版本新增）；
-- 混合条目优雅降级：C++ 库缺失 / 平台未声明 / JS 解析失败都只影响该侧，另一侧照常渲染；
-- 老 `language: "cpp"` + `nativeLibrary`（单库）/ `nativeLibraries`（多库）声明继续可用，并可与 `.js` 混用；
-- `lifts` / `objects` 的 `isScriptControlled`（原版 beta.2 改名）与 `isScriptRendered`（beta.1）**两个名字都接受**；
-- 原生脚本的跨平台声明三种形式（stem / 完整路径 / 按平台映射表），运行平台未声明时跳过并输出 latest.log + 调试模式提示（游戏内黄字/调试 HUD），而不是报错或静默不渲染。
-
-### 2. C++ 原生脚本运行时（原版完全没有的能力）
-
-- **JNI 桥 + 原生宿主**：预编译 C++ 模块（`.so` / `.dll` / `.dylib`）从资源包解压加载，与 JS 脚本共用同一条 capture-and-replay 渲染管线；渲染、状态机、图形指令记录、纹理像素处理全部在 C++ 侧完成，不产生 Java 对象分配、不参与 JVM GC；
-- **ABI 版本协商**：宿主 ABI 9；ABI 6/7/8 模块按各自原始布局继续加载（按 ABI 分组快照），老资源包无需重编译；
-- **`getTransportType()` / `getTransportMode()`**（C++：`mtr::Train`、`mtr::Stop::Interchange`）：原生读取（无 Java 回调），可识别 MAGIC MTR Addon 线路类型；
-- 每模块 1 MB 起步、按需增长的像素 arena；崩溃防护（`crash_guard`）与渲染错误 4 秒熔断；
-- [native SDK](native/README.md)：头文件 + 构建脚本 + 三个示例模块（车辆/电梯/PIDS/eyecandy）× 7 平台预编译库，随 Release 以 zip 附带。
-
-### 3. 脚本 API（JS / Java 侧）
-
-| API | 说明 |
-| --- | --- |
-| `vehicle.getTransportType()` / `stop.routeInterchanges[i].getTransportType()` | 返回基础类型（`train` / `boat` / `cable_car` / `airplane`）或 MAGIC 类型（`train_metro`、`train_light_rail`、`train_high_speed`、`train_bus`、`train_tram`、`train_sbahn`、`train_normal`）；MAGIC 通过**可选反射**集成，无硬依赖 |
-| `getTransportMode()`（不变） | 仍返回 MTR 的 `TransportMode` |
-| 服务端 → 客户端脚本数据集 | 携带 `routeId` + `transportType`，新旧版本服混用也能拿到类型 |
-
-### 4. 渲染性能修复（原版的已知问题）
-
-- **消除 C++ 脚本每 500ms GC 卡顿**（yanyang.11）：StopsData 完整数据图按「数据集身份 + 修订号」跨帧复用（原版每帧每车重建数百个 Stop / RouteInterchange 对象）；快照序列化零分配（复用 Builder、持久字符串池、出口 memo）；移除每车每帧 256 KB JNI 快照拷贝；arena `ByteBuffer` 改为每模块缓存 GlobalRef 视图、每帧仅 rewind；有限站点数据 1s TTL + 路线签名缓存；
-- **原生车辆视锥剔除**（yanyang.10，`VehicleCulling`）：整车包络在视锥外的列车不再支付快照序列化 + 整画布重绘 + 纹理上传；与原版 beta.2 的 MTR 层剔除互补，两层脚本都照常执行；
-- 渲染线程零垃圾化：模块列表遍历不再复制、script-id 逐车 memo、字符串池返回打包 `long`、`IntStream` 换成复用缓冲的普通循环、纹理像素直接从 frame arena 拷入既有图像存储；
-- 修复陈旧内置 bridge 导致的 `NoSuchMethodError`（yanyang.10）：JNI 查找失败立即清理并报告，新增 `checkNativeBridges` 构建校验；
-- **全库热路径审计**（yanyang.3）：每车每帧一棵共享车厢位置树（原先 2N+1 棵，N 节列车 ≈ 每秒 1500 次全树重建）、仅对持有原生脚本的车辆计算视锥盒、零分配一次性追踪日志、`rasterizeText` 直读 `int[]` 光栅、gfx2d 复用草稿缓冲、`SCRIPT_IDS`/`TRACED`/`CAR_POSITIONS` 失效修剪、失败加载负缓存、稳定临时文件名（不再每次重载新增 `deleteOnExit`）、`clearDeadInstance` 不再每秒 40 次全表快照。
-
-### 5. 原版版本整合策略
-
-- 每个原版版本（如 2.3.0-beta.2 的轨道预览保留、Shift 独占选择、实验性 frustum culling、潜行降低视角、车门/光照/相机 API、cs_cz/de_de 等）逐文件三路合并，**保留晏阳全部自有能力**；
-- 整合时附带晏阳侧优化：如 beta.2 的 `LiftWrapper` 车门可开启性懒惰计算（原版在每帧每电梯的构造函数里急切做世界查询）、C++ 电梯脚本与 JS 一致的 `VehicleRidingMovement` 乘坐语义。
-
-### 6. 构建与发布体系
-
-- 单一源码构建 **12 个 jar**（6 个 MC 版本 1.17.1 / 1.18.2 / 1.19.2 / 1.19.4 / 1.20.1 / 1.20.4 × Fabric / Forge），每个 jar 内置 7 个平台的 JNI bridge（`assets/jcm/natives/<platform>/`：windows-x64、linux-x64、linux-arm64、macos-x64、macos-arm64、android-arm64、ios-arm64），用户无需手动安装 DLL；
-- CI（`build.yml`）：每次 push 在 6 个 MC 版本上验证编译；`release.yml`：5 平台原生 CTest（x64/ARM64 Linux、Windows、Intel/Apple macOS）+ 2 个交叉编译（Android NDK arm64-v8a、iOS arm64 Mach-O）→ 12 jar 构建 → `verify_jar.py` + `checkNativeBridges` 资产校验 → 发布 Release（含 native SDK zip）；
-- 原生测试：`native/bench` 下 45 项 JVM 集成检查（真实 OpenJDK 21 JNI bridge）、ABI 布局回归、API 覆盖率探针。
+对原版 JCM 与本分支全代码库（Java + 桥接边界 + C++ SDK）做过多轮审计修复：F3+T 后 C++ 脚本从不重载、Forge 端车辆脚本只捕获不渲染、轨道裁剪条件反转、渲染线程 use-after-free、模块记录流越界可崩溃 JVM 等**关键修复 + 30 余项渲染正确性 / 性能 / 加固修复**——全部细节见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 📦 下载与安装
 
-每个 Release 提供 **12 个 jar**（6 个 MC 版本 × Fabric/Forge 双加载器），均已内置 4 个桌面平台的 JNI bridge：
+| 渠道 | 链接 |
+| --- | --- |
+| GitHub Releases | https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/releases |
+| Modrinth | https://modrinth.com/project/kMMJcRqY |
+| CurseForge | https://www.curseforge.com/projects/1736483 |
+
+每个 Release 提供 **12 个 jar**（6 个 MC 版本 × Fabric / Forge 双加载器，均已内置 7 平台原生桥）与 **native SDK zip**（`jcm-native-sdk-<版本>.zip`）：
 
 | Minecraft | Fabric | Forge |
 | --- | --- | --- |
@@ -115,60 +72,126 @@
 | 1.18.2 | ✅ | ✅ |
 | 1.17.1 | ✅ | ✅ |
 
-**前置**：[Minecraft Transit Railway 4.0.5](https://modrinth.com/mod/minecraft-transit-railway) + Fabric API（Fabric 端）。
+**环境要求**
 
-> 想开发 C++ 脚本？下载 Release 附带的 **`jcm-native-sdk-<版本>.zip`**（含 SDK 头文件、构建脚本、示例模块的七平台预编译库），并阅读 [`native/README.md`](native/README.md)。
-
-## 🔧 C++ 脚本架构与跨平台
-
-脚本核心遵循一条简单规则：**「API 只用于取数据，其余任务原生完成」**——
-
-- 数据获取（列车、站点、换乘、资源、输入）经由 JNI 桥接进入 C++ 快照，每帧一次；
-- 渲染、状态机、图形命令记录、纹理像素处理全部留在 C++ 侧，**不产生 Java 对象分配**，因此不参与 JVM GC；
-- 图形命令记录进 frame arena，由宿主在 Java 端一次性回放——与 JS 脚本的回放路径逐字节一致，这正是 JS 与 C++ 能在同一列车、同一脚本条目里共存的基础。
-
-可移植性：
-
-| 平台 | 支持方式 |
+| 项目 | 要求 |
 | --- | --- |
-| Windows x64 / Linux x64 / macOS x64 / macOS ARM64 | CMake 一键构建，bridge 已随 jar 内置 |
-| Android | 脚本核心 + JNI bridge 可用 NDK 编译 |
-| iOS / iPadOS | 脚本核心不依赖 JVM：渲染与逻辑全在 C++，数据获取由宿主注入 |
+| Minecraft | 1.17.1 – 1.20.4（Fabric / Forge） |
+| 前置模组 | [Minecraft Transit Railway](https://modrinth.com/mod/minecraft-transit-railway) 4.0.5+（必需）；Fabric 端另需 Fabric API |
+| Java | 16 及以上（22+ 自动启用全程零 JNI 的 FFM 平面） |
+| 与原版 JCM | **互斥**（同一 mod id，二选一，不能共存） |
+
+> [!TIP]
+> Modrinth / CurseForge 项目尚在平台审核中，链接在过审后生效；在此之前请从 GitHub Releases 下载。
+
+## 🚀 快速上手
+
+### 1. 声明一个混合脚本条目
+
+```json
+"vehicleScripts": [
+    {
+        "id": "my_pack:train_lcd",
+        "scriptLocations": [
+            "mtr:my_pack/js/train_lcd/main.js",
+            "mtr:my_pack/natives/train_num"
+        ],
+        "input": { "theme": "dark" },
+        "dataFetchMode": "ALL"
+    }
+]
+```
+
+第一个路径是 JS 脚本、第二个是 C++ 模块 stem，两个脚本**同时加载、同时渲染**。其余字段（`prependExpressions` / `input` / `dataFetchMode` 等）与原版 2.3 文档一致：[Vehicle](https://jcm.joban.org/v2.3/dev/scripting/type/vehicle/) · [Lift](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) · [Eyecandy](https://jcm.joban.org/v2.3/dev/scripting/type/eyecandy/) · [PIDS](https://jcm.joban.org/v2.3/dev/scripting/type/pids/)。
+
+**逐条目语言判定**：
+
+| `scriptLocations` 条目 | 判定 |
+| --- | --- |
+| `…/main.js`（大小写不敏感） | JavaScript |
+| `mtr:my_pack/natives/my_module`（无扩展名） | C++ 平台无关 stem，各平台自动解析为 `natives/<platform>/lib….so` / `….dll` / `lib….dylib` |
+| `…/libfoo.so` / `….dll` / `….dylib` | C++ 完整路径（绑定对应平台，其它平台跳过） |
+| `{"windows": …, "linux": …, "macos": …}` | C++ 按平台映射表（支持 `macos-arm64` 等精确键） |
+
+**兼容性**：老 `language: "cpp"` + `nativeLibrary` / `nativeLibraries` 声明继续可用，并可与 `.js` 混用；`"language": "javascript"` 可强制按 JS 解析；MTR 3 老格式 `script_files` 语义不变。
+
+### 2. 第一个 C++ 模块
+
+```cpp
+#include <mtr/script.hpp>
+
+struct ArrivalState {};                    // 逐实例持久状态（本例为空）
+
+struct ArrivalDisplay : mtr::PidsScript<ArrivalState> {
+    static constexpr auto ID = "example:arrivals";   // 必须与资源包声明一致
+
+    void render(mtr::PidsContext& ctx, ArrivalState&,
+                const mtr::Pids& pids) override {
+        for (int row = 0; row < pids.rows(); row++) {
+            if (pids.is_row_hidden(row)) continue;
+
+            std::string text = pids.get_custom_message(row).str();
+            if (text.empty() && row < pids.arrivals().size())
+                text = pids.arrivals().at(row).destination().str();
+
+            if (!text.empty())
+                mtr::Text::create().text(text.c_str())
+                    .pos(2, row * 10.0 + 2)
+                    .size(pids.width() - 4, 9)
+                    .draw(ctx);
+        }
+    }
+};
+
+MTR_REGISTER_PIDS_SCRIPT(ArrivalDisplay)
+```
+
+编译为模块后按平台目录放进资源包（如 `natives/windows-x64/my_arrivals.dll`、`natives/linux-x64/libmy_arrivals.so` …），再在 `scriptLocations` 中声明 stem 即可。车辆（`mtr::VehicleScript`）/ 电梯 / 装饰脚本同理——完整教程见下方文档。
+
+### 3. 📖 C++ 脚本开发文档（网页版）
+
+**https://bugquantumcore.github.io/Joban-Client-Mod-Yanyang/**
+
+| 页面 | 内容 |
+| --- | --- |
+| 概览 | 什么是 C++ 原生脚本、架构、何时选 C++ |
+| 快速上手 | SDK 获取、模块工程、三平台编译、打包进资源包、游戏内验证 |
+| 脚本模型与生命周期 | 四类基类、State 语义、线程模型与崩溃隔离 |
+| 数据快照参考 | Train / Stop / Arrival / Pids / Lift / EyeCandy 全访问器 |
+| 绘制与画布 | Text / Texture、Matrices、GraphicsTexture、Gfx2D、字体 |
+| Java 互操作 | `mtr::Api`、对象与回调、JS↔C++ 对照表 |
+| C ABI 与宿主服务 | 导出函数、帧输入输出、绘制记录、ABI 演进 |
+| 性能与调试 | 热路径守则、`defer_free`、`latest.log`、FAQ |
+
+站点源文件位于 [`Develop-Documentation-Website` 分支](https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/tree/Develop-Documentation-Website)（纯静态、零依赖）。SDK 也可直接从 Release 附件 `jcm-native-sdk-<版本>.zip` 获取（含全部头文件、构建脚本、示例模块与七平台预编译库）。
+
+## 🛠 从源码构建
 
 ```sh
-# 构建与测试 native SDK（需要 JDK 21 与 Python 3）
+# 原生 SDK：构建与测试（需要 JDK 21 与 Python 3）
 cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release
 cmake --build native/build --config Release --parallel 4
 ctest --test-dir native/build -C Release --output-on-failure
 ```
 
-## 🚀 快速上手：第一个 C++ 车辆脚本
+- **`build.yml`**：每次 push / PR 在全部 6 个 MC 版本上快速验证编译（快速 CI jar 不含原生桥；游戏可用的完整 jar 请使用 Release 或 `release.yml` 产物）；
+- **`release.yml`**：5 平台原生 CTest（x64 / ARM64 Linux、Windows、Intel / Apple macOS）+ 2 项交叉编译（Android NDK arm64-v8a、iOS arm64 Mach-O）→ 12 jar 构建 → `verify_jar.py` + `checkNativeBridges` 资产校验 → 发布 Release（含 native SDK zip）；
+- **`native/bench`**：基于真实 JVM 的集成检查（FFM 平面 70 项 / poller 平面 67 项）+ ABI 布局回归 + API 覆盖率探针。
 
-```cpp
-#include <mtr/script.hpp>
+## 📋 版本沿革
 
-struct State { mtr::Mat4 base; };
+完整更新日志见 [CHANGELOG.md](CHANGELOG.md)，各版本发布说明见 [Releases](https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/releases)。
 
-class MyTrain final : public mtr::VehicleScript<State> {
-    void create(mtr::Train& train, State& s) override { s.base = train.baseMatrix(); }
-    void render(mtr::Train& train, State& s, mtr::Frame& f) override {
-        // MAGIC MTR 类型原生可读：
-        //   train.getTransportType()  -> "train_metro" / "train_high_speed" / ...
-        //   train.getTransportMode()  -> TransportMode::TRAIN
-        f.pushMatrix(s.base);
-        f.drawTexture("jsblock:textures/generic.png", 0.0F, 0.0F, 1.0F, 1.0F);
-        f.popMatrix();
-    }
-};
-
-MTR_REGISTER_VEHICLE_SCRIPT(MyTrain, "example", "my_train")
-```
-
-资源包 `minecraft_custom_resources.json` 的 `scriptLocations` 里直接写上编译出的模块路径（或老格式 `"language": "cpp"` + `nativeLibrary`）即可——JS 与 C++ 脚本可在同一条目、同一资源包中并存。
-
-## 📋 完整更新日志
-
-见 [CHANGELOG.md](CHANGELOG.md)。各版本发布说明见 [Releases](https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/releases)。
+| 版本 | 主题 |
+| --- | --- |
+| `yanyang.7` | 实例热保持：列车离开视锥不再销毁，消除转头时的间歇性卡顿；空闲阀门与销毁预算 |
+| `yanyang.6` | 修复列车 LCD 永久黑屏（实例销毁与 Java 侧 id 缓存不同步） |
+| `yanyang.5` | 传输平面健壮性审查：poller 线程自愈、消除 JVM 崩溃风险等 9 处修复 |
+| `yanyang.4` | 捕获→回放稳态零分配（GC 停顿整治）；`-shmtest5` 起模组全面去 JNI |
+| `yanyang.3` | 全代码库审计：7 项关键修复 + 30 余项加固；原生桥扩展至 7 平台 |
+| `yanyang.2` | `scriptLocations` 逐条目语言自动判定，同一条目混用 JS 与 C++ |
+| `yanyang.1` | 整合原版 `2.3.0-beta.2`（实验性视锥剔除、潜行相机、车门 / 光照 / 相机 API 等） |
+| `2.3.0-beta.1-yanyang.1…11` | 混合脚本奠基：原生桥、`getTransportType()`、零分配换乘数据快照、原生视锥剔除 |
 
 ## 🤝 致谢
 
