@@ -13,7 +13,9 @@ import org.mtr.mapping.holder.Identifier;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 /**
@@ -25,6 +27,8 @@ public class RhinoParsedScript extends ParsedScript {
     private final List<Function> createFunctions;
     private final List<Function> renderFunctions;
     private final List<Function> disposeFunctions;
+
+    private static final Map<String, Script> compiledScriptCache = new HashMap<>();
 
     public RhinoParsedScript(ScriptManager scriptManager, String displayName, String contextName, ParsedScript.Configuration configuration) {
         super(scriptManager, displayName, contextName, configuration);
@@ -40,7 +44,7 @@ public class RhinoParsedScript extends ParsedScript {
             cx.setLanguageVersion(Context.VERSION_ES6);
             cx.setClassShutter(new MTRRhinoClassShutter(scriptManager.getClassShutter()));
             scope = new ImporterTopLevel(cx);
-            parseScriptContent("\"use strict\";", "");
+            parseScriptContent("\"use strict\";", "Use Strict Statement");
             ScriptResourceUtil.beginParseScript(this);
 
             /* Init global variables */
@@ -72,7 +76,9 @@ public class RhinoParsedScript extends ParsedScript {
     public void parseScriptContent(String str, String source) {
         Context cx = Context.getCurrentContext();
         if(cx == null) throw new IllegalStateException("No rhino context currently available!");
-        cx.evaluateString(scope, str, source, 1, null);
+        Script script = compiledScriptCache.containsKey(source) ? compiledScriptCache.get(source) : cx.compileString(str, source, 1, null);
+        script.exec(cx, scope);
+        compiledScriptCache.put(source, script);
     }
 
     @Override
@@ -168,5 +174,9 @@ public class RhinoParsedScript extends ParsedScript {
     @Override
     public void exposeClassInstance(String name, Object classInstance) {
         scope.put(name, scope, new NativeJavaObject(scope, classInstance, com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
+    }
+
+    public static void clearScriptCache() {
+        compiledScriptCache.clear();
     }
 }
