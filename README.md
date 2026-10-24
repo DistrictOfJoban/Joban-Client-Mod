@@ -157,13 +157,13 @@ MTR_REGISTER_PIDS_SCRIPT(ArrivalDisplay)
 | 概览 | 什么是 C++ 原生脚本、架构、何时选 C++ |
 | 快速上手 | SDK 获取、模块工程、三平台编译、打包进资源包、游戏内验证 |
 | 脚本模型与生命周期 | 四类基类、State 语义、线程模型与崩溃隔离 |
-| 数据快照参考 | Train / Stop / Arrival / Pids / Lift / EyeCandy 全访问器 |
+| 数据快照参考 | Vehicle / Stop / Arrival / Pids / Lift / EyeCandy 全访问器 |
 | 绘制与画布 | Text / Texture、Matrices、GraphicsTexture、Gfx2D、字体 |
 | Java 互操作 | `mtr::Api`、对象与回调、JS↔C++ 对照表 |
 | C ABI 与宿主服务 | 导出函数、帧输入输出、绘制记录、ABI 演进 |
 | 性能与调试 | 热路径守则、`defer_free`、`latest.log`、FAQ |
 
-站点源文件位于 [`Develop-Documentation-Website` 分支](https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/tree/Develop-Documentation-Website)（纯静态、零依赖）。SDK 也可直接从 Release 附件 `jcm-native-sdk-<版本>.zip` 获取（含全部头文件、构建脚本、示例模块与七平台预编译库）。
+站点支持**浅色 / 深色双主题**（跟随系统偏好，手动切换后记住选择）与 **7 种语言**：简体中文（中国大陆）· 繁體中文（香港特別行政區）· 繁體中文（台灣）· 文言（華夏）· English (US) · English (UK) · Français (France)。源文件位于 [`Develop-Documentation-Website` 分支](https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/tree/Develop-Documentation-Website)（纯静态、零依赖）。SDK 也可直接从 Release 附件 `jcm-native-sdk-<版本>.zip` 获取（含全部头文件、构建脚本、示例模块与七平台预编译库）。
 
 ## 🛠 从源码构建
 
