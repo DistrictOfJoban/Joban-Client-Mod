@@ -99,6 +99,10 @@ public class RawModelJS {
         return new RawModelJS(newModel);
     }
 
+    public void replaceTexture(String oldTexture, String newTexture) {
+        replaceTexture(oldTexture, new Identifier(newTexture));
+    }
+
     public void replaceTexture(String oldTexture, Identifier newTexture) {
         rawModel.iterateRawMeshList(f -> {
             Identifier id = f.materialProperties.getTexture();
@@ -119,6 +123,10 @@ public class RawModelJS {
 
     public void generateNormals() {
         this.rawModel.generateNormals();
+    }
+
+    public void replaceAllTexture(String id) {
+        replaceAllTexture(new Identifier(id));
     }
 
     public void replaceAllTexture(Identifier id) {

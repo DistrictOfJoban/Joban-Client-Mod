@@ -53,8 +53,16 @@ public class ModelManagerJS {
         return upload(modelData);
     }
 
+    public static RawModelJS loadModel(String id) {
+        return loadModel(new Identifier(id));
+    }
+
     public static RawModelJS loadModel(Identifier id) {
         return loadModel(id, true);
+    }
+
+    public static RawModelJS loadModel(String id, boolean flipTextureV) {
+        return loadModel(new Identifier(id), flipTextureV);
     }
 
     public static RawModelJS loadModel(Identifier id, boolean flipTextureV) {
@@ -70,6 +78,10 @@ public class ModelManagerJS {
             MTRScriptingModClient.LOGGER.error("", e);
             return null;
         }
+    }
+
+    public static Map<String, RawModelJS> loadModelParts(String modelLocation, boolean flipTextureV) {
+        return loadModelParts(new Identifier(modelLocation), flipTextureV);
     }
 
     public static Map<String, RawModelJS> loadModelParts(Identifier modelLocation, boolean flipTextureV) {
@@ -90,8 +102,16 @@ public class ModelManagerJS {
         }
     }
 
+    public static RawModelJS loadModelPart(String modelName, String modelLocation) {
+        return loadModelPart(modelName, new Identifier(modelLocation));
+    }
+
     public static RawModelJS loadModelPart(String modelName, Identifier modelLocation) {
         return loadModelPart(modelName, modelLocation, true);
+    }
+
+    public static RawModelJS loadModelPart(String modelName, String modelLocation, boolean flipTextureV) {
+        return loadModelPart(modelName, new Identifier(modelLocation), flipTextureV);
     }
 
     public static RawModelJS loadModelPart(String modelName, Identifier modelLocation, boolean flipTextureV) {

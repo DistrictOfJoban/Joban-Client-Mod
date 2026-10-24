@@ -17,16 +17,32 @@ public class ScriptSoundManager {
         this.soundCalls = soundCalls;
     }
 
+    public void playLocalSound(String id, float volume, float pitch) {
+        playLocalSound(new Identifier(id), volume, pitch);
+    }
+
     public void playLocalSound(Identifier id, float volume, float pitch) {
         queue(new NonPositionedSoundCall(id, SoundCategory.getMasterMapped(), volume, pitch));
+    }
+
+    public void playLocalSound(String id, float volume, float pitch, String soundCategory) {
+        playLocalSound(new Identifier(id), volume, pitch, soundCategory);
     }
 
     public void playLocalSound(Identifier id, float volume, float pitch, String soundCategory) {
         queue(new NonPositionedSoundCall(id, SoundCategory.valueOf(soundCategory), volume, pitch));
     }
 
+    public void playSound(String id, ScriptVector3f pos, float volume, float pitch) {
+        playSound(new Identifier(id), pos, volume, pitch);
+    }
+
     public void playSound(Identifier id, ScriptVector3f pos, float volume, float pitch) {
         queue(new PositionedSoundCall(id, SoundCategory.getMasterMapped(), pos.x(), pos.y(), pos.z(), volume, pitch));
+    }
+
+    public void playSound(String id, ScriptVector3f pos, float volume, float pitch, String soundCategory) {
+        playSound(new Identifier(id), pos, volume, pitch, soundCategory);
     }
 
     public void playSound(Identifier id, ScriptVector3f pos, float volume, float pitch, String soundCategory) {

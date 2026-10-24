@@ -88,6 +88,10 @@ public class EyeCandyScriptContext extends MTRScriptContext {
         this.renderManager.drawModel(dynamicModelHolder, matrices);
     }
 
+    public void playSound(String id, float volume, float pitch) {
+        playSound(new Identifier(id), volume, pitch);
+    }
+
     public void playSound(Identifier id, float volume, float pitch) {
         this.soundManager.playSound(id, ScriptVector3f.ZERO, volume, pitch);
     }

@@ -45,6 +45,10 @@ public class ModelJS {
         return new ModelJS(wrapper);
     }
 
+    public void replaceTexture(String oldTexture, String newTexture) {
+        replaceTexture(oldTexture, new Identifier(newTexture));
+    }
+
     public void replaceTexture(String oldTexture, Identifier newTexture) {
         OptimizedModel optimizedModel = ((OptimizedModelWrapperAccessor)(Object)model).getOptimizedModel();
         List<VertexArray> vertexArrays = ((OptimizedModelAccessor)(Object)optimizedModel).getUploadedParts();
@@ -58,6 +62,10 @@ public class ModelJS {
                 e.materialProperties.setTexture(newTexture);
             }
         });
+    }
+
+    public void replaceAllTexture(String id) {
+        replaceAllTexture(new Identifier(id));
     }
 
     public void replaceAllTexture(Identifier id) {

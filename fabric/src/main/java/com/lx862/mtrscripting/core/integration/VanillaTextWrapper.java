@@ -40,6 +40,10 @@ public class VanillaTextWrapper {
         return this;
     }
 
+    public VanillaTextWrapper withFont(String id) {
+        return withFont(new Identifier(id));
+    }
+
     public VanillaTextWrapper withFont(Identifier id) {
         this.style = this.style.withFont(id);
         return this;

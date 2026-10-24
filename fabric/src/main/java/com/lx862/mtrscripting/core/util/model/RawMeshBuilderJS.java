@@ -20,9 +20,13 @@ public class RawMeshBuilderJS {
     private final int faceSize;
     private Vertex buildingVertex = new Vertex();
 
-    public RawMeshBuilderJS(int faceSize, String renderType, Identifier texture) {
+    public RawMeshBuilderJS(int faceSize, String renderType, String textureId) {
+        this(faceSize, renderType, new Identifier(textureId));
+    }
+
+    public RawMeshBuilderJS(int faceSize, String renderType, Identifier textureId) {
         this.faceSize = faceSize;
-        this.mesh = new RawMesh(new MaterialProperties(RawModelJS.stringToRenderStage(renderType).shaderType, texture, 0xFFFFFFFF));
+        this.mesh = new RawMesh(new MaterialProperties(RawModelJS.stringToRenderStage(renderType).shaderType, textureId, 0xFFFFFFFF));
     }
 
     public RawMesh getMesh() {

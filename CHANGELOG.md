@@ -11,6 +11,7 @@
 - Compiled scripts are now re-used during parsing stage, which may speed up parsing time for packs with many reference to a single script.
 - When passing in JS objects in `print()` or `console` functions, they will now output the corresponding JSON string instead of `[object Object]`.
 - When encountering a runtime error, only the JS stacktrace will now be shown to reduce clutter.
+- For convenience, all non-deprecated methods with an `Identifier` argument now also has a corresponding `String` variant. Thus you can pass in a string like `"mtr:font"` instead of wrapping it with id/idr.
 - `StateTracker.setState()` would now return a boolean on whether the state is changed or not, instead of needing a separate check.
 
 ## Translations

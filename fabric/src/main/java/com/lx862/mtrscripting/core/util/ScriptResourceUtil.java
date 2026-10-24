@@ -159,18 +159,22 @@ public class ScriptResourceUtil {
         return dataReaderJS.asFont();
     }
 
-    public static @ValueNullable DataReaderJS read(Identifier identifier) {
-        String idStr = identifier.getNamespace() + ":" + identifier.getPath();
+    public static @ValueNullable DataReaderJS read(String id) {
+        return read(new Identifier(id));
+    }
+
+    public static @ValueNullable DataReaderJS read(Identifier id) {
+        String idStr = id.getNamespace() + ":" + id.getPath();
 
         return cacheOrGet(idStr, () -> {
             // HACK: MC Mappings always uses a callback for the InputStream and auto-closes it after, so we can't pass it around later on
             // For now, we just save the full file bytes, then wrap it in another ByteArrayInputStream...
             byte[][] fileBytes = new byte[][]{null};
-            ResourceManagerHelper.readResource(identifier, is -> {
+            ResourceManagerHelper.readResource(id, is -> {
                 try {
                     fileBytes[0] = IOUtils.toByteArray(is);
                 } catch (IOException e) {
-                    MTRScriptingModClient.LOGGER.error("[JCM Scripting] Error while reading data {}", identifier);
+                    MTRScriptingModClient.LOGGER.error("[JCM Scripting] Error while reading data {}", id);
                 }
             });
 
@@ -180,6 +184,10 @@ public class ScriptResourceUtil {
                 return null;
             }
         });
+    }
+
+    public static boolean exist(String id) {
+        return exist(new Identifier(id));
     }
 
     public static boolean exist(Identifier id) {
