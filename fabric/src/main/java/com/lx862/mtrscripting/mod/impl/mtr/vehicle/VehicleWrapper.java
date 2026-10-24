@@ -850,13 +850,14 @@ public class VehicleWrapper {
      *         be resolved on the client (caller gives up with "not")
      */
     private boolean addBogiePosition(ObjectArrayList<PositionAndRotation> out, double value, double lowerBound, double upperBound, boolean reversed, boolean hasPitch) {
-        /* Math.clamp mirrors MTR's own getBogiePositions clamping (the
-           double overload of Utilities.clampSafe post-dates the TSC build
-           MTR 4.0.5 ships, so plain JDK 21 Math.clamp is the portable pick). */
-        final double clampedValue = Math.clamp(value, lowerBound, upperBound);
-        final double clamp = Math.clamp(Math.min(Math.abs(clampedValue - lowerBound), Math.abs(clampedValue - upperBound)), 0.1, 1);
-        final double value1 = Math.clamp(clampedValue + (reversed ? -clamp : clamp), lowerBound, upperBound - 0.001);
-        final double value2 = Math.clamp(clampedValue - (reversed ? -clamp : clamp), lowerBound, upperBound - 0.001);
+        /* The clamping mirrors MTR's own getBogiePositions joggle; written as
+           plain min/max because the TSC build shipped in MTR 4.0.5 has no
+           Utilities.clampSafe double overload and the project targets Java
+           17 (no Math.clamp either). */
+        final double clampedValue = Math.min(Math.max(value, lowerBound), upperBound);
+        final double clamp = Math.min(Math.max(Math.min(Math.abs(clampedValue - lowerBound), Math.abs(clampedValue - upperBound)), 0.1), 1);
+        final double value1 = Math.min(Math.max(clampedValue + (reversed ? -clamp : clamp), lowerBound), upperBound - 0.001);
+        final double value2 = Math.min(Math.max(clampedValue - (reversed ? -clamp : clamp), lowerBound), upperBound - 0.001);
         final Vector position1 = positionAt(value1);
         final Vector position2 = positionAt(value2);
         if(position1 == null || position2 == null) return false;
