@@ -1003,9 +1003,9 @@ public final class DoorDirectionManager {
         }
 
         /** Whether any route calling here already has stored sides but is missing this platform — the rebuilt-platform case that no other path would ever scan. */
-        boolean missingFromStored(Long2ObjectOpenHashMap<RouteData> routes) {
+        boolean missingFromStored(Long2ObjectOpenHashMap<WorldState.RouteData> routes) {
             for(final long routeId : routeIds) {
-                final RouteData data = routes.get(routeId);
+                final WorldState.RouteData data = routes.get(routeId);
                 if(data != null && !data.sides.containsKey(platformId)) return true;
             }
             return false;
