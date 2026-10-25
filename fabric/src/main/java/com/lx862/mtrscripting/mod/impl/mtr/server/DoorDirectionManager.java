@@ -8,7 +8,9 @@ import com.lx862.jcm.mixin.mtrscripting.MainAccessorMixin;
 import com.lx862.mtrscripting.mod.MTRScriptingMod;
 import com.lx862.mtrscripting.mod.network.packet.data.DoorDirectionsS2CPacket;
 import org.mtr.core.Main;
+import org.mtr.core.data.Data;
 import org.mtr.core.data.Platform;
+import org.mtr.core.data.Position;
 import org.mtr.core.data.Rail;
 import org.mtr.core.data.Route;
 import org.mtr.core.data.RoutePlatformData;
@@ -399,6 +401,7 @@ public final class DoorDirectionManager {
         boolean scanned;          /* marker present, or full scan finished */
         boolean fullScanActive;   /* full-scan work is queued/running */
         boolean indexRequested;   /* a snapshot handoff to the sim is in flight */
+        boolean warnedEmptyFullScan;  /* the "full scan found nothing" WARN prints once per dimension */
         int ticksSinceIndex;
         int fullScanCount;        /* platforms in the running full scan, for the log */
 
@@ -501,7 +504,9 @@ public final class DoorDirectionManager {
                least FULL_SCAN_START_DELAY_MILLIS after server start, so it
                can never freeze a half-linked railway into the marker.
                Index snapshots (for the block-change pre-filter and lazy
-               route scans) are not delayed. */
+               route scans) are not delayed. scanned flips to true only in
+               finishScanIfNeeded — i.e. after a full scan really completed —
+               so a completed scan can never re-arm here. */
             final boolean canFullScan = !scanned && startedAtMillis > 0
                     && System.currentTimeMillis() - startedAtMillis >= FULL_SCAN_START_DELAY_MILLIS;
             if(!indexRequested
@@ -535,23 +540,41 @@ public final class DoorDirectionManager {
             simulator.run(() -> snapshotRailways(self, fullScan, lazyRouteIds));
         }
 
-        /** Runs in the simulator's context: reads live railway data and posts an immutable snapshot back to the server thread. */
+        /**
+         * Runs in the simulator's context: reads live railway data and posts
+         * an immutable snapshot back to the server thread.
+         *
+         * <p>The platform→rail association uses the core's own lookup —
+         * {@code Data.tryGet(simulator.positionsToRail, platform position1,
+         * platform position2)} with an {@code isPlatform()} check, the exact
+         * resolution {@code SavedRailBase#isInvalidSavedRail} performs — and
+         * NOT any hex id: {@code Rail.getHexId()} is the two-positions hex
+         * ({@link org.mtr.core.data.TwoPositionsBase}) while
+         * {@code Platform.getHexId()} is the 16-char hex of the platform's
+         * numeric id ({@link org.mtr.core.data.NameColorDataBase}) —
+         * two unrelated final methods on divergent hierarchy branches that
+         * happen to share a name. The first server build keyed rails by
+         * positions-hex and looked platforms up by id-hex, so the lookup
+         * could never match a single platform on any save, the full scan
+         * quietly had zero work, and clients fell back to view-distance
+         * scans forever. Platform endpoints are read through the public
+         * accessors ({@code getRandomPosition()} returns position1,
+         * {@code getOtherPosition(position1)} returns position2), the same
+         * trick keeps this on MTR's public API on every MC version.
+         */
         private static void snapshotRailways(WorldState state, boolean fullScan, long[] lazyRouteIds) {
-            final Object2ObjectOpenHashMap<String, ObjectArrayList<Rail>> railsByHexId = new Object2ObjectOpenHashMap<>();
-            for(final Rail rail : state.simulator.rails) {
-                if(rail.isPlatform()) {
-                    railsByHexId.computeIfAbsent(rail.getHexId(), key -> new ObjectArrayList<>()).add(rail);
-                }
-            }
-
             final ObjectArrayList<PlatformSnapshot> platformIndex = new ObjectArrayList<>();
             final ObjectArrayList<PlatformWork> fullScanWork = new ObjectArrayList<>();
+            int platformsTotal = 0;
+            int platformsWithRoutes = 0;
             for(final Platform platform : state.simulator.platforms) {
+                platformsTotal++;
                 if(platform.routes.isEmpty()) continue;   /* only platforms a route calls at, per requirement */
-                final ObjectArrayList<Rail> rails = railsByHexId.get(platform.getHexId());
-                if(rails == null || rails.isEmpty()) continue;   /* no platform rail: nothing trains can stop on */
+                platformsWithRoutes++;
+                final Rail rail = platformRail(state.simulator, platform);
+                if(rail == null) continue;   /* no platform rail: nothing trains can stop on */
                 final PlatformSnapshot snapshot = new PlatformSnapshot(
-                        platform.getId(), rails, platform.routes.stream().mapToLong(Route::getId).sorted().toArray());
+                        platform.getId(), ObjectArrayList.of(rail), platform.routes.stream().mapToLong(Route::getId).sorted().toArray());
                 platformIndex.add(snapshot);
                 if(fullScan) fullScanWork.add(new PlatformWork(snapshot));
             }
@@ -568,12 +591,12 @@ public final class DoorDirectionManager {
                 for(final RoutePlatformData routePlatformData : route.getRoutePlatforms()) {
                     final Platform platform = routePlatformData.getPlatform();
                     if(platform == null || platform.routes.isEmpty()) continue;
-                    final ObjectArrayList<Rail> rails = railsByHexId.get(platform.getHexId());
-                    if(rails == null || rails.isEmpty()) continue;
+                    final Rail rail = platformRail(state.simulator, platform);
+                    if(rail == null) continue;
                     any = true;
                     if(lazyQueued.add(platform.getId())) {
                         lazyWork.add(new PlatformWork(new PlatformSnapshot(
-                                platform.getId(), rails, platform.routes.stream().mapToLong(Route::getId).sorted().toArray())));
+                                platform.getId(), ObjectArrayList.of(rail), platform.routes.stream().mapToLong(Route::getId).sorted().toArray())));
                     }
                 }
                 if(!any) {
@@ -585,12 +608,29 @@ public final class DoorDirectionManager {
 
             if(server == null) return;   /* server stopped while snapshotting */
             final MinecraftServer minecraftServer = server;
-            minecraftServer.submit(() -> state.acceptIndex(fullScan, platformIndex, fullScanWork, lazyWork, emptyLazyRoutes));
+            minecraftServer.submit(() -> state.acceptIndex(fullScan, platformIndex, fullScanWork, lazyWork, emptyLazyRoutes, platformsTotal, platformsWithRoutes));
+        }
+
+        /**
+         * The one rail this platform sits on, resolved exactly how the core
+         * resolves it ({@code SavedRailBase#isInvalidSavedRail}): the rail
+         * registered between the platform's two endpoint positions in the
+         * simulator's {@code positionsToRail} cache, provided it is a
+         * platform rail. A platform without such a rail has nothing for a
+         * train to stop on and is skipped — same as the core's own
+         * validity rule.
+         */
+        private static Rail platformRail(Simulator simulator, Platform platform) {
+            final Position position1 = platform.getRandomPosition();
+            final Position position2 = platform.getOtherPosition(position1);
+            final Rail rail = Data.tryGet(simulator.positionsToRail, position1, position2);
+            return rail != null && rail.isPlatform() ? rail : null;
         }
 
         /** Back on the server thread: install the snapshot and queue the work. */
         private void acceptIndex(boolean fullScan, ObjectArrayList<PlatformSnapshot> platformIndex,
-                ObjectArrayList<PlatformWork> fullScanWork, ObjectArrayList<PlatformWork> lazyWork, LongArrayList emptyLazyRoutes) {
+                ObjectArrayList<PlatformWork> fullScanWork, ObjectArrayList<PlatformWork> lazyWork, LongArrayList emptyLazyRoutes,
+                int platformsTotal, int platformsWithRoutes) {
             indexRequested = false;
             this.platformIndex = platformIndex;
             this.chunkToPlatforms = new Long2ObjectOpenHashMap<>();
@@ -620,6 +660,17 @@ public final class DoorDirectionManager {
                 scanCursor = 0;
                 scanQueue.addAll(fullScanWork);
                 MTRScriptingMod.LOGGER.info("[MTR Scripting via JCM] Door directions: full platform scan of {} started — {} route-served platform(s) queued; results will land under {}", dimension, fullScanCount, root);
+            } else if(fullScan && fullScanWork.isEmpty() && !scanned && !warnedEmptyFullScan) {
+                /* The very failure mode that hid the first test build's
+                   matching bug: a full scan with zero work prints nothing,
+                   writes nothing, and looks exactly like "no feature". Now
+                   it says so, with the tallies that tell the two real
+                   causes apart (a save with no route-served platforms vs.
+                   an association that matched nothing). No marker is
+                   written, so a fixed environment rescans on the next
+                   boot — an empty result is never frozen as truth. */
+                warnedEmptyFullScan = true;
+                MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Door directions: full platform scan of {} found no scannable platform — {} platform(s) in the simulator, {} route-served; if this save has platforms that trains stop at, report this line; no scan marker will be written", dimension, platformsTotal, platformsWithRoutes);
             }
         }
 
@@ -659,6 +710,12 @@ public final class DoorDirectionManager {
         private void finishScanIfNeeded() {
             if(fullScanActive && scanQueue.isEmpty()) {
                 fullScanActive = false;
+                /* scanned == true is what stops canFullScan from re-arming
+                   every tick after the scan completes: without it the
+                   completed scan re-queued itself forever, one full pass
+                   every few seconds, re-writing every route file each
+                   cycle. */
+                scanned = true;
                 /* Data files first, marker second: the queue is FIFO, so the
                    marker can never precede its data. */
                 writeDirtyRoutes();

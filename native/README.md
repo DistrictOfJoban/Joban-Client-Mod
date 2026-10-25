@@ -203,24 +203,30 @@ when the train enters the platform track. JCM therefore keeps a **server-side
 per-route memory** ("scan once, answer anywhere"): the first time a server
 starts with this JCM version on a save, it scans every platform that at least
 one route calls at — unloaded chunks included, which is exactly the
-capability a client never had — walking each platform rail and testing the
-same blocks MTR's own `RenderVehicleHelper#canOpenDoors` would look at, and
-storing the two openable sides per route under
+capability a client never had — resolving each platform's rail the same way
+MTR's own core does (the `positionsToRail` lookup behind
+`SavedRailBase#isInvalidSavedRail`; beware — `Rail.getHexId()` and
+`Platform.getHexId()` are unrelated methods that merely share a name: the
+former encodes the rail's two endpoint coordinates, the latter the platform's
+numeric id, so no hex-id matching between the two can ever succeed) and
+testing the same blocks MTR's own `RenderVehicleHelper#canOpenDoors` would
+look at, storing the two openable sides per route under
 `<world>/mtr/<dimension>/routes-door-directions/` (mirroring MTR's routes
-sharding; a `scan-complete-v1` marker in that folder prevents any later boot
-from rescanning the whole save). Sides are stored in a frame canonicalized
-to the platform rail's intrinsic direction, so forward, reversed and
-opposite-direction trains all read the same entry. When platform blocks are
-placed, removed or replaced later — WorldEdit and Axiom batches included —
-a mixin on the server's block setter notices, coalesces the edits by chunk
-and platform, and re-scans a bounded number of platforms per tick, so the
-stored answers stay fresh without ever spiking a tick. When
-`getDirectionOfDoorOpening()` needs an answer the local scan can't see, the
-client asks the server, which replies from the stored data; until the first
-answer arrives (or on a server without this JCM version) the client keeps
-its own in-view scan as the fallback. Note for server operators: install the
-JCM jar on the server for mid-journey predictions; a client-only install
-falls back to the in-view-scan behavior.
+sharding; a `scan-complete-v2` marker in that folder prevents any later boot
+from rescanning the whole save; a scan that finds no scannable platform
+writes no marker, so a later fixed environment rescans automatically). Sides
+are stored in a frame canonicalized to the platform rail's intrinsic
+direction, so forward, reversed and opposite-direction trains all read the
+same entry. When platform blocks are placed, removed or replaced later —
+WorldEdit and Axiom batches included — a mixin on the server's block setter
+notices, coalesces the edits by chunk and platform, and re-scans a bounded
+number of platforms per tick, so the stored answers stay fresh without ever
+spiking a tick. When `getDirectionOfDoorOpening()` needs an answer the local
+scan can't see, the client asks the server, which replies from the stored
+data; until the first answer arrives (or on a server without this JCM
+version) the client keeps its own in-view scan as the fallback. Note for
+server operators: install the JCM jar on the server for mid-journey
+predictions; a client-only install falls back to the in-view-scan behavior.
 
 ```cpp
 switch (vehicle.doorDirection()) {                       // typed (mtr::DoorDirection)
