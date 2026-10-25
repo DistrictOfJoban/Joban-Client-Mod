@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
@@ -67,7 +68,7 @@ public class ScriptResourceUtil {
     private static Font NOTO_SANS_CJK_CACHE;
     private static Font NOTO_SERIF_CACHE;
 
-    private static final Map<String, DataReaderJS> dataCache = new HashMap<>();
+    private static final Map<String, DataReaderJS> dataCache = new ConcurrentHashMap<>();
 
     @ApiInternal
     public static void beginParseScript(ParsedScript parsedScript) {
