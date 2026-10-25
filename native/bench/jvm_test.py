@@ -1,6 +1,6 @@
 """Production nativeapi bridge exercised against a REAL JVM (both invocation
 planes are JNI-free since layout v2); Minecraft services are fixtures."""
-import argparse, hashlib, os, platform, re, shutil, subprocess, urllib.request
+import argparse, hashlib, os, platform, re, shutil, subprocess, time, urllib.request
 from content_fixtures import STUBS as CONTENT_STUBS
 from pathlib import Path
 
@@ -68,13 +68,25 @@ def main():
  repo=Path(__file__).resolve().parents[2]; build=a.build.resolve(); work=build/'api-jvm-test'; work.mkdir(exist_ok=True,parents=True)
  gson=work/'gson.jar'
  if not gson.exists():
-  for attempt in range(3):
+  # Maven Central 404s are transient edge-cache behavior (a full ctest leg
+  # was lost to one): back off hard and rotate through the canonical host
+  # and two public mirrors. The pinned sha256 below decides correctness,
+  # so any mirror is as good as the canonical one.
+  gson_urls=[
+   'https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar',
+   'https://repo1.maven.org/maven2/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar',
+   'https://maven.aliyun.com/repository/public/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar',
+  ]
+  delay=2
+  for attempt in range(6):
+   url=gson_urls[attempt%len(gson_urls)]
    try:
-    urllib.request.urlretrieve('https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar',gson)
+    urllib.request.urlretrieve(url,gson)
     break
    except Exception as e:
-    if attempt==2: raise
-    print('gson download failed (%s), retrying...'%e)
+    if attempt==5: raise
+    print('gson download from %s failed (%s), retrying in %ds...'%(url,e,delay))
+    time.sleep(delay); delay*=2
  assert hashlib.sha256(gson.read_bytes()).hexdigest()=='57928d6e5a6edeb2abd3770a8f95ba44dce45f3b23b7a9dc2b309c581552a78b'
  sources=[]
  STUBS.update(CONTENT_STUBS)
