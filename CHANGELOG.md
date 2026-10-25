@@ -1,16 +1,16 @@
 # JCM v2.3.0-prerelease.2 for MTR 4.0.5 has been released!
 
-> This release contains breaking changes to JCM's internal codebase. Common addons have been tested against, however some addon depending on JCM may break. 
- 
-This is a prerelease, some QOL changes for scripting has been introduced.
+This is a prerelease, focused on bug-fixes and preparation before the official release.
 
 ## General
-- Fix Forge crashing on launch
+### MTR Patch
+- Attempt to fix the "infamous" BVE Motor Sound bug in MTR 4, where an unrendered vehicle would result in the sound getting stuck.
 
 ## Technical
 
 ### Scripting
-- Add `Resources.ANTE_FLAG`, however it is set to false.
+- Add `Resources.ANTE_FLAG` so scripts do not error out, though it is set to false.
+- Fix `ConcurrentModificationException` when reading resources during Runtime Stage in previous beta release.
 
 ## Translations
 
