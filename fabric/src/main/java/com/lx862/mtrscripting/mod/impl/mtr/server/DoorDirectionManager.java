@@ -608,7 +608,11 @@ public final class DoorDirectionManager {
 
             if(server == null) return;   /* server stopped while snapshotting */
             final MinecraftServer minecraftServer = server;
-            minecraftServer.submit(() -> state.acceptIndex(fullScan, platformIndex, fullScanWork, lazyWork, emptyLazyRoutes, platformsTotal, platformsWithRoutes));
+            /* The lambda below needs effectively-final captures; the two
+               tallies were mutated by the loops above. */
+            final int platformsTotalCaptured = platformsTotal;
+            final int platformsWithRoutesCaptured = platformsWithRoutes;
+            minecraftServer.submit(() -> state.acceptIndex(fullScan, platformIndex, fullScanWork, lazyWork, emptyLazyRoutes, platformsTotalCaptured, platformsWithRoutesCaptured));
         }
 
         /**
