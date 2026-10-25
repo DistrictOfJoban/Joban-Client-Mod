@@ -67,8 +67,13 @@ public:
         return Arrival(snap_, arr + i);
     }
 
-    /* Arrival for a given platform (mirrors forEach(platformId, cb)). */
+    /* Arrival for a given platform (mirrors forEach(platformId, cb)).
+       The cursor is caller-owned (and default-initialized to 0 by value
+       callers); clamp it instead of trusting it — every sibling accessor
+       here is bounds-checked, and a negative cursor would otherwise read
+       before the pool. */
     bool next_for_platform(int64_t platform_id, Arrival& out, int32_t& cursor) const {
+        if (cursor < 0) cursor = 0;
         const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
         const JcmArrival* arr = reinterpret_cast<const JcmArrival*>(base + offset_);
         for (int32_t i = cursor; i < count_; i++) {
@@ -195,7 +200,11 @@ private:
 inline void Text::draw(PidsContext& ctx) {
     FrameRecorder& f = ctx.frame();
     rec_.text_offset = f.intern(text_, text_len_);
-    rec_.text_len = text_len_ < 0 ? static_cast<int32_t>(std::strlen(text_)) : text_len_;
+    /* A Text built without .text() has a null pointer; strlen(nullptr)
+       would crash the whole module out for a trivial omission. */
+    if (!text_) { rec_.text_len = 0; } else {
+        rec_.text_len = text_len_ < 0 ? static_cast<int32_t>(std::strlen(text_)) : text_len_;
+    }
     if (font_) {
         rec_.font_id_offset = f.intern(font_, -1);
         rec_.font_id_len = static_cast<int32_t>(std::strlen(font_));

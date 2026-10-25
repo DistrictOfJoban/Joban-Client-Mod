@@ -50,6 +50,10 @@ jobs:
           - os: windows-latest
             platform: windows-x64
             java-arch: x64
+          - os: windows-11-arm
+            platform: windows-arm64
+            java-arch: aarch64
+            python-version: '3.13'
           - os: macos-15-intel
             platform: macos-x64
             java-arch: x64
@@ -60,7 +64,7 @@ jobs:
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
           # Cross builds: the produced image cannot run on the build host,
           # so the JVM ctest suite is skipped there (source-level checks
-          # still run on the four native-platform jobs). Compilation itself
+          # still run on the six native-platform jobs). Compilation itself
           # still builds every probe and static-assert target.
           - os: ubuntu-latest
             platform: android-arm64
@@ -84,7 +88,7 @@ jobs:
           architecture: ${{ matrix.java-arch || 'x64' }}
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version || '3.12' }}
       - name: Configure and build CMake targets
         shell: bash
         run: |
@@ -150,7 +154,7 @@ jobs:
           pattern: native-*
           path: native-dist
           merge-multiple: true
-      - name: Build both loaders with all seven native bridges
+      - name: Build both loaders with all eight native bridges
         run: |
           chmod +x ./gradlew
           # Forge/Maven read-timeouts are transient — retry before failing the matrix leg.

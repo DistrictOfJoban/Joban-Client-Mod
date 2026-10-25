@@ -1101,7 +1101,10 @@ public final class NativeScriptManager {
             final String os = getPlatformKey();
             final List<String[]> out = new ArrayList<>(3);
             if (os.equals("windows")) {
-                out.add(new String[]{"windows-x64", "jcm_native_bridge.dll"});
+                // An x64 DLL cannot load inside an ARM64 JVM process (no
+                // in-process emulation), so the arch-specific directory is
+                // mandatory here, not an optimization.
+                out.add(new String[]{arm ? "windows-arm64" : "windows-x64", "jcm_native_bridge.dll"});
             } else if (os.equals("macos")) {
                 out.add(new String[]{arm ? "macos-arm64" : "macos-x64", "libjcm_native_bridge.dylib"});
             } else if (arm) {

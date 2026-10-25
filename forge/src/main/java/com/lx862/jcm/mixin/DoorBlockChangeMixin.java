@@ -25,6 +25,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * of platforms per tick, so WorldEdit/Axiom batch edits never lag the
  * server.
  *
+ * <p>Like the fabric twin, the hook targets the FOUR-argument
+ * {@code setBlock(pos, state, flags, maxUpdateDepth)}: it is {@code Level}'s
+ * real implementation of {@code LevelWriter}, the 2- and 3-argument
+ * overloads delegate into it (3-arg passes {@code 512}), and it is not
+ * overridden by {@code ServerLevel} — every world-level write dispatches
+ * here exactly once.
+ *
  * <p>The platform/PSD-APG test is deliberately inlined rather than factored
  * into a helper class: {@code com.lx862.jcm.mixin} is a mixin package
  * declared by the mixin configs, and Mixin refuses to load any plain class
@@ -34,8 +41,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Level.class)
 public class DoorBlockChangeMixin {
 
-    @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z", at = @At("HEAD"))
-    private void jsblock$trackDoorBlockChange(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", at = @At("HEAD"))
+    private void jsblock$trackDoorBlockChange(BlockPos pos, BlockState state, int flags, int maxUpdateDepth, CallbackInfoReturnable<Boolean> cir) {
         if(!((Object) this instanceof ServerLevel)) return;
         final Block newBlock = state.getBlock();
         if(newBlock instanceof PlatformHelper || newBlock instanceof BlockPSDAPGDoorBase) {

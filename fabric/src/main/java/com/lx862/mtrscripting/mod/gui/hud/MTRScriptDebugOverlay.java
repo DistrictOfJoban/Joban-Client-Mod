@@ -101,7 +101,12 @@ public class MTRScriptDebugOverlay {
 
                     if(scriptInstance.getScript().duringFailCooldown()) {
                         graphicsHolder.drawText(String.format("%s FAILED", keyName), 0, 0, COLOR_RED, true, MAX_LIGHT);
-                        for(String exLine : Splitter.fixedLength(60).split(scriptInstance.getScript().getCapturedScriptException().getMessage())) {
+                        /* Bare exceptions (e.g. a raw NullPointerException) carry a null message —
+                           Splitter.split(null) would crash the HUD into a render loop. */
+                        final Exception capturedException = scriptInstance.getScript().getCapturedScriptException();
+                        final String exceptionText = capturedException == null || capturedException.getMessage() == null
+                                ? String.valueOf(capturedException) : capturedException.getMessage();
+                        for(String exLine : Splitter.fixedLength(60).split(exceptionText)) {
                             graphicsHolder.translate(0, 10, 0);
                             graphicsHolder.drawText(String.format(exLine), 5, 0, COLOR_RED, true, MAX_LIGHT);
                         }

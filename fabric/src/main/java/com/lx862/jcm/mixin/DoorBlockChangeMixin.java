@@ -28,6 +28,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * and re-scans a bounded number of platforms per tick, so batch tools of
  * any size turn into a short trickle of re-scans instead of a lag spike.
  *
+ * <p>The hook targets the FOUR-argument {@code setBlockState(pos, state,
+ * flags, maxUpdateDepth)}: it is {@code World}'s real implementation of
+ * {@code ModifiableWorld} (method_30092, present with the same shape on
+ * every supported MC version), the 2- and 3-argument overloads delegate
+ * into it (3-arg passes {@code 512}), and it is NOT overridden by
+ * {@code ServerWorld} — so every world-level write dispatches here exactly
+ * once, with no double-fire for the shorter overloads and no gap for direct
+ * 4-argument callers (structure placement, some mods).
+ *
+ * <p>Known boundary: bulk editors that write through chunk sections
+ * instead of the world API bypass this hook entirely; the manager's index
+ * refresh re-queues missing platforms, so such edits still converge within
+ * a minute rather than instantly.
+ *
  * <p>The platform/PSD-APG test is deliberately inlined rather than factored
  * into a helper class: {@code com.lx862.jcm.mixin} is a mixin package
  * declared by the mixin configs, and Mixin refuses to load any plain class
@@ -37,8 +51,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(World.class)
 public class DoorBlockChangeMixin {
 
-    @Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z", at = @At("HEAD"))
-    private void jsblock$trackDoorBlockChange(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;II)Z", at = @At("HEAD"))
+    private void jsblock$trackDoorBlockChange(BlockPos pos, BlockState state, int flags, int maxUpdateDepth, CallbackInfoReturnable<Boolean> cir) {
         if(!((Object) this instanceof ServerWorld)) return;
         final Block newBlock = state.getBlock();
         if(newBlock instanceof PlatformHelper || newBlock instanceof BlockPSDAPGDoorBase) {

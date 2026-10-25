@@ -22,8 +22,18 @@ public class ModelPropertiesPartMixin extends ModelPropertiesPartSchema {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void jsblock$hideDisplayParts(Identifier texture, StoredMatrixTransformations storedMatrixTransformations, VehicleExtension vehicle, int carNumber, int[] scrollingDisplayIndexTracker, int light, ObjectArrayList<ObjectDoubleImmutablePair<Box>> openDoorways, boolean fromResourcePackCreator, CallbackInfo ci) {
-        String vehicleId = vehicle.getVehicleCarsAndPositions().get(carNumber).left().getVehicleId();
-        if(type == PartType.DISPLAY && MtrScriptingResourceManager.vehicle.shouldHideDisplayParts(vehicleId)) {
+        /* Only DISPLAY parts ever consult the script registry, and the car's
+           vehicle id is available O(1) from the immutable car list. The old
+           body ran vehicle.getVehicleCarsAndPositions() here — a FULL
+           position-tree rebuild per model part per car per frame (P x N
+           builds where 1 already happens elsewhere each frame) — and NPE'd
+           when MTR passes a null vehicle (stored-model render path with
+           optimized rendering off). */
+        if(type != PartType.DISPLAY || vehicle == null) return;
+        final int carCount = vehicle.vehicleExtraData.immutableVehicleCars.size();
+        if(carNumber < 0 || carNumber >= carCount) return;
+        final String vehicleId = vehicle.vehicleExtraData.immutableVehicleCars.get(carNumber).getVehicleId();
+        if(MtrScriptingResourceManager.vehicle.shouldHideDisplayParts(vehicleId)) {
             ci.cancel();
         }
     }

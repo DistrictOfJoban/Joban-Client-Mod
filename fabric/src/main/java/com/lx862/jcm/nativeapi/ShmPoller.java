@@ -36,10 +36,16 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * <h2>Threading rules (all deadlock analysis lives here)</h2>
  * <ul>
- *   <li>Every command publish+wait runs under the {@link #COMMAND_LOCK}
- *       monitor: the control slot is single, so renders, lifecycle and
- *       dispose calls serialize briefly (the poller answers in
- *       microseconds).</li>
+ *   <li>Every command publish+wait runs under the {@code NativeChannel.class}
+ *       monitor — the SAME monitor render publishes take: the control slot
+ *       is single, so the seq handout, the field writes and the wait must
+ *       be atomic against renders. (Historically commands took only the
+ *       {@link #COMMAND_LOCK} while renders took the class monitor — safe
+ *       only under the unstated single-publisher-thread invariant; a
+ *       second publisher thread could interleave between a command's seq
+ *       acquisition and its publish, tearing the slot.) The COMMAND_LOCK
+ *       still guards the session association and the CBQ ring, which are
+ *       NOT the control slot.</li>
  *   <li>Every wait loop — command wait and CBQ wait — services pending SVC
  *       requests, claimed exactly-once across all waiting threads with a
  *       compare-and-set on the served sequence.</li>
@@ -57,12 +63,28 @@ import java.util.concurrent.atomic.AtomicLong;
 final class ShmPoller {
 
     /* wait budgets: generous enough that a slow machine never trips them,
-       small enough that a broken bridge degrades within one frame. */
-    private static final long READY_WAIT_MS = 15_000;
+       small enough that a broken bridge degrades within one frame. The
+       READY budget only covers waiting for the bridge's own poller thread
+       (a 25 ms scan cadence), so 8 s is already ~320 scan cycles; the
+       only realistic way to spend all of it is a bridge binary that
+       predates the poller plane entirely — which the session-sticky
+       flag below then never pays again. */
+    private static final long READY_WAIT_MS = 8_000;
     private static final long COMMAND_WAIT_MS = 15_000;
     private static final long CBQ_WAIT_MS = 20_000;
 
     private static final Object COMMAND_LOCK = new Object();
+
+    /** Session-sticky: the READY wait once timed out, i.e. the loaded bridge
+     *  binary predates the poller plane (no poller thread exists to attach).
+     *  Not cleared by detach/reset — it is a property of the loaded library,
+     *  which cannot change without a JVM restart; retrying would re-pay the
+     *  full wait budget on every F3+T / world join for the same guaranteed
+     *  outcome. */
+    private static volatile boolean pollerNeverAttached;
+    /** One-line reason when the plane is unavailable. */
+    private static volatile String unavailableReason = "not attempted yet";
+    private static volatile boolean neverAttachSkipLogged;
 
     /** The poller-plane region this session attached (null when absent). */
     private static volatile NativeShm region;
@@ -70,8 +92,6 @@ final class ShmPoller {
     private static volatile int epoch;
     /** True once the poller published HDR_READY == epoch. */
     private static volatile boolean ready;
-    /** One-line reason when the plane is unavailable. */
-    private static volatile String unavailableReason = "not attempted yet";
 
     /** Last SVC request seq this JVM has fully answered, per ring slot
      *  (exactly-once claim). The poller takes slots by nesting depth, so
@@ -145,6 +165,18 @@ final class ShmPoller {
      * attach did not happen within the budget.
      */
     static boolean attach(NativeShm created) {
+        if (pollerNeverAttached) {
+            /* Session-sticky skip: see the flag's javadoc. Without this a
+               stale bridge re-paid the FULL wait budget on every reload /
+               world join, freezing the main thread each time, only to land
+               on the same guaranteed failure. */
+            if (!neverAttachSkipLogged) {
+                neverAttachSkipLogged = true;
+                JCMLogger.warn("Native shared-memory poller plane stays off for this session: the loaded bridge binary did not attach earlier and cannot have changed (an old jcm_native_bridge predating the poller transport — remove it from java.library.path so the bundled copy from this jar loads, then restart the game)");
+            }
+            unavailableReason = "bridge binary predates the poller plane (session-sticky)";
+            return false;
+        }
         synchronized (COMMAND_LOCK) {
             region = created;
             epoch = created.getInt(NativeShm.HDR_EPOCH);
@@ -170,7 +202,9 @@ final class ShmPoller {
             }
         }
         unavailableReason = "bridge poller did not attach to the shared region (old bridge binary?)";
-        JCMLogger.warn("Native shared-memory poller attach failed: {}", unavailableReason);
+        pollerNeverAttached = true;
+        JCMLogger.warn("Native shared-memory poller attach failed after {} ms: {} — the poller plane is disabled for this session (an old jcm_native_bridge predating the poller transport; remove it from java.library.path so the bundled copy from this jar loads, then restart the game)",
+                READY_WAIT_MS, unavailableReason);
         detach();
         return false;
     }
@@ -363,11 +397,20 @@ final class ShmPoller {
      * Publishes one lifecycle command and waits for the reply. {@code args}
      * may be null. {@code replyCapacity} allocates a reply window for
      * string-returning commands (0 when none is needed). Caller holds no
-     * other bridge locks (the COMMAND_LOCK serializes the control slot).
+     * other bridge locks (the NativeChannel.class monitor — shared with
+     * render publishes — serializes the control slot).
      */
     private static CommandResult command(NativeShm active, int kind, long module, long instance,
                                          byte[] args, int replyCapacity) {
-        synchronized (COMMAND_LOCK) {
+        /* NativeChannel.class — the SAME monitor render publishes take.
+         * The control slot is single: the seq handout, the field writes and
+         * the wait must be atomic against renders, or a second publisher
+         * thread could interleave between a command's seq acquisition and
+         * its publish, tearing the slot (the earlier pure-COMMAND_LOCK
+         * scheme was safe only under the unstated single-publisher-thread
+         * invariant). Re-entrant: reset()/ensureShm() already hold this
+         * monitor when they post the shutdown command. */
+        synchronized (NativeChannel.class) {
             final ByteBuffer argBuffer = args == null || args.length == 0 ? null
                     : ByteBuffer.allocateDirect(args.length).order(ByteOrder.nativeOrder());
             final ByteBuffer replyBuffer = replyCapacity > 0
@@ -389,9 +432,8 @@ final class ShmPoller {
 
     /** The control-slot sequence counter lives on the region header's
        discipline: NativeChannel owns per-frame seq for renders; commands
-       share the SAME slot, so they must share the counter. NativeChannel
-       hands the seq out under its class monitor; commands run under
-       COMMAND_LOCK — both funnel through here. */
+       share the SAME slot AND the SAME monitor, so both funnel through
+       here under NativeChannel.class. */
     private static long nextSeq(NativeShm active) {
         return NativeChannel.nextControlSeq();
     }
@@ -421,7 +463,9 @@ final class ShmPoller {
     /** Command variant that reuses the thread's identity scratch as the reply window. */
     private static CommandResult commandWithReply(NativeShm active, int kind, long handle,
                                                   ByteBuffer replyWindow) {
-        synchronized (COMMAND_LOCK) {
+        /* See command(): the NativeChannel.class monitor is what makes the
+           shared control slot atomic against render publishes. */
+        synchronized (NativeChannel.class) {
             final long seq = nextSeq(active);
             active.putControlLong(NativeShm.CTL_MODULE, handle);
             active.putControlLong(NativeShm.CTL_INSTANCE, 0);

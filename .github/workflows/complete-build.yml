@@ -2,8 +2,8 @@
 #
 # Unlike the push/PR `build` workflow (which compiles the mod WITHOUT the
 # native bridges for speed), this pipeline mirrors the release pipeline:
-# it first builds the jcm_native_bridge on all seven platforms, then
-# bundles all seven bridges into every jar. The resulting 12 jars
+# it first builds the jcm_native_bridge on all eight platforms, then
+# bundles all eight bridges into every jar. The resulting 12 jars
 # (6 Minecraft versions x fabric/forge) can be dropped straight into a
 # live game and will load resource-pack C++ scripts such as vehicle
 # natives — the plain CI jars cannot, and the mod will log
@@ -42,6 +42,10 @@ jobs:
           - os: windows-latest
             platform: windows-x64
             java-arch: x64
+          - os: windows-11-arm
+            platform: windows-arm64
+            java-arch: aarch64
+            python-version: '3.13'
           - os: macos-15-intel
             platform: macos-x64
             java-arch: x64
@@ -52,7 +56,7 @@ jobs:
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
           # Cross builds: the produced image cannot run on the build host,
           # so the JVM ctest suite is skipped there (source-level checks
-          # still run on the four native-platform jobs). Compilation itself
+          # still run on the six native-platform jobs). Compilation itself
           # still builds every probe and static-assert target.
           - os: ubuntu-latest
             platform: android-arm64
@@ -76,7 +80,7 @@ jobs:
           architecture: ${{ matrix.java-arch || 'x64' }}
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version || '3.12' }}
       - name: Configure and build CMake targets
         shell: bash
         run: |
@@ -142,13 +146,13 @@ jobs:
           pattern: native-*
           path: native-dist
           merge-multiple: true
-      - name: Require all seven bridges before building
+      - name: Require all eight bridges before building
         run: |
           set -euo pipefail
           found=$(find native-dist/bridges -type f | wc -l | tr -d ' ')
-          test "$found" = 7
-          echo "All 7 platform bridges present: $(find native-dist/bridges -type f -printf '%p\n' | sort | xargs -n1 basename | tr '\n' ' ')"
-      - name: Build both loaders with all seven native bridges
+          test "$found" = 8
+          echo "All 8 platform bridges present: $(find native-dist/bridges -type f -printf '%p\n' | sort | xargs -n1 basename | tr '\n' ' ')"
+      - name: Build both loaders with all eight native bridges
         run: |
           chmod +x ./gradlew
           # Forge/Maven read-timeouts are transient — retry before failing the matrix leg.
@@ -186,7 +190,7 @@ jobs:
           if-no-files-found: error
   sdk:
     # Bundles the native script SDK (headers + sources + the three example
-    # modules compiled for all seven platforms) the same way the release
+    # modules compiled for all eight platforms) the same way the release
     # pipeline does, so pack authors can test against this exact build.
     needs: natives
     runs-on: ubuntu-latest
@@ -202,7 +206,7 @@ jobs:
       - name: Package the native SDK
         run: |
           set -euo pipefail
-          test "$(find native-dist/examples -type f | wc -l | tr -d ' ')" = 21
+          test "$(find native-dist/examples -type f | wc -l | tr -d ' ')" = 24
           python3 - <<'PY'
           import subprocess,zipfile
           from pathlib import Path

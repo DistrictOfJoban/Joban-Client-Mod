@@ -7,7 +7,7 @@
 # (-Pnative_bridge_dir is not passed), so they cannot load any resource-pack
 # C++ script in a live game; every native script logs "native bridge
 # unavailable". For game-ready jars use the "Complete Build" workflow or a
-# Release, both of which bundle all seven platform bridges.
+# Release, both of which bundle all eight platform bridges.
 
 name: build
 on: [pull_request, push]
@@ -73,7 +73,7 @@ jobs:
           For jars that can actually run native scripts:
             * Run the "Complete Build" workflow (workflow_dispatch) and
               download its complete-jars-* artifacts, or
-            * download a Release jar (all release jars bundle the seven
+            * download a Release jar (all release jars bundle the eight
               platform bridges under assets/jcm/natives/).
           EOF
       - name: Upload Artifacts to GitHub

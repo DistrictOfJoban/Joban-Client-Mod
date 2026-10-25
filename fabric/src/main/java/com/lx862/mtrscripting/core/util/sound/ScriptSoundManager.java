@@ -55,7 +55,10 @@ public class ScriptSoundManager {
         this.soundCalls.add(soundCall);
     }
 
-    public void invoke(World world, ScriptVector3f basePos) {
+    public synchronized void invoke(World world, ScriptVector3f basePos) {
+        /* synchronized: same cross-thread pair as ScriptRenderManager — the
+           JS capture path (executor threads) swaps/appends this manager's
+           list while the render thread replays it. */
         /* Snapshot-count loop: soundCall.run never queues new sounds into
          * THIS manager, so the old defensive ArrayList copy per invoke (per
          * scripted block/lift/car per frame, even when the list was empty)
@@ -76,18 +79,18 @@ public class ScriptSoundManager {
      *  capture step: swaps the backing lists instead of copying them, so the
      *  receiver keeps the queued calls and the source walks away with the
      *  drained list (the caller resets it right after, as before). */
-    public void takeFrom(ScriptSoundManager other) {
+    public synchronized void takeFrom(ScriptSoundManager other) {
         final List<SoundCall> mine = this.soundCalls;
         mine.clear();
         this.soundCalls = other.soundCalls;
         other.soundCalls = mine;
     }
 
-    public void addCallsFrom(ScriptSoundManager other) {
+    public synchronized void addCallsFrom(ScriptSoundManager other) {
         this.soundCalls.addAll(other.soundCalls);
     }
 
-    public void reset() {
+    public synchronized void reset() {
         this.soundCalls.clear();
     }
 

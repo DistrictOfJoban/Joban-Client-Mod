@@ -15,9 +15,18 @@ ctest --test-dir native/build -C Release --output-on-failure
 
 Set `JAVA_HOME` to a JDK for the JVM integration tests (the bridge itself is
 JDK-free since layout v2 — no jni.h anywhere). Python 3 is required
-for the JVM tests. CMake produces Windows x64 DLLs, Linux x64 shared objects,
-and macOS x64/arm64 dylibs. Select a macOS target with
-`-DCMAKE_OSX_ARCHITECTURES=x86_64` or `arm64`.
+for the JVM tests. CMake produces Windows x64/arm64 DLLs, Linux x64/arm64
+shared objects, and macOS x64/arm64 dylibs. Select a macOS target with
+`-DCMAKE_OSX_ARCHITECTURES=x86_64` or `arm64`; build for Windows ARM64 on an
+ARM64 host (MSVC Arm64 tools) or cross with the matching toolchain file.
+
+Bundled bridge platforms (the jar ships all of them under
+`assets/jcm/natives/`): `windows-x64`, `windows-arm64`, `linux-x64`,
+`linux-arm64`, `macos-x64`, `macos-arm64`, `android-arm64` (NDK arm64-v8a,
+16 KB page-aligned), `ios-arm64` (Mach-O, iOS/iPadOS shared). Module
+libraries in resource packs use the same directory names — an ARM64 Windows
+JVM cannot load an x64 DLL in-process, so packs must ship a
+`natives/windows-arm64/` copy for Windows on ARM machines.
 
 Only `jcm_native_bridge` belongs in the mod's `assets/jcm/natives/<platform>/`.
 Scripts belong in their authors' resource packs. Example modules and test

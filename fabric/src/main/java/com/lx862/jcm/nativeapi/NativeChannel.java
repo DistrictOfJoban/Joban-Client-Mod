@@ -610,9 +610,14 @@ public final class NativeChannel {
                        on its next header revalidation. */
                     ShmPoller.requestShutdown(region);
                 }
+                /* Session references go null BEFORE the unmap: a CBQ
+                   re-entry thread reading ShmPoller.region between close()
+                   and detach() would touch a dead mapping. */
+                ShmPoller.detach();
                 region.close();
+            } else {
+                ShmPoller.detach();
             }
-            ShmPoller.detach();
             /* shmBroken stays sticky across reloads for genuine
                incompatibilities but a fresh F3+T may retry after a
                transient failure (tmpdir full etc.) — clearing it is safe

@@ -65,7 +65,13 @@ public class ScriptRenderManager {
      * in this pass, matching the old snapshot-copy semantics exactly.
      */
     @ApiInternal
-    public void invoke(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+    public synchronized void invoke(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
+        /* synchronized: the JS capture path (executor threads) swaps this
+           manager's backing list via takeFrom() while the render thread
+           replays it — without a common monitor the swap could land between
+           the size read and a get(i), replay released/pooled draw calls, or
+           IndexOutOfBoundsException straight into MTR's render. Capture and
+           replay both hold this monitor only for microseconds. */
         final int count = this.drawCalls.size();
         if (count == 0) return;
         final NativeTransformScope scope = (NativeTransformScope) (Object) storedMatrixTransformations;
@@ -96,10 +102,12 @@ public class ScriptRenderManager {
      * manager's (released and drained) list. Draw calls implementing
      * {@link RenderDrawCall#release()} are recycled into their pool here.
      *
-     * <p>Render-thread only, like every capture/replay call.
+     * <p>Historically documented "render-thread only" — but the JS capture
+     * path runs it on the script executor threads; both sides now share
+     * this manager's monitor (see invoke).
      */
     @ApiInternal
-    public void takeFrom(ScriptRenderManager other) {
+    public synchronized void takeFrom(ScriptRenderManager other) {
         final List<RenderDrawCall<?>> mine = this.drawCalls;
         for (int i = 0; i < mine.size(); i++) {
             mine.get(i).release();
@@ -110,7 +118,7 @@ public class ScriptRenderManager {
     }
 
     @ApiInternal
-    public void reset() {
+    public synchronized void reset() {
         final List<RenderDrawCall<?>> calls = this.drawCalls;
         for (int i = 0; i < calls.size(); i++) {
             calls.get(i).release();

@@ -109,6 +109,19 @@ public class ParsedScript {
         );
     }
 
+    /**
+     * Whether {@link #invokeRenderFunctions} would actually submit work for
+     * this instance right now. Lets render hooks skip building wrapper
+     * objects (a full position tree + per-car door world scans for vehicle
+     * wrappers) on frames where the previous script task is still in flight
+     * — which is every frame while a slow script runs.
+     */
+    public boolean willInvokeRender(ScriptInstance<?> instance) {
+        return !instance.shouldInvalidate()
+                && (instance.scriptTask == null || instance.scriptTask.isDone())
+                && !duringFailCooldown();
+    }
+
     public void invokeRenderFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
         if(instance.shouldInvalidate() || instance.scriptTask != null && !instance.scriptTask.isDone()) {
             return;

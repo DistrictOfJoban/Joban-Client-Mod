@@ -111,6 +111,13 @@ public final class NativeHost {
             new java.util.concurrent.atomic.AtomicInteger(1);
     private java.awt.Font nativeFont;
     private final java.util.Map<String, java.awt.image.BufferedImage> glyphMasks = new java.util.HashMap<>();
+    /* Byte budget for the glyph masks (the entry-count-only bound let a
+       module-driven maxWidth of a few thousand allocate up to maxWidth² × 4
+       bytes PER entry). Counted on insert; on exceed the map clears whole,
+       the same recovery the sibling NativeFontRenderer's LRU uses. */
+    private static final int GLYPH_MASK_BUDGET_BYTES = 32 << 20;
+    private static final int GLYPH_MASK_MAX_EDGE = 2048;
+    private long glyphMaskBytes;
     private final NativeFontRenderer fontRenderer = new NativeFontRenderer();
 
     /** ABI 7 font callbacks. The invocation planes pass resource IDs and
@@ -136,7 +143,10 @@ public final class NativeHost {
         final String text = new String(utf8, java.nio.charset.StandardCharsets.UTF_8);
         if (nativeFont == null) nativeFont = ScriptResourceUtil.getSystemFont("Noto Sans");
         if (nativeFont == null || nativeFont.canDisplayUpTo(text) >= 0) return -1;
-        final int size = maxWidth - 1;
+        /* maxWidth is module-controlled; a glyph image larger than the
+           target texture (pixels is width × height) is useless anyway, and
+           an unbounded one is a memory-exhaustion vector. */
+        final int size = Math.min(maxWidth - 1, GLYPH_MASK_MAX_EDGE);
         final String key = size + "/" + text;
         java.awt.image.BufferedImage mask = glyphMasks.get(key);
         if (mask == null) {
@@ -155,7 +165,11 @@ public final class NativeHost {
                 graphics.fill(outline);
             }
             graphics.dispose();
-            if (glyphMasks.size() >= 4096) glyphMasks.clear();
+            glyphMaskBytes += (long) size * size * 4;
+            if (glyphMaskBytes > GLYPH_MASK_BUDGET_BYTES) {
+                glyphMasks.clear();
+                glyphMaskBytes = (long) size * size * 4;
+            }
             glyphMasks.put(key, mask);
         }
         pixels.order(java.nio.ByteOrder.nativeOrder());
@@ -479,6 +493,7 @@ public final class NativeHost {
         pendingInstanceKey = null;
         activeInstanceKey = null;
         glyphMasks.clear();
+        glyphMaskBytes = 0;
         nativeFont = null;
         fontRenderer.reset();
         for (Instance instance : all) instance.close();

@@ -249,6 +249,20 @@ int32_t serve_request(uint8_t* base, uint64_t seq);
    Installed once via the jcm_ffm_init export by PanamaFfmChannel.java
    AFTER it creates java.lang.foreign upcall stubs. */
 JcmFfmHostVTable g_ffm_host = {};
+
+/* Publishes an error result slot for a request that died mid-service
+   so the waiting Java thread sees a finished exchange instead of
+   spinning to its 15 s budget. Idempotent fields + seq echo; harmless
+   if serve_request already published before throwing. Shared by the
+   poller's per-request containment and the FFM kick's (identical
+   contract — same layout, same semantics). */
+void publish_error_result(uint8_t* base, uint64_t seq) {
+    uint8_t* res = base + JCM_SHM_RESULT_OFFSET;
+    write_i32(res + JCM_SHM_RES_STATUS, JCM_SHM_ERR_REQUEST);
+    write_u64(res + JCM_SHM_RES_EXTRA, 0);
+    wr64(res + JCM_SHM_RES_SEQ, seq);   /* echo LAST */
+}
+
 /* Function pointers do not implicitly convert to void* in C++, so the
    presence check takes the entry by its own pointer type. */
 template <typename Entry>
@@ -916,13 +930,10 @@ private:
 
     /* Publishes an error result slot for a request that died mid-service
        so the waiting Java thread sees a finished exchange instead of
-       spinning to its 15 s budget. Idempotent fields + seq echo; harmless
-       if serve_request already published before throwing. */
+       spinning to its 15 s budget. (Free function above; the class keeps
+       a thin forwarding alias so the call sites read naturally.) */
     static void publish_error_result(uint8_t* base, uint64_t seq) {
-        uint8_t* res = base + JCM_SHM_RESULT_OFFSET;
-        write_i32(res + JCM_SHM_RES_STATUS, JCM_SHM_ERR_REQUEST);
-        write_u64(res + JCM_SHM_RES_EXTRA, 0);
-        wr64(res + JCM_SHM_RES_SEQ, seq);   /* echo LAST */
+        ::publish_error_result(base, seq);
     }
 
     /* ---- wrong-thread misuse guard ---------------------------------- */
@@ -1747,7 +1758,12 @@ int32_t serve_request(uint8_t* base, uint64_t seq) {
     auto publish = [&](int32_t status, uint64_t extra) {
         write_i32(res + JCM_SHM_RES_STATUS, status);
         write_u64(res + JCM_SHM_RES_EXTRA, extra);
-        write_u64(res + JCM_SHM_RES_SEQ, seq);   /* echo LAST */
+        /* Release-fenced echo LAST: the poller-plane reader does an
+           acquire-load on SEQ and then plain-reads status/extra — on
+           ARM64 (linux/android/ios/macos/windows) an unfenced plain
+           store lets the payload stores reorder past it, so the reader
+           can consume the PREVIOUS frame's result. */
+        wr64(res + JCM_SHM_RES_SEQ, seq);
     };
 
     /* ---- lifecycle commands ---- */
@@ -1914,11 +1930,18 @@ int32_t serve_request(uint8_t* base, uint64_t seq) {
         JCM_SHM_RES_RECORDS, JCM_SHM_RES_STRINGS, JCM_SHM_RES_PIXELS,
         JCM_SHM_RES_MATRICES, JCM_SHM_RES_FLOATS
     };
+    /* Status/count go out BEFORE the arena descriptors, and the seq echo
+       goes out LAST (release-fenced) — never publish(JCM_SHM_OK, 0)
+       afterwards: RES_EXTRA (128) aliases the FLOATS descriptor's
+       capacity word (JCM_SHM_RES_FLOATS + 16), so the old order zeroed
+       the floats capacity on every render. Java only reads EXTRA on the
+       command path, where publish() still writes it. */
+    write_i32(res + JCM_SHM_RES_STATUS, JCM_SHM_OK);
     write_i32(res + JCM_SHM_RES_COUNT, out.record_count);
     for (int i = 0; i < 5; i++) {
         std::memcpy(res + arenaOffsets[i], &arenas[i], sizeof(ArenaDesc));
     }
-    publish(JCM_SHM_OK, 0);
+    wr64(res + JCM_SHM_RES_SEQ, seq);   /* echo LAST */
     return JCM_SHM_OK;
 }
 
@@ -1969,7 +1992,18 @@ int32_t shm_kick_core() {
            but never double-serve): it will publish the result. */
         return JCM_SHM_ERR_REQUEST;
     }
-    return serve_request(base, seq);
+    try {
+        return serve_request(base, seq);
+    } catch (...) {
+        /* Same containment as the poller plane: the seq is already
+           claimed, so publish an error result or the FFM-kick caller
+           would wait on this seq forever. */
+        std::fprintf(stderr, "[jcm_native_bridge] shm kick: request %llu threw; "
+                             "publishing error result\n",
+                     static_cast<unsigned long long>(seq));
+        publish_error_result(base, seq);
+        return JCM_SHM_ERR_REQUEST;
+    }
 }
 
 } /* anonymous namespace */
@@ -1985,22 +2019,40 @@ int32_t shm_kick_core() {
 #  define JCM_BRIDGE_EXPORT extern "C" __attribute__((visibility("default")))
 #endif
 
+/** Exception containment for the direct-call (FFM downcall) plane. The
+ *  poller plane wraps every served request in run_outer; these exports
+ *  previously had NO guard, so a C++ exception — the bridge's own
+ *  bad_alloc (paths, keys, instance maps, the up-to-16 MB api reply) or
+ *  a hand-rolled non-SDK module whose exported function pointers throw —
+ *  escaped the extern "C" downcall, unwound into JVM frames and
+ *  TERMINATED the whole process. SDK modules are already per-call
+ *  crash-guarded (crash_guard.hpp); this covers everything else. */
+static void log_export_throw(const char* fn) {
+    std::fprintf(stderr, "[jcm_native_bridge] %s threw; contained to an error return\n", fn);
+}
+
 /* ---- module lifecycle -------------------------------------------------- */
 
 JCM_BRIDGE_EXPORT int64_t jcm_module_open(const char* path, int32_t path_len) {
     if (!path || path_len <= 0) return 0;
-    const std::string owned(path, static_cast<size_t>(path_len));
-    BridgeModule* mod = open_module(owned.c_str());
-    return reinterpret_cast<int64_t>(mod);
+    try {
+        const std::string owned(path, static_cast<size_t>(path_len));
+        BridgeModule* mod = open_module(owned.c_str());
+        return reinterpret_cast<int64_t>(mod);
+    } catch (...) { log_export_throw("jcm_module_open"); return 0; }
 }
 
 JCM_BRIDGE_EXPORT void jcm_module_close(int64_t handle) {
-    close_module_core(reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle)));
+    try {
+        close_module_core(reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle)));
+    } catch (...) { log_export_throw("jcm_module_close"); }
 }
 
 JCM_BRIDGE_EXPORT int32_t jcm_module_abi(int64_t handle) {
     auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
-    return (mod && mod->abi) ? static_cast<int32_t>(mod->abi()) : 0;
+    try {
+        return (mod && mod->abi) ? static_cast<int32_t>(mod->abi()) : 0;
+    } catch (...) { log_export_throw("jcm_module_abi"); return 0; }
 }
 
 /** Writes the module's NUL-terminated identity string (script type or
@@ -2012,15 +2064,17 @@ static int32_t copy_module_string(int64_t handle,
                                   char* out, int32_t cap) {
     auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
     if (!out || cap <= 0) return -1;
-    /* BridgeModule keeps PLAIN function pointers as data members (resolved
-       at dlopen time), so the selector is a pointer-to-data-member. */
-    const char* (*fn)(void) = mod ? (mod->*field) : nullptr;
-    const char* s = fn ? fn() : nullptr;
-    if (!s) return -1;
-    int32_t n = 0;
-    for (; s[n] && n < cap - 1; ++n) out[n] = s[n];
-    out[n] = '\0';
-    return n;
+    try {
+        /* BridgeModule keeps PLAIN function pointers as data members (resolved
+           at dlopen time), so the selector is a pointer-to-data-member. */
+        const char* (*fn)(void) = mod ? (mod->*field) : nullptr;
+        const char* s = fn ? fn() : nullptr;
+        if (!s) return -1;
+        int32_t n = 0;
+        for (; s[n] && n < cap - 1; ++n) out[n] = s[n];
+        out[n] = '\0';
+        return n;
+    } catch (...) { log_export_throw("module string export"); return -1; }
 }
 
 JCM_BRIDGE_EXPORT int32_t jcm_module_script_type(int64_t handle, char* out, int32_t cap) {
@@ -2033,7 +2087,9 @@ JCM_BRIDGE_EXPORT int32_t jcm_module_script_id(int64_t handle, char* out, int32_
 
 JCM_BRIDGE_EXPORT int64_t jcm_module_state_size(int64_t handle) {
     auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
-    return (mod && mod->state_size) ? static_cast<int64_t>(mod->state_size()) : 0;
+    try {
+        return (mod && mod->state_size) ? static_cast<int64_t>(mod->state_size()) : 0;
+    } catch (...) { log_export_throw("jcm_module_state_size"); return 0; }
 }
 
 /** Direct per-frame render WITHOUT the shared-memory region: the caller
@@ -2056,6 +2112,7 @@ JCM_BRIDGE_EXPORT int32_t jcm_module_render(int64_t handle, const char* key, int
         return JCM_SHM_ERR_REQUEST;
     }
     if (snap_len > 0x7fffffffLL) return JCM_SHM_ERR_SNAPSHOT;
+    try {
     /* Reused per-thread key storage: assign() keeps the capacity of the
        previous frame, so after the first frame the direct-call transport's
        hot path performs NO allocation (a fresh std::string here malloc'd
@@ -2083,6 +2140,7 @@ JCM_BRIDGE_EXPORT int32_t jcm_module_render(int64_t handle, const char* key, int
         std::memcpy(out_desc + 8, arenas, sizeof(arenas));
     }
     return status;
+    } catch (...) { log_export_throw("jcm_module_render"); return JCM_SHM_ERR_REQUEST; }
 }
 
 /** Invoke one module api callback (the JS-proxy re-entry downcall):
@@ -2097,11 +2155,13 @@ JCM_BRIDGE_EXPORT int64_t jcm_module_invoke_api(int64_t function, int64_t user,
                                                  int64_t out_len_addr) {
     using Callback = const char* (*)(void*, const char*, int32_t, int32_t*);
     if (!function || !params || params_len < 0 || !out_len_addr) return 0;
-    int32_t length = 0;
-    const char* result = reinterpret_cast<Callback>(static_cast<uintptr_t>(function))(
-        reinterpret_cast<void*>(static_cast<uintptr_t>(user)), params, params_len, &length);
-    std::memcpy(reinterpret_cast<void*>(static_cast<uintptr_t>(out_len_addr)), &length, sizeof(length));
-    return reinterpret_cast<int64_t>(result);
+    try {
+        int32_t length = 0;
+        const char* result = reinterpret_cast<Callback>(static_cast<uintptr_t>(function))(
+            reinterpret_cast<void*>(static_cast<uintptr_t>(user)), params, params_len, &length);
+        std::memcpy(reinterpret_cast<void*>(static_cast<uintptr_t>(out_len_addr)), &length, sizeof(length));
+        return reinterpret_cast<int64_t>(result);
+    } catch (...) { log_export_throw("jcm_module_invoke_api"); return 0; }
 }
 
 /** Dispose one instance. `snap_addr`/`snap_len` carry the LIVE driver
@@ -2112,9 +2172,11 @@ JCM_BRIDGE_EXPORT void jcm_module_dispose_instance(int64_t handle, const char* k
                                                    int64_t snap_addr, int64_t snap_len) {
     auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
     if (!mod || !key || key_len <= 0) return;
-    const std::string owned(key, static_cast<size_t>(key_len));
-    const void* live = snap_addr ? reinterpret_cast<const void*>(static_cast<uintptr_t>(snap_addr)) : nullptr;
-    dispose_instance_core(mod, owned.c_str(), live, live ? snap_len : -1);
+    try {
+        const std::string owned(key, static_cast<size_t>(key_len));
+        const void* live = snap_addr ? reinterpret_cast<const void*>(static_cast<uintptr_t>(snap_addr)) : nullptr;
+        dispose_instance_core(mod, owned.c_str(), live, live ? snap_len : -1);
+    } catch (...) { log_export_throw("jcm_module_dispose_instance"); }
 }
 
 /* ---- shared-memory channel control (FFM plane, synchronous kick) ------- */
@@ -2132,8 +2194,10 @@ JCM_BRIDGE_EXPORT void jcm_shm_register_instance(int64_t handle, int64_t instanc
     if (!key || key_len <= 0) return;
     BridgeModule* mod = find_module(static_cast<uint64_t>(handle));
     if (!mod) return;
-    std::lock_guard<std::mutex> lock(mod->mutex);
-    mod->shm_ids[instance_id] = std::string(key, static_cast<size_t>(key_len));
+    try {
+        std::lock_guard<std::mutex> lock(mod->mutex);
+        mod->shm_ids[instance_id] = std::string(key, static_cast<size_t>(key_len));
+    } catch (...) { log_export_throw("jcm_shm_register_instance"); }
 }
 
 JCM_BRIDGE_EXPORT void jcm_shm_shutdown(void) {

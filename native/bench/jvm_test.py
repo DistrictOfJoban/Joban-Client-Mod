@@ -93,7 +93,7 @@ def main():
  argfile=work/'sources.txt';argfile.write_text('\n'.join('"'+str(s).replace('\\','/')+'"' for s in sources),encoding='utf-8')
  subprocess.run([tool('javac'),'-encoding','UTF-8','-cp',str(gson),'-d',str(classes),'@'+str(argfile)],check=True)
  libs=build/'Release' if (build/'Release').is_dir() else build
- key=os.environ.get('NATIVE_TEST_PLATFORM') or ('windows-x64' if os.name=='nt' else ('macos-'+('arm64' if platform.machine()=='arm64' else 'x64') if platform.system()=='Darwin' else 'linux-'+('arm64' if platform.machine() in ('aarch64','arm64') else 'x64')))
+ key=os.environ.get('NATIVE_TEST_PLATFORM') or (('windows-'+('arm64' if platform.machine() in ('ARM64','aarch64','arm64') else 'x64')) if os.name=='nt' else ('macos-'+('arm64' if platform.machine()=='arm64' else 'x64') if platform.system()=='Darwin' else 'linux-'+('arm64' if platform.machine() in ('aarch64','arm64') else 'x64')))
  bridge='jcm_native_bridge.dll' if os.name=='nt' else 'libjcm_native_bridge.'+('dylib' if platform.system()=='Darwin' else 'so')
  target=classes/'assets/jcm/natives'/key/bridge;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(libs/bridge,target)
  # Run BOTH invocation planes wherever the JVM allows:

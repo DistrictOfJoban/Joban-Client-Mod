@@ -29,7 +29,8 @@
     "mtrscripting.VehicleSchemaMixin",
     "mtrscripting.VertexAttributeStateAccessor",
     "mtrscripting.GraphicsHolderMatrixMixin",
-    "mtrscripting.StoredMatrixTransformationsMixin"
+    "mtrscripting.StoredMatrixTransformationsMixin",
+    "mtrscripting.LevelRendererCullingAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

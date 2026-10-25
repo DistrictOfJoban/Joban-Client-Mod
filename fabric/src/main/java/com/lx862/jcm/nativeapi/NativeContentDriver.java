@@ -230,8 +230,26 @@ public final class NativeContentDriver {
         }
     }
 
+    /* Same budget shape as the vehicle sweep (yanyang.7): one teardown is
+       a dozen GL textures + uploaded models + a full canvas repaint, so
+       mass idle-expiry in a single tick was a multi-millisecond hitch. A
+       burst beyond MASS_EXPIRY_FLUSH is a teardown (world unload /
+       dimension switch / disconnect) where nothing renders anyway — pay
+       it all at once instead of dripping GL deletions across a loading
+       screen. */
+    private static final int MAX_DISPOSES_PER_TICK = 2;
+    private static final int MASS_EXPIRY_FLUSH = 8;
+    private static final java.util.Comparator<State> TOUCHED_ORDER =
+            java.util.Comparator.comparingLong((State s) -> s.touched);
+
     public static void tick() {
         long now=System.nanoTime();
+        /* Candidates first, then a bounded dispose pass — see the budget
+           constants above. Explicit removal flags (eyecandy/lift wrappers)
+           are a real despawn signal and share the budget: the sweep
+           re-derives candidates every tick, so a deferred dispose just
+           lands on the next tick. */
+        java.util.ArrayList<State> removedStates=null;
         for(State state:STATES.values()) {
             /* Explicit removal flags (eyecandy/lift wrappers) dispose at
                once — a real despawn signal. Time-based expiry is now the
@@ -247,12 +265,22 @@ public final class NativeContentDriver {
             if(state.wrapper instanceof EyecandyBlockEntityWrapper) removed=((EyecandyBlockEntityWrapper)state.wrapper).removed();
             else if(state.wrapper instanceof LiftWrapper) removed=((LiftWrapper)state.wrapper).removed();
             if(!removed&&now-state.touched>NativeScriptManager.IDLE_DISPOSE_NANOS) removed=true;
-            if(removed&&STATES.remove(state.key,state)) {
-                NativeScriptManager.disposeInstance(state.key,state.script,state.snapshot);
-                /* dispose hands the LIVE buffer to mtrDispose one last time;
-                   release the shm window only after it has come back. */
-                NativeChannel.releaseSnapshotBuffer(state.snapshot);
+            if(removed) {
+                if(removedStates==null) removedStates=new java.util.ArrayList<>();
+                removedStates.add(state);
             }
+        }
+        if(removedStates==null) return;
+        removedStates.sort(TOUCHED_ORDER);   /* oldest first */
+        int budget=removedStates.size()>MASS_EXPIRY_FLUSH?Integer.MAX_VALUE:MAX_DISPOSES_PER_TICK;
+        for(State state:removedStates) {
+            if(budget<=0) break;
+            if(!STATES.remove(state.key,state)) continue;
+            budget--;
+            NativeScriptManager.disposeInstance(state.key,state.script,state.snapshot);
+            /* dispose hands the LIVE buffer to mtrDispose one last time;
+               release the shm window only after it has come back. */
+            NativeChannel.releaseSnapshotBuffer(state.snapshot);
         }
     }
     public static void reset() {

@@ -26,6 +26,28 @@
 - CI 修复：Complete Build 的 1.18.2 矩阵项在「Build both loaders with all seven JNI bridges」步骤因 `maven.minecraftforge.net` 下载 `lwjgl-openal-3.2.2-natives-linux.jar` 读取超时而偶发失败（网络瞬时故障，与代码无关）；build / Complete Build / Release 三条流水线的 gradle 步骤现自动重试至多 3 次。
 - JNI 术语残留清理（桥自 layout v2 起已完全 JDK-free，本次仅命名与注释）：`native/jni/jni_bridge.cpp` 更名 `native/bridge/bridge.cpp`；workflow 步骤名「seven JNI bridges」→「seven native bridges」、「real JVM JNI integration」→「real JVM integration」；移除从未被 CMake 消费的 `-DJCM_JNI_INCLUDE_DIR` 旗标与配套 jni.h 注释；修正若干过时注释（jvm_test.py 文档串、CMake 与 bench/头文件及 Java 侧若干「the bridge is a JNI library」类表述）；`build.gradle` 旧桥报错不再指向仓库中不存在的 `bridge/README.md` / `repair-api/build-bridges.ps1`。二进制与行为零变化。
 
+- 原生桥扩展至 8 平台：新增 **windows-arm64**（`windows-11-arm` 原生 runner 构建，含全套 JVM 集成 ctest）。修复捆绑桥搜索列表在 ARM64 Windows 上仍指向 `windows-x64` DLL 的问题——x64 DLL 无法在 ARM64 JVM 进程内加载（无进程内仿真），此前 Windows on ARM 用户永远加载不到捆绑桥。资源包模块需提供 `natives/windows-arm64/` 副本方可在此平台运行。
+- 全模块执行与性能审计修复（Java 渲染管线 / 原生传输 / C++ 桥与 SDK / 服务端门向系统，共 4 路并行审计）：
+  - **C++ 桥（ARM 内存序）**：poller 平面的结果槽 seq 回显此前是无栅栏普通写入——其余所有跨线程发布点均已用释放栅栏（`wr64`），唯独此处在 ARM64（linux / android / ios / macos / windows）上允许负载先于 seq 可见，Java 端可能消费上一帧的结果（含已被后台回收器释放的 arena 地址，即 JVM SIGSEGV 向量）。现 seq 回显统一经 `wr64` 发布。
+  - **C++ 桥（结果槽别名）**：渲染发布的 `RES_EXTRA`（偏移 128）与 FLOATS arena 描述符的 capacity 字（112+16）重叠，每次渲染把浮点容量清零——今天被 pre-ABI-9 回退掩盖，任何未来按 capacity 的复用都会踩中。现渲染发布先写 status/count，再写 arena 三元组，seq 回显最后（带栅栏）；命令路径的 `RES_EXTRA` 语义不变。
+  - **C++ 桥（FFM 平面异常兜底）**：poller 平面每请求都有 try/catch（yanyang.5），但 `jcm_module_*` / `jcm_shm_kick` 直调导出没有——桥自身 `bad_alloc`（路径、键、实例表、最大 16 MB 的 api 回复）或手写非 SDK 模块抛出的异常会穿越 extern "C" 下调用帧直入 JVM，`std::terminate` 杀死整个进程。现全部导出逐一带兜底（错误码返回 + 一行 stderr），`jcm_shm_kick` 在 seq 已认领时发布错误结果防调用方干等。
+  - **C++ SDK**：`Text` 不设 `.text()` 直接 `draw()` 由 `strlen(nullptr)` 崩掉整个模块，现按空串处理；`Arrivals::next_for_platform` 负游标先钳到 0（与同族访问器的边界检查对齐）。
+  - **JS 捕获 / 回放竞争（yanyang.4 `takeFrom` 回归）**：JS 脚本在 4 条后台执行线程上运行，捕获回调在执行线程把已捕获绘制列表原地换入（`takeFrom`），渲染线程可能正在同列表上回放——换表可能落在 size 读取与 `get(i)` 之间（`IndexOutOfBoundsException` 直透 MTR 渲染），或回放已释放回池的绘制调用。四类 JS 脚本（vehicle / PIDS / lift / eyecandy）全部受影响；`takeFrom` 的「仅渲染线程」注释与事实不符。现回放（`invoke`）与捕获（`takeFrom` / `reset`，声音侧含 `addCallsFrom`）共享同一管理器监视器——两侧都只持微秒级。
+  - **每部件每车厢全树重建**：`ModelPropertiesPartMixin` 在每个模型部件渲染前调用 `getVehicleCarsAndPositions()`（整列车位置树重建）——P 部件 × N 车厢 = 每帧 P×N 棵，而全帧本有一次足够；且 MTR 在存储模型渲染路径传 `null` vehicle 时直接 NPE。现仅 DISPLAY 部件查询、车辆 id 从不可变车厢表 O(1) 读取、判空。
+  - **shouldInvalidate O(V) 流扫描**：每个 JS 车辆实例每帧一次 `vehicles.stream().noneMatch(...)`（外加每 tick 清扫），几十列车即每秒数十万次流操作。现由 `RenderVehiclesMixin` 每帧重建一次存活车辆 id 集，逐实例查询降为 O(1)。
+  - **包装器白建**：JS 车辆包装器（位置树 + 逐车厢门方块扫描）此前在脚本任务仍在途的每一帧都完整构建再丢弃；慢脚本运行期间即每帧一次。现按「本帧是否会真正提交脚本」判定，不在提交帧不建包装器。
+  - **Forge 端原生车辆视锥剔除从未生效**：`FabricVehicleCulling` 只在 Fabric 入口注册，Forge 上 `frustum()` 恒 null、剔除永远放行——每辆脚本列车全价支付快照封送 + 画布重绘 + 纹理上传。Forge 1.17.1 无携带视锥的渲染事件（`RenderLevelStageEvent` 1.18 起才有且各版本阶段集不同），故 Forge 侧改走**直读**路径：新增 `LevelRendererCullingAccessor`（`cullingFrustum` 字段，官方映射 6 版本逐一核验）+ 入口安装的存活供应者（帧中读取恒为当前帧；每帧最多重包一次 MTR 持有器）。任何异常即回退「不剔除」。
+  - **控制槽双锁**：渲染发布持 `NativeChannel.class`、命令发布持 `ShmPoller.COMMAND_LOCK`——单控制槽两个互斥锁，仅靠「全部发布者都在渲染线程」的未成文不变量才安全；第二发布线程可在命令取号与发布之间插入，撕裂请求槽。现命令发布与渲染同锁（`reset`/`ensureShm` 本就持该锁，天然重入），`COMMAND_LOCK` 继续守会话关联与 CBQ 环。
+  - **reset 顺序**：先 close 区域再 detach，期间 CBQ 重入线程可摸到已 unmap 的映射。现先清会话引用再 unmap。
+  - **陈旧桥 15 秒冻结**：pre-poller 时代的旧桥二进制（`System.load` 正常、无 poller 线程）每次 F3+T / 进世界都让主线程干等 15 秒再报一串误导性的「模块打不开」；`reset()` 又清掉 `shmBroken`，冻结每次重载重付。现就绪预算降为 8 秒（工作桥 25 毫秒内即挂载），失败后会话级粘滞跳过并给出明确的「桥二进制早于 poller 传输」提示与处置指引。
+  - **字符串驻留表哈希混入 arena 偏移**：同一字符串因跑马灯长度变化而偏移挪动后算作新条目，表被撑爆整体清空再全量重解码。现哈希仅按（长度、首字节），等值判定本就按内容。
+  - **字形掩码无字节上限**：`rasterizeText` 的掩码以条目数为唯一上限，`maxWidth` 由模块控制——单条可达 maxWidth²×4 字节。现边长钳到 2048、总量 32 MB 超限整体回收（与姊妹字体渲染器的 LRU 同策）。
+  - **内容实例清扫无预算**：PIDS / 装饰 / 电梯实例批量空闲过期在单 tick 内全部销毁（一次销毁≈十几张 GL 纹理 + 已上传模型 + 整幅画布）——yanyang.7 只给车辆侧加了 2/tick 预算，此处是同类卡顿。现与车辆同款：常态 2/tick（最旧先销毁），≥8 的批量退出（世界卸载 / 切维度 / 断线）一次性冲刷。
+  - **门向系统 O(P²) 首扫**：全档扫描进行期间 `canFullScan` 恒真，tick 循环每 ~2 tick 重新快照全部平台构建工作清单，只为被 `fullScanActive` 守卫丢弃——服务端线程全程 O(P²) 分配churn。空扫描维度（每个存档的下界 / 末地）更以同一节奏无限重试。现运行中不再重复请求；空扫描的自动重试搭 600 tick 索引刷新的车（自愈保留，churn 从每 2 tick 降到每 30 秒）。
+  - **门向系统重建站台不收敛**：拆除重建的站台（新站台 id、同线路）此前永远进不了答案——懒扫描只对「无数据的线路」排队，而站台自身的放置变化落在索引覆盖之前被丢弃。现每次索引刷新先按存活索引修剪失据条目（删掉的站台 / 失去站台轨 / 离开线路），再把「线路有数据但缺此站台」的站台排入扫描；短暂失去轨道的站台会在后续刷新中自动回补。逐 tick 预算改用单调钟（`System.nanoTime`，`currentTimeMillis` 在 Windows 集成服务器上仅 ~15.6 ms 粒度且可被 NTP 拨动）；无模拟器维度进入负缓存（此前每 tick 重新分配包装器再丢弃，仅在 Main 实例更换时失效）；`setBlockState` mixin 改挂四参重载（2/3 参委托其内、`ServerWorld` 不覆写——所有世界级写入恰经过一次，直接 4 参调用者不再漏报，双加载器同改）；门向查询加 2 秒每线路节流；退出时写线程 10 秒未冲刷给出明确 WARN（此前静默放弃）。
+  - 顺带修复：调试叠加层在异常 message 为 null（裸 NPE）时自身崩溃进入 HUD 渲染循环。
+- 开发文档同步：网页版（Develop-Documentation-Website 分支，7 语言）与 native/README.md 同步 8 平台清单与 windows-arm64 打包目录；`getDirectionOfDoorOpening` 条目补服务端持久记忆优先、客户端视距扫描兜底的语义（此前仅描述客户端扫描）。
+
 ## 2.3.0-beta-2.yanyang.7
 
 修复 yanyang.6 之后的间歇性卡顿（日志无报错）。旧清扫把「离开视野」误当成「已销毁」：列车离开相机视锥 5 秒后，原生实例即被整体释放（十余张 GL 纹理、全部已上传模型、脚本画布）；重新入镜的第一帧一次性支付 `mtrCreate` + `createResources` + 整幅画布重绘，转头一次即触发多列车同时重建，形成多毫秒级掉帧。

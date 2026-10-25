@@ -38,6 +38,10 @@ public class RenderVehiclesMixin {
            marshals, two whole-canvas repaints, two texture uploads per car). */
         if(com.lx862.jcm.mod.extra.JCMPatchForMTR.isRenderingShadow()) return;
         NativeVehicleDriver.beginFrame();
+        /* Per-frame live-vehicle id set for the JS instances' shouldInvalidate
+           (see VehicleScriptInstance.beginFrame) — one O(V) pass here replaces
+           one O(V) stream scan per scripted vehicle per frame. */
+        VehicleScriptInstance.beginFrame();
         for(VehicleExtension vehicle : MinecraftClientData.getInstance().vehicles) {
             /* Yanyang: C++ (language=cpp) scripts take the native route and
                never build a VehicleScriptInstance — drive them first so their
@@ -92,6 +96,15 @@ public class RenderVehiclesMixin {
                 /* Legacy stuff */
                 if(((VehicleScriptContext)scriptInstance.getContextObject()).getFetchModeOverride() != null) {
                     dataFetchMode = ((VehicleScriptContext)scriptInstance.getContextObject()).getFetchModeOverride();
+                }
+
+                /* Build the wrapper (a full position tree + per-car door
+                   world scans) ONLY on frames that actually run the script —
+                   while a slow script's task is in flight that is every
+                   frame, and the wrapper was built and discarded each time,
+                   plus once more per frame for mixed JS+native entries. */
+                if(!scriptInstance.getScript().willInvokeRender(scriptInstance)) {
+                    continue;
                 }
 
                 VehicleWrapper wrapperObject = new NTETrainWrapper(dataFetchMode, vehicle);

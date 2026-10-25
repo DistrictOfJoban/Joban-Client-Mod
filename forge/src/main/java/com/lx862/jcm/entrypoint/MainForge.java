@@ -15,6 +15,10 @@ public class MainForge {
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
             ForgeConfig.registerConfig();
             JCMClient.initialize();
+            /* Forge half of native vehicle frustum culling (the Fabric twin
+               registers WorldRenderEvents); installs a live frustum reader —
+               see ForgeVehicleCulling. */
+            ForgeVehicleCulling.init();
         });
         MinecraftForge.EVENT_BUS.register(new MigrateMapping());
     }

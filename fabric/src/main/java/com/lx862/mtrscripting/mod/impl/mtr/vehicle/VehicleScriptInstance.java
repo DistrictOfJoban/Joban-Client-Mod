@@ -15,15 +15,39 @@ public class VehicleScriptInstance extends ScriptInstance<VehicleWrapper> implem
     private final VehicleExtension vehicleExtension;
     public final VehicleScriptCallsHolder.Captured capturedScriptCalls;
 
+    /* Live-vehicle id set, rebuilt ONCE per rendered frame by
+       RenderVehiclesMixin (beginFrame). shouldInvalidate runs once per
+       scripted vehicle per frame plus once per instance per
+       clearDeadInstance tick — the old per-call stream() scan was O(V)
+       each time, ~hundreds of thousands of stream ops per second with a
+       few dozen scripted trains in a busy world. Null until the first
+       rendered frame; the fallback keeps identical semantics for the
+       pre-first-frame window. */
+    private static volatile org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongOpenHashSet liveVehicleIds;
+
     public VehicleScriptInstance(VehicleScriptContext context, VehicleExtension vehicleExtension, ParsedScript script) {
         super(context, script);
         this.vehicleExtension = vehicleExtension;
         this.capturedScriptCalls = new VehicleScriptCallsHolder.Captured();
     }
 
+    /** One O(V) pass per rendered frame (RenderVehiclesMixin, render thread). */
+    public static void beginFrame() {
+        final org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongOpenHashSet ids =
+                new org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongOpenHashSet();
+        for(final VehicleExtension vehicle : MinecraftClientData.getInstance().vehicles) {
+            ids.add(vehicle.getId());
+        }
+        liveVehicleIds = ids;
+    }
+
     public boolean shouldInvalidate() {
-        boolean notInGame = MinecraftClient.getInstance().getWorldMapped() == null;
-        return notInGame || MinecraftClientData.getInstance().vehicles.stream().noneMatch(v -> v.getId() == vehicleExtension.getId());
+        if(MinecraftClient.getInstance().getWorldMapped() == null) return true;
+        final org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongOpenHashSet ids = liveVehicleIds;
+        if(ids != null) {
+            return !ids.contains(vehicleExtension.getId());
+        }
+        return MinecraftClientData.getInstance().vehicles.stream().noneMatch(v -> v.getId() == vehicleExtension.getId());
     }
 
     @Override

@@ -15,8 +15,10 @@ import org.mtr.core.data.Rail;
 import org.mtr.core.data.Route;
 import org.mtr.core.data.RoutePlatformData;
 import org.mtr.core.simulation.Simulator;
+import org.mtr.libraries.it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongArrayList;
+import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongIterator;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -30,6 +32,10 @@ import org.mtr.mapping.holder.World;
 import org.mtr.mapping.holder.WorldSavePath;
 import org.mtr.mapping.mapper.MinecraftServerHelper;
 import org.mtr.mod.Init;
+
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -148,7 +154,7 @@ public final class DoorDirectionManager {
     private static final int SCAN_ITEMS_PER_TICK = 2;
     private static final int CHANGED_CHUNKS_PER_TICK = 64;
     private static final int RESCANS_PER_TICK = 4;
-    private static final long TICK_TIME_BUDGET_MILLIS = 4;
+    private static final long TICK_TIME_BUDGET_NANOS = 4_000_000;
     private static final int INDEX_REFRESH_TICKS = 600;
 
     /**
@@ -167,11 +173,18 @@ public final class DoorDirectionManager {
     private static final long SAVE_DEBOUNCE_MILLIS = 10_000;
     private static final long CORE_MISSING_WARN_MILLIS = 60_000;
 
+    /** Server-side per-route query throttle: the client already backs off,
+     *  but a raw channel client could otherwise schedule a fresh simulator
+     *  snapshot per request for an unknown route id. */
+    private static final long QUERY_THROTTLE_MILLIS = 2_000;
+
     /** Dimension-string-keyed view, for the client-query path (a player's world arrives as a fresh holder wrapper). */
     private static final Object2ObjectArrayMap<String, WorldState> WORLDS = new Object2ObjectArrayMap<>();
     /** Raw-world-keyed view, for the per-tick and block-change paths: the raw world instance is a per-dimension singleton at runtime, so identity-keying makes those lookups allocation-free. */
     private static final IdentityHashMap<Object, WorldState> WORLDS_BY_RAW = new IdentityHashMap<>();
-    private static MinecraftServer server;
+    /** Worlds already known to have no MTR simulator: without this, the lazy world-tick path re-ran initWorld (a World wrapper + Identifier + format string per call) every tick for the Nether/End of every save. Cleared when the MTR Main instance changes, so a datapack/new-dimension still initializes. */
+    private static final Set<Object> WORLDS_WITHOUT_SIMULATOR = Collections.newSetFromMap(new IdentityHashMap<>());
+    private static volatile MinecraftServer server;
 
     /* Lazy-init diagnostics: every kind of "could not initialize" state is
        reported at least once, never silently. */
@@ -235,7 +248,9 @@ public final class DoorDirectionManager {
             state.tick(state.world);
             return;
         }
-        if(server == null) return;
+        if(WORLDS_WITHOUT_SIMULATOR.contains(serverWorld.data)) return;
+        final MinecraftServer minecraftServer = server;
+        if(minecraftServer == null) return;
         if(startedAtMillis == 0) {
             /* A fully lazy startup (the server-start hook never running)
                still needs an anchor for the full-scan delay. */
@@ -250,12 +265,13 @@ public final class DoorDirectionManager {
             }
             return;
         }
-        initWorld(server, simulators, serverWorld, "lazy");
+        initWorld(minecraftServer, simulators, serverWorld, "lazy");
     }
 
     private static void reset() {
         WORLDS.clear();
         WORLDS_BY_RAW.clear();
+        WORLDS_WITHOUT_SIMULATOR.clear();
         server = null;
         startedAtMillis = 0;
         lastCoreMissingWarnAt = 0;
@@ -274,6 +290,10 @@ public final class DoorDirectionManager {
         final Main main = InitAccessorMixin.getMain();
         if(main == null) return null;
         if(simulatorsByDimension == null || simulatorsForMain != main) {
+            /* A fresh Main instance invalidates the no-simulator negative
+               cache too: dimensions added to MTR's config in the same
+               process must still come online. */
+            WORLDS_WITHOUT_SIMULATOR.clear();
             final Object2ObjectOpenHashMap<String, Simulator> map = new Object2ObjectOpenHashMap<>();
             for(final Simulator simulator : ((MainAccessorMixin)(Object)main).getSimulators()) {
                 map.put(simulator.dimension, simulator);
@@ -294,6 +314,7 @@ public final class DoorDirectionManager {
         final String dimension = Init.getWorldId(new World(serverWorld.data));
         final Simulator simulator = simulators.get(dimension);
         if(simulator == null) {
+            WORLDS_WITHOUT_SIMULATOR.add(serverWorld.data);
             if(WARNED_NO_SIMULATOR.add(dimension)) {
                 MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Door directions: no MTR simulator for dimension \"{}\" ({}); known dimensions: {} — this world's door sides are not tracked", dimension, context, String.join(", ", simulators.keySet()));
             }
@@ -354,7 +375,7 @@ public final class DoorDirectionManager {
             send(minecraftServer, player, DoorDirectionsS2CPacket.empty(routeId));
             return;
         }
-        state.requestLazyScan(routeId);
+        state.requestLazyScan(routeId, System.currentTimeMillis());
         final WorldState.RouteData data = state.routes.get(routeId);
         if(data != null) {
             final long[] platformIds = data.sides.keySet().toLongArray();
@@ -420,11 +441,13 @@ public final class DoorDirectionManager {
         final ObjectArrayList<PlatformWork> scanQueue = new ObjectArrayList<>();
         int scanCursor;
         final LongOpenHashSet lazyRoutes = new LongOpenHashSet();
+        final Long2LongOpenHashMap lastQueryAtMillis = new Long2LongOpenHashMap();
         final LongOpenHashSet changedChunks = new LongOpenHashSet();
         final LongOpenHashSet pendingRescans = new LongOpenHashSet();
 
         /* Spatial index from the latest simulator snapshot. */
         ObjectArrayList<PlatformSnapshot> platformIndex = new ObjectArrayList<>();
+        Long2ObjectOpenHashMap<PlatformSnapshot> platformById = new Long2ObjectOpenHashMap<>();
         Long2ObjectOpenHashMap<LongOpenHashSet> chunkToPlatforms = new Long2ObjectOpenHashMap<>();
 
         WorldState(String dimension, Simulator simulator, Path dimensionRoot, ServerWorld serverWorld) {
@@ -506,15 +529,32 @@ public final class DoorDirectionManager {
                Index snapshots (for the block-change pre-filter and lazy
                route scans) are not delayed. scanned flips to true only in
                finishScanIfNeeded — i.e. after a full scan really completed —
-               so a completed scan can never re-arm here. */
-            final boolean canFullScan = !scanned && startedAtMillis > 0
-                    && System.currentTimeMillis() - startedAtMillis >= FULL_SCAN_START_DELAY_MILLIS;
+               so a completed scan can never re-arm here. fullScanActive
+               MUST gate this too: a running full scan keeps scanned ==
+               false, and without the gate the ~2-tick request cadence
+               re-snapshotted EVERY platform into a fresh work list every
+               cycle only for acceptIndex to discard it — O(P²) allocation
+               churn on the server thread for the whole scan duration.
+               After an empty full scan (warnedEmptyFullScan) the retry
+               piggybacks on the regular 600-tick index refresh instead of
+               re-requesting every ~2 ticks forever — a marker-less
+               dimension (every vanilla Nether/End) still self-heals within
+               half a minute if platforms appear later. */
+            final boolean canFullScan = !scanned && !fullScanActive && startedAtMillis > 0
+                    && System.currentTimeMillis() - startedAtMillis >= FULL_SCAN_START_DELAY_MILLIS
+                    && (!warnedEmptyFullScan || ticksSinceIndex >= INDEX_REFRESH_TICKS);
             if(!indexRequested
                     && (!lazyRoutes.isEmpty() || platformIndex.isEmpty() || canFullScan || ticksSinceIndex >= INDEX_REFRESH_TICKS)) {
                 requestIndex(canFullScan);
             }
 
-            final long deadline = System.currentTimeMillis() + TICK_TIME_BUDGET_MILLIS;
+            /* Monotonic clock (currentTimeMillis is only ~15.6 ms granular
+               on Windows and can jump with NTP): the per-tick budget must
+               measure elapsed nanoseconds. The check runs BETWEEN items —
+               one scan item force-loading cold chunks can still overrun the
+               budget by its own latency, bounded by the per-tick item
+               caps. */
+            final long deadline = System.nanoTime() + TICK_TIME_BUDGET_NANOS;
             processScanQueue(world, deadline);
             processChangedChunks(deadline);
             processPendingRescans(world, deadline);
@@ -526,7 +566,10 @@ public final class DoorDirectionManager {
         /* Simulator snapshot (via Simulator#run, the MTR-sanctioned path)   */
         /* ---------------------------------------------------------------- */
 
-        void requestLazyScan(long routeId) {
+        void requestLazyScan(long routeId, long nowMillis) {
+            final long last = lastQueryAtMillis.get(routeId);
+            if(nowMillis - last < QUERY_THROTTLE_MILLIS) return;
+            lastQueryAtMillis.put(routeId, nowMillis);
             if(!routes.containsKey(routeId)) lazyRoutes.add(routeId);
         }
 
@@ -576,7 +619,7 @@ public final class DoorDirectionManager {
                 final PlatformSnapshot snapshot = new PlatformSnapshot(
                         platform.getId(), ObjectArrayList.of(rail), platform.routes.stream().mapToLong(Route::getId).sorted().toArray());
                 platformIndex.add(snapshot);
-                if(fullScan) fullScanWork.add(new PlatformWork(snapshot));
+                if(fullScan) fullScanWork.add(new PlatformWork(snapshot, true));
             }
 
             /* Lazy per-route scans cover routes the first scan never saw —
@@ -596,7 +639,7 @@ public final class DoorDirectionManager {
                     any = true;
                     if(lazyQueued.add(platform.getId())) {
                         lazyWork.add(new PlatformWork(new PlatformSnapshot(
-                                platform.getId(), ObjectArrayList.of(rail), platform.routes.stream().mapToLong(Route::getId).sorted().toArray())));
+                                platform.getId(), ObjectArrayList.of(rail), platform.routes.stream().mapToLong(Route::getId).sorted().toArray()), false));
                     }
                 }
                 if(!any) {
@@ -606,8 +649,12 @@ public final class DoorDirectionManager {
                 }
             }
 
-            if(server == null) return;   /* server stopped while snapshotting */
+            /* Single read into a local: reset() nulls the field at shutdown,
+               and the check-then-act of two separate reads could pass the
+               first, then NPE on the second when a threaded simulation is
+               configured. */
             final MinecraftServer minecraftServer = server;
+            if(minecraftServer == null) return;   /* server stopped while snapshotting */
             /* The lambda below needs effectively-final captures; the two
                tallies were mutated by the loops above. */
             final int platformsTotalCaptured = platformsTotal;
@@ -637,10 +684,48 @@ public final class DoorDirectionManager {
                 int platformsTotal, int platformsWithRoutes) {
             indexRequested = false;
             this.platformIndex = platformIndex;
+            this.platformById = new Long2ObjectOpenHashMap<>();
             this.chunkToPlatforms = new Long2ObjectOpenHashMap<>();
             for(final PlatformSnapshot snapshot : platformIndex) {
+                platformById.put(snapshot.platformId, snapshot);
                 for(final long chunkKey : snapshot.chunkKeys()) {
                     chunkToPlatforms.computeIfAbsent(chunkKey, key -> new LongOpenHashSet()).add(snapshot.platformId);
+                }
+            }
+            /* Converge the stored answers toward the live index (runs on
+               every refresh — the 600-tick cadence, a lazy request, or the
+               first index after boot):
+               1. Drop entries the save no longer backs — platforms that
+                  were deleted, lost their platform rail, or left this
+                  route. Without the prune, a rebuilt platform's NEW id
+                  never entered its route's file (lazy requests only fire
+                  for routes with no data at all) and deleted platforms'
+                  sides were served forever.
+               2. Queue a scan for any route-served platform whose route
+                  has data but not that platform — the rebuilt-platform
+                  case, whose own placement edits are dropped while the
+                  chunk index lags behind (the mixin's chunk pre-filter
+                  runs against the PREVIOUS index).
+               A platform that transiently loses its rail re-enters the
+               index on a later refresh, finds its entry pruned, and is
+               re-queued by rule 2 — self-healing, never stuck. */
+            for(final Long2ObjectOpenHashMap.Entry<RouteData> entry : routes.long2ObjectEntrySet()) {
+                final RouteData data = entry.getValue();
+                final LongIterator storedPlatformIds = data.sides.keySet().iterator();
+                while(storedPlatformIds.hasNext()) {
+                    final long platformId = storedPlatformIds.nextLong();
+                    final PlatformSnapshot live = platformById.get(platformId);
+                    if(live == null || !live.servesRoute(entry.getLongKey())) {
+                        storedPlatformIds.remove();
+                        data.dirty = true;
+                    }
+                }
+            }
+            if(!fullScanActive) {
+                for(final PlatformSnapshot snapshot : platformIndex) {
+                    if(!isQueuedForScan(snapshot.platformId) && snapshot.missingFromStored(routes)) {
+                        scanQueue.add(new PlatformWork(snapshot, false));
+                    }
                 }
             }
             for(int i = 0; i < emptyLazyRoutes.size(); i++) {
@@ -691,12 +776,16 @@ public final class DoorDirectionManager {
 
         private void processScanQueue(World world, long deadline) {
             int processed = 0;
-            while(scanCursor < scanQueue.size() && processed < SCAN_ITEMS_PER_TICK && System.currentTimeMillis() < deadline) {
+            while(scanCursor < scanQueue.size() && processed < SCAN_ITEMS_PER_TICK && System.nanoTime() < deadline) {
                 final PlatformWork work = scanQueue.get(scanCursor);
                 scanCursor++;
                 processed++;
                 final boolean[] sides = applyPlatformSides(world, work.snapshot);
-                if(fullScanActive) tallySides(sides);
+                /* Only full-scan items feed the completion distribution:
+                   lazy/rescan items interleaved into the same queue would
+                   otherwise inflate the left/right/both/neither tallies
+                   beyond fullScanCount. */
+                if(work.tally) tallySides(sides);
             }
             if(scanCursor >= scanQueue.size()) {
                 scanQueue.clear();
@@ -776,7 +865,7 @@ public final class DoorDirectionManager {
             int drained = 0;
             final LongOpenHashSet iteratorSet = changedChunks;
             final var iterator = iteratorSet.iterator();
-            while(iterator.hasNext() && drained < CHANGED_CHUNKS_PER_TICK && System.currentTimeMillis() < deadline) {
+            while(iterator.hasNext() && drained < CHANGED_CHUNKS_PER_TICK && System.nanoTime() < deadline) {
                 final long chunkKey = iterator.nextLong();
                 iterator.remove();
                 drained++;
@@ -788,15 +877,15 @@ public final class DoorDirectionManager {
         private void processPendingRescans(World world, long deadline) {
             int processed = 0;
             final var iterator = pendingRescans.iterator();
-            while(iterator.hasNext() && processed < RESCANS_PER_TICK && System.currentTimeMillis() < deadline) {
+            while(iterator.hasNext() && processed < RESCANS_PER_TICK && System.nanoTime() < deadline) {
                 final long platformId = iterator.nextLong();
                 iterator.remove();
                 processed++;
-                for(final PlatformSnapshot snapshot : platformIndex) {
-                    if(snapshot.platformId == platformId) {
-                        applyPlatformSides(world, snapshot);
-                        break;
-                    }
+                /* O(1) id lookup: the old linear scan of the whole platform
+                   index made a WorldEdit storm pay O(4*P) per tick. */
+                final PlatformSnapshot snapshot = platformById.get(platformId);
+                if(snapshot != null) {
+                    applyPlatformSides(world, snapshot);
                 }
             }
         }
@@ -907,14 +996,33 @@ public final class DoorDirectionManager {
             }
             return keys;
         }
+
+        /** Whether this route currently calls at the platform (routeIds is sorted ascending). */
+        boolean servesRoute(long routeId) {
+            return Arrays.binarySearch(routeIds, routeId) >= 0;
+        }
+
+        /** Whether any route calling here already has stored sides but is missing this platform — the rebuilt-platform case that no other path would ever scan. */
+        boolean missingFromStored(Long2ObjectOpenHashMap<RouteData> routes) {
+            for(final long routeId : routeIds) {
+                final RouteData data = routes.get(routeId);
+                if(data != null && !data.sides.containsKey(platformId)) return true;
+            }
+            return false;
+        }
     }
 
-    /** One platform awaiting a scan. */
+    /** One platform awaiting a scan. {@code tally} marks items that belong
+     *  to the running full scan and therefore feed its completion
+     *  distribution; lazy/rescan items interleaved into the same queue do
+     *  not. */
     private static final class PlatformWork {
         final PlatformSnapshot snapshot;
+        final boolean tally;
 
-        PlatformWork(PlatformSnapshot snapshot) {
+        PlatformWork(PlatformSnapshot snapshot, boolean tally) {
             this.snapshot = snapshot;
+            this.tally = tally;
         }
     }
 
@@ -950,6 +1058,11 @@ public final class DoorDirectionManager {
                        hang the shutdown loop for more than a few seconds. */
                     for(int i = 0; i < 5 && !flushDone; i++) {
                         FLUSH_TOKEN.wait(2000);
+                    }
+                    if(!flushDone) {
+                        /* The silent give-up hid a wedged writer: say so —
+                           the last debounced writes may be lost. */
+                        MTRScriptingMod.LOGGER.warn("[MTR Scripting via JCM] Door directions: writer did not flush within 10 s; the most recent route file changes may be missing on disk");
                     }
                     flushDone = false;
                 }

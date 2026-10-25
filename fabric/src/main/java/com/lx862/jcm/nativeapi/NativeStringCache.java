@@ -67,12 +67,20 @@ final class NativeStringCache {
         return h;
     }
 
+    /* Hash WITHOUT the arena offset on purpose: identical content at a
+       shifted offset (a marquee-length change shifts every later string
+       in the arena) is the SAME string and must keep hitting the same
+       entry. The old offset-mixed hash made those duplicates fill the
+       table, forcing the wholesale clear and re-decoding everything.
+       Equality is content-based (Arrays.equals), so offset changes stay
+       correct either way — only the hit rate improves. */
+
     private static Entry find(ByteBuffer arena, int offset, int length) {
         if (offset < 0 || length < 0 || (long) offset + length > arena.limit()) {
             throw new IllegalArgumentException("Invalid native string reference");
         }
         final byte[] bytes = readScratch(arena, offset, length);
-        final int hash = hash(offset, length, arena.get(offset));
+        final int hash = hash(length, arena.get(offset), 0);
         int slot = hash & MASK;
         for (int probe = 0; probe < 8; probe++) {
             final Entry entry = TABLE[slot];
