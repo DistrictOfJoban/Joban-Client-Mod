@@ -100,10 +100,12 @@ public class EyecandyResourceProvider implements ScriptResourceProvider {
         EyecandyScriptConfiguration config = eyecandyScripts.get(eyecandyScriptIds.getOrDefault(id, id));
         if(config != null && config.eyecandyCustomConfig() != null) return config.eyecandyCustomConfig();
 
-        ConfigResponder legacyConfigResponder = ConfigResponderStorage.getEyecandyConfigResponder(id);
-        if(legacyConfigResponder != null) {
+        List<ConfigResponder> legacyConfigResponder = ConfigResponderStorage.getEyecandyConfigResponders(id);
+        if(legacyConfigResponder != null && !legacyConfigResponder.isEmpty()) {
             List<EyecandyCustomConfig.Entry> entries = new ArrayList<>();
-            entries.addAll(legacyConfigResponder.getListEntries(null, null, null));
+            legacyConfigResponder.forEach(configResponder -> {
+                entries.addAll(configResponder.getListEntries(null, null, null));
+            });
             return new EyecandyCustomConfig("<ANTE Config>", entries);
         }
         return null;
