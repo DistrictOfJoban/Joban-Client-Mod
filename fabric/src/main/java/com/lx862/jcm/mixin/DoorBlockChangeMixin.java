@@ -1,6 +1,7 @@
 package com.lx862.jcm.mixin;
 
 import com.lx862.mtrscripting.mod.impl.mtr.server.DoorDirectionManager;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -26,6 +27,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * platform. The manager coalesces positions by chunk and then by platform
  * and re-scans a bounded number of platforms per tick, so batch tools of
  * any size turn into a short trickle of re-scans instead of a lag spike.
+ *
+ * <p>The platform/PSD-APG test is deliberately inlined rather than factored
+ * into a helper class: {@code com.lx862.jcm.mixin} is a mixin package
+ * declared by the mixin configs, and Mixin refuses to load any plain class
+ * living in such a package at runtime ({@code IllegalClassLoadError}), so
+ * nothing but mixins may sit next to this file.
  */
 @Mixin(World.class)
 public class DoorBlockChangeMixin {
@@ -33,12 +40,14 @@ public class DoorBlockChangeMixin {
     @Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z", at = @At("HEAD"))
     private void jsblock$trackDoorBlockChange(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<Boolean> cir) {
         if(!((Object) this instanceof ServerWorld)) return;
-        if(DoorBlockChangeHelper.isDoorBlock(state.getBlock())) {
+        final Block newBlock = state.getBlock();
+        if(newBlock instanceof PlatformHelper || newBlock instanceof BlockPSDAPGDoorBase) {
             DoorDirectionManager.onDoorBlockChange(this, pos.getX(), pos.getY(), pos.getZ());
             return;
         }
         if(!DoorDirectionManager.chunkMayContainPlatforms(this, pos.getX() >> 4, pos.getZ() >> 4)) return;
-        if(DoorBlockChangeHelper.isDoorBlock(((World) (Object) this).getBlockState(pos).getBlock())) {
+        final Block replacedBlock = ((World) (Object) this).getBlockState(pos).getBlock();
+        if(replacedBlock instanceof PlatformHelper || replacedBlock instanceof BlockPSDAPGDoorBase) {
             DoorDirectionManager.onDoorBlockChange(this, pos.getX(), pos.getY(), pos.getZ());
         }
     }
