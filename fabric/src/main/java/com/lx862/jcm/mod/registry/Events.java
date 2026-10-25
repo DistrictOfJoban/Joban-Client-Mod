@@ -10,7 +10,8 @@ import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.jcm.mod.scripting.JCMScripting;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.core.util.model.ModelManagerJS;
-import com.lx862.mtrscripting.mod.impl.mtr.vehicle.DoorDirectionStore;
+import com.lx862.mtrscripting.mod.impl.mtr.server.DoorDirectionManager;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.ServerDoorDirections;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
@@ -20,6 +21,17 @@ public class Events {
     public static void register() {
         // Start Tick Event for counting tick
         JCMRegistry.REGISTRY.eventRegistry.registerStartServerTick(JCMServerStats::incrementGameTick);
+
+        /* Yanyang: server-side door-opening-direction memory (the migrated
+           self-learning). First start with this version scans every
+           route-served platform of the save once — unloaded chunks included —
+           stores the sides per route under the mtr data root, marks the
+           scan so later boots never rescan, re-scans incrementally when
+           platform blocks change (batch-tool safe), and answers client
+           queries from the stored data. */
+        JCMRegistry.REGISTRY.eventRegistry.registerServerStarted(DoorDirectionManager::onServerStarted);
+        JCMRegistry.REGISTRY.eventRegistry.registerServerStopping(DoorDirectionManager::onServerStopping);
+        JCMRegistry.REGISTRY.eventRegistry.registerEndWorldTick(DoorDirectionManager::onWorldTick);
     }
 
     public static void registerClient() {
@@ -32,12 +44,11 @@ public class Events {
 
             if(MinecraftClient.getInstance().getWorldMapped() == null) {
                 VehicleDataCache.clearData();
-                /* Yanyang: persist the learned per-platform door-opening sides
-                   (config/jsblock/door-directions.json) while leaving the
-                   world — the render-thread path only schedules debounced
-                   writes, this is the one synchronous flush that must not
-                   lose the session's learning. */
-                DoorDirectionStore.flush();
+                /* Yanyang: drop the cached server door-direction answers
+                   while out of a world; a fresh join re-requests what the
+                   render path actually needs. (The old client-side on-disk
+                   learning is gone — the memory now lives on the server.) */
+                ServerDoorDirections.reset();
             }
         });
 

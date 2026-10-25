@@ -199,18 +199,28 @@ informational — MTR still owns which doors actually open.
 
 A client only holds blocks for loaded chunks, so the predictive scan alone
 would only start answering once the next stop enters view distance — roughly
-when the train enters the platform track. JCM therefore keeps a persistent
-per-platform memory (`config/jsblock/door-directions.json`, "learn once,
-answer anywhere"): every dwell, every door opening and every successful
-approach scan stores the observed sides under the platform's id, in a frame
-canonicalized to the platform rail's intrinsic direction (so forward,
-reversed and opposite-direction trains all agree on one entry). While
-predicting, a remembered platform answers without any world scan — which is
-what makes the direction available mid-journey and across restarts. A scan
-that found no openable side is never written, so a far-away platform can't
-poison its own entry; every dwell refreshes the truth. Platforms never seen
-on this client still report `"not"` until first approached (then they are
-learned for good).
+when the train enters the platform track. JCM therefore keeps a **server-side
+per-route memory** ("scan once, answer anywhere"): the first time a server
+starts with this JCM version on a save, it scans every platform that at least
+one route calls at — unloaded chunks included, which is exactly the
+capability a client never had — walking each platform rail and testing the
+same blocks MTR's own `RenderVehicleHelper#canOpenDoors` would look at, and
+storing the two openable sides per route under
+`<world>/mtr/<dimension>/routes-door-directions/` (mirroring MTR's routes
+sharding; a `scan-complete-v1` marker in that folder prevents any later boot
+from rescanning the whole save). Sides are stored in a frame canonicalized
+to the platform rail's intrinsic direction, so forward, reversed and
+opposite-direction trains all read the same entry. When platform blocks are
+placed, removed or replaced later — WorldEdit and Axiom batches included —
+a mixin on the server's block setter notices, coalesces the edits by chunk
+and platform, and re-scans a bounded number of platforms per tick, so the
+stored answers stay fresh without ever spiking a tick. When
+`getDirectionOfDoorOpening()` needs an answer the local scan can't see, the
+client asks the server, which replies from the stored data; until the first
+answer arrives (or on a server without this JCM version) the client keeps
+its own in-view scan as the fallback. Note for server operators: install the
+JCM jar on the server for mid-journey predictions; a client-only install
+falls back to the in-view-scan behavior.
 
 ```cpp
 switch (vehicle.doorDirection()) {                       // typed (mtr::DoorDirection)

@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_16",
   "mixins": [
     "BlockPIDSPoleMixin",
+    "DoorBlockChangeMixin",
     "SimpleDefaultedRegistryMixin",
     "TicketSystemMixin",
     "mtrpatch.BlockExtensionMixin",

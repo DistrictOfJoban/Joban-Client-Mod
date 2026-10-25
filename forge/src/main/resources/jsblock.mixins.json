@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_16",
   "mixins": [
     "mtrpatch.BlockExtensionMixin",
+    "DoorBlockChangeMixin",
     "mtrpatch.BlockPoleCheckBaseMixin",
     "mtrpatch.BlockRailwaySignPoleMixin",
     "BlockPIDSPoleMixin",

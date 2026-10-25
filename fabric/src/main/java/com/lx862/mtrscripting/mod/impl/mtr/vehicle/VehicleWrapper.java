@@ -635,15 +635,15 @@ public class VehicleWrapper {
      *   <li>While running on the mainline, the <b>next stop's</b> opening
      *       sides are predicted by laying the vehicle out at the stopping
      *       point on its own path and running the same world scan there
-     *       (MTR itself would report nothing in this state). Because a
-     *       client only has blocks for <i>loaded</i> chunks, that scan
-     *       succeeds from roughly the moment the stop enters view
-     *       distance; for platforms further away the answer comes from
-     *       {@link DoorDirectionStore} — a persistent per-platform memory
-     *       learned whenever the sides were observable (dwelling there,
-     *       doors opening there, or a successful approach scan), so the
-     *       prediction also works mid-journey, after restarts, on first
-     *       visits to previously seen platforms.</li>
+     *       (MTR itself would report nothing in this state). That scan only
+     *       works once the stop's chunks are loaded on this client; beyond
+     *       view distance the answer comes from the <b>server</b>, which
+     *       scanned the whole save once (and keeps its answer fresh as
+     *       platform blocks change) and serves the route's stored sides on
+     *       request — so the prediction also works mid-journey, after
+     *       restarts, and on the very first visit. When the server has not
+     *       answered yet (feature missing there, or a scan still pending),
+     *       the client keeps its own in-view scan as the fallback.</li>
      *   <li>As soon as a single car on one side finds an openable platform
      *       block, that whole side counts as openable (per-side aggregation,
      *       not per-doorway).</li>
@@ -668,10 +668,6 @@ public class VehicleWrapper {
                 if(doorLeftOpen[i]) left = true;
                 if(doorRightOpen[i]) right = true;
             }
-            /* Freshest possible observation of the platform we are
-               dwelling on — feed the persistent memory (no-op when the
-               answer didn't change or we are not actually at a platform). */
-            rememberDoorSides(dwellingPlatformSegment(), isReversed(), left, right);
             return doorDirection(left, right);
         }
         if(!isOnRoute()) return DOOR_DIRECTION_NOT;
@@ -755,7 +751,7 @@ public class VehicleWrapper {
     }
 
     /**
-     * Head-relative ⇄ canonical side conversion, and the persistence hooks.
+     * Head-relative ⇄ canonical side conversion against the server's store.
      *
      * <p>The canonical frame is the platform rail's intrinsic direction —
      * from {@code getOrderedPosition1()} to {@code getOrderedPosition2()}
@@ -769,32 +765,26 @@ public class VehicleWrapper {
      *
      * <pre>headAlongCanonicalForward = (reversed == platformPath.reversePositions)</pre>
      *
-     * <p>Storing sides in that frame is what makes the memory shareable:
-     * forward and reversed trains, and trains from opposite routes calling
-     * at the same platform, all converge on one entry per platform instead
-     * of overwriting each other with head-relative answers.
+     * <p>The server stores and sends sides in that same canonical frame
+     * (see {@code DoorScan}/"DoorDirectionManager" on the server), so this
+     * is now a pure lookup-and-convert — the learning half of the old
+     * on-client store lives on the server, where the whole save could be
+     * scanned once and far-away platforms are knowable at all.
      */
-    private static void rememberDoorSides(PathData platformPath, boolean reversed, boolean left, boolean right) {
-        /* Skipped entirely when there is nothing to learn (not at a
-           platform, or the scan found no openable side — an unloaded far
-           platform must never poison its own entry). */
-        if(platformPath == null || (!left && !right)) return;
+    private boolean[] recallDoorSides(PathData platformPath, boolean reversed) {
         final long platformId = platformPath.getSavedRailBaseId();
-        if(platformId == 0) return;
-        final boolean headForward = reversed == platformPath.reversePositions;
-        DoorDirectionStore.remember(platformId,
-                (left && headForward) || (right && !headForward),
-                (right && headForward) || (left && !headForward));
-    }
-
-    /** The remembered sides of this platform mapped into this train's head-relative frame, or null when unknown. */
-    private static boolean[] recallDoorSides(PathData platformPath, boolean reversed) {
-        final DoorDirectionStore.Entry remembered = DoorDirectionStore.recall(platformPath.getSavedRailBaseId());
-        if(remembered == null) return null;
+        final long routeId = getThisRouteId();
+        final boolean[] canonical = ServerDoorDirections.sidesFor(routeId, platformId);
+        if(canonical == null) {
+            /* Unknown to the server (or it has not answered yet): ask for
+               the route's stored sides; the request is throttled inside. */
+            ServerDoorDirections.requestFor(routeId);
+            return null;
+        }
         final boolean headForward = reversed == platformPath.reversePositions;
         return new boolean[]{
-                headForward ? remembered.left : remembered.right,
-                headForward ? remembered.right : remembered.left
+                headForward ? canonical[0] : canonical[1],
+                headForward ? canonical[1] : canonical[0]
         };
     }
 
@@ -810,9 +800,8 @@ public class VehicleWrapper {
      * Per-side world scan around the vehicles's current car poses — the same
      * boxes the constructor uses for {@code doorLeftOpen/doorRightOpen}, but
      * NOT gated on the door value, so the answer equals the fully-open state.
-     *
-     * <p>While dwelling here the sides are directly observable, so the
-     * answer also refreshes the platform's entry in {@link DoorDirectionStore}.
+     * While dwelling here the sides are directly observable; the server's
+     * stored answer may trail this by seconds, so the live scan wins.
      */
     private String currentPlatformDoorDirection(PathData platformPath) {
         boolean left = false, right = false;
@@ -827,25 +816,21 @@ public class VehicleWrapper {
                 right = MTRUtil.canOpenDoors(new Box(halfWidth, -1, -halfLength, halfWidth + 0.1, 1, halfLength), positionAndRotation);
             }
         }
-        rememberDoorSides(platformPath, isReversed(), left, right);
         return doorDirection(left, right);
     }
 
     /**
      * Prediction for a platform the vehicle has not reached yet: find that
-     * platform's rail segment on the vehicle's own path, lay the cars out
-     * exactly where they will rest at that stop (mirroring MTR's
-     * {@code Vehicle.getVehicleCarsAndPositions} math against the stopping
-     * point), then run the standard per-side door scans at those poses.
-     * Falls back to "not" when the platform is off-path or its geometry is
-     * not resolvable on the client.
-     *
-     * <p>The world scan only works once the stop's chunks are loaded on
-     * this client (roughly from view distance); before that, and across
-     * sessions, the platform's remembered sides from
-     * {@link DoorDirectionStore} answer instead. A successful scan feeds
-     * the memory back so the platform is known from further away next
-     * time.
+     * platform's rail segment on the vehicle's own path, then answer from
+     * the <b>server's</b> stored per-route sides when it has them — the only
+     * source that works beyond view distance, on first visits and after
+     * restarts, since the server scanned the whole save once. Without a
+     * server answer yet, lay the cars out exactly where they will rest at
+     * that stop (mirroring MTR's {@code Vehicle.getVehicleCarsAndPositions}
+     * math against the stopping point) and run the standard per-side door
+     * scans at those poses — which succeeds from roughly the moment the
+     * stop's chunks load on this client. Falls back to "not" when the
+     * platform is off-path or its geometry is not resolvable on the client.
      */
     private String predictPlatformDoorDirection(Platform platform) {
         PathData platformPath = null;
@@ -871,9 +856,10 @@ public class VehicleWrapper {
         if(platformPath == null) return DOOR_DIRECTION_NOT;
 
         final boolean reversed = isReversed();
-        /* Remembered sides answer without touching the world — the only
-           source that works mid-journey (stop outside view distance) and
-           after restarts. Refreshed on every dwell at the platform. */
+        /* Server-backed sides answer without touching the world — the only
+           source that works mid-journey (stop outside view distance), on
+           first visits and after restarts. Refreshed by the server as
+           platform blocks change; requested here when still unknown. */
         final boolean[] remembered = recallDoorSides(platformPath, reversed);
         if(remembered != null) {
             return doorDirection(remembered[0], remembered[1]);
@@ -917,7 +903,6 @@ public class VehicleWrapper {
             }
             checkRailProgress += (reversed ? 1 : -1) * vehicleCar.getTotalLength(true, false);
         }
-        rememberDoorSides(platformPath, reversed, left, right);
         return doorDirection(left, right);
     }
 

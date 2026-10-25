@@ -4,7 +4,9 @@ import com.lx862.jcm.mod.JCM;
 import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
 import com.lx862.mtrscripting.mod.network.packet.EyecandyCustomConfigUpdateC2SPacket;
+import com.lx862.mtrscripting.mod.network.packet.data.DoorDirectionsS2CPacket;
 import com.lx862.mtrscripting.mod.network.packet.data.MTRDataS2CPacket;
+import com.lx862.mtrscripting.mod.network.packet.data.RequestDoorDirectionsC2SPacket;
 import com.lx862.mtrscripting.mod.network.packet.data.RequestMTRDataC2SPacket;
 import com.lx862.mtrscripting.mod.network.packet.data.RequestStopsDataC2SPacket;
 import com.lx862.mtrscripting.mod.network.packet.data.StopsDataS2CPacket;
@@ -30,5 +32,7 @@ public class MTRScriptingMod {
         Networking.registerPacket(StopsDataS2CPacket.class, StopsDataS2CPacket::new);
         Networking.registerPacket(RequestMTRDataC2SPacket.class, RequestMTRDataC2SPacket::new);
         Networking.registerPacket(MTRDataS2CPacket.class, MTRDataS2CPacket::new);
+        Networking.registerPacket(RequestDoorDirectionsC2SPacket.class, RequestDoorDirectionsC2SPacket::new);
+        Networking.registerPacket(DoorDirectionsS2CPacket.class, DoorDirectionsS2CPacket::new);
     }
 }
