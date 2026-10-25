@@ -15,6 +15,9 @@
   - For `Resources.idr()`, simply prepend your string with `./`.
   - Note: This can still only be used during parsing stage.
 - `StateTracker.setState()` would now return a boolean on whether the state is changed or not, instead of needing a separate check.
+- Added the `Java` util class
+  - Allows creation of native java array via `Java.newArray`, or converting from a list `Java.toArray`
+  - A global `asJavaArray` function is added for interoperability with ANTE. However scripts targeting JCM should use `Java.toArray` instead.
 
 ## Translations
 Thanks to the following people who have contributed translations for this release! (No particular order):

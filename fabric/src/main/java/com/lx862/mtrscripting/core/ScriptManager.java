@@ -107,6 +107,7 @@ public class ScriptManager {
             parsedScript.exposeClassMethod("print", ScriptResourceUtil.class.getMethod("print", Object[].class));
             parsedScript.exposeClass("Resources", ScriptResourceUtil.class);
             parsedScript.exposeClass("GraphicsTexture", GraphicsTexture.class);
+            parsedScript.exposeClass("Java", JavaUtil.class);
             parsedScript.exposeClassInstance("console", new ConsoleJS());
             parsedScript.exposeClassInstance("BackgroundWorker", backgroundWorker);
 
@@ -129,6 +130,9 @@ public class ScriptManager {
             parsedScript.exposeClass("RawModel", RawModelJS.class);
             parsedScript.exposeClass("RawMeshBuilder", RawMeshBuilderJS.class);
             parsedScript.exposeClass("DynamicModelHolder", DynamicModelHolderJS.class);
+
+            /* ANTE */
+            parsedScript.exposeClassMethod("asJavaArray", JavaUtil.class.getMethod("toArray", List.class, Class.class));
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
