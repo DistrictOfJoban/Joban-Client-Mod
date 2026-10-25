@@ -7,10 +7,8 @@ import org.mtr.core.tool.Vector;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Box;
-import org.mtr.mapping.holder.Property;
 import org.mtr.mapping.holder.World;
 import org.mtr.mod.Init;
-import org.mtr.mod.block.BlockPSDAPGDoorBase;
 import org.mtr.mod.block.PlatformHelper;
 
 /**
@@ -51,12 +49,20 @@ import org.mtr.mod.block.PlatformHelper;
  *       that never contradicts itself.</li>
  * </ul>
  *
- * <p>Block predicate and lattice are byte-for-byte the client's: a block
- * counts as "doors can open against it" when it is a platform block
- * ({@link PlatformHelper}) or an unlocked PSD/APG door
- * ({@link BlockPSDAPGDoorBase} with {@code UNLOCKED}), looked up on the
- * integer lattice the client expands the doorway box by — ±1 block
- * horizontally and ±2 blocks vertically.
+ * <p><b>The block test is platform-only.</b> Per MTR's actual train behavior
+ * (in-game verified by the server owners): whether PSD/APG door blocks
+ * exist does not influence whether trains open their doors — only platform
+ * blocks do. The earlier port of this scan also credited an <i>unlocked</i>
+ * PSD/APG door ({@code RenderVehicleHelper#canOpenDoors} does, for its
+ * visual door sync), but that clause can only ever mislead here: a scan
+ * with no train present always sees PSD/APG doors locked, and doors whose
+ * block entities cannot tick (custom JCM door variants are known to end up
+ * "invalid for ticking" in some mod packs) never unlock at all — so a
+ * door-aware scan could only produce false negatives, never a correction.
+ * {@link #isDoorOpenableBlock} therefore tests platform blocks only, which
+ * matches both the real door-opening rule and every PSD/APG layout, because
+ * the platform blocks the trains actually open against stay within the same
+ * lattice either way.
  */
 final class DoorScan {
 
@@ -212,13 +218,14 @@ final class DoorScan {
         return false;
     }
 
-    /** The exact block predicate of {@code MTRUtil#canOpenDoors}, unchanged. */
+    /**
+     * The block test, platform-only: per MTR's actual train behavior, only
+     * platform blocks ({@link PlatformHelper}) decide whether trains open
+     * their doors on a side — the presence of PSD/APG doors is irrelevant
+     * to that decision, and a scan with no train present could only ever
+     * see doors locked anyway, so they are deliberately not consulted.
+     */
     private static boolean isDoorOpenableBlock(World world, BlockPos blockPos) {
-        final BlockState blockState = world.getBlockState(blockPos);
-        final Object block = blockState.getBlock().data;
-        if(block instanceof PlatformHelper) {
-            return true;
-        }
-        return block instanceof BlockPSDAPGDoorBase && blockState.get(new Property<>(BlockPSDAPGDoorBase.UNLOCKED.data));
+        return world.getBlockState(blockPos).getBlock().data instanceof PlatformHelper;
     }
 }
