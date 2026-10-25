@@ -12,7 +12,7 @@ import org.mtr.core.data.Platform;
 import org.mtr.core.data.Rail;
 import org.mtr.core.data.Route;
 import org.mtr.core.data.RoutePlatformData;
-import org.mtr.core.data.Simulator;
+import org.mtr.core.simulation.Simulator;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongOpenHashSet;
