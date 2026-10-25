@@ -3,7 +3,7 @@ package com.lx862.mtrscripting.core.util;
 import java.lang.reflect.Array;
 import java.util.List;
 
-public class JavaUtil {
+public class JavaUtilJS {
     /**
      * Create a native java array
      * @param classType The class type
@@ -36,7 +36,7 @@ public class JavaUtil {
     }
 
     /**
-     * ANTE Overload for {@link JavaUtil#toArray(Class, List)}
+     * ANTE Overload for {@link JavaUtilJS#toArray(Class, List)}
      */
     @Deprecated
     public static <T> T[] toArray(List<T> list, Class<T> classType) {

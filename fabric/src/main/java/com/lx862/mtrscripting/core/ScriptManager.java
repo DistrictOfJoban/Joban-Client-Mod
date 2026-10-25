@@ -7,6 +7,8 @@ import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.integration.MinecraftParticleData;
 import com.lx862.mtrscripting.core.util.*;
+import com.lx862.mtrscripting.core.util.ante.ComponentUtilJS;
+import com.lx862.mtrscripting.core.util.ante.GlobalRegister;
 import com.lx862.mtrscripting.core.util.model.DynamicModelHolderJS;
 import com.lx862.mtrscripting.core.util.model.ModelManagerJS;
 import com.lx862.mtrscripting.core.util.model.RawMeshBuilderJS;
@@ -107,7 +109,7 @@ public class ScriptManager {
             parsedScript.exposeClassMethod("print", ScriptResourceUtil.class.getMethod("print", Object[].class));
             parsedScript.exposeClass("Resources", ScriptResourceUtil.class);
             parsedScript.exposeClass("GraphicsTexture", GraphicsTexture.class);
-            parsedScript.exposeClass("Java", JavaUtil.class);
+            parsedScript.exposeClass("Java", JavaUtilJS.class);
             parsedScript.exposeClassInstance("console", new ConsoleJS());
             parsedScript.exposeClassInstance("BackgroundWorker", backgroundWorker);
 
@@ -132,7 +134,9 @@ public class ScriptManager {
             parsedScript.exposeClass("DynamicModelHolder", DynamicModelHolderJS.class);
 
             /* ANTE */
-            parsedScript.exposeClassMethod("asJavaArray", JavaUtil.class.getMethod("toArray", List.class, Class.class));
+            parsedScript.exposeClass("GlobalRegister", GlobalRegister.class);
+            parsedScript.exposeClass("ComponentUtil", ComponentUtilJS.class);
+            parsedScript.exposeClassMethod("asJavaArray", JavaUtilJS.class.getMethod("toArray", List.class, Class.class));
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
