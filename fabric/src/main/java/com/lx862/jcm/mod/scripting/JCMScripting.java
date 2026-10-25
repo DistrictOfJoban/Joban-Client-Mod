@@ -36,7 +36,7 @@ public class JCMScripting {
             if (contextName.equals("pids")) {
                 parsedScript.exposeClass("Text", TextWrapper.class);
                 parsedScript.exposeClass("Texture", TextureWrapper.class);
-                parsedScript.exposeClass("Rectangle", RectangleWrapper.class);
+                parsedScript.exposeClass("Rect", RectangleWrapper.class);
             }
         });
 
