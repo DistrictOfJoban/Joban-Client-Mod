@@ -57,6 +57,8 @@ public class ScriptResourceUtil {
     private static final Stack<Identifier> scriptLocationStack = new Stack<>();
     private static ParsedScript activeParsingScript;
 
+    public static final boolean ANTE_FLAG = false;
+
     private static final FontRenderContext FONT_CONTEXT = new FontRenderContext(new AffineTransform(), true, false);
     private static final Identifier NOTO_SANS_CJK_LOCATION = new Identifier("mtr", "font/noto-sans-cjk-tc-medium.otf");
     private static final Identifier NOTO_SANS_LOCATION = new Identifier("mtr", "font/noto-sans-semibold.ttf");
