@@ -231,7 +231,7 @@ int main(int argc, char** argv) {
     /* ---- 3. api upcalls through the vtable (content probe) ---------- */
     const int64_t content = jcm_module_open(contentPath,
             static_cast<int32_t>(std::strlen(contentPath)));
-    CHECK(content != 0 && jcm_module_abi(content) == 10, "content probe opened");
+    CHECK(content != 0 && jcm_module_abi(content) == 11, "content probe opened");
     const int invokesBefore = g_invoke_calls;
     status = jcm_module_render(content, "inst", 4,
             reinterpret_cast<int64_t>(snapshot), 256, 1, desc);

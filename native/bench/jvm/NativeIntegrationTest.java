@@ -66,7 +66,7 @@ public class NativeIntegrationTest {
   System.out.println("Session plane: "+(isPollerPlane?"shared-memory poller (no JNI)":"Panama FFM (no JNI)"));
   if(isPollerPlane) check(PanamaFfmChannel.reason()!=null&&!PanamaFfmChannel.reason().isEmpty(),"poller-plane session: FFM unavailability has a reason: "+PanamaFfmChannel.reason());
   else check(PanamaFfmChannel.hostReady(),"FFM session: host upcall vtable installed");
-  check(module!=null&&module.getAbiVersion()==10,"ABI 10 loaded from resource declaration");
+  check(module!=null&&module.getAbiVersion()==11,"ABI 11 loaded from resource declaration");
   Fixture first=new Fixture(),second=new Fixture();
   NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
   ByteBuffer snapshot=ByteBuffer.allocateDirect(184).order(ByteOrder.nativeOrder());snapshot.limit(184);
@@ -173,7 +173,7 @@ public class NativeIntegrationTest {
    module=NativeScriptManager.loadFromDeclaration("test:probe",new JsonPrimitive("test:"+prefix+"api_probe"+ext));
    check(ShmPoller.active(),"poller attached to the shared region");
    check(NativeChannel.describe().contains("no JNI"),"census advertises the JNI-free poller plane: "+NativeChannel.describe());
-   check(module!=null&&module.getAbiVersion()==10,"module loads over the poller CMD_OPEN");
+   check(module!=null&&module.getAbiVersion()==11,"module loads over the poller CMD_OPEN");
    check("test:api_probe".equals(module.getScriptId()),"module identity over the poller commands");
    NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
    Fixture poller=new Fixture();
@@ -204,7 +204,7 @@ public class NativeIntegrationTest {
    check(NativeChannel.activeTransport()==NativeChannel.Transport.PANAMA_FFM,"PANAMA_FFM selected");
    check(NativeChannel.describe().contains("no JNI"),"census advertises the JNI-free FFM plane");
    module=NativeScriptManager.loadFromDeclaration("test:probe",new JsonPrimitive("test:"+prefix+"api_probe"+ext));
-   check(module!=null&&module.getAbiVersion()==10,"module loads over jcm_module_open");
+   check(module!=null&&module.getAbiVersion()==11,"module loads over jcm_module_open");
    check("test:api_probe".equals(module.getScriptId()),"module identity via jcm_module_script_id");
    NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
    Fixture ffm=new Fixture();
