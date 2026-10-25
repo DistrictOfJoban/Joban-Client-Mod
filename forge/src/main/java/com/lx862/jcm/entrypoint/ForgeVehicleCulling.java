@@ -28,11 +28,25 @@ import net.minecraft.client.renderer.LevelRenderer;
 public final class ForgeVehicleCulling {
     private ForgeVehicleCulling() {}
 
+    /* Render-thread confined (the supplier only runs inside the vehicle
+       render pass): the raw frustum instance is stable for a whole pass, so
+       the MTR holder wrap happens once per frame, not once per vehicle. */
+    private static Object lastRaw;
+    private static org.mtr.mapping.holder.Frustum lastHolder;
+
     public static void init() {
         NativeCullFrustum.setLive(() -> {
             try {
                 final LevelRenderer levelRenderer = Minecraft.getInstance().levelRenderer;
-                return levelRenderer == null ? null : ((LevelRendererCullingAccessor) levelRenderer).getJcmCullingFrustum();
+                if (levelRenderer == null) return null;
+                final net.minecraft.client.renderer.culling.Frustum raw =
+                        ((LevelRendererCullingAccessor) levelRenderer).getJcmCullingFrustum();
+                if (raw == null) return null;
+                if (raw != lastRaw) {
+                    lastRaw = raw;
+                    lastHolder = new org.mtr.mapping.holder.Frustum(raw);
+                }
+                return lastHolder;
             } catch(Throwable t) {
                 /* A culling aid must never break world rendering. */
                 return null;

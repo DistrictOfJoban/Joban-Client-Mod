@@ -26,8 +26,9 @@ import java.util.function.Supplier;
  * at every query. {@link VehicleCulling#shouldRender} only runs from inside the
  * vehicle render pass, which happens after that field received the current
  * frame's frustum, so a live read is always current-frame — and needs no event
- * at all. The raw frustum instance is stable for the whole pass, so the MTR
- * holder wrapper is built once per frame, not once per vehicle.</li>
+ * at all. The supplier hands back the MTR-wrapped holder; the loader side
+ * caches the wrap per raw frustum instance (stable for the whole pass), so the
+ * holder is built once per frame, not once per vehicle.</li>
  * </ul>
  */
 public final class NativeCullFrustum {
@@ -39,9 +40,7 @@ public final class NativeCullFrustum {
 
     /* Live mode (Forge). Render-thread confined: shouldRender callers all run
        on the render thread, the supplier is installed once at client init. */
-    private static volatile Supplier<Object> liveRawFrustum;
-    private static Frustum liveHolder;
-    private static Object liveHolderRaw;
+    private static volatile Supplier<Frustum> liveFrustum;
 
     /**
      * Publishes the frustum captured for the current world render pass.
@@ -62,34 +61,26 @@ public final class NativeCullFrustum {
     }
 
     /**
-     * Installs (or with {@code null} removes) a live raw-frustum supplier —
-     * the Forge mode; see the class javadoc. The supplier must return the
-     * loader-raw frustum object or {@code null}, never throw.
+     * Installs (or with {@code null} removes) a live frustum supplier — the
+     * Forge mode; see the class javadoc. The supplier must return the
+     * MTR-holder-wrapped frustum or {@code null}, never throw.
      */
-    public static void setLive(Supplier<Object> rawFrustumSupplier) {
-        liveRawFrustum = rawFrustumSupplier;
-        liveHolder = null;
-        liveHolderRaw = null;
+    public static void setLive(Supplier<Frustum> frustumSupplier) {
+        liveFrustum = frustumSupplier;
     }
 
     /** The frustum, or {@code null} when none was captured this pass. */
     public static Frustum frustum() {
-        final Supplier<Object> supplier = liveRawFrustum;
+        final Supplier<Frustum> supplier = liveFrustum;
         if(supplier != null) {
-            final Object raw = supplier.get();
-            if(raw == null) return null;
-            if(raw != liveHolderRaw) {
-                liveHolderRaw = raw;
-                liveHolder = new Frustum(raw);
-            }
-            return liveHolder;
+            return supplier.get();
         }
         return frustum;
     }
 
     /** The world the captured frustum belongs to, or {@code null}. */
     public static Object world() {
-        if(liveRawFrustum != null) {
+        if(liveFrustum != null) {
             /* Live mode: the frustum is read mid-pass, so the world it
                belongs to is by definition the world being rendered. */
             try {
