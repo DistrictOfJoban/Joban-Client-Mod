@@ -3,13 +3,12 @@ package com.lx862.jcm.mixin.mtrscripting;
 import com.lx862.jcm.mod.util.TextCategory;
 import com.lx862.jcm.mod.util.TextUtil;
 import com.lx862.mtrscripting.mod.gui.screen.EyecandyCustomConfigScreen;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.JCMBlockEyecandyExtra;
-import com.lx862.mtrscripting.mod.resource.EyecandyResourceProvider;
 import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ButtonWidgetExtension;
-import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mod.block.BlockEyeCandy;
 import org.mtr.mod.client.CustomResourceLoader;
 import org.mtr.mod.client.IDrawing;
@@ -51,10 +50,10 @@ public class EyecandyScreenMixin {
             if(be != null && be.data instanceof BlockEyeCandy.BlockEntity) {
                 String modelId = objects.getId();
                 Map<String, String> customEntries = new HashMap<>(((JCMBlockEyecandyExtra)be.data).jsblock$getCustomConfig());
-                EyecandyResourceProvider.EyecandyScriptConfiguration scriptConfig = MtrScriptingResourceManager.eyecandy.getScriptEntry(modelId);
+                EyecandyCustomConfig customConfig = MtrScriptingResourceManager.eyecandy.getScriptConfig(modelId);
                 MinecraftClient.getInstance().openScreen(
                         new Screen(
-                                new EyecandyCustomConfigScreen(modelId, modelId, blockPos, customEntries, scriptConfig.eyecandyCustomConfig())
+                                new EyecandyCustomConfigScreen(modelId, modelId, blockPos, customEntries, customConfig)
                                         .withPreviousScreen(new Screen((EyeCandyScreen)(Object)this))
                         )
                 );
@@ -72,9 +71,8 @@ public class EyecandyScreenMixin {
             ObjectResource objects = CustomResourceLoader.getObjects().get((int)selectedModelIndices.getLong(0));
             if(objects != null) {
                 String modelId = objects.getId();
-                EyecandyResourceProvider.EyecandyScriptConfiguration scriptConfig = MtrScriptingResourceManager.eyecandy.getScriptEntry(modelId);
-                boolean visible = scriptConfig != null && scriptConfig.eyecandyCustomConfig() != null;
-                if(visible) {
+                EyecandyCustomConfig customConfig = MtrScriptingResourceManager.eyecandy.getScriptConfig(modelId);
+                if(customConfig != null) {
                     jsblock$customConfigButton.setVisibleMapped(true);
                     ((EyeCandyScreen)(Object)this).addChild(new ClickableWidget(jsblock$customConfigButton));
                 }

@@ -7,8 +7,6 @@ import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.OrderedText;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mapping.mapper.GuiDrawing;
-import org.mtr.mapping.mapper.TextHelper;
 
 public class ConfigIntegerField extends IntegerTextField implements ValidatableWidget {
     private final EyecandyCustomConfig.Entry.ValidationCallback validationCallback;
@@ -38,7 +36,7 @@ public class ConfigIntegerField extends IntegerTextField implements ValidatableW
 
         if(!this.result.success() && isHovered()) {
             #if MC_VERSION >= "11903"
-                OrderedText orderedText = LoaderImplGUI.asOrderedText(TextHelper.translatable(this.result.validationMessage()));
+                OrderedText orderedText = LoaderImplGUI.asOrderedText(this.result.validationMessage());
                 LoaderImplGUI.setTooltip(MinecraftClient.getInstance().getCurrentScreenMapped(), orderedText);
             #endif
         } else if(this.originalValue != getNumber()) {

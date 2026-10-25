@@ -55,7 +55,7 @@ public class ConfigTextField extends AlwaysRenderedTextField implements Validata
         String content = getText2();
         if(!this.result.success() && isHovered()) {
             #if MC_VERSION >= "11903"
-                OrderedText orderedText = LoaderImplGUI.asOrderedText(TextHelper.translatable(this.result.validationMessage()));
+                OrderedText orderedText = LoaderImplGUI.asOrderedText(this.result.validationMessage());
                 LoaderImplGUI.setTooltip(MinecraftClient.getInstance().getCurrentScreenMapped(), orderedText);
             #endif
         } else if(!Objects.equals(this.originalValue, content)) {

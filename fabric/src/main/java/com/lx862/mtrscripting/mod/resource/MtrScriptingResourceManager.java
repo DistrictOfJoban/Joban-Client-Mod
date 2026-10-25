@@ -8,6 +8,7 @@ import com.lx862.mtrscripting.core.util.ScriptResourceUtil;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import com.lx862.mtrscripting.core.util.ConsoleJS;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponderStorage;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 import org.mtr.mod.Init;
@@ -29,6 +30,7 @@ public class MtrScriptingResourceManager {
         lift.reset();
         ScriptResourceUtil.resetCache();
         RhinoParsedScript.clearScriptCache();
+        ConfigResponderStorage.reset();
 
         MTRContentScripting.getScriptManager().scriptErrorNotifier.reset();
 

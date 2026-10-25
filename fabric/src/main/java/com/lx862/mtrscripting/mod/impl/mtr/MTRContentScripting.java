@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.mod.impl.mtr;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponder;
 import com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.util.TextUtilJS;
 import com.lx862.mtrscripting.core.ScriptManager;
@@ -13,6 +14,7 @@ import org.mtr.mod.client.MinecraftClientData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -50,6 +52,12 @@ public class MTRContentScripting {
             parsedScript.exposeClass("MTRClientData", MinecraftClientData.class);
             parsedScript.exposeClass("MTR", MTRWrapper.class);
             parsedScript.exposeClass("TextUtil", TextUtilJS.class);
+
+            // ANTE Eyecandy Custom Config
+            if(contextName.equals("Block")) {
+                parsedScript.exposeClass("ConfigResponder", ConfigResponder.class);
+                parsedScript.exposeClass("Optional", Optional.class);
+            }
         });
 
         MTRScriptingAPI.registerAddonVersion("mtr", mtrModVersion);

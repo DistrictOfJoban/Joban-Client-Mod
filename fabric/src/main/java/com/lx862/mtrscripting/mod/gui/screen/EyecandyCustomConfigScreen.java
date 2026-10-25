@@ -160,7 +160,7 @@ public class EyecandyCustomConfigScreen extends SavableScreen implements RenderH
         widgetSet.setXYSize(0, 0, 120, 20);
 
         addChild(new ClickableWidget(widgetSet));
-        ContentItem contentItem = new ContentItem(TextUtil.translatable(entry.name()), new MappedWidget(widgetSet), 26);
+        ContentItem contentItem = new ContentItem(entry.name(), new MappedWidget(widgetSet), 26);
 
         listViewWidget.add(contentItem);
     }

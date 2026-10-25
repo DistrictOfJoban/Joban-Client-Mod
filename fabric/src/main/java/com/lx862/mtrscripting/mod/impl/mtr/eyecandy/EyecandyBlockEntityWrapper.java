@@ -1,6 +1,8 @@
 package com.lx862.mtrscripting.mod.impl.mtr.eyecandy;
 
 import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponder;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponderStorage;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.JCMBlockEyecandyExtra;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
@@ -120,6 +122,15 @@ public class EyecandyBlockEntityWrapper {
 
     public String getCustomConfig(String key, String fallback) {
         return customConfigs.getOrDefault(key, fallback);
+    }
+
+    @Deprecated
+    public void registerCustomConfig(ConfigResponder configResponder) {
+        ConfigResponderStorage.registerEyecandy(getModelId(), configResponder);
+    }
+
+    @Deprecated
+    public void sendUpdateC2S() {
     }
 
     /**
