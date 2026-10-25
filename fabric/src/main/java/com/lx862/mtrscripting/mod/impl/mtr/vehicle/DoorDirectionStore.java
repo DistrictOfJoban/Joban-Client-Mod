@@ -241,7 +241,11 @@ public final class DoorDirectionStore {
         }
         final Map<Long, Entry> parsed = new HashMap<>();
         try(final BufferedReader reader = Files.newBufferedReader(file(), StandardCharsets.UTF_8)) {
-            final JsonElement rootElement = JsonParser.parseReader(reader);
+            /* new JsonParser().parse(reader) rather than the static JsonParser.parseReader:
+               MC 1.17.1 bundles a gson older than 2.8.6, which has no static
+               parseReader — the instance form exists on every bundled gson
+               version (same pattern as MtrScriptingResourceManager). */
+            final JsonElement rootElement = new JsonParser().parse(reader);
             if(!rootElement.isJsonObject()) return;
             final JsonObject root = rootElement.getAsJsonObject();
             final JsonElement entriesElement = root.get("entries");
