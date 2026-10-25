@@ -635,7 +635,15 @@ public class VehicleWrapper {
      *   <li>While running on the mainline, the <b>next stop's</b> opening
      *       sides are predicted by laying the vehicle out at the stopping
      *       point on its own path and running the same world scan there
-     *       (MTR itself would report nothing in this state).</li>
+     *       (MTR itself would report nothing in this state). Because a
+     *       client only has blocks for <i>loaded</i> chunks, that scan
+     *       succeeds from roughly the moment the stop enters view
+     *       distance; for platforms further away the answer comes from
+     *       {@link DoorDirectionStore} — a persistent per-platform memory
+     *       learned whenever the sides were observable (dwelling there,
+     *       doors opening there, or a successful approach scan), so the
+     *       prediction also works mid-journey, after restarts, on first
+     *       visits to previously seen platforms.</li>
      *   <li>As soon as a single car on one side finds an openable platform
      *       block, that whole side counts as openable (per-side aggregation,
      *       not per-doorway).</li>
@@ -660,6 +668,10 @@ public class VehicleWrapper {
                 if(doorLeftOpen[i]) left = true;
                 if(doorRightOpen[i]) right = true;
             }
+            /* Freshest possible observation of the platform we are
+               dwelling on — feed the persistent memory (no-op when the
+               answer didn't change or we are not actually at a platform). */
+            rememberDoorSides(dwellingPlatformSegment(), isReversed(), left, right);
             return doorDirection(left, right);
         }
         if(!isOnRoute()) return DOOR_DIRECTION_NOT;
@@ -679,7 +691,8 @@ public class VehicleWrapper {
 
     /** Cached half of {@link #getDirectionOfDoorOpening()} (the world-scan paths). */
     private String computeCachedDoorDirection() {
-        final boolean atPlatform = isStoppedAtPlatform();
+        final PathData dwellingSegment = dwellingPlatformSegment();
+        final boolean atPlatform = dwellingSegment != null;
         final Platform nextPlatform = atPlatform ? null : nextStopPlatform();
         final long keyKind = atPlatform ? 0 : 1;
         final long keyId = atPlatform || nextPlatform == null ? 0 : nextPlatform.getId();
@@ -694,7 +707,7 @@ public class VehicleWrapper {
 
         final String value;
         if(atPlatform) {
-            value = currentPlatformDoorDirection();
+            value = currentPlatformDoorDirection(dwellingSegment);
         } else if(nextPlatform == null) {
             value = DOOR_DIRECTION_NOT;
         } else {
@@ -719,11 +732,14 @@ public class VehicleWrapper {
      * segment endDistance), doors may be in any phase. Checked on the
      * vehicle's own path data, so it works even before stop distances have
      * been requested from the server.
+     *
+     * @return the platform PathData being dwelled on (its savedRailBaseId
+     *         is the platform id), or null when not dwelling at one
      */
-    private boolean isStoppedAtPlatform() {
-        if(Math.abs(getSpeedMs()) > 1e-4) return false;
+    private PathData dwellingPlatformSegment() {
+        if(Math.abs(getSpeedMs()) > 1e-4) return null;
         final List<PathData> path = getPathData();
-        if(path.isEmpty()) return false;
+        if(path.isEmpty()) return null;
         final double railProgress = getRailProgress();
         final int index = Utilities.getIndexFromConditionalList(path, railProgress);
         /* At the stop, railProgress == startDistance of the segment AFTER
@@ -733,9 +749,53 @@ public class VehicleWrapper {
             final PathData pathData = Utilities.getElement(path, index + offset);
             if(pathData == null) continue;
             if(pathData.getSavedRailBaseId() == 0 || pathData.getDwellTime() <= 0) continue;
-            if(Math.abs(pathData.getEndDistance() - railProgress) <= AT_PLATFORM_TOLERANCE) return true;
+            if(Math.abs(pathData.getEndDistance() - railProgress) <= AT_PLATFORM_TOLERANCE) return pathData;
         }
-        return false;
+        return null;
+    }
+
+    /**
+     * Head-relative ⇄ canonical side conversion, and the persistence hooks.
+     *
+     * <p>The canonical frame is the platform rail's intrinsic direction —
+     * from {@code getOrderedPosition1()} to {@code getOrderedPosition2()}
+     * ({@code Position.compareTo} order of the two end anchors), which is
+     * identical for every train regardless of which way it traverses the
+     * rail or whether it is reversed. {@code PathData#reversePositions}
+     * says whether this train's segment runs <i>against</i> that order,
+     * {@link #isReversed()} whether the head faces against the travel
+     * direction — composing the two, the head faces the canonical forward
+     * direction exactly when they are equal:
+     *
+     * <pre>headAlongCanonicalForward = (reversed == platformPath.reversePositions)</pre>
+     *
+     * <p>Storing sides in that frame is what makes the memory shareable:
+     * forward and reversed trains, and trains from opposite routes calling
+     * at the same platform, all converge on one entry per platform instead
+     * of overwriting each other with head-relative answers.
+     */
+    private static void rememberDoorSides(PathData platformPath, boolean reversed, boolean left, boolean right) {
+        /* Skipped entirely when there is nothing to learn (not at a
+           platform, or the scan found no openable side — an unloaded far
+           platform must never poison its own entry). */
+        if(platformPath == null || (!left && !right)) return;
+        final long platformId = platformPath.getSavedRailBaseId();
+        if(platformId == 0) return;
+        final boolean headForward = reversed == platformPath.reversePositions;
+        DoorDirectionStore.remember(platformId,
+                (left && headForward) || (right && !headForward),
+                (right && headForward) || (left && !headForward));
+    }
+
+    /** The remembered sides of this platform mapped into this train's head-relative frame, or null when unknown. */
+    private static boolean[] recallDoorSides(PathData platformPath, boolean reversed) {
+        final DoorDirectionStore.Entry remembered = DoorDirectionStore.recall(platformPath.getSavedRailBaseId());
+        if(remembered == null) return null;
+        final boolean headForward = reversed == platformPath.reversePositions;
+        return new boolean[]{
+                headForward ? remembered.left : remembered.right,
+                headForward ? remembered.right : remembered.left
+        };
     }
 
     /** The platform object of the next stop, or null when unknown. */
@@ -750,8 +810,11 @@ public class VehicleWrapper {
      * Per-side world scan around the vehicles's current car poses — the same
      * boxes the constructor uses for {@code doorLeftOpen/doorRightOpen}, but
      * NOT gated on the door value, so the answer equals the fully-open state.
+     *
+     * <p>While dwelling here the sides are directly observable, so the
+     * answer also refreshes the platform's entry in {@link DoorDirectionStore}.
      */
-    private String currentPlatformDoorDirection() {
+    private String currentPlatformDoorDirection(PathData platformPath) {
         boolean left = false, right = false;
         for(int i = 0; i < getCarCount() && !(left && right); i++) {
             final PositionAndRotation positionAndRotation = posAndRotations.get(i);
@@ -764,6 +827,7 @@ public class VehicleWrapper {
                 right = MTRUtil.canOpenDoors(new Box(halfWidth, -1, -halfLength, halfWidth + 0.1, 1, halfLength), positionAndRotation);
             }
         }
+        rememberDoorSides(platformPath, isReversed(), left, right);
         return doorDirection(left, right);
     }
 
@@ -775,6 +839,13 @@ public class VehicleWrapper {
      * point), then run the standard per-side door scans at those poses.
      * Falls back to "not" when the platform is off-path or its geometry is
      * not resolvable on the client.
+     *
+     * <p>The world scan only works once the stop's chunks are loaded on
+     * this client (roughly from view distance); before that, and across
+     * sessions, the platform's remembered sides from
+     * {@link DoorDirectionStore} answer instead. A successful scan feeds
+     * the memory back so the platform is known from further away next
+     * time.
      */
     private String predictPlatformDoorDirection(Platform platform) {
         PathData platformPath = null;
@@ -799,8 +870,16 @@ public class VehicleWrapper {
         }
         if(platformPath == null) return DOOR_DIRECTION_NOT;
 
-        final double stopDistance = platformPath.getEndDistance();
         final boolean reversed = isReversed();
+        /* Remembered sides answer without touching the world — the only
+           source that works mid-journey (stop outside view distance) and
+           after restarts. Refreshed on every dwell at the platform. */
+        final boolean[] remembered = recallDoorSides(platformPath, reversed);
+        if(remembered != null) {
+            return doorDirection(remembered[0], remembered[1]);
+        }
+
+        final double stopDistance = platformPath.getEndDistance();
         final List<VehicleCar> vehicleCars = vehicleExtension.vehicleExtraData.immutableVehicleCars;
         final double totalVehicleLength = vehicleExtension.vehicleExtraData.getTotalVehicleLength();
         final double lowerBound = stopDistance - totalVehicleLength;
@@ -838,6 +917,7 @@ public class VehicleWrapper {
             }
             checkRailProgress += (reversed ? 1 : -1) * vehicleCar.getTotalLength(true, false);
         }
+        rememberDoorSides(platformPath, reversed, left, right);
         return doorDirection(left, right);
     }
 

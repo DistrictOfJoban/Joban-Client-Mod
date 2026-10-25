@@ -10,6 +10,7 @@ import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.jcm.mod.scripting.JCMScripting;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.core.util.model.ModelManagerJS;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.DoorDirectionStore;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.TextUtil;
 import org.mtr.mapping.holder.*;
@@ -31,6 +32,12 @@ public class Events {
 
             if(MinecraftClient.getInstance().getWorldMapped() == null) {
                 VehicleDataCache.clearData();
+                /* Yanyang: persist the learned per-platform door-opening sides
+                   (config/jsblock/door-directions.json) while leaving the
+                   world — the render-thread path only schedules debounced
+                   writes, this is the one synchronous flush that must not
+                   lose the session's learning. */
+                DoorDirectionStore.flush();
             }
         });
 

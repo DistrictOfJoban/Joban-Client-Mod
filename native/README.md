@@ -197,6 +197,21 @@ openable. Left/right are relative to the vehicle head (bogie-1 end), so
 neither travel direction nor reversing flips them. The call is purely
 informational — MTR still owns which doors actually open.
 
+A client only holds blocks for loaded chunks, so the predictive scan alone
+would only start answering once the next stop enters view distance — roughly
+when the train enters the platform track. JCM therefore keeps a persistent
+per-platform memory (`config/jsblock/door-directions.json`, "learn once,
+answer anywhere"): every dwell, every door opening and every successful
+approach scan stores the observed sides under the platform's id, in a frame
+canonicalized to the platform rail's intrinsic direction (so forward,
+reversed and opposite-direction trains all agree on one entry). While
+predicting, a remembered platform answers without any world scan — which is
+what makes the direction available mid-journey and across restarts. A scan
+that found no openable side is never written, so a far-away platform can't
+poison its own entry; every dwell refreshes the truth. Platforms never seen
+on this client still report `"not"` until first approached (then they are
+learned for good).
+
 ```cpp
 switch (vehicle.doorDirection()) {                       // typed (mtr::DoorDirection)
     case mtr::DoorDirection::LEFT:  rotateLeftLcd();  break;
