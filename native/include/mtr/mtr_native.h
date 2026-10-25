@@ -66,7 +66,7 @@ extern "C" {
    (vehicle_type_offset/len) and to every interchange (type_offset/len),
    exposing the MAGIC MTR Addon's route types alongside the four base modes.
    ABI 9 hosts also stop copying the snapshot per frame and reuse the arena
-   views on the host boundary (see jni_bridge.cpp).
+   views on the host boundary (see bridge.cpp).
    ABI 8 appends invoke_api, Lift snapshots and typed interchange modes.
    ABI 6/7 modules retain their original host prefix and snapshot layouts.
    ABI 7 appends resource-font metrics and baseline text rasterization to

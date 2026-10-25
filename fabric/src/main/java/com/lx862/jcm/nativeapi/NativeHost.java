@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * NativeHost — the JVM-side owner of every resource a C++ script asks for.
  *
- * <p>The bridge ({@code native/jni/jni_bridge.cpp}) never touches OpenGL or MTR
+ * <p>The bridge ({@code native/bridge/bridge.cpp}) never touches OpenGL or MTR
  * classes. While a module runs {@code mtrCreate} it only RECORDS the textures
  * and quads the script described, then calls {@link #createResources} once per
  * script instance on the render thread. This class turns that batch into real
@@ -127,7 +127,8 @@ public final class NativeHost {
                 clipX0, clipY0, clipX1, clipY1, pixels, width, height);
     }
 
-    /** JNI font callback. Pixels are packed ARGB ints, stored as BGRA bytes. */
+    /** Host font upcall (vtable/poller; the bridge's script-facing service).
+     * Pixels are packed ARGB ints, stored as BGRA bytes. */
     public int rasterizeText(byte[] utf8, int x, int y, int maxWidth,
                              int red, int green, int blue, java.nio.ByteBuffer pixels,
                              int width, int height) {
@@ -375,7 +376,7 @@ public final class NativeHost {
     }
 
     /** Zero staging-array path for both vehicle and block-content frames.
-     * The legacy byte[] overload is kept for JNI/API compatibility. */
+     * The legacy byte[] overload is kept for API compatibility. */
     public void uploadPixels(int textureHandle, int x, int y, int width, int height,
                              java.nio.ByteBuffer arena, long offset, long length) {
         if (arena == null || offset < 0 || length < 0 || offset > arena.limit()

@@ -1,5 +1,8 @@
 /**
- * jni_bridge.cpp — the C-side dispatcher behind NativeScriptManager.java.
+ * bridge.cpp — the C-side dispatcher behind NativeScriptManager.java.
+ *
+ * (Historically native/jni/jni_bridge.cpp; renamed when layout v2 removed
+ * the last JNI export — the library is JDK-free and JNI-free.)
  *
  * TWO invocation planes reach the same cores, and NEITHER one contains a
  * single line of JNI (the JNI plane was removed in layout v2):
@@ -42,7 +45,7 @@
  * thread whose command it is currently serving.
  *
  * Build (per platform):
- *   Linux   : g++ -std=c++17 -O2 -fPIC -shared -I../include jni_bridge.cpp \
+ *   Linux   : g++ -std=c++17 -O2 -fPIC -shared -I../include bridge.cpp \
  *             -o libjcm_native_bridge.so -ldl -pthread
  *   Windows : cl /LD /utf-8 /O2 /EHsc /I..\include ... → jcm_native_bridge.dll
  *   macOS   : clang++ ... → libjcm_native_bridge.dylib

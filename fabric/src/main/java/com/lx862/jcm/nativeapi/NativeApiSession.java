@@ -143,8 +143,8 @@ public final class NativeApiSession {
             reply.add("value", dispatch(parseJson(request).getAsJsonObject()));
             return JSON.toJson(reply);
         } catch (Throwable e) {
-            /* Throwable, not Exception: a StackOverflowError/OOM escaping as a
-               pending JNI exception breaks the JSON reply contract with the
+            /* Throwable, not Exception: a StackOverflowError/OOM escaping up
+               the host upcall breaks the JSON reply contract with the
                C++ caller; degrade to an error reply like every other failure. */
             Throwable cause = e instanceof InvocationTargetException ? ((InvocationTargetException)e).getTargetException() : e;
             JsonObject error = new JsonObject();

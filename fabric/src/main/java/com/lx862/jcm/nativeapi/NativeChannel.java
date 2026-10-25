@@ -477,7 +477,7 @@ public final class NativeChannel {
     /**
      * The bridge-side instance id dies with EVERY instance dispose (the
      * bridge forgets it in the same critical section — "ids never outlive
-     * their instances", jni_bridge.cpp dispose_instance_core). The Java
+     * their instances", bridge.cpp dispose_instance_core). The Java
      * cache must forget it at exactly the same moments, or the NEXT render
      * of this key ships a dead id and the bridge answers ERR_INSTANCE for
      * every remaining frame of the session — which is how a train that

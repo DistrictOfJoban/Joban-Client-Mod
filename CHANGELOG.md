@@ -5,6 +5,8 @@
 - 新增脚本 API：`vehicle.getDirectionOfDoorOpening()`（JS 与 C++ 均可调用，返回 `"not"` / `"left"` / `"right"` / `"all"`），识别车辆在当前站 / 下一站的开门方向。停靠站台时，无论车门处于未开 / 半开 / 关闭中 / 已关的哪个阶段，返回值都与车门完全打开时一致；正线运行时预测下一站的开门情况（把车辆按停车点摆放后，按 MTR `RenderVehicleHelper#canOpenDoors` 同款方块扫描逐车厢检测）；同侧任一车门可开即整侧记为可开。左右相对车头（bogie-1 端），不受行进方向 / 倒行影响。纯查询语义——不改变 MTR 实际开门行为。
 - 原生 C ABI 升至 11：车辆快照原 `_pad0` 字节升格为 `door_direction`（0..3，对应上述四个值），布局与尺寸不变；ABI 9/10 模块照常工作，`mtr::Vehicle` 新增 `doorDirection()`（枚举）与 `getDirectionOfDoorOpening()`（字符串）访问器及 `mtr::door_direction` 常量。
 - SDK 术语对齐 MTR 4：车辆快照包装类由 `mtr::Train` 更名为 `mtr::Vehicle`（与 `VehicleWrapper` / `vehicleScripts` 命名一致）；`mtr::Train` 保留为源码兼容别名，老模块无需修改即可继续编译。C ABI 与二进制布局不变。
+- CI 修复：Complete Build 的 1.18.2 矩阵项在「Build both loaders with all seven JNI bridges」步骤因 `maven.minecraftforge.net` 下载 `lwjgl-openal-3.2.2-natives-linux.jar` 读取超时而偶发失败（网络瞬时故障，与代码无关）；build / Complete Build / Release 三条流水线的 gradle 步骤现自动重试至多 3 次。
+- JNI 术语残留清理（桥自 layout v2 起已完全 JDK-free，本次仅命名与注释）：`native/jni/jni_bridge.cpp` 更名 `native/bridge/bridge.cpp`；workflow 步骤名「seven JNI bridges」→「seven native bridges」、「real JVM JNI integration」→「real JVM integration」；移除从未被 CMake 消费的 `-DJCM_JNI_INCLUDE_DIR` 旗标与配套 jni.h 注释；修正若干过时注释（jvm_test.py 文档串、CMake 与 bench/头文件及 Java 侧若干「the bridge is a JNI library」类表述）；`build.gradle` 旧桥报错不再指向仓库中不存在的 `bridge/README.md` / `repair-api/build-bridges.ps1`。二进制与行为零变化。
 
 ## 2.3.0-beta-2.yanyang.7
 

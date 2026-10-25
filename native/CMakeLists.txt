@@ -8,7 +8,7 @@ if(MSVC)
 else()
   add_compile_options(-O2)
   # Warnings (not errors) for GCC/Clang — MSVC had /W3, the POSIX side had
-  # nothing, so JNI-boundary and bounds-check regressions compiled silently.
+  # nothing, so host-boundary and bounds-check regressions compiled silently.
   add_compile_options(-Wall -Wextra)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fno-gnu-unique)
@@ -24,10 +24,11 @@ function(mtr_add_script name)
     set_target_properties(${name} PROPERTIES PREFIX "" SUFFIX ".dll")
   elseif(APPLE)
     set_target_properties(${name} PROPERTIES PREFIX "lib" SUFFIX ".dylib")
-    # Modules resolve JNI symbols against the embedding JVM at load time.
-    # CMake's Darwin MODULE create flags have historically included
-    # -undefined dynamic_lookup, but some CMAKE_SYSTEM_NAME=iOS combos drop
-    # it — make it explicit so cross builds link the same way as macOS.
+    # Modules are JDK-free since layout v2 — nothing resolves against the
+    # embedding JVM anymore. CMake's Darwin MODULE create flags have
+    # historically included -undefined dynamic_lookup, but some
+    # CMAKE_SYSTEM_NAME=iOS combos drop it — make it explicit so cross
+    # builds link the same way as macOS.
     target_link_options(${name} PRIVATE "-Wl,-undefined,dynamic_lookup")
   elseif(ANDROID)
     # 16 KB page alignment: required in Android 15's 16 KB mode and
@@ -45,7 +46,7 @@ mtr_add_script(lift_indicator examples/lift_indicator.cpp)
 # filesystem handshake (any JVM). find_package(JNI) is only a "is a JDK
 # around" signal for the JVM integration test below.
 find_package(JNI QUIET)
-mtr_add_script(jcm_native_bridge jni/jni_bridge.cpp)
+mtr_add_script(jcm_native_bridge bridge/bridge.cpp)
 target_link_libraries(jcm_native_bridge PRIVATE ${CMAKE_DL_LIBS})
 if(UNIX AND NOT APPLE AND NOT ANDROID)
   find_package(Threads REQUIRED)
@@ -82,11 +83,11 @@ if(BUILD_TESTING)
   # Java side, api re-entry through the CBQ ring — exactly the flow the
   # bridge's constructor-started thread serves on JDK 16..21. Runs on
   # every CI platform.
-  add_executable(native_ffm_test bench/native_ffm_test.cpp jni/jni_bridge.cpp)
+  add_executable(native_ffm_test bench/native_ffm_test.cpp bridge/bridge.cpp)
   target_link_libraries(native_ffm_test PRIVATE ${CMAKE_DL_LIBS} mtr_script_sdk)
   add_test(NAME native_ffm_test COMMAND native_ffm_test
       "$<TARGET_FILE:legacy_probe_6>" "$<TARGET_FILE:content_probe_1>")
-  add_executable(native_poller_test bench/native_poller_test.cpp jni/jni_bridge.cpp)
+  add_executable(native_poller_test bench/native_poller_test.cpp bridge/bridge.cpp)
   target_link_libraries(native_poller_test PRIVATE ${CMAKE_DL_LIBS} mtr_script_sdk)
   add_test(NAME native_poller_test COMMAND native_poller_test
       "$<TARGET_FILE:legacy_probe_6>" "$<TARGET_FILE:content_probe_1>")

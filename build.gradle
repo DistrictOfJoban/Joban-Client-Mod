@@ -126,8 +126,8 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
                                         "Stale native bridge(s) — these do not export the JNI-free " +
                                         "plain-C surface (${required.join(' ')}) this jar requires:\n" +
                                         bad.collect { "  ${it}" }.join("\n") +
-                                        "\nRebuild them from native/jni/jni_bridge.cpp (see bridge/README.md; " +
-                                        "repair-api/build-bridges.ps1 cross-compiles all four).")
+                                        "\nRebuild them from native/bridge/bridge.cpp (see native/README.md; " +
+                                        "the Complete Build / Release workflows compile all seven platforms).")
                         }
                         logger.lifecycle("[native-bridge] ${binaries.size()} bridge(s) expose the JNI-free plain-C surface")
                 }

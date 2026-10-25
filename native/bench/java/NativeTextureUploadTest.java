@@ -38,7 +38,7 @@ public final class NativeTextureUploadTest {
                 }
                 texture.uploadRawARGB(arena,offset,sw,sx,sy,dx,dy,w,h);
                 check(Arrays.equals(expected,((DataBufferInt)texture.bufferedImage.getRaster().getDataBuffer()).getData()),"owned ARGB data " + test);
-                // JNI arena is module owned. Reuse it BEFORE the GL queue drains.
+                // The arena is module owned. Reuse it BEFORE the GL queue drains.
                 for(int i=0;i<arena.capacity();i++)arena.put(i,(byte)0);
                 RenderSystem.drain();
                 var nativeTexture=MinecraftClient.getInstance().getTextureManager().get(texture.identifier);

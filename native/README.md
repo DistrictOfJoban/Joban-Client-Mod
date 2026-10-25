@@ -298,8 +298,9 @@ most a few times per second, never per draw call: every `Api` call is a
 JSON encode + reflection + JSON decode round-trip, and doing that per frame
 per vehicle is what used to produce a periodic GC stutter.
 
-The host does its part: JNI bindings and Java method lists are cached, the
-five arena ByteBuffers are created once per module and rewound per frame,
+The host does its part: host services travel the FFM upcall vtable or the
+poller's shared-page SVC requests (never a JVM-internal invocation path),
+the five arena ByteBuffers are created once per module and rewound per frame,
 the snapshot is marshalled by a reusable builder whose string pool and exit
 memo persist across frames, the built stop graph is cached until the
 underlying data revision changes, the bridge passes the live direct snapshot

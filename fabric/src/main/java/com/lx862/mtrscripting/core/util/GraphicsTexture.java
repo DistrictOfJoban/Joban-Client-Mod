@@ -184,7 +184,7 @@ public class GraphicsTexture implements Closeable {
         });
     }
 
-    /** Internal native-frame path. Consume the arena before the next JNI call;
+    /** Internal native-frame path. Consume the arena before the next bridge call;
      * only our owned image memory is used by the queued GPU upload. */
     @ApiInternal
     public void uploadRawARGB(ByteBuffer source, int byteOffset, int sourceStride,

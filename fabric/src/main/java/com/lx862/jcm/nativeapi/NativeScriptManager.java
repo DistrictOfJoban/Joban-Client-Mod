@@ -1008,7 +1008,7 @@ public final class NativeScriptManager {
      * NativeFrame — draw-call records + arenas read back from the
      * module. The replay step (render thread) walks the records and
      * creates the same MainRenderer.scheduleRender calls the JS
-     * pipeline issues; see native/jni_bridge.cpp for the struct
+     * pipeline issues; see native/bridge/bridge.cpp for the struct
      * layouts (they are plain C structs over this ByteBuffer).
      *
      * <p>Fields are mutable ON PURPOSE: the shared-memory transport reuses
@@ -1074,9 +1074,10 @@ public final class NativeScriptManager {
          * The C-side dispatcher lives in ONE shared library
          * (jcm_native_bridge.{dll,so,dylib}), not in each script module.
          *
-         * The bridge is a JNI library, so it must live on
-         * java.library.path (or be extracted next to the loader) — resource
-         * packs cannot System.load() from inside a zip. When it is missing
+         * The bridge is a plain shared library (JNI-free since layout v2), so
+         * it must exist as a real file on disk — java.library.path honours
+         * an explicit override, otherwise the loader extracts it — because
+         * resource packs cannot System.load() from inside a zip. When it is missing
          * we DO NOT throw: an UnsatisfiedLinkError inside a static
          * initialiser would turn a missing optional file into a
          * NoClassDefFoundError for every caller (including the resource
@@ -1116,7 +1117,7 @@ public final class NativeScriptManager {
         private static final boolean BRIDGE_AVAILABLE = loadBridge();
 
         /**
-         * Load the JNI bridge.
+         * Load the native bridge.
          *
          * <p><b>Why this is not just {@code System.loadLibrary}:</b> on a modern
          * launcher {@code java.library.path} points at the loader's own natives

@@ -42,7 +42,7 @@ import java.nio.charset.StandardCharsets;
  * </ul>
  *
  * <p>Package-private, JDK-only (no Minecraft classes), and compiled into
- * the bare-javac JNI test harness together with the rest of the channel
+ * the bare-javac JVM test harness together with the rest of the channel
  * classes: the harness's Fixture/NativeApiSession stubs let the same
  * adapters run end-to-end on every CI platform.
  */

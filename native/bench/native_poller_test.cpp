@@ -49,7 +49,7 @@
 #include <unistd.h>
 #endif
 
-/* Declared by jni_bridge.cpp (linked into this executable). */
+/* Declared by bridge.cpp (linked into this executable). */
 extern "C" {
 int32_t jcm_poller_attached(void);
 int64_t jcm_reclaimer_pending(void);

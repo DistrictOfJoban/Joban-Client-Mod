@@ -180,7 +180,7 @@ public final class NativeSnapshot {
 
     /**
      * Flattens {@code v} into {@code out}. The buffer is cleared and left
-     * FLIPPED (position 0, limit = end of blob) — hand it straight to JNI.
+     * FLIPPED (position 0, limit = end of blob) — hand it straight to the bridge.
      */
     public static ByteBuffer build(ByteBuffer out, VehicleWrapper v) {
         return build(out, v, 8, new Builder());

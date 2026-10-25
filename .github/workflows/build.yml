@@ -34,11 +34,31 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
       - name: Setup Forge files
-        run: ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}"
+        run: |
+          # Forge/Maven read-timeouts are transient — retry before failing the matrix leg.
+          try() {
+            local n=0
+            until "$@"; do
+              n=$((n+1))
+              if [ "$n" -ge 3 ]; then return 1; fi
+              echo "::warning::gradle attempt ${n} failed; retrying in 30s"
+              sleep 30
+            done
+          }
+          try ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}"
       - name: Build with Gradle
         run: |
+          try() {
+            local n=0
+            until "$@"; do
+              n=$((n+1))
+              if [ "$n" -ge 3 ]; then return 1; fi
+              echo "::warning::gradle attempt ${n} failed; retrying in 30s"
+              sleep 30
+            done
+          }
           NOW=$(date '+%Y-%m-%d-%H.%M')
-          ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Partifact_date=".artifact_$NOW"
+          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Partifact_date=".artifact_$NOW"
       - name: Stamp CI-jar warning into the artifact
         run: |
           cat > build/README-IMPORT-WARNING.txt <<'EOF'

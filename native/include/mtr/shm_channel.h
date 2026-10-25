@@ -177,7 +177,7 @@ extern "C" {
    service wait posting another service, which a deeper Java proxy may
    nest again) can publish while an outer slot is still unanswered — the
    single-slot design deadlocked exactly there. The poller is the only
-   requester and takes slots by nesting depth (see jni_bridge.cpp); the
+   requester and takes slots by nesting depth (see bridge.cpp); the
    Java side scans every slot and answers pending requests with a
    per-slot exactly-once claim. The 32 argument words carry the
    vtable-shaped arguments of the service: every pointer as a raw

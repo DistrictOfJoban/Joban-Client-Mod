@@ -1,4 +1,5 @@
-"""Production manager/API bridge through actual JNI; Minecraft services are fixtures."""
+"""Production nativeapi bridge exercised against a REAL JVM (both invocation
+planes are JNI-free since layout v2); Minecraft services are fixtures."""
 import argparse, hashlib, os, platform, re, shutil, subprocess, urllib.request
 from content_fixtures import STUBS as CONTENT_STUBS
 from pathlib import Path
@@ -66,7 +67,14 @@ def main():
  p=argparse.ArgumentParser();p.add_argument('--build',required=True,type=Path);a=p.parse_args()
  repo=Path(__file__).resolve().parents[2]; build=a.build.resolve(); work=build/'api-jvm-test'; work.mkdir(exist_ok=True,parents=True)
  gson=work/'gson.jar'
- if not gson.exists(): urllib.request.urlretrieve('https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar',gson)
+ if not gson.exists():
+  for attempt in range(3):
+   try:
+    urllib.request.urlretrieve('https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar',gson)
+    break
+   except Exception as e:
+    if attempt==2: raise
+    print('gson download failed (%s), retrying...'%e)
  assert hashlib.sha256(gson.read_bytes()).hexdigest()=='57928d6e5a6edeb2abd3770a8f95ba44dce45f3b23b7a9dc2b309c581552a78b'
  sources=[]
  STUBS.update(CONTENT_STUBS)

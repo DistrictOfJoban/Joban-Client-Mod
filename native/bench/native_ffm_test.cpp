@@ -3,8 +3,9 @@
  * plane (the jcm_* plain-C exports + the JcmFfmHostVTable upcalls).
  *
  * The bridge translation unit is linked INTO this executable, but the JVM
- * is not: JNI_OnLoad never runs, so g_vm stays null and every legacy JNI
- * path is inert. The fake vtable installed via jcm_ffm_init stands in for
+ * is not: nothing in the bridge ever touches a JVM (JDK-free since
+ * layout v2), so without the vtable every host-boundary path is inert.
+ * The fake vtable installed via jcm_ffm_init stands in for
  * the java.lang.foreign upcall stubs PanamaFfmChannel.java would create —
  * which makes this the exact C contract the real Java side relies on:
  *
@@ -31,7 +32,7 @@
 #include <string>
 #include <vector>
 
-/* Declared by jni_bridge.cpp (linked into this executable). */
+/* Declared by bridge.cpp (linked into this executable). */
 extern "C" {
 int32_t jcm_ffm_init(const JcmFfmHostVTable*, int32_t);
 int64_t jcm_module_open(const char*, int32_t);

@@ -51,7 +51,7 @@ jobs:
             java-arch: aarch64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
           # Cross builds: the produced image cannot run on the build host,
-          # so the JVM/JNI ctest suite is skipped there (source-level checks
+          # so the JVM ctest suite is skipped there (source-level checks
           # still run on the four native-platform jobs). Compilation itself
           # still builds every probe and static-assert target.
           - os: ubuntu-latest
@@ -83,26 +83,23 @@ jobs:
           set -euo pipefail
           if [ "${{ matrix.cross }}" = "android" ]; then
             # Cross-compile against the preinstalled NDK (arm64-v8a,
-            # Android 5.0+ / API 21). jni.h comes from the HOST JDK — the
-            # NDK's own jni.h is a divergent variant (no JNI_VERSION_1_8,
-            # different C++ AttachCurrentThread signature).
+            # Android 5.0+ / API 21). The bridge is JDK-free, so nothing
+            # comes from a JVM — no jni.h anywhere.
             NDK=$(ls -d /usr/local/lib/android/sdk/ndk/* | sort -V | tail -1)
             echo "Using NDK: $NDK"
             cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release \
               -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
-              -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 \
-              -DJCM_JNI_INCLUDE_DIR="$JAVA_HOME/include" ${{ matrix.cmake-arch }}
+              -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 ${{ matrix.cmake-arch }}
           elif [ "${{ matrix.cross }}" = "ios" ]; then
             # Cross-compile a Mach-O arm64 dylib against the iPhoneOS SDK.
-            # jni.h comes from the host JDK (the JNI interface is identical);
-            # side-loaders re-sign the image, so no signing identity here.
-            cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release \
-              -DJCM_JNI_INCLUDE_DIR="$JAVA_HOME/include" ${{ matrix.cmake-arch }}
+            # The bridge is JDK-free; side-loaders re-sign the image, so no
+            # signing identity here.
+            cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake-arch }}
           else
             cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake-arch }}
           fi
           cmake --build native/build --config Release --parallel 4
-      - name: Verify scripts, ABI layout and real JVM JNI integration
+      - name: Verify scripts, ABI layout and real JVM integration
         if: matrix.cross == ''
         run: ctest --test-dir native/build -C Release --output-on-failure
       - name: Collect bridge and generic example libraries
@@ -151,11 +148,21 @@ jobs:
           found=$(find native-dist/bridges -type f | wc -l | tr -d ' ')
           test "$found" = 7
           echo "All 7 platform bridges present: $(find native-dist/bridges -type f -printf '%p\n' | sort | xargs -n1 basename | tr '\n' ' ')"
-      - name: Build both loaders with all seven JNI bridges
+      - name: Build both loaders with all seven native bridges
         run: |
           chmod +x ./gradlew
-          ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}" --console=plain
-          ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="${{ inputs.mod-version }}" -Pnative_bridge_dir=native-dist/bridges --console=plain
+          # Forge/Maven read-timeouts are transient — retry before failing the matrix leg.
+          try() {
+            local n=0
+            until "$@"; do
+              n=$((n+1))
+              if [ "$n" -ge 3 ]; then return 1; fi
+              echo "::warning::gradle attempt ${n} failed; retrying in 30s"
+              sleep 30
+            done
+          }
+          try ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}" --console=plain
+          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="${{ inputs.mod-version }}" -Pnative_bridge_dir=native-dist/bridges --console=plain
       - name: Audit documented Java API declarations
         run: |
           find .gradle ~/.gradle -name '*4.0.5*.jar' -type f > native/build-api-jars.txt
