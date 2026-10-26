@@ -12,6 +12,8 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
 - **PIDS Scripting - The newly added "Rectangle" has been renamed to "Rect"**
   - This is to avoid name conflict of existing scripts using  AWT's Rectangle.
 - Add `Resources.ANTE_FLAG` so scripts do not error out, though it is set to false.
+- Add basic compat for `SoundHelper`/`TickableSound` in ANTE.
+- Added the dummy `Resources.mgr()` alias that previously existed in NTE.
 - Add `Resources.id(id: Identifier, suffix: String)` to obtain a new identifier with `suffix` being appended to the path.
   - Can be used with a "base path" via `idr()`, then resolving it in runtime with this function.
 - If you invoke a Java method with an "undefined" as one of its parameter, it will show a very long `Can't find method...` error, since it cannot match the method signature.

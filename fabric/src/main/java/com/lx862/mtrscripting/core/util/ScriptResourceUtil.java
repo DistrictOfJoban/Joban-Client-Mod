@@ -112,6 +112,11 @@ public class ScriptResourceUtil {
     }
 
     @Deprecated
+    public static Object mgr() {
+        return null;
+    }
+
+    @Deprecated
     public static Identifier identifier(String textForm) {
         return id(textForm);
     }
