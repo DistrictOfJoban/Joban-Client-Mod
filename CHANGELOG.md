@@ -22,6 +22,8 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
 - Fix `ConcurrentModificationException` when reading resources during Runtime Stage in previous beta release.
 
 ## Translations
+Thanks to the following people who have contributed translations for this release! (No particular order):
+- Paaaaddy (ga_ie)
 
 Translations for JCM is now hosted on [ZiYue's Weblate](https://weblate.ziyuesinicization.site/projects/joban-client-mod/)
 
