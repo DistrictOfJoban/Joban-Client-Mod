@@ -75,6 +75,12 @@ if(BUILD_TESTING)
   if(JNI_FOUND AND Python3_FOUND)
     add_test(NAME native_jvm_integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/bench/jvm_test.py --build ${CMAKE_CURRENT_BINARY_DIR})
   endif()
+  # Flush-time semantics regression for the scripted render replay path
+  # (the jsblock:pids_1a oversized-text bug class). Pure JVM — only javac
+  # and java are needed, no JNI headers, no native bridge.
+  if(Python3_FOUND)
+    add_test(NAME scripted_render_semantics COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/bench/scripted_render_test.py --build ${CMAKE_CURRENT_BINARY_DIR})
+  endif()
   # Headless regression for the JNI-FREE planes. The bridge TU is linked
   # into the executables with NO JVM anywhere: a fake vtable stands in for
   # the java.lang.foreign upcall stubs (native_ffm_test), and

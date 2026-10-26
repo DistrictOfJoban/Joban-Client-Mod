@@ -42,9 +42,10 @@ public class RenderEyeCandyMixin {
      * reachable (the classic WeakHashMap self-reference leak).
      *
      * <p>The cached transform is used directly as the replay root:
-     * {@code ScriptRenderManager.invoke} isolates per-draw-call additions
-     * with its mark/truncate discipline, so a shared base needs no
-     * per-frame {@code copy()}.
+     * {@code ScriptRenderManager.invoke} replays every draw call against
+     * its own pooled snapshot (see {@link com.lx862.mtrscripting.core.util.render.TransformCapturePool}),
+     * so a shared base is neither mutated nor cross-contaminated and needs
+     * no per-frame {@code copy()}.
      */
     private static final class TransformCache {
         final StoredMatrixTransformations transform = new StoredMatrixTransformations();
@@ -118,9 +119,9 @@ public class RenderEyeCandyMixin {
         String nativeId=MtrScriptingResourceManager.eyecandy.getScriptEntryId(eyecandyId);
         if(com.lx862.jcm.nativeapi.NativeScriptManager.isLoaded(nativeId)) {
             Direction facing=IBlock.getStatePropertySafe(world,blockEntity.getPos2(),BlockEyeCandy.FACING);
-            /* Cached base (rebuilt only on NBT change): invoke isolates
-               per-draw-call additions with mark/truncate, so the cached
-               instance serves directly as the replay root. */
+            /* Cached base (rebuilt only on NBT change): invoke replays every
+               draw call against pooled snapshots seeded from this base, so
+               the cached instance serves directly as the replay root. */
             StoredMatrixTransformations transforms=transformOf(blockEntity, facing);
             com.lx862.jcm.nativeapi.NativeContentDriver.eyecandy(nativeId,blockEntity,world,transforms,facing,light);
             if(MtrScriptingResourceManager.eyecandy.isScriptControlledRendering(eyecandyId)) ci.cancel();

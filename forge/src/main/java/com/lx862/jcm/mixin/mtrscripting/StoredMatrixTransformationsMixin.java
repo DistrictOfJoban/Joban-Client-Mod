@@ -12,11 +12,17 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.function.Consumer;
 
 /**
- * Exposes mark/truncate on MTR's {@link StoredMatrixTransformations} so the
- * scripting replay path can isolate per-draw-call additions without the
- * per-call {@code copy()} (new object + new ObjectArrayList + element copy
- * per draw call per car per frame — the single largest steady allocation
- * multiplier in the scripted render path).
+ * Exposes list surgery on MTR's {@link StoredMatrixTransformations}: the
+ * scripting replay path ({@code TransformCapturePool}, the eyecandy
+ * transform cache, pooled native draw calls) clears and re-seeds recycled
+ * holders in place instead of paying the per-call {@code copy()} (new
+ * object + new ObjectArrayList + element copy per draw call per car per
+ * frame — the single largest steady allocation multiplier in the scripted
+ * render path). {@code jcm$mark}/{@code jcm$truncate} are kept for addons
+ * and the regression test; the replay path itself no longer truncates a
+ * shared list (the deferred render callbacks read it at flush time — see
+ * TransformCapturePool's javadoc for the yanyang.4 regression that taught
+ * us this).
  *
  * <p>Applied to every StoredMatrixTransformations, including instances MTR
  * itself creates; the added methods are additive and change no behaviour.

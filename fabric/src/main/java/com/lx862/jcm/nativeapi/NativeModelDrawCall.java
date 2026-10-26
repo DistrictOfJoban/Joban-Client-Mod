@@ -66,7 +66,8 @@ public final class NativeModelDrawCall extends RenderDrawCall<NativeModelDrawCal
     private static final NativePose[] NO_POSES = new NativePose[0];
 
     /** One persistent transform holder per draw call; cleared and re-filled
-     *  in place each frame (mark/truncate mixin on MTR's class). */
+     *  in place each frame (the jcm$clearTransformations accessor the
+     *  StoredMatrixTransformations mixin adds to MTR's class). */
     private StoredMatrixTransformations pooledTransformations;
 
     private boolean inPool;

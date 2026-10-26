@@ -15,10 +15,14 @@ import org.mtr.mod.render.StoredMatrixTransformations;
  * copy per draw call per car per frame, which is exactly the steady young-gen
  * churn that surfaces as periodic GC stutter.
  *
- * <p>The mark/truncate pair below restores the same isolation with zero
- * allocation: remember the list length, let the draw call append what it
- * needs, cut back to the mark. Only usable on the render thread (the same
- * discipline the copy-based path already required).
+ * <p>The replay path now hands each draw call a recycled snapshot from
+ * {@code TransformCapturePool} instead ({@code jcm$clearTransformations} +
+ * re-seed), which keeps zero steady-state allocation <b>and</b> keeps each
+ * call's additions alive until the deferred render callback reads them at
+ * flush time — a shared list cut back with mark/truncate lost them the
+ * instant {@code run()} returned (the {@code jsblock:pids_1a} oversized-text
+ * regression). {@code jcm$mark}/{@code jcm$truncate} remain available for
+ * addons and the regression test.
  */
 public interface NativeTransformScope {
 

@@ -75,8 +75,9 @@ public final class NativeContentDriver {
                 b->NativeContentSnapshot.pids(b,wrapper),()->new PIDSScriptContext(script));
         for(AbstractScriptContext context:state.contexts.values()) {
             PIDSScriptContext ctx=(PIDSScriptContext)context;
-            /* No transform.copy(): invoke isolates per-draw-call additions
-               with mark/truncate — one transform serves every context. */
+            /* No transform.copy(): invoke replays every draw call against
+               its own pooled snapshot seeded from this transform — one
+               shared (read-only) transform serves every context. */
             ctx.getRenderManager().invoke(world,transform,facing,light);
             ctx.getSoundManager().invoke(world,wrapper.blockPos());
         }

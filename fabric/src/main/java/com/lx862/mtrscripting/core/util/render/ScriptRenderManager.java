@@ -1,6 +1,5 @@
 package com.lx862.mtrscripting.core.util.render;
 
-import com.lx862.jcm.nativeapi.NativeTransformScope;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.Matrices;
@@ -52,14 +51,17 @@ public class ScriptRenderManager {
     /**
      * Replays the captured draw calls.
      *
-     * <p>Zero steady-state allocation: the previous implementation copied the
-     * draw-call list AND gave every draw call its own
-     * {@code storedMatrixTransformations.copy()} so per-call additions could
-     * not leak into the next call — N list copies plus N matrix-holder copies
-     * (each a fresh ObjectArrayList) per car per frame, which is exactly the
-     * periodic-GC-stutter allocation pattern. The copy-free replacement
-     * marks the transform list length, lets each draw call append what it
-     * needs, and truncates back to the mark, restoring identical isolation.
+     * <p>Every draw call replays against its own transform snapshot from
+     * {@link TransformCapturePool}: {@code run()} may append consumers to
+     * the holder it is given (PIDS {@code BASE_SCALE}+position, z-order
+     * offsets, {@code .matrices()} merges), and the deferred render callback
+     * it schedules reads that consumer list at <b>flush time</b> — long
+     * after this method returns — so the additions must survive until then.
+     * A shared holder with mark/truncate (the yanyang.4 rewrite) discarded
+     * them the moment {@code run()} returned, which broke every scripted
+     * PIDS text (see the pool's javadoc). The pool keeps the zero
+     * steady-state allocation of that rewrite while restoring upstream
+     * correctness; the shared base is only ever read, never mutated.
      *
      * <p>Draw calls queued DURING replay (re-entrant draw) are not executed
      * in this pass, matching the old snapshot-copy semantics exactly.
@@ -74,15 +76,8 @@ public class ScriptRenderManager {
            replay both hold this monitor only for microseconds. */
         final int count = this.drawCalls.size();
         if (count == 0) return;
-        final NativeTransformScope scope = (NativeTransformScope) (Object) storedMatrixTransformations;
-        final int mark = scope.jcm$mark();
-        try {
-            for (int i = 0; i < count; i++) {
-                this.drawCalls.get(i).run(world, storedMatrixTransformations, facing, light);
-                scope.jcm$truncate(mark);
-            }
-        } finally {
-            scope.jcm$truncate(mark);
+        for (int i = 0; i < count; i++) {
+            this.drawCalls.get(i).run(world, TransformCapturePool.acquire(storedMatrixTransformations), facing, light);
         }
     }
 
