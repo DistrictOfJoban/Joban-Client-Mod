@@ -2,8 +2,6 @@ package com.lx862.mtrscripting.core.util.ante;
 
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.core.util.sound.TickableSoundInstanceJS;
-import net.minecraft.client.sound.Sound;
-import net.minecraft.client.sound.SoundInstance;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.SoundCategory;
 
@@ -34,7 +32,8 @@ public class ANTETickableSoundJS {
         this.tickableSoundInstanceJS.setLoopDelay(tick);
     }
 
-    public void setAttenuation(SoundInstance.AttenuationType type) {
+    public void setAttenuation(Object type) {
+        throw new IllegalArgumentException("Not implemented.");
     }
 
     public void play() {
@@ -53,8 +52,8 @@ public class ANTETickableSoundJS {
         this.tickableSoundInstanceJS.setRelative(relative);
     }
 
-    public Sound getSound() {
-        return this.tickableSoundInstanceJS.getSound();
+    public Object getSound() {
+        throw new IllegalArgumentException("Not implemented.");
     }
 
     public Identifier getLocation() {
@@ -77,8 +76,8 @@ public class ANTETickableSoundJS {
         return this.tickableSoundInstanceJS.getPitch2();
     }
 
-    public SoundInstance.AttenuationType getAttenuation() {
-        return this.tickableSoundInstanceJS.getAttenuationType();
+    public Object getAttenuation() {
+        throw new IllegalArgumentException("Not implemented.");
     }
 
     public int getDelay() {
