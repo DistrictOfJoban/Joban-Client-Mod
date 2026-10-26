@@ -10,6 +10,8 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
 
 ### Scripting
 - Add `Resources.ANTE_FLAG` so scripts do not error out, though it is set to false.
+- Add `Resources.id(id: Identifier, suffix: String)` to obtain a new identifier with `suffix` being appended to the path.
+  - Can be used with a "base path" via `idr()`, then resolving it in runtime with this function. 
 - Fix `ConcurrentModificationException` when reading resources during Runtime Stage in previous beta release.
 
 ## Translations

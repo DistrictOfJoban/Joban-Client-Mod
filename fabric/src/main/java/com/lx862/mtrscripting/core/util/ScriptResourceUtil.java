@@ -46,7 +46,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.text.AttributedString;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
@@ -96,7 +95,7 @@ public class ScriptResourceUtil {
         if (pathOrIdentifier instanceof Identifier) {
             identifier = (Identifier) pathOrIdentifier;
         } else {
-            identifier = idRelative(pathOrIdentifier.toString());
+            identifier = idr(pathOrIdentifier.toString());
         }
         DataReaderJS scriptFile = read(identifier);
         if(scriptFile == null) throw new IllegalStateException(String.format("Failed to include script %s:%s as it is not found.", identifier.getNamespace(), identifier.getPath()));
@@ -119,6 +118,10 @@ public class ScriptResourceUtil {
 
     public static Identifier id(String textForm) {
         return new Identifier(textForm);
+    }
+
+    public static Identifier id(Identifier id, String suffix) {
+        return new Identifier(id.getNamespace(), id.getPath() + suffix);
     }
 
     @Deprecated
