@@ -11,7 +11,10 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
 ### Scripting
 - Add `Resources.ANTE_FLAG` so scripts do not error out, though it is set to false.
 - Add `Resources.id(id: Identifier, suffix: String)` to obtain a new identifier with `suffix` being appended to the path.
-  - Can be used with a "base path" via `idr()`, then resolving it in runtime with this function. 
+  - Can be used with a "base path" via `idr()`, then resolving it in runtime with this function.
+- If you invoke a Java method with an "undefined" as one of its parameter, it will show a very long `Can't find method...` error, since it cannot match the method signature.
+  - The Rhino Undefined class will now be replaced with `UNDEFINED` in the error message, instead of the full class name.
+  - An extra warning will be shown in console, notifying that you have passed an undefined object as one of its param.
 - Fix `ConcurrentModificationException` when reading resources during Runtime Stage in previous beta release.
 
 ## Translations

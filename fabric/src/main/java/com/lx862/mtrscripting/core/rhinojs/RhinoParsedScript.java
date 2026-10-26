@@ -135,7 +135,7 @@ public class RhinoParsedScript extends ParsedScript {
                 scriptManager.getLogger().error("[MTR Scripting via JCM {}] Error executing JS Script {}!", MTRScriptingMod.VERSION, displayName);
                 if(e instanceof RhinoException) {
                     RhinoException re = ((RhinoException)e);
-                    scriptManager.getLogger().error(re.getMessage());
+                    scriptManager.getLogger().error(cleanRhinoExceptionMessage(re.getMessage()));
                     for(String ste : re.getScriptStackTrace().split("\n")) {
                         scriptManager.getLogger().error("{}", ste);
                     }
@@ -143,8 +143,14 @@ public class RhinoParsedScript extends ParsedScript {
                     scriptManager.getLogger().error("", e);
                 }
 
+                if(likelyDueToUndefinedParam(e.getMessage())) {
+                    scriptManager.getLogger().warn("[MTR Scripting via JCM {}] [WARN] One or more parameter is UNDEFINED, is your variable assigned?", MTRScriptingMod.VERSION);
+                }
+
+                Exception capturedException = new Exception(cleanRhinoExceptionMessage(e.getMessage()), e);
+
                 lastFailedTime = System.currentTimeMillis();
-                capturedScriptException = e;
+                capturedScriptException = capturedException;
                 if(errorCallback != null) errorCallback.run();
             } finally {
                 scriptInstance.endTrackExecuteTime();
@@ -188,5 +194,17 @@ public class RhinoParsedScript extends ParsedScript {
 
     public static void clearScriptCache() {
         compiledScriptCache.clear();
+    }
+
+    private static String cleanRhinoExceptionMessage(String s) {
+        String errorMessage = s;
+        if(likelyDueToUndefinedParam(s)) {
+            errorMessage = errorMessage.replace("com.lx862.mtrscripting.lib.org.mozilla.javascript.Undefined", "UNDEFINED");
+        }
+        return errorMessage;
+    }
+
+    private static boolean likelyDueToUndefinedParam(String s) {
+        return (s.startsWith("Can't find method") || s.startsWith("Java constructor for")) && s.contains("org.mozilla.javascript.Undefined");
     }
 }
