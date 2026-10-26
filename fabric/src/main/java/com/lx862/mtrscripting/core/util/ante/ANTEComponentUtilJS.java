@@ -5,7 +5,7 @@ import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 /**
  * Backward compatibility with ANTE's ComponentUtil
  */
-public class ComponentUtilJS {
+public class ANTEComponentUtilJS {
     public static VanillaTextWrapper literal(String str) {
         return VanillaTextWrapper.literal(str);
     }

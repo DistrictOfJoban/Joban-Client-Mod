@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Collection;
 
-public class GlobalRegister {
+public class ANTEGlobalRegisterJS {
 
     private static final Map<String, Object> register = new HashMap<>();
 

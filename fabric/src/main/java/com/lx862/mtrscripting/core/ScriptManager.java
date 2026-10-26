@@ -7,8 +7,10 @@ import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.integration.MinecraftParticleData;
 import com.lx862.mtrscripting.core.util.*;
-import com.lx862.mtrscripting.core.util.ante.ComponentUtilJS;
-import com.lx862.mtrscripting.core.util.ante.GlobalRegister;
+import com.lx862.mtrscripting.core.util.ante.ANTEComponentUtilJS;
+import com.lx862.mtrscripting.core.util.ante.ANTEGlobalRegisterJS;
+import com.lx862.mtrscripting.core.util.ante.ANTESoundHelperJS;
+import com.lx862.mtrscripting.core.util.ante.ANTETickableSoundJS;
 import com.lx862.mtrscripting.core.util.model.DynamicModelHolderJS;
 import com.lx862.mtrscripting.core.util.model.ModelManagerJS;
 import com.lx862.mtrscripting.core.util.model.RawMeshBuilderJS;
@@ -134,8 +136,10 @@ public class ScriptManager {
             parsedScript.exposeClass("DynamicModelHolder", DynamicModelHolderJS.class);
 
             /* ANTE */
-            parsedScript.exposeClass("GlobalRegister", GlobalRegister.class);
-            parsedScript.exposeClass("ComponentUtil", ComponentUtilJS.class);
+            parsedScript.exposeClass("SoundHelper", ANTESoundHelperJS.class);
+            parsedScript.exposeClass("TickableSound", ANTETickableSoundJS.class);
+            parsedScript.exposeClass("GlobalRegister", ANTEGlobalRegisterJS.class);
+            parsedScript.exposeClass("ComponentUtil", ANTEComponentUtilJS.class);
             parsedScript.exposeClassMethod("asJavaArray", JavaUtilJS.class.getMethod("toArray", List.class, Class.class));
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);

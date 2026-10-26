@@ -17,9 +17,16 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension {
         super(sound, category);
     }
 
+    @ApiInternal
+    public static TickableSoundInstanceJS create(Identifier soundId, SoundCategory category) {
+        return new TickableSoundInstanceJS(SoundHelper.createSoundEvent(soundId), category);
+    }
+
     public static TickableSoundInstanceJS create(Identifier soundId, String category) {
         return new TickableSoundInstanceJS(soundId, category);
     }
+
+    // TODO: Getters
 
     public TickableSoundInstanceJS setSoundVolume(float f) {
         setVolume(f);
