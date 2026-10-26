@@ -112,6 +112,7 @@ public class ScriptResourceUtil {
         return null;
     }
 
+    @Deprecated
     public static Identifier identifier(String textForm) {
         return id(textForm);
     }
@@ -120,6 +121,7 @@ public class ScriptResourceUtil {
         return new Identifier(textForm);
     }
 
+    @Deprecated
     public static Identifier idRelative(String textForm) {
         return idr(textForm);
     }
