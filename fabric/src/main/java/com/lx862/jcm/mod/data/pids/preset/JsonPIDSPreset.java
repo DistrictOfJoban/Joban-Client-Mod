@@ -46,7 +46,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private final boolean[] rowHidden;
 
     public JsonPIDSPreset(String id, @Nullable String name, Identifier thumbnail, List<String> blacklist, Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, boolean hidePlatform, int textColor) {
-        super(id, name, thumbnail, blacklist, builtin);
+        super(id, name, thumbnail, blacklist, false, builtin);
         this.background = background;
         this.showClock = showClock;
         this.showWeather = showWeather;

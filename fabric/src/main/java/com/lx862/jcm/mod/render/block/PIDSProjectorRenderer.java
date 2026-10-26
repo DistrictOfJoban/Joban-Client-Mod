@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.render.block;
 
 import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.PIDSProjectorBlockEntity;
+import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.JCMUtil;
@@ -75,12 +76,19 @@ public class PIDSProjectorRenderer extends PIDSRenderer<PIDSProjectorBlockEntity
 
     @Override
     public boolean rendersOutsideBoundingBox2(PIDSProjectorBlockEntity blockEntity) {
-        // Most other PIDS have a known size which usually only ranges to ~2 blocks, PIDS Projector is an exception, devs can create whatever they want
-        return true;
+        if(blockEntity.getScale() >= 4) return true;
+        if(blockEntity.getOffsetX() >= 4) return true;
+        if(blockEntity.getOffsetY() >= 4) return true;
+        if(blockEntity.getOffsetZ() >= 4) return true;
+        PIDSPresetBase pidsPreset = PIDSManager.getPreset(blockEntity.getPresetId());
+        if(pidsPreset != null && pidsPreset.outOfBoundAllowed()) return true;
+        return super.rendersOutsideBoundingBox2(blockEntity);
     }
 
     @Override
     public boolean isInRenderDistance(PIDSProjectorBlockEntity blockEntity, Vector3d position) {
-        return true;
+        PIDSPresetBase pidsPreset = PIDSManager.getPreset(blockEntity.getPresetId());
+        if(pidsPreset != null && pidsPreset.outOfBoundAllowed()) return true;
+        return super.isInRenderDistance(blockEntity, position);
     }
 }

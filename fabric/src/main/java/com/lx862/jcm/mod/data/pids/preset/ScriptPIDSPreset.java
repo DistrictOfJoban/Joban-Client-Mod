@@ -17,6 +17,7 @@ import com.lx862.mtrscripting.core.primitive.ScriptContent;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.core.primitive.ScriptInstance;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.mod.util.JsonUtil;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -35,15 +36,16 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     private static final Identifier DEFAULT_THUMBNAIL = Constants.id("textures/gui/pids_preview_js.png");
     public final ParsedScript parsedScripts;
 
-    public ScriptPIDSPreset(String id, @Nullable String name, Identifier thumbnail, List<String> blacklist, boolean builtin, ParsedScript parsedScripts) {
-        super(id, name, thumbnail, blacklist, builtin);
+    private ScriptPIDSPreset(String id, @Nullable String name, Identifier thumbnail, List<String> blacklist, boolean outOfBound, boolean builtin, ParsedScript parsedScripts) {
+        super(id, name, thumbnail, blacklist, outOfBound, builtin);
         this.parsedScripts = parsedScripts;
     }
 
     public static ScriptPIDSPreset parse(JsonObject rootJsonObject) throws Exception {
         final String id = rootJsonObject.get("id").getAsString();
         final String name = rootJsonObject.has("name") ? rootJsonObject.get("name").getAsString() : null;
-        final boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
+        final boolean builtin = JsonUtil.getBoolean("builtin", false, rootJsonObject);
+        final boolean outOfBound = JsonUtil.getBoolean("outOfBound", false, rootJsonObject);
         final Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : DEFAULT_THUMBNAIL;
         List<String> blackList = new ArrayList<>();
         if(rootJsonObject.has("blacklist")) {
@@ -89,7 +91,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         ParsedScript.Configuration scriptConfiguration = ParsedScript.Configuration.create(scripts, scriptLang, scriptRateLimit);
         try {
             ParsedScript script = scripts.isEmpty() ? null : JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scriptConfiguration, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
-            return script == null ? null : new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, script);
+            return script == null ? null : new ScriptPIDSPreset(id, name, thumbnail, blackList, outOfBound, builtin, script);
         } catch (Exception e) {
             logError("parsing PIDS script (" + id + ")", e);
             return null;
