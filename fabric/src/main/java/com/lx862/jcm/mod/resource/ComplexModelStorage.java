@@ -26,10 +26,19 @@ public class ComplexModelStorage {
 
     public static void beginReload() {
         modelToLoad.forEach(id -> {
+            /* Yanyang: close the previous GL model before replacing it —
+               put() alone leaked its buffers on every reload. */
+            OptimizedModelWrapper previous = models.get(id);
+            if (previous != null) {
+                ((OptimizedModelWrapperAccessor)(Object)previous).getOptimizedModel().close();
+            }
             RawModelJS rawModelJS = ModelManagerJS.loadModel(id);
             ModelJS modelJS = ModelJS.uploadRawModel(rawModelJS);
             models.put(id, modelJS.getUnderlyingModel());
         });
+        /* Yanyang: the request list survives reset() otherwise — stale ids
+           were re-uploaded forever. beginReload consumed them. */
+        modelToLoad.clear();
     }
 
     public static void reset() {
@@ -37,5 +46,6 @@ public class ComplexModelStorage {
             ((OptimizedModelWrapperAccessor)(Object)e).getOptimizedModel().close();
         });
         models.clear();
+        modelToLoad.clear();
     }
 }
