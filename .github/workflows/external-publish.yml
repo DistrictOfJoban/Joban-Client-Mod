@@ -244,7 +244,11 @@ jobs:
               fapi = get(f"{MR}/project/fabric-api")
           except Exception:
               fapi = None
-          print(f"deps: MTR -> {mtr['id']} {mtr['title']} | fabric-api -> {fapi and fapi['id']}")
+          try:
+              jcm = get(f"{MR}/project/jcm")
+          except Exception:
+              jcm = None
+          print(f"deps: MTR -> {mtr['id']} {mtr['title']} | fabric-api -> {fapi and fapi['id']} | jcm -> {jcm and jcm['id']}")
 
           proj = get(f"{MR}/project/{PROJECT}")
           print(f"Modrinth project: {proj['title']} (id {proj['id']}, slug {proj['slug']}, status {proj.get('status')})")
@@ -271,7 +275,11 @@ jobs:
               deps = [{"project_id": mtr["id"], "dependency_type": "required"}]
               if loader == "fabric" and fapi:
                   deps.append({"project_id": fapi["id"], "dependency_type": "required"})
-              vnum = f"{ver}+{mc}-{loader}"
+              if jcm:
+                  deps.append({"project_id": jcm["id"], "dependency_type": "incompatible"})
+              # Modrinth caps version_number length; "yanyang.N+<mc>-<loader>"
+              # is the format all previously uploaded versions already use.
+              vnum = ".".join(ver.split(".")[-2:]) + f"+{mc}-{loader}"
               data = json.dumps({
                   "name": f"JCM {ver} ({loader.capitalize()} {mc})",
                   "version_number": vnum,
