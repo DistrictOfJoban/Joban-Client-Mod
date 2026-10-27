@@ -255,7 +255,7 @@ jobs:
               b = "----jcmypub" + uuid.uuid4().hex
               out = io.BytesIO()
               out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"data\"\r\n\r\n{data_json}\r\n".encode())
-              out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"files\"; filename=\"{filename}\"\r\nContent-Type: application/java-archive\r\n\r\n".encode())
+              out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"{filename}\"; filename=\"{filename}\"\r\nContent-Type: application/java-archive\r\n\r\n".encode())
               out.write(blob)
               out.write(f"\r\n--{b}--\r\n".encode())
               return out.getvalue(), f"multipart/form-data; boundary={b}"
@@ -282,6 +282,7 @@ jobs:
                   "featured": loader == "fabric" and mc == "1.20.4",
                   "dependencies": deps,
                   "project_id": PROJECT,
+                  "file_parts": [fn],
               })
               blob = open(f"jars/{fn}", "rb").read()
               payload, ctype = multipart(data, fn, blob)
