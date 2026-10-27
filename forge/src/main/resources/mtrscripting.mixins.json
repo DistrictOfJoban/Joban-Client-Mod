@@ -3,37 +3,34 @@
   "package": "com.lx862.jcm.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "mtrscripting.InitAccessorMixin",
     "mtrscripting.BlockEntityEyecandyMixin",
+    "mtrscripting.InitAccessorMixin",
     "mtrscripting.MainAccessorMixin",
     "mtrscripting.SidingAccessorMixin"
   ],
   "client": [
+    "mtrpatch.WorldRendererAccessor",
     "mtrscripting.BlockEyecandyMixin",
     "mtrscripting.EyecandyScreenMixin",
-    "mtrscripting.MainRendererMixin",
-    "mtrscripting.RenderEyeCandyMixin",
-    "mtrscripting.RenderLiftsMixin",
-    "mtrscripting.VehicleExtensionMixin",
-    "mtrscripting.VehicleResourceMixin",
-    "mtrscripting.VehicleAccessorMixin",
-    "mtrscripting.NativeImageAccessor",
     "mtrscripting.LegacyVehicleResourceSchemaMixin",
+    "mtrscripting.MainRendererMixin",
     "mtrscripting.ModelPropertiesPartMixin",
+    "mtrscripting.NativeImageAccessor",
     "mtrscripting.ObjModelAccessor",
     "mtrscripting.OptimizedModelAccessor",
-    "mtrscripting.GlStateTrackerAccessor",
     "mtrscripting.OptimizedModelWrapperAccessor",
     "mtrscripting.RawMeshAccessor",
+    "mtrscripting.RenderEyeCandyMixin",
+    "mtrscripting.RenderLiftsMixin",
     "mtrscripting.RenderVehiclesMixin",
+    "mtrscripting.VehicleAccessorMixin",
+    "mtrscripting.VehicleExtensionMixin",
+    "mtrscripting.VehicleResourceMixin",
     "mtrscripting.VehicleSchemaMixin",
-    "mtrscripting.VertexAttributeStateAccessor",
-    "mtrscripting.GraphicsHolderMatrixMixin",
-    "mtrscripting.StoredMatrixTransformationsMixin",
-    "mtrscripting.LevelRendererCullingAccessor"
+    "mtrscripting.VertexAttributeStateAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
   },
-  "refmap": "mtrscripting.refmap.json"
+  "refmap": "jsblock.refmap.json"
 }

@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.jcm.nativeapi.NativeScriptManager;
+import com.lx862.mtrscripting.core.api.ScriptingLanguage;
+import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptContent;
 import com.lx862.mtrscripting.mod.MTRScriptingMod;
@@ -63,6 +65,10 @@ public interface ScriptResourceProvider {
         final String scriptFilesKey = isParsingMTR4 ? "scriptLocations" : useSnakeCase ? "script_files" : "scriptFiles";
         final String scriptTextsKey = isParsingMTR4 ? "prependExpressions" : useSnakeCase ? "script_texts" : "scriptTexts";
         final String scriptInputKey = isParsingMTR4 ? "input" : "scriptInput";
+        final String rateLimitKey = isParsingMTR4 ? "rateLimit" : useSnakeCase ? "script_rate_limit" : "scriptRateLimit";
+        final String languageKey = isParsingMTR4 ? "language" : useSnakeCase ? "script_lang" : "scriptLang";
+        String scriptLang = jsonObject.has(languageKey) ? jsonObject.get(languageKey).getAsString() : ScriptingLanguage.RHINO_JS;
+        double rateLimit = jsonObject.has(rateLimitKey) ? jsonObject.get(rateLimitKey).getAsDouble() : 0;
 
         final boolean explicitCpp = isNativeCppScript(jsonObject);
         final boolean explicitJs = !explicitCpp && isExplicitJavascript(jsonObject);
@@ -161,7 +167,8 @@ public interface ScriptResourceProvider {
         }
 
         try {
-            return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
+            ParsedScript.Configuration configuration = ParsedScript.Configuration.create(scripts, scriptLang, rateLimit);
+            return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, configuration, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
         } catch (Exception e) {
             ScriptResourceProvider.logError("parsing " + scriptType + " script (" + id + ")", e);
             return null;
@@ -241,7 +248,7 @@ public interface ScriptResourceProvider {
         if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             MTRScriptingModClient.LOGGER.error("[MTR Scripting] Error while {}!", action, e);
             MTRContentScripting.getScriptManager().scriptErrorNotifier.queue(() -> {
-                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("[MTR] Error while " + action + "!"), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(VanillaTextWrapper.literal("[MTR] Error while " + action + "!").withColor("RED").withHoverText(VanillaTextWrapper.literal(e.getMessage()).withColor("RED")).impl()), false);
                 MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
             });
         } else {

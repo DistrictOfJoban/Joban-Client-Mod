@@ -4,6 +4,7 @@ import com.lx862.jcm.mixin.mtrscripting.OptimizedModelAccessor;
 import com.lx862.jcm.mixin.mtrscripting.OptimizedModelWrapperAccessor;
 import com.lx862.jcm.mixin.mtrscripting.GlStateTrackerAccessor;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.OptimizedModel;
 import org.mtr.mapping.mapper.OptimizedRenderer;
@@ -56,6 +57,10 @@ public class ModelJS {
         return new ModelJS(wrapper);
     }
 
+    public void replaceTexture(String oldTexture, String newTexture) {
+        replaceTexture(oldTexture, JSUtil.parseId(newTexture));
+    }
+
     public void replaceTexture(String oldTexture, Identifier newTexture) {
         OptimizedModel optimizedModel = ((OptimizedModelWrapperAccessor)(Object)model).getOptimizedModel();
         List<VertexArray> vertexArrays = ((OptimizedModelAccessor)(Object)optimizedModel).getUploadedParts();
@@ -69,6 +74,10 @@ public class ModelJS {
                 e.materialProperties.setTexture(newTexture);
             }
         });
+    }
+
+    public void replaceAllTexture(String id) {
+        replaceAllTexture(JSUtil.parseId(id));
     }
 
     public void replaceAllTexture(Identifier id) {

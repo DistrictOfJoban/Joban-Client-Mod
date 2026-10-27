@@ -1,5 +1,8 @@
 package com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config;
 
+import org.mtr.mapping.holder.MutableText;
+import org.mtr.mapping.mapper.TextHelper;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -21,7 +24,7 @@ public class EyecandyCustomConfig {
         return this.entries;
     }
 
-    public record Entry(String id, String name, Type type, ValidationCallback validationCallback, String defaultValue) {
+    public record Entry(String id, MutableText name, Type type, ValidationCallback validationCallback, String defaultValue) {
         public enum Type {
             STRING,
             INTEGER,
@@ -29,7 +32,7 @@ public class EyecandyCustomConfig {
             BOOLEAN
         }
 
-        public record ValidationResult(String validationMessage) {
+        public record ValidationResult(MutableText validationMessage) {
             public boolean success() {
                 return this.validationMessage == null;
             }
@@ -50,7 +53,7 @@ public class EyecandyCustomConfig {
 
                 @Override
                 public ValidationResult validate(String string) {
-                    return pattern.matcher(string).find() ? new ValidationResult(null) : new ValidationResult(validationMessage);
+                    return pattern.matcher(string).find() ? new ValidationResult(null) : new ValidationResult(TextHelper.translatable(validationMessage));
                 }
             }
         }

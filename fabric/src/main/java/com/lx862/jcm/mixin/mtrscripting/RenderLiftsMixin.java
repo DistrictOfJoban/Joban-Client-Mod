@@ -16,6 +16,7 @@ import org.mtr.libraries.com.logisticscraft.occlusionculling.util.Vec3d;
 import org.mtr.libraries.it.unimi.dsi.fastutil.ints.IntObjectImmutablePair;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.client.VehicleRidingMovement;
 import org.mtr.mod.render.PositionAndRotation;
@@ -31,9 +32,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public class RenderLiftsMixin {
     @Inject(method = "render(JLorg/mtr/mapping/holder/Vector3d;)V", at = @At(value = "INVOKE", target = "Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectCollection;forEach(Ljava/util/function/Consumer;)V"))
     private static void jsblock$executeScript(long millisElapsed, Vector3d cameraShakeOffset, CallbackInfo ci) {
-        /* Yanyang: shadow passes re-run RenderLifts.render — drive the scripts
-           exactly once per frame (see RenderVehiclesMixin). */
-        if(com.lx862.jcm.mod.extra.JCMPatchForMTR.isRenderingShadow()) return;
+        if(OptimizedRenderer.renderingShadows()) return; /* Yanyang: cached via OptimizedRendererMixin redirect */
         for(MinecraftClientData.LiftWrapper liftWrapper : MinecraftClientData.getInstance().liftWrapperList.values()) {
             String style = liftWrapper.getLift().getStyle();
 

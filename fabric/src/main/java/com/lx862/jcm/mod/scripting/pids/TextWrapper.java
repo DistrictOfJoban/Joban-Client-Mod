@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.util.CachedIdentifiers;
 import com.lx862.jcm.mod.util.TextUtil;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
@@ -199,7 +200,9 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     }
 
     public TextWrapper font(String fontId) {
-        return font(CachedIdentifiers.of(fontId));
+        /* Yanyang: absolute ids hit the render-thread identifier cache;
+           "./"-relative ids (upstream) are context-dependent — bypass it. */
+        return font(fontId.startsWith("./") ? JSUtil.parseId(fontId) : CachedIdentifiers.of(fontId));
     }
 
     public TextWrapper font(Identifier fontId) {

@@ -1,5 +1,23 @@
 # 更新日志 / Changelog
 
+## 2.3.0-prerelease.2-yanyang.1
+
+同步上游 DistrictOfJoban/Joban-Client-Mod 自 2.3.0-beta.3 至 v2.3.0-prerelease.2 的全部内容（61 个上游提交），晏阳全部自有特性（共享内存 / FFM 双传输、C++ 原生脚本、服务端门向记忆、PIDS 渲染修复、8 平台原生桥等）完整保留：
+
+- 脚本系统（上游）：
+  - 脚本限流与死循环防护：新增 `scriptRateLimit` 预设字段与全局速率限制；解析阶段超时不再挂起游戏；无限循环可被检测并中止。
+  - 解析错误信息以游戏内悬停文本展示；仅运行时错误输出 JS 堆栈；控制台对象转 JSON 输出。
+  - 脚本缓存：同一脚本不再重复编译（重载时重置缓存）；DataReader 运行时缓存按 tick 过期自动重置。
+  - 脚本核心与 Rhino 解耦：`ParsedScript` 抽象化 + `ScriptingLanguage` 多语言地基（`scriptLang` 字段）；Rhino 实现移入 `core.rhinojs` 包。
+  - PIDS 脚本绘制类 `Rectangle` 更名 `Rect`（避免与 AWT 同名冲突）；`id()` / `idr()` 长形式标记弃用，新增字符串等价形式与 `JSUtil.parseId`（支持 `"./"` 脚本相对路径标识符）；新增 `Resources.ANTE_FLAG`、`Resources.mgr()` 别名、`Resources.id(id, suffix)`、Java 数组创建方法等 ANTE 兼容与工具 API。
+  - ANTE 基础兼容：`ConfigResponder`（装饰物自定义配置注册）、`SoundHelper` / `TickableSound` 兼容层。
+  - 运行时阶段读取资源不再抛 `ConcurrentModificationException`。
+- 渲染与修补（上游）：MTR 4 著名的 BVE 电机声音卡死修复（被剔除车辆的声音不再永久滞留）；Iris/OptiFine 阴影_pass__重复执行脚本修复扩展至电梯 / 车辆 / 装饰物 / PIDS 全部脚本渲染面（晏阳的帧缓存语义保持一致）；贴墙方块面朝向检查修复；`GraphicsTexture` 新增 `fullAA()` / `noAA()`；装饰物配置界面重做（布尔开关、`ConfigCheckbox`、ANTE 多配置注册）。
+- Forge（上游）：mixin 构建设置修复——refmap 统一为 `jsblock.refmap.json`。
+- 翻译（上游）：新增爱尔兰语（ga_ie）与捷克语（cs_cz）；更新日语、简体中文。
+- 晏阳适配：所有上游改动与原生 C++ 脚本管线（车辆 / PIDS / 装饰物 / 电梯的 JS+C++ 混合条目）、零分配渲染路径、标识符缓存融合——上游新 API（`ParsedScript.Configuration`、字符串标识符）在保留晏阳缓存优化的同时全部接入；`willInvokeRender`、`takeFrom` 交换、`TransformCapturePool` 等晏阳机制经新抽象层继续生效。
+- 版本号格式随上游基线更新：`2.3.0-prerelease.2-yanyang.1`。
+
 ## 2.3.0-beta-2.yanyang.8
 
 - 修复（yanyang.4 引入的回归，实机报告 `jsblock:pids_1a`）：**脚本化 PIDS 预设的文字与贴图按方块原始尺度渲染**——文字约放大 96 倍、锚在方块原点完全偏离，`.matrices()` 模型姿态全部丢失。受影响面：内置 `pids_1a` 预设（JS）与任何自定义脚本化 PIDS 预设（JS 或 C++，含原生 `JCM_DRAW_TEXT` / `JCM_DRAW_TEXTURE` / `JCM_DRAW_MODEL` 记录）的 Text / Texture / 带姿态 Model 绘制；JS 装饰物（eyecandy）与 JS 车辆脚本中依赖 `.matrices()` 合并的绘制同样受累。基于 JSON 预设的 PIDS 方块（`rv_pids` / `rv_pids_sil_1` / `rv_pids_sil_2` / `lcd_pids` / `pids_projector` 默认预设）与「绝对坐标四边形 + 像素上传」型原生脚本（如 wr2a03 车辆 LCD）不受影响——这也是车辆显示一直正常、唯有脚本化 PIDS 暴露的原因。

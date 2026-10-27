@@ -1,11 +1,16 @@
 package com.lx862.mtrscripting.core;
 
 import com.lx862.mtrscripting.core.api.MTRClassShutter;
+import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
+import com.lx862.mtrscripting.core.api.ScriptingLanguage;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.integration.MinecraftParticleData;
-import com.lx862.mtrscripting.core.primitive.ScriptContent;
 import com.lx862.mtrscripting.core.util.*;
+import com.lx862.mtrscripting.core.util.ante.ANTEComponentUtilJS;
+import com.lx862.mtrscripting.core.util.ante.ANTEGlobalRegisterJS;
+import com.lx862.mtrscripting.core.util.ante.ANTESoundHelperJS;
+import com.lx862.mtrscripting.core.util.ante.ANTETickableSoundJS;
 import com.lx862.mtrscripting.core.util.model.DynamicModelHolderJS;
 import com.lx862.mtrscripting.core.util.model.ModelManagerJS;
 import com.lx862.mtrscripting.core.util.model.RawMeshBuilderJS;
@@ -16,16 +21,14 @@ import com.lx862.mtrscripting.core.util.sound.TickableSoundInstanceJS;
 import com.lx862.mtrscripting.core.integration.MinecraftClientWrapper;
 import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.integration.VoxelShapeWrapper;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.*;
-import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import com.lx862.mtrscripting.mod.gui.hud.ScriptErrorNotifier;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @ApiInternal
@@ -37,7 +40,7 @@ public class ScriptManager {
     private final BackgroundWorkerJS backgroundWorker;
     private int scriptExecutorCounter = 0;
 
-    public final ParseScriptEvent<TriConsumer<String, Context, Scriptable>> parseScriptEvent = new ParseScriptEvent<>();
+    public final ParseScriptEvent<BiConsumer<String, ParsedScript>> parseScriptEvent = new ParseScriptEvent<>();
     public final ParseScriptEvent<Consumer<ParsedScript>> finishParseScriptEvent = new ParseScriptEvent<>();
     public final ScriptErrorNotifier scriptErrorNotifier = new ScriptErrorNotifier();
 
@@ -62,21 +65,19 @@ public class ScriptManager {
     }
 
     /**
-     * Obtain the class shutter, this could be used to explicitly allow/deny java package/class accesses for scripts.
+     * Obtain the class restrictor, this could be used to explicitly allow/deny java package/class accesses for scripts.
      */
     public MTRClassShutter getClassShutter() {
         return this.classShutter;
     }
 
-    public ParsedScript parseScript(String displayName, String contextName, List<ScriptContent> scripts, boolean verboseLogging) {
-        try {
-            ParsedScript parsedScript = new ParsedScript(this, displayName, contextName, scripts, verboseLogging);
-            finishParseScriptEvent.invoke(e -> e.accept(parsedScript));
-            return parsedScript;
-        } catch (NoSuchMethodException e) {
-            MTRScriptingModClient.LOGGER.error("[JCM Scripting] Fatal error: Cannot find required java method to add to script!", e);
-            return null;
-        }
+    public ParsedScript parseScript(String displayName, String contextName, ParsedScript.Configuration scriptConfiguration, boolean verboseLogging) {
+        ScriptingLanguage lang = MTRScriptingAPI.getScriptingLanguage(scriptConfiguration.scriptingLanguage());
+        if(lang == null) throw new IllegalArgumentException("Cannot parse unknown programming language '" + scriptConfiguration.scriptingLanguage() + "'!");
+
+        ParsedScript parsedScript = lang.createParsedScript(this, displayName, contextName, scriptConfiguration).parse(verboseLogging);
+        finishParseScriptEvent.invoke(e -> e.accept(parsedScript));
+        return parsedScript;
     }
 
     public ExecutorService getDesignatedScriptExecutor() {
@@ -104,34 +105,42 @@ public class ScriptManager {
     /**
      * Expose basic methods/classes to provide a useful environment for script developer
      */
-    private void addBuiltInTypes(String contextName, Context cx, Scriptable scope) throws RuntimeException {
+    private void addBuiltInTypes(String contextName, ParsedScript parsedScript) throws RuntimeException {
         try {
-            scope.put("include", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("includeScript", Object.class), "includeScript"));
-            scope.put("print", scope, new NativeJavaMethod(ScriptResourceUtil.class.getMethod("print", Object[].class), "print"));
-            scope.put("Resources", scope, new NativeJavaClass(scope, ScriptResourceUtil.class));
-            scope.put("GraphicsTexture", scope, new NativeJavaClass(scope, GraphicsTexture.class));
-            scope.put("console", scope, new NativeJavaObject(scope, new ConsoleJS(), com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
-            scope.put("BackgroundWorker", scope, new NativeJavaObject(scope, backgroundWorker, com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
+            parsedScript.exposeClassMethod("include", ScriptResourceUtil.class.getMethod("includeScript", Object.class));
+            parsedScript.exposeClassMethod("print", ScriptResourceUtil.class.getMethod("print", Object[].class));
+            parsedScript.exposeClass("Resources", ScriptResourceUtil.class);
+            parsedScript.exposeClass("GraphicsTexture", GraphicsTexture.class);
+            parsedScript.exposeClass("Java", JavaUtilJS.class);
+            parsedScript.exposeClassInstance("console", new ConsoleJS());
+            parsedScript.exposeClassInstance("BackgroundWorker", backgroundWorker);
 
-            scope.put("StateTracker", scope, new NativeJavaClass(scope, StateTrackerJS.class));
-            scope.put("CycleTracker", scope, new NativeJavaClass(scope, CycleTrackerJS.class));
-            scope.put("RateLimit", scope, new NativeJavaClass(scope, RateLimitJS.class));
-            scope.put("Networking", scope, new NativeJavaClass(scope, NetworkingJS.class));
-            scope.put("Files", scope, new NativeJavaClass(scope, FilesJS.class));
+            parsedScript.exposeClass("StateTracker", StateTrackerJS.class);
+            parsedScript.exposeClass("CycleTracker", CycleTrackerJS.class);
+            parsedScript.exposeClass("RateLimit", RateLimitJS.class);
+            parsedScript.exposeClass("Networking", NetworkingJS.class);
+            parsedScript.exposeClass("Files", FilesJS.class);
 
-            scope.put("Matrices", scope, new NativeJavaClass(scope, Matrices.class));
-            scope.put("Vector3f", scope, new NativeJavaClass(scope, ScriptVector3f.class));
-            scope.put("VoxelShape", scope, new NativeJavaClass(scope, VoxelShapeWrapper.class));
-            scope.put("VanillaText", scope, new NativeJavaClass(scope, VanillaTextWrapper.class));
-            scope.put("MinecraftClient", scope, new NativeJavaClass(scope, MinecraftClientWrapper.class));
-            scope.put("TickableSoundInstance", scope, new NativeJavaClass(scope, TickableSoundInstanceJS.class));
+            parsedScript.exposeClass("Matrices", Matrices.class);
+            parsedScript.exposeClass("Vector3f", ScriptVector3f.class);
+            parsedScript.exposeClass("VoxelShape", VoxelShapeWrapper.class);
+            parsedScript.exposeClass("VanillaText", VanillaTextWrapper.class);
+            parsedScript.exposeClass("MinecraftClient", MinecraftClientWrapper.class);
+            parsedScript.exposeClass("TickableSoundInstance", TickableSoundInstanceJS.class);
 
-            scope.put("ModelDrawCall", scope, new NativeJavaClass(scope, ModelDrawCall.class));
-            scope.put("QuadDrawCall", scope, new NativeJavaClass(scope, QuadDrawCall.class));
-            scope.put("ModelManager", scope, new NativeJavaClass(scope, ModelManagerJS.class));
-            scope.put("RawModel", scope, new NativeJavaClass(scope, RawModelJS.class));
-            scope.put("RawMeshBuilder", scope, new NativeJavaClass(scope, RawMeshBuilderJS.class));
-            scope.put("DynamicModelHolder", scope, new NativeJavaClass(scope, DynamicModelHolderJS.class));
+            parsedScript.exposeClass("ModelDrawCall", ModelDrawCall.class);
+            parsedScript.exposeClass("QuadDrawCall", QuadDrawCall.class);
+            parsedScript.exposeClass("ModelManager", ModelManagerJS.class);
+            parsedScript.exposeClass("RawModel", RawModelJS.class);
+            parsedScript.exposeClass("RawMeshBuilder", RawMeshBuilderJS.class);
+            parsedScript.exposeClass("DynamicModelHolder", DynamicModelHolderJS.class);
+
+            /* ANTE */
+            parsedScript.exposeClass("SoundHelper", ANTESoundHelperJS.class);
+            parsedScript.exposeClass("TickableSound", ANTETickableSoundJS.class);
+            parsedScript.exposeClass("GlobalRegister", ANTEGlobalRegisterJS.class);
+            parsedScript.exposeClass("ComponentUtil", ANTEComponentUtilJS.class);
+            parsedScript.exposeClassMethod("asJavaArray", JavaUtilJS.class.getMethod("toArray", List.class, Class.class));
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }

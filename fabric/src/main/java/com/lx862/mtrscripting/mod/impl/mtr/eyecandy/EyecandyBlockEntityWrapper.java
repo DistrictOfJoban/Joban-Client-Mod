@@ -1,6 +1,8 @@
 package com.lx862.mtrscripting.mod.impl.mtr.eyecandy;
 
 import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponder;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponderStorage;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.JCMBlockEyecandyExtra;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
@@ -122,6 +124,15 @@ public class EyecandyBlockEntityWrapper {
         return customConfigs.getOrDefault(key, fallback);
     }
 
+    @Deprecated
+    public void registerCustomConfig(ConfigResponder configResponder) {
+        ConfigResponderStorage.registerEyecandy(getModelId(), configResponder);
+    }
+
+    @Deprecated
+    public void sendUpdateC2S() {
+    }
+
     /**
      * Equivalent to {@link EyecandyBlockEntityWrapper#blockPos()} and {@link ScriptVector3f#rawBlockPos()}
      * For backward compatibility of scripts designed for Nemo's Transit Expansion (NTE)
@@ -155,10 +166,5 @@ public class EyecandyBlockEntityWrapper {
     @ApiInternal
     public boolean modelChanged(String modelId) {
         return !modelId.equals(be.getModelId());
-    }
-
-    @ApiInternal
-    public boolean removed() {
-        return be.isRemoved2() || be.getWorld2().getBlockEntity(blockPos().rawBlockPos()) == null;
     }
 }

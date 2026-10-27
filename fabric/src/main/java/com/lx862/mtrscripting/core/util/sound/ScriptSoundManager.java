@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.core.util.sound;
 
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.*;
 
 import java.util.ArrayList;
@@ -17,16 +18,32 @@ public class ScriptSoundManager {
         this.soundCalls = soundCalls;
     }
 
+    public void playLocalSound(String id, float volume, float pitch) {
+        playLocalSound(JSUtil.parseId(id), volume, pitch);
+    }
+
     public void playLocalSound(Identifier id, float volume, float pitch) {
         queue(new NonPositionedSoundCall(id, SoundCategory.getMasterMapped(), volume, pitch));
+    }
+
+    public void playLocalSound(String id, float volume, float pitch, String soundCategory) {
+        playLocalSound(JSUtil.parseId(id), volume, pitch, soundCategory);
     }
 
     public void playLocalSound(Identifier id, float volume, float pitch, String soundCategory) {
         queue(new NonPositionedSoundCall(id, SoundCategory.valueOf(soundCategory), volume, pitch));
     }
 
+    public void playSound(String id, ScriptVector3f pos, float volume, float pitch) {
+        playSound(JSUtil.parseId(id), pos, volume, pitch);
+    }
+
     public void playSound(Identifier id, ScriptVector3f pos, float volume, float pitch) {
         queue(new PositionedSoundCall(id, SoundCategory.getMasterMapped(), pos.x(), pos.y(), pos.z(), volume, pitch));
+    }
+
+    public void playSound(String id, ScriptVector3f pos, float volume, float pitch, String soundCategory) {
+        playSound(JSUtil.parseId(id), pos, volume, pitch, soundCategory);
     }
 
     public void playSound(Identifier id, ScriptVector3f pos, float volume, float pitch, String soundCategory) {
@@ -39,6 +56,15 @@ public class ScriptSoundManager {
         soundInstance.setInstanceInUse(true);
         MinecraftClient.getInstance().submit(() -> {
             MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(soundInstance));
+        });
+    }
+
+    public void play(TickableSoundInstanceJS soundInstance, int delay) {
+        if(soundInstance.isInstanceInUse()) return; // Don't allow playing twice
+
+        soundInstance.setInstanceInUse(true);
+        MinecraftClient.getInstance().submit(() -> {
+            MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(soundInstance), delay);
         });
     }
 

@@ -12,6 +12,7 @@ import java.util.Map;
 @ApiInternal
 public class MTRScriptingAPI {
     private static final Map<String, String> addonVersionMap = new HashMap<>();
+    private static final Map<String, ScriptingLanguage> supportedLanguages = new HashMap<>();
 
     /**
      * Register a version for a Mod ID, used by scripts calling {@link ScriptResourceUtil#getAddonVersion};
@@ -24,7 +25,20 @@ public class MTRScriptingAPI {
         addonVersionMap.put(modId, version);
     }
 
+    /**
+     * Register a programming language.
+     * @param languageName The language name to be referenced
+     * @param scriptingLanguage The properties of the scripting language
+     */
+    public static void addScriptingLanguage(String languageName, ScriptingLanguage scriptingLanguage) {
+        supportedLanguages.put(languageName, scriptingLanguage);
+    }
+
     public static String getAddonVersion(String modId) {
         return addonVersionMap.get(modId);
+    }
+
+    public static ScriptingLanguage getScriptingLanguage(String languageName) {
+        return supportedLanguages.get(languageName);
     }
 }

@@ -9,11 +9,14 @@ import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.util.DataReaderJS;
 import com.lx862.mtrscripting.core.util.ScriptResourceUtil;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponder;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponderStorage;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import com.lx862.mtrscripting.mod.util.JsonUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
+import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mod.Init;
 
 import java.io.InputStreamReader;
@@ -118,6 +121,21 @@ public class EyecandyResourceProvider implements ScriptResourceProvider {
 
     public String getScriptEntryId(String id) { return eyecandyScriptIds.getOrDefault(id, id); }
 
+    public EyecandyCustomConfig getScriptConfig(String id) {
+        EyecandyScriptConfiguration config = eyecandyScripts.get(eyecandyScriptIds.getOrDefault(id, id));
+        if(config != null && config.eyecandyCustomConfig() != null) return config.eyecandyCustomConfig();
+
+        List<ConfigResponder> legacyConfigResponder = ConfigResponderStorage.getEyecandyConfigResponders(id);
+        if(legacyConfigResponder != null && !legacyConfigResponder.isEmpty()) {
+            List<EyecandyCustomConfig.Entry> entries = new ArrayList<>();
+            legacyConfigResponder.forEach(configResponder -> {
+                entries.addAll(configResponder.getListEntries(null, null, null));
+            });
+            return new EyecandyCustomConfig("<ANTE Config>", entries);
+        }
+        return null;
+    }
+
     public boolean isScriptControlledRendering(String id) {
         return scriptControlledRendering.contains(id);
     }
@@ -157,7 +175,7 @@ public class EyecandyResourceProvider implements ScriptResourceProvider {
                 String validationMessage = JsonUtil.getString("validationMessage", String.format("Value is not %s!", validation), entryObject);
                 String defaultValue = JsonUtil.getString("defaultValue", null, entryObject);
 
-                EyecandyCustomConfig.Entry entry = new EyecandyCustomConfig.Entry(id, name, type, validation == null ? null : new EyecandyCustomConfig.Entry.ValidationCallback.Regex(validation, validationMessage), defaultValue);
+                EyecandyCustomConfig.Entry entry = new EyecandyCustomConfig.Entry(id, TextHelper.translatable(name), type, validation == null ? null : new EyecandyCustomConfig.Entry.ValidationCallback.Regex(validation, validationMessage), defaultValue);
                 entries.add(entry);
             }
         }

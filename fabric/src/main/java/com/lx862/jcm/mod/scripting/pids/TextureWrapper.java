@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.util.CachedIdentifiers;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mod.render.MainRenderer;
@@ -83,7 +84,9 @@ public class TextureWrapper extends PIDSDrawCall<TextureWrapper> {
     }
 
     public TextureWrapper texture(String id) {
-        return texture(CachedIdentifiers.of(id));
+        /* Yanyang: absolute ids hit the render-thread identifier cache;
+           "./"-relative ids (upstream) are context-dependent — bypass it. */
+        return texture(id.startsWith("./") ? JSUtil.parseId(id) : CachedIdentifiers.of(id));
     }
 
     public TextureWrapper texture(Identifier id) {

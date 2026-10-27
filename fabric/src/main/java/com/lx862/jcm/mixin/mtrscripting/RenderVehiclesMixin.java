@@ -15,6 +15,7 @@ import org.mtr.core.data.VehicleCar;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectImmutableList;
 import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.render.*;
@@ -33,15 +34,16 @@ import java.util.Map;
 public class RenderVehiclesMixin {
     @Inject(method = "render(JLorg/mtr/mapping/holder/Vector3d;)V", at = @At(value = "INVOKE", target = "Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArraySet;forEach(Ljava/util/function/Consumer;)V"))
     private static void jsblock$executeScript(long millisElapsed, Vector3d cameraShakeOffset, CallbackInfo ci) {
-        /* Yanyang: Iris/OptiFine shadow passes re-run RenderVehicles.render;
-           without this guard every script ran TWICE per frame (two snapshot
-           marshals, two whole-canvas repaints, two texture uploads per car). */
-        if(com.lx862.jcm.mod.extra.JCMPatchForMTR.isRenderingShadow()) return;
+        /* Yanyang: Iris/OptiFine shadow passes re-run RenderVehicles.render —
+           drive the scripts exactly once per frame (check cached via
+           OptimizedRendererMixin redirect). */
+        if(OptimizedRenderer.renderingShadows()) return;
         NativeVehicleDriver.beginFrame();
         /* Per-frame live-vehicle id set for the JS instances' shouldInvalidate
            (see VehicleScriptInstance.beginFrame) — one O(V) pass here replaces
            one O(V) stream scan per scripted vehicle per frame. */
         VehicleScriptInstance.beginFrame();
+
         for(VehicleExtension vehicle : MinecraftClientData.getInstance().vehicles) {
             /* Yanyang: C++ (language=cpp) scripts take the native route and
                never build a VehicleScriptInstance — drive them first so their

@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.scripting.pids;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.integration.MinecraftClientWrapper;
+import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
@@ -18,9 +19,8 @@ public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> implements S
     private ScriptSoundManager soundManager;
     private ScriptRenderManager renderManager;
 
-    public PIDSScriptInstance(PIDSBlockEntity blockEntity, ParsedScript script, PIDSWrapper wrapperObject) {
+    public PIDSScriptInstance(PIDSBlockEntity blockEntity, ParsedScript script) {
         super(new PIDSScriptContext(blockEntity.getPresetId()), script);
-        setWrapperObject(wrapperObject);
         this.blockEntity = blockEntity;
         this.soundManager = new ScriptSoundManager();
         this.renderManager = new ScriptRenderManager();
@@ -53,6 +53,6 @@ public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> implements S
 
     @Override
     public int getSortScore() {
-        return (int)(MinecraftClientWrapper.localPlayer().pos().distance(getWrapperObject().blockPos()) * 1000);
+        return (int)(MinecraftClientWrapper.localPlayer().pos().distance(new ScriptVector3f(blockEntity.getPos2())) * 1000);
     }
 }

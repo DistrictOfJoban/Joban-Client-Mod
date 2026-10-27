@@ -2,6 +2,7 @@ package com.lx862.mtrscripting.core.integration;
 
 import com.lx862.jcm.mapping.LoaderImpl;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.TextHelper;
 
@@ -40,6 +41,10 @@ public class VanillaTextWrapper {
         return this;
     }
 
+    public VanillaTextWrapper withFont(String id) {
+        return withFont(JSUtil.parseId(id));
+    }
+
     public VanillaTextWrapper withFont(Identifier id) {
         this.style = this.style.withFont(id);
         return this;
@@ -72,13 +77,18 @@ public class VanillaTextWrapper {
         return this;
     }
 
+    /**
+     * MutableText is not the intended argument type, scripts should not be exposed to internal details.
+     */
+    @Deprecated
     public VanillaTextWrapper withHoverText(MutableText content) {
         this.style = LoaderImpl.withHoverContentText(style, content);
         return this;
     }
 
     public VanillaTextWrapper withHoverText(VanillaTextWrapper content) {
-        return withHoverText(content.impl());
+        this.style = LoaderImpl.withHoverContentText(style, content.impl());
+        return this;
     }
 
     public String getString() {

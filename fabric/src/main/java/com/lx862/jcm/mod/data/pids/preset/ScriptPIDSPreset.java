@@ -11,15 +11,19 @@ import com.lx862.jcm.mod.scripting.pids.PIDSScriptContext;
 import com.lx862.jcm.mod.scripting.pids.PIDSScriptInstance;
 import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
 import com.lx862.jcm.mod.util.JCMLogger;
+import com.lx862.mtrscripting.core.api.ScriptingLanguage;
+import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptContent;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.core.primitive.ScriptInstance;
+import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 import org.mtr.mapping.mapper.TextHelper;
 import org.mtr.mod.render.StoredMatrixTransformations;
@@ -56,11 +60,19 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         final String name = rootJsonObject.has("name") ? rootJsonObject.get("name").getAsString() : null;
         final boolean builtin = rootJsonObject.has("builtin") && rootJsonObject.get("builtin").getAsBoolean();
         final Identifier thumbnail = rootJsonObject.has("thumbnail") ? new Identifier(rootJsonObject.get("thumbnail").getAsString()) : DEFAULT_THUMBNAIL;
+        List<String> blackList = new ArrayList<>();
+        if(rootJsonObject.has("blacklist")) {
+            JsonArray blacklistedPIDS = rootJsonObject.getAsJsonArray("blacklist");
+            for(int i = 0; i < blacklistedPIDS.size(); i++) {
+                blackList.add(blacklistedPIDS.get(i).getAsString());
+            }
+        }
 
         final boolean explicitCpp = com.lx862.mtrscripting.mod.resource.ScriptResourceProvider.isNativeCppScript(rootJsonObject);
         final boolean explicitJs = !explicitCpp && com.lx862.mtrscripting.mod.resource.ScriptResourceProvider.isExplicitJavascript(rootJsonObject);
 
         final List<ScriptContent> scripts = new ObjectArrayList<>();
+        final double scriptRateLimit = rootJsonObject.has("scriptRateLimit") ? rootJsonObject.get("scriptRateLimit").getAsDouble() : 0;
         final List<JsonElement> nativeDeclarations = new ArrayList<>();
         final List<ScriptContent> jsFiles = new ObjectArrayList<>();
 
@@ -131,10 +143,12 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             }
         }
 
+        final String scriptLang = rootJsonObject.has("scriptLang") ? rootJsonObject.get("scriptLang").getAsString() : ScriptingLanguage.RHINO_JS;
+        ParsedScript.Configuration scriptConfiguration = ParsedScript.Configuration.create(scripts, scriptLang, scriptRateLimit);
         ParsedScript script = null;
         if(!scripts.isEmpty()) {
             try {
-                script = JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
+                script = JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scriptConfiguration, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
             } catch (Exception e) {
                 logError("parsing PIDS script (" + id + ")", e);
                 script = null; /* keep the C++ modules alive — degrade gracefully */
@@ -174,33 +188,40 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
 
     @Override
     public void render(PIDSBlockEntity be, GraphicsHolder graphicsHolder, StoredMatrixTransformations storedMatrixTransformations, World world, BlockPos pos, Direction facing, LongImmutableList targetPlatformIds, ObjectArrayList<ArrivalResponse> arrivals, boolean[] rowHidden, float tickDelta, int x, int y, int width, int height, int light) {
-        PIDSWrapper pidsWrapper = new PIDSWrapper(be, targetPlatformIds, arrivals, width, height);
         /* Yanyang: mixed entries run the C++ modules first, then the JS part
            below — each side captures into its own replay managers, so their
            draw calls never collide. A failed or platform-skipped native part
-           simply doesn't run; a failed JS part keeps the native side alive. */
-        if (com.lx862.jcm.nativeapi.NativeScriptManager.isLoaded(getId())) {
-            com.lx862.jcm.nativeapi.NativeContentDriver.pids(getId(),pidsWrapper,world,storedMatrixTransformations,facing,light);
+           simply doesn't run; a failed JS part keeps the native side alive.
+           Shadow passes skip the native drive — same contract as the JS-only
+           path (replay managers keep the last frame's calls). */
+        if(!OptimizedRenderer.renderingShadows()) {
+            if (com.lx862.jcm.nativeapi.NativeScriptManager.isLoaded(getId())) {
+                PIDSWrapper pidsWrapper = new PIDSWrapper(be, targetPlatformIds, arrivals, width, height);
+                com.lx862.jcm.nativeapi.NativeContentDriver.pids(getId(), pidsWrapper, world, storedMatrixTransformations, facing, light);
+            }
         }
         if (parsedScripts == null) {
             return;
         }
-        ScriptInstance<PIDSWrapper> scriptInstance = JCMScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("pids", getId(), pos.getX(), pos.getY(), pos.getZ()), () -> new PIDSScriptInstance(be, parsedScripts, pidsWrapper));
+        ScriptInstance<PIDSWrapper> scriptInstance = JCMScripting.getScriptManager().getInstanceManager().getInstance(new UniqueKey("pids", getId(), pos.getX(), pos.getY(), pos.getZ()), () -> new PIDSScriptInstance(be, parsedScripts));
 
         if(scriptInstance instanceof PIDSScriptInstance) {
             PIDSScriptInstance pidsScriptInstance = (PIDSScriptInstance) scriptInstance;
             PIDSScriptContext scriptContext = (PIDSScriptContext)scriptInstance.getContextObject();
 
-            scriptInstance.setWrapperObject(pidsWrapper);
-            scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
-                pidsScriptInstance.saveRenderCalls(scriptContext.renderManager());
-                pidsScriptInstance.saveSoundCalls(scriptContext.soundManager());
-                scriptContext.resetForNextRun();
-            });
+            if(!OptimizedRenderer.renderingShadows()) {
+                PIDSWrapper pidsWrapper = new PIDSWrapper(be, targetPlatformIds, arrivals, width, height);
+                scriptInstance.setWrapperObject(pidsWrapper);
+                scriptInstance.getScript().invokeRenderFunctions(scriptInstance, () -> {
+                    pidsScriptInstance.saveRenderCalls(scriptContext.renderManager());
+                    pidsScriptInstance.saveSoundCalls(scriptContext.soundManager());
+                    scriptContext.resetForNextRun();
+                });
+            }
 
             graphicsHolder.translate(0, 0, -0.005);
             pidsScriptInstance.getRenderManager().invoke(world, storedMatrixTransformations, facing, light);
-            pidsScriptInstance.getSoundManager().invoke(world, pidsWrapper.blockPos());
+            pidsScriptInstance.getSoundManager().invoke(world, new ScriptVector3f(pos));
         }
     }
 
@@ -219,7 +240,7 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             JCMLogger.error("[JCM] Error while " + action + "!", e);
 
             JCMScripting.getScriptManager().scriptErrorNotifier.queue(() -> {
-                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("[JCM] Error while " + action + "!"), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(VanillaTextWrapper.literal("[JCM] Error while " + action + "!").withColor("RED").withHoverText(VanillaTextWrapper.literal(e.getMessage()).withColor("RED")).impl()), false);
                 MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
             });
         } else {

@@ -2,12 +2,14 @@ package com.lx862.jcm.mixin.mtrpatch;
 
 import com.lx862.jcm.mapping.LoaderImplClient;
 import com.lx862.jcm.mod.config.JCMClientConfig;
+import org.mtr.core.data.VehicleCar;
 import org.mtr.libraries.com.logisticscraft.occlusionculling.OcclusionCullingInstance;
 import org.mtr.libraries.com.logisticscraft.occlusionculling.util.Vec3d;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
-import org.mtr.mapping.holder.Box;
-import org.mtr.mapping.holder.Vector3d;
+import org.mtr.mapping.holder.*;
+import org.mtr.mapping.mapper.OptimizedRenderer;
+import org.mtr.mod.client.CustomResourceLoader;
 import org.mtr.mod.client.VehicleRidingMovement;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.render.DynamicVehicleModel;
@@ -17,6 +19,7 @@ import org.mtr.mod.render.StoredMatrixTransformations;
 import org.mtr.mod.resource.VehicleResource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -34,6 +37,20 @@ public class RenderVehiclesMixin {
             if (!LoaderImplClient.isFrustumVisible(zbx)) {
                 cir.setReturnValue(() -> vehicle.persistentVehicleData.rayTracing[carNumber] = false);
             }
+        }
+    }
+
+
+    @Inject(method = "org/mtr/mod/render/RenderVehicles.lambda$render$15(Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArrayList;Lorg/mtr/mod/data/VehicleExtension;Lorg/mtr/libraries/com/logisticscraft/occlusionculling/util/Vec3d;Lorg/mtr/mapping/holder/Vector3d;Ljava/lang/Double;Lorg/mtr/mod/render/PositionAndRotation;Lorg/mtr/mapping/holder/Vector3d;Lorg/mtr/mapping/holder/ClientPlayerEntity;IZLorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArrayList;Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArrayList;Lorg/mtr/mapping/holder/MinecraftClient;Lorg/mtr/mapping/holder/ClientWorld;JLorg/mtr/mod/render/RenderVehicles$PreviousGangwayMovementPositions;ILorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectObjectImmutablePair;)V", at = @At("HEAD"))
+    private static void jsblock$playCulledVehicleMotorSound(ObjectArrayList cullingTasks, VehicleExtension vehicle, Vec3d camera, Vector3d offsetVector, Double offsetRotation, PositionAndRotation ridingCarPositionAndRotation, Vector3d cameraShakeOffset, ClientPlayerEntity clientPlayerEntity, int ridingCarNumber, boolean canRide, ObjectArrayList previousGangwayPositionsList, ObjectArrayList previousBarrierPositionsList, MinecraftClient minecraftClient, ClientWorld clientWorld, long millisElapsed, @Coerce /* Private Class (PreviousGangwayMovementPositions) */ Object previousGangwayMovementPositions, int carNumber, ObjectObjectImmutablePair vehicleCarDetails, CallbackInfo ci) {
+        if(OptimizedRenderer.renderingShadows()) return;
+
+        if(!vehicle.persistentVehicleData.rayTracing[carNumber] && !VehicleRidingMovement.isRiding(vehicle.getId())) {
+            CustomResourceLoader.getVehicleById(vehicle.getTransportMode(), ((VehicleCar)vehicleCarDetails.left()).getVehicleId(), (vehicleResourceDetails) -> {
+                VehicleResource vehicleResource = vehicleResourceDetails.left();
+                PositionAndRotation absoluteVehicleCarPositionAndRotation = (PositionAndRotation) ((ObjectObjectImmutablePair) vehicleCarDetails.right()).right();
+                vehicle.playMotorSound(vehicleResource, carNumber, absoluteVehicleCarPositionAndRotation.position);
+            });
         }
     }
 

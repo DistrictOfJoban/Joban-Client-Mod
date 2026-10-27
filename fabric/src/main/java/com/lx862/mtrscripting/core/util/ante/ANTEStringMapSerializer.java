@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class StringMapSerializer {
+public class ANTEStringMapSerializer {
 
     private static ByteArrayOutputStream serializeIn(Map<String, String> map) throws IOException{
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

@@ -4,6 +4,7 @@ import com.lx862.jcm.mixin.mtrscripting.ObjModelAccessor;
 import com.lx862.jcm.mixin.mtrscripting.RawMeshAccessor;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.OptimizedModel;
 import org.mtr.mapping.render.batch.MaterialProperties;
@@ -99,6 +100,10 @@ public class RawModelJS {
         return new RawModelJS(newModel);
     }
 
+    public void replaceTexture(String oldTexture, String newTexture) {
+        replaceTexture(oldTexture, JSUtil.parseId(newTexture));
+    }
+
     public void replaceTexture(String oldTexture, Identifier newTexture) {
         rawModel.iterateRawMeshList(f -> {
             Identifier id = f.materialProperties.getTexture();
@@ -119,6 +124,10 @@ public class RawModelJS {
 
     public void generateNormals() {
         this.rawModel.generateNormals();
+    }
+
+    public void replaceAllTexture(String id) {
+        replaceAllTexture(JSUtil.parseId(id));
     }
 
     public void replaceAllTexture(Identifier id) {

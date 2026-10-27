@@ -110,8 +110,10 @@ public class MTRScriptDebugOverlay {
                             graphicsHolder.translate(0, 10, 0);
                             graphicsHolder.drawText(String.format(exLine), 5, 0, COLOR_RED, true, MAX_LIGHT);
                         }
+                    } else if(scriptInstance.executionTimedOut(5000)) {
+                        graphicsHolder.drawText(String.format("%s (Not Responding...)", keyName), 0, 0, 0x777777, true, MAX_LIGHT);
                     } else {
-                        graphicsHolder.drawText(String.format("%s (%.2f ms)", keyName, executionMs), 0, 0, getColor(executionMs), true, MAX_LIGHT);
+                        graphicsHolder.drawText(String.format("%s (%.2f ms)", keyName, executionMs), 0, 0, getExecTimeColor(executionMs), true, MAX_LIGHT);
                     }
 
                     graphicsHolder.translate(0, 10, 0);
@@ -234,7 +236,7 @@ public class MTRScriptDebugOverlay {
         }
     }
 
-    private static int getColor(double executionMs) {
+    private static int getExecTimeColor(double executionMs) {
         if(executionMs > (1000/(IDEAL_FRAMERATE/2))) {
             return COLOR_RED;
         } else if(executionMs > (1000/IDEAL_FRAMERATE)) {

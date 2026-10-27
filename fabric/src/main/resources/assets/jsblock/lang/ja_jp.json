@@ -259,5 +259,6 @@
     "gui.jsblock.eyecandy.listview.widget.selected": "選択済み",
     "gui.jsblock.eyecandy.subtitle": "選択済み > %s",
     "gui.jsblock.eyecandy.title": "オブジェクトを選択",
-    "gui.jsblock.eyecandy.listview.widget.not_validated": "1つ以上の設定項目にエラーが含まれています"
+    "gui.jsblock.eyecandy.listview.widget.not_validated": "1つ以上の設定項目にエラーが含まれています",
+    "gui.jsblock.config.listview.title.allow_camera_lowering": "スニーク使用時にカメラの高さを低くする。"
 }

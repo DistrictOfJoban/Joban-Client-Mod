@@ -3,17 +3,18 @@ package com.lx862.mtrscripting.mod.impl.mtr;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponder;
 import com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.util.TextUtilJS;
 import com.lx862.mtrscripting.core.ScriptManager;
 import com.lx862.mtrscripting.core.api.ClassRule;
 import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.NativeJavaClass;
 import org.mtr.mod.Keys;
 import org.mtr.mod.client.MinecraftClientData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -47,10 +48,16 @@ public class MTRContentScripting {
         scriptManager.getClassShutter().allowClass(ClassRule.parse("top.mcmtr.mod.*"));
         scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.mtrscripting.mod.impl.mtr.*"));
 
-        scriptManager.parseScriptEvent.register((contextName, context, scriptable) -> {
-            scriptable.put("MTRClientData", scriptable, new NativeJavaClass(scriptable, MinecraftClientData.class));
-            scriptable.put("MTR", scriptable, new NativeJavaClass(scriptable, MTRWrapper.class));
-            scriptable.put("TextUtil", scriptable, new NativeJavaClass(scriptable, TextUtilJS.class));
+        scriptManager.parseScriptEvent.register((contextName, parsedScript) -> {
+            parsedScript.exposeClass("MTRClientData", MinecraftClientData.class);
+            parsedScript.exposeClass("MTR", MTRWrapper.class);
+            parsedScript.exposeClass("TextUtil", TextUtilJS.class);
+
+            // ANTE Eyecandy Custom Config
+            if(contextName.equals("Block")) {
+                parsedScript.exposeClass("ConfigResponder", ConfigResponder.class);
+                parsedScript.exposeClass("Optional", Optional.class);
+            }
         });
 
         MTRScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
@@ -64,7 +71,7 @@ public class MTRContentScripting {
     public static void tick() {
         com.lx862.jcm.nativeapi.NativeContentDriver.tick();
         com.lx862.jcm.nativeapi.NativeVehicleDriver.tick();
-        int clearedInstance = scriptManager.getInstanceManager().clearDeadInstance();
+        int clearedInstance = scriptManager.getInstanceManager().tick();
         if(clearedInstance > 0 && JCMClientConfig.INSTANCE.debugMode.value()) {
             MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Removed {} dead MTR script instance", clearedInstance);
         }

@@ -144,6 +144,8 @@
 	"gui.jsblock.eyecandy.listview.widget.selected": "Selected",
 	"gui.jsblock.eyecandy.subtitle": "Selected > %s",
 	"gui.jsblock.eyecandy.title": "Select Object",
+	"gui.jsblock.eyecandy.custom_config.title": "Object Config",
+	"gui.jsblock.eyecandy.custom_config.edit": "Edit Custom Config",
 	"gui.jsblock.eyecandy.listview.widget.not_validated": "One or more config entries contains errors!",
 	"gui.jsblock.script_restriction.title": "Warning!",
 	"gui.jsblock.script_restriction.subtitle": "Are you sure you want to disable scripting class restrictions?",

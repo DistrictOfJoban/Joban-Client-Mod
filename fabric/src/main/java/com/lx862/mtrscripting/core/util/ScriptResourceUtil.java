@@ -29,9 +29,10 @@ import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.api.MTRScriptingAPI;
 
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.Context;
-import com.lx862.mtrscripting.lib.org.mozilla.javascript.Scriptable;
+import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.mtrscripting.mod.util.JSUtil;
+import org.apache.commons.io.IOUtils;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.mapper.ResourceManagerHelper;
 
@@ -46,13 +47,17 @@ import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.text.AttributedString;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class ScriptResourceUtil {
     private static final Stack<Identifier> scriptLocationStack = new Stack<>();
-    private static Context activeContext;
-    private static Scriptable activeScope;
+    private static ParsedScript activeParsingScript;
+
+    public static final boolean ANTE_FLAG = false;
 
     private static final FontRenderContext FONT_CONTEXT = new FontRenderContext(new AffineTransform(), true, false);
     private static final Identifier NOTO_SANS_CJK_LOCATION = new Identifier("mtr", "font/noto-sans-cjk-tc-medium.otf");
@@ -64,57 +69,49 @@ public class ScriptResourceUtil {
     private static Font NOTO_SANS_CJK_CACHE;
     private static Font NOTO_SERIF_CACHE;
 
+    private static final Map<String, DataReaderJS> dataCache = new ConcurrentHashMap<>();
+
     @ApiInternal
-    public static void beginParseScript(Context context, Scriptable scope) {
-        if(activeContext != null || activeScope != null) throw new IllegalStateException("Must call finishParseScript() before beginParseScript()!");
-        activeContext = context;
-        activeScope = scope;
+    public static void beginParseScript(ParsedScript parsedScript) {
+        if(activeParsingScript != null) throw new IllegalStateException("Must call finishParseScript() before beginParseScript()!");
+        activeParsingScript = parsedScript;
     }
 
     @ApiInternal
     public static void finishParseScript() {
-        activeContext = null;
-        activeScope = null;
+        activeParsingScript = null;
     }
 
     @ApiInternal
-    public static void executeScript(Context rhinoCtx, Scriptable scope, Identifier scriptLocation, String script) {
+    public static void executeScript(ParsedScript script, Identifier scriptLocation, String scriptContent) {
         scriptLocationStack.push(scriptLocation);
         try {
-            rhinoCtx.evaluateString(scope, script, scriptLocation.getNamespace() + ":" + scriptLocation.getPath(), 1, null);
+            script.parseScriptContent(scriptContent, scriptLocation.getNamespace() + ":" + scriptLocation.getPath());
         } finally {
-            /* Pop even when the script throws: a leftover entry made every
-               LATER script's idr()/include() resolve relative to the failed
-               script's directory. */
+            /* Yanyang: pop even when the script throws — a leftover entry
+               made every LATER script's idr()/include() resolve relative to
+               the failed script's directory. */
             scriptLocationStack.pop();
         }
     }
 
     public static void includeScript(Object pathOrIdentifier) {
-        if (activeContext == null) throw new RuntimeException(
+        if (!isParsingStage()) throw new RuntimeException(
             "Cannot use include() in Runtime Stage, as all scripts has been parsed and finalized at this point!"
         );
         Identifier identifier;
         if (pathOrIdentifier instanceof Identifier) {
             identifier = (Identifier) pathOrIdentifier;
         } else {
-            identifier = idRelative(pathOrIdentifier.toString());
+            identifier = idr(pathOrIdentifier.toString());
         }
         DataReaderJS scriptFile = read(identifier);
         if(scriptFile == null) throw new IllegalStateException(String.format("Failed to include script %s:%s as it is not found.", identifier.getNamespace(), identifier.getPath()));
-        executeScript(activeContext, activeScope, identifier, scriptFile.asString());
+        executeScript(activeParsingScript, identifier, scriptFile.asString());
     }
 
     public static void print(@ValueNullable Object... objs) {
-        StringBuilder sb = new StringBuilder();
-        if(objs == null) {
-            sb.append("null");
-        } else {
-            for(Object obj : objs) {
-                sb.append(obj);
-            }
-        }
-        ConsoleJS.log(sb.toString());
+        ConsoleJS.log(objs);
     }
 
     @Deprecated
@@ -122,6 +119,12 @@ public class ScriptResourceUtil {
         return null;
     }
 
+    @Deprecated
+    public static Object mgr() {
+        return null;
+    }
+
+    @Deprecated
     public static Identifier identifier(String textForm) {
         return id(textForm);
     }
@@ -130,6 +133,11 @@ public class ScriptResourceUtil {
         return new Identifier(textForm);
     }
 
+    public static Identifier id(Identifier id, String suffix) {
+        return new Identifier(id.getNamespace(), id.getPath() + suffix);
+    }
+
+    @Deprecated
     public static Identifier idRelative(String textForm) {
         return idr(textForm);
     }
@@ -153,43 +161,55 @@ public class ScriptResourceUtil {
     }
 
     @Deprecated
-    public static @ValueNullable String readString(Identifier identifier) {
-        DataReaderJS dataReader = read(identifier);
-        if(dataReader == null) return null;
-        return dataReader.asString();
+    public static @ValueNullable String readString(Identifier id) {
+        DataReaderJS dataReaderJS = read(id);
+        if(dataReaderJS == null) return null;
+        return dataReaderJS.asString();
     }
 
     @Deprecated
     public static @ValueNullable BufferedImage readBufferedImage(Identifier id) {
-        DataReaderJS dataReader = read(id);
-        if(dataReader == null) return null;
-        return dataReader.asBufferedImage();
+        DataReaderJS dataReaderJS = read(id);
+        if(dataReaderJS == null) return null;
+        return dataReaderJS.asBufferedImage();
     }
 
     @Deprecated
     public static @ValueNullable Font readFont(Identifier id) {
-        DataReaderJS dataReader = read(id);
-        if(dataReader == null) return null;
-        return dataReader.asFont();
+        DataReaderJS dataReaderJS = read(id);
+        if(dataReaderJS == null) return null;
+        return dataReaderJS.asFont();
     }
 
-    public static @ValueNullable DataReaderJS read(Identifier identifier) {
-        // HACK: MC Mappings always uses a callback for the InputStream and auto-closes it after, so we can't pass it around later on
-        // For now, we just save the full file bytes, then wrap it in another ByteArrayInputStream...
-        byte[][] fileBytes = new byte[][]{null};
-        ResourceManagerHelper.readResource(identifier, is -> {
-            try {
-                fileBytes[0] = is.readAllBytes();
-            } catch (IOException e) {
-                MTRScriptingModClient.LOGGER.error("[JCM Scripting] Error while reading data {}", identifier);
+    public static @ValueNullable DataReaderJS read(String id) {
+        return read(JSUtil.parseId(id));
+    }
+
+    public static @ValueNullable DataReaderJS read(Identifier id) {
+        String idStr = id.getNamespace() + ":" + id.getPath();
+
+        return cacheOrGet(idStr, () -> {
+            // HACK: MC Mappings always uses a callback for the InputStream and auto-closes it after, so we can't pass it around later on
+            // For now, we just save the full file bytes, then wrap it in another ByteArrayInputStream...
+            byte[][] fileBytes = new byte[][]{null};
+            ResourceManagerHelper.readResource(id, is -> {
+                try {
+                    fileBytes[0] = IOUtils.toByteArray(is);
+                } catch (IOException e) {
+                    MTRScriptingModClient.LOGGER.error("[JCM Scripting] Error while reading data {}", id);
+                }
+            });
+
+            if(fileBytes[0] != null) {
+                return new DataReaderJS(() -> new ByteArrayInputStream(fileBytes[0]));
+            } else {
+                return null;
             }
         });
+    }
 
-        if(fileBytes[0] != null) {
-            return new DataReaderJS(() -> new ByteArrayInputStream(fileBytes[0]));
-        } else {
-            return null;
-        }
+    public static boolean exist(String id) {
+        return exist(JSUtil.parseId(id));
     }
 
     public static boolean exist(Identifier id) {
@@ -307,6 +327,12 @@ public class ScriptResourceUtil {
         return 2; // Hardcoded for backward compat
     }
 
+    @ApiInternal
+    private static boolean isParsingStage() {
+        return activeParsingScript != null;
+    }
+
+    @ApiInternal
     private static Identifier resolveRelativePath(Identifier baseFile, String relative) {
         String result = relative.toLowerCase(Locale.ROOT).replace('\\', '/');
         if (result.contains(":")) {
@@ -321,5 +347,15 @@ public class ScriptResourceUtil {
 
             return new Identifier(baseFile.getNamespace(), FileSystems.getDefault().getPath(baseFile.getPath()).getParent().resolve(result).normalize().toString().replace('\\', '/'));
         }
+    }
+
+    @ApiInternal
+    private static DataReaderJS cacheOrGet(String key, Supplier<DataReaderJS> supplier) {
+        return dataCache.computeIfAbsent(key, (k) -> supplier.get());
+    }
+
+    @ApiInternal
+    public static void resetCache() {
+        dataCache.clear();
     }
 }
