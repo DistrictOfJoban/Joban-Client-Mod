@@ -23,6 +23,16 @@ import org.mtr.mod.render.StoredMatrixTransformations;
  * instant {@code run()} returned (the {@code jsblock:pids_1a} oversized-text
  * regression). {@code jcm$mark}/{@code jcm$truncate} remain available for
  * addons and the regression test.
+ *
+ * <p>{@link #jcm$copyWorldAnchorFrom} copies the world anchor — MTR's
+ * {@code useDefaultOffset} + {@code initialTranslateX/Y/Z} fields, set by the
+ * 4-arg constructor — from one holder to another. The anchor is what
+ * {@code transform(GraphicsHolder, Vector3d)} turns into
+ * {@code translate(initialTranslate - offset)} at flush time: it is the ONLY
+ * channel through which a holder participates in the camera-offset
+ * compensation, so a pooled snapshot that drops it renders at the rendering
+ * entity instead of its world position (the yanyang.8 floating-text
+ * regression: scripted PIDS text followed the camera).
  */
 public interface NativeTransformScope {
 
@@ -34,4 +44,12 @@ public interface NativeTransformScope {
 
     /** Drop every appended transformation. */
     void jcm$clearTransformations();
+
+    /**
+     * Adopts the world anchor ({@code useDefaultOffset} +
+     * {@code initialTranslateX/Y/Z}) of another holder, replicating the field
+     * semantics of MTR's {@code StoredMatrixTransformations.copy()} without
+     * allocating. Consumers are not touched.
+     */
+    void jcm$copyWorldAnchorFrom(StoredMatrixTransformations base);
 }

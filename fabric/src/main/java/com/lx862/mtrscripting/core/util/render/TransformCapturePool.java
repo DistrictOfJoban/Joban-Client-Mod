@@ -18,6 +18,19 @@ import org.mtr.mod.render.StoredMatrixTransformations;
  * consumer list live). So every draw call must leave behind a list that
  * still contains its own additions when the flush eventually reads it.
  *
+ * <p>Every handed-out snapshot must ALSO carry the base's <b>world anchor</b>
+ * ({@code useDefaultOffset} + {@code initialTranslateX/Y/Z}, set by MTR's
+ * 4-arg constructor). At flush time {@code transform(holder, offset)} turns
+ * the anchor into {@code translate(initialTranslate - offset)} — the
+ * camera-offset compensation that pins the geometry to its world position
+ * on the rendering-entity matrix. Upstream's per-call {@code copy()}
+ * preserved it; this pool must too: the yanyang.8 pool seeded recycled
+ * holders with a bare {@code new StoredMatrixTransformations()} +
+ * {@code add(base)} and silently dropped the anchor, so every scripted
+ * PIDS text rendered at the rendering entity instead of its block —
+ * following the camera as the player moved (the reported
+ * {@code jsblock:pids_1a} floating-text bug).
+ *
  * <p>The upstream implementation gave every draw call a
  * {@code storedMatrixTransformations.copy()} — correct, but one new object
  * plus a full list copy per draw call per frame. The yanyang.4
@@ -30,7 +43,8 @@ import org.mtr.mod.render.StoredMatrixTransformations;
  *
  * <h2>This pool</h2>
  * {@link #acquire} hands out a recycled {@link StoredMatrixTransformations}
- * seeded with a copy of the base consumer list. The shared base is never
+ * that adopts the base's world anchor and is seeded with a copy of the base
+ * consumer list. The shared base is never
  * mutated, the snapshot survives until the flush, and steady-state
  * allocation is zero (handouts are recycled by
  * {@code com.lx862.jcm.mixin.mtrpatch.MainRendererMixin} at the tail of
@@ -73,10 +87,12 @@ public final class TransformCapturePool {
     }
 
     /**
-     * Takes a transform holder from the pool, empties it and seeds it with
-     * the base list's current consumers. The returned instance is captured
-     * by the draw call's deferred render callback and must not be reused
-     * until {@link #recycleAll()} runs after the frame's queue flush.
+     * Takes a transform holder from the pool, empties it, adopts the base's
+     * world anchor and seeds it with the base list's current consumers — the
+     * field semantics of upstream's {@code copy()} without the allocation.
+     * The returned instance is captured by the draw call's deferred render
+     * callback and must not be reused until {@link #recycleAll()} runs after
+     * the frame's queue flush.
      */
     public static synchronized StoredMatrixTransformations acquire(StoredMatrixTransformations base) {
         final StoredMatrixTransformations smt;
@@ -86,7 +102,13 @@ public final class TransformCapturePool {
             smt = new StoredMatrixTransformations();
             allocated++;
         }
-        ((NativeTransformScope) (Object) smt).jcm$clearTransformations();
+        final NativeTransformScope scope = (NativeTransformScope) (Object) smt;
+        scope.jcm$clearTransformations();
+        /* Anchor first, consumers second: without the anchor the flush-time
+           translate(initialTranslate - offset) never happens and the
+           geometry renders at the rendering entity (camera) instead of the
+           block — see the class javadoc. */
+        scope.jcm$copyWorldAnchorFrom(base);
         smt.add(base);
         if (inFlightCount == inFlight.length) {
             final StoredMatrixTransformations[] grown = new StoredMatrixTransformations[inFlightCount * 2];

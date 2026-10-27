@@ -34,7 +34,11 @@ import java.util.function.Consumer;
  * mark/truncate replay (embedded below as {@link #legacyReplay}) must
  * demonstrably LOSE the per-call transforms — that loss is what rendered
  * every scripted PIDS text (e.g. {@code jsblock:pids_1a}) ~96x oversized
- * and anchored to the block origin.
+ * and anchored to the block origin. S6/S7 guard the other half of
+ * upstream's {@code copy()} semantics — the world anchor: a pooled
+ * snapshot that drops it renders at the rendering entity instead of its
+ * world position, which is the floating-text regression (scripted PIDS
+ * text following the camera as the player moved).
  */
 public final class ScriptedRenderSemanticsTest {
 
@@ -175,6 +179,16 @@ public final class ScriptedRenderSemanticsTest {
         return base;
     }
 
+    /** The real PIDSRenderer base form: a 4-arg world anchor (block center)
+     *  plus local rotation consumers. */
+    private static StoredMatrixTransformations anchoredPidsBase(double bx, double by, double bz) {
+        final StoredMatrixTransformations base = new StoredMatrixTransformations(bx, by, bz);
+        base.add(gh -> gh.rotateYDegrees(90));
+        base.add(gh -> gh.rotateZDegrees(180));
+        base.add(gh -> gh.translate(-0.47, -0.155, -0.130));
+        return base;
+    }
+
     private static boolean has(List<GraphicsHolder.Op> ops, String type, double x, double y, double z) {
         for (GraphicsHolder.Op op : ops) {
             if (op.type.equals(type)
@@ -299,7 +313,97 @@ public final class ScriptedRenderSemanticsTest {
                     "legacy: second callback position must also be lost (the reported pids_1a symptom)");
         }
 
-        System.out.println("ScriptedRenderSemanticsTest: all assertions passed (fixed replay correct, legacy replay demonstrably broken)");
+        /* ---------- S6: the world anchor must survive into the pooled
+             snapshot — the floating-text regression. PIDSRenderer builds its
+             base with the 4-arg constructor (block center); at flush time
+             transform() turns the anchor into
+             translate(initialTranslate - offset). A pooled snapshot seeded
+             without it (the yanyang.8 pool) never applies that translate and
+             the geometry renders at the rendering entity / follows the
+             camera — the reported jsblock:pids_1a bug. ---------- */
+        {
+            final double bx = 100.5, by = 64.5, bz = -200.5;
+            final StoredMatrixTransformations base = anchoredPidsBase(bx, by, bz);
+            final ScriptRenderManager manager = new ScriptRenderManager();
+            manager.draw(new FakeTextCall(3, 10));
+            manager.invoke(WORLD, base, Direction.NORTH, 0xF000F0);
+
+            check(base.size() == 3, "S6: anchored base must not be mutated");
+            final List<List<GraphicsHolder.Op>> frames = flush();
+            check(frames.size() == 1, "S6: one callback scheduled");
+            final List<GraphicsHolder.Op> ops = frames.get(0);
+            check(ops.size() > 0 && ops.get(0).type.equals("push"), "S6: transform pushes first");
+            /* The anchor translate must be the FIRST op after the push,
+               exactly where MTR's transform() emits it. */
+            check(ops.size() > 1 && ops.get(1).type.equals("translate")
+                            && Math.abs(ops.get(1).x - (bx - OFFSET.getXMapped())) < 1e-6
+                            && Math.abs(ops.get(1).y - (by - OFFSET.getYMapped())) < 1e-6
+                            && Math.abs(ops.get(1).z - (bz - OFFSET.getZMapped())) < 1e-6,
+                    "S6: world anchor must apply translate(initialTranslate - offset) at flush "
+                            + "(the floating-text regression)");
+            /* And the per-call transforms must still be there too. */
+            check(has(ops, "scale", BASE_SCALE, BASE_SCALE, BASE_SCALE), "S6: BASE_SCALE still applied");
+            check(has(ops, "translate", 3, 10, 0), "S6: own position still applied");
+
+            /* Reference check against upstream's copy() semantics: the
+               pooled snapshot must transform identically to a fresh
+               base.copy() carrying the same call additions (plus the
+               callback's script-scale tail, which both sides share). */
+            final StoredMatrixTransformations upstreamReference = base.copy();
+            upstreamReference.add(gh -> { gh.scale(BASE_SCALE, BASE_SCALE, BASE_SCALE); gh.translate(3, 10, 0); });
+            final GraphicsHolder referenceHolder = new GraphicsHolder();
+            upstreamReference.transform(referenceHolder, OFFSET);
+            referenceHolder.ops.add(new GraphicsHolder.Op("scale", SCRIPT_SCALE, SCRIPT_SCALE, SCRIPT_SCALE));
+            referenceHolder.ops.add(new GraphicsHolder.Op("pop", 0, 0, 0));
+            // Re-run the same capture/flush for the comparison ops.
+            final ScriptRenderManager manager2 = new ScriptRenderManager();
+            manager2.draw(new FakeTextCall(3, 10));
+            manager2.invoke(WORLD, base, Direction.NORTH, 0xF000F0);
+            final List<List<GraphicsHolder.Op>> frames2 = flush();
+            check(frames2.size() == 1, "S6: reference re-run scheduled");
+            check(frames2.get(0).size() == referenceHolder.ops.size(),
+                    "S6: pooled snapshot op count matches upstream copy() semantics");
+            boolean opsEqual = frames2.get(0).size() == referenceHolder.ops.size();
+            for (int i = 0; opsEqual && i < referenceHolder.ops.size(); i++) {
+                final GraphicsHolder.Op a = frames2.get(0).get(i);
+                final GraphicsHolder.Op b = referenceHolder.ops.get(i);
+                opsEqual = a.type.equals(b.type) && Math.abs(a.x - b.x) < 1e-6
+                        && Math.abs(a.y - b.y) < 1e-6 && Math.abs(a.z - b.z) < 1e-6;
+            }
+            check(opsEqual, "S6: pooled snapshot must transform identically to upstream's copy()");
+        }
+
+        /* ---------- S7: recycled instances re-anchor to each frame's base.
+             Frame 1 anchors at one block, frame 2 at another — the pooled
+             handout of frame 2 must carry frame 2's anchor, not the stale
+             one from frame 1 (guards the re-seed inside acquire()). ---------- */
+        {
+            final StoredMatrixTransformations baseA = anchoredPidsBase(1.5, 2.5, 3.5);
+            final ScriptRenderManager managerA = new ScriptRenderManager();
+            managerA.draw(new FakeTextCall(0, 0));
+            managerA.invoke(WORLD, baseA, Direction.NORTH, 0xF000F0);
+            final List<List<GraphicsHolder.Op>> framesA = flush();
+            check(framesA.size() == 1, "S7: frame A scheduled");
+            check(framesA.get(0).size() > 1 && Math.abs(framesA.get(0).get(1).x - (1.5 - OFFSET.getXMapped())) < 1e-6,
+                    "S7: frame A anchored at its own block");
+
+            final double bx2 = 900.5, by2 = 30.5, bz2 = 777.5;
+            final StoredMatrixTransformations baseB = anchoredPidsBase(bx2, by2, bz2);
+            final ScriptRenderManager managerB = new ScriptRenderManager();
+            managerB.draw(new FakeTextCall(0, 0));
+            managerB.invoke(WORLD, baseB, Direction.NORTH, 0xF000F0);
+            final List<List<GraphicsHolder.Op>> framesB = flush();
+            check(framesB.size() == 1, "S7: frame B scheduled");
+            final List<GraphicsHolder.Op> opsB = framesB.get(0);
+            check(opsB.size() > 1 && opsB.get(1).type.equals("translate")
+                            && Math.abs(opsB.get(1).x - (bx2 - OFFSET.getXMapped())) < 1e-6
+                            && Math.abs(opsB.get(1).y - (by2 - OFFSET.getYMapped())) < 1e-6
+                            && Math.abs(opsB.get(1).z - (bz2 - OFFSET.getZMapped())) < 1e-6,
+                    "S7: recycled handout must re-anchor to frame B's base (stale anchors are the "
+                            + "floating-text regression in recycling form)");
+        }
+
+        System.out.println("ScriptedRenderSemanticsTest: all assertions passed (fixed replay correct, legacy replay demonstrably broken, world anchor preserved)");
     }
 
     private ScriptedRenderSemanticsTest() {

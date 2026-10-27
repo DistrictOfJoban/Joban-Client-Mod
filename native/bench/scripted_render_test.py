@@ -4,16 +4,19 @@ Compiles the PRODUCTION ScriptRenderManager / RenderDrawCall /
 TransformCapturePool / NativeTransformScope sources against stubs that
 replicate MTR 4.0.5's StoredMatrixTransformations semantics (verified
 against the decompiled shipped jar: transform() pushes, applies
-translate(-offset), then every consumer in order, and does NOT pop — the
-caller balances the push; the consumer list is iterated live at flush
-time). The test drives the real capture/replay lifecycle and asserts that
-each draw call's per-call transforms (PIDS BASE_SCALE + position,
+translate(initialTranslate - offset) when the holder was built with the
+4-arg world-anchor constructor, then every consumer in order, and does NOT
+pop — the caller balances the push; the consumer list is iterated live at
+flush time). The test drives the real capture/replay lifecycle and asserts
+that each draw call's per-call transforms (PIDS BASE_SCALE + position,
 .matrices() rotate sandwich) survive until the deferred callback reads
 them, that draw calls stay isolated from each other, that the shared base
-is never mutated, and that the pool reaches steady state. It also embeds
-the yanyang.4..yanyang.8 mark/truncate replay and asserts it demonstrably
-LOSES those transforms — that loss is the jsblock:pids_1a oversized-text
-regression this test exists to guard.
+is never mutated, that the base's world anchor survives into the pooled
+snapshot and is re-anchored on every recycled handout (dropping it is what
+made scripted PIDS text follow the camera), and that the pool reaches
+steady state. It also embeds the yanyang.4..yanyang.8 mark/truncate replay
+and asserts it demonstrably LOSES those transforms — that loss is the
+jsblock:pids_1a oversized-text regression this test exists to guard.
 
 Pure JVM: no native bridge, no Minecraft dependencies.
 """
@@ -42,10 +45,14 @@ public class GraphicsHolder {
     public void rotateZDegrees(float d) { ops.add(new Op("rotateZ", d, 0, 0)); }
 }''',
     # Byte-for-byte semantics of MTR 4.0.5's StoredMatrixTransformations,
-    # decompiled from the shipped jar (transform = push + translate(-offset)
-    # + forEach consumers, NO pop; add(SMT) append-merges the other list).
-    # The jcm$* methods stand in for what StoredMatrixTransformationsMixin
-    # adds to the real class at runtime.
+    # decompiled from the shipped jar (transform = push + conditional
+    # translate(initialTranslate - offset) when useDefaultOffset is set +
+    # forEach consumers, NO pop; add(SMT) append-merges the other list's
+    # consumers but does NOT carry the anchor — only copy() does). The
+    # jcm$* methods stand in for what StoredMatrixTransformationsMixin adds
+    # to the real class at runtime; jcm$copyWorldAnchorFrom mirrors the
+    # mixin's @Mutable field writes (the stub keeps the anchor fields
+    # non-final because plain Java has no PUTFIELD bypass).
     'org/mtr/mod/render/StoredMatrixTransformations.java': '''package org.mtr.mod.render;
 import com.lx862.jcm.nativeapi.NativeTransformScope;
 import org.mtr.mapping.holder.Vector3d;
@@ -55,12 +62,32 @@ import java.util.List;
 import java.util.function.Consumer;
 public class StoredMatrixTransformations implements NativeTransformScope {
     final List<Consumer<GraphicsHolder>> transformations = new ArrayList<>();
+    boolean useDefaultOffset;
+    double initialTranslateX, initialTranslateY, initialTranslateZ;
+    public StoredMatrixTransformations() { useDefaultOffset = false; }
+    public StoredMatrixTransformations(double x, double y, double z) {
+        useDefaultOffset = true;
+        initialTranslateX = x; initialTranslateY = y; initialTranslateZ = z;
+    }
+    private StoredMatrixTransformations(boolean anchored, double x, double y, double z) {
+        useDefaultOffset = anchored;
+        initialTranslateX = x; initialTranslateY = y; initialTranslateZ = z;
+    }
     public void add(Consumer<GraphicsHolder> consumer) { transformations.add(consumer); }
     public void add(StoredMatrixTransformations other) { transformations.addAll(other.transformations); }
     public void transform(GraphicsHolder graphicsHolder, Vector3d offset) {
         graphicsHolder.push();
-        graphicsHolder.translate(-offset.getXMapped(), -offset.getYMapped(), -offset.getZMapped());
+        if (useDefaultOffset) {
+            graphicsHolder.translate(initialTranslateX - offset.getXMapped(),
+                    initialTranslateY - offset.getYMapped(),
+                    initialTranslateZ - offset.getZMapped());
+        }
         transformations.forEach(consumer -> consumer.accept(graphicsHolder));
+    }
+    public StoredMatrixTransformations copy() {
+        StoredMatrixTransformations s = new StoredMatrixTransformations(useDefaultOffset, initialTranslateX, initialTranslateY, initialTranslateZ);
+        s.transformations.addAll(transformations);
+        return s;
     }
     public int size() { return transformations.size(); }
     public int jcm$mark() { return transformations.size(); }
@@ -68,6 +95,12 @@ public class StoredMatrixTransformations implements NativeTransformScope {
         if (mark >= 0 && transformations.size() > mark) transformations.subList(mark, transformations.size()).clear();
     }
     public void jcm$clearTransformations() { transformations.clear(); }
+    public void jcm$copyWorldAnchorFrom(StoredMatrixTransformations base) {
+        this.useDefaultOffset = base.useDefaultOffset;
+        this.initialTranslateX = base.initialTranslateX;
+        this.initialTranslateY = base.initialTranslateY;
+        this.initialTranslateZ = base.initialTranslateZ;
+    }
 }''',
     'org/mtr/mapping/holder/Vector3d.java': '''package org.mtr.mapping.holder;
 public class Vector3d {

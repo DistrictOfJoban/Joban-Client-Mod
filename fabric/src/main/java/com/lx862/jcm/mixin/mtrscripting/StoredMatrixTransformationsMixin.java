@@ -6,6 +6,7 @@ import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.render.StoredMatrixTransformations;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
@@ -24,6 +25,17 @@ import java.util.function.Consumer;
  * TransformCapturePool's javadoc for the yanyang.4 regression that taught
  * us this).
  *
+ * <p>{@code jcm$copyWorldAnchorFrom} writes the four anchor fields
+ * ({@code useDefaultOffset} + {@code initialTranslateX/Y/Z}) of a recycled
+ * holder — {@code @Mutable} shadows, the standard mixin write pattern for
+ * final instance fields ({@code PUTFIELD} carries no runtime finality
+ * check; instance finals are never JIT constant-folded). The anchor is what
+ * {@code transform()} turns into {@code translate(initialTranslate - offset)}
+ * at flush time; {@code TransformCapturePool.acquire} re-seeds it from the
+ * base every handout, replicating {@code copy()}'s field semantics — the
+ * yanyang.8 pool dropped it, and every scripted PIDS text followed the
+ * camera instead of its block.
+ *
  * <p>Applied to every StoredMatrixTransformations, including instances MTR
  * itself creates; the added methods are additive and change no behaviour.
  */
@@ -33,6 +45,26 @@ public abstract class StoredMatrixTransformationsMixin implements NativeTransfor
     @Shadow
     @Final
     private ObjectArrayList<Consumer<GraphicsHolder>> transformations;
+
+    @Shadow
+    @Final
+    @Mutable
+    public boolean useDefaultOffset;
+
+    @Shadow
+    @Final
+    @Mutable
+    private double initialTranslateX;
+
+    @Shadow
+    @Final
+    @Mutable
+    private double initialTranslateY;
+
+    @Shadow
+    @Final
+    @Mutable
+    private double initialTranslateZ;
 
     @Override
     @Unique
@@ -54,5 +86,15 @@ public abstract class StoredMatrixTransformationsMixin implements NativeTransfor
     @Unique
     public void jcm$clearTransformations() {
         transformations.clear();
+    }
+
+    @Override
+    @Unique
+    public void jcm$copyWorldAnchorFrom(StoredMatrixTransformations base) {
+        final StoredMatrixTransformationsMixin from = (StoredMatrixTransformationsMixin) (Object) base;
+        this.useDefaultOffset = from.useDefaultOffset;
+        this.initialTranslateX = from.initialTranslateX;
+        this.initialTranslateY = from.initialTranslateY;
+        this.initialTranslateZ = from.initialTranslateZ;
     }
 }

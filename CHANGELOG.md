@@ -2,6 +2,7 @@
 
 ## 2.3.0-prerelease.2-yanyang.1
 
+- **修复（脚本化 PIDS 文字乱飘 / eyecandy 位移）**：yanyang.8 的 `TransformCapturePool` 在把 base 变换快照进回收实例时只复制了 consumer 列表，**丢失了 MTR 4 参构造器承载的世界锚点**（`useDefaultOffset` + `initialTranslateX/Y/Z`）。锚点是 flush 时 `translate(initialTranslate - offset)` 相机补偿的唯一通道——丢失后脚本化 PIDS 文字渲染在渲染实体（相机）位置而非方块处，随玩家移动满处乱飘、视距近导致大小异常（`jsblock:pids_1a` 报告）。修复：`acquire()` 现按上游 `copy()` 的字段语义重新播种锚点（mixin `@Mutable` 写入，保持零稳态分配）。同因修复 eyecandy 变换缓存：缓存实例此前把世界坐标塞进 consumer（不参与相机补偿，几何体被平移渲染实体位置），现改用 MTR 自身 `RenderEyeCandy` 的 4 参锚点构造 + 仅本地变换 consumer。回归测试补齐 stub 的真实 MTR 语义（条件锚点平移）并新增 S6/S7 场景（锚点存活 + 回收实例逐帧重锚定），红绿验证：旧池代码精确触发 S6 断言失败。
 - **C++ ABI 同步（上游 JS API 变化全量移植）**：
   - 新增 `mtr::Rect`：上游把 PIDS 脚本的 JS 类 `Rectangle` 更名为 `Rect`（Java 类名不变）——C++ SDK 此前没有对应类，现按 `RectangleWrapper` 语义完整移植（`mtr:white.png` 全 UV 四边形、`ARGB_BLACK+color` 不透明色调、默认 20×20/LIGHT_2、`color/naturalLight/renderType/pos/size/zOrder/draw` 全套流式接口）。
   - 记录头 flags 字节：`JcmRecordHeader._pad0[0]` 升格为 flags（`MTR_RECORD_FLAG_NATURAL_LIGHT`），Text/Texture/Rect 的 `naturalLight()` 经此传递——结构体尺寸与全部字段偏移零变化，旧 SDK 编译的模块该字节恒为 0（push_record 整体清零），新旧模块与新旧宿主双向兼容；Java 回放（NativeContentDriver）开始消费该标志。

@@ -43,6 +43,15 @@ public class RenderEyeCandyMixin {
      * and strongly reference the key, making the entry permanently
      * reachable (the classic WeakHashMap self-reference leak).
      *
+     * <p><b>World anchor:</b> the cached holder is built with MTR's own
+     * {@code RenderEyeCandy} base pattern — the 4-arg constructor carrying
+     * the block's world position, with ONLY local transforms (NBT translate
+     * + rotations) as consumers. The anchor participates in the flush-time
+     * {@code translate(initialTranslate - offset)} camera compensation; a
+     * world translate stuffed into a consumer is NOT compensated and
+     * displaces the geometry by the rendering entity's position (the
+     * pre-fix cache rendered eyecandy at entityPos + blockPos).
+     *
      * <p>The cached transform is used directly as the replay root:
      * {@code ScriptRenderManager.invoke} replays every draw call against
      * its own pooled snapshot (see {@link com.lx862.mtrscripting.core.util.render.TransformCapturePool}),
@@ -50,7 +59,7 @@ public class RenderEyeCandyMixin {
      * no per-frame {@code copy()}.
      */
     private static final class TransformCache {
-        final StoredMatrixTransformations transform = new StoredMatrixTransformations();
+        StoredMatrixTransformations transform;
         int px, py, pz;
         float tx, ty, tz, rx, ry, rz;
         Direction facing;
@@ -66,21 +75,23 @@ public class RenderEyeCandyMixin {
         }
 
         void rebuild(BlockEyeCandy.BlockEntity be, Direction facing) {
-            final StoredMatrixTransformations transform = this.transform;
             final BlockPos pos = be.getPos2();
             /* Primitives only — see the capture discipline note above. */
             final double bx = 0.5 + pos.getX(), by = pos.getY(), bz = 0.5 + pos.getZ();
             final float ltx = be.getTranslateX(), lty = be.getTranslateY(), ltz = be.getTranslateZ();
             final float lrx = be.getRotateX(), lry = be.getRotateY(), lrz = be.getRotateZ();
             final float facingRot = -(float) Math.toRadians(facing.asRotation()) + (float) Math.PI;
+            /* 4-arg world anchor (MTR's RenderEyeCandy pattern): consumers
+               carry ONLY the local NBT translate + rotations. */
+            final StoredMatrixTransformations transform = new StoredMatrixTransformations(bx, by, bz);
             transform.add(gh -> {
-                gh.translate(bx, by, bz);
                 gh.translate(ltx, lty, ltz);
                 gh.rotateYRadians(facingRot);
                 gh.rotateXRadians(lrx + (float) Math.PI);
                 gh.rotateYRadians(lry);
                 gh.rotateZRadians(lrz);
             });
+            this.transform = transform;
             this.px = pos.getX();
             this.py = pos.getY();
             this.pz = pos.getZ();
@@ -104,7 +115,9 @@ public class RenderEyeCandyMixin {
             TRANSFORMS.put(blockEntity, cache);
         }
         if (!cache.matches(blockEntity, facing)) {
-            ((com.lx862.jcm.nativeapi.NativeTransformScope) (Object) cache.transform).jcm$clearTransformations();
+            /* Rebuild swaps in a fresh anchored holder — safe even mid-frame:
+               in-flight pooled snapshots copied the old consumers at acquire
+               time and never alias this list. */
             cache.rebuild(blockEntity, facing);
         }
         return cache.transform;
