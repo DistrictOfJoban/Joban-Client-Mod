@@ -279,7 +279,7 @@ jobs:
                   "version_type": "beta",
                   "game_versions": [mc],
                   "loaders": [loader],
-                  "featured": False,
+                  "featured": loader == "fabric" and mc == "1.20.4",
                   "dependencies": deps,
               })
               blob = open(f"jars/{fn}", "rb").read()

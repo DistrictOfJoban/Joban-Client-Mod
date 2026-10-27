@@ -1,22 +1,23 @@
-JCM Yanyang `2.3.0-beta-2.yanyang.7` — 修复间歇性卡顿（yanyang.5 / yanyang.6 已随各自 tag 发布，此处一并概述）。
+JCM Yanyang `2.3.0-beta-2.yanyang.8` — 脚本化 PIDS 渲染修复、开门方向服务端持久记忆、原生桥扩至 8 平台。
 
-**间歇性卡顿修复 (yanyang.7)**
+**PIDS 文字渲染修复（yanyang.4 回归）**
 
-旧实例清扫把「离开视野」误当成「已销毁」：列车离开相机视锥 5 秒后，原生脚本实例即被整体释放（十余张 GL 纹理、全部已上传模型、脚本画布）；重新入镜的第一帧一次性支付 `mtrCreate` + `createResources` + 整幅画布重绘。转头一次即触发多列车同时重建——多毫秒级掉帧、反复出现、日志无报错。
+脚本化 PIDS 预设（内置 `jsblock:pids_1a` 及任何自定义 JS / C++ PIDS 预设）的文字与贴图此前按方块原始尺度渲染——文字约放大 96 倍、锚在方块原点，`.matrices()` 模型姿态丢失。现逐绘制调用捕获变换快照（回收式对象池，稳态零分配保持），缩放与定位恢复正确；JS 装饰物 / 车辆脚本的同源绘制一并修复。JSON 预设 PIDS（`rv_pids` / `lcd_pids` / 投影 PIDS 等）与车辆 LCD 不受影响。新增跨平台回归测试 `scripted_render_semantics` 防止再次回归。
 
-- 清扫区分「存在」与「可见」：镜头后的列车实例保持热态，重新入镜零成本；仅当车辆真正离开客户端车辆列表 5 秒后才销毁（与 JS 车辆脚本行为一致）。
-- 空闲阀门 `-Djcm.nativeIdleMillis`（默认 90000）与热实例上限 `-Djcm.nativeIdleMax`（默认 32）约束不可见实例的内存占用；`0` 分别表示不按时限释放 / 不设上限。
-- 每 tick 销毁预算 2 个（旧者先），批量退出（世界卸载 / 切维度 / 断线）仍一次性冲刷；PIDS / 装饰 / 电梯清扫套用同一阀门。
-- 清扫工作以每分钟一行的聚合日志输出，销毁流量可直接观测。
+**开门方向：服务端持久记忆 + `getDirectionOfDoorOpening()`**
 
-**LCD 黑屏修复 (yanyang.6)**
+- 新脚本 API（JS / C++ 一致）：返回 `"not"` / `"left"` / `"right"` / `"all"`——当前站停靠中（与车门开闭阶段无关）或正线运行时预测**下一站**开门侧；左右相对车头、不受倒行影响；纯查询，不改变 MTR 开门行为。
+- 服务端安装本模组时，预测由**服务端逐线路持久记忆**作答：首次启动全档扫描（未加载区块按需载入——客户端物理上做不到），站台增删改（含 WorldEdit / Axiom 批量编辑）增量重扫、拆除重建自动收敛，结果持久化在存档内——**跨视距、跨会话生效**。服务端未装时自动回退客户端视距内扫描。
+- 原生 C ABI 升至 11：车辆快照新增 `door_direction` 字段（ABI 9/10 旧模块照常工作）；SDK 车辆包装类更名 `mtr::Vehicle`（`mtr::Train` 保留为别名）。
 
-列车离开视锥后 LCD 永久黑屏（数据正常、无报错）的根因是实例销毁与 Java 侧 id 缓存不同步：重新入镜后每帧携带已被桥遗忘的 id，桥返回 `ERR_INSTANCE(4)`。现销毁与缓存删除在同一临界区完成，快捷键重载亦接入完整 C++ 卸载路径；JDK 22+ 的共享内存访问器安装失败静默回退问题同步修复。
+**原生桥扩至 8 平台：windows-arm64**
 
-**传输平面健壮性 (yanyang.5)**
+新增 windows-arm64 原生桥，并修复捆绑桥搜索在 ARM64 Windows 上错误指向 x64 DLL 的问题（x64 DLL 无法在 ARM64 JVM 进程内加载，此前该平台永远加载不到桥）。资源包 C++ 模块需提供 `natives/windows-arm64/` 副本方可在此平台运行。
 
-poller 线程不再被单次异常杀死、被放弃的共享内存区域自愈、CBQ 回调缓冲保留化消除 JVM 崩溃风险、模块回复长度全路径钳制；修复时序缺陷共 9 处，shm 协议（layout v2）不变。
+**全模块执行与性能审计（20+ 项修复）**
 
-**交付物**
+JS 捕获 / 回放线程竞争（可致渲染崩溃）、ARM64 结果槽内存序（JVM 崩溃向量）、Forge 端原生车辆视锥剔除从未生效、每部件每车厢全树重建、陈旧桥 15 秒冻结、字形掩码内存无上限、批量实例销毁单 tick 倾泻、门向扫描 O(P²) 等——完整清单见仓库 [CHANGELOG.md](https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/blob/main/CHANGELOG.md) 的 yanyang.8 章节。
 
-12 个 jar（6 个 MC 版本 × Fabric/Forge，均内置 7 平台原生桥：windows-x64 / linux-x64 / linux-arm64 / android-arm64 / macos-x64 / macos-arm64 / ios-arm64）+ native SDK zip，见本 Release 附件与 Actions 产物。
+> Modrinth 用户提示：自 yanyang.4 跳版升级时，yanyang.5–.7 的修复（传输平面自愈、列车 LCD 黑屏、间歇性卡顿）已包含在本版中。
+
+**交付物**：12 个 jar（6 个 MC 版本 × Fabric / Forge，均内置 8 平台原生桥）+ native SDK zip。

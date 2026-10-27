@@ -211,7 +211,7 @@ ctest --test-dir native/build -C Release --output-on-failure
 
 | 版本 | 主题 |
 | --- | --- |
-| 未发布 | 原生桥扩至 8 平台（windows-arm64）；开门方向迁移服务端并持久化（正线跨视距预测）；全模块执行与性能审计（JS 捕获/回放竞争、ARM 结果槽内存序、Forge 视锥剔除缺失、门向 O(P²) 等 20+ 项修复） |
+| `yanyang.8` | 脚本化 PIDS 渲染修复（yanyang.4 回归）；开门方向服务端持久记忆与 `getDirectionOfDoorOpening()`（C ABI 11）；原生桥扩至 8 平台（windows-arm64）；全模块执行 / 性能审计 20+ 项修复 |
 | `yanyang.7` | 实例热保持：列车离开视锥不再销毁，消除转头时的间歇性卡顿；空闲阀门与销毁预算 |
 | `yanyang.6` | 修复列车 LCD 永久黑屏（实例销毁与 Java 侧 id 缓存不同步） |
 | `yanyang.5` | 传输平面健壮性审查：poller 线程自愈、消除 JVM 崩溃风险等 9 处修复 |

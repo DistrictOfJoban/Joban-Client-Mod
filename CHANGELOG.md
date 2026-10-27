@@ -1,6 +1,6 @@
 # 更新日志 / Changelog
 
-## 未发布
+## 2.3.0-beta-2.yanyang.8
 
 - 修复（yanyang.4 引入的回归，实机报告 `jsblock:pids_1a`）：**脚本化 PIDS 预设的文字与贴图按方块原始尺度渲染**——文字约放大 96 倍、锚在方块原点完全偏离，`.matrices()` 模型姿态全部丢失。受影响面：内置 `pids_1a` 预设（JS）与任何自定义脚本化 PIDS 预设（JS 或 C++，含原生 `JCM_DRAW_TEXT` / `JCM_DRAW_TEXTURE` / `JCM_DRAW_MODEL` 记录）的 Text / Texture / 带姿态 Model 绘制；JS 装饰物（eyecandy）与 JS 车辆脚本中依赖 `.matrices()` 合并的绘制同样受累。基于 JSON 预设的 PIDS 方块（`rv_pids` / `rv_pids_sil_1` / `rv_pids_sil_2` / `lcd_pids` / `pids_projector` 默认预设）与「绝对坐标四边形 + 像素上传」型原生脚本（如 wr2a03 车辆 LCD）不受影响——这也是车辆显示一直正常、唯有脚本化 PIDS 暴露的原因。
   - 根因：`ScriptRenderManager.invoke`（yanyang.4 零分配改造）把每个绘制调用对共享 `StoredMatrixTransformations` 追加的变换消费者（PIDS 的 `BASE_SCALE`+坐标消费者、Z 序偏移、`.matrices()` 旋转三明治）在 `run()` 返回的瞬间就地截断——但绘制的真正执行是 `MainRenderer.scheduleRender` 排入的**延迟回调**，它在帧末队列冲刷时才读取消费者列表（已反编译 MTR 4.0.5 字节码确认：`transform()` 只 push 不 pop、消费列表在冲刷时现场遍历）。冲刷时列表只剩基础变换：位置与缩放从未生效。上游逐调用 `copy()` 语义正确但每帧每调用两份分配；yanyang.4 的 mark/truncate 优化正是丢掉这一点。
