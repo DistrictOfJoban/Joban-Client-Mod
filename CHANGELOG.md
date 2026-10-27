@@ -6,6 +6,7 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
 
 ### Scripting
 - Bump Rhino JS Engine to 1.9.2, see their [changelog](https://github.com/mozilla/rhino/releases/tag/Rhino1_9_2_Release) for details.
+- Reduce performance impact when [hiding vehicle display cube](https://jcm.joban.org/latest/dev/scripting/features/vehicle_display_cube/). (Yes you read that correctly)
 - **PIDS Scripting: Breaking Changes (Not code-related) (PIDS Projector only)**
   - This update "nerfed" the PIDS Projector such that it will skip rendering if out of the camera's bound (In-line with other PIDS), except:
     - If any of the configured X/Y/Z offset is >= 4m
