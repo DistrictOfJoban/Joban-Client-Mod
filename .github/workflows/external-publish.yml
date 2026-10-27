@@ -281,10 +281,11 @@ jobs:
                   "loaders": [loader],
                   "featured": loader == "fabric" and mc == "1.20.4",
                   "dependencies": deps,
+                  "project_id": PROJECT,
               })
               blob = open(f"jars/{fn}", "rb").read()
               payload, ctype = multipart(data, fn, blob)
-              st, resp = post(f"{MR}/project/{PROJECT}/version", payload, ctype)
+              st, resp = post(f"{MR}/version", payload, ctype)
               print(f"UPLOADED {fn} -> version id {resp.get('id')} ({st})")
               uploaded.append((fn, vnum, resp.get("id")))
 
