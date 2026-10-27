@@ -2,6 +2,10 @@
  * util.hpp — utility ports used by native scripts.
  *
  *  - CycleTracker   : mirrors com.lx862.mtrscripting.core.util.CycleTrackerJS
+ *  - StateTracker   : mirrors com.lx862.mtrscripting.core.util.StateTrackerJS
+ *                     (including the upstream v2.3.0-prerelease.2 change:
+ *                     setState returns whether this is the first frame in
+ *                     the new state)
  *  - PidsUtil       : mirrors jsblock:scripts/pids_util.js (JS object)
  *  - StrView helpers: zero-copy views over the snapshot string pool
  */
@@ -41,6 +45,54 @@ inline StrView make_view(const char* data, int32_t len) {
     v.len = len;
     return v;
 }
+
+/**
+ * StateTracker — 1:1 port of StateTrackerJS. The JS class is constructed
+ * with `new StateTracker()` and reads Timing.globalElapsed() itself; the
+ * C++ port takes the clock explicitly (the snapshots' game_time_millis is
+ * the natural equivalent) so it stays allocation- and host-free.
+ *
+ * JS (upstream v2.3.0-prerelease.2 semantics):
+ *   const st = new StateTracker();
+ *   if (st.setState("arriving")) { ... first frame in "arriving" ... }
+ *   st.stateNow() / st.stateLast() / st.stateNowDuration()
+ *   st.changedTo("arriving") / st.changedFromTo("idle", "arriving")
+ */
+template <typename T>
+class StateTracker {
+public:
+    /* Returns true on the first frame in the new state (the upstream
+       setState() boolean since v2.3.0-prerelease.2 — previously void). */
+    bool set_state(const T& value, double now_millis) {
+        if (!(value == current_)) {
+            last_ = current_;
+            current_ = value;
+            current_since_ = now_millis;
+            first_time_ = true;
+        } else {
+            first_time_ = false;
+        }
+        return first_time_;
+    }
+
+    const T& state_now() const { return current_; }
+    const T& state_last() const { return last_; }
+    double state_now_duration(double now_millis) const { return now_millis - current_since_; }
+    bool state_now_first() const { return first_time_; }
+
+    bool changed_to(const T& state) const {
+        return first_time_ && current_ == state;
+    }
+    bool changed_from_to(const T& old_state, const T& new_state) const {
+        return first_time_ && last_ == old_state && current_ == new_state;
+    }
+
+private:
+    T last_{};
+    T current_{};
+    double current_since_ = 0.0;
+    bool first_time_ = false;
+};
 
 /**
  * CycleTracker — mirrors CycleTrackerJS / TextUtil.cycleString:

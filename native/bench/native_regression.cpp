@@ -56,6 +56,57 @@ int main() {
     }
     std::puts("NATIVE REGRESSION OK: closed rounded outline without diagonal chords");
 
+    /* ---- fullAA()/noAA() (upstream GraphicsTexture port) ----
+       Default (no_aa): hard edges — an oval's boundary ring is all-or-
+       nothing per pixel. full_aa(): coverage blend — the same ring gains
+       intermediate alpha values, the interior stays fully opaque and the
+       hard-edge ink total stays within the feather band. */
+    {
+        mtr::GraphicsTexture hard, soft;
+        JcmFrameInput in{};
+        hard.create(in, 64, 64);
+        soft.create(in, 64, 64);
+        mtr::Gfx2D gh(hard), gs(soft);
+        gh.no_aa();  /* default */
+        gs.full_aa();
+        gh.set_color(0xFFFFFFFFu); gs.set_color(0xFFFFFFFFu);
+        gh.fill_oval(8, 8, 48, 48);
+        gs.fill_oval(8, 8, 48, 48);
+        if (gh.aa() || !gs.aa()) { std::fprintf(stderr, "FAIL: aa toggle\n"); return 1; }
+        int hard_partial = 0, soft_partial = 0, soft_full = 0;
+        for (int i = 0; i < 64 * 64; i++) {
+            const uint32_t h = hard.pixels32()[i], s = soft.pixels32()[i];
+            const uint8_t ha = (uint8_t)(h >> 24), sa = (uint8_t)(s >> 24);
+            if (ha != 0 && ha != 0xFF) hard_partial++;
+            if (sa != 0 && sa != 0xFF) soft_partial++;
+            if (sa == 0xFF) soft_full++;
+        }
+        if (hard_partial != 0) { std::fprintf(stderr, "FAIL: hard-edge oval must be binary\n"); return 1; }
+        if (soft_partial < 8) { std::fprintf(stderr, "FAIL: AA oval must have a blended rim (%d)\n", soft_partial); return 1; }
+        if (soft_full == 0) { std::fprintf(stderr, "FAIL: AA oval interior must stay opaque\n"); return 1; }
+        /* AA lines: soft alpha must appear along a diagonal stroke. */
+        hard.fill(0); soft.fill(0);
+        gh.draw_line(4, 4, 60, 52, 2);
+        gs.draw_line(4, 4, 60, 52, 2);
+        int line_partial = 0;
+        for (int i = 0; i < 64 * 64; i++) {
+            const uint8_t sa = (uint8_t)(soft.pixels32()[i] >> 24);
+            if (sa != 0 && sa != 0xFF) line_partial++;
+        }
+        if (line_partial < 4) { std::fprintf(stderr, "FAIL: AA line must blend (%d)\n", line_partial); return 1; }
+        /* no_aa() restores hard edges (clear the AA leftovers first). */
+        gs.no_aa();
+        soft.fill(0);
+        gs.fill_oval(8, 8, 48, 48);
+        int back_partial = 0;
+        for (int i = 0; i < 64 * 64; i++) {
+            const uint8_t sa = (uint8_t)(soft.pixels32()[i] >> 24);
+            if (sa != 0 && sa != 0xFF) back_partial++;
+        }
+        if (back_partial != 0) { std::fprintf(stderr, "FAIL: no_aa() must restore hard edges\n"); return 1; }
+        std::puts("NATIVE REGRESSION OK: fullAA/noAA coverage blending");
+    }
+
     /* Pixel-arena lifecycle: a spike frame grows the arena, the decaying
        idle shrink must hand the excess back to the allocator (down to the
        1 MB floor) while a quiet workload continues, and a later frame

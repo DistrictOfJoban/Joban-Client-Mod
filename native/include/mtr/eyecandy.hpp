@@ -38,6 +38,21 @@ public:
 
     /* Direction.ordinal(), matching the Java scripting wrapper. */
     int32_t facing() const { return snap_->facing; }
+
+    /* facingAngle() — port of EyecandyBlockEntityWrapper.facingAngle()
+       (upstream v2.3.0-prerelease.2): Direction.asRotation() degrees.
+       MC ordinals: 2=NORTH, 3=SOUTH, 4=WEST, 5=EAST; asRotation() is
+       horizontalIndex*90 (SOUTH=0, WEST=90, NORTH=180, EAST=270). Vertical
+       ordinals never occur for eyecandy FACING; 0 keeps the arithmetic
+       total instead of branching on an impossible case. */
+    float facing_angle() const {
+        switch (snap_->facing) {
+            case 2: return 180.0f; /* NORTH */
+            case 4: return 90.0f;  /* WEST  */
+            case 5: return 270.0f; /* EAST  */
+            default: return 0.0f;  /* SOUTH (and verticals) */
+        }
+    }
     bool is_crosshair_target() const { return snap_->crosshair_target != 0; }
 
     int32_t redstone_level() const { return snap_->redstone_level; }

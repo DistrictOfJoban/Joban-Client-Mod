@@ -50,7 +50,6 @@
     "Position": "org.mtr.core.data.Position",
     "Text": "com.lx862.jcm.mod.scripting.pids.TextWrapper",
     "Texture": "com.lx862.jcm.mod.scripting.pids.TextureWrapper",
-    "Rectangle": "com.lx862.jcm.mod.scripting.pids.RectangleWrapper",
     "PIDSScriptContext": "com.lx862.jcm.mod.scripting.pids.PIDSScriptContext",
     "PIDSBlockEntity": "com.lx862.jcm.mod.scripting.pids.PIDSWrapper",
     "ArrivalEntries": "com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalsWrapper",
@@ -70,7 +69,8 @@
     "StopsData": "com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper$StopsData",
     "LiftWrapper": "com.lx862.mtrscripting.mod.impl.mtr.lift.LiftWrapper",
     "LiftFloor": "com.lx862.mtrscripting.mod.impl.mtr.lift.LiftWrapper$Floor",
-    "LiftScriptContext": "com.lx862.mtrscripting.mod.impl.mtr.lift.LiftScriptContext"
+    "LiftScriptContext": "com.lx862.mtrscripting.mod.impl.mtr.lift.LiftScriptContext",
+    "Rect": "com.lx862.jcm.mod.scripting.pids.RectangleWrapper"
   },
   "members": [
     {
@@ -6009,6 +6009,146 @@
         0
       ],
       "signature": "RouteInterchange.getTransportMode(): TransportMode?"
+    },
+    {
+      "page": "type_pids",
+      "type": "Rect",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        0
+      ],
+      "signature": "Rect.create(): Rect"
+    },
+    {
+      "page": "type_pids",
+      "type": "Rect",
+      "kind": "method",
+      "member": "create",
+      "arities": [
+        1
+      ],
+      "signature": "Rect.create(comment: String): Rect"
+    },
+    {
+      "page": "type_pids",
+      "type": "Rect",
+      "kind": "method",
+      "member": "color",
+      "arities": [
+        1
+      ],
+      "signature": "Rect.color(color: int): Rect"
+    },
+    {
+      "page": "type_pids",
+      "type": "Rect",
+      "kind": "method",
+      "member": "naturalLight",
+      "arities": [
+        0
+      ],
+      "signature": "Rect.naturalLight(): Rect"
+    },
+    {
+      "page": "type_pids",
+      "type": "Rect",
+      "kind": "method",
+      "member": "renderType",
+      "arities": [
+        1
+      ],
+      "signature": "Rect.renderType(renderType: String): Rect"
+    },
+    {
+      "page": "type_pids",
+      "type": "Rect",
+      "kind": "method",
+      "member": "pos",
+      "arities": [
+        2
+      ],
+      "signature": "Rect.pos(x: double, y: double): Rect"
+    },
+    {
+      "page": "type_pids",
+      "type": "Rect",
+      "kind": "method",
+      "member": "size",
+      "arities": [
+        2
+      ],
+      "signature": "Rect.size(w: double, h: double): Rect"
+    },
+    {
+      "page": "type_pids",
+      "type": "Rect",
+      "kind": "method",
+      "member": "zOrder",
+      "arities": [
+        1
+      ],
+      "signature": "Rect.zOrder(z: int): Rect"
+    },
+    {
+      "page": "type_pids",
+      "type": "Rect",
+      "kind": "method",
+      "member": "draw",
+      "arities": [
+        1
+      ],
+      "signature": "Rect.draw(ctx: PIDSScriptContext): void"
+    },
+    {
+      "page": "dynamic_textures",
+      "type": "GraphicsTexture",
+      "kind": "method",
+      "member": "fullAA",
+      "arities": [
+        0
+      ],
+      "signature": "GraphicsTexture.fullAA(): GraphicsTexture"
+    },
+    {
+      "page": "dynamic_textures",
+      "type": "GraphicsTexture",
+      "kind": "method",
+      "member": "noAA",
+      "arities": [
+        0
+      ],
+      "signature": "GraphicsTexture.noAA(): GraphicsTexture"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "id",
+      "arities": [
+        2
+      ],
+      "signature": "Resources.id(id: Identifier, suffix: String): Identifier"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "method",
+      "member": "mgr",
+      "arities": [
+        0
+      ],
+      "signature": "Resources.mgr(): Object"
+    },
+    {
+      "page": "resources",
+      "type": "Resources",
+      "kind": "field",
+      "member": "ANTE_FLAG",
+      "arities": [
+        0
+      ],
+      "signature": "Resources.ANTE_FLAG: boolean"
     }
   ]
 }

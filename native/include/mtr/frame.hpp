@@ -90,6 +90,7 @@ public:
         pixel_bytes_ = 0;
         float_bytes_ = 0;
         z_auto_ = 0;
+        const_count_ = 0;
     }
 
     /* ---- record emitters (bump-allocated, no malloc on hot path) ---- */
@@ -162,6 +163,27 @@ public:
         int32_t off = string_bytes_;
         std::memcpy(string_arena_ + string_bytes_, s, static_cast<size_t>(len));
         string_bytes_ += len;
+        return off;
+    }
+
+    /* Constant-string interning: repeated string LITERALS (static storage,
+       e.g. Rect's shared white-texture id) intern once per frame instead of
+       once per draw call — a 1000-rect LED matrix would otherwise re-copy
+       28 KB into the 32 KB arena every frame and overflow it. Pointer
+       identity is the key; the cache dies with the frame (begin_frame
+       resets it). Plain intern() stays allocation- and hash-free for the
+       per-record payloads (text lines) that genuinely differ. */
+    int32_t intern_const(const char* s, int32_t len) {
+        for (int32_t i = 0; i < const_count_; i++) {
+            if (const_keys_[i] == s && const_lens_[i] == len) return const_offsets_[i];
+        }
+        const int32_t off = intern(s, len);
+        if (const_count_ < CONST_CACHE) {
+            const_keys_[const_count_] = s;
+            const_lens_[const_count_] = len;
+            const_offsets_[const_count_] = off;
+            const_count_++;
+        }
         return off;
     }
 
@@ -386,6 +408,13 @@ private:
     int64_t pixel_bytes_ = 0;
     int32_t float_bytes_ = 0;
     int32_t z_auto_ = 0;
+
+    /* intern_const() cache (per frame). */
+    static constexpr int32_t CONST_CACHE = 16;
+    const char* const_keys_[CONST_CACHE] = {};
+    int32_t const_lens_[CONST_CACHE] = {};
+    int32_t const_offsets_[CONST_CACHE] = {};
+    int32_t const_count_ = 0;
 };
 
 } /* namespace mtr */

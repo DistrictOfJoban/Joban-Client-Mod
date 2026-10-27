@@ -139,6 +139,18 @@ public:
 
     void set_color(uint32_t argb) { color_ = argb; }
 
+    /* fullAA() / noAA() — port of GraphicsTexture.fullAA()/noAA()
+       (upstream v2.3.0-prerelease.2): toggles shape anti-aliasing on the
+       canvas. Java default (constructor) leaves KEY_ANTIALIASING unset —
+       shapes are hard-edged until fullAA() — so the C++ default matches
+       with aa_ = false and the previous hard-edged loops stay the fast
+       path. Text is not affected here: the host TTF rasterization is
+       always anti-aliased (Java keeps TEXT_ANTIALIAS ON in the
+       constructor and fullAA()/noAA() only re-assert/clear it). */
+    void full_aa() { aa_ = true; }
+    void no_aa()   { aa_ = false; }
+    bool aa() const { return aa_; }
+
     GraphicsTexture& texture() { return tex_; }
 
     /* ---- clip (g.clip(rect) / g.setClip(oldClip)) ---- */
@@ -200,23 +212,20 @@ public:
             const double fy = py + 0.5;
             for (int32_t px = x0; px < x1; px++) {
                 const double fx = px + 0.5;
-                bool inside;
-                if (fx < cx0 && fy < cy0) {
-                    const double ex = (cx0 - fx) / arx, ey = (cy0 - fy) / ary;
-                    inside = ex * ex + ey * ey <= 1.0;
-                } else if (fx > cx1 && fy < cy0) {
-                    const double ex = (fx - cx1) / arx, ey = (cy0 - fy) / ary;
-                    inside = ex * ex + ey * ey <= 1.0;
-                } else if (fx < cx0 && fy > cy1) {
-                    const double ex = (cx0 - fx) / arx, ey = (fy - cy1) / ary;
-                    inside = ex * ex + ey * ey <= 1.0;
-                } else if (fx > cx1 && fy > cy1) {
-                    const double ex = (fx - cx1) / arx, ey = (fy - cy1) / ary;
-                    inside = ex * ex + ey * ey <= 1.0;
-                } else {
-                    inside = true;
-                }
-                if (inside) plot(px, py);
+                double ex = 0, ey = 0;
+                bool edge = true;
+                if (fx < cx0 && fy < cy0) { ex = (cx0 - fx) / arx; ey = (cy0 - fy) / ary; }
+                else if (fx > cx1 && fy < cy0) { ex = (fx - cx1) / arx; ey = (cy0 - fy) / ary; }
+                else if (fx < cx0 && fy > cy1) { ex = (cx0 - fx) / arx; ey = (fy - cy1) / ary; }
+                else if (fx > cx1 && fy > cy1) { ex = (fx - cx1) / arx; ey = (fy - cy1) / ary; }
+                else edge = false;
+                if (!edge) { plot(px, py); continue; }
+                const double rr = std::sqrt(ex * ex + ey * ey);
+                /* rr is normalized (1.0 = the boundary): convert to a signed
+                   pixel distance ((rr - 1) * local radius) so edge_coverage
+                   sees < 0 inside, ~0 on the boundary, > 0 outside. */
+                if (aa_) { plot_cov(px, py, edge_coverage((rr - 1.0) * std::min(arx, ary), 1.0)); }
+                else if (rr <= 1.0) plot(px, py);
             }
         }
         dirty_union(x0, y0, x1 - 1, y1 - 1);
@@ -246,7 +255,10 @@ public:
             const double ey = (py + 0.5 - cy) / ry;
             for (int32_t px = x0; px < x1; px++) {
                 const double ex = (px + 0.5 - cx) / rx;
-                if (ex * ex + ey * ey <= 1.0) plot(px, py);
+                if (aa_) {
+                    plot_cov(px, py, edge_coverage((std::sqrt(ex * ex + ey * ey) - 1.0)
+                                                    * std::min(rx, ry), 1.0));
+                } else if (ex * ex + ey * ey <= 1.0) plot(px, py);
             }
         }
         dirty_union(x0, y0, x1 - 1, y1 - 1);
@@ -268,7 +280,8 @@ public:
                 const double ex = (px + 0.5 - cx) / rx;
                 const double ey = (py + 0.5 - cy) / ry;
                 const double d = std::fabs(std::sqrt(ex * ex + ey * ey) - 1.0) * norm;
-                if (d <= tol) plot(px, py);
+                if (aa_) { plot_cov(px, py, edge_coverage(tol - d, 1.0)); }
+                else if (d <= tol) plot(px, py);
             }
         }
         dirty_union(x0, y0, x1 - 1, y1 - 1);
@@ -318,9 +331,20 @@ public:
             }
             std::sort(xhits.begin(), xhits.end());
             for (size_t k = 0; k + 1 < xhits.size(); k += 2) {
-                const int32_t xa = std::max(clip_x0_, static_cast<int32_t>(std::floor(xhits[k])));
-                const int32_t xb = std::min(clip_x1_ - 1, static_cast<int32_t>(std::ceil(xhits[k + 1])));
-                for (int32_t px = xa; px <= xb; px++) plot(px, py);
+                const double xa = xhits[k], xb = xhits[k + 1];
+                const int32_t px0 = std::max(clip_x0_, static_cast<int32_t>(std::floor(xa)));
+                const int32_t px1 = std::min(clip_x1_ - 1, static_cast<int32_t>(std::ceil(xb)));
+                for (int32_t px = px0; px <= px1; px++) {
+                    if (aa_) {
+                        /* Horizontal box-filter coverage: the fraction of
+                           [px, px+1) covered by the span [xa, xb]. */
+                        const double cov = std::min(static_cast<double>(px + 1), xb)
+                                         - std::max(static_cast<double>(px), xa);
+                        plot_cov(px, py, cov);
+                    } else {
+                        plot(px, py);
+                    }
+                }
             }
         }
         dirty_union(static_cast<int32_t>(min_x), static_cast<int32_t>(min_y),
@@ -435,14 +459,28 @@ private:
     inline void plot(int32_t px, int32_t py) {
         if (px < clip_x0_ || py < clip_y0_ || px >= clip_x1_ || py >= clip_y1_) return;
         uint32_t* const row = base_ + static_cast<size_t>(py) * stride_;
+        plot_blend(row + px, color_);
+    }
+
+    /* Coverage-blended plot for the AA paths: the source alpha is scaled
+       by cov (0..1) first, then the same integer src-over as plot(). */
+    inline void plot_cov(int32_t px, int32_t py, double cov) {
+        if (cov <= 0.0) return;
+        if (cov > 1.0) cov = 1.0;
+        if (px < clip_x0_ || py < clip_y0_ || px >= clip_x1_ || py >= clip_y1_) return;
+        uint32_t* const row = base_ + static_cast<size_t>(py) * stride_;
         const uint32_t src = color_;
-        if ((src >> 24) == 0xFF) {
-            row[px] = src;
-            return;
-        }
+        const uint32_t sa = static_cast<uint32_t>((src >> 24) * cov + 0.5);
+        if (sa == 0) return;
+        if (sa >= 255) { row[px] = src; return; }
+        plot_blend(row + px, (src & 0x00FFFFFFu) | (sa << 24));
+    }
+
+    inline void plot_blend(uint32_t* dst_ptr, uint32_t src) {
         const uint32_t sa = src >> 24;
         if (sa == 0) return;
-        const uint32_t dst = row[px];
+        if (sa == 0xFF) { *dst_ptr = src; return; }
+        const uint32_t dst = *dst_ptr;
         const uint32_t da = dst >> 24;
         /* integer src-over */
         const uint32_t inv = 255 - sa;
@@ -450,9 +488,19 @@ private:
         auto mix = [sa, inv](uint32_t sc, uint32_t dc) {
             return (sa * sc + inv * dc + 127) >> 8;
         };
-        row[px] = (out_a << 24) | (mix((src >> 16) & 0xFF, (dst >> 16) & 0xFF) << 16)
-                  | (mix((src >> 8) & 0xFF, (dst >> 8) & 0xFF) << 8)
-                  | mix(src & 0xFF, dst & 0xFF);
+        *dst_ptr = (out_a << 24) | (mix((src >> 16) & 0xFF, (dst >> 16) & 0xFF) << 16)
+                      | (mix((src >> 8) & 0xFF, (dst >> 8) & 0xFF) << 8)
+                      | mix(src & 0xFF, dst & 0xFF);
+    }
+
+    /* Analytic edge coverage for the AA paths: dist_px is a signed distance
+       in PIXELS (<= 0 inside the shape / stroke band, > 0 outside) —
+       normalized-space distances must be scaled back to pixels by the
+       caller before reaching this function. One-pixel feather, the same
+       visual softness as Java2D's default ANTIALIAS quality hint. */
+    static inline double edge_coverage(double dist_px, double /*scale*/) {
+        const double c = 0.5 - dist_px;
+        return c <= 0.0 ? 0.0 : (c >= 1.0 ? 1.0 : c);
     }
 
     inline void dirty_union(int32_t x0, int32_t y0, int32_t x1, int32_t y1) {
@@ -480,7 +528,9 @@ private:
                 }
                 const double ex = px + 0.5 - (x1 + t * dx);
                 const double ey = py + 0.5 - (y1 + t * dy);
-                if (ex * ex + ey * ey <= r * r) plot(px, py);
+                if (aa_) {
+                    plot_cov(px, py, edge_coverage(r - std::sqrt(ex * ex + ey * ey), 1.0));
+                } else if (ex * ex + ey * ey <= r * r) plot(px, py);
             }
         }
         dirty_union(px0, py0, px1, py1);
@@ -653,6 +703,7 @@ private:
     int32_t stride_ = 0;
     uint32_t color_ = 0xFF000000u;
     double sx_ = 1.0, sy_ = 1.0;
+    bool aa_ = false;                 /* fullAA()/noAA() — shape anti-aliasing */
     int32_t clip_x0_ = 0, clip_y0_ = 0, clip_x1_ = 0, clip_y1_ = 0;
     std::vector<Clip> saved_;
 };

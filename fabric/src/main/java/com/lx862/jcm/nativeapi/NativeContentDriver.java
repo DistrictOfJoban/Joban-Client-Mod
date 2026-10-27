@@ -175,6 +175,19 @@ public final class NativeContentDriver {
     private static org.mtr.mapping.holder.Identifier identifier(ByteBuffer arena,int offset,int length) {
         return NativeStringCache.identifier(arena,offset,length);
     }
+
+    /** MtrRenderLayer (the C++ enum in mtr_native.h) → QueuedRenderLayer
+     * name for the wrappers' renderType(String) setters. The light
+     * variants condense to LIGHT_2 — the TextureWrapper/RectangleWrapper
+     * default — and TEXT/EXTERIOR/INTERIOR map one to one. */
+    private static String renderLayerName(int layer) {
+        switch(layer) {
+            case 0: return "TEXT";
+            case 2: return "EXTERIOR";
+            case 3: return "INTERIOR";
+            default: return "LIGHT_2";
+        }
+    }
     public static void apply(NativeScriptManager.NativeFrame frame,AbstractScriptContext context) {
         NativeHost.get().setActiveInstance(frame.instanceKey);
         ByteBuffer records=frame.records.order(ByteOrder.nativeOrder()); int pos=0;
@@ -220,12 +233,21 @@ public final class NativeContentDriver {
                 switch(records.getInt(pos+24)) { case 1:call.stretchXY();break; case 2:call.scaleXY();break; case 3:call.wrapText();break; case 4:call.marquee(records.getDouble(pos+72)).withMarqueeProgress(records.getDouble(pos+80));break; }
                 int fontLength=records.getInt(pos+92); if(fontLength>0) call.font(string(frame.stringArena,records.getInt(pos+88),fontLength));
                 int z=records.getInt(pos+28); if(z>=0) call.zOrder(z);
+                /* Header flags byte (natural light) + the render layer —
+                   both ignored by this replay before the flags byte existed;
+                   records from older SDKs carry zeros and map onto the
+                   wrapper defaults, so behavior is unchanged for them. */
+                if((records.get(pos+1)&1)!=0) call.naturalLight();
+                call.renderType(renderLayerName(records.getInt(pos+12)));
                 ((PIDSScriptContext)context).draw(call);
             } else if(kind==2&&context instanceof PIDSScriptContext) {
                 TextureWrapper call=TextureWrapper.createPooled().texture(identifier(frame.stringArena,records.getInt(pos+68),records.getInt(pos+72)))
                     .color(records.getInt(pos+12)).pos(records.getDouble(pos+16),records.getDouble(pos+24))
                     .size(records.getDouble(pos+32),records.getDouble(pos+40)).uv(records.getFloat(pos+48),records.getFloat(pos+52),records.getFloat(pos+56),records.getFloat(pos+60));
-                int z=records.getInt(pos+64); if(z>=0) call.zOrder(z); ((PIDSScriptContext)context).draw(call);
+                int z=records.getInt(pos+64); if(z>=0) call.zOrder(z);
+                if((records.get(pos+1)&1)!=0) call.naturalLight();
+                call.renderType(renderLayerName(records.getInt(pos+8)));
+                ((PIDSScriptContext)context).draw(call);
             }
             pos+=size;
         }

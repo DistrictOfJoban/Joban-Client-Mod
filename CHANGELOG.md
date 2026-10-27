@@ -2,6 +2,17 @@
 
 ## 2.3.0-prerelease.2-yanyang.1
 
+- **C++ ABI 同步（上游 JS API 变化全量移植）**：
+  - 新增 `mtr::Rect`：上游把 PIDS 脚本的 JS 类 `Rectangle` 更名为 `Rect`（Java 类名不变）——C++ SDK 此前没有对应类，现按 `RectangleWrapper` 语义完整移植（`mtr:white.png` 全 UV 四边形、`ARGB_BLACK+color` 不透明色调、默认 20×20/LIGHT_2、`color/naturalLight/renderType/pos/size/zOrder/draw` 全套流式接口）。
+  - 记录头 flags 字节：`JcmRecordHeader._pad0[0]` 升格为 flags（`MTR_RECORD_FLAG_NATURAL_LIGHT`），Text/Texture/Rect 的 `naturalLight()` 经此传递——结构体尺寸与全部字段偏移零变化，旧 SDK 编译的模块该字节恒为 0（push_record 整体清零），新旧模块与新旧宿主双向兼容；Java 回放（NativeContentDriver）开始消费该标志。
+  - `renderType(String)`：Text/Texture/Rect 三构建器新增字符串形式（`QueuedRenderLayer.valueOf` 等价语义，未知名抛异常）；同时修复 Java 回放此前**静默丢弃** `layer` 字段的问题——现在 TEXT/TEXTURE 记录的渲染层真正生效（旧记录零值恰好映射包装器默认值，行为不变）。
+  - `Gfx2D::full_aa()/no_aa()`：上游 `GraphicsTexture.fullAA()/noAA()` 移植——椭圆/圆角矩形/描边/多边形填充的一像素覆盖率抗锯齿（整数 src-over 混合、快路径不变），默认关闭与 Java 构造器默认一致；文本保持宿主 TTF 渲染。
+  - `EyeCandy::facing_angle()`：上游 `EyecandyWrapper.facingAngle()` 移植（`Direction.asRotation()` 度数：S=0/W=90/N=180/E=270）。
+  - `mtr::StateTracker<T>`：`StateTrackerJS` 完整移植，含上游新语义——`set_state()` 返回「是否为进入该状态的首帧」（上游把 `setState` 从 void 改为 boolean）；`stateNow/stateLast/stateNowDuration/stateNowFirst/changedTo/changedFromTo` 全套，时钟显式传入（快照 `game_time_millis`）。
+  - Resources 新成员（`id(id,suffix)` 拼接、`mgr()` 别名、`ANTE_FLAG`、字符串参数变体）与 `VanillaText.withFont(String)` 等经通用 `Api` JSON-RPC 面自动可用；api-coverage 审计清单同步（Rect 类型 + fullAA/noAA + Resources 新成员 + 类型名 Rectangle→Rect）。
+- 修复（执行错误）：`Texture::draw` 对未调用 `.texture()` 的构建器会 `strlen(nullptr)` 崩溃整个模块（`Text::draw` 有同款守卫而 Texture 缺失）——现跳过该记录（Java 侧对应行为是逐绘制调用 NPE，跳过是更安全的原生侧降级）。
+- 回归测试：`native_sdk_test` 新增 Rect 记录逐字段断言（含默认色 `ARGB_BLACK+ARGB_WHITE` 的 Java 同款 int 回绕 0xFEFFFFFF）、naturalLight 标志位、`facing_angle` 四向、StateTracker 全语义、renderType 解析（含异常路径）、无 texture 守卫；`native_regression` 新增 fullAA/noAA 覆盖率混合断言（硬边二值、AA 边缘带、内部不透明、no_aa 复原）。
+
 同步上游 DistrictOfJoban/Joban-Client-Mod 自 2.3.0-beta.3 至 v2.3.0-prerelease.2 的全部内容（61 个上游提交），晏阳全部自有特性（共享内存 / FFM 双传输、C++ 原生脚本、服务端门向记忆、PIDS 渲染修复、8 平台原生桥等）完整保留：
 
 - 脚本系统（上游）：

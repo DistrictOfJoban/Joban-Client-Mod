@@ -195,7 +195,7 @@ private:
     int32_t z_auto_ = 0;
 };
 
-/* ---- Text::draw / Texture::draw (defined here: PidsContext complete) ---- */
+/* ---- Text::draw / Texture::draw / Rect::draw (defined here: PidsContext complete) ---- */
 
 inline void Text::draw(PidsContext& ctx) {
     FrameRecorder& f = ctx.frame();
@@ -213,16 +213,43 @@ inline void Text::draw(PidsContext& ctx) {
     const JcmRecordHeader hdr = committed.header; /* keep recorder header */
     committed = rec_;                             /* struct copy */
     committed.header = hdr;
+    if (natural_light_) committed.header.flags |= MTR_RECORD_FLAG_NATURAL_LIGHT;
 }
 
 inline void Texture::draw(PidsContext& ctx) {
+    /* A Texture built without .texture() has a null pointer — the Java
+       wrapper would NPE inside the scheduled render callback per draw call;
+       here the record is the whole frame's contract, so skip it instead of
+       strlen(nullptr)-crashing the module (or poisoning the replay with an
+       empty Identifier, which would back the whole script off for 4 s). */
+    if (!tex_) return;
     FrameRecorder& f = ctx.frame();
     JcmDrawTexture& committed = f.push_texture();
     const JcmRecordHeader hdr = committed.header;
     committed = rec_;
     committed.header = hdr;
+    if (natural_light_) committed.header.flags |= MTR_RECORD_FLAG_NATURAL_LIGHT;
     committed.texture_offset = f.intern(tex_, -1);
     committed.texture_len = static_cast<int32_t>(std::strlen(tex_));
+}
+
+inline void Rect::draw(PidsContext& ctx) {
+    /* RectangleWrapper.drawTransformed(): a full-UV quad of mtr's shared
+       white texture, tinted ARGB_BLACK + color (the addition makes the tint
+       opaque — int wraparound keeps us bug-compatible with the Java
+       original for callers that pass a stray alpha byte). */
+    FrameRecorder& f = ctx.frame();
+    JcmDrawTexture& committed = f.push_texture();
+    committed.layer = static_cast<int32_t>(layer_);
+    committed.color = static_cast<int32_t>(0xFF000000u) + color_;
+    committed.x = x_; committed.y = y_;
+    committed.w = w_; committed.h = h_;
+    committed.u1 = 0; committed.v1 = 0; committed.u2 = 1; committed.v2 = 1;
+    committed.z_order = z_;
+    if (natural_light_) committed.header.flags |= MTR_RECORD_FLAG_NATURAL_LIGHT;
+    static const char WHITE_TEXTURE[] = "mtr:textures/block/white.png";
+    committed.texture_offset = f.intern_const(WHITE_TEXTURE, static_cast<int32_t>(sizeof(WHITE_TEXTURE) - 1));
+    committed.texture_len = static_cast<int32_t>(sizeof(WHITE_TEXTURE) - 1);
 }
 
 } /* namespace mtr */

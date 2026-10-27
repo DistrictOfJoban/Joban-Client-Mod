@@ -168,12 +168,29 @@ python native/bench/api_coverage.py --classes fabric/build/classes/java/main --j
 ## PIDS, Lift and Eyecandy
 
 `api.context()` and `api.wrapper()` refer to the same type-specific context and
-wrapper supplied to JavaScript. PIDS supports Text, Texture and Rectangle,
-fonts, overflow, lighting, matrices, z ordering, hidden rows, custom messages,
-target platforms, station and complete arrivals/car data. Lift supports its
-render/sound managers, visibility, offsets, angles, dimensions, doors,
-direction, riding state and floors. Each floor exposes its index, number,
-description, position and current/target flags.
+wrapper supplied to JavaScript. PIDS supports Text, Texture and **Rect**
+(the JS class was renamed from `Rectangle` in upstream v2.3.0-prerelease.2 —
+`mtr::Rect` draws the shared `mtr:white.png` quad exactly like
+`RectangleWrapper`), fonts, overflow, lighting, matrices, z ordering, hidden
+rows, custom messages, target platforms, station and complete arrivals/car
+data. Lift supports its render/sound managers, visibility, offsets, angles,
+dimensions, doors, direction, riding state and floors. Each floor exposes its
+index, number, description, position and current/target flags.
+
+All three PIDS draw builders (Text/Texture/Rect) carry the JS wrappers'
+`naturalLight()` (world-light rendering, in the record-header flags byte —
+records from older SDKs predate the flag and render with full brightness as
+before) and `renderType("LIGHT_2")` (QueuedRenderLayer name; unknown names
+throw like `valueOf`). Eyecandy exposes `facing_angle()` — the upstream
+`facingAngle()` port (`Direction.asRotation()` degrees).
+
+The `Gfx2D` rasterizer mirrors `GraphicsTexture.fullAA()/noAA()` (upstream
+v2.3.0-prerelease.2): `full_aa()` enables one-pixel coverage
+anti-aliasing on ovals, rounded rects, strokes and polygon fills, `no_aa()`
+restores the default hard edges; text remains host-TTF rendered.
+`mtr::StateTracker<T>` ports `StateTrackerJS` including the upstream change
+that `setState` returns whether this is the first frame in the new state —
+pass the snapshot's `game_time_millis()` as the clock.
 
 Eyecandy supports its model, transform, facing, full brightness, redstone,
 crosshair status, custom configuration, render/sound managers, outline and

@@ -147,12 +147,23 @@ enum MtrDrawKind {
     JCM_DRAW_BLOCK_EVENT    = 8   /* eyecandy onBlockUse handshakes*/
 };
 
+/* Per-record flags (JcmRecordHeader.flags). Zero for records emitted by
+   modules compiled against older SDKs — FrameRecorder::push_record() zeroes
+   the whole record, so old binaries simply report "no flags" and hosts
+   predating this definition ignore the byte entirely. Both directions stay
+   binary compatible: no struct size or field offset changes. */
+#define MTR_RECORD_FLAG_NATURAL_LIGHT 0x01u  /* Text/Texture/Rect: take the
+                                                world light value instead of
+                                                MAX_RENDER_LIGHT (mirrors the
+                                                JS wrappers' naturalLight()) */
+
 /* Every frame record starts with this header. Records are laid out
    SEQUENTIALLY (variable size): walk with pos += header.record_size.
    This keeps the arena compact regardless of per-kind struct size. */
 typedef struct JcmRecordHeader {
     uint8_t  kind;            /* MtrDrawKind */
-    uint8_t  _pad0[3];
+    uint8_t  flags;           /* MTR_RECORD_FLAG_* */
+    uint8_t  _pad0[2];
     int32_t  record_size;     /* total bytes, header included */
 } JcmRecordHeader;
 
