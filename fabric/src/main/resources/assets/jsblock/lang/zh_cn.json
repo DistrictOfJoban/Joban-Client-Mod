@@ -259,5 +259,7 @@
     "lore.jsblock.station_ceiling_wrl_single_station_color": "港铁九龙南线开通后看到的装饰天花板。",
     "lore.jsblock.station_ceiling_wrl_station_color": "港铁九龙南线开通后看到的装饰天花板。",
     "lore.jsblock.subsidy_machine": "提供免费余额的机器。",
-    "lore.jsblock.tcl_emg_stop_button": "港铁东涌线车站内的紧急停车按钮"
+    "lore.jsblock.tcl_emg_stop_button": "港铁东涌线车站内的紧急停车按钮",
+    "gui.jsblock.eyecandy.custom_config.title": "对象配置",
+    "gui.jsblock.eyecandy.custom_config.edit": "编辑自定义配置"
 }
