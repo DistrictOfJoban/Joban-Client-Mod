@@ -64,7 +64,7 @@ public class JCMClientConfig extends ReflectiveConfig {
         public final TrackedValue<Boolean> enableFrustumCullingVehicle = value(true);
 
         @Comment("Whether to enable Frustum Culling for Rails")
-        public final TrackedValue<Boolean> enableFrustumCullingRails = value(true);
+        public final TrackedValue<Boolean> enableFrustumCullingRails = value(false);
 
         @Comment("Rail Culling Improvements")
         @ChangeWarning(folk.sisby.kaleido.lib.quiltconfig.api.metadata.ChangeWarning.Type.Experimental)
