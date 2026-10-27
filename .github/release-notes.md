@@ -18,6 +18,4 @@ JCM Yanyang `2.3.0-beta-2.yanyang.8` — 脚本化 PIDS 渲染修复、开门方
 
 JS 捕获 / 回放线程竞争（可致渲染崩溃）、ARM64 结果槽内存序（JVM 崩溃向量）、Forge 端原生车辆视锥剔除从未生效、每部件每车厢全树重建、陈旧桥 15 秒冻结、字形掩码内存无上限、批量实例销毁单 tick 倾泻、门向扫描 O(P²) 等——完整清单见仓库 [CHANGELOG.md](https://github.com/BugQuantumCore/Joban-Client-Mod-Yanyang/blob/main/CHANGELOG.md) 的 yanyang.8 章节。
 
-> Modrinth 用户提示：自 yanyang.4 跳版升级时，yanyang.5–.7 的修复（传输平面自愈、列车 LCD 黑屏、间歇性卡顿）已包含在本版中。
-
 **交付物**：12 个 jar（6 个 MC 版本 × Fabric / Forge，均内置 8 平台原生桥）+ native SDK zip。
