@@ -135,14 +135,6 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
             com.lx862.jcm.nativeapi.NativeScriptManager.loadManyFromDeclaration(id, merged);
         }
 
-        List<String> blackList = new ArrayList<>();
-        if(rootJsonObject.has("blacklist")) {
-            JsonArray blacklistedPIDS = rootJsonObject.getAsJsonArray("blacklist");
-            for(int i = 0; i < blacklistedPIDS.size(); i++) {
-                blackList.add(blacklistedPIDS.get(i).getAsString());
-            }
-        }
-
         final String scriptLang = rootJsonObject.has("scriptLang") ? rootJsonObject.get("scriptLang").getAsString() : ScriptingLanguage.RHINO_JS;
         ParsedScript.Configuration scriptConfiguration = ParsedScript.Configuration.create(scripts, scriptLang, scriptRateLimit);
         ParsedScript script = null;

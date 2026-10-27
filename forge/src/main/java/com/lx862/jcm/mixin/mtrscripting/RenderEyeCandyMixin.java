@@ -161,6 +161,6 @@ public class RenderEyeCandyMixin {
         StoredMatrixTransformations storedMatrixTransformations = transformOf(blockEntity, facing);
 
         eyeCandyScriptInstance.getRenderManager().invoke(world, storedMatrixTransformations, facing, light);
-        eyeCandyScriptInstance.getSoundManager().invoke(world, new ScriptVector3f(blockPos));
+        eyeCandyScriptInstance.getSoundManager().invoke(world, new ScriptVector3f(blockEntity.getPos2()));
     }
 }

@@ -167,4 +167,12 @@ public class EyecandyBlockEntityWrapper {
     public boolean modelChanged(String modelId) {
         return !modelId.equals(be.getModelId());
     }
+
+    /* Yanyang: upstream removed this helper in v2.3.0-prerelease.2 (their own
+       code no longer calls it), but the native instance sweeper in
+       NativeContentDriver still invalidates eyecandy instances through it. */
+    @ApiInternal
+    public boolean removed() {
+        return be.isRemoved2() || be.getWorld2().getBlockEntity(blockPos().rawBlockPos()) == null;
+    }
 }

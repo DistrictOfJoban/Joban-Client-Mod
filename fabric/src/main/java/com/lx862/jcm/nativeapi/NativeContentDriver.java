@@ -95,7 +95,7 @@ public final class NativeContentDriver {
            reassigned by the loop above, so snapshot it once. */
         final boolean blockUsed=used;
         State state=run(key,script,NativeScriptManager.MTR_RESOURCE_EYECANDY,wrapper,
-                b->NativeContentSnapshot.eyecandy(b,wrapper,blockUsed),()->new EyeCandyScriptContext(wrapper));
+                b->NativeContentSnapshot.eyecandy(b,wrapper,blockUsed),()->new EyeCandyScriptContext(block));
         for(AbstractScriptContext context:state.contexts.values()) {
             EyeCandyScriptContext ctx=(EyeCandyScriptContext)context;
             /* No transform.copy(): see the PIDS path above. */
