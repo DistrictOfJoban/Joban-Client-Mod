@@ -83,7 +83,7 @@ public class Events {
         JCMScripting.reset();
         MTRContentScripting.reset();
         ModelManagerJS.reset();
-        JCMResourceManager.reload();
         MtrScriptingResourceManager.reload();
+        JCMResourceManager.reload();
     }
 }
