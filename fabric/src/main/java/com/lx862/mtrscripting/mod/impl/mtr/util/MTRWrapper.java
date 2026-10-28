@@ -7,6 +7,7 @@ import org.mtr.core.data.*;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mod.Init;
 import org.mtr.mod.InitClient;
@@ -18,6 +19,7 @@ import org.mtr.mod.data.VehicleExtension;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MTRWrapper {
@@ -189,6 +191,36 @@ public class MTRWrapper {
 
         public static List<Rail> getKnownRails() {
             return new ArrayList<>(MinecraftClientData.getInstance().railWrapperList.values().stream().map(e -> e.getRail()).collect(Collectors.toList()));
+        }
+
+        public static List<Rail> getConnectedRails(PathData pathData, boolean front, boolean back) {
+            List<Rail> rails = new ArrayList<>();
+            for(int i = 0; i < 2; i++) {
+                if(i == 0 && !front) continue;
+                if(i == 1 && !back) continue;
+                Position position = i == 0 ? pathData.getOrderedPosition1() : pathData.getOrderedPosition2();
+
+                for(Map.Entry<Position, Object2ObjectOpenHashMap<Position, Rail>> entry : MinecraftClientData.getInstance().positionsToRail.entrySet()) {
+                    if(entry.getKey().equals(position)) {
+                        rails.addAll(entry.getValue().values());
+                        break;
+                    }
+                }
+            }
+            return rails;
+        }
+
+        public static List<Rail> getConnectedRails(ScriptVector3f pos) {
+            List<Rail> rails = new ArrayList<>();
+
+            for(Map.Entry<Position, Object2ObjectOpenHashMap<Position, Rail>> entry : MinecraftClientData.getInstance().positionsToRail.entrySet()) {
+                if(entry.getKey().equals(pos.rawTscPosition())) {
+                    rails.addAll(entry.getValue().values());
+                    break;
+                }
+            }
+
+            return rails;
         }
 
         public static boolean isRailBlocked(String railHexId) {
