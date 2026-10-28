@@ -55,4 +55,8 @@ public class ArrivalsWrapper {
             consumer.accept(arrivalResponse);
         }
     }
+
+    public int length() {
+        return arrivals.size();
+    }
 }
