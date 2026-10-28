@@ -4,11 +4,13 @@ import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalsWrapper;
 import org.mtr.core.data.*;
-import org.mtr.core.operation.ArrivalResponse;
+import org.mtr.libraries.it.unimi.dsi.fastutil.ints.IntObjectImmutablePair;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
+import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mod.Init;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.client.MinecraftClientData;
@@ -114,6 +116,15 @@ public class MTRWrapper {
                 }
             }
             return null;
+        }
+
+        public static MountDetail getVehicleMountDetail() {
+            VehicleExtension playerMountedVehicle = getPlayerMountedVehicle();
+            if(playerMountedVehicle == null) return null;
+            IntObjectImmutablePair<ObjectObjectImmutablePair<Vector3d, Double>> obj = VehicleRidingMovement.getRidingVehicleCarNumberAndOffset(playerMountedVehicle.getId());
+            if(obj == null) return null;
+            int carIndex = obj.leftInt();
+            return new MountDetail(carIndex, new ScriptVector3f(obj.right().left()));
         }
 
         public static List<VehicleExtension> getKnownVehicles() {
@@ -243,5 +254,7 @@ public class MTRWrapper {
         public static ArrivalsWrapper getArrivals(long[] platformId) {
             return new ArrivalsWrapper(ArrivalsCacheClient.INSTANCE.requestArrivals(new LongImmutableList(platformId)));
         }
+
+        public record MountDetail(int ridingCarIndex, ScriptVector3f pos) {}
     }
 }

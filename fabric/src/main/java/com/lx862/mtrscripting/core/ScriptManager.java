@@ -22,12 +22,14 @@ import com.lx862.mtrscripting.core.integration.MinecraftClientWrapper;
 import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.integration.VoxelShapeWrapper;
 import com.lx862.mtrscripting.mod.gui.hud.ScriptErrorNotifier;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -144,6 +146,12 @@ public class ScriptManager {
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static ThreadFactory getNamedThreadFactory(String name) {
+        return new BasicThreadFactory.Builder()
+                .namingPattern(name)
+                .build();
     }
 
     public static class ParseScriptEvent<T> {

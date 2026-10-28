@@ -8,6 +8,7 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
 - Bump Rhino JS Engine to 1.9.2, see their [changelog](https://github.com/mozilla/rhino/releases/tag/Rhino1_9_2_Release) for details.
 - Reduce performance impact when [hiding vehicle display cube](https://jcm.joban.org/latest/dev/scripting/features/vehicle_display_cube/).
 - Add `MTR.Data.getConnectedRails()` to obtain a list of rails connected to either a path/rail node position.
+- Add `MTR.Data.getVehicleMountDetail()` to obtain the player's current car index & position in car.
 - **PIDS Scripting: Breaking Changes (Not code-related) (PIDS Projector only)**
   - This update "nerfed" the PIDS Projector such that it will skip rendering if out of the camera's bound (In-line with other PIDS), except:
     - If any of the configured X/Y/Z offset is >= 4m

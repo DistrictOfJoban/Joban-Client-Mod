@@ -21,19 +21,13 @@ import java.util.concurrent.Executors;
 public class MTRContentScripting {
     private static final int EXECUTOR_AMOUNT = 4;
     private static final List<ExecutorService> scriptExecutors = new ArrayList<>();
-
-    static {
-        for(int i = 0; i < EXECUTOR_AMOUNT; i++) {
-            scriptExecutors.add(Executors.newFixedThreadPool(1));
-        }
-    }
-
     private static ScriptManager scriptManager;
 
     /**
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
+        initExecutors(EXECUTOR_AMOUNT);
         scriptManager = new ScriptManager(MTRScriptingModClient.LOGGER, scriptExecutors);
         scriptManager.getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
 
@@ -62,6 +56,12 @@ public class MTRContentScripting {
 
         MTRScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
         MTRScriptDebugOverlay.registerDebugSource("MTR", scriptManager);
+    }
+
+    private static void initExecutors(int threadCount) {
+        for(int i = 0; i < threadCount; i++) {
+            scriptExecutors.add(Executors.newFixedThreadPool(1, ScriptManager.getNamedThreadFactory("JCM-Scripting-Executor-%d")));
+        }
     }
 
     public static ScriptManager getScriptManager() {
