@@ -95,6 +95,14 @@ public class MainRenderer { public static void scheduleRender(QueuedRenderLayer 
 public record ScriptVector3f(float x,float y,float z) {}''',
     'com/lx862/jcm/mixin/mtrscripting/VertexAttributeStateAccessor.java': '''package com.lx862.jcm.mixin.mtrscripting;
 public interface VertexAttributeStateAccessor { void setColor(int c); }''',
+    # Upstream prerelease.2 added JSUtil.parseId calls to ModelJS/RawMeshBuilderJS;
+    # stubbed here (the real one drags in ScriptResourceUtil -> JCM/AWT/commons).
+    # ModelUploadTest never exercises the texture-replace paths, so a plain
+    # passthrough onto the stubbed Identifier record is sufficient.
+    'com/lx862/mtrscripting/mod/util/JSUtil.java': '''package com.lx862.mtrscripting.mod.util;
+public class JSUtil {
+ public static org.mtr.mapping.holder.Identifier parseId(String str) { return new org.mtr.mapping.holder.Identifier(str); }
+}''',
     'com/lx862/mtrscripting/core/util/model/RawModelJS.java': '''package com.lx862.mtrscripting.core.util.model;
 public class RawModelJS {
  public final org.mtr.mapping.render.model.RawModel rawModel;
