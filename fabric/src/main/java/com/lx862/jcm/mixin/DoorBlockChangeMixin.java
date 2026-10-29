@@ -20,13 +20,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * a PSD/APG door.
  *
  * <p>Hooked at the world level rather than the chunk: every vanilla,
- * WorldEdit and Axiom edit path funnels through it on the server, and the
- * pre-filters below make the cost for unrelated edits negligible — one
- * instanceof per placement, and for the removal direction a chunk-index
- * lookup that only ever runs for chunks that actually contain a route-served
- * platform. The manager coalesces positions by chunk and then by platform
- * and re-scans a bounded number of platforms per tick, so batch tools of
- * any size turn into a short trickle of re-scans instead of a lag spike.
+ * WorldEdit and Axiom per-block edit path funnels through it on the
+ * server, and the pre-filters below make the cost for unrelated edits
+ * negligible — one instanceof per placement, and for the removal
+ * direction a chunk-index lookup that only ever runs for chunks that
+ * actually contain a route-served platform. The manager coalesces
+ * positions by chunk and then by platform and re-scans a bounded number
+ * of platforms per tick, so batch tools of any size turn into a short
+ * trickle of re-scans instead of a lag spike.
  *
  * <p>The hook targets the FOUR-argument {@code setBlockState(pos, state,
  * flags, maxUpdateDepth)}: it is {@code World}'s real implementation of
@@ -37,10 +38,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * once, with no double-fire for the shorter overloads and no gap for direct
  * 4-argument callers (structure placement, some mods).
  *
- * <p>Known boundary: bulk editors that write through chunk sections
- * instead of the world API bypass this hook entirely; the manager's index
- * refresh re-queues missing platforms, so such edits still converge within
- * a minute rather than instantly.
+ * <p>The world API is not the only write style on a server: bulk editors
+ * that write chunk sections directly — Axiom's set-block-buffer
+ * operations being the flagship example — bypass this hook entirely.
+ * {@code DoorHeightmapMixin} closes that gap at the heightmap convergence
+ * point that all three write styles (world API, chunk API, section
+ * writers) must pass.
  *
  * <p>The platform/PSD-APG test is deliberately inlined rather than factored
  * into a helper class: {@code com.lx862.jcm.mixin} is a mixin package

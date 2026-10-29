@@ -5,6 +5,8 @@
   "mixins": [
     "BlockPIDSPoleMixin",
     "DoorBlockChangeMixin",
+    "DoorHeightmapMixin",
+    "DoorWorldChunkAccessor",
     "SimpleDefaultedRegistryMixin",
     "TicketSystemMixin",
     "mtrpatch.BlockExtensionMixin",

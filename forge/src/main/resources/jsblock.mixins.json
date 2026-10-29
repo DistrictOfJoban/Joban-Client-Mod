@@ -6,6 +6,8 @@
   "mixins": [
     "mtrpatch.BlockExtensionMixin",
     "DoorBlockChangeMixin",
+    "DoorHeightmapMixin",
+    "DoorLevelChunkAccessor",
     "mtrpatch.BlockPoleCheckBaseMixin",
     "mtrpatch.BlockRailwaySignPoleMixin",
     "BlockPIDSPoleMixin",

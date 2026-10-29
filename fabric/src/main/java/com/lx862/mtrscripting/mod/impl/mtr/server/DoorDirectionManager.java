@@ -98,13 +98,24 @@ import java.util.stream.Stream;
  *       marker is a <b>v2</b> name: the v1 marker of earlier test builds is
  *       deliberately ignored so every save gets one fresh, complete scan
  *       under the corrected platform-only block test.</li>
- *   <li><b>Runtime block changes</b>: the mixin on
- *       {@code World#setBlockState} reports every change whose old or new
- *       block is a platform block or a PSD/APG door. Positions are
- *       coalesced by chunk and then by platform, and only a handful of
- *       platforms are re-scanned per tick — so WorldEdit/Axiom batch edits
- *       of any size turn into a short trickle of re-scans instead of a lag
- *       spike, and platforms far from the change are never touched.</li>
+ *   <li><b>Runtime block changes</b>: two mixin layers report changes.
+ *       The world layer ({@code World#setBlockState}) sees every
+ *       world-API write — hand edits, WorldEdit, Axiom's per-block sets,
+ *       Mishang UC's placement tools, pistons, explosions, structure
+ *       placement — testing old and new states against the platform/door
+ *       block set. The heightmap layer ({@code Heightmap#trackUpdate})
+ *       converges all three write styles — world API, chunk API, and bulk
+ *       editors that write chunk sections directly (Axiom's
+ *       set-block-buffer operations update heightmaps per changed block,
+ *       or vanilla heightmaps would go stale) — and catches those batch
+ *       editors by chunk: platform/door placements anywhere, plus any
+ *       edit inside a chunk the index says holds a route-served platform
+ *       (the section-writer's removal case has no old state left to
+ *       test). Positions are coalesced by chunk and then by platform, and
+ *       only a handful of platforms are re-scanned per tick — so
+ *       WorldEdit/Axiom batch edits of any size turn into a short trickle
+ *       of re-scans instead of a lag spike, and platforms far from the
+ *       change are never touched.</li>
  *   <li><b>Client queries</b>: {@code getDirectionOfDoorOpening()} asks the
  *       server; the server answers from the stored per-route data,
  *       scheduling a one-route scan on demand if that route predates the
@@ -185,6 +196,10 @@ public final class DoorDirectionManager {
     /** Worlds already known to have no MTR simulator: without this, the lazy world-tick path re-ran initWorld (a World wrapper + Identifier + format string per call) every tick for the Nether/End of every save. Cleared when the MTR Main instance changes, so a datapack/new-dimension still initializes. */
     private static final Set<Object> WORLDS_WITHOUT_SIMULATOR = Collections.newSetFromMap(new IdentityHashMap<>());
     private static volatile MinecraftServer server;
+    /** The main server thread, captured at server start (and lazily on the first world tick): the heightmap-level
+     * block-change mixin uses it to keep worldgen worker threads — which can reach a wrapped proto chunk's heightmaps
+     * during below-zero retrogen — off the server thread's tick pipelines. */
+    private static volatile Thread serverThread;
 
     /* Lazy-init diagnostics: every kind of "could not initialize" state is
        reported at least once, never silently. */
@@ -206,6 +221,7 @@ public final class DoorDirectionManager {
     public static void onServerStarted(MinecraftServer minecraftServer) {
         reset();
         server = minecraftServer;
+        serverThread = Thread.currentThread();
         startedAtMillis = System.currentTimeMillis();
 
         final Object2ObjectOpenHashMap<String, Simulator> simulators = simulatorsByDimension();
@@ -243,6 +259,7 @@ public final class DoorDirectionManager {
      * instead of disabling the feature for the whole session.
      */
     public static void onWorldTick(ServerWorld serverWorld) {
+        if(serverThread == null) serverThread = Thread.currentThread();
         final WorldState state = WORLDS_BY_RAW.get(serverWorld.data);
         if(state != null) {
             state.tick(state.world);
@@ -273,6 +290,7 @@ public final class DoorDirectionManager {
         WORLDS_BY_RAW.clear();
         WORLDS_WITHOUT_SIMULATOR.clear();
         server = null;
+        serverThread = null;
         startedAtMillis = 0;
         lastCoreMissingWarnAt = 0;
         WARNED_NO_SIMULATOR.clear();
@@ -347,6 +365,14 @@ public final class DoorDirectionManager {
         final WorldState state = WORLDS_BY_RAW.get(rawWorld);
         if(state == null) return;
         state.noteChangedBlock(x, z);
+    }
+
+    /** Whether the calling thread is the main server thread: only such a thread may feed the block-change pipelines
+     *  (the heightmap hook is the one level worldgen worker threads can reach — via wrapped proto chunks during
+     *  below-zero retrogen — and their notes would race the tick pipelines). */
+    public static boolean isServerThread() {
+        final Thread thread = serverThread;
+        return thread != null && Thread.currentThread() == thread;
     }
 
     /** Cheap pre-filter for the mixin: whether any indexed platform area intersects this chunk column. Never allocates. */

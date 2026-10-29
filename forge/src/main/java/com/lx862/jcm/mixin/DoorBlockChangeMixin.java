@@ -32,6 +32,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * overridden by {@code ServerLevel} — every world-level write dispatches
  * here exactly once.
  *
+ * <p>The world API is not the only write style on a server: bulk editors
+ * that write chunk sections directly — Axiom's set-block-buffer
+ * operations being the flagship example — bypass this hook entirely.
+ * {@code DoorHeightmapMixin} (this loader's twin included) closes that gap
+ * at the heightmap convergence point that all three write styles (world
+ * API, chunk API, section writers) must pass.
+ *
  * <p>The platform/PSD-APG test is deliberately inlined rather than factored
  * into a helper class: {@code com.lx862.jcm.mixin} is a mixin package
  * declared by the mixin configs, and Mixin refuses to load any plain class
