@@ -17,7 +17,7 @@
 
 > [!IMPORTANT]
 > - 本分支与原版 Joban Client Mod 使用同一 mod id（`jsblock`），**二者互斥，只能安装其一**。
-> - 分支持续跟踪整合原版 JCM 的每个版本（当前基线：[2.3.0-beta.2](https://github.com/DistrictOfJoban/Joban-Client-Mod)），并保持向后兼容：原版 JCM 资源包、`language: "cpp"` 老格式资源包均无需修改即可继续使用。
+> - 分支持续跟踪整合原版 JCM 的每个版本（当前基线：[2.3.0-prerelease.2](https://github.com/DistrictOfJoban/Joban-Client-Mod)），并保持向后兼容：原版 JCM 资源包、`language: "cpp"` 老格式资源包均无需修改即可继续使用。
 > - C++ 脚本开发文档：**[网页版开发文档](https://bugquantumcore.github.io/Joban-Client-Mod-Yanyang/)**（7 种语言）· [native/README.md](native/README.md)；完整修改历史见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## ✨ 核心特性
@@ -28,7 +28,7 @@ vehicle / PIDS / lift / eyecandy 四类脚本均可用 C++ 编写，并与 JavaS
 
 - `scriptLocations` 逐条目自动判定语言，无需声明 `language` 字段；
 - 两侧各自捕获绘制指令、各自回放，互不干扰；某一侧缺失或加载失败时仅该侧跳过（latest.log / 调试模式提示），另一侧照常工作；
-- C++ 与 JS 共享同一 `create` / `render` / `dispose` 生命周期与逐实例持久状态（`State`），`mtr::Api` 可调用 JavaScript 脚本能访问的全部公开 Java API。
+- C++ 与 JS 共享同一 `create` / `render` / `dispose` 生命周期与逐实例持久状态（`State`），`mtr::Api` 可调用 JavaScript 脚本能访问的全部公开 Java API；C++ SDK 与上游 JS API 面同步维护（`mtr::Rect`、`full_aa()` / `no_aa()` 抗锯齿、`facing_angle()`、`StateTracker`、`renderType(String)` 等）。
 
 ### 零 JNI 原生运行时
 
@@ -55,9 +55,13 @@ Java ↔ C++ 之间完全不经 JNI：JDK 16–21 使用共享内存 poller 平�
 
 `getTransportType()`（JS / Java / C++ 三侧一致）：除 MTR 基础类型（`train` / `boat` / `cable_car` / `airplane`）外，可识别 MAGIC MTR Addon 线路类型（`train_metro`、`train_light_rail`、`train_high_speed`、`train_bus`、`train_tram`、`train_sbahn`、`train_normal` 等）——经可选反射集成，无硬依赖。
 
+### 脚本执行防护（上游 v2.3.0-prerelease.2）
+
+预设级 `scriptRateLimit` 速率限制 + 全局执行预算：解析阶段超时不再挂起游戏，无限循环可被检测并中止；同一脚本不再重复编译，DataReader 运行时缓存按 tick 过期自动重置；解析错误以游戏内悬停文本展示。上游 Iris / OptiFine 阴影 pass 重复执行脚本的修复已覆盖电梯 / 车辆 / 装饰物 / PIDS 全部脚本渲染面，BVE 电机声音卡死等 MTR 4 著名缺陷亦随同步修复。
+
 ### 相对原版的大量修复
 
-对原版 JCM 与本分支全代码库（Java 渲染管线 + 原生传输 + C++ 桥接边界 + C++ SDK + 服务端门向系统）做过多轮审计修复：F3+T 后 C++ 脚本从不重载、Forge 端车辆脚本只捕获不渲染、ARM 平台结果槽内存序、JS 捕获/回放线程竞争、每部件每车厢全树重建、渲染线程 use-after-free、模块记录流越界可崩溃 JVM 等**关键修复 + 40 余项渲染正确性 / 性能 / 加固修复**——全部细节见 [CHANGELOG.md](CHANGELOG.md)。
+对原版 JCM 与本分支全代码库（Java 渲染管线 + 原生传输 + C++ 桥接边界 + C++ SDK + 服务端门向系统）做过多轮审计修复：F3+T 后 C++ 脚本从不重载、Forge 端车辆脚本只捕获不渲染、脚本化 PIDS 文字随相机漂移（池化快照丢失世界锚点，yanyang.8 回归）、ARM 平台结果槽内存序、JS 捕获/回放线程竞争、每部件每车厢全树重建、渲染线程 use-after-free、模块记录流越界可崩溃 JVM 等**关键修复 + 40 余项渲染正确性 / 性能 / 加固修复**——全部细节见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 📦 下载与安装
 
