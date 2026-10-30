@@ -213,7 +213,7 @@ public class MTRWrapperJS {
             for(int i = 0; i < 2; i++) {
                 if(i == 0 && !front) continue;
                 if(i == 1 && !back) continue;
-                Position position = i == 0 ? pathData.getOrderedPosition1() : pathData.getOrderedPosition2();
+                Position position = i == 0 ? pathData.getOrderedPosition2() : pathData.getOrderedPosition1();
 
                 for(Map.Entry<Position, Object2ObjectOpenHashMap<Position, Rail>> entry : MinecraftClientData.getInstance().positionsToRail.entrySet()) {
                     if(entry.getKey().equals(position)) {
