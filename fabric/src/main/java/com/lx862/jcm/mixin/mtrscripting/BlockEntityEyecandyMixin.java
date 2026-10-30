@@ -1,7 +1,7 @@
 package com.lx862.jcm.mixin.mtrscripting;
 
 import com.lx862.jcm.mod.util.JCMLogger;
-import com.lx862.mtrscripting.core.util.ante.ANTEStringMapSerializer;
+import com.lx862.mtrscripting.mod.impl.mtr.util.ante.ANTEStringMapSerializer;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.JCMBlockEyecandyExtra;
 import org.mtr.mapping.holder.CompoundTag;
 import org.mtr.mod.block.BlockEyeCandy;

@@ -35,7 +35,7 @@ import static com.lx862.jcm.mod.data.pids.preset.components.base.TextComponent.S
 
 @SuppressWarnings("unused")
 public class TextUtilJS {
-    private TextUtilJS() {
+    protected TextUtilJS() {
     }
 
     public static String getCjkParts(String src) {

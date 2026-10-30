@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class MTRWrapper {
+public class MTRWrapperJS {
 
     public static class ClientConfig {
         public static boolean isChatAnnouncementsEnabled() {
