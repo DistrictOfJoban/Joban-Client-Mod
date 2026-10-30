@@ -62,7 +62,11 @@ jobs:
             platform: android-arm64
             cross: android
             cmake-arch: -DCMAKE_ANDROID_ABI=arm64-v8a
-          - os: macos-latest
+          # iOS cross-compiles against the iPhoneOS SDK, which ships in Xcode
+          # on Intel hosts too — and ctest is already skipped for cross legs.
+          # macos-latest (arm) runner provisioning was repeatedly cancelled by
+          # GitHub infra today, so pin the Intel image which stays available.
+          - os: macos-15-intel
             platform: ios-arm64
             cross: ios
             cmake-arch: -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
