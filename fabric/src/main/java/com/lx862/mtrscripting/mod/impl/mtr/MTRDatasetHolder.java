@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.mod.impl.mtr;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import com.lx862.mtrscripting.mod.impl.mtr.vehicle.MagicRouteTypes;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleWrapper;
 import org.mtr.core.data.Data;
 import org.mtr.core.data.Platform;
@@ -120,7 +121,13 @@ public class MTRDatasetHolder {
                 List<VehicleWrapper.Stop.RouteInterchange> interchanges = new ArrayList<>();
                 routeInterchanges.forEach((color, routes) -> routes.forEach(route ->
                         interchanges.add(new VehicleWrapper.Stop.RouteInterchange(route.getId(), color, route.getName(),
-                                route.getTransportMode(), null))));
+                                route.getTransportMode(),
+                                // Pre-resolve with MTR 4's native RouteType so 高铁/轻轨
+                                // (HIGH_SPEED/LIGHT_RAIL) interchanges sync as
+                                // "train_high_speed"/"train_light_rail" instead of the
+                                // base "train" — the sidecar MAGIC lookup alone cannot
+                                // see the native type.
+                                MagicRouteTypes.typeId(route.getId(), route.getTransportMode(), route.getRouteType())))));
                 if (connectingStation.getId() == station.getId()) stationInterchangeMap.put(station.getId(), interchanges);
                 else connectingStations.put(connectingStation.getName(), interchanges);
             });

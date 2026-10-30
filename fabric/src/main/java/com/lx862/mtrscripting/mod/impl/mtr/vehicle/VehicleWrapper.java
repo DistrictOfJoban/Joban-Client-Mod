@@ -310,12 +310,12 @@ public class VehicleWrapper {
                         station.getInterchangeStationToColorToRoutesMap(true).forEach((s, interchanges) -> {
                             if (s.getId() == station.getId()) interchanges.forEach((color, routes) -> routes.forEach(r ->
                                         interchangeModes.add(color, r.getName(), r.getTransportMode(),
-                                                MagicRouteTypes.extendedType(r.getId()), r.getId())));
+                                                MagicRouteTypes.extendedType(r.getId(), r.getTransportMode(), r.getRouteType()), r.getId())));
                         });
                     }
                     if (platform != null) platform.routes.forEach(r ->
                             interchangeModes.add(r.getColor(), r.getName(), r.getTransportMode(),
-                                    MagicRouteTypes.extendedType(r.getId()), r.getId()));
+                                    MagicRouteTypes.extendedType(r.getId(), r.getTransportMode(), r.getRouteType()), r.getId()));
                     // In-station interchange
                     routePlatform.forEach((color, routes) -> {
                         routes.forEach(routeName -> {
@@ -332,7 +332,8 @@ public class VehicleWrapper {
                                 interchanges.forEach((color, routes) -> routes.forEach(interchangeRoute ->
                                         thisStop.connectingInterchanges.computeIfAbsent(connectingStation.getName(), k -> new ObjectArrayList<>())
                                                 .add(new Stop.RouteInterchange(interchangeRoute.getId(), color, interchangeRoute.getName(),
-                                                        interchangeRoute.getTransportMode(), null))));
+                                                        interchangeRoute.getTransportMode(),
+                                                        MagicRouteTypes.typeId(interchangeRoute.getId(), interchangeRoute.getTransportMode(), interchangeRoute.getRouteType())))));
                             }
                         });
                     }
@@ -450,9 +451,11 @@ public class VehicleWrapper {
             /**
              * The interchange's transport type as a canonical id: a MAGIC MTR
              * extension ("train_metro", "train_light_rail", ...) when the addon
-             * assigns one, otherwise the base mode id ("train", "boat",
-             * "cable_car", "airplane"). Never null; "unknown" only when the mode
-             * itself is unknown (older server data).
+             * assigns one, else MTR 4's native route type key for typed routes
+             * ("train_light_rail"/"train_high_speed" for 轻轨/高铁), otherwise
+             * the base mode id ("train", "boat", "cable_car", "airplane").
+             * Never null; "unknown" only when the mode itself is unknown
+             * (older server data).
              */
             public String getTransportType() {
                 return transportType;
@@ -502,9 +505,11 @@ public class VehicleWrapper {
     }
     /**
      * The vehicle's transport type as a canonical id: the MAGIC MTR Addon's
-     * extended type for the vehicle's current route ("train_metro",
-     * "train_high_speed", ...) when one is assigned, otherwise the base mode
-     * id ("train", "boat", "cable_car", "airplane"). Never null.
+     * extended type for the vehicle's current route ("train_metro", ...) when
+     * one is assigned, else MTR 4's native route type key when the current
+     * route is typed 高铁/轻轨 ("train_high_speed"/"train_light_rail", synced
+     * per-vehicle in VehicleExtraData), otherwise the base mode id ("train",
+     * "boat", "cable_car", "airplane"). Never null.
      *
      * <p>Native (C++) snapshots surface the exact same string through
      * {@code mtr::Train::getTransportType()} (ABI 9), so JS and C++ scripts
@@ -512,7 +517,8 @@ public class VehicleWrapper {
      * plain enum for scripts that only care about the four base modes.
      */
     public String getTransportType() {
-        return MagicRouteTypes.typeId(getThisRouteId(), getTransportMode());
+        return MagicRouteTypes.typeId(getThisRouteId(), getTransportMode(),
+                vehicleExtension.vehicleExtraData.getThisRouteType());
     }
     public int getCarCount() {
         return vehicleExtension.vehicleExtraData.immutableVehicleCars.size();

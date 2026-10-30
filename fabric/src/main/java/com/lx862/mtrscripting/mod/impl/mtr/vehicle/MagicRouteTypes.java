@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.mod.impl.mtr.vehicle;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import org.mtr.core.data.RouteType;
 import org.mtr.core.data.TransportMode;
 import org.mtr.core.tool.Utilities;
 
@@ -119,6 +120,59 @@ public final class MagicRouteTypes {
     public static String typeId(long routeId, TransportMode mode) {
         final String extended = routeId == 0 ? null : extendedType(routeId);
         if (extended != null) return extended;
+        return baseTypeId(mode);
+    }
+
+    /**
+     * The canonical transport type id for a route, honouring MTR 4's native
+     * {@link RouteType} (the "类别" selector on the route editor: NORMAL /
+     * LIGHT_RAIL / HIGH_SPEED, synced inside every Route and inside
+     * VehicleExtraData for the vehicle's own route).
+     *
+     * <p>Resolution order mirrors MAGIC's own effective-key logic
+     * (EditRouteScreenRouteTypesMixin#getTrainRouteTypeKeyForUi): a
+     * route_types.json sidecar override wins when present — MAGIC clears it
+     * whenever a native type is picked, so the two never really compete —
+     * then a non-NORMAL native RouteType contributes its
+     * {@code mode + "_" + routeType} key ("train_light_rail",
+     * "train_high_speed", "boat_light_rail", ...: the exact strings MTR's
+     * own {@code Route.getRouteTypeKey()} produces and MAGIC reuses for the
+     * same types), and the default NORMAL type keeps the plain base mode id
+     * ("train") so vanilla-default Train routes stay indistinguishable from
+     * untyped ones. Never null.
+     */
+    public static String typeId(long routeId, TransportMode mode, RouteType routeType) {
+        final String extended = routeId == 0 ? null : extendedType(routeId);
+        if (extended != null) return extended;
+        return nativeTypeKey(mode, routeType);
+    }
+
+    /**
+     * Same resolution as {@link #typeId(long, TransportMode, RouteType)} but
+     * returns null when the route has neither a MAGIC override nor a
+     * non-NORMAL native RouteType — the same "nothing to say" contract as
+     * {@link #extendedType(long)}, so (color, name)-group merging in
+     * {@link InterchangeRouteModes} keeps its old behaviour for plain
+     * vanilla routes.
+     */
+    public static String extendedType(long routeId, TransportMode mode, RouteType routeType) {
+        final String extended = routeId == 0 ? null : extendedType(routeId);
+        if (extended != null) return extended;
+        return routeType != null && routeType != RouteType.NORMAL
+                ? nativeTypeKey(mode, routeType) : null;
+    }
+
+    /**
+     * Canonical id for a native {@link RouteType}: "train_light_rail" /
+     * "train_high_speed" / "boat_light_rail" / "boat_high_speed" (the key
+     * format MTR's own {@code Route.getRouteTypeKey()} uses) — or the base
+     * mode id when the type is null or the default NORMAL.
+     */
+    public static String nativeTypeKey(TransportMode mode, RouteType routeType) {
+        if (mode == null) return "unknown";
+        if (routeType != null && routeType != RouteType.NORMAL) {
+            return (mode.name() + "_" + routeType.name()).toLowerCase(Locale.ROOT);
+        }
         return baseTypeId(mode);
     }
 
