@@ -205,6 +205,10 @@ public class MTRWrapper {
         }
 
         public static List<Rail> getConnectedRails(PathData pathData, boolean front, boolean back) {
+            return getConnectedRails(pathData, front, back, false);
+        }
+
+        public static List<Rail> getConnectedRails(PathData pathData, boolean front, boolean back, boolean excludeSelf) {
             List<Rail> rails = new ArrayList<>();
             for(int i = 0; i < 2; i++) {
                 if(i == 0 && !front) continue;
@@ -213,7 +217,10 @@ public class MTRWrapper {
 
                 for(Map.Entry<Position, Object2ObjectOpenHashMap<Position, Rail>> entry : MinecraftClientData.getInstance().positionsToRail.entrySet()) {
                     if(entry.getKey().equals(position)) {
-                        rails.addAll(entry.getValue().values());
+                        entry.getValue().values().forEach(e -> {
+                            if(excludeSelf && pathData.getRail().getHexId().equals(e.getHexId())) return;
+                            rails.add(e);
+                        });
                         break;
                     }
                 }
