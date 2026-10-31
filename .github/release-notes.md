@@ -1,21 +1,22 @@
-JCM Yanyang `2.3.0-prerelease.2-yanyang.1-hotfix.1` — yanyang.1 定向热修：MTR 4 原生路线类别（高铁 / 轻轨）流入换乘类型链，原版高铁、轻轨线路正确从车侧线路图去除；Axiom 区块批量编辑纳入开门方向重扫；iOS 交叉编译腿回归 macos-latest（arm）runner。
+JCM Yanyang `2.3.0-prerelease.2-yanyang.1-hotfix.2` — 原生层两轮人工审查修复（8 项 + 3 项回归修复）的首次发布：直接调用模式的内存安全、模块内存治理、字符串缓存与阴影渲染等 11 项缺陷全部关闭。
 
-**原版高铁 / 轻轨正确按类型隐藏（修复「线路图去不掉原版高铁、轻轨」）**
+**第一轮：8 项审查修复（2×P1 + 5×P2 + 1×P3）**
 
-车侧 LCD 换乘过滤按类型串判定，但 MTR 4 路线编辑器的原生「类别」（普通 / 通勤 / 区域 / 城际 / 高铁 / 轻轨，随 `Route` 与 `VehicleExtraData` 逐车同步）此前从不参与类型解析——解析链只查 MAGIC 边车覆盖，而 MAGIC 下拉框选中高铁 / 轻轨时恰好清除边车、只留原生枚举，这些线路在数据快照里全部退化为基础 `train`，于是按「保留原版默认 Train」规格随普通地铁一起放行。修复（产出串与既有词汇表完全一致，脚本侧零改动）：
+- **[P1] 直接调用模式 arena 偏移解析错误**：C++ 直接调用结果布局为「偏移 0 状态码 / 偏移 4 记录数 / 偏移 8 起五组 arena 描述符」，而共享内存路径的描述符镜像在偏移 0——描述符解析现在显式接收起始偏移（shm 传 0、direct 传 8），状态码不再被拼成地址；绑定前校验地址/长度/容量组合，杜绝 `limit > capacity` 的 NIO 视图。
+- **[P1] 桥接层记录类型最小长度校验**：`patch_frame_handles` 此前仅检查 8 字节记录头就强转 `JcmDrawModel` / `JcmDrawTextureUpload` 访问字段——现在按 kind 校验 `record_size ≥ sizeof(对应结构体)`，边界判断改用剩余字节数（不再有可溢出的指针加法），畸形记录零内存访问即停止。
+- **[P2] 重载代际的模块堆内存滞留**：SDK 新增可选导出 `mtrCleanup`（旧模块无此导出则行为不变），桥接在全部实例销毁且旧帧消费完毕后调用，释放模块级 `HostBuffers` 与峰值增长的像素 arena；代码映射与堆内存生命周期分离，keep-loaded 策略与 ABI 10 兼容性不变。
+- **[P2] 合法空字符串中断 PIDS 帧**：字符串区末尾的空串（`offset == limit`）是合法空范围，但旧哈希无条件 `arena.get(offset)` 抛越界异常、中断整帧并触发 4 秒错误退避——现在范围校验后长度为 0 直接返回共享空条目，不读 arena 任何字节。
+- **[P2] 字符串缓存哈希集中冲突**：哈希从「长度 + 首字节」改为完整 UTF-8 内容 FNV-1a（scratch 内直算、零新分配）；等长中文站名不再集中到同一探测区间。
+- **[P2] 原生装饰物脚本阴影阶段重复执行**：fabric / forge 两端 `RenderEyeCandyMixin` 的原生分支补上与 JS 分支一致的阴影阶段保护——阴影 pass 不重跑脚本、不消费事件、不重放声音、不上传纹理，仅回放已捕获绘制。
+- **[P2] 无原生脚本车辆的缓存无淘汰路径**：脚本 ID 缓存增加独立存活信息（render 命中刷新），5 秒未见即清理，不再只能等资源重载；不禁止空结果缓存（避免每帧重建解析）。
+- **[P3] 变换对象池回收滞留**：`TransformCapturePool.recycleAll` 取出对象后立即置空 `inFlight[i]` 槽位——超上限对象不再被静态数组钉住，1024 上限真正生效。
 
-- 类型解析新增原生 `RouteType` 入参：MAGIC 边车覆盖仍优先（镜像其 UI 优先级），其次非 NORMAL 原生类别产出 `train_high_speed` / `train_light_rail` 等键（与 MTR 自家 `getRouteTypeKey()` 同格式），NORMAL 仍为基础模式 id——vanilla 默认 Train 行为不变。
-- 三条数据链全部类型感知：服务端全量数据预解析（`MTRDatasetHolder.addStation`）、客户端有限数据拼装（`buildLimitedStopsData`，站内换乘两组 + 相连车站换乘）、车辆自身线路（`VehicleExtraData` 逐车同步的类别）；类型串随 JSON 同步，新服务端 + 旧客户端同样正确。
-- MAGIC 未安装 / 未覆盖线路、pre-ABI-9 旧数据回退行为不变；`train_high_speed` / `train_light_rail` 本就在脚本侧隐藏集——车侧 LCD 线路图与开门换乘面板无需任何改动即恢复正确过滤。
+**第二轮：3 项回归修复（1×P1 + 2×P2，修复上一轮修复引入的问题）**
 
-**开门方向重扫补上 Axiom 区块批量编辑**
+- **[P1] 每帧重新 attach 丢失扩容像素 arena**：`install_frame` 此前每帧调用 `attach()`，把像素 arena 重置回 1 MiB 内联块并清掉所有权标志——一旦像素数据超过 1 MiB，扩容出的堆内存下一帧即成无主泄漏。现在 attach 仅在首次分配（及 cleanup 后重分配）时执行一次，普通帧只 `begin_frame()`；cleanup 时先 `detach()` 释放 recorder 拥有的增长块再删除 `HostBuffers`。
+- **[P2] 字符串缓存满后新条目插入不可找回的位置**：开放寻址表到达上限后，初始槽为空的新 key 会被放到后方占用槽，下次查找在初始空槽处提前退出、永远到不了新条目——相同文本从此每帧重复分配。改为 16 组 × 8 路固定分组缓存（总量仍 128）：查找 / 插入 / 淘汰都只发生在本组 8 槽内，组满轮转淘汰一个槽位；空槽只记录候选位置、绝不提前结束扫描，刚插入的条目保证立即可查回。
+- **[P2] 关闭一个句柄提前清理同一动态库的其他句柄**：同一路径多次打开时系统加载器返回同一底层 DSO，多个模块句柄共享 SDK 的静态 recorder 与 `HostBuffers`——旧实现任一句柄关闭都调 `mtrCleanup()`，可能释放仍存活句柄正在使用的 arena（且各持不同的锁）。现在以加载器句柄为键共享锁与成功打开计数，只有最后一个句柄关闭才执行清理；锁序为「共享模块锁 → 注册表锁」，注册表条目随 keep-loaded 映射终身保留。
 
-高度图追踪现在按改动块收敛 world / chunk / section 三级写入（Axiom set-block-buffer 批量放置的每个方块都会更新高度图），配合区块本地坐标、归属 chunk 路由与服务端线程守卫。手动编辑、WorldEdit、Mishang UC 摆放此前已经由 world-API 钩子覆盖，本次补齐批量写入的最后缺口——开门方向服务端记忆对区块编辑器的批量改动同样即时生效。
-
-**构建与工程**
-
-- iOS 交叉编译腿回归 `macos-latest`（arm）runner：撤除 2026-10-28 / 10-30 两日 arm 供给拥堵期间临时钉上的 `macos-15-intel`（release.yml 与 complete-build.yml 同步撤除）；iPhoneOS SDK 随 arm 宿主 Xcode 同样随附，cross 腿跳过 ctest 不变。
-- model-upload 测试台架补 `JSUtil` stub（恢复前置依赖齐备后的全绿）。
-- README 补记上游 prerelease.2 基线对照。
+**验证**：ASAN 行为 harness（真实桥接，44 项：同库双句柄共享状态、兄弟句柄关闭不触发清理、末句柄恰清理一次、8 轮重开 + 双活句柄交替渲染、arena 容量跨 23 帧稳定零泄漏）；字符串缓存行为套件（10312 项：5000 独立串 + 300 同首字节 CJK 突发全部即时可找回、占用精确封顶 128）；`native_regression` / `native_sdk_test` / `native_abi_layout`（全部 ABI 偏移不变）/ `native_ffm_test` / `native_poller_test` 全绿。
 
 **交付物**：12 个 jar（6 个 MC 版本 × Fabric / Forge，均内置 8 平台原生桥）+ native SDK zip。mod id 仍为 `jsblock`（与原版 JCM 互斥），依赖 MTR 4.0.5+；fabric 版另需 Fabric API。
