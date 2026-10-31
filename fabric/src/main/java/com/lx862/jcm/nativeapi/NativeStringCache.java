@@ -17,11 +17,11 @@ import java.util.Arrays;
  * directly (no decode on the hit path) and keeps the decoded artifacts
  * alive, so a steady frame does not allocate anything for repeated strings.
  *
- * <p>Open-addressed linear probing, power-of-two capacity; cleared wholesale
- * only on reload (the same graceful-degradation policy as NativeHost's
- * glyph-mask cache). Overflow used to clear the whole table too — it now
- * evicts in place instead (bounded eviction), see {@link #find}. Render
- * thread only.
+ * <p>Fixed-group (set-associative) layout: 16 sets x 8 ways, 128 entries
+ * total. A key's lookup, insertion and eviction happen ONLY inside its own
+ * 8 slots — no probe chains crossing the table, so an entry is always
+ * findable exactly where it was inserted. A full set rotates a victim.
+ * Cleared wholesale only on reload. Render thread only.
  */
 final class NativeStringCache {
 
@@ -33,13 +33,10 @@ final class NativeStringCache {
         Identifier identifier;
     }
 
-    private static final int CAPACITY = 256;   /* power of two */
-    private static final int MASK = CAPACITY - 1;
-    /** Size limit (kept from the old design): beyond it new content evicts
-     *  instead of filling more slots, so the table stays at half load. */
-    private static final int LIMIT = CAPACITY / 2;
-    private static final Entry[] TABLE = new Entry[CAPACITY];
-    private static int size;
+    private static final int SET_COUNT = 16;
+    private static final int WAYS = 8;
+    private static final Entry[] TABLE = new Entry[SET_COUNT * WAYS];
+    private static final byte[] NEXT_VICTIM = new byte[SET_COUNT];
 
     /** Shared entry for length-0 references. A zero-length range is LEGAL —
      *  an empty string parked at the very end of the arena has
@@ -61,41 +58,18 @@ final class NativeStringCache {
 
     static void clear() {
         Arrays.fill(TABLE, null);
-        size = 0;
+        Arrays.fill(NEXT_VICTIM, (byte) 0);
     }
 
-    /** Scratch-view bytes of an arena range (no allocation). */
-    private static byte[] readScratch(ByteBuffer arena, int offset, int length) {
-        if (scratch.length < length) scratch = new byte[Math.max(length, scratch.length * 2)];
-        for (int i = 0; i < length; i++) {
-            scratch[i] = arena.get(offset + i);
-        }
-        return scratch;
-    }
-
-    /* FNV-1a over the FULL UTF-8 content. The old hash mixed only the length
-       and the FIRST byte: same-length Chinese station names overwhelmingly
-       share their UTF-8 lead byte (the common 3-byte sequence for CJK),
-       so different contents piled into one probe cluster and the ninth
-       collision flushed the whole table every few frames. The content is
-       already in scratch by the time this runs, so the full walk allocates
-       nothing. Byte-level equality below still settles real hash
-       collisions.
-
-       Hash WITHOUT the arena offset on purpose: identical content at a
-       shifted offset (a marquee-length change shifts every later string
-       in the arena) is the SAME string and must keep hitting the same
-       entry. Equality is content-based (Arrays.equals), so offset changes
-       stay correct either way — only the hit rate improves. */
     private static int hashContent(byte[] bytes, int length) {
-        int h = 0x811c9dc5;
+        int hash = 0x811c9dc5;
         for (int i = 0; i < length; i++) {
-            h = (h ^ bytes[i]) * 0x01000193;
+            hash = (hash ^ bytes[i]) * 0x01000193;
         }
-        h ^= h >>> 15;
-        h *= 0x2545f491;
-        h ^= h >>> 13;
-        return h;
+        hash ^= hash >>> 15;
+        hash *= 0x2545f491;
+        hash ^= hash >>> 13;
+        return hash;
     }
 
     private static Entry find(ByteBuffer arena, int offset, int length) {
@@ -103,52 +77,52 @@ final class NativeStringCache {
             throw new IllegalArgumentException("Invalid native string reference");
         }
         if (length == 0) return EMPTY;   /* legal empty range: no arena byte is read */
-        final byte[] bytes = readScratch(arena, offset, length);
-        final int hash = hashContent(bytes, length);
-        int slot = hash & MASK;
-        int victim = -1;   /* first occupied slot of the probe run: the eviction target */
-        for (int probe = 0; probe < 8; probe++) {
+        if (scratch.length < length) {
+            scratch = new byte[Math.max(length, scratch.length * 2)];
+        }
+        for (int i = 0; i < length; i++) {
+            scratch[i] = arena.get(offset + i);
+        }
+
+        final int hash = hashContent(scratch, length);
+        final int set = hash & (SET_COUNT - 1);
+        final int base = set * WAYS;
+        int empty = -1;
+
+        /* Scan the WHOLE group before deciding: an empty way only marks a
+           candidate slot, it never ends the scan (the old open-addressed
+           code could stop at an empty probe slot that sat BEFORE the slot
+           the entry was actually stored in — a cache-full insert parked
+           behind such a gap became unfindable and the content re-allocated
+           forever). */
+        for (int way = 0; way < WAYS; way++) {
+            final int slot = base + way;
             final Entry entry = TABLE[slot];
             if (entry == null) {
-                if (size < LIMIT) return insert(slot, hash, bytes, length);
-                /* At the size limit: evict rather than grow (the limit keeps
-                   the load factor at one half, which is what makes the short
-                   probe run reliable in the first place). */
-                break;
+                if (empty < 0) empty = slot;
+                continue;
             }
             if (entry.hash == hash && entry.bytes.length == length
-                    && Arrays.equals(entry.bytes, 0, length, bytes, 0, length)) {
+                    && Arrays.equals(entry.bytes, 0, length, scratch, 0, length)) {
                 return entry;
             }
-            if (victim < 0) victim = slot;
-            slot = (slot + 1) & MASK;
         }
-        /* Probe run exhausted (8 occupied, no match) or limit reached: BOUNDED
-           EVICTION of the run's first slot. The old policy cleared the WHOLE
-           table here, so one burst of distinct strings (a route change, a
-           mixed-language consist) threw away every hot entry and re-decoded
-           the steady frame for several frames. Evicting one cold-enough
-           victim keeps the rest interned; the evicted content simply
-           re-interns (one Entry + one byte[] + one String) the next time it
-           appears. `size` is not touched — eviction replaces in place. */
-        if (victim < 0) {
-            /* Empty probe cluster at the size limit (slot 0 of the run was
-               null): pick the nearest occupied slot instead. The table is at
-               half load, so this walk is a couple of steps in practice. */
-            victim = slot;
-            while (TABLE[victim] == null) victim = (victim + 1) & MASK;
-        }
-        return insert(victim, hash, bytes, length);
-    }
 
-    /** Builds and stores an entry at `slot`; `size` counts only genuinely new
-     *  slots, so eviction (occupied slot) leaves it unchanged. */
-    private static Entry insert(int slot, int hash, byte[] bytes, int length) {
+        final int slot;
+        if (empty >= 0) {
+            slot = empty;
+        } else {
+            /* Full group: rotate one victim. Keeps capacity bounded, keeps
+               the just-inserted entry immediately findable, and never
+               touches other groups. */
+            final int victim = NEXT_VICTIM[set] & (WAYS - 1);
+            slot = base + victim;
+            NEXT_VICTIM[set] = (byte) ((victim + 1) & (WAYS - 1));
+        }
         final Entry created = new Entry();
         created.hash = hash;
-        created.bytes = Arrays.copyOf(bytes, length);
-        created.string = new String(created.bytes, 0, length, StandardCharsets.UTF_8);
-        if (TABLE[slot] == null) size++;
+        created.bytes = Arrays.copyOf(scratch, length);
+        created.string = new String(created.bytes, StandardCharsets.UTF_8);
         TABLE[slot] = created;
         return created;
     }

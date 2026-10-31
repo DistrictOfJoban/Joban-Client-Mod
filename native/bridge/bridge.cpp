@@ -64,6 +64,7 @@
 
 #include <atomic>
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <condition_variable>
 #include <cstdio>
@@ -71,11 +72,13 @@
 #include <cstring>
 #include <deque>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <new>
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #if defined(_WIN32)
@@ -129,7 +132,30 @@ struct Instance {
     std::vector<int32_t> quad_slot, quad_stage;
 };
 
+/* Per-underlying-library shared state. The system loader hands back the
+   SAME handle for repeated opens of one path, so several BridgeModules can
+   alias one DSO — and the SDK's static recorder / HostBuffers live in that
+   DSO, shared by every handle. `mutex` therefore serialises ALL handles of
+   the library, and `open_modules` counts successfully opened handles so the
+   module-level cleanup only runs when the LAST handle closes (an earlier
+   cleanup would free arenas a still-live sibling handle is rendering
+   into). */
+struct SharedLibraryState {
+    std::mutex mutex;
+    size_t open_modules = 0;
+};
+
 struct BridgeModule {
+    /* Shared lock + open-count of the underlying library (see
+       SharedLibraryState). `library` MUST be declared before `mutex`: the
+       reference binds to library->mutex in the constructor's member-init
+       list, and members initialize in declaration order. */
+    std::shared_ptr<SharedLibraryState> library;
+    std::mutex& mutex;
+
+    explicit BridgeModule(std::shared_ptr<SharedLibraryState> shared)
+        : library(std::move(shared)), mutex(library->mutex) {}
+
     void* dl = nullptr;
     /* Shm transport: long instance id -> instance key ("instanceKey/module/<handle>").
        Registered once per instance via the register command, scanned off
@@ -165,7 +191,6 @@ struct BridgeModule {
        loaded either way (ABI 10 keep-loaded policy). */
     void (*cleanup)(void) = nullptr;
 
-    std::mutex mutex;
     std::unordered_map<std::string, Instance> instances;
 
     /* ABI 10 lifetime policy — the DSO STAYS LOADED when the module closes:
@@ -292,6 +317,20 @@ ShmState g_shm;
 std::atomic<uint64_t> g_served_seq{0};
 std::unordered_map<int64_t, BridgeModule*> g_modules;
 std::mutex g_modules_mutex;
+
+/* Shared per-library state registry, keyed by the loader's handle. Never
+   erased on close: the mapping stays loaded (ABI 10), and wiping the entry
+   would mint a SECOND lock+count for the next open of the same mapping —
+   two locks guarding one static recorder is exactly the bug this table
+   exists to prevent. */
+std::unordered_map<void*, std::shared_ptr<SharedLibraryState>> g_library_states;
+
+std::shared_ptr<SharedLibraryState> shared_library_state(void* lib) {
+    std::lock_guard<std::mutex> lock(g_modules_mutex);
+    auto& shared = g_library_states[lib];
+    if (!shared) shared = std::make_shared<SharedLibraryState>();
+    return shared;
+}
 
 /* ------------------------------------------------------------------ */
 /* C++-mode background reclamation                                     */
@@ -1516,7 +1555,7 @@ BridgeModule* open_module(const char* path) {
                      path, last_error());
         return nullptr;
     }
-    auto* mod = new (std::nothrow) BridgeModule();
+    auto* mod = new (std::nothrow) BridgeModule(shared_library_state(lib));
     if (!mod) {
         std::fprintf(stderr, "[jcm_native_bridge] out of memory loading %s\n", path);
 #if defined(_WIN32)
@@ -1563,8 +1602,15 @@ BridgeModule* open_module(const char* path) {
     /* Register for the request servers, which learn the module from the
        CONTROL SLOT instead of an argument (shm_channel.h). */
     {
-        std::lock_guard<std::mutex> lk(g_modules_mutex);
+        /* Lock order: the SHARED module lock first, then the registry —
+           shared_library_state() only ever takes the registry lock and
+           has already returned here, so no cycle. open_modules is
+           incremented exactly HERE, on the one successful-registration
+           path (never in the constructor, never on the failure paths). */
+        std::lock_guard<std::mutex> module_lock(mod->mutex);
+        std::lock_guard<std::mutex> registry_lock(g_modules_mutex);
         g_modules[reinterpret_cast<int64_t>(mod)] = mod;
+        ++mod->library->open_modules;
     }
     return mod;
 }
@@ -1760,7 +1806,17 @@ void close_module_core(BridgeModule* mod) {
            on its first render. The DSO mapping itself stays loaded (ABI 10):
            this releases heap MEMORY, it must never dlclose (callbacks and
            thread-local objects may still reference the mapping). */
-        if (mod->cleanup) mod->cleanup();
+        /* Same-library handles share the SDK's static recorder and
+           HostBuffers; only the LAST live handle may release them. The
+           count is read/written under mod->mutex, which IS the shared
+           library lock, so a concurrent open/close of a sibling handle
+           cannot race the decrement. */
+        auto& shared = *mod->library;
+        assert(shared.open_modules > 0);
+        --shared.open_modules;
+        if (shared.open_modules == 0 && mod->cleanup) {
+            mod->cleanup();
+        }
     }
     {
         std::lock_guard<std::mutex> lk(g_modules_mutex);

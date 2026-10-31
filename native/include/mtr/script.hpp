@@ -88,25 +88,26 @@ inline FrameRecorder& recorder() {
    (the DSO is never dlclosed), so every F3+T leaked one block. A later
    install_frame() on the SAME mapping simply allocates a fresh block. */
 inline HostBuffers*& host_buffers() {
-    static HostBuffers* buffers = new HostBuffers();
+    static HostBuffers* buffers = nullptr;
     return buffers;
 }
 
 inline void install_frame() {
-    HostBuffers* buffers = host_buffers();
+    HostBuffers*& buffers = host_buffers();
     if (buffers == nullptr) {
         buffers = new HostBuffers();
-        host_buffers() = buffers;
+        recorder().attach(buffers->records, buffers->matrix_arena,
+                          buffers->string_arena, buffers->pixel_arena,
+                          sizeof(buffers->pixel_arena), buffers->float_arena);
     }
-    /* Idempotent re-attach every frame (a handful of pointer/capacity
-       stores): it keeps the recorder's pointers and the buffer block in
-       lock-step across a cleanup — after release_module_buffers() the
-       recorder is detached, and this line re-initializes it together
-       with the freshly allocated block, with no separate `attached`
-       flag left stale. */
-    recorder().attach(buffers->records, buffers->matrix_arena,
-                      buffers->string_arena, buffers->pixel_arena,
-                      sizeof(buffers->pixel_arena), buffers->float_arena);
+    /* Per-frame work is begin_frame() ONLY: attach() would slam the
+       recorder back onto the initial inline pixel arena (pixel_owned_ =
+       false), orphaning any heap arena push_pixels() grew in a previous
+       frame — a per-frame attach therefore LEAKED exactly the growth it
+       was meant to reuse. The one-shot attach above runs on first
+       allocation and on the first frame after a cleanup re-alloc, which
+       is also what keeps the recorder and the buffer block in lock-step
+       (release_module_buffers() detaches and nulls together). */
     recorder().begin_frame();
 }
 
@@ -121,11 +122,16 @@ inline void install_frame() {
    render. Mirrors the JS side's script-instance teardown, not a DSO
    unload: the mapping itself STAYS loaded by design (ABI 10). */
 inline void release_module_buffers() {
-    HostBuffers* buffers = host_buffers();
+    HostBuffers*& buffers = host_buffers();
     if (buffers == nullptr) return;   /* idempotent no-op */
-    host_buffers() = nullptr;
+    /* detach() BEFORE the delete: once push_pixels() grew past the
+       inline arena, the recorder's pixel_arena_ points at a HEAP block
+       the recorder owns — delete only frees HostBuffers itself (the
+       initial 1 MiB inline arena), while detach() releases the grown
+       block (through the deferred reclaimer when attached). */
     recorder().detach();
     delete buffers;
+    buffers = nullptr;
 }
 
 } /* namespace detail */
