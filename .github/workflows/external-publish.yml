@@ -250,8 +250,18 @@ jobs:
               jcm = None
           print(f"deps: MTR -> {mtr['id']} {mtr['title']} | fabric-api -> {fapi and fapi['id']} | jcm -> {jcm and jcm['id']}")
 
-          proj = get(f"{MR}/project/{PROJECT}")
-          print(f"Modrinth project: {proj['title']} (id {proj['id']}, slug {proj['slug']}, status {proj.get('status')})")
+          # While the project is in moderation review ("processing") it is
+          # invisible to anonymous requests, and some CDN edges even serve
+          # cached anonymous 404s to authenticated owners (observed 2026-10-31:
+          # the same token 404'd here yet succeeded in a preflight 11 minutes
+          # later). This lookup is informational only — the upload below
+          # authenticates and addresses the project by id — so keep it
+          # best-effort instead of failing the publish.
+          try:
+              proj = get(f"{MR}/project/{PROJECT}")
+              print(f"Modrinth project: {proj['title']} (id {proj['id']}, slug {proj['slug']}, status {proj.get('status')})")
+          except Exception as e:
+              print(f"project lookup failed ({e}); continuing — upload addresses the project by id")
 
           body = open("release_body.md", encoding="utf-8").read()
 
