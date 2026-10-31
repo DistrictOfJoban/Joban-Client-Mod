@@ -5,6 +5,7 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
 ## General
 - Fix PIDS Projector unable to save selected platforms.
 - Reduce performance impact when [hiding vehicle display cube](https://jcm.joban.org/latest/dev/scripting/features/vehicle_display_cube/).
+- MTR Patch: Fix a source of memory leak in MTR 4 (Vehicle/Eyecandy model)
 
 ## Technical
 
@@ -25,6 +26,9 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
     - You think the frame-rate impact of your PIDS is negligible. (e.g. AWT-drawn text)
 
 ## Translations
+Thanks to the following people who have contributed translations for this release! (No particular order):
+- happytbs (zh_cn)
+
 Translations for JCM is now hosted on [ZiYue's Weblate](https://weblate.ziyuesinicization.site/projects/joban-client-mod/)
 
 **Download:**  
