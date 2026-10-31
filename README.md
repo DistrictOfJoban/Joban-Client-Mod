@@ -215,6 +215,7 @@ ctest --test-dir native/build -C Release --output-on-failure
 
 | 版本 | 主题 |
 | --- | --- |
+| `prerelease.2-yanyang.1-hotfix.1` | 热修：MTR 4 原生路线类别（高铁 / 轻轨）流入换乘类型链，原版高铁、轻轨线路正确从车侧线路图去除；Axiom 区块批量编辑纳入开门方向重扫；iOS 交叉编译腿回归 macos-latest（arm）runner |
 | `prerelease.2-yanyang.1` | 上游 v2.3.0-prerelease.2 全量同步（61 提交：脚本限流 / 防死循环、脚本核心解耦、BVE 声音卡死与 Iris / OptiFine 阴影修复等）；脚本化 PIDS 文字乱飘修复（世界锚点）；C++ SDK 与上游 API 面同步（Rect / fullAA / StateTracker 等） |
 | `yanyang.8` | 脚本化 PIDS 渲染修复（yanyang.4 回归）；开门方向服务端持久记忆与 `getDirectionOfDoorOpening()`（C ABI 11）；原生桥扩至 8 平台（windows-arm64）；全模块执行 / 性能审计 20+ 项修复 |
 | `yanyang.7` | 实例热保持：列车离开视锥不再销毁，消除转头时的间歇性卡顿；空闲阀门与销毁预算 |

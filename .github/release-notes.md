@@ -1,26 +1,21 @@
-JCM Yanyang `2.3.0-prerelease.2-yanyang.1` — 上游 v2.3.0-prerelease.2 全量同步（61 个提交）；脚本化 PIDS 文字乱飘修复；C++ SDK 与上游 API 面同步。
+JCM Yanyang `2.3.0-prerelease.2-yanyang.1-hotfix.1` — yanyang.1 定向热修：MTR 4 原生路线类别（高铁 / 轻轨）流入换乘类型链，原版高铁、轻轨线路正确从车侧线路图去除；Axiom 区块批量编辑纳入开门方向重扫；iOS 交叉编译腿回归 macos-latest（arm）runner。
 
-**脚本化 PIDS 文字乱飘修复（yanyang.8 回归，`jsblock:pids_1a` 报告）**
+**原版高铁 / 轻轨正确按类型隐藏（修复「线路图去不掉原版高铁、轻轨」）**
 
-脚本化 PIDS 的文字与贴图随玩家移动满处乱飘、大小异常。根因：yanyang.8 的变换快照对象池在把 base 变换捕获进回收实例时只复制了 consumer 列表，**丢失了 MTR 4 参构造器承载的世界锚点**——锚点是 flush 时相机偏移补偿的唯一通道，丢失后每次绘制都渲染在渲染实体（相机）位置。修复：`acquire()` 现按上游 `copy()` 的字段语义重新播种锚点，**保持零稳态分配**；同因修复 eyecandy 变换缓存（世界坐标此前被错误塞进不参与补偿的 consumer，几何体被平移渲染实体位置）。车辆 / 电梯 / 原生脚本路径行为不变。新增 S6 / S7 回归测试（锚点存活 + 回收实例逐帧重锚定），六平台 CI 全绿，红绿验证确保旧代码必然触发断言。
+车侧 LCD 换乘过滤按类型串判定，但 MTR 4 路线编辑器的原生「类别」（普通 / 通勤 / 区域 / 城际 / 高铁 / 轻轨，随 `Route` 与 `VehicleExtraData` 逐车同步）此前从不参与类型解析——解析链只查 MAGIC 边车覆盖，而 MAGIC 下拉框选中高铁 / 轻轨时恰好清除边车、只留原生枚举，这些线路在数据快照里全部退化为基础 `train`，于是按「保留原版默认 Train」规格随普通地铁一起放行。修复（产出串与既有词汇表完全一致，脚本侧零改动）：
 
-**上游同步：2.3.0-beta.3 → v2.3.0-prerelease.2（61 个提交）**
+- 类型解析新增原生 `RouteType` 入参：MAGIC 边车覆盖仍优先（镜像其 UI 优先级），其次非 NORMAL 原生类别产出 `train_high_speed` / `train_light_rail` 等键（与 MTR 自家 `getRouteTypeKey()` 同格式），NORMAL 仍为基础模式 id——vanilla 默认 Train 行为不变。
+- 三条数据链全部类型感知：服务端全量数据预解析（`MTRDatasetHolder.addStation`）、客户端有限数据拼装（`buildLimitedStopsData`，站内换乘两组 + 相连车站换乘）、车辆自身线路（`VehicleExtraData` 逐车同步的类别）；类型串随 JSON 同步，新服务端 + 旧客户端同样正确。
+- MAGIC 未安装 / 未覆盖线路、pre-ABI-9 旧数据回退行为不变；`train_high_speed` / `train_light_rail` 本就在脚本侧隐藏集——车侧 LCD 线路图与开门换乘面板无需任何改动即恢复正确过滤。
 
-- **脚本执行防护**：新增 `scriptRateLimit` 预设字段与全局速率限制；解析阶段超时不再挂起游戏；无限循环可被检测并中止。
-- **脚本诊断**：解析错误以游戏内悬停文本展示；仅运行时错误输出 JS 堆栈；`console` 对象转 JSON 输出。
-- **脚本缓存**：同一脚本不再重复编译（重载时重置）；DataReader 运行时缓存按 tick 过期自动重置。
-- **脚本核心与 Rhino 解耦**：`ParsedScript` 抽象化 + `ScriptingLanguage` 多语言地基（`scriptLang` 字段）；Rhino 实现移入 `core.rhinojs` 包。
-- **脚本 API**：PIDS 绘制类 `Rectangle` 更名 `Rect`（避免与 AWT 同名冲突）；`id()` / `idr()` 长形式标记弃用，新增字符串等价形式与 `JSUtil.parseId`（支持 `"./"` 脚本相对路径）；`Resources.id(id, suffix)`、`Resources.mgr()` 别名、`Resources.ANTE_FLAG`、Java 数组创建等 ANTE 兼容与工具 API；`ConfigResponder`（装饰物自定义配置注册）、`SoundHelper` / `TickableSound` 兼容层。
-- **渲染与修补（上游）**：MTR 4 著名的 BVE 电机声音卡死修复（被剔除车辆的声音不再永久滞留）；Iris / OptiFine 阴影 pass 重复执行脚本修复扩展至电梯 / 车辆 / 装饰物 / PIDS 全部脚本渲染面；贴墙方块面朝向检查修复；`GraphicsTexture` 新增 `fullAA()` / `noAA()`；装饰物配置界面重做（布尔开关、`ConfigCheckbox`、ANTE 多配置注册）；运行时阶段读取资源不再抛 `ConcurrentModificationException`。
-- **Forge（上游）**：mixin 构建设置修复，refmap 统一为 `jsblock.refmap.json`。
-- **翻译（上游）**：新增爱尔兰语（ga_ie）与捷克语（cs_cz）；更新日语、简体中文。
-- **晏阳适配**：上游全部改动与原生 C++ 脚本管线（车辆 / PIDS / 装饰物 / 电梯的 JS + C++ 混合条目）、零分配渲染路径、标识符缓存融合；`willInvokeRender`、`takeFrom` 交换、`TransformCapturePool` 等晏阳机制经新抽象层继续生效；yanyang 全部自有特性（共享内存 / FFM 双传输、C++ 原生脚本、服务端门向持久记忆、8 平台原生桥）完整保留。
+**开门方向重扫补上 Axiom 区块批量编辑**
 
-**C++ SDK：与上游 prerelease.2 JS API 面同步**
+高度图追踪现在按改动块收敛 world / chunk / section 三级写入（Axiom set-block-buffer 批量放置的每个方块都会更新高度图），配合区块本地坐标、归属 chunk 路由与服务端线程守卫。手动编辑、WorldEdit、Mishang UC 摆放此前已经由 world-API 钩子覆盖，本次补齐批量写入的最后缺口——开门方向服务端记忆对区块编辑器的批量改动同样即时生效。
 
-- 新增 `mtr::Rect`（上游 JS 类 `Rectangle` → `Rect` 的 C++ 对应物，按 `RectangleWrapper` 语义全量移植）。
-- Text / Texture / Rect 构建器新增 `renderType(String)`；记录头 flags 字节承载 `naturalLight()`——结构体尺寸与字段偏移零变化，新旧模块与新旧宿主双向二进制兼容。
-- `Gfx2D::full_aa()` / `no_aa()`（一像素覆盖率抗锯齿，默认关闭）、`EyeCandy::facing_angle()`、`mtr::StateTracker<T>`（含上游新语义：`set_state()` 返回是否为进入该状态的首帧）。
-- 修复：`Texture::draw` 对未调用 `.texture()` 的构建器不再崩溃整个模块（跳过该记录）；Java 回放此前静默丢弃渲染层字段的问题一并修复（旧记录零值恰好映射包装器默认值，行为不变）。
+**构建与工程**
+
+- iOS 交叉编译腿回归 `macos-latest`（arm）runner：撤除 2026-10-28 / 10-30 两日 arm 供给拥堵期间临时钉上的 `macos-15-intel`（release.yml 与 complete-build.yml 同步撤除）；iPhoneOS SDK 随 arm 宿主 Xcode 同样随附，cross 腿跳过 ctest 不变。
+- model-upload 测试台架补 `JSUtil` stub（恢复前置依赖齐备后的全绿）。
+- README 补记上游 prerelease.2 基线对照。
 
 **交付物**：12 个 jar（6 个 MC 版本 × Fabric / Forge，均内置 8 平台原生桥）+ native SDK zip。mod id 仍为 `jsblock`（与原版 JCM 互斥），依赖 MTR 4.0.5+；fabric 版另需 Fabric API。
