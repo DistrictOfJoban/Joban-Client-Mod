@@ -25,8 +25,6 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
     - You think the frame-rate impact of your PIDS is negligible. (e.g. AWT-drawn text)
 
 ## Translations
-Thanks to the following people who have contributed translations for this release! (No particular order):
-
 Translations for JCM is now hosted on [ZiYue's Weblate](https://weblate.ziyuesinicization.site/projects/joban-client-mod/)
 
 **Download:**  
