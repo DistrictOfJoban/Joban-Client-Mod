@@ -127,6 +127,13 @@ public final class NativeVehicleDriver {
     private static final class ScriptIds {
         final String[] carVehicleIds;
         final List<String> ids;
+        /** Last time render() consumed this memo. SCRIPT_IDS no longer relies
+         *  on a native instance (STATES) existing to get swept: vehicles with
+         *  no native module never create a state, yet they DO pin a memo
+         *  (car-id array + id list) here, so every train that ever spawned
+         *  accumulated until a resource reload. The sweep in tick() expires
+         *  memos by this stamp, the same existence horizon the states use. */
+        long lastSeen = System.nanoTime();
 
         ScriptIds(String[] carVehicleIds, List<String> ids) {
             this.carVehicleIds = carVehicleIds;
@@ -422,7 +429,10 @@ public final class NativeVehicleDriver {
     private static List<String> scriptIdsOf(VehicleExtension vehicle) {
         final int carCount = vehicle.vehicleExtraData.immutableVehicleCars.size();
         final ScriptIds memo = SCRIPT_IDS.get(vehicle.getHexId());
-        if (memo != null && memo.matches(vehicle, carCount)) return memo.ids;
+        if (memo != null && memo.matches(vehicle, carCount)) {
+            memo.lastSeen = System.nanoTime();   /* existence signal for the tick sweep */
+            return memo.ids;
+        }
 
         final String[] carVehicleIds = new String[carCount];
         final List<String> ids = new ArrayList<>(2);
@@ -771,6 +781,17 @@ public final class NativeVehicleDriver {
            here really does mean "vehicle gone". */
         for(Map.Entry<String,CarPositions> entry:CAR_POSITIONS.entrySet()) {
             if(now-entry.getValue().stamp>UNSEEN_FORGET_NANOS) CAR_POSITIONS.remove(entry.getKey());
+        }
+        /* Script-id memo sweep: memos for vehicles with NO native instance
+           (JS-only or script-less trains, the vast majority) used to survive
+           until a reload — only forget(), driven by the STATES sweep, ever
+           removed them, and a vehicle without a state is never forgotten.
+           Expire by the memo's own lastSeen stamp (the same existence horizon
+           the states use); a live vehicle repopulates on its next frame for
+           the cost of one memo rebuild, and resetting the world / reloading
+           resources clears everything through reset() as before. */
+        for(Map.Entry<String,ScriptIds> entry:SCRIPT_IDS.entrySet()) {
+            if(now-entry.getValue().lastSeen>UNSEEN_FORGET_NANOS) SCRIPT_IDS.remove(entry.getKey());
         }
         /* Candidates collected first (no dispose-while-iterating, and the
            lists need re-ranking); two tiny lists per tick is nothing. */

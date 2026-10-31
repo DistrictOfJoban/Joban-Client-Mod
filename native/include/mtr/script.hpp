@@ -73,21 +73,59 @@ inline FrameRecorder& recorder() {
     return rec;
 }
 
+/* Module-level host buffers. Heap-backed on purpose: a 16 MB static
+   aggregate is emitted by Apple ld64 as *initialized* __DATA (comdat
+   zero aggregates become file-backed data), which bloated every macOS
+   dylib to ~17 MB. `new` gives demand-zero pages on all three platforms
+   and keeps the one-time attach semantics.
+
+   A bare re-assignable pointer instead of the old
+   `static std::unique_ptr<HostBuffers> buffers(new HostBuffers())`:
+   release_module_buffers() (the mtrCleanup entry) hands the block back
+   to the allocator when the bridge closes the module, so a KEPT-LOADED
+   DSO no longer pins ~1.2 MB of frame buffers per reload generation —
+   the old design left the mapping's static destructors un-run forever
+   (the DSO is never dlclosed), so every F3+T leaked one block. A later
+   install_frame() on the SAME mapping simply allocates a fresh block. */
+inline HostBuffers*& host_buffers() {
+    static HostBuffers* buffers = new HostBuffers();
+    return buffers;
+}
+
 inline void install_frame() {
-    /* Heap-backed on purpose: a 16 MB static aggregate is emitted by
-       Apple ld64 as *initialized* __DATA (comdat zero aggregates become
-       file-backed data), which bloated every macOS dylib to ~17 MB.
-       `new` gives demand-zero pages on all three platforms and keeps
-       the one-time attach semantics. */
-    static std::unique_ptr<HostBuffers> buffers(new HostBuffers());
-    static bool attached = false;
-    if (!attached) {
-        recorder().attach(buffers->records, buffers->matrix_arena,
-                          buffers->string_arena, buffers->pixel_arena,
-                          sizeof(buffers->pixel_arena), buffers->float_arena);
-        attached = true;
+    HostBuffers* buffers = host_buffers();
+    if (buffers == nullptr) {
+        buffers = new HostBuffers();
+        host_buffers() = buffers;
     }
+    /* Idempotent re-attach every frame (a handful of pointer/capacity
+       stores): it keeps the recorder's pointers and the buffer block in
+       lock-step across a cleanup — after release_module_buffers() the
+       recorder is detached, and this line re-initializes it together
+       with the freshly allocated block, with no separate `attached`
+       flag left stale. */
+    recorder().attach(buffers->records, buffers->matrix_arena,
+                      buffers->string_arena, buffers->pixel_arena,
+                      sizeof(buffers->pixel_arena), buffers->float_arena);
     recorder().begin_frame();
+}
+
+/* mtrCleanup body — the OPTIONAL module-level cleanup entry the bridge
+   resolves (load_symbol("mtrCleanup")) and calls from its module-close
+   path once every instance is disposed and the host confirmed the last
+   frame's replay is done. Releases the module-level heap frame buffers
+   and detaches the recorder (which also frees a spike-grown heap pixel
+   arena). Idempotent; old bridges that never call mtrCleanup keep the
+   legacy behaviour (buffers live until process exit), and a module
+   re-opened from the kept-loaded mapping re-allocates on its next
+   render. Mirrors the JS side's script-instance teardown, not a DSO
+   unload: the mapping itself STAYS loaded by design (ABI 10). */
+inline void release_module_buffers() {
+    HostBuffers* buffers = host_buffers();
+    if (buffers == nullptr) return;   /* idempotent no-op */
+    host_buffers() = nullptr;
+    recorder().detach();
+    delete buffers;
 }
 
 } /* namespace detail */
@@ -230,6 +268,16 @@ class EyecandyScript : public ScriptBase<State, detail::EyecandyAdapter> {};
     }                                                                           \
     MTR_NATIVE_EXPORT int32_t mtrDispose(const JcmFrameInput* in) {             \
         MTR_GUARDED_BODY(return mtr_g_script.lifecycle<2>(in, nullptr))         \
+    }                                                                           \
+    /* ABI 11 optional module-level cleanup: the bridge resolves this with      \
+       load_symbol (absent = legacy module, never called) and invokes it from  \
+       the module-close path AFTER the last instance is disposed and the      \
+       host confirmed the last frame's replay is done. Releases the module-   \
+       level frame buffers (HostBuffers + any spike-grown pixel arena) so a   \
+       kept-loaded DSO does not pin heap memory between reload generations.  \
+       Idempotent; a re-opened module re-allocates on its next render. */     \
+    MTR_NATIVE_EXPORT void mtrCleanup(void) {                                   \
+        ::mtr::detail::release_module_buffers();                                \
     }                                                                           \
     } /* extern "C" */
 

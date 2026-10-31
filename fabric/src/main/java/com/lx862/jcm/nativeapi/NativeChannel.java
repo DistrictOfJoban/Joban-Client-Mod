@@ -357,8 +357,14 @@ public final class NativeChannel {
         final int recordCount = region.getResultInt(NativeShm.RES_COUNT);
         final Views views = viewsFor(moduleHandle);
         views.renderOut.clear();
+        /* The result slot's arena triples are MIRRORED into the descriptor
+           buffer at offset 0 (readResultInto copies to index 0), so the shm
+           plane parses them from 0 — unlike the direct-call plane, whose
+           descriptor starts with status + record count (arena triples at
+           offset 8). finishDescriptorFrame takes the base explicitly so the
+           two layouts can never be confused again. */
         region.readResultInto(views.renderOut, NativeShm.RES_RECORDS, 5 * 24);
-        return finishDescriptorFrame(views, recordCount);
+        return finishDescriptorFrame(views, recordCount, 0);
     }
 
     /* ------------------------------------------------------------------ */
@@ -404,7 +410,14 @@ public final class NativeChannel {
                     noteStatus(status);
                     return null;
                 }
-                return finishDescriptorFrame(views, views.renderOut.getInt(4));
+                /* Direct-call descriptor layout (jcm_module_render):
+                 *   +0 int32 status, +4 int32 record count,
+                 *   +8 the five {address, length, capacity} triples. Parsing
+                 *   from 0 used to splice status+count into the first
+                 *   arena's address and read the real address as its
+                 *   length — an out-of-bounds view on every direct-call
+                 *   frame (JDK 22+ sessions). */
+                return finishDescriptorFrame(views, views.renderOut.getInt(4), 8);
             }
         } catch (Throwable t) {
             noteShmFailure("render-direct", t);
@@ -412,13 +425,16 @@ public final class NativeChannel {
         }
     }
 
-    /** Binds the five arena views from one frame descriptor (shm result
-     *  slot or direct-render out buffer share the triple layout) and
-     *  assigns the reused NativeFrame; monitor held by the caller. */
-    private static NativeScriptManager.NativeFrame finishDescriptorFrame(Views views, int recordCount) {
+    /** Binds the five arena views from one frame descriptor and assigns the
+     *  reused NativeFrame; monitor held by the caller. `descriptorBase` is
+     *  where the five 24-byte arena triples START in renderOut: 0 on the shm
+     *  plane (readResultInto mirrors the result slot into index 0) and 8 on
+     *  the direct-call plane (status + record count precede the triples). */
+    private static NativeScriptManager.NativeFrame finishDescriptorFrame(Views views, int recordCount,
+                                                                        int descriptorBase) {
         final ByteBuffer source = views.renderOut;
         for (int i = 0; i < 5; i++) {
-            final int base = i * 24;
+            final int base = descriptorBase + i * 24;
             bindArena(views, i, source.getLong(base), source.getLong(base + 8), source.getLong(base + 16));
         }
         views.frame.assign(views.records, recordCount, views.strings, views.pixels,
@@ -429,13 +445,25 @@ public final class NativeChannel {
     private static void bindArena(Views views, int slot, long address, long len, long cap) {
         final ByteBuffer view = slot == 0 ? views.records : slot == 1 ? views.strings
                 : slot == 2 ? views.pixels : slot == 3 ? views.matrices : views.floats;
-        if (address == 0 || len < 0) {
+        /* Validate the (address, length, capacity) combination BEFORE the
+           wrapper is bound: a bogus module descriptor must degrade to an
+           empty view — never address 0 with a non-zero length (a null
+           pointer read on the replay path), never a negative capacity, and
+           never limit > capacity (an NIO invariant violation that surfaces
+           far away from here, inside the buffer machinery). */
+        if (address == 0 || len < 0 || cap < 0) {
             NativeArenaView.bind(view, 0, 0, 0);
             return;
         }
         /* Pre-ABI-9 modules report capacity 0: wrap at the exact length
            (the same behaviour the bridge had for them). */
-        final long capacity = cap > 0 ? cap : len;
+        long capacity = cap > 0 ? cap : len;
+        if (len > capacity) {
+            /* Descriptor inconsistency (length beyond the module-owned
+               allocation): clamp to the capacity so the view never exposes
+               bytes the module did not allocate. */
+            len = capacity;
+        }
         NativeArenaView.bind(view, address,
                 (int) Math.min(len, Integer.MAX_VALUE),
                 (int) Math.min(capacity, Integer.MAX_VALUE));

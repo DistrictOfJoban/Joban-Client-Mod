@@ -125,7 +125,13 @@ public class RenderEyeCandyMixin {
                draw call against pooled snapshots seeded from this base, so
                the cached instance serves directly as the replay root. */
             StoredMatrixTransformations transforms=transformOf(blockEntity, facing);
-            com.lx862.jcm.nativeapi.NativeContentDriver.eyecandy(nativeId,blockEntity,world,transforms,facing,light);
+            /* Shadow-pass guard, the same discipline the JS branch below has:
+               during the shader shadow phase the native script must NOT run
+               again (no re-render, no context reset, no event consumption, no
+               sounds, no texture uploads) — only the draw calls captured by
+               the last main pass replay, so shadow-casting models keep their
+               silhouette. */
+            com.lx862.jcm.nativeapi.NativeContentDriver.eyecandy(nativeId,blockEntity,world,transforms,facing,light,OptimizedRenderer.renderingShadows());
             if(MtrScriptingResourceManager.eyecandy.isScriptControlledRendering(eyecandyId)) ci.cancel();
             /* Yanyang: mixed entries (JS + C++ modules under one script id)
                keep running — the JS part below executes in addition to the

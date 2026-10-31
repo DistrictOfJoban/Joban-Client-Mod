@@ -128,6 +128,13 @@ public final class TransformCapturePool {
         if (inFlightCount == 0) return;
         for (int i = 0; i < inFlightCount; i++) {
             final StoredMatrixTransformations smt = inFlight[i];
+            /* Null the slot FIRST, before deciding its fate: objects beyond
+             * FREE_CAP used to stay referenced by this static array until a
+             * LATER frame happened to acquire past the same index — a frame
+             * that acquires fewer transforms (or none) left the whole
+             * previous burst pinned, so the 1024-entry free-list cap never
+             * actually bounded the pool's retained memory. */
+            inFlight[i] = null;
             ((NativeTransformScope) (Object) smt).jcm$clearTransformations();
             if (freeCount < FREE_CAP) {
                 if (freeCount == free.length) {
@@ -137,7 +144,7 @@ public final class TransformCapturePool {
                 }
                 free[freeCount++] = smt;
             }
-            /* Beyond the cap: simply drop the reference — GC reclaims it. */
+            /* Beyond the cap: the slot is already null — GC reclaims it. */
         }
         inFlightCount = 0;
     }

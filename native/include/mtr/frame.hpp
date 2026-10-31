@@ -288,6 +288,44 @@ public:
         string_cap_ = string_cap; float_cap_ = float_cap;
     }
 
+    /* mtrCleanup support: drop every pointer/capacity and release the heap
+       pixel arena, resetting the recorder to the pre-attach state so a
+       module that is re-used after a bridge-side cleanup re-initializes
+       from scratch (the next attach() re-binds fresh buffers). Idempotent:
+       detaching an already-detached recorder is a no-op. Runs on the same
+       thread the renders ran on (the bridge calls it from the module close
+       path under the module mutex), so no synchronization is needed.
+
+       The heap pixel arena is freed SYNCHRONOUSLY here on purpose (the
+       defer hook is cleared first): at cleanup time there is no live frame
+       for the host reclaimer to serialize against, and the block is
+       provably dead — the bridge only calls mtrCleanup after the last
+       instance is disposed and the host confirmed the last frame's replay
+       finished. */
+    void detach() {
+        uint8_t* const owned = pixel_owned_ ? pixel_arena_ : nullptr;
+        pixel_arena_ = nullptr;
+        pixel_cap_ = 0;
+        pixel_owned_ = false;
+        pixel_decay_ = 0.0;
+        defer_free_ = nullptr;
+        defer_user_ = nullptr;
+        records_ = nullptr;
+        matrix_arena_ = nullptr;
+        string_arena_ = nullptr;
+        float_arena_ = nullptr;
+        record_cap_ = matrix_cap_ = string_cap_ = float_cap_ = 0;
+        record_count_ = 0;
+        records_bytes_ = 0;
+        matrix_bytes_ = 0;
+        string_bytes_ = 0;
+        pixel_bytes_ = 0;
+        float_bytes_ = 0;
+        z_auto_ = 0;
+        const_count_ = 0;
+        if (owned) std::free(owned);
+    }
+
     /* ABI 10: install the host's deferred-reclamation hook for replaced
        pixel arenas (see the policy note at the top of the file). Called
        from the SDK glue every lifecycle phase with the CURRENT host table;

@@ -157,6 +157,13 @@ struct BridgeModule {
     int32_t (*create)(const JcmFrameInput*) = nullptr;
     int32_t (*render)(const JcmFrameInput*, JcmFrameOutput*) = nullptr;
     int32_t (*dispose)(const JcmFrameInput*) = nullptr;
+    /* ABI 11, optional: module-level heap cleanup. SDK modules export
+       mtrCleanup to release their static frame buffers (HostBuffers +
+       spike-grown pixel arenas) once every instance is gone; the bridge
+       calls it from close_module_core. Absent on older modules, which keep
+       the legacy keep-the-buffers behaviour. The DSO mapping itself stays
+       loaded either way (ABI 10 keep-loaded policy). */
+    void (*cleanup)(void) = nullptr;
 
     std::mutex mutex;
     std::unordered_map<std::string, Instance> instances;
@@ -1394,22 +1401,37 @@ bool resolve_captured_resources(Instance& inst) {
 void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
                          int32_t* kept_records, int32_t* new_records_len) {
     uint8_t* base = const_cast<uint8_t*>(static_cast<const uint8_t*>(out.records));
-    const uint8_t* end = base + (out.records_len > 0 ? out.records_len : 0);
+    const int64_t total = out.records_len > 0 ? out.records_len : 0;
     uint8_t* p = base;
+    int64_t pos = 0;   /* consumed bytes; bounds are judged on REMAINING
+                          bytes (total - pos), never via pointer addition —
+                          a bogus record_size used to be compared as
+                          p + size > end, which can itself overflow. */
     uint8_t* write = p;
     int32_t kept = 0;
     /* The record stream is module-provided, and this walk runs in BRIDGE code
        (outside the module's MTR_GUARDED_BODY crash guard): a bogus record_size
        used to read/memmove past the records arena and SIGSEGV the whole JVM.
-       Validate every step against out.records_len before touching memory. */
+       Validate every step against out.records_len before touching memory.
+       The header check alone is NOT enough for the typed records: a
+       header-only JcmDrawModel / JcmDrawTextureUpload (8 of the required
+       24/56 bytes) still passed the generic check and let the field reads
+       below walk past the arena — each kind must also pass its own
+       sizeof(structure) minimum before any field is dereferenced. */
     for (int32_t i = 0; i < out.record_count; i++) {
-        if (p + sizeof(JcmRecordHeader) > end) break;
+        const int64_t remaining = total - pos;
+        if (remaining < static_cast<int64_t>(sizeof(JcmRecordHeader))) break;
         const JcmRecordHeader* h = reinterpret_cast<const JcmRecordHeader*>(p);
         const int32_t size = h->record_size;
-        if (size < static_cast<int32_t>(sizeof(JcmRecordHeader)) || p + size > end) break;
+        if (size < static_cast<int32_t>(sizeof(JcmRecordHeader))
+                || static_cast<int64_t>(size) > remaining) break;
         bool keep = true;
 
         if (h->kind == JCM_DRAW_TEXTURE_UPLOAD) {
+            /* Malformed typed record: stop processing (no field read, no
+               handle rewrite, no memmove — the partial frame up to here is
+               what the host gets, the same degradation as a bogus size). */
+            if (size < static_cast<int32_t>(sizeof(JcmDrawTextureUpload))) break;
             JcmDrawTextureUpload* u = reinterpret_cast<JcmDrawTextureUpload*>(p);
             const int32_t slot = u->texture_handle;
             if (slot >= 0 && slot < static_cast<int32_t>(inst.tex_slot_handles.size())) {
@@ -1419,6 +1441,7 @@ void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
                 keep = false;   /* unknown slot: nothing to upload into */
             }
         } else if (h->kind == JCM_DRAW_MODEL) {
+            if (size < static_cast<int32_t>(sizeof(JcmDrawModel))) break;
             JcmDrawModel* m = reinterpret_cast<JcmDrawModel*>(p);
             const int32_t slot = m->model_handle;
             if (slot >= 0 && (slot & 0x40000000)) m->model_handle = slot & ~0x40000000;
@@ -1438,6 +1461,7 @@ void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
             kept++;
         }
         p += size;
+        pos += size;
     }
     *kept_records = kept;
     *new_records_len = static_cast<int32_t>(write - const_cast<uint8_t*>(
@@ -1514,6 +1538,10 @@ BridgeModule* open_module(const char* path) {
     mod->create     = reinterpret_cast<int32_t (*)(const JcmFrameInput*)>(load_symbol(lib, "mtrCreate"));
     mod->render     = reinterpret_cast<int32_t (*)(const JcmFrameInput*, JcmFrameOutput*)>(load_symbol(lib, "mtrRender"));
     mod->dispose    = reinterpret_cast<int32_t (*)(const JcmFrameInput*)>(load_symbol(lib, "mtrDispose"));
+    /* Optional (ABI 11): the module-level heap cleanup entry. A missing
+       export is NOT a load failure — pre-ABI-11 modules simply keep their
+       buffers until process exit, exactly like before. */
+    mod->cleanup    = reinterpret_cast<void (*)(void)>(load_symbol(lib, "mtrCleanup"));
 
     if (!mod->abi || !mod->type || !mod->id || !mod->state_size ||
         !mod->create || !mod->render || !mod->dispose) {
@@ -1720,6 +1748,19 @@ void close_module_core(BridgeModule* mod) {
         }
         mod->instances.clear();
         g_reclaimer.defer_bytes(std::move(mod->zero_snapshot));
+        /* ABI 11 module-level cleanup, still under the module mutex: every
+           instance is disposed, the bookkeeping is gone and the host has
+           finished the last frame's replay (the close path only runs after
+           the drivers reset, so no arena view is alive). Ask the module to
+           release the heap its STATIC machinery still pins — the SDK's
+           HostBuffers block and a spike-grown pixel arena — so a kept-loaded
+           DSO stops carrying ~1.2+ MB per reload generation. Old modules
+           without the export keep the legacy behaviour; the function is
+           idempotent on the SDK side, so a re-opened module re-allocates
+           on its first render. The DSO mapping itself stays loaded (ABI 10):
+           this releases heap MEMORY, it must never dlclose (callbacks and
+           thread-local objects may still reference the mapping). */
+        if (mod->cleanup) mod->cleanup();
     }
     {
         std::lock_guard<std::mutex> lk(g_modules_mutex);

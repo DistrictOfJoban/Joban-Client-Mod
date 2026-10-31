@@ -83,9 +83,29 @@ public final class NativeContentDriver {
         }
     }
 
-    public static void eyecandy(String script,BlockEyeCandy.BlockEntity block,World world,StoredMatrixTransformations transform,Direction facing,int light) {
+    /** Shadow-pass variant of the eyecandy pipeline (shader shadow phase):
+     *  the script must NOT execute again — no snapshot, no context reset, no
+     *  native render, no event consumption, no sound replay and no texture
+     *  upload. Only the draw calls the last main pass captured are replayed,
+     *  so models that cast shadows keep their silhouette; everything with a
+     *  frame side effect (sounds, uploads, onBlockUse handling) waits for
+     *  the next main pass. Mirrors the JS branch's shadow guard in
+     *  RenderEyeCandyMixin, which skips invokeRenderFunctions but keeps the
+     *  render-manager replay. */
+    public static void eyecandy(String script,BlockEyeCandy.BlockEntity block,World world,StoredMatrixTransformations transform,Direction facing,int light,boolean shadowPass) {
+        final String key=key("eyecandy",script,block.getPos2());
+        if(shadowPass) {
+            State state=STATES.get(key);
+            if(state==null) return;   /* nothing captured yet: nothing to replay */
+            /* Still a live sighting: keep the idle valve from disposing the
+               instance while only the shadow camera sees the block. */
+            state.touched=System.nanoTime();
+            for(AbstractScriptContext context:state.contexts.values()) {
+                ((EyeCandyScriptContext)context).getRenderManager().invoke(world,transform,facing,light);
+            }
+            return;
+        }
         EyecandyBlockEntityWrapper wrapper=new EyecandyBlockEntityWrapper(block);
-        String key=key("eyecandy",script,block.getPos2());
         State previous=STATES.get(key);
         boolean used=false;
         if(previous!=null) for(AbstractScriptContext c:previous.contexts.values()) {
