@@ -36,8 +36,8 @@ public class PIDSScreen extends BlockConfigListScreen {
     protected final CheckboxWidgetExtension hidePlatformNumber;
     protected final ButtonWidgetExtension choosePresetButton;
     protected final ButtonWidgetExtension choosePlatformButton;
+    protected final LongAVLTreeSet filteredPlatforms;
 
-    protected LongAVLTreeSet filteredPlatforms;
     protected String presetId;
     public PIDSScreen(BlockPos blockPos, String[] customMessages, boolean[] rowHidden, boolean hidePlatformNumber, String presetId) {
         super(blockPos);
@@ -69,6 +69,13 @@ public class PIDSScreen extends BlockConfigListScreen {
             );
         });
 
+        if(MinecraftClient.getInstance().getWorldMapped() != null) {
+            BlockEntity be = MinecraftClient.getInstance().getWorldMapped().getBlockEntity(blockPos);
+            if(be != null && be.data instanceof PIDSBlockEntity) {
+                filteredPlatforms.addAll(((PIDSBlockEntity)be.data).getPlatformIds());
+            }
+        }
+
         this.choosePlatformButton = new ButtonWidgetExtension(0, 0, 60, 20, TextUtil.translatable(TextCategory.GUI, "pids.listview.widget.change_platform"), (btn) -> {
             final Station station = InitClient.findStation(blockPos);
             final ObjectImmutableList<DashboardListItem> platformsForList;
@@ -83,13 +90,6 @@ public class PIDSScreen extends BlockConfigListScreen {
         });
 
         this.presetId = presetId;
-
-        if(MinecraftClient.getInstance().getWorldMapped() != null) {
-            BlockEntity be = MinecraftClient.getInstance().getWorldMapped().getBlockEntity(blockPos);
-            if(be != null && be.data instanceof PIDSBlockEntity) {
-                filteredPlatforms = ((PIDSBlockEntity)be.data).getPlatformIds();
-            }
-        }
     }
 
     @Override

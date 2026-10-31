@@ -2,11 +2,14 @@
 
 This is a prerelease, focused on bug-fixes and preparation before the official release.
 
+## General
+- Fix PIDS Projector unable to save selected platforms.
+- Reduce performance impact when [hiding vehicle display cube](https://jcm.joban.org/latest/dev/scripting/features/vehicle_display_cube/).
+
 ## Technical
 
 ### Scripting
 - Bump Rhino JS Engine to 1.9.2, see their [changelog](https://github.com/mozilla/rhino/releases/tag/Rhino1_9_2_Release) for details.
-- Reduce performance impact when [hiding vehicle display cube](https://jcm.joban.org/latest/dev/scripting/features/vehicle_display_cube/).
 - Add `MTR.Data.getConnectedRails()` to obtain a list of rails connected to either a path/rail node position.
 - Add `MTR.Data.getVehicleMountDetail()` to obtain the player's current car index & position in car.
 - **PIDS Scripting:** Add `pids.arrivals().length()` to obtain the total arrivals available.
