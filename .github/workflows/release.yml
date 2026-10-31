@@ -70,11 +70,12 @@ jobs:
             platform: android-arm64
             cross: android
             cmake-arch: -DCMAKE_ANDROID_ABI=arm64-v8a
-          # iOS cross-compiles from any Xcode host; run it on the intel
-          # image because macos-latest queue congestion kept auto-cancelling
-          # this job after its 15-minute pending window (four attempts in a
-          # row on 2026-10-28, while macos-15-intel picked up instantly).
-          - os: macos-15-intel
+          # iOS cross-compiles against the iPhoneOS SDK, which ships in the
+          # arm runner's Xcode too — and ctest is already skipped for cross
+          # legs. The 2026-10-28/30 macos-latest (arm) provisioning outage
+          # that forced the macos-15-intel pin has cleared; build on the arm
+          # image again (user-requested runner).
+          - os: macos-latest
             platform: ios-arm64
             cross: ios
             cmake-arch: -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
