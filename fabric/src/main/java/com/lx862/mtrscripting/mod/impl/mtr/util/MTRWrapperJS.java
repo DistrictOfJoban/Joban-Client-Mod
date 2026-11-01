@@ -2,6 +2,7 @@ package com.lx862.mtrscripting.mod.impl.mtr.util;
 
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.mod.impl.mtr.lift.LiftWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalsWrapper;
 import org.mtr.core.data.*;
 import org.mtr.libraries.it.unimi.dsi.fastutil.ints.IntObjectImmutablePair;
@@ -10,7 +11,9 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
+import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.Vector3d;
+import org.mtr.mapping.holder.World;
 import org.mtr.mod.Init;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.client.MinecraftClientData;
@@ -138,6 +141,12 @@ public class MTRWrapperJS {
         /* Lifts */
         public static Lift getLift(long vehicleId) {
             return MinecraftClientData.getLift(vehicleId);
+        }
+
+        public static List<LiftWrapper.Floor> getLiftFloors(Lift lift) {
+            List<LiftWrapper.Floor> floors = new ArrayList<>();
+            LiftWrapper.populateFloors(floors, lift, World.cast(MinecraftClient.getInstance().getWorldMapped()));
+            return floors;
         }
 
         public static Lift getPlayerMountedLift() {

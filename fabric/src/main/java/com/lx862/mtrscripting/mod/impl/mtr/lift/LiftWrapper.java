@@ -61,17 +61,9 @@ public class LiftWrapper {
         this.pos = new ScriptVector3f(absolutePositionAndRotation.position);
 
         /* Populate floors */
-        liftWrapper.getLift().iterateFloors(liftFloor -> {
-            BlockPos floorBlockPos = new BlockPos((int)liftFloor.getPosition().getX(), (int)liftFloor.getPosition().getY(), (int)liftFloor.getPosition().getZ());
-            BlockEntity be = worldView.getBlockEntity(floorBlockPos);
-
-            // Block entity contains all the necessary info TSC does not sync over
-            BlockLiftTrackFloor.BlockEntity floorBE = be == null ? null : (BlockLiftTrackFloor.BlockEntity)be.data;
-
-            Floor floor = new Floor(liftWrapper.getLift(), liftFloor, floorBE);
-            this.floors.add(floor);
-        });
+        populateFloors(this.floors, liftWrapper.getLift(), worldView);
         this.floors.sort((e, f) -> e.index - f.index);
+
         Box doorway1 = new Box(-0.75F, 0.0F, -liftObject.getDepth() / (double)2.0F + (double)0.25F, 0.75F, 0.0F, -liftObject.getDepth() / (double)2.0F);
         Box doorway2 = new Box(-0.75F, 0.0F, liftObject.getDepth() / (double)2.0F - (double)0.25F, 0.75F, 0.0F, liftObject.getDepth() / (double)2.0F);
 
@@ -162,6 +154,19 @@ public class LiftWrapper {
 
     public boolean isClientPlayerRiding() {
         return VehicleRidingMovement.isRiding(liftObject.getId());
+    }
+
+    public static void populateFloors(List<Floor> list, Lift lift, World worldView) {
+        lift.iterateFloors(liftFloor -> {
+            BlockPos floorBlockPos = new BlockPos((int)liftFloor.getPosition().getX(), (int)liftFloor.getPosition().getY(), (int)liftFloor.getPosition().getZ());
+            BlockEntity be = worldView.getBlockEntity(floorBlockPos);
+
+            // Block entity contains all the necessary info TSC does not sync over
+            BlockLiftTrackFloor.BlockEntity floorBE = be == null ? null : (BlockLiftTrackFloor.BlockEntity)be.data;
+
+            Floor floor = new Floor(lift, liftFloor, floorBE);
+            list.add(floor);
+        });
     }
 
     @ApiInternal
