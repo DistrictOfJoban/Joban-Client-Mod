@@ -127,7 +127,9 @@ public class MTRWrapperJS {
             IntObjectImmutablePair<ObjectObjectImmutablePair<Vector3d, Double>> obj = VehicleRidingMovement.getRidingVehicleCarNumberAndOffset(playerMountedVehicle.getId());
             if(obj == null) return null;
             int carIndex = obj.leftInt();
-            return new MountDetail(carIndex, new ScriptVector3f(obj.right().left()));
+            Vector3d vec3d = obj.right().left();
+            if(vec3d == null) return null;
+            return new MountDetail(carIndex, new ScriptVector3f(vec3d));
         }
 
         public static List<VehicleExtension> getKnownVehicles() {
