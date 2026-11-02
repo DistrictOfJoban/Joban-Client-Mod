@@ -148,10 +148,10 @@ public class RhinoParsedScript extends ParsedScript {
                 }
 
                 Exception capturedException = new Exception(cleanRhinoExceptionMessage(e.getMessage()), e);
-
                 lastFailedTime = System.currentTimeMillis();
                 capturedScriptException = capturedException;
                 if(errorCallback != null) errorCallback.run();
+                scriptInstance.getContextObject().dispose();
             } finally {
                 scriptInstance.endTrackExecuteTime();
                 Context.exit();

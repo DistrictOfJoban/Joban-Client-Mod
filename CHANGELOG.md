@@ -15,8 +15,15 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
 - Add `MTR.Data.getVehicleMountDetail()` to obtain the player's current car index & position in car.
 - Add `MTR.Data.getLiftFloors()` to obtain a list of stopping floors (With floor name/descriptions) from a TSC Lift.
 - Better error message for partial `GraphicsTexture.upload()`.
-- **PIDS Scripting:** Add `pids.arrivals().length()` to obtain the total arrivals available.
-- **PIDS Scripting: Breaking Changes (Not code-related) (PIDS Projector only)**
+- **TickableSoundInstance** has been revised, hopefully making it more intuitive.
+  - Add standalone `TickableSoundInstance.play()` and `TickableSoundInstance.stop()` method, removing the need for SoundManager. (Which doesn't manage the sound at all)
+  - The previous `setLoopable` method is deprecated, since it will be set to `false` once `SoundManager.stop` is called, requiring the need to call `setLoopable` again.
+    - Use `setRepeatable` instead, which preserves the state.
+  - You may also use `play(ctx)` to associate your sound with a ScriptContext. This will auto stop your sound once the script context is disposed/errored, without the need for manual disposal.
+
+### PIDS Scripting
+- Add `pids.arrivals().length()` to obtain the total arrivals available.
+- **Breaking Changes (Not code-related) (PIDS Projector only)**
   - This update "nerfed" the PIDS Projector such that it will skip rendering if out of the camera's bound (In-line with other PIDS), except:
     - If any of the configured X/Y/Z offset is >= 4m
     - If the configured scale is >= 4x

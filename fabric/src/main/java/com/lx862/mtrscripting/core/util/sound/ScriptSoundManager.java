@@ -50,30 +50,19 @@ public class ScriptSoundManager {
         queue(new PositionedSoundCall(id, SoundCategory.valueOf(soundCategory), pos.x(), pos.y(), pos.z(), volume, pitch));
     }
 
+    @Deprecated
     public void play(TickableSoundInstanceJS soundInstance) {
-        if(soundInstance.isInstanceInUse()) return; // Don't allow playing twice
-
-        soundInstance.setInstanceInUse(true);
-        MinecraftClient.getInstance().submit(() -> {
-            MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(soundInstance));
-        });
+        soundInstance.play();
     }
 
+    @Deprecated
     public void play(TickableSoundInstanceJS soundInstance, int delay) {
-        if(soundInstance.isInstanceInUse()) return; // Don't allow playing twice
-
-        soundInstance.setInstanceInUse(true);
-        MinecraftClient.getInstance().submit(() -> {
-            MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(soundInstance), delay);
-        });
+        soundInstance.play(delay);
     }
 
+    @Deprecated
     public void stop(TickableSoundInstanceJS soundInstance) {
-        soundInstance.setInstanceInUse(false);
-        soundInstance.setLoopable(false); // Prevent looping sound from repeating again
-        MinecraftClient.getInstance().submit(() -> {
-            MinecraftClient.getInstance().getSoundManager().stop(new SoundInstance(soundInstance));
-        });
+        soundInstance.stop();
     }
 
     public void queue(SoundCall soundCall) {
