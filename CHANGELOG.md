@@ -21,6 +21,9 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
     - Use `setRepeatable` instead, which preserves the state.
   - You may also use `play(ctx)` to associate your sound with a ScriptContext. This will auto stop your sound once the script context is disposed/errored, without the need for manual disposal.
 
+### Vehicle Scripting
+- Fix a bug where if the same RoutePlatform is assigned multiple times in a Route, the behaviour of data fetching will be errornous. 
+
 ### PIDS Scripting
 - Add `pids.arrivals().length()` to obtain the total arrivals available.
 - **Breaking Changes (Not code-related) (PIDS Projector only)**
