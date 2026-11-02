@@ -14,6 +14,7 @@ This is a prerelease, focused on bug-fixes and preparation before the official r
 - Add `MTR.Data.getConnectedRails()` to obtain a list of rails connected to either a path/rail node position.
 - Add `MTR.Data.getVehicleMountDetail()` to obtain the player's current car index & position in car.
 - Add `MTR.Data.getLiftFloors()` to obtain a list of stopping floors (With floor name/descriptions) from a TSC Lift.
+- Better error message for partial `GraphicsTexture.upload()`.
 - **PIDS Scripting:** Add `pids.arrivals().length()` to obtain the total arrivals available.
 - **PIDS Scripting: Breaking Changes (Not code-related) (PIDS Projector only)**
   - This update "nerfed" the PIDS Projector such that it will skip rendering if out of the camera's bound (In-line with other PIDS), except:

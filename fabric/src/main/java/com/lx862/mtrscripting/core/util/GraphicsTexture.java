@@ -90,16 +90,32 @@ public class GraphicsTexture implements Closeable {
         int srcImgWidth = sourceImage.getWidth();
         int srcImgHeight = sourceImage.getHeight();
         if(dstOffsetX + uploadWidth > this.width) {
-            throw new IllegalArgumentException("Destination offsetX + width should not be larger than the destination image size! Have you subtracted width from offset?");
+            throw new IllegalArgumentException("Destination offsetX + width should not be larger than the destination image size! Have you subtracted width from offset?" +
+                    "\nGraphicsTexture width: " + this.width +
+                    "\ndstOffsetX: " + dstOffsetX +
+                    "\nuploadWidth: " + uploadWidth
+            );
         }
         if(dstOffsetY + uploadHeight > this.height) {
-            throw new IllegalArgumentException("Destination offsetY + height should not be larger than the destination image size! Have you subtracted height from offset?");
+            throw new IllegalArgumentException("Destination offsetY + height should not be larger than the destination image size! Have you subtracted height from offset?" +
+                    "\nGraphicsTexture height: " + this.height +
+                    "\ndstOffsetY: " + dstOffsetY +
+                    "\nuploadHeight: " + uploadHeight
+            );
         }
         if (srcOffsetX + uploadWidth > srcImgWidth) {
-            throw new IllegalArgumentException("Source offsetX + width should not be larger than the source image size!");
+            throw new IllegalArgumentException("Source offsetX + width should not be larger than the source image width!" +
+                    "\nSource Image width: " + srcImgWidth +
+                    "\nsrcOffsetX: " + srcOffsetX +
+                    "\nuploadWidth: " + uploadWidth
+            );
         }
         if (srcOffsetY + uploadHeight > srcImgHeight) {
-            throw new IllegalArgumentException("Source offsetY + height should not be larger than the source image size!");
+            throw new IllegalArgumentException("Source offsetY + height should not be larger than the source image height!" +
+                    "\nSource Image height: " + srcImgHeight +
+                    "\nsrcOffsetY: " + srcOffsetY +
+                    "\nuploadHeight: " + uploadHeight
+            );
         }
         copyBuffer(sourceImage, this.dynamicTexture, dstOffsetX, dstOffsetY, srcOffsetX, srcOffsetY, uploadWidth, uploadHeight, this.width, this.height, srcImgWidth, srcImgHeight);
         RenderSystem.recordRenderCall(() -> {
