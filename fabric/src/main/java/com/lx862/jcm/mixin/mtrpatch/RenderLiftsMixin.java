@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class RenderLiftsMixin {
     @Inject(method = "lambda$render$3", at = @At("HEAD"), cancellable = true)
     private static void jsblock$liftFrustumCulling(Lift lift, PositionAndRotation absolutePositionAndRotation, Vec3d camera, MinecraftClientData.LiftWrapper liftWrapper, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
-        if(JCMClientConfig.INSTANCE.mtrPatch.enableFrustumCullingLift.value()) {
+        if(JCMClientConfig.INSTANCE.mtrPatch.enableLiftFrustumCulling.value()) {
             double longestDimension = Math.max(lift.getHeight(), Math.max(lift.getWidth(), lift.getDepth()));
             Vec3d startVector = new Vec3d(absolutePositionAndRotation.position.x - longestDimension, absolutePositionAndRotation.position.y - longestDimension, absolutePositionAndRotation.position.z - longestDimension);
             Vec3d endVector = new Vec3d(absolutePositionAndRotation.position.x + longestDimension, absolutePositionAndRotation.position.y + longestDimension, absolutePositionAndRotation.position.z + longestDimension);

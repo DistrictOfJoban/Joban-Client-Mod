@@ -62,7 +62,7 @@ public class ScriptSoundManager {
 
     @Deprecated
     public void stop(TickableSoundInstanceJS soundInstance) {
-        soundInstance.stop();
+        soundInstance.abort();
     }
 
     public void queue(SoundCall soundCall) {

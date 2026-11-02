@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class RenderVehiclesMixin {
     @Inject(method = "lambda$render$3", at = @At("HEAD"), cancellable = true)
     private static void jsblock$vehicleFrustumCulling(VehicleExtension vehicle, int carNumber, ObjectObjectImmutablePair vehicleCarDetails, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
-        if(JCMClientConfig.INSTANCE.mtrPatch.enableFrustumCullingVehicle.value()) {
+        if(JCMClientConfig.INSTANCE.mtrPatch.enableVehicleFrustumCulling.value()) {
             double longestDimension = vehicle.persistentVehicleData.longestDimensions[carNumber];
             Vec3d startVector = new Vec3d(((PositionAndRotation) ((ObjectObjectImmutablePair) vehicleCarDetails.right()).right()).position.x - longestDimension, ((PositionAndRotation) ((ObjectObjectImmutablePair) vehicleCarDetails.right()).right()).position.y - (double) 8.0F, ((PositionAndRotation) ((ObjectObjectImmutablePair) vehicleCarDetails.right()).right()).position.z - longestDimension);
             Vec3d endVector = new Vec3d(((PositionAndRotation) ((ObjectObjectImmutablePair) vehicleCarDetails.right()).right()).position.x + longestDimension, ((PositionAndRotation) ((ObjectObjectImmutablePair) vehicleCarDetails.right()).right()).position.y + (double) 8.0F, ((PositionAndRotation) ((ObjectObjectImmutablePair) vehicleCarDetails.right()).right()).position.z + longestDimension);

@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.core.util.sound;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.api.AbstractScriptContext;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.MovingSoundInstanceExtension;
 import org.mtr.mapping.mapper.SoundHelper;
@@ -10,6 +11,7 @@ import org.mtr.mapping.mapper.SoundHelper;
 public class TickableSoundInstanceJS extends MovingSoundInstanceExtension implements AutoCloseable {
     private boolean instanceInUse = false;
     private boolean isRepeatable = false;
+    private boolean useNewRepeatBehaviour = false;
 
     protected TickableSoundInstanceJS(Identifier soundId, String category) {
         this(SoundHelper.createSoundEvent(soundId), SoundCategory.valueOf(category));
@@ -28,6 +30,10 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension implem
         return new TickableSoundInstanceJS(soundId, category);
     }
 
+    public static TickableSoundInstanceJS create(String soundId, String category) {
+        return new TickableSoundInstanceJS(JSUtil.parseId(soundId), category);
+    }
+
     // TODO: Getters
 
     public TickableSoundInstanceJS setSoundVolume(float f) {
@@ -41,6 +47,7 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension implem
     }
 
     public TickableSoundInstanceJS setRepeatable(boolean canRepeat) {
+        this.useNewRepeatBehaviour = true;
         this.isRepeatable = canRepeat;
         return this;
     }
@@ -86,10 +93,10 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension implem
     public void play() {
         if(isInstanceInUse()) return; // Don't allow playing twice
 
-        setIsRepeatableMapped(this.isRepeatable);
+        if(this.useNewRepeatBehaviour) setIsRepeatableMapped(this.isRepeatable);
         setInstanceInUse(true);
         MinecraftClient.getInstance().submit(() -> {
-            MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(this), 0);
+            MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(this));
         });
     }
 
@@ -97,13 +104,14 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension implem
         if(isInstanceInUse()) return; // Don't allow playing twice
 
         setInstanceInUse(true);
-        setIsRepeatableMapped(this.isRepeatable);
+        if(this.useNewRepeatBehaviour) setIsRepeatableMapped(this.isRepeatable);
         MinecraftClient.getInstance().submit(() -> {
             MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(this), delay);
         });
     }
 
-    public void stop() {
+    // N.B. stop() is already in mojmap and is final
+    public void abort() {
         if(!isInstanceInUse()) return;
 
         setInstanceInUse(false);
@@ -114,12 +122,12 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension implem
     }
 
     @ApiInternal
-    public void setInstanceInUse(boolean isPlaying) {
+    protected void setInstanceInUse(boolean isPlaying) {
         this.instanceInUse = isPlaying;
     }
 
     @ApiInternal
-    public boolean isInstanceInUse() {
+    protected boolean isInstanceInUse() {
         return this.instanceInUse;
     }
 
@@ -136,6 +144,6 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension implem
 
     @Override
     public void close() throws Exception {
-        stop();
+        abort();
     }
 }
