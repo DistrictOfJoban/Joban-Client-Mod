@@ -58,13 +58,13 @@ public class JCMClientConfig extends ReflectiveConfig {
         public final TrackedValue<Boolean> allowCameraLowering = value(true);
 
         @Comment("Whether to enable Frustum Culling for Lifts")
-        public final TrackedValue<Boolean> enableFrustumCullingLift = value(true);
+        public final TrackedValue<Boolean> enableLiftFrustumCulling = value(true);
 
         @Comment("Whether to enable Frustum Culling for Vehicles")
-        public final TrackedValue<Boolean> enableFrustumCullingVehicle = value(true);
+        public final TrackedValue<Boolean> enableVehicleFrustumCulling = value(true);
 
         @Comment("Whether to enable Frustum Culling for Rails")
-        public final TrackedValue<Boolean> enableFrustumCullingRails = value(false);
+        public final TrackedValue<Boolean> enableRailFrustumCulling = value(false);
 
         @Comment("Rail Culling Improvements")
         @ChangeWarning(folk.sisby.kaleido.lib.quiltconfig.api.metadata.ChangeWarning.Type.Experimental)
