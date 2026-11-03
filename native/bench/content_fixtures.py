@@ -35,6 +35,7 @@ STUBS = {
   public static class PSDStopWrapper {public final String name,destinationName;
    PSDStopWrapper(String name,String dest,boolean withInterchange){this.name=name;this.destinationName=dest;this.withInterchange=withInterchange;}
    final boolean withInterchange;
+   public String name(){return name;} public String destinationName(){return destinationName;}
    public String customDestination(){return null;}
    public org.mtr.core.data.Station station(){return new org.mtr.core.data.Station();}
    public org.mtr.core.data.Platform platform(){return new org.mtr.core.data.Platform();}
