@@ -42,7 +42,7 @@ public final class PSDRouteStopCache {
         List<PSDStopWrapper> stops;
     }
 
-    static void reset() {
+    public static void reset() {
         CACHE.clear();
     }
 
