@@ -1978,7 +1978,10 @@ int32_t serve_request(uint8_t* base, uint64_t seq) {
     }
 
     /* ---- per-frame render ---- */
-    if (seq == 0 || kind > MTR_RESOURCE_LIFT) {
+    /* MTR_RESOURCE_PSD (ABI 12) is the current last kind — the gate must
+       track the enum tail, not a hard-coded LIFT, or every PSD frame is
+       rejected before run_frame_locked ever sees it. */
+    if (seq == 0 || kind > MTR_RESOURCE_PSD) {
         std::fprintf(stderr, "[jcm_native_bridge] shm request: bad request (seq %llu, kind %u)\n",
                      (unsigned long long)seq, kind);
         publish(JCM_SHM_ERR_REQUEST, 0);
@@ -2205,7 +2208,7 @@ JCM_BRIDGE_EXPORT int32_t jcm_module_render(int64_t handle, const char* key, int
                                              int32_t kind, uint8_t* out_desc) {
     auto* mod = reinterpret_cast<BridgeModule*>(static_cast<uintptr_t>(handle));
     if (!mod || !key || key_len <= 0 || snap_addr == 0 || snap_len <= 0
-            || !out_desc || kind < 0 || kind > MTR_RESOURCE_LIFT) {
+            || !out_desc || kind < 0 || kind > MTR_RESOURCE_PSD) {
         return JCM_SHM_ERR_REQUEST;
     }
     if (snap_len > 0x7fffffffLL) return JCM_SHM_ERR_SNAPSHOT;
