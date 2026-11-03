@@ -55,7 +55,7 @@ public class PSDPidsScriptInstance extends ScriptInstance<PIDSWrapper> implement
     @Override
     public boolean shouldInvalidate() {
         if (MinecraftClient.getInstance().getWorldMapped() == null) return true;
-        final World world = MinecraftClient.getInstance().getWorldMapped();
+        final World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
         final BlockState state = world.getBlockState(blockPos);
         final Object block = state.getBlock().data;
         final boolean stillPsd = block instanceof BlockPSDAPGBase || block instanceof BlockPSDTop;

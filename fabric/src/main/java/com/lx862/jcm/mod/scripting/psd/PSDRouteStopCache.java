@@ -26,7 +26,7 @@ import java.util.Map;
  * The cache is bounded and cleared when the world changes (see
  * {@link #reset()}).</p>
  */
-final class PSDRouteStopCache {
+public final class PSDRouteStopCache {
 
     private static final long TTL_NANOS = 1_000_000_000L;
     private static final int MAX_ENTRIES = 256;

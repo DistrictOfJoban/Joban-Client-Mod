@@ -72,8 +72,8 @@ public final class NativeContentDriver {
 
     public static void pids(String script,PIDSWrapper wrapper, World world,StoredMatrixTransformations transform,Direction facing,int light) {
         pidsDrive(script,wrapper,world);
-        pidsReplay(script,wrapper,world,transform,facing,light);
-        pidsReplaySounds(script,wrapper,world);
+        pidsReplay(script,wrapper.blockPos().rawBlockPos(),world,transform,facing,light);
+        pidsReplaySounds(script,wrapper.blockPos().rawBlockPos(),world);
     }
 
     /** PIDS drive half — marshal the snapshot and run every C++ module once.

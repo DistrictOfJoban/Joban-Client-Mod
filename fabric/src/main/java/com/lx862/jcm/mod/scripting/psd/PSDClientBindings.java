@@ -90,8 +90,8 @@ public final class PSDClientBindings {
         dimension switch, and retries when no server ever answered (a vanilla
         server without this mod simply never replies). */
     public static void tick() {
-        final World world = MinecraftClient.getInstance().getWorldMapped();
-        if (world == null) {
+        final org.mtr.mapping.holder.ClientWorld clientWorld = MinecraftClient.getInstance().getWorldMapped();
+        if (clientWorld == null) {
             if (currentDimension != null || !BINDINGS.isEmpty()) {
                 currentDimension = null;
                 lastWorldData = null;
@@ -101,9 +101,9 @@ public final class PSDClientBindings {
             return;
         }
 
-        if (world.data != lastWorldData) {
-            lastWorldData = world.data;
-            currentDimension = Init.getWorldId(world);
+        if (clientWorld.data != lastWorldData) {
+            lastWorldData = clientWorld.data;
+            currentDimension = Init.getWorldId(World.cast(clientWorld));
             BINDINGS.clear();
             request(currentDimension);
             return;

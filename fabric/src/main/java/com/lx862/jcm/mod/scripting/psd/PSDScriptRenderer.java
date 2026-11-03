@@ -21,10 +21,10 @@ import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.ClientPlayerEntity;
-import org.mtr.mapping.holder.ClientWorld;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MinecraftClient;
+import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.block.BlockAPGGlass;
@@ -107,7 +107,9 @@ public final class PSDScriptRenderer implements RenderHelper {
     /** Called from MainRendererMixin at the head of MainRenderer.render. */
     public static void renderAll() {
         final MinecraftClient minecraftClient = MinecraftClient.getInstance();
-        final ClientWorld world = minecraftClient.getWorldMapped();
+        /* MTR's mapping wrappers are unrelated types — ClientWorld reaches the
+           World-typed helpers (native driver, InitClient) through World.cast. */
+        final World world = World.cast(minecraftClient.getWorldMapped());
         final ClientPlayerEntity player = minecraftClient.getPlayerMapped();
         if (world == null || player == null) return;
         if (PSDClientBindings.isEmpty()) return;
@@ -142,7 +144,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* Glass                                                                 */
     /* ==================================================================== */
 
-    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, ClientWorld world, boolean shadowPass) {
+    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING);
         final boolean upper = IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
         final boolean apg = state.getBlock().data instanceof BlockAPGGlass || state.getBlock().data instanceof BlockAPGGlassEnd;
@@ -199,7 +201,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* Top panel                                                             */
     /* ==================================================================== */
 
-    private static void renderTop(PSDBinding binding, BlockPos pos, BlockState state, ClientWorld world, boolean shadowPass) {
+    private static void renderTop(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDTop.FACING);
         final boolean persistent = IBlock.getStatePropertySafe(state, BlockPSDTop.PERSISTENT) != BlockPSDTop.EnumPersistent.NONE;
         final float additionalOffset = persistent ? BlockPSDTop.PERSISTENT_OFFSET_SMALL : 0;
@@ -228,7 +230,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* Script driving (once per frame) and replay (once per face)            */
     /* ==================================================================== */
 
-    private static void driveScript(PSDBinding binding, BlockPos pos, ClientWorld world, int canvasWidth, int canvasHeight) {
+    private static void driveScript(PSDBinding binding, BlockPos pos, World world, int canvasWidth, int canvasHeight) {
         if (binding.pidsPreset) {
             final PIDSPresetBase preset = PIDSManager.getPreset(binding.scriptId);
             if (!(preset instanceof ScriptPIDSPreset)) return;
@@ -286,7 +288,7 @@ public final class PSDScriptRenderer implements RenderHelper {
         }
     }
 
-    private static void replayScript(PSDBinding binding, BlockPos pos, ClientWorld world, StoredMatrixTransformations transform, Direction drawDirection) {
+    private static void replayScript(PSDBinding binding, BlockPos pos, World world, StoredMatrixTransformations transform, Direction drawDirection) {
         if (binding.pidsPreset) {
             final PIDSPresetBase preset = PIDSManager.getPreset(binding.scriptId);
             if (!(preset instanceof ScriptPIDSPreset)) return;
@@ -316,7 +318,7 @@ public final class PSDScriptRenderer implements RenderHelper {
         }
     }
 
-    private static void replaySoundsOnce(PSDBinding binding, BlockPos pos, ClientWorld world) {
+    private static void replaySoundsOnce(PSDBinding binding, BlockPos pos, World world) {
         if (binding.pidsPreset) {
             if (NativeScriptManager.isLoaded(binding.scriptId)) {
                 NativeContentDriver.pidsReplaySounds(binding.scriptId, pos, world);

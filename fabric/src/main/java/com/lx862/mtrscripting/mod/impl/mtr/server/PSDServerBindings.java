@@ -104,7 +104,7 @@ public final class PSDServerBindings {
         if (!subscribers.contains(player)) {
             subscribers.add(player);
         }
-        send(minecraftServer, player, new PSDScriptsS2CPacket(dimension, snapshot(state)));
+        send(minecraftServer, PlayerEntity.cast(player), new PSDScriptsS2CPacket(dimension, snapshot(state)));
     }
 
     public static void handleBind(MinecraftServer minecraftServer, ServerPlayerEntity player, int x, int y, int z, String scriptId, boolean pidsPreset, String typeName) {

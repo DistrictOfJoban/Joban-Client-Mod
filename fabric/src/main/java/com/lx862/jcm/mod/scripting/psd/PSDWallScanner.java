@@ -7,6 +7,7 @@ import org.mtr.core.data.Route;
 import org.mtr.core.data.TransportMode;
 import org.mtr.core.operation.CarDetails;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.mapping.holder.Axis;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
@@ -228,11 +229,11 @@ public final class PSDWallScanner {
     }
 
     private static double alongOf(BlockPos pos, Direction wallAxis) {
-        return wallAxis.getAxis() == Direction.Axis.X ? pos.getX() : pos.getZ();
+        return wallAxis.getAxis() == Axis.X ? pos.getX() : pos.getZ();
     }
 
     private static double alongOf(Position position, Direction wallAxis) {
-        return wallAxis.getAxis() == Direction.Axis.X ? position.getX() : position.getZ();
+        return wallAxis.getAxis() == Axis.X ? position.getX() : position.getZ();
     }
 
     /** Re-reads the live door values/states of a cached run (every frame). */
