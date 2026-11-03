@@ -106,7 +106,10 @@ STUBS = {
    public long routeId(){return routeId;} public int color(){return color;} public String name(){return name;}
    public TM transportMode(){return TM.TRAIN;} public String getTransportType(){return transportType;}}
   public static class PSDExitWrapper {
-   public String name(){return "A";} public List<String> destinations(){return List.of("出口目的地");}}
+   private final String name; private final List<String> destinations;
+   public PSDExitWrapper(){this("A",List.of("出口目的地"));}
+   public PSDExitWrapper(String name,List<String> destinations){this.name=name;this.destinations=destinations;}
+   public String name(){return name;} public List<String> destinations(){return destinations;}}
   public static class PSDStationWrapper {
    private final org.mtr.core.data.Station station;
    private final List<PSDInterchangeWrapper> interchanges=new ArrayList<>();

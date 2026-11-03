@@ -243,10 +243,10 @@ public final class NativeContentSnapshot {
             for (int s = 0; s < stops.size(); s++) {
                 final com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDStopWrapper stop = stops.get(s);
                 final int q = stopOffsets[r] + s * 88;
-                final org.mtr.core.data.Station station = stop.station();
+                final org.mtr.core.data.Station stopStation = stop.station();
                 final org.mtr.core.data.Platform stopPlatform = stop.platform();
                 buffer.putLong(q, route.id());
-                buffer.putLong(q + 8, station == null ? 0 : station.getId());
+                buffer.putLong(q + 8, stopStation == null ? 0 : stopStation.getId());
                 buffer.putLong(q + 16, stopPlatform == null ? 0 : stopPlatform.getId());
                 buffer.putDouble(q + 24, -1);
                 buffer.putDouble(q + 32, stopPlatform == null ? -1 : stopPlatform.getDwellTime());
