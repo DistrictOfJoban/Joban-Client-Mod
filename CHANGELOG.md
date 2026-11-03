@@ -6,10 +6,23 @@
   - `mtr_custom_resources.json` 新增 `psdScripts` 类别，形式同 `vehicleScripts`（`id` / `scriptLocations`（JS 与 C++ 混排、逐条目语言判定）/ `prependExpressions` / `input` / `rateLimit` / `dataFetchMode`），新增 `"type"` 设置项（`"glass"` / `"top"`）选择绑定表面。
   - 新物品 **屏蔽门脚本编辑器**（与 MTR「刷」同一创造分类）：对任意屏蔽门玻璃（含端部玻璃 / APG 半高闸门玻璃；MTR、天津地铁等一切基于 MTR PSD 类的模组）或屏蔽门顶部面板右键，弹出选择界面，可绑定该类型的 `psdScripts` 条目**或任一脚本化 PIDS 预设**（PIDS 脚本经无方块实体构造的合成 `PIDSWrapper` 原样运行，画布自动适配 PSD 表面）；「无脚本」解除绑定。
   - 绑定保存在服务端（`<世界>/mtr/<维度>/psd-scripts/bindings.json`，沿用门向系统的存储约定），进世界 / 换维度自动请求同步，任何玩家改动即时广播给同维度玩家；绑定请求以「手持编辑器物品」为服务端权限校验，方块类型与绑定表面服务端复核。
-  - 渲染：玻璃变为**不透明白色**并叠加脚本控制的动态贴图（正反两面、背面镜像，APG 上半自动按 9px 高度适配）；顶部面板**不再显示**原有箭头 / 线路图，内容完全由脚本控制。渲染走 MTR 自身的 `MainRenderer` 队列（`RenderRouteBaseMixin` 取消原内容、`MainRendererPSDMixin` 驱动脚本面），Shader 阴影 pass 仅回放上一帧捕获（不执行脚本、不驱动 C++）。
-  - 脚本 API（JS `psd` 参数 / C++ `mtr::Psd`，绘制与 PIDS 完全同构）：站台（编号 / 名称 / 车站 / 停站时间）、经停线路全量信息（名称 / 编号 / 颜色 / 环线 / 交通类型）、每条线路完整车站列表（`dataFetchMode: ALL`；站名 / 到站显示 / 自定义到站 / 换乘线路 / 车站出口）、即将到达列车（终点站 / 线路 / 车厢数 / 倒计时 / 实时 / 终到 / **将开启的屏蔽门编号 `doorNumbers()`**——停站中读实际门状态、未到站按「列车居中停站 + 按车辆资源逐卡累加车长」预测）、门单元列表与实时开门 / 上锁状态。
-  - C++ 第五类脚本基类 `mtr::PsdScript<State>`（`MTR_REGISTER_PSD_SCRIPT`），与车辆 C++ API 同款每帧数据快照（`JcmPsdSnapshot` / `JcmPsdArrival` / `JcmPsdRoute` / `JcmPsdDoor`，**ABI 12**，纯增量——既有结构零变化，ABI 6–11 旧模块全部继续可载）；`native_abi_layout` 布局探针补齐 PSD 全部尺寸 / 偏移输出，`mtr_native.h` 增加编译期 `static_assert` 布局钉死，示例模块 `examples/psd_glass.cpp`。
+  - 渲染：玻璃变为**不透明白色**并叠加脚本控制的动态贴图（仅站台侧显示动态贴图；背面为纯白色——车厢内乘客不会看到镜像的动态贴图。APG 上半自动按 9px 高度适配）；顶部面板**不再显示**原有箭头 / 线路图，内容完全由脚本控制。渲染走 MTR 自身的 `MainRenderer` 队列（`RenderRouteBaseMixin` 取消原内容、`MainRendererPSDMixin` 驱动脚本面），Shader 阴影 pass 仅回放上一帧捕获（不执行脚本、不驱动 C++）。
+  - 脚本 API（JS `psd` 参数 / C++ `mtr::Psd`，绘制与 PIDS 完全同构）：站台（编号 / 名称 / 车站 / 停站时间）、**当前车站完整信息（`psd.stop()`，见下）**、经停线路全量信息（名称 / 编号 / 颜色 / 环线 / 交通类型）、每条线路完整车站列表（`dataFetchMode: ALL`；站名 / 到站显示 / 自定义到站 / 换乘线路 / 车站出口）、即将到达列车（终点站 / 线路 / 车厢数 / 倒计时 / 实时 / 终到 / **将开启的屏蔽门编号 `doorNumbers()`**——停站中读实际门状态、未到站按「列车居中停站 + 按车辆资源逐卡累加车长」预测）、门单元列表与实时开门 / 上锁状态。
+  - C++ 第五类脚本基类 `mtr::PsdScript<State>`（`MTR_REGISTER_PSD_SCRIPT`），与车辆 C++ API 同款每帧数据快照（`JcmPsdSnapshot` / `JcmPsdArrival` / `JcmPsdRoute` / `JcmPsdDoor`，**ABI 13**（PSD 基础快照 ABI 12 引入 + 本次车站信息增补），纯增量——既有结构零变化，ABI 6–12 旧模块全部继续可载）；`native_abi_layout` 布局探针补齐 PSD 全部尺寸 / 偏移输出，`mtr_native.h` 增加编译期 `static_assert` 布局钉死，示例模块 `examples/psd_glass.cpp`。
   - 门单元语义：一面连续屏蔽门墙内的滑动门组（2 块 LEFT+RIGHT 或 3 块奇数门）按墙体方向从 1 编号；墙体走查带 TTL 缓存，开门状态逐帧直读门方块实体。
+- **新增 `psd.stop()`——直接获取当前车站完整信息**（JS 与 C++ 同步）：
+  - JS：`psd.stop()` 返回车站信息包装（无站台 / 车站时为 `null`）：`name()` / `color()`（ARGB）/ `colorHex()`（#RRGGBB）/ `zone1()–zone3()`（票务分区，0 = 未设置）/ `interchanges()`（经停本站的全部线路，颜色 + 名称 + 交通类型）/ `connectingInterchanges()`（换乘站线路，按车站名分组）/ `connectedStations()`（物理连通车站名）/ `exits()`（出口与目的地）/ `platforms()` 与 `platformCount()`（站台编号列表，数字自然排序）；结果按车站 id 缓存 1 秒（重载 / 换维度时重置）。
+  - C++：`mtr::Psd::stop()`（及 `station()` 别名）返回 `mtr::PsdStation`（`has_station()` 判存），字段与 JS 一致（`name/color/color_hex/zone1-3/interchange/connecting/connected_station/exit/platform` 全套访问器，越界安全）。随车 ABI 升至 **13**：`JcmPsdSnapshot` 原 124 偏移的纯填充字段升格为 `station_offset`（-1 = 无车站），新增 `JcmPsdStation`(96B) / `JcmPsdStationInterchange`(32B) / `JcmPsdStationConnectingGroup`(16B)，`static_assert` 钉死布局；ABI 6–12 旧模块不受影响照常加载。顺带修正 C++ 侧一个误命名：`Psd::platform_name()`（实际一直返回车站名）更名为 `station_name()`。
+- **屏蔽门玻璃背面仅显示白色**：脚本动态贴图不再镜像渲染到玻璃背面（轨道侧），列车内乘客只会看到白色玻璃；站台侧显示不受影响。`psdScripts` 玻璃绑定与 PIDS 预设绑定均适用。
+
+- **同步上游 DistrictOfJoban/Joban-Client-Mod v2.3.0-prerelease.3**（27 个上游提交，2026-10-26 b0fbf4a → 2026-11-02 4330524），晏阳全部自有特性（共享内存 / FFM 双传输、C++ 原生脚本、PSD 脚本、服务端门向记忆、8 平台原生桥等）完整保留：
+  - 常规（上游）：修复 PIDS 投影仪无法保存所选站台；降低隐藏车辆显示屏（display cube）时的性能影响；MTR 修补：修复 MTR 4 的一处内存泄漏源（车辆 / 装饰物模型的 `CachedResource`——新增追踪与过期清理 mixin）。
+  - 脚本（上游）：Rhino JS 引擎升级至 1.9.2；新增 `MTR.Data.getConnectedRails()`（获取与某条轨道 / 轨道节点位置相连的轨道，可按前 / 后端筛选并可排除自身）；新增 `MTR.Data.getVehicleMountDetail()`（玩家所乘车厢编号与车厢内相对位置）；新增 `MTR.Data.getLiftFloors()`（TSC 电梯停靠楼层，含楼层名 / 说明）；`GraphicsTexture.upload()` 部分上传的报错信息附各尺寸参数；**TickableSoundInstance 重构**——新增独立 `play()` / `abort()`（不再依赖 SoundManager），`setLoopable()` 弃用（`abort()` 后会被重置为 false，需重新调用）改用保持状态的 `setRepeatable()`，新增 `play(ctx)` 把声音关联到脚本上下文（上下文销毁 / 出错时自动停止，免手动释放）。
+  - 车辆脚本（上游）：修复同一路线中重复分配同一站台（RoutePlatform）时停站数据获取行为错误的问题（连续重复分配按一次停站对齐）。
+  - PIDS 脚本（上游）：新增 `pids.arrivals().length()`；**PIDS 投影仪渲染策略调整（破坏性变更，非代码层面）**——超出相机边界即跳过渲染（与其他 PIDS 一致），除非 X/Y/Z 偏移 ≥4m、缩放 ≥4x，或预设中显式声明 `"outOfBound": true`（需要后台常驻运行、投影中途消失、或帧率影响可忽略的预设请显式声明）。
+  - 其他（上游）：`MTRWrapper` 更名 `MTRWrapperJS`；ANTE 工具类移包（`mtrscripting.core.util.ante` → `mtrscripting.mod.impl.mtr.util.ante`，改由 MTR 内容脚本注册暴露）；装饰物自定义配置未配置项回退脚本包声明的默认值；资源重载顺序调整（先 MTR 脚本资源、后 JCM 资源）；轨道视锥剔除默认关闭（配置项 `enableFrustumCulling{Lift,Vehicle,Rails}` → `enable{Lift,Vehicle,Rail}FrustumCulling`）；脚本实例重置与脚本出错时统一释放上下文可释放对象；简体中文新增装饰物自定义配置界面文案；`jsblock_override` 资源包 pack_format 8→22。
+  - 晏阳适配：上游重命名 / 移包同步到晏阳全部引用点（含 `NativeApiSession` 的反射注册串）；移除上游本次更新在 `RequestStopsDataC2SPacket` 遗留的调试输出（`System.out.println`——已向原版仓库提交清理分支）；车辆显示屏隐藏保留晏阳的 O(1) 车厢表 + 判空加固版本（语义覆盖上游同类修复）。
+  - 翻译（上游）：happytbs（简体中文）。
 
 ## 2.3.0-prerelease.2-yanyang.1
 

@@ -89,7 +89,7 @@ int main() {
     FIELD(PSD_ROUTE_COUNT, JcmPsdSnapshot, route_count);
     FIELD(PSD_ROUTE_OFFSET, JcmPsdSnapshot, route_offset);
     FIELD(PSD_PLATFORM_NUMBER_OFFSET, JcmPsdSnapshot, platform_number_offset);
-    FIELD(PSD_PLATFORM_NAME_OFFSET, JcmPsdSnapshot, platform_name_offset);
+    FIELD(PSD_STATION_NAME_OFFSET, JcmPsdSnapshot, station_name_offset);
     FIELD(PSD_STRING_POOL_OFFSET, JcmPsdSnapshot, string_pool_offset);
     FIELD(PSD_STRING_POOL_LEN, JcmPsdSnapshot, string_pool_len);
     FIELD(PSD_ARRIVAL_DOOR_COUNT, JcmPsdArrival, door_count);
@@ -98,4 +98,37 @@ int main() {
     FIELD(PSD_ROUTE_STOP_OFFSET, JcmPsdRoute, stop_offset);
     FIELD(PSD_DOOR_NUMBER, JcmPsdDoor, number);
     FIELD(PSD_DOOR_OPEN, JcmPsdDoor, open);
+    /* ABI 13: PSD station info — JcmPsdSnapshot._pad0 (124) repurposed as
+       station_offset; JcmPsdStation + its interchange / connecting-group
+       pools (pinned by the static_asserts in mtr_native.h and hard-coded
+       in NativeContentSnapshot.psd). */
+    FIELD(PSD_STATION_OFFSET, JcmPsdSnapshot, station_offset);
+    SIZE(SZ_PSD_STATION_INTERCHANGE, JcmPsdStationInterchange);
+    SIZE(SZ_PSD_STATION_CONNECTING_GROUP, JcmPsdStationConnectingGroup);
+    SIZE(SZ_PSD_STATION, JcmPsdStation);
+    FIELD(PSD_STATION_STATION_ID, JcmPsdStation, station_id);
+    FIELD(PSD_STATION_COLOR, JcmPsdStation, color);
+    FIELD(PSD_STATION_ZONE1, JcmPsdStation, zone1);
+    FIELD(PSD_STATION_ZONE2, JcmPsdStation, zone2);
+    FIELD(PSD_STATION_ZONE3, JcmPsdStation, zone3);
+    FIELD(PSD_STATION_NAME_OFFSET, JcmPsdStation, name_offset);
+    FIELD(PSD_STATION_COLOR_HEX_OFFSET, JcmPsdStation, color_hex_offset);
+    FIELD(PSD_STATION_INTERCHANGE_COUNT, JcmPsdStation, interchange_count);
+    FIELD(PSD_STATION_INTERCHANGE_OFFSET, JcmPsdStation, interchange_offset);
+    FIELD(PSD_STATION_CONNECTING_COUNT, JcmPsdStation, connecting_count);
+    FIELD(PSD_STATION_CONNECTING_OFFSET, JcmPsdStation, connecting_offset);
+    FIELD(PSD_STATION_CONNECTED_COUNT, JcmPsdStation, connected_station_count);
+    FIELD(PSD_STATION_CONNECTED_OFFSET, JcmPsdStation, connected_station_offset);
+    FIELD(PSD_STATION_EXIT_COUNT, JcmPsdStation, exit_count);
+    FIELD(PSD_STATION_EXIT_OFFSET, JcmPsdStation, exit_offset);
+    FIELD(PSD_STATION_PLATFORM_COUNT, JcmPsdStation, platform_count);
+    FIELD(PSD_STATION_PLATFORM_OFFSET, JcmPsdStation, platform_offset);
+    FIELD(PSD_STATION_IC_ROUTE_ID, JcmPsdStationInterchange, route_id);
+    FIELD(PSD_STATION_IC_COLOR, JcmPsdStationInterchange, color);
+    FIELD(PSD_STATION_IC_TRANSPORT_MODE, JcmPsdStationInterchange, transport_mode);
+    FIELD(PSD_STATION_IC_NAME_OFFSET, JcmPsdStationInterchange, name_offset);
+    FIELD(PSD_STATION_IC_TYPE_OFFSET, JcmPsdStationInterchange, type_offset);
+    FIELD(PSD_STATION_CG_NAME_OFFSET, JcmPsdStationConnectingGroup, station_name_offset);
+    FIELD(PSD_STATION_CG_ROUTE_COUNT, JcmPsdStationConnectingGroup, route_count);
+    FIELD(PSD_STATION_CG_ROUTE_OFFSET, JcmPsdStationConnectingGroup, route_offset);
 }

@@ -42,6 +42,23 @@ struct NextArrivalGlass : mtr::PsdScript<GlassState> {
                     .draw(ctx);
         }
 
+        /* The station this PSD belongs to (ABI 13: psd.stop()), e.g.
+           "测试车站 · 2 站台", drawn above the route strip. */
+        const mtr::PsdStation station = psd.stop();
+        if (station.ok()) {
+            std::snprintf(buffer, sizeof(buffer), "%.*s · %d 站台",
+                          static_cast<int>(station.name().len),
+                          station.name().data,
+                          station.platform_count());
+            mtr::Text::create()
+                    .text(buffer)
+                    .pos(3, psd.height() - 18)
+                    .size(psd.width() - 6, 10)
+                    .stretch_xy()
+                    .color(0xFFFFFF)
+                    .draw(ctx);
+        }
+
         const mtr::PsdArrivalList arrivals = psd.arrivals();
         if (arrivals.size() == 0) return;
         const mtr::PsdArrival arrival = arrivals.at(0);

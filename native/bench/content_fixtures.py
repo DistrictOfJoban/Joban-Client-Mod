@@ -4,8 +4,65 @@ STUBS = {
  'org/mtr/mapping/holder/BlockPos.java': 'package org.mtr.mapping.holder; public class BlockPos {final int x,y,z; public BlockPos(int x,int y,int z){this.x=x;this.y=y;this.z=z;} public int getX(){return x;} public int getY(){return y;} public int getZ(){return z;}}',
  'org/mtr/mapping/holder/MinecraftClient.java': 'package org.mtr.mapping.holder; public class MinecraftClient {public static MinecraftClient getInstance(){return new MinecraftClient();} public Object getWorldMapped(){return this;}}',
  'com/lx862/mtrscripting/core/integration/MinecraftClientWrapper.java': 'package com.lx862.mtrscripting.core.integration; public class MinecraftClientWrapper {public static long worldDayTime(){return 12000;}}',
- 'org/mtr/core/data/Station.java': 'package org.mtr.core.data; public class Station {public long getId(){return 9223372036854775000L;}}',
- 'org/mtr/core/data/Platform.java': 'package org.mtr.core.data; public class Platform {public final Station area=new Station(); public long getId(){return 9223372036854775000L;} public String getName(){return "1";} public String getStationName(){return "测试车站";} public long getDwellTime(){return 15000;}}',
+ 'org/mtr/core/data/SavedRailBase.java': 'package org.mtr.core.data; public class SavedRailBase {}',
+ 'org/mtr/core/data/Route.java': '''package org.mtr.core.data;
+ public class Route {
+  final long id; final int color; final String name; final String routeType;
+  public Route(long id,int color,String name,String routeType){this.id=id;this.color=color;this.name=name;this.routeType=routeType;}
+  public long getId(){return id;} public int getColor(){return color;} public String getName(){return name;}
+  public TransportMode getTransportMode(){return TransportMode.TRAIN;}
+  public String getRouteType(){return routeType;}
+ }''',
+ 'org/mtr/core/data/StationExit.java': '''package org.mtr.core.data;
+ public class StationExit {
+  public String getName(){return "A";}
+  public java.util.List<String> getDestinations(){return java.util.List.of("车站出口目的地甲","车站出口目的地乙");}
+ }''',
+ 'org/mtr/core/data/Station.java': '''package org.mtr.core.data;
+ import java.util.*;
+ /* ABI 13 fixture station: zones 1/2, color #1E90FF, 2 interchange routes
+    (42 from the interchange map, 43 from a platform), 1 connecting group
+    (station 换乘车站, route 44), 2 connected stations, 1 exit with 2
+    destinations, platforms "1" and "2" — the PSDStationWrapper stub walks
+    these exactly like the real wrapper. */
+ public class Station {
+  private static final List<SavedRailBase> SAVED_RAILS=new ArrayList<>();
+  private static final List<Station> CONNECTED_STATIONS=new ArrayList<>();
+  private static final Map<Station,Map<Integer,List<Route>>> INTERCHANGE_MAP=new HashMap<>();
+  static {
+   CONNECTED_STATIONS.add(new Station(9223372036854775001L,"连接车站甲"));
+   CONNECTED_STATIONS.add(new Station(9223372036854775002L,"连接车站乙"));
+   INTERCHANGE_MAP.put(new Station(9223372036854775000L,"测试车站"),Map.of(0xFC9700,List.of(new Route(42,0xFC9700,"换乘线","train_metro"))));
+   INTERCHANGE_MAP.put(new Station(9223372036854775003L,"换乘车站"),Map.of(0x9966CC,List.of(new Route(44,0x9966CC,"接驳线","train_light_rail"))));
+   SAVED_RAILS.add(new Platform("1",List.of(new Route(42,0xFC9700,"换乘线","train_metro"))));
+   SAVED_RAILS.add(new Platform("2",List.of(new Route(43,0x00A870,"本站线路","train"))));
+  }
+  final long id; final String name;
+  public Station(){this(9223372036854775000L,"测试车站");}
+  Station(long id,String name){this.id=id;this.name=name;}
+  public long getId(){return id;}
+  public String getName(){return name;}
+  public int getColor(){return 0x1E90FF;}
+  public String getColorHex(){return "#1E90FF";}
+  public long getZone1(){return 1;} public long getZone2(){return 2;} public long getZone3(){return 0;}
+  public final List<SavedRailBase> savedRails=SAVED_RAILS;
+  public final List<Station> connectedStations=CONNECTED_STATIONS;
+  public List<StationExit> getExits(){return List.of(new StationExit());}
+  public Map<Station,Map<Integer,List<Route>>> getInterchangeStationToColorToRoutesMap(boolean sorted){return INTERCHANGE_MAP;}
+ }''',
+ 'org/mtr/core/data/Platform.java': '''package org.mtr.core.data;
+ import java.util.*;
+ public class Platform extends SavedRailBase {
+  public final Station area=new Station();
+  public final List<Route> routes;
+  final String name;
+  public Platform(){this("1",List.of());}
+  Platform(String name,List<Route> routes){this.name=name;this.routes=routes;}
+  public long getId(){return 9223372036854775000L;}
+  public String getName(){return name;}
+  public String getStationName(){return "测试车站";}
+  public long getDwellTime(){return 15000;}
+ }''',
  'com/lx862/jcm/mod/scripting/psd/PSDWallScanner.java': '''package com.lx862.jcm.mod.scripting.psd;
  public class PSDWallScanner {public static class WallRun {public double doorValue=0.5;}}''',
  'com/lx862/jcm/mod/scripting/psd/PSDWrapper.java': '''package com.lx862.jcm.mod.scripting.psd;
@@ -19,6 +76,7 @@ STUBS = {
   public ScriptVector3f blockPos(){return new ScriptVector3f(1,2,3);}
   public org.mtr.core.data.Platform platformData(){return new org.mtr.core.data.Platform();}
   public PSDWallScanner.WallRun wallRun(){return new PSDWallScanner.WallRun();}
+  public PSDStationWrapper stop(){return PSDStationWrapper.of(platformData().area);}
   public List<PSDDoorWrapper> doors(){return List.of(new PSDDoorWrapper(1,true,false),new PSDDoorWrapper(3,false,true));}
   public List<PSDArrivalWrapper> arrivalList(){return List.of(new PSDArrivalWrapper());}
   public List<PSDRouteWrapper> routes(){return List.of(new PSDRouteWrapper());}
@@ -42,10 +100,49 @@ STUBS = {
    public List<PSDInterchangeWrapper> interchanges(){return withInterchange?List.of(new PSDInterchangeWrapper()):List.of();}
    public List<PSDExitWrapper> exits(){return withInterchange?List.of():List.of(new PSDExitWrapper());}}
   public static class PSDInterchangeWrapper {
-   public long routeId(){return 42;} public int color(){return 0xFC9700;} public String name(){return "换乘线";}
-   public TM transportMode(){return TM.TRAIN;} public String getTransportType(){return "train_metro";}}
+   final long routeId; final int color; final String name; final String transportType;
+   public PSDInterchangeWrapper(){this(42,0xFC9700,"换乘线","train_metro");}
+   PSDInterchangeWrapper(long routeId,int color,String name,String transportType){this.routeId=routeId;this.color=color;this.name=name;this.transportType=transportType;}
+   public long routeId(){return routeId;} public int color(){return color;} public String name(){return name;}
+   public TM transportMode(){return TM.TRAIN;} public String getTransportType(){return transportType;}}
   public static class PSDExitWrapper {
    public String name(){return "A";} public List<String> destinations(){return List.of("出口目的地");}}
+  public static class PSDStationWrapper {
+   private final org.mtr.core.data.Station station;
+   private final List<PSDInterchangeWrapper> interchanges=new ArrayList<>();
+   private final Map<String,List<PSDInterchangeWrapper>> connectingInterchanges=new HashMap<>();
+   private final List<PSDExitWrapper> exits=new ArrayList<>();
+   private final List<String> platformNames=new ArrayList<>();
+   private final List<String> connectedStationNames=new ArrayList<>();
+   public static PSDStationWrapper of(org.mtr.core.data.Station station){return new PSDStationWrapper(station);}
+   private PSDStationWrapper(org.mtr.core.data.Station station){
+    this.station=station;
+    station.getInterchangeStationToColorToRoutesMap(true).forEach((icStation,colorToRoutes)->{
+     if(icStation.getId()==station.getId()) colorToRoutes.forEach((color,routes)->routes.forEach(route->interchanges.add(wrap(route,color))));
+     else colorToRoutes.forEach((color,routes)->routes.forEach(route->connectingInterchanges.computeIfAbsent(icStation.getName(),k->new ArrayList<>()).add(wrap(route,color))));
+    });
+    for(org.mtr.core.data.SavedRailBase savedRail:station.savedRails){
+     if(!(savedRail instanceof org.mtr.core.data.Platform)) continue;
+     org.mtr.core.data.Platform platform=(org.mtr.core.data.Platform)savedRail;
+     platformNames.add(platform.getName());
+     platform.routes.forEach(route->{if(interchanges.stream().noneMatch(e->e.routeId()==route.getId())) interchanges.add(wrap(route,route.getColor()));});
+    }
+    for(org.mtr.core.data.StationExit exit:station.getExits()) exits.add(new PSDExitWrapper(exit.getName(),exit.getDestinations()));
+    for(org.mtr.core.data.Station connected:station.connectedStations) connectedStationNames.add(connected.getName());
+   }
+   private PSDInterchangeWrapper wrap(org.mtr.core.data.Route route,int color){return new PSDInterchangeWrapper(route.getId(),color,route.getName(),route.getRouteType());}
+   public long id(){return station.getId();}
+   public String name(){return station.getName();}
+   public int color(){return station.getColor();}
+   public String colorHex(){return station.getColorHex();}
+   public long zone1(){return station.getZone1();} public long zone2(){return station.getZone2();} public long zone3(){return station.getZone3();}
+   public List<PSDInterchangeWrapper> interchanges(){return interchanges;}
+   public Map<String,List<PSDInterchangeWrapper>> connectingInterchanges(){return connectingInterchanges;}
+   public List<String> connectedStations(){return connectedStationNames;}
+   public List<PSDExitWrapper> exits(){return exits;}
+   public List<String> platforms(){return platformNames;}
+   public int platformCount(){return platformNames.size();}
+  }
  }''',
  'com/lx862/jcm/mod/scripting/pids/PIDSWrapper.java': '''package com.lx862.jcm.mod.scripting.pids;
  import java.util.*; import com.lx862.mtrscripting.core.util.ScriptVector3f;

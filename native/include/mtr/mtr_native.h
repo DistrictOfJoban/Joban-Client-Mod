@@ -88,8 +88,18 @@ extern "C" {
    against a header a given host predates is refused instead of
    half-driven: an ABI 12 host loads ABI 6–12 modules, an ABI 11 host
    refuses ABI 12 modules (they would only ever see their "psd" script
-   type go undriven). */
-#define MTR_NATIVE_ABI_VERSION 12
+   type go undriven).
+   ABI 13 adds PSD station info: JcmPsdSnapshot._pad0 (offset 124) is
+   repurposed as station_offset pointing at the new JcmPsdStation struct
+   (with its JcmPsdStationInterchange / JcmPsdStationConnectingGroup
+   pools) — the complete station info of the JS psd.stop() wrapper.
+   ABI 12 modules remain loadable: the repurposed field was pure padding
+   (zeroed by the writer, never read by any module), and every other
+   struct, record format and host-services slot is byte-identical to
+   ABI 12. An ABI 13 host loads ABI 6–13 modules; an ABI 12 host refuses
+   ABI 13 modules (their station-drawing scripts would silently see no
+   station data). */
+#define MTR_NATIVE_ABI_VERSION 13
 
 /* Resource kinds, identical to JCM script contexts. */
 enum MtrResourceKind {
@@ -535,11 +545,21 @@ typedef struct JcmPsdSnapshot {
     int32_t  route_offset;
     int32_t  platform_number_offset; /* UTF-8 into string pool, "" = none */
     int32_t  platform_number_len;
-    int32_t  platform_name_offset;
-    int32_t  platform_name_len;
+    /* v13 (ABI 13): the STATION's name. The writer has always stored the
+       station name here (platform.getStationName()); the field was
+       mislabeled "platform_name" in ABI 12. Pure source rename — the
+       wire offset/len (108/112) are unchanged. */
+    int32_t  station_name_offset;
+    int32_t  station_name_len;
     int32_t  string_pool_offset;
     int32_t  string_pool_len;
-    int32_t  _pad0;
+    /* v13 (ABI 13): blob-relative offset of the JcmPsdStation struct —
+       the complete station info of the JS psd.stop() wrapper (identity,
+       fare zones, interchange routes, connecting stations, exits,
+       platform numbers). -1 = no station. Was pure _pad0 padding in
+       ABI 12 (zeroed by the writer, never read by any module), so the
+       snapshot layout is unchanged and ABI 12 modules keep loading. */
+    int32_t  station_offset;
 } JcmPsdSnapshot;
 
 #ifdef __cplusplus
@@ -550,6 +570,68 @@ static_assert(sizeof(JcmPsdArrival) == 104, "JcmPsdArrival layout changed");
 static_assert(sizeof(JcmPsdRoute)   == 48,  "JcmPsdRoute layout changed");
 static_assert(sizeof(JcmPsdDoor)    == 32,  "JcmPsdDoor layout changed");
 static_assert(sizeof(JcmPsdSnapshot) == 128, "JcmPsdSnapshot layout changed");
+#endif
+
+/* ABI 13: the station a PSD belongs to — mirrors the JS psd.stop()
+ * wrapper (PSDWrapper.PSDStationWrapper). Same offset convention as the
+ * rest of the PSD snapshot: every *_offset is relative to the start of
+ * the snapshot blob. The interchange / connecting-group entries reuse
+ * the JcmInterchange semantics (color + transport mode + canonical
+ * transport type id) but carry their own layout so the route id fits.
+ */
+
+/* One route calling at the station (or at one of its walkable connecting
+   stations, when referenced from a JcmPsdStationConnectingGroup). */
+typedef struct JcmPsdStationInterchange {
+    int64_t  route_id;             /* +0  */
+    int32_t  color;                /* +8  ARGB */
+    int32_t  transport_mode;       /* +12 -1 = unknown */
+    int32_t  name_offset;          /* +16 UTF-8 into string pool */
+    int32_t  name_len;             /* +20 */
+    int32_t  type_offset;          /* +24 canonical transport type id */
+    int32_t  type_len;             /* +28 */
+} JcmPsdStationInterchange;        /* 32 bytes */
+
+/* The routes of one walkable connecting (interchange) station, grouped
+   under that station's name — mirrors psd.stop().connectingInterchanges()
+   (JS: a Map keyed by the connecting station name). */
+typedef struct JcmPsdStationConnectingGroup {
+    int32_t  station_name_offset;  /* +0 connecting station name */
+    int32_t  station_name_len;     /* +4 */
+    int32_t  route_count;          /* +8 */
+    int32_t  route_offset;         /* +12 -> JcmPsdStationInterchange[] */
+} JcmPsdStationConnectingGroup;    /* 16 bytes */
+
+/* The complete station info. Exits reuse the vehicle JcmExit layout
+   (name + JcmStrRef[] destinations); connected stations and platform
+   numbers are plain JcmStrRef[] pools. */
+typedef struct JcmPsdStation {
+    int64_t  station_id;               /* +0 */
+    int32_t  color;                    /* +8  ARGB, 0 = unset */
+    int32_t  _pad0;                    /* +12 */
+    int64_t  zone1;                    /* +16 0 = unset */
+    int64_t  zone2;                    /* +24 */
+    int64_t  zone3;                    /* +32 */
+    int32_t  name_offset;              /* +40 UTF-8 into string pool */
+    int32_t  name_len;                 /* +44 */
+    int32_t  color_hex_offset;         /* +48 "#RRGGBB" into string pool, "" = unset */
+    int32_t  color_hex_len;            /* +52 */
+    int32_t  interchange_count;        /* +56 routes at this station */
+    int32_t  interchange_offset;       /* +60 -> JcmPsdStationInterchange[] */
+    int32_t  connecting_count;         /* +64 walkable connecting stations */
+    int32_t  connecting_offset;        /* +68 -> JcmPsdStationConnectingGroup[] */
+    int32_t  connected_station_count;  /* +72 */
+    int32_t  connected_station_offset; /* +76 -> JcmStrRef[] */
+    int32_t  exit_count;               /* +80 */
+    int32_t  exit_offset;              /* +84 -> JcmExit[] */
+    int32_t  platform_count;           /* +88 platform numbers */
+    int32_t  platform_offset;          /* +92 -> JcmStrRef[] */
+} JcmPsdStation;                       /* 96 bytes */
+
+#ifdef __cplusplus
+static_assert(sizeof(JcmPsdStationInterchange)     == 32, "JcmPsdStationInterchange layout changed");
+static_assert(sizeof(JcmPsdStationConnectingGroup) == 16, "JcmPsdStationConnectingGroup layout changed");
+static_assert(sizeof(JcmPsdStation)                == 96, "JcmPsdStation layout changed");
 #endif
 
 typedef struct JcmLiftFloor {

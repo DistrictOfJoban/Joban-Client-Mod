@@ -1,5 +1,6 @@
 package com.lx862.mtrscripting.mod.impl.mtr.eyecandy;
 
+import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.core.integration.MinecraftClientWrapper;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
@@ -42,10 +43,11 @@ public class EyeCandyScriptInstance extends ScriptInstance<EyecandyBlockEntityWr
     }
 
     public boolean shouldInvalidate() {
-        boolean beRemoved = be.isRemoved2() || be.getWorld2().getBlockEntity(be.getPos2()) == null;
+        boolean beRemoved = be.getWorld2().getBlockEntity(be.getPos2()) == null;
         boolean modelChanged = getWrapperObject() != null && getWrapperObject().modelChanged(getContextObject().getName());
         boolean notInGame = MinecraftClient.getInstance().getWorldMapped() == null;
-        return notInGame || beRemoved || modelChanged;
+        boolean shouldInvalidate = notInGame || beRemoved || modelChanged;
+        return shouldInvalidate;
     }
 
     @Override

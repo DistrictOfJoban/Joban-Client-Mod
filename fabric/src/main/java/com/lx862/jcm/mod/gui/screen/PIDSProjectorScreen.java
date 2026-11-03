@@ -120,11 +120,10 @@ public class PIDSProjectorScreen extends PIDSScreen {
         String[] customMessages = new String[customMessagesWidgets.length];
         boolean[] rowHidden = new boolean[rowHiddenWidgets.length];
 
-            for(int i = 0; i < customMessagesWidgets.length; i++) {
+        for(int i = 0; i < customMessagesWidgets.length; i++) {
             customMessages[i] = this.customMessagesWidgets[i].getText2();
         }
-
-            for(int i = 0; i < rowHiddenWidgets.length; i++) {
+        for(int i = 0; i < rowHiddenWidgets.length; i++) {
             rowHidden[i] = this.rowHiddenWidgets[i].isChecked2();
         }
 

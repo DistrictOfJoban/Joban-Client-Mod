@@ -78,12 +78,15 @@ public final class NativeContentSnapshot {
     /** JcmPsdSnapshot (ABI 12) — layout pinned by the static_asserts in
      *  mtr_native.h. Header 128, JcmPsdDoor 32, JcmPsdArrival 104
      *  (JcmArrival + door refs), JcmPsdRoute 48, stops/interchanges/exits
-     *  reuse the vehicle JcmStop layout. */
+     *  reuse the vehicle JcmStop layout. ABI 13 adds the station pools:
+     *  JcmPsdStation 96 at snapshot offset 124 (formerly padding),
+     *  JcmPsdStationInterchange 32, JcmPsdStationConnectingGroup 16. */
     public static ByteBuffer psd(ByteBuffer buffer, com.lx862.jcm.mod.scripting.psd.PSDWrapper psd) {
         final com.lx862.jcm.mod.scripting.psd.PSDWallScanner.WallRun wallRun = psd.wallRun();
         final List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDDoorWrapper> doors = psd.doors();
         final List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDArrivalWrapper> arrivals = psd.arrivalList();
         final List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDRouteWrapper> routes = psd.routes();
+        final com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDStationWrapper station = psd.stop();
         final List<List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDStopWrapper>> routeStops = new ArrayList<>(routes.size());
         for (com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDRouteWrapper route : routes) {
             routeStops.add(route.stops());
@@ -142,6 +145,47 @@ public final class NativeContentSnapshot {
             }
             interchangeOffsetsPerRoute.add(icOffsets);
             exitOffsetsPerRoute.add(exitOffsets);
+        }
+
+        /* ---- station pools (ABI 13; -1 at offset 124 when absent) ---- */
+        final List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDInterchangeWrapper> stationInterchanges;
+        final List<Map.Entry<String, List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDInterchangeWrapper>>> connectingGroups;
+        final List<Integer> connectingRouteOffsets;
+        final int stationOffset, stationInterchangeOffset, connectingOffset, connectedStationOffset, stationExitOffset, stationPlatformOffset;
+        final List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDExitWrapper> stationExits;
+        final List<Integer> stationExitDestinationOffsets;
+        if (station == null) {
+            stationInterchanges = null;
+            connectingGroups = null;
+            connectingRouteOffsets = null;
+            stationExits = null;
+            stationExitDestinationOffsets = null;
+            stationOffset = -1;
+            stationInterchangeOffset = 0;
+            connectingOffset = 0;
+            connectedStationOffset = 0;
+            stationExitOffset = 0;
+            stationPlatformOffset = 0;
+            buffer.putInt(124, -1);
+        } else {
+            stationInterchanges = station.interchanges();
+            connectingGroups = new ArrayList<>(station.connectingInterchanges().entrySet());
+            connectingRouteOffsets = new ArrayList<>(connectingGroups.size());
+            for (final Map.Entry<String, List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDInterchangeWrapper>> group : connectingGroups) {
+                connectingRouteOffsets.add(group.getValue().isEmpty() ? 0 : out.reserve(group.getValue().size() * 32, 8));
+            }
+            stationExits = station.exits();
+            stationExitDestinationOffsets = new ArrayList<>(stationExits.size());
+            for (final com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDExitWrapper exit : stationExits) {
+                stationExitDestinationOffsets.add(exit.destinations().isEmpty() ? 0 : out.reserve(exit.destinations().size() * 8, 4));
+            }
+            stationOffset = out.reserve(96, 8);
+            buffer.putInt(124, stationOffset);
+            stationInterchangeOffset = stationInterchanges.isEmpty() ? 0 : out.reserve(stationInterchanges.size() * 32, 8);
+            connectingOffset = connectingGroups.isEmpty() ? 0 : out.reserve(connectingGroups.size() * 16, 4);
+            connectedStationOffset = station.connectedStations().isEmpty() ? 0 : out.reserve(station.connectedStations().size() * 8, 4);
+            stationExitOffset = stationExits.isEmpty() ? 0 : out.reserve(stationExits.size() * 16, 4);
+            stationPlatformOffset = station.platforms().isEmpty() ? 0 : out.reserve(station.platforms().size() * 8, 4);
         }
 
         /* ---- string pool starts here ---- */
@@ -247,6 +291,69 @@ public final class NativeContentSnapshot {
                         out.string(strRefBase + k * 8, exit.destinations().get(k));
                     }
                 }
+            }
+        }
+
+        /* station (ABI 13) — the complete info of psd.stop() */
+        if (station != null) {
+            buffer.putLong(stationOffset, station.id());
+            buffer.putInt(stationOffset + 8, station.color());
+            buffer.putInt(stationOffset + 12, 0);
+            buffer.putLong(stationOffset + 16, station.zone1());
+            buffer.putLong(stationOffset + 24, station.zone2());
+            buffer.putLong(stationOffset + 32, station.zone3());
+            out.string(stationOffset + 40, station.name());
+            out.string(stationOffset + 48, station.colorHex());
+            buffer.putInt(stationOffset + 56, stationInterchanges.size());
+            buffer.putInt(stationOffset + 60, stationInterchangeOffset);
+            for (int i = 0; i < stationInterchanges.size(); i++) {
+                final com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDInterchangeWrapper interchange = stationInterchanges.get(i);
+                final int ic = stationInterchangeOffset + i * 32;
+                buffer.putLong(ic, interchange.routeId());
+                buffer.putInt(ic + 8, interchange.color());
+                buffer.putInt(ic + 12, interchange.transportMode() == null ? -1 : interchange.transportMode().ordinal());
+                out.string(ic + 16, interchange.name());
+                out.string(ic + 24, interchange.getTransportType());
+            }
+            buffer.putInt(stationOffset + 64, connectingGroups.size());
+            buffer.putInt(stationOffset + 68, connectingOffset);
+            for (int i = 0; i < connectingGroups.size(); i++) {
+                final Map.Entry<String, List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDInterchangeWrapper>> group = connectingGroups.get(i);
+                final int cg = connectingOffset + i * 16;
+                out.string(cg, group.getKey());
+                buffer.putInt(cg + 8, group.getValue().size());
+                buffer.putInt(cg + 12, connectingRouteOffsets.get(i));
+                for (int j = 0; j < group.getValue().size(); j++) {
+                    final com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDInterchangeWrapper interchange = group.getValue().get(j);
+                    final int ic = connectingRouteOffsets.get(i) + j * 32;
+                    buffer.putLong(ic, interchange.routeId());
+                    buffer.putInt(ic + 8, interchange.color());
+                    buffer.putInt(ic + 12, interchange.transportMode() == null ? -1 : interchange.transportMode().ordinal());
+                    out.string(ic + 16, interchange.name());
+                    out.string(ic + 24, interchange.getTransportType());
+                }
+            }
+            buffer.putInt(stationOffset + 72, station.connectedStations().size());
+            buffer.putInt(stationOffset + 76, connectedStationOffset);
+            for (int i = 0; i < station.connectedStations().size(); i++) {
+                out.string(connectedStationOffset + i * 8, station.connectedStations().get(i));
+            }
+            buffer.putInt(stationOffset + 80, stationExits.size());
+            buffer.putInt(stationOffset + 84, stationExitOffset);
+            for (int i = 0; i < stationExits.size(); i++) {
+                final com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDExitWrapper exit = stationExits.get(i);
+                final int ex = stationExitOffset + i * 16;
+                out.string(ex, exit.name());
+                buffer.putInt(ex + 8, exit.destinations().size());
+                buffer.putInt(ex + 12, stationExitDestinationOffsets.get(i));
+                for (int j = 0; j < exit.destinations().size(); j++) {
+                    out.string(stationExitDestinationOffsets.get(i) + j * 8, exit.destinations().get(j));
+                }
+            }
+            buffer.putInt(stationOffset + 88, station.platformCount());
+            buffer.putInt(stationOffset + 92, stationPlatformOffset);
+            for (int i = 0; i < station.platformCount(); i++) {
+                out.string(stationPlatformOffset + i * 8, station.platforms().get(i));
             }
         }
 

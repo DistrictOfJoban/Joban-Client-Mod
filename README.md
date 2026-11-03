@@ -17,7 +17,7 @@
 
 > [!IMPORTANT]
 > - 本分支与原版 Joban Client Mod 使用同一 mod id（`jsblock`），**二者互斥，只能安装其一**。
-> - 分支持续跟踪整合原版 JCM 的每个版本（当前基线：[2.3.0-prerelease.2](https://github.com/DistrictOfJoban/Joban-Client-Mod)），并保持向后兼容：原版 JCM 资源包、`language: "cpp"` 老格式资源包均无需修改即可继续使用。
+> - 分支持续跟踪整合原版 JCM 的每个版本（当前基线：[2.3.0-prerelease.3](https://github.com/DistrictOfJoban/Joban-Client-Mod)），并保持向后兼容：原版 JCM 资源包、`language: "cpp"` 老格式资源包均无需修改即可继续使用。
 > - C++ 脚本开发文档：**[网页版开发文档](https://bugquantumcore.github.io/Joban-Client-Mod-Yanyang/)**（7 种语言）· [native/README.md](native/README.md)；完整修改历史见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## ✨ 核心特性
@@ -199,7 +199,7 @@ switch (vehicle.doorDirection()) {
 **游戏内绑定**：使用新物品 **屏蔽门脚本编辑器**（与 MTR 的「刷」在同一创造分类下）对任意屏蔽门玻璃或屏蔽门上方面板右键，在弹出界面中选择一个该类型的 `psdScripts` 条目 **或** 任一脚本化 PIDS 预设（PIDS 脚本原样运行，画布自动适配 PSD 表面）。绑定保存在服务端（`<世界>/mtr/<维度>/psd-scripts/bindings.json`）并同步给同维度的所有玩家；选择「无脚本」即解除绑定。
 
 **渲染效果**：
-- **玻璃**（含端部玻璃、半高闸门 APG 玻璃；MTR 与天津地铁等基于 MTR PSD 类的模组均支持）：变为不透明白色，脚本控制的动态贴图叠加在白色之上（正反两面，背面镜像）。
+- **玻璃**（含端部玻璃、半高闸门 APG 玻璃；MTR 与天津地铁等基于 MTR PSD 类的模组均支持）：变为不透明白色，脚本控制的动态贴图叠加在白色之上（仅站台侧显示；背面为纯白色，列车内乘客不会看到镜像贴图）。
 - **顶部面板**：不再显示原有的箭头 / 线路图，显示内容完全由脚本控制（78×42 像素画布）。
 
 **脚本 API（JS 的 `psd` 参数 / C++ 的 `mtr::Psd`）**——绘制 API 与 PIDS 完全一致（`Text` / `Texture` / `Rect` + `ctx.draw`），数据 API 覆盖：
@@ -208,11 +208,12 @@ switch (vehicle.doorDirection()) {
 | --- | --- |
 | `psd.type()` / `width()` / `height()` | 绑定表面（glass/top）与画布尺寸（玻璃 96×96，APG 上半 96×54，面板 78×42 PIDS 像素） |
 | `psd.platform()` | 当前站台：编号 / 名称（`number()` / `name()`）、所属车站、停站时间 |
+| `psd.stop()` | **当前车站完整信息**：名称、颜色（ARGB / #RRGGBB）、票务分区 zone1–3、经停本站的全部线路、换乘站线路（按站名分组）、物理连通车站、出口与目的地、站台编号列表与数量（C++：`mtr::Psd::stop()` → `mtr::PsdStation`） |
 | `psd.routes()` | 经过此站台的**所有线路**：名称 / 编号 / 颜色 / 环线状态 / 交通类型；`dataFetchMode: "ALL"` 时每条线路附带**完整车站列表**（站名、到站显示、自定义到站、**换乘线路**（颜色 + 名称 + 交通类型）、车站出口与出口目的地） |
 | `psd.arrivals()` | 即将到达的列车：终点站、所属线路（名称 / 编号 / 颜色）、车厢数、到站倒计时、实时 / 环线 / 终到状态，以及 **`doorNumbers()` —— 该列车将开启的屏蔽门编号**（停站中的列车读实际开门状态，未到站按「列车停于站台中点 + 按车辆资源逐卡累加车长」近似预测） |
 | `psd.doors()` / `doorValue()` | 本面屏蔽门墙的门单元列表（1 起编号）与实时开门状态 / 上锁状态、整墙开门量 |
 
-C++ 侧为第五类脚本基类 `mtr::PsdScript<State>`（`MTR_REGISTER_PSD_SCRIPT`），实现方式与车辆 C++ API 相同——每帧一次数据快照（`JcmPsdSnapshot`，ABI 12），零 JNI、零逐帧分配。见 `native/examples/psd_glass.cpp`。
+C++ 侧为第五类脚本基类 `mtr::PsdScript<State>`（`MTR_REGISTER_PSD_SCRIPT`），实现方式与车辆 C++ API 相同——每帧一次数据快照（`JcmPsdSnapshot`，ABI 13，含完整车站信息快照），零 JNI、零逐帧分配。见 `native/examples/psd_glass.cpp`。
 
 ### 5. 📖 C++ 脚本开发文档（网页版）
 
@@ -251,6 +252,7 @@ ctest --test-dir native/build -C Release --output-on-failure
 
 | 版本 | 主题 |
 | --- | --- |
+| `2.3.0-prerelease.3-yanyang.1` | 同步上游 v2.3.0-prerelease.3；PSD 玻璃背面改纯白；新增 psd.stop() 车站信息 API（JS + C++ ABI 13） |
 | `prerelease.2-yanyang.1-hotfix.2` | 原生层两轮人工审查修复首次发布（8 + 3 项）：直接调用模式内存安全（arena 偏移 / 记录长度校验）、每帧 re-attach 泄漏扩容像素 arena、重载代际模块堆内存治理（`mtrCleanup`）、字符串缓存满后插入不可找回（改 16×8 固定分组）、同库多句柄共享锁 + 末句柄清理、空字符串中断 PIDS 帧、阴影阶段重复执行、无原生脚本车辆缓存淘汰、变换池回收滞留 |
 | `prerelease.2-yanyang.1-hotfix.1` | 热修：MTR 4 原生路线类别（高铁 / 轻轨）流入换乘类型链，原版高铁、轻轨线路正确从车侧线路图去除；Axiom 区块批量编辑纳入开门方向重扫；iOS 交叉编译腿回归 macos-latest（arm）runner |
 | `prerelease.2-yanyang.1` | 上游 v2.3.0-prerelease.2 全量同步（61 提交：脚本限流 / 防死循环、脚本核心解耦、BVE 声音卡死与 Iris / OptiFine 阴影修复等）；脚本化 PIDS 文字乱飘修复（世界锚点）；C++ SDK 与上游 API 面同步（Rect / fullAA / StateTracker 等） |

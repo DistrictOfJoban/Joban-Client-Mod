@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
+import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.integration.MinecraftClientWrapper;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
@@ -45,10 +46,11 @@ public class PIDSScriptInstance extends ScriptInstance<PIDSWrapper> implements S
     }
 
     public boolean shouldInvalidate() {
-        boolean beRemoved = blockEntity.isRemoved2() || blockEntity.getWorld2().getBlockEntity(blockEntity.getPos2()) == null;
+        boolean beRemoved = blockEntity.getWorld2().getBlockEntity(blockEntity.getPos2()) == null;
         boolean presetChanged = !Objects.equals(blockEntity.getPresetId(), getContextObject().getName());
         boolean notInGame = MinecraftClient.getInstance().getWorldMapped() == null;
-        return notInGame || beRemoved || presetChanged;
+        boolean shouldInvalidate = notInGame || beRemoved || presetChanged;
+        return shouldInvalidate;
     }
 
     @Override

@@ -40,7 +40,7 @@ public final class NativeApiSession {
         }
         for (String name : new String[]{"Text", "Texture", "Rectangle"}) register(name, "com.lx862.jcm.mod.scripting.pids." + name + "Wrapper");
         register("MTRClientData", "org.mtr.mod.client.MinecraftClientData");
-        register("MTR", "com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapper");
+        register("MTR", "com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapperJS");
         register("TextUtil", "com.lx862.mtrscripting.mod.impl.mtr.util.TextUtilJS");
         for (String name : new String[]{"TransportMode", "Route", "RouteType", "Station", "StationExit", "Siding", "Platform", "SimplifiedRoute", "SimplifiedRoutePlatform", "VehicleExtraData", "PathData", "Rail", "Position"}) register(name, "org.mtr.core.data." + name);
         register("Vector", "org.mtr.core.tool.Vector");

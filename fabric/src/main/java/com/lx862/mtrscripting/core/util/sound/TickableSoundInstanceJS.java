@@ -1,13 +1,17 @@
 package com.lx862.mtrscripting.core.util.sound;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
+import com.lx862.mtrscripting.core.api.AbstractScriptContext;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.MovingSoundInstanceExtension;
 import org.mtr.mapping.mapper.SoundHelper;
 
-public class TickableSoundInstanceJS extends MovingSoundInstanceExtension {
+public class TickableSoundInstanceJS extends MovingSoundInstanceExtension implements AutoCloseable {
     private boolean instanceInUse = false;
+    private boolean isRepeatable = false;
+    private boolean useNewRepeatBehaviour = false;
 
     protected TickableSoundInstanceJS(Identifier soundId, String category) {
         this(SoundHelper.createSoundEvent(soundId), SoundCategory.valueOf(category));
@@ -26,6 +30,10 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension {
         return new TickableSoundInstanceJS(soundId, category);
     }
 
+    public static TickableSoundInstanceJS create(String soundId, String category) {
+        return new TickableSoundInstanceJS(JSUtil.parseId(soundId), category);
+    }
+
     // TODO: Getters
 
     public TickableSoundInstanceJS setSoundVolume(float f) {
@@ -38,8 +46,16 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension {
         return this;
     }
 
+    public TickableSoundInstanceJS setRepeatable(boolean canRepeat) {
+        this.useNewRepeatBehaviour = true;
+        this.isRepeatable = canRepeat;
+        return this;
+    }
+
+    /** Legacy method that directly sets the sound instance. Not recommended due to manually managed */
+    @Deprecated
     public TickableSoundInstanceJS setLoopable(boolean canLoop) {
-        setIsRepeatableMapped(canLoop);
+        super.setIsRepeatableMapped(canLoop);
         return this;
     }
 
@@ -64,13 +80,54 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension {
         return MinecraftClient.getInstance().getSoundManager().isPlaying(new SoundInstance(this));
     }
 
+    public void play(AbstractScriptContext abstractScriptContext) {
+        play();
+        abstractScriptContext.addDisposable(this);
+    }
+
+    public void play(AbstractScriptContext abstractScriptContext, int delay) {
+        play(delay);
+        abstractScriptContext.addDisposable(this);
+    }
+
+    public void play() {
+        if(isInstanceInUse()) return; // Don't allow playing twice
+
+        if(this.useNewRepeatBehaviour) setIsRepeatableMapped(this.isRepeatable);
+        setInstanceInUse(true);
+        MinecraftClient.getInstance().submit(() -> {
+            MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(this));
+        });
+    }
+
+    public void play(int delay) {
+        if(isInstanceInUse()) return; // Don't allow playing twice
+
+        setInstanceInUse(true);
+        if(this.useNewRepeatBehaviour) setIsRepeatableMapped(this.isRepeatable);
+        MinecraftClient.getInstance().submit(() -> {
+            MinecraftClient.getInstance().getSoundManager().play(new SoundInstance(this), delay);
+        });
+    }
+
+    // N.B. stop() is already in mojmap and is final
+    public void abort() {
+        if(!isInstanceInUse()) return;
+
+        setInstanceInUse(false);
+        super.setIsRepeatableMapped(false);
+        MinecraftClient.getInstance().submit(() -> {
+            MinecraftClient.getInstance().getSoundManager().stop(new SoundInstance(this));
+        });
+    }
+
     @ApiInternal
-    public void setInstanceInUse(boolean isPlaying) {
+    protected void setInstanceInUse(boolean isPlaying) {
         this.instanceInUse = isPlaying;
     }
 
     @ApiInternal
-    public boolean isInstanceInUse() {
+    protected boolean isInstanceInUse() {
         return this.instanceInUse;
     }
 
@@ -83,5 +140,10 @@ public class TickableSoundInstanceJS extends MovingSoundInstanceExtension {
     @ApiInternal
     @Override
     public void tick2() {
+    }
+
+    @Override
+    public void close() throws Exception {
+        abort();
     }
 }

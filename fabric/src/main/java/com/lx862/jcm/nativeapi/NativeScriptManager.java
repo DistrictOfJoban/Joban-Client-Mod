@@ -126,13 +126,20 @@ public final class NativeScriptManager {
        layouts — purely additive, every pre-existing struct is byte-identical
        to ABI 11. An ABI 12 host still serves ABI 6–11 modules; an ABI 12
        module is refused by an ABI 11 host (its "psd" type would otherwise
-       never be driven). */
-    private static final int ABI_VERSION = 12;
+       never be driven).
+       v13 adds PSD station info: JcmPsdSnapshot._pad0 (offset 124) is
+       repurposed as station_offset pointing at the new JcmPsdStation /
+       JcmPsdStationInterchange / JcmPsdStationConnectingGroup layouts —
+       the complete station info of the JS psd.stop() wrapper. ABI 12
+       modules remain loadable (the repurposed field was pure padding);
+       an ABI 13 module is refused by an ABI 12 host (its station-drawing
+       scripts would silently see no station data). */
+    private static final int ABI_VERSION = 13;
 
     private static boolean supportedAbi(int version) {
-        /* Contiguous 6..current: 6, 7, 8, 9, 10 and 11 are all explicitly
+        /* Contiguous 6..current: 6, 7, 8, 9, 10, 11 and 12 are all explicitly
            loadable by this host, same as their own hosts did. */
-        return (version >= 6 && version <= 11) || version == ABI_VERSION;
+        return (version >= 6 && version <= 12) || version == ABI_VERSION;
     }
 
     /* Route.CircularState mapping (v2 snapshots). */

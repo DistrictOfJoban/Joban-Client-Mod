@@ -14,6 +14,8 @@
     "mtrpatch.BlockRailwaySignPoleMixin"
   ],
   "client": [
+    "mtrpatch.CachedResourceAccessorMixin",
+    "mtrpatch.CachedResourceMixin",
     "mtrpatch.RenderLiftsMixin",
     "mtrpatch.DashboardListSelectorScreenMixin",
     "mtrpatch.PlayerEntityMixin",

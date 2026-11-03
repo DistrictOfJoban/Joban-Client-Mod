@@ -7,10 +7,6 @@ import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.integration.MinecraftParticleData;
 import com.lx862.mtrscripting.core.util.*;
-import com.lx862.mtrscripting.core.util.ante.ANTEComponentUtilJS;
-import com.lx862.mtrscripting.core.util.ante.ANTEGlobalRegisterJS;
-import com.lx862.mtrscripting.core.util.ante.ANTESoundHelperJS;
-import com.lx862.mtrscripting.core.util.ante.ANTETickableSoundJS;
 import com.lx862.mtrscripting.core.util.model.DynamicModelHolderJS;
 import com.lx862.mtrscripting.core.util.model.ModelManagerJS;
 import com.lx862.mtrscripting.core.util.model.RawMeshBuilderJS;
@@ -22,12 +18,14 @@ import com.lx862.mtrscripting.core.integration.MinecraftClientWrapper;
 import com.lx862.mtrscripting.core.integration.VanillaTextWrapper;
 import com.lx862.mtrscripting.core.integration.VoxelShapeWrapper;
 import com.lx862.mtrscripting.mod.gui.hud.ScriptErrorNotifier;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -135,15 +133,16 @@ public class ScriptManager {
             parsedScript.exposeClass("RawMeshBuilder", RawMeshBuilderJS.class);
             parsedScript.exposeClass("DynamicModelHolder", DynamicModelHolderJS.class);
 
-            /* ANTE */
-            parsedScript.exposeClass("SoundHelper", ANTESoundHelperJS.class);
-            parsedScript.exposeClass("TickableSound", ANTETickableSoundJS.class);
-            parsedScript.exposeClass("GlobalRegister", ANTEGlobalRegisterJS.class);
-            parsedScript.exposeClass("ComponentUtil", ANTEComponentUtilJS.class);
             parsedScript.exposeClassMethod("asJavaArray", JavaUtilJS.class.getMethod("toArray", List.class, Class.class));
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static ThreadFactory getNamedThreadFactory(String name) {
+        return new BasicThreadFactory.Builder()
+                .namingPattern(name)
+                .build();
     }
 
     public static class ParseScriptEvent<T> {

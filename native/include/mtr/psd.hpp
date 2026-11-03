@@ -310,13 +310,188 @@ private:
 };
 
 /* ------------------------------------------------------------------ */
+/* Station (ABI 13) — the complete info of the PSD's station           */
+/*                                                                     */
+/* Mirrors the JS psd.stop() wrapper (PSDWrapper.PSDStationWrapper).    */
+/* Unlike the list accessors above, every accessor here is             */
+/* null-safe and bounds-checked with SAFE DEFAULTS instead of throws:  */
+/* an absent station, a short blob or an out-of-range index yields     */
+/* ok()==false / 0 / -1 / an empty StrView — a module must never crash */
+/* on partial data.                                                    */
+/* ------------------------------------------------------------------ */
+
+/** One route calling at the station (JS: psd.stop().interchanges()[i]). */
+class PsdStationInterchange {
+public:
+    PsdStationInterchange() : blob_(nullptr), ic_(nullptr) {}
+    PsdStationInterchange(const void* blob, const JcmPsdStationInterchange* ic)
+        : blob_(blob), ic_(ic) {}
+
+    /** The route id. */
+    int64_t id() const { return ic_ ? ic_->route_id : 0; }
+    int32_t color() const { return ic_ ? ic_->color : 0; }
+    StrView name() const { return ic_ ? pool(ic_->name_offset, ic_->name_len) : StrView{}; }
+    /* -1 when older server data omits it. */
+    int32_t transport_mode() const { return ic_ ? ic_->transport_mode : -1; }
+    /* Canonical transport type id ("train", "train_metro", ...), "" = unresolved. */
+    StrView get_transport_type() const { return ic_ ? pool(ic_->type_offset, ic_->type_len) : StrView{}; }
+
+private:
+    StrView pool(int32_t offset, int32_t len) const {
+        if (len <= 0 || offset < 0) return StrView{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        return make_view(reinterpret_cast<const char*>(base + offset), len);
+    }
+    const void* blob_;
+    const JcmPsdStationInterchange* ic_;
+};
+
+/** The routes of one walkable connecting station, grouped under its name
+    (JS: psd.stop().connectingInterchanges(), a Map keyed by station name). */
+class PsdStationConnectingGroup {
+public:
+    PsdStationConnectingGroup() : blob_(nullptr), group_(nullptr) {}
+    PsdStationConnectingGroup(const void* blob, const JcmPsdStationConnectingGroup* group)
+        : blob_(blob), group_(group) {}
+
+    /** The connecting (walkable) station's name. */
+    StrView name() const { return group_ ? pool(group_->station_name_offset, group_->station_name_len) : StrView{}; }
+
+    int32_t route_count() const { return group_ ? group_->route_count : 0; }
+    /** Route i of the group; an out-of-range index yields an absent
+        wrapper (id 0, empty name) instead of throwing. */
+    PsdStationInterchange route(int32_t i) const {
+        if (!group_ || i < 0 || i >= group_->route_count) return PsdStationInterchange{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        return PsdStationInterchange(blob_, reinterpret_cast<const JcmPsdStationInterchange*>(base + group_->route_offset) + i);
+    }
+
+private:
+    StrView pool(int32_t offset, int32_t len) const {
+        if (len <= 0 || offset < 0) return StrView{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        return make_view(reinterpret_cast<const char*>(base + offset), len);
+    }
+    const void* blob_;
+    const JcmPsdStationConnectingGroup* group_;
+};
+
+/** One station exit (JS: psd.stop().exits()[i]) — an exit letter plus its
+    destination landmarks. */
+class PsdStationExit {
+public:
+    PsdStationExit() : blob_(nullptr), exit_(nullptr) {}
+    PsdStationExit(const void* blob, const JcmExit* exit)
+        : blob_(blob), exit_(exit) {}
+
+    /** The exit name/letter, e.g. "A". */
+    StrView name() const { return exit_ ? pool(exit_->name_offset, exit_->name_len) : StrView{}; }
+
+    int32_t destination_count() const { return exit_ ? exit_->destination_count : 0; }
+    /** Destination landmark i; an empty StrView when out of range. */
+    StrView destination(int32_t i) const {
+        if (!exit_ || i < 0 || i >= exit_->destination_count) return StrView{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        const JcmStrRef* ref = reinterpret_cast<const JcmStrRef*>(base + exit_->destination_offset) + i;
+        if (ref->len <= 0 || ref->offset < 0) return StrView{};
+        return make_view(reinterpret_cast<const char*>(base + ref->offset), ref->len);
+    }
+
+private:
+    StrView pool(int32_t offset, int32_t len) const {
+        if (len <= 0 || offset < 0) return StrView{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        return make_view(reinterpret_cast<const char*>(base + offset), len);
+    }
+    const void* blob_;
+    const JcmExit* exit_;
+};
+
+/** The station this PSD's platform belongs to (JS: psd.stop()) — ok() is
+    false when the snapshot carries no station (station_offset == -1). */
+class PsdStation {
+public:
+    PsdStation() : blob_(nullptr), station_(nullptr) {}
+    PsdStation(const void* blob, const JcmPsdStation* station)
+        : blob_(blob), station_(station) {}
+
+    bool ok() const { return station_ != nullptr; }
+
+    int64_t id() const { return station_ ? station_->station_id : 0; }
+    StrView name() const { return station_ ? pool(station_->name_offset, station_->name_len) : StrView{}; }
+    /** ARGB, 0 = unset. */
+    int32_t color() const { return station_ ? station_->color : 0; }
+    /** "#RRGGBB" (MTR's own formatting), "" when unset. */
+    StrView color_hex() const { return station_ ? pool(station_->color_hex_offset, station_->color_hex_len) : StrView{}; }
+
+    /** Fare zones, 0 = unset. */
+    int64_t zone1() const { return station_ ? station_->zone1 : 0; }
+    int64_t zone2() const { return station_ ? station_->zone2 : 0; }
+    int64_t zone3() const { return station_ ? station_->zone3 : 0; }
+
+    /** Every route calling at this station; out-of-range indices yield
+        absent wrappers instead of throwing. */
+    int32_t interchange_count() const { return station_ ? station_->interchange_count : 0; }
+    PsdStationInterchange interchange(int32_t i) const {
+        if (!station_ || i < 0 || i >= station_->interchange_count) return PsdStationInterchange{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        return PsdStationInterchange(blob_, reinterpret_cast<const JcmPsdStationInterchange*>(base + station_->interchange_offset) + i);
+    }
+
+    /** Walkable connecting stations, each with its calling routes. */
+    int32_t connecting_count() const { return station_ ? station_->connecting_count : 0; }
+    PsdStationConnectingGroup connecting(int32_t i) const {
+        if (!station_ || i < 0 || i >= station_->connecting_count) return PsdStationConnectingGroup{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        return PsdStationConnectingGroup(blob_, reinterpret_cast<const JcmPsdStationConnectingGroup*>(base + station_->connecting_offset) + i);
+    }
+
+    /** Names of stations physically connected to this one. */
+    int32_t connected_station_count() const { return station_ ? station_->connected_station_count : 0; }
+    StrView connected_station(int32_t i) const {
+        if (!station_ || i < 0 || i >= station_->connected_station_count) return StrView{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        const JcmStrRef* ref = reinterpret_cast<const JcmStrRef*>(base + station_->connected_station_offset) + i;
+        if (ref->len <= 0 || ref->offset < 0) return StrView{};
+        return make_view(reinterpret_cast<const char*>(base + ref->offset), ref->len);
+    }
+
+    /** Station exits (name/letter plus destination landmarks). */
+    int32_t exit_count() const { return station_ ? station_->exit_count : 0; }
+    PsdStationExit exit(int32_t i) const {
+        if (!station_ || i < 0 || i >= station_->exit_count) return PsdStationExit{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        return PsdStationExit(blob_, reinterpret_cast<const JcmExit*>(base + station_->exit_offset) + i);
+    }
+
+    /** The station's platform numbers ("1", "2", ...), numbers first. */
+    int32_t platform_count() const { return station_ ? station_->platform_count : 0; }
+    StrView platform(int32_t i) const {
+        if (!station_ || i < 0 || i >= station_->platform_count) return StrView{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        const JcmStrRef* ref = reinterpret_cast<const JcmStrRef*>(base + station_->platform_offset) + i;
+        if (ref->len <= 0 || ref->offset < 0) return StrView{};
+        return make_view(reinterpret_cast<const char*>(base + ref->offset), ref->len);
+    }
+
+private:
+    StrView pool(int32_t offset, int32_t len) const {
+        if (len <= 0 || offset < 0) return StrView{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
+        return make_view(reinterpret_cast<const char*>(base + offset), len);
+    }
+    const void* blob_;
+    const JcmPsdStation* station_;
+};
+
+/* ------------------------------------------------------------------ */
 /* Psd — the top-level wrapper                                         */
 /* ------------------------------------------------------------------ */
 
 /**
  * Psd — mirrors PSDWrapper (psd.width / psd.height / psd.type() /
- * psd.platform() / psd.routes() / psd.arrivals() / psd.doors() /
- * psd.doorValue()).
+ * psd.platform() / psd.stop() / psd.routes() / psd.arrivals() /
+ * psd.doors() / psd.doorValue()).
  */
 class Psd {
 public:
@@ -341,7 +516,10 @@ public:
 
     /** The platform number/name (e.g. "1"); empty without a platform. */
     StrView platform_number() const { return pool(snap_->platform_number_offset, snap_->platform_number_len); }
-    StrView platform_name() const { return pool(snap_->platform_name_offset, snap_->platform_name_len); }
+    /* ABI 13 rename: this field always carried the STATION's name (the
+       writer stores platform.getStationName()); it was mislabeled
+       "platform_name" until the honest rename in ABI 13. */
+    StrView station_name() const { return pool(snap_->station_name_offset, snap_->station_name_len); }
 
     int64_t game_time_millis() const { return snap_->game_time_millis; }
     int64_t in_game_time() const { return snap_->in_game_time; }
@@ -353,6 +531,16 @@ public:
     PsdDoorList doors() const { return PsdDoorList(snap_, snap_->door_count, snap_->door_offset); }
     PsdArrivalList arrivals() const { return PsdArrivalList(snap_, snap_->arrival_count, snap_->arrival_offset); }
     PsdRouteList routes() const { return PsdRouteList(snap_, snap_->route_count, snap_->route_offset); }
+
+    /* ABI 13: the complete station info (JS: psd.stop()). */
+    bool has_station() const { return snap_->station_offset != -1; }
+    PsdStation station() const {
+        if (snap_->station_offset < 0) return PsdStation{};
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
+        return PsdStation(snap_, reinterpret_cast<const JcmPsdStation*>(base + snap_->station_offset));
+    }
+    /** Alias of station() — parity with the JS psd.stop(). */
+    PsdStation stop() const { return station(); }
 
     const JcmPsdSnapshot& raw() const { return *snap_; }
 

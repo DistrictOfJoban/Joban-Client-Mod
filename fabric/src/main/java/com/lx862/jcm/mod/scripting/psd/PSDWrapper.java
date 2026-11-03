@@ -7,6 +7,7 @@ import com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.MagicRouteTypes;
 import org.mtr.core.data.Platform;
 import org.mtr.core.data.Route;
+import org.mtr.core.data.SavedRailBase;
 import org.mtr.core.data.SimplifiedRoute;
 import org.mtr.core.data.SimplifiedRoutePlatform;
 import org.mtr.core.data.Station;
@@ -15,6 +16,7 @@ import org.mtr.core.data.TransportMode;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.core.operation.CarDetails;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
+import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mod.data.ArrivalsCacheClient;
@@ -39,6 +41,9 @@ import java.util.function.Consumer;
  * <h2>Data</h2>
  * <ul>
  *   <li>{@link #platform()} — the platform this PSD serves (number/name, station);</li>
+ *   <li>{@link #stop()} — the complete info of the station this PSD belongs to
+ *       (name, color, fare zones, interchange routes, connecting stations,
+ *       exits, platform numbers);</li>
  *   <li>{@link #routes()} — every route calling at the platform, each with its
  *       full stop list (station name, destination, custom destination,
  *       interchange routes with color and transport type, station exits).
@@ -130,6 +135,16 @@ public class PSDWrapper {
     /** The platform this PSD wall serves, or null when none is in range. */
     public @ValueNullable PSDPlatformWrapper platform() {
         return platform == null ? null : new PSDPlatformWrapper(platform);
+    }
+
+    /* ---------------- Station ---------------- */
+
+    /**
+     * The station this PSD's platform belongs to, with its complete info —
+     * or null when no platform (or no station) is in range.
+     */
+    public @ValueNullable PSDStationWrapper stop() {
+        return platform == null || platform.area == null ? null : PSDStationWrapper.of(platform.area);
     }
 
     /* ---------------- Routes ---------------- */
@@ -242,6 +257,179 @@ public class PSDWrapper {
         /** Dwell time at this platform, in milliseconds. */
         public long dwellTimeMillis() {
             return platform.getDwellTime();
+        }
+    }
+
+    /**
+     * The complete info of the station a PSD belongs to: identity, fare zones,
+     * every route calling at the station, walkable connecting stations, exits
+     * and platform numbers. Cached for 1 second per station id — the wrapper is
+     * rebuilt for every bound block each frame, and construction walks the
+     * client's interchange maps.
+     */
+    public static class PSDStationWrapper {
+        private static final long CACHE_TTL_MILLIS = 1000;
+        private static final Map<Long, PSDStationWrapper> cache = new HashMap<>();
+        private static long cacheStamp = Long.MIN_VALUE;
+
+        private final Station station;
+        private final List<PSDInterchangeWrapper> interchanges = new ArrayList<>();
+        private final Map<String, List<PSDInterchangeWrapper>> connectingInterchanges = new HashMap<>();
+        private final List<PSDExitWrapper> exits = new ArrayList<>();
+        private final List<String> platformNames = new ArrayList<>();
+        private final List<String> connectedStationNames = new ArrayList<>();
+
+        @ApiInternal
+        public static PSDStationWrapper of(Station station) {
+            final long now = System.currentTimeMillis();
+            if(now - cacheStamp > CACHE_TTL_MILLIS) {
+                cache.clear();
+                cacheStamp = now;
+            }
+            PSDStationWrapper wrapper = cache.get(station.getId());
+            if(wrapper == null) {
+                wrapper = new PSDStationWrapper(station);
+                cache.put(station.getId(), wrapper);
+            }
+            return wrapper;
+        }
+
+        /** Clear the station cache (dimension/world switch, resource reload). */
+        @ApiInternal
+        public static void resetCache() {
+            cache.clear();
+            cacheStamp = Long.MIN_VALUE;
+        }
+
+        @ApiInternal
+        private PSDStationWrapper(Station station) {
+            this.station = station;
+            final LongOpenHashSet seenRouteIds = new LongOpenHashSet();
+
+            // Interchange routes within the same station (any of its platforms).
+            station.getInterchangeStationToColorToRoutesMap(true).forEach((interchangeStation, colorToRoutes) -> {
+                if(interchangeStation.getId() == station.getId()) {
+                    colorToRoutes.forEach((color, routes) -> routes.forEach(route -> {
+                        if(seenRouteIds.add(route.getId())) interchanges.add(wrapInterchange(route));
+                    }));
+                }
+            });
+            // Routes of connecting (walkable) interchange stations.
+            station.getInterchangeStationToColorToRoutesMap(true).forEach((interchangeStation, colorToRoutes) -> {
+                if(interchangeStation.getId() != station.getId()) {
+                    colorToRoutes.forEach((color, routes) -> routes.forEach(route ->
+                            connectingInterchanges.computeIfAbsent(interchangeStation.getName(), k -> new ArrayList<>()).add(wrapInterchange(route))));
+                }
+            });
+            // The station's own platforms: numbers plus their routes (deduped).
+            for(SavedRailBase savedRail : station.savedRails) {
+                if(!(savedRail instanceof Platform)) continue;
+                final Platform stationPlatform = (Platform)savedRail;
+                platformNames.add(stationPlatform.getName());
+                stationPlatform.routes.forEach(route -> {
+                    if(seenRouteIds.add(route.getId())) interchanges.add(wrapInterchange(route));
+                });
+            }
+            platformNames.sort(PSDStationWrapper::comparePlatformNames);
+            for(StationExit exit : station.getExits()) {
+                exits.add(new PSDExitWrapper(exit.getName(), new ArrayList<>(exit.getDestinations())));
+            }
+            for(Station connected : station.connectedStations) {
+                connectedStationNames.add(connected.getName());
+            }
+        }
+
+        private PSDInterchangeWrapper wrapInterchange(Route route) {
+            return new PSDInterchangeWrapper(
+                    route.getId(), route.getColor(), route.getName(),
+                    route.getTransportMode(),
+                    MagicRouteTypes.extendedType(route.getId(), route.getTransportMode(), route.getRouteType()));
+        }
+
+        /** Numbers first in natural order, then names case-insensitively. */
+        private static int comparePlatformNames(String a, String b) {
+            final Long aNum = tryParseLong(a);
+            final Long bNum = tryParseLong(b);
+            if(aNum != null && bNum != null) return Long.compare(aNum, bNum);
+            if(aNum != null) return -1;
+            if(bNum != null) return 1;
+            return String.CASE_INSENSITIVE_ORDER.compare(a, b);
+        }
+
+        private static Long tryParseLong(String s) {
+            try {
+                return Long.parseLong(s);
+            } catch(NumberFormatException ignored) {
+                return null;
+            }
+        }
+
+        public long id() {
+            return station.getId();
+        }
+
+        public String name() {
+            return station.getName();
+        }
+
+        /** The station's custom color (ARGB int), 0 when unset. */
+        public int color() {
+            return station.getColor();
+        }
+
+        /** The station's custom color as "#RRGGBB" (MTR's own formatting). */
+        public String colorHex() {
+            return station.getColorHex();
+        }
+
+        /** Fare zone as configured in MTR (0 = unset). */
+        public long zone1() {
+            return station.getZone1();
+        }
+
+        /** Fare zone as configured in MTR (0 = unset). */
+        public long zone2() {
+            return station.getZone2();
+        }
+
+        /** Fare zone as configured in MTR (0 = unset). */
+        public long zone3() {
+            return station.getZone3();
+        }
+
+        /** Every route calling at this station. */
+        public List<PSDInterchangeWrapper> interchanges() {
+            return interchanges;
+        }
+
+        /** Routes of walkable connecting stations, keyed by the connecting station name. */
+        public Map<String, List<PSDInterchangeWrapper>> connectingInterchanges() {
+            return connectingInterchanges;
+        }
+
+        /** Names of stations physically connected to this one. */
+        public List<String> connectedStations() {
+            return connectedStationNames;
+        }
+
+        /** Station exits (name/letter plus destination landmarks). */
+        public List<PSDExitWrapper> exits() {
+            return exits;
+        }
+
+        /** The station's platform numbers ("1", "2", ...), numbers in natural order. */
+        public List<String> platforms() {
+            return platformNames;
+        }
+
+        /** How many platforms this station has. */
+        public int platformCount() {
+            return platformNames.size();
+        }
+
+        /** Raw MTR station data (for scripts that also use MTRClientData). */
+        public Station station() {
+            return station;
         }
     }
 

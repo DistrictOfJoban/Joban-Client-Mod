@@ -52,6 +52,7 @@ public class Events {
                 VehicleDataCache.clearData();
                 com.lx862.jcm.mod.scripting.psd.PSDWallScanner.reset();
                 com.lx862.jcm.mod.scripting.psd.PSDRouteStopCache.reset();
+                com.lx862.jcm.mod.scripting.psd.PSDStationWrapper.resetCache();
                 com.lx862.jcm.mod.scripting.psd.PSDClientBindings.reset();
                 /* Yanyang: drop the cached server door-direction answers
                    while out of a world; a fresh join re-requests what the
@@ -132,7 +133,7 @@ public class Events {
         JCMScripting.reset();
         MTRContentScripting.reset();
         ModelManagerJS.reset();
-        JCMResourceManager.reload();
         MtrScriptingResourceManager.reload();
+        JCMResourceManager.reload();
     }
 }

@@ -90,7 +90,7 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                         for(int i = 0; i < vehiclePath.size(); i++) {
                                             PathData currentPath = vehiclePath.get(i);
                                             if(!currentPath.getRail().isPlatform() || currentPath.getDwellTime() <= 0) continue;
-                                            ObjectArrayList<RoutePlatformData> routePlatforms = belongingRoute.getRoutePlatforms();
+                                            ObjectArrayList<RoutePlatformData> routePlatforms = deduplicateRoutePlatform(belongingRoute.getRoutePlatforms());
                                             int routePlatformIndex = routeStopsData.stops.size();
                                             boolean finalRouteStop = routePlatformIndex == routePlatforms.size()-1;
                                             RoutePlatformData routePlatformData = routePlatforms.get(routePlatformIndex);
@@ -111,7 +111,7 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                                 belongingRoute = depot.routes.get(routeIdx);
                                                 routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
                                                 // Next route also has the same RoutePlatform assigned
-                                                if(!belongingRoute.getRoutePlatforms().isEmpty() && belongingRoute.getRoutePlatforms().get(0).getPlatform().getId() == platformId) {
+                                                if(!routePlatforms.isEmpty() && belongingRoute.getRoutePlatforms().get(0).getPlatform().getId() == platformId) {
                                                     routeStopsData.addStop(stopObject);
                                                 }
                                             }
@@ -143,5 +143,18 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                 break;
             }
         }
+    }
+
+    private static ObjectArrayList<RoutePlatformData> deduplicateRoutePlatform(ObjectArrayList<RoutePlatformData> list) {
+        ObjectArrayList<RoutePlatformData> newList = new ObjectArrayList<>();
+        long lastPlatId = 0;
+        for(RoutePlatformData routePlatformData : list) {
+            if(lastPlatId != routePlatformData.getPlatform().getId()) {
+                newList.add(routePlatformData);
+            }
+            lastPlatId = routePlatformData.getPlatform().getId();
+        }
+
+        return newList;
     }
 }

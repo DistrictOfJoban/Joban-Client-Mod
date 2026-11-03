@@ -3,7 +3,7 @@ package com.lx862.jcm.mod.extra;
 import com.lx862.jcm.mixin.mtrpatch.OptimizedRendererAccessorMixin;
 import com.lx862.jcm.mixin.mtrpatch.OptimizedRendererWrapperAccessorMixin;
 import com.lx862.jcm.mod.config.JCMClientConfig;
-import com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapper;
+import com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapperJS;
 import it.unimi.dsi.fastutil.longs.Long2IntArrayMap;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.OptimizedRenderer;
@@ -41,7 +41,7 @@ public class JCMPatchForMTR {
         if(MinecraftClient.getInstance().getPlayerMapped() != null) {
             if(JCMClientConfig.INSTANCE.mtrPatch.allowCameraLowering.value()) {
                 boolean isPlayerSneaking = MinecraftClient.getInstance().getPlayerMapped().isSneaking();
-                if(MTRWrapper.Data.getPlayerMountedVehicle() == null) {
+                if(MTRWrapperJS.Data.getPlayerMountedVehicle() == null) {
                     JCMPatchForMTR.isSitting = false;
                 } else {
                     if(isPlayerSneaking && !JCMPatchForMTR.wasSneaking) {

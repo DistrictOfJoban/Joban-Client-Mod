@@ -1,4 +1,4 @@
-package com.lx862.mtrscripting.core.util.ante;
+package com.lx862.mtrscripting.mod.impl.mtr.util.ante;
 
 import com.lx862.mtrscripting.core.util.sound.ScriptSoundManager;
 import org.mtr.mapping.holder.SoundCategory;

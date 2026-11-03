@@ -76,12 +76,14 @@ one registration macro:
 The vehicle data wrapper follows MTR 4 terminology (`VehicleWrapper`,
 `vehicleScripts`); the MTR 3-era name `mtr::Train` is kept as a source alias.
 
-PSD scripts (ABI 12) are bound per-block in-game with the PSD Script Editor
-item (屏蔽门脚本编辑器) — declare them under the `psdScripts` category of
-`mtr_custom_resources.json` with `"type": "glass"` or `"top"` (see the
+PSD scripts (ABI 12; station info since ABI 13) are bound per-block in-game with
+the PSD Script Editor item (屏蔽门脚本编辑器) — declare them under the `psdScripts`
+category of `mtr_custom_resources.json` with `"type": "glass"` or `"top"` (see the
 main README). The `mtr::Psd` wrapper carries the platform, the wall's door
-units, arrivals with door-open predictions and every route calling at the
-platform with its full interchange-rich stop list; drawing uses the same
+units, arrivals with door-open predictions, every route calling at the platform
+with its full interchange-rich stop list, and (ABI 13, `psd.stop()`) the
+complete info of the station itself — fare zones, interchange routes, walkable
+connecting stations, exits and platform numbers; drawing uses the same
 `Text` / `Texture` / `Rect` records as PIDS. Example:
 `examples/psd_glass.cpp`.
 

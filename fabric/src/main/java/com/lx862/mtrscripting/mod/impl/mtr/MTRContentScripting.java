@@ -3,8 +3,12 @@ package com.lx862.mtrscripting.mod.impl.mtr;
 import com.lx862.jcm.mod.config.JCMClientConfig;
 import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.mtrscripting.mod.impl.mtr.util.ante.ANTEComponentUtilJS;
+import com.lx862.mtrscripting.mod.impl.mtr.util.ante.ANTEGlobalRegisterJS;
+import com.lx862.mtrscripting.mod.impl.mtr.util.ante.ANTESoundHelperJS;
+import com.lx862.mtrscripting.mod.impl.mtr.util.ante.ANTETickableSoundJS;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponder;
-import com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapper;
+import com.lx862.mtrscripting.mod.impl.mtr.util.MTRWrapperJS;
 import com.lx862.mtrscripting.mod.impl.mtr.util.TextUtilJS;
 import com.lx862.mtrscripting.core.ScriptManager;
 import com.lx862.mtrscripting.core.api.ClassRule;
@@ -21,19 +25,13 @@ import java.util.concurrent.Executors;
 public class MTRContentScripting {
     private static final int EXECUTOR_AMOUNT = 4;
     private static final List<ExecutorService> scriptExecutors = new ArrayList<>();
-
-    static {
-        for(int i = 0; i < EXECUTOR_AMOUNT; i++) {
-            scriptExecutors.add(Executors.newFixedThreadPool(1));
-        }
-    }
-
     private static ScriptManager scriptManager;
 
     /**
      * Called once when the mod entrypoint is invoked
      */
     public static void register() {
+        initExecutors(EXECUTOR_AMOUNT);
         scriptManager = new ScriptManager(MTRScriptingModClient.LOGGER, scriptExecutors);
         scriptManager.getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
 
@@ -50,7 +48,7 @@ public class MTRContentScripting {
 
         scriptManager.parseScriptEvent.register((contextName, parsedScript) -> {
             parsedScript.exposeClass("MTRClientData", MinecraftClientData.class);
-            parsedScript.exposeClass("MTR", MTRWrapper.class);
+            parsedScript.exposeClass("MTR", MTRWrapperJS.class);
             parsedScript.exposeClass("TextUtil", TextUtilJS.class);
 
             // ANTE Eyecandy Custom Config
@@ -58,10 +56,22 @@ public class MTRContentScripting {
                 parsedScript.exposeClass("ConfigResponder", ConfigResponder.class);
                 parsedScript.exposeClass("Optional", Optional.class);
             }
+
+            // ANTE Utils
+            parsedScript.exposeClass("SoundHelper", ANTESoundHelperJS.class);
+            parsedScript.exposeClass("TickableSound", ANTETickableSoundJS.class);
+            parsedScript.exposeClass("GlobalRegister", ANTEGlobalRegisterJS.class);
+            parsedScript.exposeClass("ComponentUtil", ANTEComponentUtilJS.class);
         });
 
         MTRScriptingAPI.registerAddonVersion("mtr", mtrModVersion);
         MTRScriptDebugOverlay.registerDebugSource("MTR", scriptManager);
+    }
+
+    private static void initExecutors(int threadCount) {
+        for(int i = 0; i < threadCount; i++) {
+            scriptExecutors.add(Executors.newFixedThreadPool(1, ScriptManager.getNamedThreadFactory("JCM-Scripting-Executor-%d")));
+        }
     }
 
     public static ScriptManager getScriptManager() {

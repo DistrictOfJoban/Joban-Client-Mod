@@ -1,12 +1,14 @@
 package com.lx862.mtrscripting.mod.impl.mtr.eyecandy;
 
 import com.lx862.jcm.mapping.LoaderImpl;
+import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.EyecandyCustomConfig;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponder;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.ante.ConfigResponderStorage;
 import com.lx862.mtrscripting.mod.impl.mtr.eyecandy.config.JCMBlockEyecandyExtra;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import org.mtr.mapping.holder.*;
 import org.mtr.mod.block.BlockEyeCandy;
 import org.mtr.mod.block.IBlock;
@@ -18,6 +20,8 @@ public class EyecandyBlockEntityWrapper {
     private final BlockEyeCandy.BlockEntity be;
 
     private final Map<String, String> customConfigs;
+
+    private final Map<String, String> legacyDefaultConfig;
 
     /* Note: Field access for backward compatibility only, you should use the getter functions. */
     @Deprecated
@@ -48,6 +52,14 @@ public class EyecandyBlockEntityWrapper {
         this.rotateZ = be.getRotateZ();
         this.fullLight = be.getFullBrightness();
         this.customConfigs = new HashMap<>(((JCMBlockEyecandyExtra)be).jsblock$getCustomConfig());
+        this.legacyDefaultConfig = new HashMap<>();
+
+        EyecandyCustomConfig legacyDefaultConfigValue = MtrScriptingResourceManager.eyecandy.getScriptConfig(this.prefabId, true);
+        if(legacyDefaultConfigValue != null) {
+            legacyDefaultConfigValue.entries().forEach(e -> {
+                this.legacyDefaultConfig.put(e.id(), e.defaultValue());
+            });
+        }
     }
 
     public String getModelId() {
@@ -117,7 +129,9 @@ public class EyecandyBlockEntityWrapper {
     }
 
     public String getCustomConfig(String key) {
-        return getCustomConfig(key, null);
+        String config = getCustomConfig(key, null);
+        if(config != null) return config;
+        return legacyDefaultConfig.get(key);
     }
 
     public String getCustomConfig(String key, String fallback) {

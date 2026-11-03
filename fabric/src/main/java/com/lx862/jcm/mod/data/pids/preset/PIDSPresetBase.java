@@ -22,14 +22,16 @@ public abstract class PIDSPresetBase implements RenderHelper {
     private final List<String> blacklist;
     protected final Identifier thumbnail;
     public final boolean builtin;
+    private final boolean outOfBound;
 
-    public PIDSPresetBase(String id, @Nullable String name, Identifier thumbnail, List<String> blacklistedPIDS, boolean builtin) {
+    public PIDSPresetBase(String id, @Nullable String name, Identifier thumbnail, List<String> blacklistedPIDS, boolean outOfBound, boolean builtin) {
         this.id = id;
         if(name == null) {
             this.name = id;
         } else {
             this.name = name;
         }
+        this.outOfBound = outOfBound;
         this.blacklist = blacklistedPIDS;
         this.builtin = builtin;
         this.thumbnail = thumbnail;
@@ -45,6 +47,10 @@ public abstract class PIDSPresetBase implements RenderHelper {
 
     public Identifier getThumbnail() {
         return thumbnail;
+    }
+
+    public boolean outOfBoundAllowed() {
+        return this.outOfBound;
     }
 
     public boolean typeAllowed(String pidsType) {

@@ -17,6 +17,7 @@ public class ScriptVector3f {
 
     @ApiInternal
     public ScriptVector3f(Vector3d impl) {
+        if(impl == null) throw new IllegalArgumentException("Cannot use null as the impl!");
         this.impl = impl;
     }
 

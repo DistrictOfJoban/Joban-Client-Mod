@@ -272,5 +272,7 @@
     "gui.jsblock.psd_script.subtitle": "选择要绑定到该%s的脚本",
     "gui.jsblock.psd_script.none": "无脚本（移除绑定）",
     "gui.jsblock.psd_script.surface.glass": "屏蔽门玻璃",
-    "gui.jsblock.psd_script.surface.top": "屏蔽门顶部面板"
+    "gui.jsblock.psd_script.surface.top": "屏蔽门顶部面板",
+    "gui.jsblock.eyecandy.custom_config.title": "对象配置",
+    "gui.jsblock.eyecandy.custom_config.edit": "编辑自定义配置"
 }

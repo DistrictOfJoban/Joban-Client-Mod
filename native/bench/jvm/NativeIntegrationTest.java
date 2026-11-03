@@ -66,7 +66,7 @@ public class NativeIntegrationTest {
   System.out.println("Session plane: "+(isPollerPlane?"shared-memory poller (no JNI)":"Panama FFM (no JNI)"));
   if(isPollerPlane) check(PanamaFfmChannel.reason()!=null&&!PanamaFfmChannel.reason().isEmpty(),"poller-plane session: FFM unavailability has a reason: "+PanamaFfmChannel.reason());
   else check(PanamaFfmChannel.hostReady(),"FFM session: host upcall vtable installed");
-  check(module!=null&&module.getAbiVersion()==12,"ABI 12 loaded from resource declaration");
+  check(module!=null&&module.getAbiVersion()==13,"ABI 13 loaded from resource declaration");
   Fixture first=new Fixture(),second=new Fixture();
   NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
   ByteBuffer snapshot=ByteBuffer.allocateDirect(184).order(ByteOrder.nativeOrder());snapshot.limit(184);
@@ -149,6 +149,15 @@ public class NativeIntegrationTest {
     check(data.getInt(doorOffset)==1&&data.getInt(doorOffset+4)==3,"PSD arrival door numbers");
     int routeOffset=data.getInt(96);
     check(data.getInt(routeOffset+40)==2,"PSD route stop count");
+    /* ABI 13: the station struct at snapshot offset 124 (formerly padding). */
+    int stationOffset=data.getInt(124);
+    check(stationOffset!=-1,"PSD station present");
+    check(data.getLong(stationOffset)==9223372036854775000L,"PSD station ID");
+    check(data.getLong(stationOffset+16)==1&&data.getLong(stationOffset+24)==2&&data.getLong(stationOffset+32)==0,"PSD station zones");
+    check(data.getInt(stationOffset+56)==2&&data.getInt(stationOffset+64)==1,"PSD station interchange and connecting counts");
+    check(data.getInt(stationOffset+72)==2&&data.getInt(stationOffset+80)==1&&data.getInt(stationOffset+88)==2,"PSD station connected/exit/platform counts");
+    int connectingOffset=data.getInt(stationOffset+68);
+    check(data.getInt(connectingOffset+8)==1,"PSD connecting group route count");
    } else {
     var lift=new com.lx862.mtrscripting.mod.impl.mtr.lift.LiftWrapper();wrapper=lift;NativeContentSnapshot.lift(data,lift);
     check(data.getDouble(48)==4&&data.getLong(0)==9223372036854775000L,"Lift offset and ID");
@@ -186,7 +195,7 @@ public class NativeIntegrationTest {
    module=NativeScriptManager.loadFromDeclaration("test:probe",new JsonPrimitive("test:"+prefix+"api_probe"+ext));
    check(ShmPoller.active(),"poller attached to the shared region");
    check(NativeChannel.describe().contains("no JNI"),"census advertises the JNI-free poller plane: "+NativeChannel.describe());
-   check(module!=null&&module.getAbiVersion()==12,"module loads over the poller CMD_OPEN");
+   check(module!=null&&module.getAbiVersion()==13,"module loads over the poller CMD_OPEN");
    check("test:api_probe".equals(module.getScriptId()),"module identity over the poller commands");
    NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
    Fixture poller=new Fixture();
@@ -217,7 +226,7 @@ public class NativeIntegrationTest {
    check(NativeChannel.activeTransport()==NativeChannel.Transport.PANAMA_FFM,"PANAMA_FFM selected");
    check(NativeChannel.describe().contains("no JNI"),"census advertises the JNI-free FFM plane");
    module=NativeScriptManager.loadFromDeclaration("test:probe",new JsonPrimitive("test:"+prefix+"api_probe"+ext));
-   check(module!=null&&module.getAbiVersion()==12,"module loads over jcm_module_open");
+   check(module!=null&&module.getAbiVersion()==13,"module loads over jcm_module_open");
    check("test:api_probe".equals(module.getScriptId()),"module identity via jcm_module_script_id");
    NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
    Fixture ffm=new Fixture();

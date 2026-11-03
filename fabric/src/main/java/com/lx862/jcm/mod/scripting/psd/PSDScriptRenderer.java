@@ -57,9 +57,11 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  * <ul>
  *   <li><b>Glass</b> (bound per block half; the editor item binds both halves
  *       of a column at once): an opaque white quad pair is drawn just outside
- *       both pane faces (z = 4/16 - ε platform side, z = 6/16 + ε track side,
- *       x-mirrored so content reads correctly from behind), and the script's
- *       captured draw calls replay on top of the white. Each half's canvas is
+ *       both pane faces (z = 4/16 - ε platform side, z = 6/16 + ε track side).
+ *       The script's captured draw calls replay ONLY on the platform-side
+ *       face — the track-side face (what passengers inside a train see)
+ *       stays plain white, so dynamic content is never visible mirrored
+ *       from behind. Each half's canvas is
  *       96×96 PIDS pixels (APG upper halves: 96×54, matching the 9-px gate
  *       glass).</li>
  *   <li><b>Top</b> (bound to a psd_top block, whose own arrow/route content
@@ -164,9 +166,11 @@ public final class PSDScriptRenderer implements RenderHelper {
             driveScript(binding, pos, world, canvasWidth, canvasHeight);
         }
 
-        // Replay the captured calls on both faces; sounds once.
+        // The script content replays on the PLATFORM side only. The track
+        // side (visible from inside a stopped train) intentionally stays
+        // plain white — the dynamic texture would otherwise show up mirrored
+        // to riding passengers.
         replayScript(binding, pos, world, platformSide, facing.getOpposite());
-        replayScript(binding, pos, world, trackSide, facing);
         if (!shadowPass) {
             replaySoundsOnce(binding, pos, world);
         }
@@ -174,8 +178,9 @@ public final class PSDScriptRenderer implements RenderHelper {
 
     /**
      * The canvas frame for one glass face: the origin sits at the top-left of
-     * the face (as seen from that side — the track side is x-mirrored so
-     * content reads correctly from behind), y runs down, +Z faces the viewer.
+     * the face (as seen from that side — the track side is x-mirrored so the
+     * white base quad covers the pane symmetrically), y runs down, +Z faces
+     * the viewer.
      */
     private static StoredMatrixTransformations glassTransform(BlockPos pos, Direction facing, float z, boolean trackSide) {
         final StoredMatrixTransformations transform = new StoredMatrixTransformations(0.5 + pos.getX(), pos.getY(), 0.5 + pos.getZ());

@@ -2,12 +2,18 @@ package com.lx862.mtrscripting.mod.impl.mtr.util;
 
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
+import com.lx862.mtrscripting.mod.impl.mtr.lift.LiftWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalsWrapper;
 import org.mtr.core.data.*;
-import org.mtr.core.operation.ArrivalResponse;
+import org.mtr.libraries.it.unimi.dsi.fastutil.ints.IntObjectImmutablePair;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
+import org.mtr.mapping.holder.MinecraftClient;
+import org.mtr.mapping.holder.Vector3d;
+import org.mtr.mapping.holder.World;
 import org.mtr.mod.Init;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.client.MinecraftClientData;
@@ -18,9 +24,10 @@ import org.mtr.mod.data.VehicleExtension;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-public class MTRWrapper {
+public class MTRWrapperJS {
 
     public static class ClientConfig {
         public static boolean isChatAnnouncementsEnabled() {
@@ -114,6 +121,17 @@ public class MTRWrapper {
             return null;
         }
 
+        public static MountDetail getVehicleMountDetail() {
+            VehicleExtension playerMountedVehicle = getPlayerMountedVehicle();
+            if(playerMountedVehicle == null) return null;
+            IntObjectImmutablePair<ObjectObjectImmutablePair<Vector3d, Double>> obj = VehicleRidingMovement.getRidingVehicleCarNumberAndOffset(playerMountedVehicle.getId());
+            if(obj == null) return null;
+            int carIndex = obj.leftInt();
+            Vector3d vec3d = obj.right().left();
+            if(vec3d == null) return null;
+            return new MountDetail(carIndex, new ScriptVector3f(vec3d));
+        }
+
         public static List<VehicleExtension> getKnownVehicles() {
             return new ArrayList<>(MinecraftClientData.getInstance().vehicles);
         }
@@ -125,6 +143,12 @@ public class MTRWrapper {
         /* Lifts */
         public static Lift getLift(long vehicleId) {
             return MinecraftClientData.getLift(vehicleId);
+        }
+
+        public static List<LiftWrapper.Floor> getLiftFloors(Lift lift) {
+            List<LiftWrapper.Floor> floors = new ArrayList<>();
+            LiftWrapper.populateFloors(floors, lift, World.cast(MinecraftClient.getInstance().getWorldMapped()));
+            return floors;
         }
 
         public static Lift getPlayerMountedLift() {
@@ -191,6 +215,43 @@ public class MTRWrapper {
             return new ArrayList<>(MinecraftClientData.getInstance().railWrapperList.values().stream().map(e -> e.getRail()).collect(Collectors.toList()));
         }
 
+        public static List<Rail> getConnectedRails(PathData pathData, boolean front, boolean back) {
+            return getConnectedRails(pathData, front, back, false);
+        }
+
+        public static List<Rail> getConnectedRails(PathData pathData, boolean front, boolean back, boolean excludeSelf) {
+            List<Rail> rails = new ArrayList<>();
+            for(int i = 0; i < 2; i++) {
+                if(i == 0 && !front) continue;
+                if(i == 1 && !back) continue;
+                Position position = i == 0 ? pathData.getOrderedPosition2() : pathData.getOrderedPosition1();
+
+                for(Map.Entry<Position, Object2ObjectOpenHashMap<Position, Rail>> entry : MinecraftClientData.getInstance().positionsToRail.entrySet()) {
+                    if(entry.getKey().equals(position)) {
+                        entry.getValue().values().forEach(e -> {
+                            if(excludeSelf && pathData.getRail().getHexId().equals(e.getHexId())) return;
+                            rails.add(e);
+                        });
+                        break;
+                    }
+                }
+            }
+            return rails;
+        }
+
+        public static List<Rail> getConnectedRails(ScriptVector3f pos) {
+            List<Rail> rails = new ArrayList<>();
+
+            for(Map.Entry<Position, Object2ObjectOpenHashMap<Position, Rail>> entry : MinecraftClientData.getInstance().positionsToRail.entrySet()) {
+                if(entry.getKey().equals(pos.rawTscPosition())) {
+                    rails.addAll(entry.getValue().values());
+                    break;
+                }
+            }
+
+            return rails;
+        }
+
         public static boolean isRailBlocked(String railHexId) {
             return MinecraftClientData.getInstance().blockedRailIds.contains(railHexId);
         }
@@ -211,5 +272,7 @@ public class MTRWrapper {
         public static ArrivalsWrapper getArrivals(long[] platformId) {
             return new ArrivalsWrapper(ArrivalsCacheClient.INSTANCE.requestArrivals(new LongImmutableList(platformId)));
         }
+
+        public record MountDetail(int ridingCarIndex, ScriptVector3f pos) {}
     }
 }

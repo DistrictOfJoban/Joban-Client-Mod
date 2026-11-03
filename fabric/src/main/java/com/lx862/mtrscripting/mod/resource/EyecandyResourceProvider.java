@@ -122,8 +122,14 @@ public class EyecandyResourceProvider implements ScriptResourceProvider {
     public String getScriptEntryId(String id) { return eyecandyScriptIds.getOrDefault(id, id); }
 
     public EyecandyCustomConfig getScriptConfig(String id) {
-        EyecandyScriptConfiguration config = eyecandyScripts.get(eyecandyScriptIds.getOrDefault(id, id));
-        if(config != null && config.eyecandyCustomConfig() != null) return config.eyecandyCustomConfig();
+        return getScriptConfig(id, false);
+    }
+
+    public EyecandyCustomConfig getScriptConfig(String id, boolean legacyOnly) {
+        if(!legacyOnly) {
+            EyecandyScriptConfiguration config = eyecandyScripts.get(eyecandyScriptIds.getOrDefault(id, id));
+            if(config != null && config.eyecandyCustomConfig() != null) return config.eyecandyCustomConfig();
+        }
 
         List<ConfigResponder> legacyConfigResponder = ConfigResponderStorage.getEyecandyConfigResponders(id);
         if(legacyConfigResponder != null && !legacyConfigResponder.isEmpty()) {

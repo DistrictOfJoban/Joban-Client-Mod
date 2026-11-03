@@ -75,6 +75,7 @@ public class ScriptInstanceManager {
     public void reset() {
         for(ScriptInstance<?> instance : new HashMap<>(instances).values()) {
             instance.getScript().invokeDisposeFunctions(instance, null);
+            instance.getContextObject().dispose();
         }
         instances.clear();
     }

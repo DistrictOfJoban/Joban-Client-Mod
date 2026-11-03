@@ -40,7 +40,7 @@ public class RenderRailsMixin {
 
     @Inject(method = "lambda$render$1", at = @At("HEAD"), cancellable = true)
     private static void jsblock$railFrustumCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
-        if(JCMClientConfig.INSTANCE.mtrPatch.enableFrustumCullingRails.value()) {
+        if(JCMClientConfig.INSTANCE.mtrPatch.enableRailFrustumCulling.value()) {
             Box zbx = new Box(railWrapper.startVector.getX(), railWrapper.startVector.getY(), railWrapper.startVector.getZ(), railWrapper.endVector.getX(), railWrapper.endVector.getY(), railWrapper.endVector.getZ());
             if(!LoaderImplClient.isFrustumVisible(zbx)) {
                 cir.setReturnValue(() -> railWrapper.shouldRender = false);
@@ -82,7 +82,7 @@ public class RenderRailsMixin {
 
     @Inject(method = "lambda$render$1", at = @At("HEAD"), cancellable = true)
     private static void jsblock$improveRailCulling(MinecraftClientData.RailWrapper railWrapper, Vec3d camera, OcclusionCullingInstance occlusionCullingInstance, CallbackInfoReturnable<Runnable> cir) {
-        boolean overrideDefaultBehaviour = JCMClientConfig.INSTANCE.mtrPatch.allowCameraLowering.value();
+        boolean overrideDefaultBehaviour = JCMClientConfig.INSTANCE.mtrPatch.railCullingImprovement.value();
         if(!overrideDefaultBehaviour) return;
 
         Box railCullingBoundary = JCMPatchForMTR.clampBoundingBoxToRenderDistance(

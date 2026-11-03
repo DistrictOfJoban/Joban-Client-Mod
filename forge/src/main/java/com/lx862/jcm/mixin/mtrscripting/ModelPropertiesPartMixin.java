@@ -28,7 +28,8 @@ public class ModelPropertiesPartMixin extends ModelPropertiesPartSchema {
            position-tree rebuild per model part per car per frame (P x N
            builds where 1 already happens elsewhere each frame) — and NPE'd
            when MTR passes a null vehicle (stored-model render path with
-           optimized rendering off). */
+           optimized rendering off). (Upstream prerelease.3 makes the same
+           DISPLAY-only + immutableVehicleCars change in a simpler form.) */
         if(type != PartType.DISPLAY || vehicle == null) return;
         final int carCount = vehicle.vehicleExtraData.immutableVehicleCars.size();
         if(carNumber < 0 || carNumber >= carCount) return;
