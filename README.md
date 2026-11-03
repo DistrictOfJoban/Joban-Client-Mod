@@ -178,7 +178,43 @@ switch (vehicle.doorDirection()) {
 }
 ```
 
-### 4. 📖 C++ 脚本开发文档（网页版）
+### 4. 屏蔽门脚本（PSD Scripts，玻璃 / 顶部面板）
+
+在 `mtr_custom_resources.json` 中新增 `psdScripts` 类别——形式同 `vehicleScripts`，新增 `"type"` 设置项（`"glass"` 绑定屏蔽门玻璃 / `"top"` 绑定屏蔽门顶部面板）：
+
+```json
+"psdScripts": [
+    {
+        "id": "psd_glass_pids",
+        "type": "glass",
+        "scriptLocations": [
+            "mtr:my_pack/js/psd_glass_pids/main.js",
+            "mtr:my_pack/native/psd_glass_pids"
+        ],
+        "dataFetchMode": "ALL"
+    }
+]
+```
+
+**游戏内绑定**：使用新物品 **屏蔽门脚本编辑器**（与 MTR 的「刷」在同一创造分类下）对任意屏蔽门玻璃或屏蔽门上方面板右键，在弹出界面中选择一个该类型的 `psdScripts` 条目 **或** 任一脚本化 PIDS 预设（PIDS 脚本原样运行，画布自动适配 PSD 表面）。绑定保存在服务端（`<世界>/mtr/<维度>/psd-scripts/bindings.json`）并同步给同维度的所有玩家；选择「无脚本」即解除绑定。
+
+**渲染效果**：
+- **玻璃**（含端部玻璃、半高闸门 APG 玻璃；MTR 与天津地铁等基于 MTR PSD 类的模组均支持）：变为不透明白色，脚本控制的动态贴图叠加在白色之上（正反两面，背面镜像）。
+- **顶部面板**：不再显示原有的箭头 / 线路图，显示内容完全由脚本控制（78×42 像素画布）。
+
+**脚本 API（JS 的 `psd` 参数 / C++ 的 `mtr::Psd`）**——绘制 API 与 PIDS 完全一致（`Text` / `Texture` / `Rect` + `ctx.draw`），数据 API 覆盖：
+
+| API | 说明 |
+| --- | --- |
+| `psd.type()` / `width()` / `height()` | 绑定表面（glass/top）与画布尺寸（玻璃 96×96，APG 上半 96×54，面板 78×42 PIDS 像素） |
+| `psd.platform()` | 当前站台：编号 / 名称（`number()` / `name()`）、所属车站、停站时间 |
+| `psd.routes()` | 经过此站台的**所有线路**：名称 / 编号 / 颜色 / 环线状态 / 交通类型；`dataFetchMode: "ALL"` 时每条线路附带**完整车站列表**（站名、到站显示、自定义到站、**换乘线路**（颜色 + 名称 + 交通类型）、车站出口与出口目的地） |
+| `psd.arrivals()` | 即将到达的列车：终点站、所属线路（名称 / 编号 / 颜色）、车厢数、到站倒计时、实时 / 环线 / 终到状态，以及 **`doorNumbers()` —— 该列车将开启的屏蔽门编号**（停站中的列车读实际开门状态，未到站按「列车停于站台中点 + 按车辆资源逐卡累加车长」近似预测） |
+| `psd.doors()` / `doorValue()` | 本面屏蔽门墙的门单元列表（1 起编号）与实时开门状态 / 上锁状态、整墙开门量 |
+
+C++ 侧为第五类脚本基类 `mtr::PsdScript<State>`（`MTR_REGISTER_PSD_SCRIPT`），实现方式与车辆 C++ API 相同——每帧一次数据快照（`JcmPsdSnapshot`，ABI 12），零 JNI、零逐帧分配。见 `native/examples/psd_glass.cpp`。
+
+### 5. 📖 C++ 脚本开发文档（网页版）
 
 **https://bugquantumcore.github.io/Joban-Client-Mod-Yanyang/**
 

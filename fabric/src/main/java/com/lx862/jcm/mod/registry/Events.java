@@ -11,6 +11,7 @@ import com.lx862.jcm.mod.scripting.JCMScripting;
 import com.lx862.mtrscripting.mod.impl.mtr.MTRContentScripting;
 import com.lx862.mtrscripting.core.util.model.ModelManagerJS;
 import com.lx862.mtrscripting.mod.impl.mtr.server.DoorDirectionManager;
+import com.lx862.mtrscripting.mod.impl.mtr.server.PSDServerBindings;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.ServerDoorDirections;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.VehicleDataCache;
 import com.lx862.jcm.mod.util.TextUtil;
@@ -32,6 +33,10 @@ public class Events {
         JCMRegistry.REGISTRY.eventRegistry.registerServerStarted(DoorDirectionManager::onServerStarted);
         JCMRegistry.REGISTRY.eventRegistry.registerServerStopping(DoorDirectionManager::onServerStopping);
         JCMRegistry.REGISTRY.eventRegistry.registerEndWorldTick(DoorDirectionManager::onWorldTick);
+
+        /* Yanyang/PSD: server-side PSD script binding storage — loads per
+           dimension on first use, saves on every change and at shutdown. */
+        JCMRegistry.REGISTRY.eventRegistry.registerServerStopping(PSDServerBindings::onServerStopping);
     }
 
     public static void registerClient() {
@@ -41,9 +46,13 @@ public class Events {
             MTRContentScripting.tick();
             VehicleDataCache.tick();
             JCMPatchForMTR.tick();
+            com.lx862.jcm.mod.scripting.psd.PSDClientBindings.tick();
 
             if(MinecraftClient.getInstance().getWorldMapped() == null) {
                 VehicleDataCache.clearData();
+                com.lx862.jcm.mod.scripting.psd.PSDWallScanner.reset();
+                com.lx862.jcm.mod.scripting.psd.PSDRouteStopCache.reset();
+                com.lx862.jcm.mod.scripting.psd.PSDClientBindings.reset();
                 /* Yanyang: drop the cached server door-direction answers
                    while out of a world; a fresh join re-requests what the
                    render path actually needs. (The old client-side on-disk

@@ -23,6 +23,7 @@ public class MtrScriptingResourceManager {
     public static final VehicleResourceProvider vehicle = new VehicleResourceProvider();
     public static final EyecandyResourceProvider eyecandy = new EyecandyResourceProvider();
     public static final LiftResourceProvider lift = new LiftResourceProvider();
+    public static final PSDResourceProvider psd = new PSDResourceProvider();
 
     public static void reload() {
         MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Loading MTR scripts...");
@@ -47,6 +48,7 @@ public class MtrScriptingResourceManager {
         vehicle.reset();
         eyecandy.reset();
         lift.reset();
+        psd.reset();
         ScriptResourceUtil.resetCache();
         RhinoParsedScript.clearScriptCache();
         ConfigResponderStorage.reset();
@@ -91,6 +93,7 @@ public class MtrScriptingResourceManager {
                 vehicle.parseMtrResources(rootObject, isLegacyResource);
                 eyecandy.parseMtrResources(rootObject, isLegacyResource);
                 lift.parseMtrResources(rootObject, isLegacyResource);
+                psd.parseMtrResources(rootObject, isLegacyResource);
             } catch (Exception e) {
                 ScriptResourceProvider.logError("parsing scripts in mtr_custom_resources.json", e);
             }
@@ -103,5 +106,6 @@ public class MtrScriptingResourceManager {
         vehicle.validate();
         eyecandy.validate();
         lift.validate();
+        psd.validate();
     }
 }

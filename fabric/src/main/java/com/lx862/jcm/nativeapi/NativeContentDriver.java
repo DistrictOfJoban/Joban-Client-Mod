@@ -71,15 +71,63 @@ public final class NativeContentDriver {
     }
 
     public static void pids(String script,PIDSWrapper wrapper, World world,StoredMatrixTransformations transform,Direction facing,int light) {
-        State state=run(key("pids",script,wrapper.blockPos().rawBlockPos()),script,NativeScriptManager.MTR_RESOURCE_PIDS,wrapper,
+        pidsDrive(script,wrapper,world);
+        pidsReplay(script,wrapper,world,transform,facing,light);
+        pidsReplaySounds(script,wrapper,world);
+    }
+
+    /** PIDS drive half — marshal the snapshot and run every C++ module once.
+     *  Split from the replay so multi-surface hosts (a PIDS preset bound to
+     *  both faces of a PSD glass) execute the native side ONCE per frame. */
+    public static void pidsDrive(String script,PIDSWrapper wrapper, World world) {
+        run(key("pids",script,wrapper.blockPos().rawBlockPos()),script,NativeScriptManager.MTR_RESOURCE_PIDS,wrapper,
                 b->NativeContentSnapshot.pids(b,wrapper),()->new PIDSScriptContext(script));
+    }
+
+    /** PIDS replay half — re-invoke the last captured draw calls of every
+     *  module context onto the given transform. */
+    public static void pidsReplay(String script, org.mtr.mapping.holder.BlockPos blockPos, World world,StoredMatrixTransformations transform,Direction facing,int light) {
+        State state=STATES.get(key("pids",script,blockPos));
+        if(state==null) return;
         for(AbstractScriptContext context:state.contexts.values()) {
-            PIDSScriptContext ctx=(PIDSScriptContext)context;
-            /* No transform.copy(): invoke replays every draw call against
-               its own pooled snapshot seeded from this transform — one
-               shared (read-only) transform serves every context. */
-            ctx.getRenderManager().invoke(world,transform,facing,light);
-            ctx.getSoundManager().invoke(world,wrapper.blockPos());
+            ((PIDSScriptContext)context).getRenderManager().invoke(world,transform,facing,light);
+        }
+    }
+
+    /** PIDS sound replay — once per frame regardless of replay surface count. */
+    public static void pidsReplaySounds(String script, org.mtr.mapping.holder.BlockPos blockPos, World world) {
+        State state=STATES.get(key("pids",script,blockPos));
+        if(state==null) return;
+        for(AbstractScriptContext context:state.contexts.values()) {
+            ((PIDSScriptContext)context).getSoundManager().invoke(world,new com.lx862.mtrscripting.core.util.ScriptVector3f(blockPos));
+        }
+    }
+
+    /** PSD (platform screen door) glass / top-panel scripts — same shape as
+     *  the PIDS path, but with the rich JcmPsdSnapshot and PSDScriptContext
+     *  contexts. Drive/replay are separate so a glass binding can draw on
+     *  BOTH faces (platform + mirrored track side) from ONE native execution;
+     *  only invoked on main render passes (PSDScriptRenderer skips shadow
+     *  passes entirely, so — unlike eyecandy — no shadow variant is needed). */
+    public static void psdDrive(String script, com.lx862.jcm.mod.scripting.psd.PSDWrapper wrapper, World world) {
+        run(key("psd",script,wrapper.blockPos().rawBlockPos()),script,NativeScriptManager.MTR_RESOURCE_PSD,wrapper,
+                b->NativeContentSnapshot.psd(b,wrapper),
+                ()->new com.lx862.jcm.mod.scripting.psd.PSDScriptContext(script));
+    }
+
+    public static void psdReplay(String script, org.mtr.mapping.holder.BlockPos blockPos, World world,StoredMatrixTransformations transform,Direction facing,int light) {
+        State state=STATES.get(key("psd",script,blockPos));
+        if(state==null) return;
+        for(AbstractScriptContext context:state.contexts.values()) {
+            ((PIDSScriptContext)context).getRenderManager().invoke(world,transform,facing,light);
+        }
+    }
+
+    public static void psdReplaySounds(String script, org.mtr.mapping.holder.BlockPos blockPos, World world) {
+        State state=STATES.get(key("psd",script,blockPos));
+        if(state==null) return;
+        for(AbstractScriptContext context:state.contexts.values()) {
+            ((PIDSScriptContext)context).getSoundManager().invoke(world,new com.lx862.mtrscripting.core.util.ScriptVector3f(blockPos));
         }
     }
 

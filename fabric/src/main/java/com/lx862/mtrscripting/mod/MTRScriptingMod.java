@@ -10,6 +10,9 @@ import com.lx862.mtrscripting.mod.network.packet.data.RequestDoorDirectionsC2SPa
 import com.lx862.mtrscripting.mod.network.packet.data.RequestMTRDataC2SPacket;
 import com.lx862.mtrscripting.mod.network.packet.data.RequestStopsDataC2SPacket;
 import com.lx862.mtrscripting.mod.network.packet.data.StopsDataS2CPacket;
+import com.lx862.mtrscripting.mod.network.packet.psd.PSDScriptBindC2SPacket;
+import com.lx862.mtrscripting.mod.network.packet.psd.PSDScriptsS2CPacket;
+import com.lx862.mtrscripting.mod.network.packet.psd.RequestPSDScriptsC2SPacket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mtr.mapping.holder.Identifier;
@@ -34,5 +37,8 @@ public class MTRScriptingMod {
         Networking.registerPacket(MTRDataS2CPacket.class, MTRDataS2CPacket::new);
         Networking.registerPacket(RequestDoorDirectionsC2SPacket.class, RequestDoorDirectionsC2SPacket::new);
         Networking.registerPacket(DoorDirectionsS2CPacket.class, DoorDirectionsS2CPacket::new);
+        Networking.registerPacket(RequestPSDScriptsC2SPacket.class, RequestPSDScriptsC2SPacket::new);
+        Networking.registerPacket(PSDScriptsS2CPacket.class, PSDScriptsS2CPacket::new);
+        Networking.registerPacket(PSDScriptBindC2SPacket.class, PSDScriptBindC2SPacket::new);
     }
 }

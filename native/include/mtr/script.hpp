@@ -29,6 +29,7 @@
 #include "crash_guard.hpp"
 #include "vehicle.hpp"
 #include "pids.hpp"
+#include "psd.hpp"
 #include "eyecandy.hpp"
 #include "lift.hpp"
 #include "api.hpp"
@@ -194,6 +195,20 @@ struct EyecandyAdapter {
     }
 };
 
+struct PsdAdapter {
+    static constexpr int RESOURCE_ID = MTR_RESOURCE_PSD;
+    static constexpr const char* TYPE = "psd";
+    using Context = PsdContext;
+    using Wrapper = Psd;
+    using Snapshot = JcmPsdSnapshot;
+    static PsdContext make_context(FrameRecorder& f, const JcmFrameInput& in) {
+        return PsdContext(f, in);
+    }
+    static Psd make_wrapper(const void* snap) {
+        return Psd(static_cast<const JcmPsdSnapshot*>(static_cast<const void*>(snap)));
+    }
+};
+
 } /* namespace detail */
 
 } /* namespace mtr */
@@ -242,6 +257,10 @@ class LiftScript : public ScriptBase<State, detail::LiftAdapter> {};
 
 template <typename State>
 class EyecandyScript : public ScriptBase<State, detail::EyecandyAdapter> {};
+
+/* ABI 12: platform screen door glass / top-panel scripts. */
+template <typename State>
+class PsdScript : public ScriptBase<State, detail::PsdAdapter> {};
 
 } /* namespace mtr */
 
@@ -295,6 +314,8 @@ class EyecandyScript : public ScriptBase<State, detail::EyecandyAdapter> {};
     MTR_INTERNAL_EXPORTS(S, "lift", S::ID)
 #define MTR_REGISTER_EYECANDY_SCRIPT(S) \
     MTR_INTERNAL_EXPORTS(S, "eyecandy", S::ID)
+#define MTR_REGISTER_PSD_SCRIPT(S) \
+    MTR_INTERNAL_EXPORTS(S, "psd", S::ID)
 
 namespace mtr { namespace detail {
 

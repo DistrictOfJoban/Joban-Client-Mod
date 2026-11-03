@@ -260,5 +260,11 @@
     "gui.jsblock.eyecandy.subtitle": "選択済み > %s",
     "gui.jsblock.eyecandy.title": "オブジェクトを選択",
     "gui.jsblock.eyecandy.listview.widget.not_validated": "1つ以上の設定項目にエラーが含まれています",
-    "gui.jsblock.config.listview.title.allow_camera_lowering": "スニーク使用時にカメラの高さを低くする。"
+    "gui.jsblock.config.listview.title.allow_camera_lowering": "スニーク使用時にカメラの高さを低くする。",
+    "item.jsblock.psd_script_editor": "ホームドア スクリプトエディター",
+    "gui.jsblock.psd_script.title": "ホームドア スクリプト",
+    "gui.jsblock.psd_script.subtitle": "この%sにバインドするスクリプトを選択",
+    "gui.jsblock.psd_script.none": "スクリプトなし（バインド解除）",
+    "gui.jsblock.psd_script.surface.glass": "ホームドアガラス",
+    "gui.jsblock.psd_script.surface.top": "ホームドア上部パネル"
 }

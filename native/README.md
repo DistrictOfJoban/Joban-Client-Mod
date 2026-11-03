@@ -71,9 +71,19 @@ one registration macro:
 | PIDS | `mtr::PidsScript<State>` | `MTR_REGISTER_PIDS_SCRIPT` | `mtr::Pids` |
 | Lift | `mtr::LiftScript<State>` | `MTR_REGISTER_LIFT_SCRIPT` | `mtr::Lift` |
 | Eyecandy | `mtr::EyecandyScript<State>` | `MTR_REGISTER_EYECANDY_SCRIPT` | `mtr::EyeCandy` |
+| PSD (platform screen door glass / top) | `mtr::PsdScript<State>` | `MTR_REGISTER_PSD_SCRIPT` | `mtr::Psd` |
 
 The vehicle data wrapper follows MTR 4 terminology (`VehicleWrapper`,
 `vehicleScripts`); the MTR 3-era name `mtr::Train` is kept as a source alias.
+
+PSD scripts (ABI 12) are bound per-block in-game with the PSD Script Editor
+item (屏蔽门脚本编辑器) — declare them under the `psdScripts` category of
+`mtr_custom_resources.json` with `"type": "glass"` or `"top"` (see the
+main README). The `mtr::Psd` wrapper carries the platform, the wall's door
+units, arrivals with door-open predictions and every route calling at the
+platform with its full interchange-rich stop list; drawing uses the same
+`Text` / `Texture` / `Rect` records as PIDS. Example:
+`examples/psd_glass.cpp`.
 
 Place textures, models, callbacks and mutable instance data in `State`.
 Members of the script class are shared by every instance of that module.

@@ -31,6 +31,7 @@
 namespace mtr {
 
 class PidsContext; /* fwd */
+class PsdContext;  /* fwd (psd.hpp — PSD glass/top draw surface) */
 
 /* renderType("LIGHT_2") — QueuedRenderLayer.valueOf(String) equivalent.
    The four MtrRenderLayer values condense the MC enum; the light variants
@@ -104,6 +105,7 @@ public:
 
     /* Finalize: commit into the frame (mirrors .draw(ctx)). */
     void draw(PidsContext& ctx);
+    void draw(PsdContext& ctx);
 
 private:
     /* Same defaults as FrameRecorder::push_text — see default_text_record:
@@ -146,6 +148,7 @@ public:
     Texture& layer(MtrRenderLayer l)  { rec_.layer = static_cast<int32_t>(l); return *this; }
 
     void draw(PidsContext& ctx);
+    void draw(PsdContext& ctx);
 
 private:
     /* See default_text_record: matches FrameRecorder::push_texture defaults. */
@@ -178,6 +181,7 @@ public:
        exactly RectangleWrapper.drawTransformed(). Committed here (needs
        PidsContext complete, like Text/Texture::draw). */
     void draw(PidsContext& ctx);
+    void draw(PsdContext& ctx);
 
 private:
     Rect() = default;

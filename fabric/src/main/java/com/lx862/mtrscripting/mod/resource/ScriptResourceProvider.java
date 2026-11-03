@@ -62,6 +62,16 @@ public interface ScriptResourceProvider {
      * with .js scriptLocations entries without any language field.
      */
     static ParsedScript tryParseScript(String id, String scriptType, String contextName, JsonObject jsonObject, boolean isParsingMTR4, boolean useSnakeCase) {
+        /* Yanyang/PSD: the manager is selectable — PSD scripts parse under the
+           JCM script manager (they draw with the jcm PIDS Text/Texture/Rect
+           wrappers, which only that manager's class shutter exposes), while
+           vehicle/lift/eyecandy keep the MTR manager. */
+        return tryParseScript(id, scriptType, contextName, jsonObject, isParsingMTR4, useSnakeCase, null);
+    }
+
+    /** Full variant: {@code scriptManager == null} keeps the historical
+        behavior of parsing under the MTR content-scripting manager. */
+    static ParsedScript tryParseScript(String id, String scriptType, String contextName, JsonObject jsonObject, boolean isParsingMTR4, boolean useSnakeCase, com.lx862.mtrscripting.core.ScriptManager scriptManager) {
         final String scriptFilesKey = isParsingMTR4 ? "scriptLocations" : useSnakeCase ? "script_files" : "scriptFiles";
         final String scriptTextsKey = isParsingMTR4 ? "prependExpressions" : useSnakeCase ? "script_texts" : "scriptTexts";
         final String scriptInputKey = isParsingMTR4 ? "input" : "scriptInput";
@@ -168,7 +178,10 @@ public interface ScriptResourceProvider {
 
         try {
             ParsedScript.Configuration configuration = ParsedScript.Configuration.create(scripts, scriptLang, rateLimit);
-            return scripts.isEmpty() ? null : MTRContentScripting.getScriptManager().parseScript(id + " (" + scriptType + ")", contextName, configuration, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
+            if (scripts.isEmpty()) return null;
+            final com.lx862.mtrscripting.core.ScriptManager manager = scriptManager != null
+                    ? scriptManager : MTRContentScripting.getScriptManager();
+            return manager.parseScript(id + " (" + scriptType + ")", contextName, configuration, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
         } catch (Exception e) {
             ScriptResourceProvider.logError("parsing " + scriptType + " script (" + id + ")", e);
             return null;

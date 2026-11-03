@@ -68,4 +68,34 @@ int main() {
     FIELD(STOP_EXIT_OFFSET, JcmStop, exit_offset);
     FIELD(STOP_ROUTE_CIRCULAR, JcmStop, route_circular_state);
     FIELD(STOP_SWITCHOVER, JcmStop, is_route_switchover);
+    /* ABI 12: PSD snapshots (pinned by the static_asserts in mtr_native.h
+       and hard-coded in NativeContentSnapshot.psd). */
+    SIZE(SZ_PSD_ARRIVAL, JcmPsdArrival);
+    SIZE(SZ_PSD_ROUTE, JcmPsdRoute);
+    SIZE(SZ_PSD_DOOR, JcmPsdDoor);
+    SIZE(SZ_PSD, JcmPsdSnapshot);
+    FIELD(PSD_PLATFORM_ID, JcmPsdSnapshot, platform_id);
+    FIELD(PSD_STATION_ID, JcmPsdSnapshot, station_id);
+    FIELD(PSD_GAME_TIME, JcmPsdSnapshot, game_time_millis);
+    FIELD(PSD_IN_GAME_TIME, JcmPsdSnapshot, in_game_time);
+    FIELD(PSD_DOOR_VALUE, JcmPsdSnapshot, door_value);
+    FIELD(PSD_TYPE, JcmPsdSnapshot, psd_type);
+    FIELD(PSD_WIDTH, JcmPsdSnapshot, width);
+    FIELD(PSD_HEIGHT, JcmPsdSnapshot, height);
+    FIELD(PSD_DOOR_COUNT, JcmPsdSnapshot, door_count);
+    FIELD(PSD_DOOR_OFFSET, JcmPsdSnapshot, door_offset);
+    FIELD(PSD_ARRIVAL_COUNT, JcmPsdSnapshot, arrival_count);
+    FIELD(PSD_ARRIVAL_OFFSET, JcmPsdSnapshot, arrival_offset);
+    FIELD(PSD_ROUTE_COUNT, JcmPsdSnapshot, route_count);
+    FIELD(PSD_ROUTE_OFFSET, JcmPsdSnapshot, route_offset);
+    FIELD(PSD_PLATFORM_NUMBER_OFFSET, JcmPsdSnapshot, platform_number_offset);
+    FIELD(PSD_PLATFORM_NAME_OFFSET, JcmPsdSnapshot, platform_name_offset);
+    FIELD(PSD_STRING_POOL_OFFSET, JcmPsdSnapshot, string_pool_offset);
+    FIELD(PSD_STRING_POOL_LEN, JcmPsdSnapshot, string_pool_len);
+    FIELD(PSD_ARRIVAL_DOOR_COUNT, JcmPsdArrival, door_count);
+    FIELD(PSD_ARRIVAL_DOOR_OFFSET, JcmPsdArrival, door_offset);
+    FIELD(PSD_ROUTE_STOP_COUNT, JcmPsdRoute, stop_count);
+    FIELD(PSD_ROUTE_STOP_OFFSET, JcmPsdRoute, stop_offset);
+    FIELD(PSD_DOOR_NUMBER, JcmPsdDoor, number);
+    FIELD(PSD_DOOR_OPEN, JcmPsdDoor, open);
 }

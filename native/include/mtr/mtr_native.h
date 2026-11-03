@@ -78,15 +78,28 @@ extern "C" {
    (host-built textured quad) — bumped because scripts compiled against
    the newer header call a host function slot that does not exist in an
    older host (the struct grew), so an old host must refuse the module
-   instead of reading past it. */
-#define MTR_NATIVE_ABI_VERSION 11
+   instead of reading past it.
+   ABI 12 adds the PSD (platform screen door) script kind: the new
+   MTR_RESOURCE_PSD resource id plus the JcmPsdSnapshot /
+   JcmPsdArrival / JcmPsdRoute / JcmPsdDoor snapshot layouts (see the
+   structs below). Purely additive — every pre-existing struct, the
+   record formats and the host-services table are byte-identical to
+   ABI 11 — but the bump keeps the invariant that a module compiled
+   against a header a given host predates is refused instead of
+   half-driven: an ABI 12 host loads ABI 6–12 modules, an ABI 11 host
+   refuses ABI 12 modules (they would only ever see their "psd" script
+   type go undriven). */
+#define MTR_NATIVE_ABI_VERSION 12
 
 /* Resource kinds, identical to JCM script contexts. */
 enum MtrResourceKind {
     MTR_RESOURCE_VEHICLE  = 0,
     MTR_RESOURCE_PIDS     = 1,
     MTR_RESOURCE_EYECANDY = 2,
-    MTR_RESOURCE_LIFT     = 3
+    MTR_RESOURCE_LIFT     = 3,
+    /* ABI 12: platform screen door glass / top-panel scripts, driven by
+       the JCM "屏蔽门脚本编辑器" (PSD Script Editor) item binding. */
+    MTR_RESOURCE_PSD      = 4
 };
 
 /* ------------------------------------------------------------------ */
@@ -446,6 +459,99 @@ typedef struct JcmPidsSnapshot {
     int32_t  string_pool_len;
 } JcmPidsSnapshot;
 
+/* ------------------------------------------------------------------ */
+/* ABI 12: PSD (platform screen door) snapshots                        */
+/*                                                                     */
+/* Drives the psdScripts entries of mtr_custom_resources.json — the    */
+/* same offset convention as every other snapshot: all *_offset        */
+/* fields are byte offsets relative to the START of the snapshot blob  */
+/* (the pointer passed as JcmFrameInput.snapshot).                     */
+/* ------------------------------------------------------------------ */
+
+/* One arrival at the PSD's platform, mirroring the JS PSD arrival
+   wrapper: everything JcmArrival carries, plus the door units of this
+   wall run that will open for the train. door_offset points at an
+   int32[] of 1-based unit numbers (see JcmPsdDoor.number). */
+typedef struct JcmPsdArrival {
+    JcmArrival arrival;         /* 96 bytes, identical to the PIDS pool */
+    int32_t  door_count;        /* number of door units that will open */
+    int32_t  door_offset;       /* int32[] into the snapshot blob */
+} JcmPsdArrival;
+
+/* One route calling at the PSD's platform: identity plus its stop
+   list. Stops reuse the vehicle JcmStop layout (name, destination,
+   custom destination, interchanges, exits, circular state), so a PSD
+   script can draw a full interchange-rich route strip. dataFetchMode
+   SKIP marshals route identity with stop_count == 0. */
+typedef struct JcmPsdRoute {
+    int64_t  route_id;
+    int32_t  route_color;         /* ARGB */
+    uint8_t  circular_state;      /* 0 none, 1 clockwise, 2 anticlockwise */
+    uint8_t  _pad0[3];
+    int32_t  name_offset;         /* UTF-8 into string pool */
+    int32_t  name_len;
+    int32_t  number_offset;       /* route number, may be empty */
+    int32_t  number_len;
+    int32_t  type_offset;         /* canonical transport type id ("train",
+                                     "train_metro", ...) into string pool */
+    int32_t  type_len;
+    int32_t  stop_count;          /* JcmStop[] at stop_offset */
+    int32_t  stop_offset;
+} JcmPsdRoute;
+
+/* One door unit of the bound PSD wall run. A unit is the sliding panel
+   group of adjacent psd_door blocks (a LEFT+RIGHT pair, or
+   LEFT+CENTER+RIGHT for the 3-block style); pos is the lower-half
+   block of the unit's first door block, number is the 1-based index
+   counted from the start of the wall run in facing.rotateYClockwise()
+   direction. */
+typedef struct JcmPsdDoor {
+    int64_t  pos[3];
+    int32_t  number;              /* 1-based along the wall */
+    uint8_t  open;                /* current state: any panel door value > 0 */
+    uint8_t  locked;              /* 1 = door locked (UNLOCKED property off) */
+    uint8_t  _pad0[2];
+} JcmPsdDoor;
+
+/* Mirrors the JS PSDWrapper (com.lx862.jcm.mod.scripting.psd.PSDWrapper):
+   the bound glass or top block, its platform, the door units of its wall
+   run, arrivals with door-open predictions, and the routes calling at
+   the platform. */
+typedef struct JcmPsdSnapshot {
+    int64_t  block_pos[3];        /* the bound block (glass: lower half) */
+    int64_t  platform_id;         /* 0 = no platform within range */
+    int64_t  station_id;          /* 0 = none */
+    int64_t  game_time_millis;    /* host wall clock, offset-corrected */
+    int64_t  in_game_time;        /* 0..24000 ticks */
+    double   door_value;          /* current 0..1, max over the wall doors */
+    int32_t  psd_type;            /* 0 = glass, 1 = top */
+    int32_t  width;               /* canvas in PIDS pixels (1.0 = 16 px) */
+    int32_t  height;
+    int32_t  door_count;          /* JcmPsdDoor[] */
+    int32_t  door_offset;
+    int32_t  arrival_count;       /* JcmPsdArrival[] */
+    int32_t  arrival_offset;
+    int32_t  route_count;         /* JcmPsdRoute[] */
+    int32_t  route_offset;
+    int32_t  platform_number_offset; /* UTF-8 into string pool, "" = none */
+    int32_t  platform_number_len;
+    int32_t  platform_name_offset;
+    int32_t  platform_name_len;
+    int32_t  string_pool_offset;
+    int32_t  string_pool_len;
+    int32_t  _pad0;
+} JcmPsdSnapshot;
+
+#ifdef __cplusplus
+/* Layout guards: the Java writer (NativeContentSnapshot.psd) hard-codes
+   these offsets/sizes — a struct edit without a matching Java edit is a
+   silent data-corruption bug, so pin them here at compile time. */
+static_assert(sizeof(JcmPsdArrival) == 104, "JcmPsdArrival layout changed");
+static_assert(sizeof(JcmPsdRoute)   == 48,  "JcmPsdRoute layout changed");
+static_assert(sizeof(JcmPsdDoor)    == 32,  "JcmPsdDoor layout changed");
+static_assert(sizeof(JcmPsdSnapshot) == 128, "JcmPsdSnapshot layout changed");
+#endif
+
 typedef struct JcmLiftFloor {
     int32_t index;
     uint8_t current_floor, target_floor;
@@ -640,7 +746,7 @@ struct JcmHostServices {
 /* Returns MTR_NATIVE_ABI_VERSION. Host refuses mismatches. */
 MTR_NATIVE_EXPORT uint32_t mtrNativeAbiVersion(void);
 
-/* "vehicle" | "pids" | "eyecandy". */
+/* "vehicle" | "pids" | "eyecandy" | "lift" | "psd" (ABI 12). */
 MTR_NATIVE_EXPORT const char* mtrScriptType(void);
 
 /* Script id, e.g. "example:vehicle_status". Must match mtr_custom_resources.json. */

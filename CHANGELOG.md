@@ -1,5 +1,16 @@
 # 更新日志 / Changelog
 
+## Unreleased（未发布）
+
+- **新特性：屏蔽门脚本（PSD Scripts）——屏蔽门玻璃与顶部面板的 JS + C++ 脚本化**：
+  - `mtr_custom_resources.json` 新增 `psdScripts` 类别，形式同 `vehicleScripts`（`id` / `scriptLocations`（JS 与 C++ 混排、逐条目语言判定）/ `prependExpressions` / `input` / `rateLimit` / `dataFetchMode`），新增 `"type"` 设置项（`"glass"` / `"top"`）选择绑定表面。
+  - 新物品 **屏蔽门脚本编辑器**（与 MTR「刷」同一创造分类）：对任意屏蔽门玻璃（含端部玻璃 / APG 半高闸门玻璃；MTR、天津地铁等一切基于 MTR PSD 类的模组）或屏蔽门顶部面板右键，弹出选择界面，可绑定该类型的 `psdScripts` 条目**或任一脚本化 PIDS 预设**（PIDS 脚本经无方块实体构造的合成 `PIDSWrapper` 原样运行，画布自动适配 PSD 表面）；「无脚本」解除绑定。
+  - 绑定保存在服务端（`<世界>/mtr/<维度>/psd-scripts/bindings.json`，沿用门向系统的存储约定），进世界 / 换维度自动请求同步，任何玩家改动即时广播给同维度玩家；绑定请求以「手持编辑器物品」为服务端权限校验，方块类型与绑定表面服务端复核。
+  - 渲染：玻璃变为**不透明白色**并叠加脚本控制的动态贴图（正反两面、背面镜像，APG 上半自动按 9px 高度适配）；顶部面板**不再显示**原有箭头 / 线路图，内容完全由脚本控制。渲染走 MTR 自身的 `MainRenderer` 队列（`RenderRouteBaseMixin` 取消原内容、`MainRendererPSDMixin` 驱动脚本面），Shader 阴影 pass 仅回放上一帧捕获（不执行脚本、不驱动 C++）。
+  - 脚本 API（JS `psd` 参数 / C++ `mtr::Psd`，绘制与 PIDS 完全同构）：站台（编号 / 名称 / 车站 / 停站时间）、经停线路全量信息（名称 / 编号 / 颜色 / 环线 / 交通类型）、每条线路完整车站列表（`dataFetchMode: ALL`；站名 / 到站显示 / 自定义到站 / 换乘线路 / 车站出口）、即将到达列车（终点站 / 线路 / 车厢数 / 倒计时 / 实时 / 终到 / **将开启的屏蔽门编号 `doorNumbers()`**——停站中读实际门状态、未到站按「列车居中停站 + 按车辆资源逐卡累加车长」预测）、门单元列表与实时开门 / 上锁状态。
+  - C++ 第五类脚本基类 `mtr::PsdScript<State>`（`MTR_REGISTER_PSD_SCRIPT`），与车辆 C++ API 同款每帧数据快照（`JcmPsdSnapshot` / `JcmPsdArrival` / `JcmPsdRoute` / `JcmPsdDoor`，**ABI 12**，纯增量——既有结构零变化，ABI 6–11 旧模块全部继续可载）；`native_abi_layout` 布局探针补齐 PSD 全部尺寸 / 偏移输出，`mtr_native.h` 增加编译期 `static_assert` 布局钉死，示例模块 `examples/psd_glass.cpp`。
+  - 门单元语义：一面连续屏蔽门墙内的滑动门组（2 块 LEFT+RIGHT 或 3 块奇数门）按墙体方向从 1 编号；墙体走查带 TTL 缓存，开门状态逐帧直读门方块实体。
+
 ## 2.3.0-prerelease.2-yanyang.1
 
 - **修复（脚本化 PIDS 文字乱飘 / eyecandy 位移）**：yanyang.8 的 `TransformCapturePool` 在把 base 变换快照进回收实例时只复制了 consumer 列表，**丢失了 MTR 4 参构造器承载的世界锚点**（`useDefaultOffset` + `initialTranslateX/Y/Z`）。锚点是 flush 时 `translate(initialTranslate - offset)` 相机补偿的唯一通道——丢失后脚本化 PIDS 文字渲染在渲染实体（相机）位置而非方块处，随玩家移动满处乱飘、视距近导致大小异常（`jsblock:pids_1a` 报告）。修复：`acquire()` 现按上游 `copy()` 的字段语义重新播种锚点（mixin `@Mutable` 写入，保持零稳态分配）。同因修复 eyecandy 变换缓存：缓存实例此前把世界坐标塞进 consumer（不参与相机补偿，几何体被平移渲染实体位置），现改用 MTR 自身 `RenderEyeCandy` 的 4 参锚点构造 + 仅本地变换 consumer。回归测试补齐 stub 的真实 MTR 语义（条件锚点平移）并新增 S6/S7 场景（锚点存活 + 回收实例逐帧重锚定），红绿验证：旧池代码精确触发 S6 断言失败。

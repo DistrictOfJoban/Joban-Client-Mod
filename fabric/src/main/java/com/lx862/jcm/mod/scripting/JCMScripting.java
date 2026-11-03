@@ -26,6 +26,7 @@ public class JCMScripting {
         scriptManager.getClassShutter().setEnabled(!JCMClientConfig.INSTANCE.scripting.disableScriptRestrictions.value());
         scriptManager.getClassShutter().allowClass(ClassRule.parse("org.mtr.*"));
         scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.jcm.mod.scripting.pids.*"));
+        scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.jcm.mod.scripting.psd.*"));
         scriptManager.getClassShutter().allowClass(ClassRule.parse("com.lx862.mtrscripting.mod.impl.mtr.*"));
 
         scriptManager.parseScriptEvent.register((contextName, parsedScript) -> {
@@ -33,7 +34,7 @@ public class JCMScripting {
             parsedScript.exposeClass("MTR", MTRWrapper.class);
             parsedScript.exposeClass("TextUtil", TextUtilJS.class);
 
-            if (contextName.equals("pids")) {
+            if (contextName.equals("pids") || contextName.equals("psd")) {
                 parsedScript.exposeClass("Text", TextWrapper.class);
                 parsedScript.exposeClass("Texture", TextureWrapper.class);
                 parsedScript.exposeClass("Rect", RectangleWrapper.class);

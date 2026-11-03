@@ -181,5 +181,11 @@
     "gui.jsblock.enquiry_screen.balance": "剩餘金額: %s",
     "gui.jsblock.enquiry_screen.points": "港鐵積分: %s",
     "gui.jsblock.rvenquiry_screen.balance": "餘額",
-    "gui.jsblock.keybinds.script_debug_reload": "重新載入腳本快捷鍵"
+    "gui.jsblock.keybinds.script_debug_reload": "重新載入腳本快捷鍵",
+    "item.jsblock.psd_script_editor": "屏蔽門腳本編輯器",
+    "gui.jsblock.psd_script.title": "屏蔽門腳本",
+    "gui.jsblock.psd_script.subtitle": "選擇要綁定到該%s的腳本",
+    "gui.jsblock.psd_script.none": "無腳本（移除綁定）",
+    "gui.jsblock.psd_script.surface.glass": "屏蔽門玻璃",
+    "gui.jsblock.psd_script.surface.top": "屏蔽門頂部面板"
 }

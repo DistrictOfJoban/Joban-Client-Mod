@@ -13,6 +13,8 @@
     "mtrscripting.EyecandyScreenMixin",
     "mtrscripting.LegacyVehicleResourceSchemaMixin",
     "mtrscripting.MainRendererMixin",
+    "mtrscripting.MainRendererPSDMixin",
+    "mtrscripting.RenderRouteBaseMixin",
     "mtrscripting.ModelPropertiesPartMixin",
     "mtrscripting.NativeImageAccessor",
     "mtrscripting.ObjModelAccessor",

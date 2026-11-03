@@ -13,7 +13,9 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mod.InitClient;
 
 public class PIDSWrapper {
-    private final PIDSBlockEntity be;
+    private final boolean[] rowHidden;
+    private final String[] customMessages;
+    private final boolean keyBlock;
     private final ArrivalsWrapper arrivalsWrapper;
     private final LongImmutableList targetPlatformIds;
 
@@ -28,17 +30,34 @@ public class PIDSWrapper {
 
     @ApiInternal
     public PIDSWrapper(PIDSBlockEntity be, LongImmutableList targetPlatformIds, ObjectArrayList<ArrivalResponse> arrivalsResponse, int width, int height) {
-        this.be = be;
-        this.type = be.getPIDSType();
+        this(
+                be.getPIDSType(), be.getRowAmount(), be.getPos2(), targetPlatformIds, arrivalsResponse, width, height,
+                be.platformNumberHidden(), be.getPlatformIds().isEmpty(), be.isKeyBlock(), be.getRowHidden(), be.getCustomMessages()
+        );
+        /* The BE-derived constructor keeps its own reference so future getters
+           added against `be` still work for real PIDS blocks. */
+    }
+
+    /**
+     * Yanyang/PSD: BE-less constructor — used when a scripted PIDS preset is
+     * bound to a platform screen door glass/top panel, where no
+     * {@link PIDSBlockEntity} exists. The synthesized wrapper presents a
+     * neutral PIDS identity (no custom messages, no hidden rows, no key
+     * block) with the PSD's own canvas size and platform/arrival data.
+     */
+    @ApiInternal
+    public PIDSWrapper(String type, int rows, BlockPos blockPos, LongImmutableList targetPlatformIds, ObjectArrayList<ArrivalResponse> arrivalsResponse, int width, int height, boolean platformNumberHidden, boolean platformAutoDetected, boolean keyBlock, boolean[] rowHidden, String[] customMessages) {
+        this.type = type;
         this.width = width;
         this.height = height;
-        this.rows = be.getRowAmount();
+        this.rows = rows;
         this.targetPlatformIds = targetPlatformIds;
-
-        this.blockPos = be.getPos2();
-        this.isPlatformNumberHidden = be.platformNumberHidden();
-        this.isAutoDetectPlatform = be.getPlatformIds().isEmpty();
-
+        this.blockPos = blockPos;
+        this.isPlatformNumberHidden = platformNumberHidden;
+        this.isAutoDetectPlatform = platformAutoDetected;
+        this.keyBlock = keyBlock;
+        this.rowHidden = rowHidden;
+        this.customMessages = customMessages;
         this.arrivalsWrapper = new ArrivalsWrapper(arrivalsResponse);
     }
 
@@ -51,11 +70,10 @@ public class PIDSWrapper {
     }
 
     public boolean isKeyBlock() {
-        return be.isKeyBlock();
+        return this.keyBlock;
     }
 
     public boolean isRowHidden(int i) {
-        boolean[] rowHidden = be.getRowHidden();
         if(i >= rowHidden.length) {
             return false;
         } else {
@@ -64,7 +82,6 @@ public class PIDSWrapper {
     }
 
     public @ValueNullable String getCustomMessage(int i) {
-        String[] customMessages = be.getCustomMessages();
         return i >= customMessages.length ? null : customMessages[i];
     }
 

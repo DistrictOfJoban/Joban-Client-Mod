@@ -120,12 +120,19 @@ public final class NativeScriptManager {
        extension). The byte already existed (zero-filled) in every ABI≤10
        layout and older modules never read it, so the snapshot layout and
        the group-9 blob sharing are unchanged; the bump only keeps ABI 11
-       modules away from ABI 10 hosts that would feed them a constant 0. */
-    private static final int ABI_VERSION = 11;
+       modules away from ABI 10 hosts that would feed them a constant 0.
+       v12 adds the PSD script kind (MTR_RESOURCE_PSD = 4) plus the
+       JcmPsdSnapshot / JcmPsdArrival / JcmPsdRoute / JcmPsdDoor snapshot
+       layouts — purely additive, every pre-existing struct is byte-identical
+       to ABI 11. An ABI 12 host still serves ABI 6–11 modules; an ABI 12
+       module is refused by an ABI 11 host (its "psd" type would otherwise
+       never be driven). */
+    private static final int ABI_VERSION = 12;
 
     private static boolean supportedAbi(int version) {
-        /* 10 is kept explicit: the previous host's own version, still loadable. */
-        return version == 6 || version == 7 || version == 8 || version == 9 || version == 10 || version == ABI_VERSION;
+        /* Contiguous 6..current: 6, 7, 8, 9, 10 and 11 are all explicitly
+           loadable by this host, same as their own hosts did. */
+        return (version >= 6 && version <= 11) || version == ABI_VERSION;
     }
 
     /* Route.CircularState mapping (v2 snapshots). */
@@ -815,6 +822,7 @@ public final class NativeScriptManager {
             case MTR_RESOURCE_PIDS: return "pids";
             case MTR_RESOURCE_EYECANDY: return "eyecandy";
             case MTR_RESOURCE_LIFT: return "lift";
+            case MTR_RESOURCE_PSD: return "psd";
             default: throw new IllegalArgumentException("Unknown native script kind " + kind);
         }
     }
@@ -941,6 +949,8 @@ public final class NativeScriptManager {
     public static final int MTR_RESOURCE_PIDS = 1;
     public static final int MTR_RESOURCE_EYECANDY = 2;
     public static final int MTR_RESOURCE_LIFT = 3;
+    /* ABI 12: platform screen door glass / top-panel scripts. */
+    public static final int MTR_RESOURCE_PSD = 4;
 
     /* ------------------------------------------------------------------ */
     /* shared sweep tuning (NativeVehicleDriver / NativeContentDriver)    */
