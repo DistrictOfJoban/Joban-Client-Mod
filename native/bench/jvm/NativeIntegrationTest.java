@@ -123,7 +123,7 @@ public class NativeIntegrationTest {
   NativeScriptManager.reload();
   check(second.marks.equals(List.of("create","render","render","render","render","dispose")),"reload disposes each instance with live APIs");
   check(!NativeScriptManager.isLoaded("test:probe"),"reload unloads module");
-  for(int kind=1;kind<=3;kind++) {
+  for(int kind=1;kind<=4;kind++) {
    String id="test:content"+kind;
    module=NativeScriptManager.loadFromDeclaration(id,new JsonPrimitive("test:"+prefix+"content_probe_"+kind+ext));
    check(module!=null,"load content script "+kind);
@@ -136,6 +136,19 @@ public class NativeIntegrationTest {
    } else if(kind==2) {
     var eye=new com.lx862.mtrscripting.mod.impl.mtr.eyecandy.EyecandyBlockEntityWrapper();wrapper=eye;NativeContentSnapshot.eyecandy(data,eye,true);
     check(data.get(65)==5&&data.getFloat(56)==0.2f,"Eyecandy facing and rotation");
+   } else if(kind==4) {
+    var psd=new com.lx862.jcm.mod.scripting.psd.PSDWrapper();wrapper=psd;NativeContentSnapshot.psd(data,psd);
+    check(data.getLong(24)==9223372036854775000L&&data.getLong(32)==9223372036854775000L,"PSD platform and station");
+    check(data.getDouble(56)==0.5&&data.getInt(64)==0,"PSD door value and glass type");
+    check(data.getInt(68)==96&&data.getInt(72)==150,"PSD canvas size");
+    check(data.getInt(76)==2&&data.getInt(92)==1,"PSD door and route counts");
+    check(data.getInt(84)==1,"PSD arrival count");
+    int arrivalOffset=data.getInt(88);
+    check(data.getInt(arrivalOffset+96)==2,"PSD arrival door count");
+    int doorOffset=data.getInt(arrivalOffset+100);
+    check(data.getInt(doorOffset)==1&&data.getInt(doorOffset+4)==3,"PSD arrival door numbers");
+    int routeOffset=data.getInt(96);
+    check(data.getInt(routeOffset+40)==2,"PSD route stop count");
    } else {
     var lift=new com.lx862.mtrscripting.mod.impl.mtr.lift.LiftWrapper();wrapper=lift;NativeContentSnapshot.lift(data,lift);
     check(data.getDouble(48)==4&&data.getLong(0)==9223372036854775000L,"Lift offset and ID");

@@ -1,9 +1,51 @@
 """Deterministic fixtures used with the production non-vehicle snapshot writer."""
 STUBS = {
- 'com/lx862/mtrscripting/core/util/ScriptVector3f.java': 'package com.lx862.mtrscripting.core.util; public record ScriptVector3f(float x,float y,float z){}',
+ 'com/lx862/mtrscripting/core/util/ScriptVector3f.java': 'package com.lx862.mtrscripting.core.util; public record ScriptVector3f(float x,float y,float z){public org.mtr.mapping.holder.BlockPos rawBlockPos(){return new org.mtr.mapping.holder.BlockPos((int)x,(int)y,(int)z);}}',
+ 'org/mtr/mapping/holder/BlockPos.java': 'package org.mtr.mapping.holder; public class BlockPos {final int x,y,z; public BlockPos(int x,int y,int z){this.x=x;this.y=y;this.z=z;} public int getX(){return x;} public int getY(){return y;} public int getZ(){return z;}}',
  'org/mtr/mapping/holder/MinecraftClient.java': 'package org.mtr.mapping.holder; public class MinecraftClient {public static MinecraftClient getInstance(){return new MinecraftClient();} public Object getWorldMapped(){return this;}}',
  'com/lx862/mtrscripting/core/integration/MinecraftClientWrapper.java': 'package com.lx862.mtrscripting.core.integration; public class MinecraftClientWrapper {public static long worldDayTime(){return 12000;}}',
  'org/mtr/core/data/Station.java': 'package org.mtr.core.data; public class Station {public long getId(){return 9223372036854775000L;}}',
+ 'org/mtr/core/data/Platform.java': 'package org.mtr.core.data; public class Platform {public final Station area=new Station(); public long getId(){return 9223372036854775000L;} public String getName(){return "1";} public String getStationName(){return "测试车站";} public long getDwellTime(){return 15000;}}',
+ 'com/lx862/jcm/mod/scripting/psd/PSDWallScanner.java': '''package com.lx862.jcm.mod.scripting.psd;
+ public class PSDWallScanner {public static class WallRun {public double doorValue=0.5;}}''',
+ 'com/lx862/jcm/mod/scripting/psd/PSDWrapper.java': '''package com.lx862.jcm.mod.scripting.psd;
+ import java.util.*; import com.lx862.mtrscripting.core.util.ScriptVector3f;
+ public class PSDWrapper {
+  public enum PSDType {GLASS, TOP}
+  public enum DataFetchMode {SKIP, MANDATORY, ALL}
+  public enum Circular {NONE,CLOCKWISE,ANTICLOCKWISE}
+  public enum TM {TRAIN}
+  public final PSDType type=PSDType.GLASS; public final int width=96, height=150;
+  public ScriptVector3f blockPos(){return new ScriptVector3f(1,2,3);}
+  public org.mtr.core.data.Platform platformData(){return new org.mtr.core.data.Platform();}
+  public PSDWallScanner.WallRun wallRun(){return new PSDWallScanner.WallRun();}
+  public List<PSDDoorWrapper> doors(){return List.of(new PSDDoorWrapper(1,true,false),new PSDDoorWrapper(3,false,true));}
+  public List<PSDArrivalWrapper> arrivalList(){return List.of(new PSDArrivalWrapper());}
+  public List<PSDRouteWrapper> routes(){return List.of(new PSDRouteWrapper());}
+  public static class PSDDoorWrapper {final int n; final boolean open,locked; PSDDoorWrapper(int n,boolean open,boolean locked){this.n=n;this.open=open;this.locked=locked;}
+   public int number(){return n;} public boolean isOpen(){return open;} public boolean isLocked(){return locked;}
+   public ScriptVector3f pos(){return new ScriptVector3f(1,2,3);}}
+  public static class PSDArrivalWrapper extends com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalWrapper {
+   public List<Integer> doorNumbers(){return List.of(1,3);}}
+  public static class PSDRouteWrapper {
+   public long id(){return 9223372036854775000L;} public int color(){return 0x00A870;}
+   public Circular circularState(){return Circular.CLOCKWISE;} public String name(){return "测试线路";}
+   public String routeNumber(){return "A1";} public String getTransportType(){return "train";}
+   public List<PSDStopWrapper> stops(){return List.of(new PSDStopWrapper("车站甲","测试终点",true),new PSDStopWrapper("车站乙","测试终点",false));}}
+  public static class PSDStopWrapper {public final String name,destinationName;
+   PSDStopWrapper(String name,String dest,boolean withInterchange){this.name=name;this.destinationName=dest;this.withInterchange=withInterchange;}
+   final boolean withInterchange;
+   public String customDestination(){return null;}
+   public org.mtr.core.data.Station station(){return new org.mtr.core.data.Station();}
+   public org.mtr.core.data.Platform platform(){return new org.mtr.core.data.Platform();}
+   public List<PSDInterchangeWrapper> interchanges(){return withInterchange?List.of(new PSDInterchangeWrapper()):List.of();}
+   public List<PSDExitWrapper> exits(){return withInterchange?List.of():List.of(new PSDExitWrapper());}}
+  public static class PSDInterchangeWrapper {
+   public long routeId(){return 42;} public int color(){return 0xFC9700;} public String name(){return "换乘线";}
+   public TM transportMode(){return TM.TRAIN;} public String getTransportType(){return "train_metro";}}
+  public static class PSDExitWrapper {
+   public String name(){return "A";} public List<String> destinations(){return List.of("出口目的地");}}
+ }''',
  'com/lx862/jcm/mod/scripting/pids/PIDSWrapper.java': '''package com.lx862.jcm.mod.scripting.pids;
  import java.util.*; import com.lx862.mtrscripting.core.util.ScriptVector3f;
  public class PIDSWrapper {
