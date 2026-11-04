@@ -2,6 +2,7 @@
 
 ## Unreleased（未发布）
 
+- **修复（MTR-Yanyang 兼容）：启动即崩溃**（实机报告 2026-11-04）：`2.3.0-prerelease.3-yanyang.1` 新引入的 `CachedResource` 内存泄漏修补 mixin（上游 `MTR Patch: Fix CachedResource memory leak`）`@Shadow` 了官方 MTR 4.0.5 的 `CACHED_RESOURCES` / `canFetchCache` 静态成员，而晏阳服务器实装的 **MTR-Yanyang** 定制构建携带旧版 `CachedResource` 布局（无这些成员），mixin 在 APPLY 阶段失败并导致客户端启动崩溃（`InvalidMixinException: @Shadow field CACHED_RESOURCES was not located in the target class`；上一发行版 hotfix.2 无此 mixin，故此前正常）。修复：新增 `JcmMixinPlugin`（fabric / forge 双端，`jsblock.mixins.json` 注册）在 mixin 应用前读取目标类**原始字节码**（资源流读取，不经类加载 / mixin 转换）验证 `CACHED_RESOURCES` / `canFetchCache` / `expiry` / `getData` / `tick` 成员齐备——旧布局的 MTR 构建（MTR-Yanyang 等）自动跳过这两个 mixin 并在日志输出说明（仅失去可选的内存泄漏修补，其余功能不受影响），官方 MTR 构建完全不受影响，字节码不可读时按官方布局放行（fail-open）。字节码成员检测经 javac + JVM 集成测试验证（官方 4.0.5±1.20.1/1.20.4 正常应用、旧布局模拟类正确跳过、资源缺失 fail-open）。
 - **新特性：屏蔽门脚本（PSD Scripts）——屏蔽门玻璃与顶部面板的 JS + C++ 脚本化**：
   - `mtr_custom_resources.json` 新增 `psdScripts` 类别，形式同 `vehicleScripts`（`id` / `scriptLocations`（JS 与 C++ 混排、逐条目语言判定）/ `prependExpressions` / `input` / `rateLimit` / `dataFetchMode`），新增 `"type"` 设置项（`"glass"` / `"top"`）选择绑定表面。
   - 新物品 **屏蔽门脚本编辑器**（与 MTR「刷」同一创造分类）：对任意屏蔽门玻璃（含端部玻璃 / APG 半高闸门玻璃；MTR、天津地铁等一切基于 MTR PSD 类的模组）或屏蔽门顶部面板右键，弹出选择界面，可绑定该类型的 `psdScripts` 条目**或任一脚本化 PIDS 预设**（PIDS 脚本经无方块实体构造的合成 `PIDSWrapper` 原样运行，画布自动适配 PSD 表面）；「无脚本」解除绑定。

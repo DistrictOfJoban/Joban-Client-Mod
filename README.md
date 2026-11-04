@@ -18,6 +18,7 @@
 > [!IMPORTANT]
 > - 本分支与原版 Joban Client Mod 使用同一 mod id（`jsblock`），**二者互斥，只能安装其一**。
 > - 分支持续跟踪整合原版 JCM 的每个版本（当前基线：[2.3.0-prerelease.3](https://github.com/DistrictOfJoban/Joban-Client-Mod)），并保持向后兼容：原版 JCM 资源包、`language: "cpp"` 老格式资源包均无需修改即可继续使用。
+> - 兼容官方 MTR 与晏阳服务器定制 MTR 构建（MTR-Yanyang）：对 MTR 内部类布局的修补 mixin 均带运行时结构检测，所用 MTR 构建缺少对应成员时自动跳过该修补并在日志说明（仅失去对应优化，其余功能不受影响），不会在启动时崩溃。
 > - C++ 脚本开发文档：**[网页版开发文档](https://bugquantumcore.github.io/Joban-Client-Mod-Yanyang/)**（7 种语言）· [native/README.md](native/README.md)；完整修改历史见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## ✨ 核心特性
@@ -87,7 +88,7 @@ Java ↔ C++ 之间完全不经 JNI：JDK 16–21 使用共享内存 poller 平�
 | 项目 | 要求 |
 | --- | --- |
 | Minecraft | 1.17.1 – 1.20.4（Fabric / Forge） |
-| 前置模组 | [Minecraft Transit Railway](https://modrinth.com/mod/minecraft-transit-railway) 4.0.5+（必需）；Fabric 端另需 Fabric API |
+| 前置模组 | [Minecraft Transit Railway](https://modrinth.com/mod/minecraft-transit-railway) 4.0.5+（必需；官方构建或 MTR-Yanyang 等定制构建均可）；Fabric 端另需 Fabric API |
 | Java | 16 及以上（22+ 自动启用全程零 JNI 的 FFM 平面） |
 | 与原版 JCM | **互斥**（同一 mod id，二选一，不能共存） |
 
@@ -252,7 +253,7 @@ ctest --test-dir native/build -C Release --output-on-failure
 
 | 版本 | 主题 |
 | --- | --- |
-| `2.3.0-prerelease.3-yanyang.1` | 同步上游 v2.3.0-prerelease.3；PSD 玻璃背面改纯白；新增 psd.stop() 车站信息 API（JS + C++ ABI 13） |
+| `2.3.0-prerelease.3-yanyang.1` | 同步上游 v2.3.0-prerelease.3；PSD 玻璃背面改纯白；新增 psd.stop() 车站信息 API（JS + C++ ABI 13）；修复 MTR-Yanyang 定制构建启动崩溃（mixin 结构检测，官方 MTR 不受影响） |
 | `prerelease.2-yanyang.1-hotfix.2` | 原生层两轮人工审查修复首次发布（8 + 3 项）：直接调用模式内存安全（arena 偏移 / 记录长度校验）、每帧 re-attach 泄漏扩容像素 arena、重载代际模块堆内存治理（`mtrCleanup`）、字符串缓存满后插入不可找回（改 16×8 固定分组）、同库多句柄共享锁 + 末句柄清理、空字符串中断 PIDS 帧、阴影阶段重复执行、无原生脚本车辆缓存淘汰、变换池回收滞留 |
 | `prerelease.2-yanyang.1-hotfix.1` | 热修：MTR 4 原生路线类别（高铁 / 轻轨）流入换乘类型链，原版高铁、轻轨线路正确从车侧线路图去除；Axiom 区块批量编辑纳入开门方向重扫；iOS 交叉编译腿回归 macos-latest（arm）runner |
 | `prerelease.2-yanyang.1` | 上游 v2.3.0-prerelease.2 全量同步（61 提交：脚本限流 / 防死循环、脚本核心解耦、BVE 声音卡死与 Iris / OptiFine 阴影修复等）；脚本化 PIDS 文字乱飘修复（世界锚点）；C++ SDK 与上游 API 面同步（Rect / fullAA / StateTracker 等） |
