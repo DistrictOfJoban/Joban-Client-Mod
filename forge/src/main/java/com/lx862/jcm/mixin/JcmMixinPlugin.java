@@ -17,23 +17,34 @@ import java.util.Set;
  *
  * <p>Motivation: upstream JCM 2.3.0-prerelease.3 added
  * {@code mtrpatch.CachedResourceMixin} (memory-leak fix) which
- * {@code @Shadow}s {@code CACHED_RESOURCES} / {@code canFetchCache} and
- * injects into {@code getData} / {@code tick} of
- * {@code org.mtr.mod.resource.CachedResource}. Custom MTR distributions
- * (e.g. the MTR-Yanyang server build) ship an older CachedResource
- * layout without those members, which makes the mixin fail during APPLY
- * and hard-crashes the client at startup
+ * {@code @Shadow}s {@code CACHED_RESOURCES} /
+ * {@code canFetchCache} and injects into {@code getData} /
+ * {@code tick} of {@code org.mtr.mod.resource.CachedResource}.
+ * {@code @Shadow} matching requires the field <b>descriptor</b> to
+ * match, not just the name: official MTR 4.0.x declares
+ * {@code ObjectArrayList<CachedResource<?>> CACHED_RESOURCES}, while
+ * some custom MTR distributions (e.g. older MTR-Yanyang builds) ship a
+ * {@code Set}-backed rewrite. The mixin then fails during APPLY and
+ * hard-crashes the client at startup
  * ({@code InvalidMixinException: @Shadow field CACHED_RESOURCES was not
  * located in the target class}).</p>
  *
  * <p>This plugin inspects the raw (un-transformed) target class bytes
  * before the mixin is applied and skips the guarded mixins when the
- * expected members are missing. Skipping only loses the optional
- * memory-leak patch — the game stays fully playable. When the class
- * cannot be inspected the plugin fails open (keeps upstream behavior),
- * so official MTR builds are completely unaffected.</p>
+ * expected members are missing or the {@code CACHED_RESOURCES} field
+ * descriptor is not the official
+ * {@code Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArrayList;}
+ * — i.e. an {@code ObjectArrayList} from MTR's shaded fastutil. Skipping
+ * only loses the optional memory-leak patch — the game stays fully
+ * playable. When the class bytes cannot be read at all the plugin fails
+ * open (keeps upstream behavior), so official MTR builds are completely
+ * unaffected.</p>
  */
 public class JcmMixinPlugin implements IMixinConfigPlugin {
+
+    /** Descriptor of CachedResource.CACHED_RESOURCES on official MTR 4.0.x. */
+    private static final String CACHED_RESOURCES_FIELD_NAME = "CACHED_RESOURCES";
+    private static final String CACHED_RESOURCES_FIELD_DESC = "Lorg/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArrayList;";
 
     /** Result of the CachedResource layout probe, cached across calls. */
     private Boolean cachedResourceModern;
@@ -102,33 +113,45 @@ public class JcmMixinPlugin implements IMixinConfigPlugin {
             // be visible in latest.log no matter what.
             System.err.println("[JCM] Skipped " + shortName(mixinClassName)
                     + " on " + targetClassName
-                    + ": this MTR build does not ship the modern CachedResource layout"
-                    + " (CACHED_RESOURCES/canFetchCache/tick). The upstream CachedResource"
-                    + " memory-leak patch does not apply to this MTR build; everything else"
-                    + " keeps working. (Seen with third-party MTR distributions such as"
-                    + " MTR-Yanyang.)");
+                    + ": this MTR build does not ship the official 4.0.x CachedResource layout"
+                    + " (CACHED_RESOURCES as shaded ObjectArrayList, canFetchCache, getData, tick)."
+                    + " The upstream CachedResource memory-leak patch does not apply to this MTR"
+                    + " build; everything else keeps working. (Seen with third-party MTR"
+                    + " distributions such as older MTR-Yanyang builds.)");
         }
         return cachedResourceModern;
     }
 
     private boolean probeCachedResourceLayout(String targetClassName) {
+        final byte[] classBytes;
         try {
-            final byte[] classBytes = readRawClassBytes(targetClassName);
-            if (classBytes == null) {
-                System.err.println("[JCM] Could not read " + targetClassName
-                        + " bytecode before mixin apply; assuming official MTR layout.");
-                return true; // fail open — official MTR path
-            }
-            return hasUtf8Constant(classBytes, "CACHED_RESOURCES")
-                    && hasUtf8Constant(classBytes, "canFetchCache")
-                    && hasUtf8Constant(classBytes, "expiry")
-                    && hasUtf8Constant(classBytes, "getData")
-                    && hasUtf8Constant(classBytes, "tick");
+            classBytes = readRawClassBytes(targetClassName);
         } catch (Throwable t) {
             System.err.println("[JCM] CachedResource layout probe failed (" + t
                     + "); assuming official MTR layout.");
             return true; // fail open — official MTR path
         }
+        if (classBytes == null) {
+            System.err.println("[JCM] Could not read " + targetClassName
+                    + " bytecode before mixin apply; assuming official MTR layout.");
+            return true; // fail open — official MTR path
+        }
+        final boolean namesPresent = hasUtf8Constant(classBytes, CACHED_RESOURCES_FIELD_NAME)
+                && hasUtf8Constant(classBytes, "canFetchCache")
+                && hasUtf8Constant(classBytes, "expiry")
+                && hasUtf8Constant(classBytes, "getData")
+                && hasUtf8Constant(classBytes, "tick");
+        if (!namesPresent) {
+            return false;
+        }
+        // Names alone are not enough: @Shadow also matches the field
+        // descriptor. A Set-backed CACHED_RESOURCES rewrite (MTR-Yanyang
+        // dd51ae10) carries all five member names but a different field
+        // type, which still crashes the mixin APPLY. Parse the real field
+        // table when possible; if the parse is impossible for an exotic
+        // class file, fall back to the name-based verdict.
+        final Boolean descriptorOk = cachedResourcesFieldHasDescriptor(classBytes);
+        return descriptorOk == null ? namesPresent : descriptorOk;
     }
 
     /**
@@ -145,6 +168,91 @@ public class JcmMixinPlugin implements IMixinConfigPlugin {
             }
             return is.readAllBytes();
         }
+    }
+
+    /**
+     * Minimal constant-pool + field-table walk that returns whether the
+     * class declares a field named {@code CACHED_RESOURCES} with the
+     * official ObjectArrayList descriptor. Returns {@code null} when the
+     * class file cannot be parsed (unknown constant pool tag, truncated
+     * data, ...); callers then fall back to the name-based heuristic.
+     */
+    private static Boolean cachedResourcesFieldHasDescriptor(byte[] classBytes) {
+        try {
+            int pos = 8;
+            final int cpCount = u2(classBytes, pos);
+            pos += 2;
+            final String[] utf8 = new String[cpCount];
+            for (int i = 1; i < cpCount; i++) {
+                final int tag = classBytes[pos++] & 0xFF;
+                switch (tag) {
+                    case 1: { // CONSTANT_Utf8
+                        final int len = u2(classBytes, pos);
+                        pos += 2;
+                        utf8[i] = new String(classBytes, pos, len, StandardCharsets.US_ASCII);
+                        pos += len;
+                        break;
+                    }
+                    case 7: case 8: case 16: case 19: case 20: // 2-byte entries
+                        pos += 2;
+                        break;
+                    case 15: // CONSTANT_MethodHandle
+                        pos += 3;
+                        break;
+                    case 3: case 4: case 9: case 10: case 11: case 12: case 17: case 18: // 4-byte entries
+                        pos += 4;
+                        break;
+                    case 5: case 6: // 8-byte entries, take two pool slots
+                        pos += 8;
+                        i++;
+                        break;
+                    default:
+                        return null; // unknown tag — let the caller fall back
+                }
+            }
+            pos += 6; // access_flags, this_class, super_class
+            final int interfaceCount = u2(classBytes, pos);
+            pos += 2 + 2 * interfaceCount;
+            // Per the JVM spec the class-level attribute table comes AFTER the
+            // method table, so the field table starts right here.
+            final int fieldCount = u2(classBytes, pos);
+            pos += 2;
+            for (int i = 0; i < fieldCount; i++) {
+                pos += 2; // access_flags
+                final int nameIdx = u2(classBytes, pos);
+                final int descIdx = u2(classBytes, pos + 2);
+                pos += 4;
+                final String name = nameIdx > 0 && nameIdx < cpCount ? utf8[nameIdx] : null;
+                final String desc = descIdx > 0 && descIdx < cpCount ? utf8[descIdx] : null;
+                if (CACHED_RESOURCES_FIELD_NAME.equals(name)) {
+                    return CACHED_RESOURCES_FIELD_DESC.equals(desc);
+                }
+                pos = skipAttributes(classBytes, pos);
+            }
+            return false; // no CACHED_RESOURCES field at all
+        } catch (Throwable t) {
+            return null; // unreadable structure — fall back to names
+        }
+    }
+
+    /** Skips an attributes table (count already consumed); returns the new offset. */
+    private static int skipAttributes(byte[] classBytes, int pos) {
+        final int count = u2(classBytes, pos);
+        pos += 2;
+        for (int i = 0; i < count; i++) {
+            pos += 2; // attribute_name_index
+            final int len = u4(classBytes, pos);
+            pos += 4 + len;
+        }
+        return pos;
+    }
+
+    private static int u2(byte[] b, int off) {
+        return ((b[off] & 0xFF) << 8) | (b[off + 1] & 0xFF);
+    }
+
+    private static int u4(byte[] b, int off) {
+        return ((b[off] & 0xFF) << 24) | ((b[off + 1] & 0xFF) << 16) | ((b[off + 2] & 0xFF) << 8) | (b[off + 3] & 0xFF);
     }
 
     /**
