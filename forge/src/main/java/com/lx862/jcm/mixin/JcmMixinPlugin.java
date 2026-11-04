@@ -1,6 +1,8 @@
 package com.lx862.jcm.mixin;
 
+import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
+import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,12 +65,26 @@ public class JcmMixinPlugin implements IMixinConfigPlugin {
         return null;
     }
 
-    @Override
-    public void preApply(org.spongepowered.asm.mixin.extensibility.IMixinInfo info) {
+    // No @Override on the apply callbacks on purpose: which of the two
+    // signatures matches the interface depends on the SpongeMixin version
+    // on the compile classpath, and an @Override on the non-matching
+    // overload would fail that build leg. Interface conformance is
+    // structural at runtime, the annotation is not required.
+    public void preApply(IMixinInfo info) {
     }
 
-    @Override
-    public void postApply(org.spongepowered.asm.mixin.extensibility.IMixinInfo info) {
+    public void postApply(IMixinInfo info) {
+    }
+
+    // SpongeMixin < 0.8.5 (the loaders of MC 1.17.1 – 1.19.4) declares the
+    // apply callbacks with four arguments and the un-shaded ASM ClassNode.
+    // Defining them as overloads lets this one class satisfy whichever
+    // interface variant the target loader ships; the unused overload is
+    // never invoked (its empty body never resolves ClassNode at runtime).
+    public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    }
+
+    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
     }
 
     /**
