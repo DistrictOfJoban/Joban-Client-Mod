@@ -123,11 +123,25 @@ public class PSDScriptSelectionScreen extends SavableScreen implements RenderHel
             options.add(new Option(config.id(), config.id(), false, false, 0xFFFC9700));
         }
 
-        final List<PIDSPresetBase> presets = new ArrayList<>(PIDSManager.getCustomPresets());
-        for (PIDSPresetBase preset : presets) {
-            if (preset instanceof ScriptPIDSPreset) {
-                options.add(new Option(preset.getId(), preset.getName(), true, false, 0xFF00A870));
-            }
+        /* Yanyang fix: scripted PIDS presets are bindable to PSD glass/top —
+           the render path (PSDScriptRenderer) resolves any preset id through
+           PIDSManager.getPreset() with no builtin filter, yet the old list
+           only iterated getCustomPresets(), so the builtin PIDS 1A preset
+           (the scripted preset this mod itself ships) never appeared in the
+           editor and, without a pack-provided scripted preset, the whole
+           PIDS section was empty. Offer builtin scripted presets first, then
+           pack-provided ones — the same grouping PIDSPresetScreen uses.
+           Static image presets (JsonPIDSPreset) can't draw on the PSD canvas
+           and stay filtered out. */
+        final List<PIDSPresetBase> scriptedPresets = new ArrayList<>();
+        for (PIDSPresetBase preset : PIDSManager.getBuiltInPresets()) {
+            if (preset instanceof ScriptPIDSPreset) scriptedPresets.add(preset);
+        }
+        for (PIDSPresetBase preset : PIDSManager.getCustomPresets()) {
+            if (preset instanceof ScriptPIDSPreset) scriptedPresets.add(preset);
+        }
+        for (PIDSPresetBase preset : scriptedPresets) {
+            options.add(new Option(preset.getId(), preset.getName(), true, false, 0xFF00A870));
         }
         return options;
     }
