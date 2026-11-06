@@ -114,8 +114,6 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                                                 if(!routePlatforms.isEmpty() && belongingRoute.getRoutePlatforms().get(0).getPlatform().getId() == platformId) {
                                                     routeStopsData.addStop(stopObject);
                                                 }
-                                            } else {
-                                                System.out.println("" + routePlatformIndex + "/" + (routePlatforms.size()-1));
                                             }
                                         }
                                     }
