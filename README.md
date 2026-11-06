@@ -253,6 +253,7 @@ ctest --test-dir native/build -C Release --output-on-failure
 
 | 版本 | 主题 |
 | --- | --- |
+| `2.3.0-prerelease.3-yanyang.2` | 修复绑定脚本化 PIDS 预设后 PSD 画布完全空白（合成包装器自定义消息为 null 数组，`getCustomMessage(i) != ""` 对 null 判真、每行都画空文本——现与真实 PIDS 一致返回空串）；玻璃白底与脚本画布横向扩展到整段刷子合并的玻璃（门为段边界，画布宽 = 段宽 × 96px、锚定段左端）；psd_top 脚本画布横贯整段顶板带并整段取消原生箭头 / 线路图（走查规则与 MTR 路线图纹理完全一致，取消范围与画布覆盖逐块对齐） |
 | `2.3.0-prerelease.3-yanyang.1` | 同步上游 v2.3.0-prerelease.3；PSD 玻璃背面改纯白；新增 psd.stop() 车站信息 API（JS + C++ ABI 13）；修复 MTR-Yanyang 定制构建启动崩溃（mixin 成员名 + 字段描述符双重结构检测，官方 MTR 不受影响；MTR-Yanyang 仓库侧亦已恢复官方布局，新构建上泄漏修补照常生效）；补齐屏蔽门脚本编辑器物品模型 / 贴图（此前显示为紫黑方块）；修复编辑器选择界面不显示 PIDS 脚本（内置 PIDS 1A 等脚本化预设此前被整体排除在列表外）；修复绑定脚本后 PSD 不渲染脚本内容（回放误读已清空的上下文管理器）、DRL 半高闸门玻璃上半悬空白板、旧世界陈旧 MTR 方块实体在 DRL 玻璃上悬浮线路图、psd_top 画布侧边距错误 |
 | `prerelease.2-yanyang.1-hotfix.2` | 原生层两轮人工审查修复首次发布（8 + 3 项）：直接调用模式内存安全（arena 偏移 / 记录长度校验）、每帧 re-attach 泄漏扩容像素 arena、重载代际模块堆内存治理（`mtrCleanup`）、字符串缓存满后插入不可找回（改 16×8 固定分组）、同库多句柄共享锁 + 末句柄清理、空字符串中断 PIDS 帧、阴影阶段重复执行、无原生脚本车辆缓存淘汰、变换池回收滞留 |
 | `prerelease.2-yanyang.1-hotfix.1` | 热修：MTR 4 原生路线类别（高铁 / 轻轨）流入换乘类型链，原版高铁、轻轨线路正确从车侧线路图去除；Axiom 区块批量编辑纳入开门方向重扫；iOS 交叉编译腿回归 macos-latest（arm）runner |

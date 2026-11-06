@@ -58,31 +58,35 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *
  * <ul>
  *   <li><b>Glass</b> (bound per block half; the editor item binds both halves
- *       of a column at once): an opaque white quad pair is drawn just outside
- *       both pane faces (z = 4/16 - ε platform side, z = 6/16 + ε track side).
- *       The script's captured draw calls replay ONLY on the platform-side
- *       face — the track-side face (what passengers inside a train see)
- *       stays plain white, so dynamic content is never visible mirrored
- *       from behind. Each half's canvas is
- *       96×96 PIDS pixels (MTR-APG upper halves: 96×54, matching the 9-px
- *       gate glass; JCM DRL APG upper halves render nothing — that model
- *       has no pane above its 2-px light strip, the lower half is the
- *       column's display surface).</li>
+ *       of a column at once): the <b>entire contiguous glass segment</b> the
+ *       bound column belongs to (every brush-merged glass/glass-end block up
+ *       to the doors) turns into an opaque white panel — one quad pair just
+ *       outside both pane faces (z = 4/16 - ε platform side, z = 6/16 + ε
+ *       track side) spanning the whole segment. The script's captured draw
+ *       calls replay ONLY on the platform-side face — the track-side face
+ *       (what passengers inside a train see) stays plain white, so dynamic
+ *       content is never visible mirrored from behind. The segment's shared
+ *       canvas is segmentWidth×96 PIDS pixels wide (MTR-APG upper halves:
+ *       segmentWidth×54, matching the 9-px gate glass; JCM DRL APG upper
+ *       halves render nothing — that model has no pane above its 2-px light
+ *       strip, the lower half is the column's display surface).</li>
  *   <li><b>Top</b> (bound to a psd_top block, whose own arrow/route content
- *       is cancelled by {@code RenderRouteBaseMixin}): the script's draw
- *       calls replay on the psd_top display band — ~95×42 PIDS pixels, the
- *       same band MTR's route map texture occupies (side padding 0.125/16,
- *       top 7.5/16, bottom 1.5/16, straight from RenderPSDTop). No white
- *       base is forced; the script fully controls the content.</li>
+ *       is cancelled band-wide by {@code RenderRouteBaseMixin}): the script's
+ *       draw calls replay across the <b>entire contiguous psd_top run</b> —
+ *       the same run MTR's own route map texture spans — as one
+ *       runWidth×42 PIDS pixel canvas (side padding 0.125/16, top 7.5/16,
+ *       bottom 1.5/16, straight from RenderPSDTop). No white base is forced;
+ *       the script fully controls the content.</li>
  * </ul>
  *
  * <h2>Execution model</h2>
  * Scripts (JS and C++) are DRIVEN once per bound block per frame; the
- * captured draw calls are REPLAYED onto each visible face (both glass faces /
- * the one top face). Sounds replay exactly once per frame. Shader shadow
- * passes replay the last captured draw calls (silhouette correctness)
- * without executing scripts, uploading textures or driving the C++ side —
- * mirroring the eyecandy/PIDS shadow contract.
+ * captured draw calls are REPLAYED onto each visible face (the one merged
+ * platform-side glass canvas / the one merged top canvas). Sounds replay
+ * exactly once per frame. Shader shadow passes replay the last captured draw
+ * calls (silhouette correctness) without executing scripts, uploading
+ * textures or driving the C++ side — mirroring the eyecandy/PIDS shadow
+ * contract.
  */
 public final class PSDScriptRenderer implements RenderHelper {
 
@@ -92,9 +96,7 @@ public final class PSDScriptRenderer implements RenderHelper {
 
     /** psd_top display band paddings (16ths of the block), from RenderPSDTop
      *  (its constructor passes sidePadding = 0.125F, topPadding = 7.5F,
-     *  bottomPadding = 1.5F). The side padding used to be 1.5F/16 — a mix-up
-     *  with the bottom padding — which squeezed the script canvas to 78 px
-     *  where MTR's own route band spans ~94.5 px. */
+     *  bottomPadding = 1.5F). */
     private static final float TOP_SIDE_PADDING = 0.125F / 16;
     private static final float TOP_TOP_PADDING = 7.5F / 16;
     private static final float TOP_BOTTOM_PADDING = 1.5F / 16;
@@ -163,25 +165,26 @@ public final class PSDScriptRenderer implements RenderHelper {
         /* Yanyang fix: JCM's own DRL APG glass (and its end cap) has NO pane
            in the upper half — the model is transparent above the ~2/16 light
            strip (the DRL gate is full glass in the LOWER half only), unlike
-           MTR's own APG glass whose upper half carries a 9/16 pane. The old
-           generic "upper && apg → 9/16 face" rule drew a white slab + script
-           canvas floating in mid-air over every bound DRL upper half. There
+           MTR's own APG glass whose upper half carries a 9/16 pane. There
            is no meaningful surface there, so the upper half of a DRL glass
-           column renders nothing at all — the lower half (a full 96×96
-           canvas) is the display surface for the whole column. */
+           column renders nothing at all — the lower half (the column's full
+           display surface) covers the whole segment. */
         if (upper && (block instanceof APGGlassDRL || block instanceof APGGlassEndDRL)) {
             return;
         }
 
         final boolean apg = block instanceof BlockAPGGlass || block instanceof BlockAPGGlassEnd;
 
-        // Half-height overlays for APG upper glass; full faces everywhere else.
+        /* The whole brush-merged glass segment turns into the white panel —
+           one shared canvas spanning every glass/glass-end block between the
+           doors (see PSDRuns for the walk and the anchor convention). */
+        final PSDRuns.Run run = PSDRuns.glassRun(world, pos, facing);
         final float faceHeight = upper && apg ? APG_UPPER_HEIGHT : 1;
-        final int canvasWidth = 96;
+        final int canvasWidth = run.width * 96;
         final int canvasHeight = Math.round(faceHeight * 96);
 
-        final StoredMatrixTransformations platformSide = glassTransform(pos, facing, GLASS_PLATFORM_Z - SMALL_OFFSET, false);
-        final StoredMatrixTransformations trackSide = glassTransform(pos, facing, GLASS_TRACK_Z + SMALL_OFFSET, true);
+        final StoredMatrixTransformations platformSide = glassTransform(run.start, facing, GLASS_PLATFORM_Z - SMALL_OFFSET, false);
+        final StoredMatrixTransformations trackSide = glassTransform(run.start, facing, GLASS_TRACK_Z + SMALL_OFFSET, true);
 
         if (!shadowPass) {
             // Opaque white base on both faces — the glass "becomes" a white panel.
@@ -235,15 +238,20 @@ public final class PSDScriptRenderer implements RenderHelper {
         final boolean persistent = IBlock.getStatePropertySafe(state, BlockPSDTop.PERSISTENT) != BlockPSDTop.EnumPersistent.NONE;
         final float additionalOffset = persistent ? BlockPSDTop.PERSISTENT_OFFSET_SMALL : 0;
 
-        // Same band RenderRouteBase draws the arrow/route texture into.
-        final StoredMatrixTransformations transform = new StoredMatrixTransformations(0.5 + pos.getX(), pos.getY(), 0.5 + pos.getZ());
+        /* One canvas across the ENTIRE contiguous psd_top run — the same run
+           MTR's own route map texture spans (each psd_top renders its slice
+           of the run-wide texture; see RenderRouteBase.getTextureNumber).
+           Anchored at the run's left-most block, padded exactly like MTR's
+           own band. */
+        final PSDRuns.Run run = PSDRuns.topRun(world, pos, facing);
+        final StoredMatrixTransformations transform = new StoredMatrixTransformations(0.5 + run.start.getX(), pos.getY(), 0.5 + run.start.getZ());
         transform.add(graphicsHolder -> graphicsHolder.rotateYDegrees(-facing.asRotation()));
         transform.add(graphicsHolder -> graphicsHolder.translate(0, 1, 0));
         transform.add(graphicsHolder -> graphicsHolder.rotateZDegrees(180));
         transform.add(graphicsHolder -> graphicsHolder.translate(-0.5, -additionalOffset, TOP_DISPLAY_Z - SMALL_OFFSET));
         transform.add(graphicsHolder -> graphicsHolder.translate(TOP_SIDE_PADDING, TOP_TOP_PADDING, 0));
 
-        final int canvasWidth = Math.round((1 - TOP_SIDE_PADDING * 2) * 96);
+        final int canvasWidth = Math.round((run.width - TOP_SIDE_PADDING * 2) * 96);
         final int canvasHeight = Math.round((1 - TOP_TOP_PADDING - TOP_BOTTOM_PADDING) * 96);
 
         if (!shadowPass) {
@@ -383,11 +391,20 @@ public final class PSDScriptRenderer implements RenderHelper {
         final Platform platform = findPlatform(pos, binding.type);
         final LongImmutableList platformIds = platform == null ? new LongImmutableList(new long[0]) : new LongImmutableList(new long[]{platform.getId()});
         final ObjectArrayList<ArrivalResponse> arrivals = ArrivalsCacheClient.INSTANCE.requestArrivals(platformIds);
+        /* Yanyang fix: custom messages must be EMPTY STRINGS, not nulls. A
+           real PIDSBlockEntity presents "" after its NBT round-trip
+           (CompoundTag.getString defaults to ""), and virtually every
+           scripted preset branches on `getCustomMessage(i) != ""` — in JS,
+           null != "" is TRUE, so a null row made the preset take the
+           custom-text branch and draw cycleString(null) == "" on every row:
+           the script ran every frame, captured its draw calls, replayed
+           them — and the canvas stayed blank. This is exactly what
+           pids_1a.js did on every bound PSD glass/top. */
         return new PIDSWrapper(
                 "psd_" + binding.type.id, 3, pos, platformIds, arrivals,
                 canvasWidth, canvasHeight,
                 false, platform == null, false,
-                new boolean[3], new String[3]
+                new boolean[3], new String[]{"", "", ""}
         );
     }
 
