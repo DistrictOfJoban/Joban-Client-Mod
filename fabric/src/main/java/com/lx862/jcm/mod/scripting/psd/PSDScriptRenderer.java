@@ -3,6 +3,8 @@ package com.lx862.jcm.mod.scripting.psd;
 import com.lx862.jcm.mod.data.pids.PIDSManager;
 import com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase;
 import com.lx862.jcm.mod.data.pids.preset.ScriptPIDSPreset;
+import com.lx862.jcm.mod.block.APGGlassDRL;
+import com.lx862.jcm.mod.block.APGGlassEndDRL;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.scripting.JCMScripting;
 import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
@@ -62,13 +64,16 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       face — the track-side face (what passengers inside a train see)
  *       stays plain white, so dynamic content is never visible mirrored
  *       from behind. Each half's canvas is
- *       96×96 PIDS pixels (APG upper halves: 96×54, matching the 9-px gate
- *       glass).</li>
+ *       96×96 PIDS pixels (MTR-APG upper halves: 96×54, matching the 9-px
+ *       gate glass; JCM DRL APG upper halves render nothing — that model
+ *       has no pane above its 2-px light strip, the lower half is the
+ *       column's display surface).</li>
  *   <li><b>Top</b> (bound to a psd_top block, whose own arrow/route content
  *       is cancelled by {@code RenderRouteBaseMixin}): the script's draw
- *       calls replay on the psd_top display band — 78×42 PIDS pixels, the
- *       same band MTR's route map texture occupies. No white base is forced;
- *       the script fully controls the content.</li>
+ *       calls replay on the psd_top display band — ~95×42 PIDS pixels, the
+ *       same band MTR's route map texture occupies (side padding 0.125/16,
+ *       top 7.5/16, bottom 1.5/16, straight from RenderPSDTop). No white
+ *       base is forced; the script fully controls the content.</li>
  * </ul>
  *
  * <h2>Execution model</h2>
@@ -85,8 +90,12 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static final float BASE_SCALE = 1 / 96F;
     private static final float SMALL_OFFSET = 0.0005F;
 
-    /** psd_top display band paddings (16ths of the block), from RenderPSDTop. */
-    private static final float TOP_SIDE_PADDING = 1.5F / 16;
+    /** psd_top display band paddings (16ths of the block), from RenderPSDTop
+     *  (its constructor passes sidePadding = 0.125F, topPadding = 7.5F,
+     *  bottomPadding = 1.5F). The side padding used to be 1.5F/16 — a mix-up
+     *  with the bottom padding — which squeezed the script canvas to 78 px
+     *  where MTR's own route band spans ~94.5 px. */
+    private static final float TOP_SIDE_PADDING = 0.125F / 16;
     private static final float TOP_TOP_PADDING = 7.5F / 16;
     private static final float TOP_BOTTOM_PADDING = 1.5F / 16;
     private static final float TOP_DISPLAY_Z = 2F / 16 - 0.05F / 16;
@@ -149,7 +158,22 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING);
         final boolean upper = IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
-        final boolean apg = state.getBlock().data instanceof BlockAPGGlass || state.getBlock().data instanceof BlockAPGGlassEnd;
+        final Object block = state.getBlock().data;
+
+        /* Yanyang fix: JCM's own DRL APG glass (and its end cap) has NO pane
+           in the upper half — the model is transparent above the ~2/16 light
+           strip (the DRL gate is full glass in the LOWER half only), unlike
+           MTR's own APG glass whose upper half carries a 9/16 pane. The old
+           generic "upper && apg → 9/16 face" rule drew a white slab + script
+           canvas floating in mid-air over every bound DRL upper half. There
+           is no meaningful surface there, so the upper half of a DRL glass
+           column renders nothing at all — the lower half (a full 96×96
+           canvas) is the display surface for the whole column. */
+        if (upper && (block instanceof APGGlassDRL || block instanceof APGGlassEndDRL)) {
+            return;
+        }
+
+        final boolean apg = block instanceof BlockAPGGlass || block instanceof BlockAPGGlassEnd;
 
         // Half-height overlays for APG upper glass; full faces everywhere else.
         final float faceHeight = upper && apg ? APG_UPPER_HEIGHT : 1;
@@ -308,8 +332,14 @@ public final class PSDScriptRenderer implements RenderHelper {
             if (parsedScript == null) return;
             final ScriptInstance<?> instance = JCMScripting.getScriptManager().getInstanceManager().getInstance(
                     new UniqueKey("psd_pids", binding.scriptId, pos.getX(), pos.getY(), pos.getZ()));
+            /* Yanyang fix: replay from the INSTANCE's render manager — the
+               same contract as ScriptPIDSPreset.render. The old code invoked
+               the CONTEXT's manager, which saveRenderCalls() had just emptied
+               via the takeFrom() swap (the instance takes the captured calls,
+               the context keeps the instance's spent list), so the script ran
+               every frame yet nothing was ever drawn. */
             if (instance instanceof PSDPidsScriptInstance) {
-                ((PSDScriptContext) instance.getContextObject()).getRenderManager().invoke(world, transform, drawDirection, MAX_RENDER_LIGHT);
+                ((PSDPidsScriptInstance) instance).getRenderManager().invoke(world, transform, drawDirection, MAX_RENDER_LIGHT);
             }
         } else {
             if (NativeScriptManager.isLoaded(binding.scriptId)) {
@@ -318,7 +348,7 @@ public final class PSDScriptRenderer implements RenderHelper {
             final ScriptInstance<?> instance = JCMScripting.getScriptManager().getInstanceManager().getInstance(
                     new UniqueKey("psd", binding.scriptId, pos.getX(), pos.getY(), pos.getZ()));
             if (instance instanceof PSDScriptInstance) {
-                ((PSDScriptContext) instance.getContextObject()).getRenderManager().invoke(world, transform, drawDirection, MAX_RENDER_LIGHT);
+                ((PSDScriptInstance) instance).getRenderManager().invoke(world, transform, drawDirection, MAX_RENDER_LIGHT);
             }
         }
     }
@@ -330,8 +360,10 @@ public final class PSDScriptRenderer implements RenderHelper {
             }
             final ScriptInstance<?> instance = JCMScripting.getScriptManager().getInstanceManager().getInstance(
                     new UniqueKey("psd_pids", binding.scriptId, pos.getX(), pos.getY(), pos.getZ()));
+            /* Instance manager, not the (already-swapped-empty) context one —
+               see replayScript. */
             if (instance instanceof PSDPidsScriptInstance) {
-                ((PSDScriptContext) instance.getContextObject()).getSoundManager().invoke(world, new ScriptVector3f(pos));
+                ((PSDPidsScriptInstance) instance).getSoundManager().invoke(world, new ScriptVector3f(pos));
             }
         } else {
             if (NativeScriptManager.isLoaded(binding.scriptId)) {
@@ -340,7 +372,7 @@ public final class PSDScriptRenderer implements RenderHelper {
             final ScriptInstance<?> instance = JCMScripting.getScriptManager().getInstanceManager().getInstance(
                     new UniqueKey("psd", binding.scriptId, pos.getX(), pos.getY(), pos.getZ()));
             if (instance instanceof PSDScriptInstance) {
-                ((PSDScriptContext) instance.getContextObject()).getSoundManager().invoke(world, new ScriptVector3f(pos));
+                ((PSDScriptInstance) instance).getSoundManager().invoke(world, new ScriptVector3f(pos));
             }
         }
     }

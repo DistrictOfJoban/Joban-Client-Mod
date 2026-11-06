@@ -1,8 +1,11 @@
 package com.lx862.jcm.mixin.mtrscripting;
 
+import com.lx862.jcm.mod.block.APGGlassDRL;
+import com.lx862.jcm.mod.block.APGGlassEndDRL;
 import com.lx862.jcm.mod.scripting.psd.PSDBinding;
 import com.lx862.jcm.mod.scripting.psd.PSDClientBindings;
 import com.lx862.jcm.mod.scripting.psd.PSDWrapper;
+import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mod.block.BlockPSDTop;
 import org.mtr.mod.render.RenderRouteBase;
@@ -17,9 +20,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * must no longer render — the script fully controls what the panel shows
  * (drawn by {@code PSDScriptRenderer} through the MainRenderer pass).
  *
- * <p>Only psd_top block entities are affected; the other
- * {@link RenderRouteBase} subclass (RenderAPGGlass) passes through
- * untouched.</p>
+ * <p>Also cancels for <b>stale MTR block entities on JCM DRL glass</b>:
+ * worlds that placed {@code jsblock:apg_glass_drl} /
+ * {@code jsblock:apg_glass_end_drl} with an older JCM — before those blocks
+ * overrode {@code createBlockEntity} with their own
+ * {@code jsblock:apg_glass_1} type — still carry MTR
+ * {@code mtr:apg_glass} block entities in their chunk NBT. Those keep
+ * rendering through MTR's RenderAPGGlass (renderer selection follows the BE
+ * type), painting the arrow/route map, station-name strip and color strip at
+ * the top of the upper glass half — but the DRL model has no pane there
+ * (just a ~2/16 light strip), so the content floats in mid-air. No MTR
+ * route content is ever wanted on a JCM DRL glass block, so the whole
+ * RenderRouteBase pass is dropped whenever the block at the entity's
+ * position is one of ours. (Those stale entities also can't tick — vanilla
+ * logs "invalid for ticking" for them — which is harmless: the shared
+ * PSD/APG block entity tick is a no-op.)</p>
  */
 @Mixin(value = RenderRouteBase.class, remap = false)
 public class RenderRouteBaseMixin {
@@ -28,6 +43,18 @@ public class RenderRouteBaseMixin {
         if (entity instanceof BlockPSDTop.BlockEntity) {
             final PSDBinding binding = PSDClientBindings.get(entity.getPos2());
             if (binding != null && binding.type == PSDWrapper.PSDType.TOP) {
+                ci.cancel();
+                return;
+            }
+        }
+
+        /* Stale MTR apg_glass/apg_glass_end BEs sitting on JCM DRL glass
+           blocks (old worlds, see class doc) — MTR's own route content must
+           not float over the DRL's open upper half. */
+        final World world = entity.getWorld2();
+        if (world != null) {
+            final Object block = world.getBlockState(entity.getPos2()).getBlock().data;
+            if (block instanceof APGGlassDRL || block instanceof APGGlassEndDRL) {
                 ci.cancel();
             }
         }
