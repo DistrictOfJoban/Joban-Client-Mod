@@ -17,17 +17,19 @@ import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.mtrscripting.mod.resource.PSDResourceProvider;
 /* The synchronous backing draw needs a RAW immediate-style consumer
-   (private buffer + synchronous flush, see drawSync). The raw type names
-   are loader-specific — Yarn on fabric, Mojmap on forge — so this is the
-   only loader branch in the file; everything else sticks to the
-   org.mtr.mapping abstractions. */
+   (the shared Tessellator buffer + synchronous flush, see drawSync —
+   the exact discipline and buffer MTR's own GraphicsHolder.drawText
+   uses, which stays visible under every batching pipeline the users
+   run). The raw type names are loader-specific — Yarn on fabric,
+   Mojmap on forge — so this is the only loader branch in the file;
+   everything else sticks to the org.mtr.mapping abstractions. */
 #if LOADER == "fabric"
-import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 #else
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.renderer.MultiBufferSource;
 #endif
 import org.mtr.core.data.Platform;
@@ -79,11 +81,17 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       spanning the segment's full height (yanyang.6: the two block halves
  *       of a full-height door are ONE glass, so the canvas merges them
  *       vertically instead of drawing the script once per half) —
- *       <b>sandwiched INSIDE the pane</b>: an opaque white backing 1/16
- *       behind the pane's platform-side face (drawn double-sided) and the
- *       script canvas 0.5/16 behind it — both at the run's DERIVED pane
- *       depth (see {@link PSDWindowBounds}; vanilla geometry → the classic
- *       5/16 and 4.5/16). The pane's own texture blends over the sandwich,
+ *       <b>sandwiched INSIDE the pane</b>: an opaque white backing
+ *       0.45/16 behind the pane's platform-side face (drawn double-sided)
+ *       and the script canvas 0.25/16 behind it — both at the run's
+ *       DERIVED pane depth (see {@link PSDWindowBounds}; vanilla geometry
+ *       → 4.45/16 and 4.25/16). Yanyang.7: both planes sit in the FRONT of
+ *       the pane slab, ahead of the +0.5/16 plane where every canvas has
+ *       provably rendered — packs place their own (white diffuser) panels
+ *       behind that plane (the yanyang pack's sits between +0.5/16 and the
+ *       old backing plane +1/16, which is why three rounds of "the glass
+ *       never turns white" fixes never showed: the backing rendered fine,
+ *       behind the pack's panel). The pane's own texture blends over the sandwich,
  *       so the script is visible exactly through the pane's <b>originally
  *       transparent window</b> while the opaque parts of the texture — the
  *       frame, divider bars, frosted bands, whatever the resource pack
@@ -163,18 +171,31 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static final float TOP_BOTTOM_PADDING = 1.5F / 16;
     private static final float TOP_DISPLAY_Z = 2F / 16 - 0.05F / 16;
 
-    /** The scripted sandwich lives INSIDE the pane: the white backing and
-     *  the script canvas sit just behind the pane's platform-side face,
-     *  both placed relative to the run's derived pane depth (see
-     *  {@link PSDWindowBounds.Bounds#paneAlong}; for the vanilla 4/16 pane
-     *  these are the classic 5/16 and 4.5/16). Both are separated from
-     *  every pane face by ≥ 1/32 of a block — far beyond any
-     *  depth-precision z-fighting range — and because the pane's
-     *  translucent faces blend over them afterwards, the pane texture
-     *  itself decides where the sandwich shows: only through its
-     *  transparent window pixels, never over the frame. */
-    private static final float GLASS_BACKING_OFFSET = 1F / 16;
-    private static final float GLASS_SCRIPT_OFFSET = 0.5F / 16;
+    /** The scripted sandwich lives INSIDE the pane, in its FRONT: the
+     *  white backing and the script canvas sit just behind the pane's
+     *  platform-side face, both placed relative to the run's derived pane
+     *  depth (see {@link PSDWindowBounds.Bounds#paneAlong}; for the
+     *  vanilla 4/16 pane these are 4.45/16 and 4.25/16).
+     *
+     *  <p>Yanyang.7 repositioning: the yanyang.5/6 layout put the canvas
+     *  at +0.5/16 and the backing at +1/16 — the canvas rendered (its
+     *  text stayed visible through every round) but the backing never
+     *  showed, because the user's pack carries its OWN white diffuser
+     *  panel whose front face lies between those two planes (+0.5/16 to
+     *  +1/16): the backing rendered correctly, merely behind the pack's
+     *  panel. Both planes now sit between the pane face and the
+     *  proven-visible +0.5/16 frontier — the backing at +0.45/16 is
+     *  therefore guaranteed in front of any such panel, with the canvas
+     *  0.2/16 ahead of it.</p>
+     *
+     *  <p>The planes stay ≥ 0.25/16 from the pane's platform face and
+     *  0.2/16 from each other — clear of depth-precision z-fighting at
+     *  any playable distance — and the pane's translucent faces still
+     *  blend over both, so the pane texture itself decides where the
+     *  sandwich shows: only through its transparent window pixels, never
+     *  over the frame. */
+    private static final float GLASS_BACKING_OFFSET = 0.45F / 16;
+    private static final float GLASS_SCRIPT_OFFSET = 0.25F / 16;
 
     /** A window narrower than this (block fraction) is treated as no window. */
     private static final float MIN_WINDOW = 0.05F;
@@ -349,9 +370,10 @@ public final class PSDScriptRenderer implements RenderHelper {
         final float canvasTop = frameHeight - windowTop;
 
         /* The sandwich planes track the run's pane depth: the script
-           canvas 0.5/16 behind the pane's platform-side face, the white
-           backing 1/16 behind it (vanilla pane → the classic 4.5/16 and
-           5/16). */
+           canvas 0.25/16 behind the pane's platform-side face, the white
+           backing 0.45/16 behind it (vanilla pane → 4.25/16 and 4.45/16;
+           both in the pane slab's front, ahead of any pack-placed
+           panel — see the constants' javadoc). */
         final float scriptZ = paneAlong + GLASS_SCRIPT_OFFSET;
         final float backingZ = paneAlong + GLASS_BACKING_OFFSET;
 
@@ -398,8 +420,9 @@ public final class PSDScriptRenderer implements RenderHelper {
      * of the pane face as seen from the platform side, y runs down, and +Z
      * points toward the track (deeper into the pane). {@code frameHeight} is
      * the number of block rows the canvas spans (2 for a merged full-height
-     * glass, 1 otherwise). All sandwich planes (script at 4.5/16, backing at
-     * 5/16 for the vanilla pane) use the same frame — only the z translation
+     * glass, 1 otherwise). All sandwich planes (script at 4.25/16, backing
+     * at 4.45/16 for the vanilla pane) use the same frame — only the z
+     * translation
      * differs.
      */
     private static StoredMatrixTransformations glassTransform(BlockPos pos, Direction facing, float z, float frameHeight) {
@@ -416,27 +439,27 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* ==================================================================== */
 
     /**
-     * Draws through a PRIVATE {@code VertexConsumerProvider.Immediate} that
-     * is flushed synchronously at the end of this call — the same flush
-     * discipline MTR's own {@code GraphicsHolder.drawText} uses for every
-     * scripted text. Deferred-batching pipelines (ImmediatelyFast with
-     * Iris/Sodium shaderpacks) may hold the SHARED entity-phase consumer's
-     * buffers until after the translucent terrain; anything drawn through
-     * it from BEHIND a translucent face (the pane's platform-side face at
-     * 4/16 is in front of the pane-centre backing at 5/16) then fails the
-     * depth test and silently vanishes. A private immediate, drawn and
-     * flushed right here, always lands before the translucent pane.
+     * Draws through a PRIVATE {@code VertexConsumerProvider.Immediate}
+     * wrapping the SHARED TESSELLATOR's buffer, flushed synchronously at
+     * the end of this call — the exact buffer and flush discipline MTR's
+     * own {@code GraphicsHolder.drawText} uses for every scripted text
+     * (which provably stays visible under the users' ImmediatelyFast +
+     * Iris/Sodium pipelines, while fresh private buffers and the shared
+     * entity-phase consumer have both proven unreliable carriers for
+     * behind-the-pane quads). Deferred-batching pipelines may hold other
+     * consumers' buffers until after the translucent terrain; anything
+     * drawn through them from BEHIND a translucent face then fails the
+     * depth test and silently vanishes. The Tessellator immediate, drawn
+     * and flushed right here, always lands before the translucent pane.
      */
     private static void drawSync(StoredMatrixTransformations transform, Vector3d offset, Consumer<GraphicsHolder> drawer) {
         try {
 #if LOADER == "fabric"
             final MatrixStack matrices = new MatrixStack();
-            final BufferBuilder buffer = new BufferBuilder(256);
-            final VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(buffer);
+            final VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
 #else
             final PoseStack matrices = new PoseStack();
-            final BufferBuilder buffer = new BufferBuilder(256);
-            final MultiBufferSource.BufferSource immediate = MultiBufferSource.immediate(buffer);
+            final MultiBufferSource.BufferSource immediate = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
 #endif
             GraphicsHolder.createInstanceSafe(matrices, immediate, holder -> {
                 transform.transform(holder, offset);

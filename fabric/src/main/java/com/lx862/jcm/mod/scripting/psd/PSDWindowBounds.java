@@ -42,11 +42,16 @@ import java.util.concurrent.ConcurrentHashMap;
  * blockstate's rotation is already baked in) and keeps every
  * <b>pane-parallel</b> quad (geometric normal along the platform axis,
  * either direction) that is big enough to matter. Every sprite row of
- * such a quad whose sampled pixels are majority-opaque marks its block
- * space y-range as <b>occluded frame</b> — whether that row belongs to
- * the pane's own texture (frosted bands, printed frame) or to a
- * separate frame/strip element anywhere in the block. The window is
- * the largest contiguous unoccluded span, intersected with the
+ * such a quad whose sampled pixels are majority at-or-above the frame
+ * threshold marks its block space y-range as <b>occluded frame</b> —
+ * whether that row belongs to the pane's own texture (frosted bands,
+ * printed frame) or to a separate frame/strip element anywhere in the
+ * block. Yanyang.7: the scan runs TWICE — a strict pass (only
+ * near-fully-transparent rows are window, so SEMI-TRANSPARENT frame
+ * strips occlude like the yanyang pack's) and, when that finds no
+ * window at all, the lenient legacy pass (majority-OPAQUE rows are
+ * frame) so tinted-window packs keep their window. The window is
+ * then the largest contiguous unoccluded span, intersected with the
  * <b>pane's own geometric extent</b> (so a half-height pane never
  * lets content float in the open air above it), and reported together
  * with the pane's plane position (the sandwich planes are placed just
@@ -77,10 +82,22 @@ final class PSDWindowBounds {
 
 #if MC_VERSION >= "12001"
 #if LOADER == "fabric"
-    /** An alpha below this counts as "window". Vanilla's window is 0 and
-     *  its frame is 255; tinted-glass packs sit anywhere in between, so
-     *  the threshold is set high enough to catch a ~60 % tint as a window
-     *  while still excluding frame panels (typically ≥ ~70 % opaque). */
+    /** Yanyang.7 strict-pass frame threshold: a sprite row whose
+     *  majority of sampled pixels is at or above this alpha counts as
+     *  OCCLUDED FRAME. The yanyang pack's frame strips are
+     *  SEMI-TRANSPARENT (~50-60 % tint) — the old majority-opaque rule
+     *  (see {@link #ALPHA_THRESHOLD}) let them through as "window", so
+     *  the canvas and the white backing spanned them and the script
+     *  content bled onto the strips. Only near-fully-transparent rows
+     *  are window now (vanilla windows are 0). */
+    private static final int FRAME_ALPHA_STRICT = 51;
+
+    /** Lenient legacy threshold, used only when the strict pass finds no
+     *  window at all: packs whose WINDOW itself is a ~50-60 % tint would
+     *  have every row occluded under the strict rule, so this pass
+     *  counts rows whose majority is at or above THIS alpha as frame
+     *  instead — preserving the yanyang.5 behaviour for tinted-glass
+     *  packs. */
     private static final int ALPHA_THRESHOLD = 170;
 
     /** A pane-parallel quad must span at least this much of the block
@@ -293,50 +310,64 @@ final class PSDWindowBounds {
                 return new Bounds(1, 0, DEFAULT_PANE_ALONG, anyVisible);
             }
 
-            /* Occlusion grid: mark every majority-opaque sprite row of every
-               occluder quad (pane's own texture bands AND separate frame
-               elements) as frame. */
-            final boolean[] occluded = new boolean[GRID];
-            for (final Quad quad : quads) {
-                if (quad.area < MIN_OCCLUDER_AREA) {
-                    continue;
-                }
-                try {
-                    markOcclusion(quad, occluded);
-                } catch (Throwable ignored) {
-                    /* Unreadable sprite — contributes no occlusion. */
-                }
-            }
-
             /* Window: the largest unoccluded span, clipped to the pane's
-               own geometric extent. */
-            final int yFrom = clampRow(pane.yMin);
-            final int yTo = clampRow(pane.yMax);
-            int bestStart = -1, bestLen = 0;
-            int run = 0;
-            for (int y = yFrom; y <= yTo; y++) {
-                if (!occluded[y]) {
-                    run++;
-                    if (run > bestLen) {
-                        bestLen = run;
-                        bestStart = y - run + 1;
-                    }
-                } else {
-                    run = 0;
-                }
+               own geometric extent. Two passes (yanyang.7): the STRICT
+               pass first — semi-transparent frame strips must occlude —
+               then the lenient legacy threshold when the strict pass
+               finds no window (tinted-window packs keep their window). */
+            final Bounds strict = scanWindow(quads, pane, anyVisible, FRAME_ALPHA_STRICT);
+            if (strict != null) {
+                return strict;
             }
-            if (bestLen <= 0) {
-                return new Bounds(1, 0, pane.along, anyVisible);
+            final Bounds lenient = scanWindow(quads, pane, anyVisible, ALPHA_THRESHOLD);
+            if (lenient != null) {
+                return lenient;
             }
-            final float top = (float) (bestStart + bestLen) / GRID;
-            final float bottom = (float) bestStart / GRID;
-            if (top - bottom < MIN_WINDOW) {
-                return new Bounds(1, 0, pane.along, anyVisible);
-            }
-            return new Bounds(top, bottom, pane.along, anyVisible);
+            return new Bounds(1, 0, pane.along, anyVisible);
         } catch (Throwable t) {
             return Bounds.FULL_FACE;
         }
+    }
+
+    /** The largest unoccluded y-span across every occluder quad under the
+     *  given frame threshold, clipped to the pane's own geometric extent;
+     *  null when no span of {@link #MIN_WINDOW} survives. */
+    private static Bounds scanWindow(java.util.ArrayList<Quad> quads, Quad pane, boolean anyVisible, int frameThreshold) {
+        final boolean[] occluded = new boolean[GRID];
+        for (final Quad quad : quads) {
+            if (quad.area < MIN_OCCLUDER_AREA) {
+                continue;
+            }
+            try {
+                markOcclusion(quad, occluded, frameThreshold);
+            } catch (Throwable ignored) {
+                /* Unreadable sprite — contributes no occlusion. */
+            }
+        }
+        final int yFrom = clampRow(pane.yMin);
+        final int yTo = clampRow(pane.yMax);
+        int bestStart = -1, bestLen = 0;
+        int run = 0;
+        for (int y = yFrom; y <= yTo; y++) {
+            if (!occluded[y]) {
+                run++;
+                if (run > bestLen) {
+                    bestLen = run;
+                    bestStart = y - run + 1;
+                }
+            } else {
+                run = 0;
+            }
+        }
+        if (bestLen <= 0) {
+            return null;
+        }
+        final float top = (float) (bestStart + bestLen) / GRID;
+        final float bottom = (float) bestStart / GRID;
+        if (top - bottom < MIN_WINDOW) {
+            return null;
+        }
+        return new Bounds(top, bottom, pane.along, anyVisible);
     }
 
     /** Whether the quad's sampled region contains ANY visible pixel. */
@@ -355,28 +386,29 @@ final class PSDWindowBounds {
         return false;
     }
 
-    /** Marks the block-space y-ranges of the quad's majority-opaque sprite
-     *  rows (and, when the quad's sampled region is majority-opaque as a
-     *  whole, its full extent — small frame strips) as occluded. */
-    private static void markOcclusion(Quad quad, boolean[] occluded) {
+    /** Marks the block-space y-ranges of the quad's sprite rows whose
+     *  sampled pixels are majority at-or-above {@code frameThreshold}
+     *  (and, when the quad's sampled region is majority-frame as a whole,
+     *  its full extent — small frame strips) as occluded. */
+    private static void markOcclusion(Quad quad, boolean[] occluded, int frameThreshold) {
         final NativeImage image = ((SpriteContentsAccessor) (Object) quad.sprite.getContents()).jsblock$getImage();
         final int[][] rect = sampleRect(quad);
         final int xFrom = rect[0][0], xTo = rect[0][1], yFrom = rect[1][0], yTo = rect[1][1];
         final int columnStep = Math.max(1, (xTo - xFrom) / 16);
 
-        int opaqueRows = 0;
+        int frameRows = 0;
         int totalRows = 0;
         for (int y = yFrom; y <= yTo; y++) {
-            int opaque = 0, total = 0;
+            int frame = 0, total = 0;
             for (int x = xFrom; x <= xTo; x += columnStep) {
                 total++;
-                if ((image.getOpacity(x, y) & 0xFF) >= ALPHA_THRESHOLD) {
-                    opaque++;
+                if ((image.getOpacity(x, y) & 0xFF) >= frameThreshold) {
+                    frame++;
                 }
             }
             totalRows++;
-            if (total > 0 && opaque * 2 >= total) {
-                opaqueRows++;
+            if (total > 0 && frame * 2 >= total) {
+                frameRows++;
                 /* Map the row to block-space y through the quad's v→y
                    mapping, clamped to the quad's own y extent. */
                 final float yA = vToY(quad, quad.rowToV(y));
@@ -392,10 +424,10 @@ final class PSDWindowBounds {
                 }
             }
         }
-        /* Mostly-opaque quad (a frame strip / beam): occlude its whole
+        /* Mostly-frame quad (a frame strip / beam): occlude its whole
            y extent — sub-pixel UV slivers would otherwise slip through
            the row mapping. */
-        if (totalRows > 0 && opaqueRows * 2 >= totalRows) {
+        if (totalRows > 0 && frameRows * 2 >= totalRows) {
             final int rFrom = clampRow(quad.yMin);
             final int rTo = clampRow(quad.yMax);
             for (int r = rFrom; r <= rTo; r++) {
