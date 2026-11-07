@@ -1,45 +1,45 @@
-# JCM v2.3.0-prerelease.3 for MTR 4.0.5 has been released!
+# JCM v2.3.0 for MTR 4.0.5 has been released!
 
-This is a prerelease, focused on bug-fixes and preparation before the official release.
+> Note: This release contains a large amount of internal changes. Some existing addons dependent on JCM may be incompatible until updated.
+
+A non-exhaustive highlight of this release are as follows.
+For more details, please review the changelog for previous betas/prereleases.
 
 ## General
-- Fix PIDS Projector unable to save selected platforms.
-- Reduce performance impact when [hiding vehicle display cube](https://jcm.joban.org/latest/dev/scripting/features/vehicle_display_cube/).
-- MTR Patch: Fix a source of memory leak in MTR 4 (Vehicle/Eyecandy model)
+- Add **Emergency Train Stop Button** (Wall mounted, TML/URL) (Thanks LX9702!)
+- **Spot Lamp** & **Railway Sign Pole (MTR)** may now adapt to slab blocks.
+- Added several optimizations (For both MTR & JCM), which is hoped to improve frame-rate and reduce memory usage.
+- Fixes the "infamous" BVE Sound getting stuck bug.
+- Cache rail node so that rail preview no longer disappear after long distances.
+- Re-added the "sitting" feature in MTR 3.
 
 ## Technical
 
-### Scripting
-- Bump Rhino JS Engine to 1.9.2, see their [changelog](https://github.com/mozilla/rhino/releases/tag/Rhino1_9_2_Release) for details.
-- Add `MTR.Data.getConnectedRails()` to obtain a list of rails connected to either a path/rail node position.
-- Add `MTR.Data.getVehicleMountDetail()` to obtain the player's current car index & position in car.
-- Add `MTR.Data.getLiftFloors()` to obtain a list of stopping floors (With floor name/descriptions) from a TSC Lift.
-- Better error message for partial `GraphicsTexture.upload()`.
-- **TickableSoundInstance** has been revised, hopefully making it more intuitive.
-  - Add standalone `TickableSoundInstance.play()` and `TickableSoundInstance.stop()` method, removing the need for SoundManager. (Which doesn't manage the sound at all)
-  - The previous `setLoopable` method is deprecated, since it will be set to `false` once `SoundManager.stop` is called, requiring the need to call `setLoopable` again.
-    - Use `setRepeatable` instead, which preserves the state.
-  - You may also use `play(ctx)` to associate your sound with a ScriptContext. This will auto stop your sound once the script context is disposed/errored, without the need for manual disposal.
+### Sign Coloring
+- The text for MTR Railway Sign may now be colored using the `textColor` property.
 
-### Vehicle Scripting
-- Fix a bug where if the same RoutePlatform is assigned multiple times in a Route, the behaviour of data fetching will be errornous. 
+### Scripting
+- Add **Lift Scripting**, refer to the [documentation](https://jcm.joban.org/v2.3/dev/scripting/type/lift/) for details.
+- A non-stablized method of adding custom config for Eyecandy has been added. Some ANTE eyecandy scripts which passively read config may now work.
+- Various new APIs and changes for convenience of scripting. Refer to the docs & changelog for details.
+- Add a new global `rateLimit` property for script entries.
+- Fix a potential bug causing vehicle stops data to not be fetched.
 
 ### PIDS Scripting
-- Add `pids.arrivals().length()` to obtain the total arrivals available.
-- **Breaking Changes (Not code-related) (PIDS Projector only)**
-  - This update "nerfed" the PIDS Projector such that it will skip rendering if out of the camera's bound (In-line with other PIDS), except:
-    - If any of the configured X/Y/Z offset is >= 4m
-    - If the configured scale is >= 4x
-    - If explicitly configured in the PIDS Preset (Detailed below)
+This release introduces a somewhat breaking change for PIDS Projector:
+- By default, PIDS Projector can no longer render out of bound.
   - This is done to conserve performance, in particular vanilla text rendering (`Text.create`) can be very heavy for frame-rate. (This is not related to JS execution speed)
   - Please manually add a `"outOfBound": true` property for the relevant preset in `joban_custom_resources.json` to true if:
     - Your script requires constant background running.
-    - You experience your PIDS disappearing midway. (Note: There's some leniency for the out-of-bound rules, so e.g. a 2x1 is acceptable)
+    - You experience your PIDS disappearing midway. (Note: There's some leniency for the out-of-bound rules, so e.g. a 2x1 is still acceptable)
     - You think the frame-rate impact of your PIDS is negligible. (e.g. AWT-drawn text)
+- Added `Rect` for rendering a solid color quad, instead of needing `Texture`.
 
 ## Translations
 Thanks to the following people who have contributed translations for this release! (No particular order):
-- happytbs (zh_cn)
+- DelphoxOTS (ja_jp)
+- vernacular7 (ko_kr)
+- mathewofficial (nl_nl)
 
 Translations for JCM is now hosted on [ZiYue's Weblate](https://weblate.ziyuesinicization.site/projects/joban-client-mod/)
 
