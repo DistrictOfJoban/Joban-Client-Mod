@@ -16,9 +16,20 @@ import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.mtrscripting.mod.resource.PSDResourceProvider;
+/* The synchronous backing draw needs a RAW immediate-style consumer
+   (private buffer + synchronous flush, see drawSync). The raw type names
+   are loader-specific — Yarn on fabric, Mojmap on forge — so this is the
+   only loader branch in the file; everything else sticks to the
+   org.mtr.mapping abstractions. */
+#if LOADER == "fabric"
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
+#else
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
+#endif
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
@@ -146,7 +157,10 @@ public final class PSDScriptRenderer implements RenderHelper {
     /** A window narrower than this (block fraction) is treated as no window. */
     private static final float MIN_WINDOW = 0.05F;
 
-    private static final net.minecraft.util.Identifier WHITE_TEXTURE_MC = new net.minecraft.util.Identifier("mtr", "textures/block/white.png");
+    /** MTR ships a plain opaque white texture; the mapping-layer
+        Identifier/RenderLayer pair is loader-neutral (same statics MTR's
+        own MoreRenderLayers uses). */
+    private static final org.mtr.mapping.holder.Identifier WHITE_TEXTURE = new org.mtr.mapping.holder.Identifier("mtr", "textures/block/white.png");
 
     /** Distance² gate — bindings beyond this are not driven. */
     private static final double MAX_DISTANCE_SQ = 192 * 192;
@@ -317,15 +331,25 @@ public final class PSDScriptRenderer implements RenderHelper {
      */
     private static void drawSync(StoredMatrixTransformations transform, Vector3d offset, Consumer<GraphicsHolder> drawer) {
         try {
+#if LOADER == "fabric"
             final MatrixStack matrices = new MatrixStack();
             final BufferBuilder buffer = new BufferBuilder(256);
             final VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(buffer);
+#else
+            final PoseStack matrices = new PoseStack();
+            final BufferBuilder buffer = new BufferBuilder(256);
+            final MultiBufferSource.BufferSource immediate = MultiBufferSource.immediate(buffer);
+#endif
             GraphicsHolder.createInstanceSafe(matrices, immediate, holder -> {
                 transform.transform(holder, offset);
                 drawer.accept(holder);
                 holder.pop();
             });
+#if LOADER == "fabric"
             immediate.draw();
+#else
+            immediate.endBatch();
+#endif
         } catch (Throwable ignored) {
             /* Never take the render thread down over a backing quad. */
         }
@@ -341,7 +365,7 @@ public final class PSDScriptRenderer implements RenderHelper {
         final float y = 1 - top;
         final float height = top - bottom;
         drawSync(transform, offset, holder -> {
-            holder.createVertexConsumer(new org.mtr.mapping.holder.RenderLayer(net.minecraft.client.render.RenderLayer.getEntityCutout(WHITE_TEXTURE_MC)));
+            holder.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(WHITE_TEXTURE));
             holder.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), ARGB_WHITE, MAX_RENDER_LIGHT);
             holder.drawTextureInWorld(x, y, 0, x + 1, y, 0, x + 1, y + height, 0, x, y + height, 0, 0, 0, 1, 1, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
         });

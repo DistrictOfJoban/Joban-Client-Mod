@@ -11,15 +11,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Yanyang/PSD: drives the PSD script render pass at the head of MTR's frame
- * render — the queued draws (white glass panels + script content) join the
- * same EXTERIOR-layer flush MTR's own PSD renderers schedule into, after the
- * block-entity phase drew (and, for bound tops, was cancelled by
- * {@link RenderRouteBaseMixin}) and before vehicles.
+ * render — the queued script draws join the same queued-layer flush MTR's own
+ * PSD renderers schedule into, after the block-entity phase drew (and, for
+ * bound tops, was cancelled by {@link RenderRouteBaseMixin}) and before
+ * vehicles. The camera {@code offset} is forwarded: the glass pane's white
+ * backing is drawn synchronously (private immediate, see
+ * {@code PSDScriptRenderer}'s flush-discipline note) and needs it to place
+ * its quads camera-relative.
  */
 @Mixin(value = MainRenderer.class, remap = false)
 public class MainRendererPSDMixin {
     @Inject(method = "render(Lorg/mtr/mapping/mapper/GraphicsHolder;Lorg/mtr/mapping/holder/Vector3d;)V", at = @At("HEAD"))
     private static void jsblock$renderPsdScripts(GraphicsHolder graphicsHolder, Vector3d offset, CallbackInfo ci) {
-        PSDScriptRenderer.renderAll();
+        PSDScriptRenderer.renderAll(offset);
     }
 }

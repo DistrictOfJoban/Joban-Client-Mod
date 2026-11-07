@@ -1,6 +1,7 @@
 package com.lx862.jcm.mod.scripting.psd;
 
 #if MC_VERSION >= "12001"
+#if LOADER == "fabric"
 import com.lx862.jcm.mixin.mtrscripting.SpriteContentsAccessor;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -15,6 +16,7 @@ import net.minecraft.util.math.random.Random;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+#endif
 #endif
 
 /**
@@ -46,13 +48,16 @@ import java.util.concurrent.ConcurrentHashMap;
  * vanilla AND for whatever the pack ships.
  *
  * <h2>Availability &amp; fallbacks</h2>
- * Requires the 1.20.x baked-sprite texture API (SpriteContents); on older
- * MC versions the scan is compiled out and every pane renders the full
- * face. Anything unexpected (no model, no sprite, unreadable image,
- * degenerate result) also falls back to the full face — exactly the
- * pre-clipping behaviour. The scan is cached per block state; states are
- * interned by the game, so the cache is bounded by the number of distinct
- * glass variants in the world.
+ * Requires the 1.20.x baked-sprite texture API (SpriteContents) AND the
+ * fabric mappings — the scan walks raw baked-model quads and reads raw
+ * atlas-sprite pixels, APIs the shared-source forge build (Mojmap names)
+ * does not expose without a second per-loader implementation; on forge,
+ * and on older MC versions, the scan is compiled out and every pane
+ * renders the full face. Anything unexpected (no model, no sprite,
+ * unreadable image, degenerate result) also falls back to the full
+ * face — exactly the pre-clipping behaviour. The scan is cached per
+ * block state; states are interned by the game, so the cache is bounded
+ * by the number of distinct glass variants in the world.
  */
 final class PSDWindowBounds {
 
@@ -60,6 +65,7 @@ final class PSDWindowBounds {
     private static final float[] FULL_FACE = {1, 0};
 
 #if MC_VERSION >= "12001"
+#if LOADER == "fabric"
     /** An alpha below this counts as "window". Vanilla's window is 0 and
      *  its frame is 255; tinted-glass packs sit anywhere in between, so
      *  the threshold is set high enough to catch a ~60 % tint as a window
@@ -240,9 +246,13 @@ final class PSDWindowBounds {
         if (image == null || image.getWidth() <= 0 || image.getHeight() <= 0) {
             return null;
         }
-        final int frames = Math.max(1, contents.getFrameCount());
+        /* Frame 0 of the original image: for static textures (every PSD
+           glass texture in practice) the image IS the one frame, so its
+           full height is the frame height. Animated textures degrade to
+           reading the stacked image — no frame-count API is needed (the
+           contents' own frame count is private in the 1.20.x mappings). */
         final int frameWidth = image.getWidth();
-        final int frameHeight = Math.max(1, image.getHeight() / frames);
+        final int frameHeight = image.getHeight();
 
         final float uSpan = sprite.getMaxU() - sprite.getMinU();
         final float vSpan = sprite.getMaxV() - sprite.getMinV();
@@ -329,6 +339,14 @@ final class PSDWindowBounds {
     private static float clamp01(float v) {
         return v < 0 ? 0 : Math.min(v, 1);
     }
+#else
+    /* Forge: the baked-sprite scan is fabric-only (see the class javadoc)
+       — window clipping is unavailable and every pane renders the full
+       face (the pre-clipping behaviour of the glass sandwich). */
+    static float[] window(org.mtr.mapping.holder.BlockState state, org.mtr.mapping.holder.Direction facing) {
+        return FULL_FACE;
+    }
+#endif
 #else
     /* Pre-1.20.1: no baked-sprite texture API — window clipping is
        unavailable and every pane renders the full face (the pre-clipping
