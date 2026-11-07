@@ -30,22 +30,30 @@ import java.util.concurrent.ConcurrentHashMap;
  * originally-transparent window while the pane's opaque parts (frame,
  * bottom panel, light strip) stay in front and clip it. Resource packs
  * however replace both the glass models and the glass textures — frame
- * thicknesses and window extents are pack-specific, and tinted-glass
- * packs even make the "frame" semi-transparent (alpha in between), which
- * lets sandwiched content bleed through it. Clipping the script canvas
- * to hardcoded vanilla insets would be wrong for every pack but vanilla.
+ * thicknesses and window extents are pack-specific, and the yanyang.4
+ * user pack proved the extreme: a pane texture that is <b>fully
+ * transparent</b> (pure see-through glass) with the door's frame strips
+ * as <b>separate model elements</b>. Deriving the window from the pane
+ * quad's own texture alone then yields the full face and the canvas
+ * bleeds over the strips.
  *
- * <h2>How</h2>
+ * <h2>How (v2 — occlusion derived)</h2>
  * For the bound block's state this walks the BAKED model's quads (the
- * blockstate's rotation is already baked in), picks the pane's
- * platform-facing face quads (geometric normal pointing at the platform,
- * plane inside the pane slab, face area large enough to exclude rim
- * strips), scans the quads' sprite pixels — through the baked atlas
- * sprite, so animations and atlas packing are handled — for rows whose
- * alpha is below {@link #ALPHA_THRESHOLD}, and maps the found transparent
- * v-range back to block-space Y through the quad's own UV→position
- * mapping. Result: the window's top/bottom in block space, correct for
- * vanilla AND for whatever the pack ships.
+ * blockstate's rotation is already baked in) and keeps every
+ * <b>pane-parallel</b> quad (geometric normal along the platform axis,
+ * either direction) that is big enough to matter. Every sprite row of
+ * such a quad whose sampled pixels are majority-opaque marks its block
+ * space y-range as <b>occluded frame</b> — whether that row belongs to
+ * the pane's own texture (frosted bands, printed frame) or to a
+ * separate frame/strip element anywhere in the block. The window is
+ * the largest contiguous unoccluded span, intersected with the
+ * <b>pane's own geometric extent</b> (so a half-height pane never
+ * lets content float in the open air above it), and reported together
+ * with the pane's plane position (the sandwich planes are placed just
+ * behind the pane's platform-side face — pack panes do not necessarily
+ * sit at the vanilla 4/16) and whether the block has any visible
+ * pane-parallel geometry at all (the render gate for DRL upper halves,
+ * whose vanilla models are invisible).
  *
  * <h2>Availability &amp; fallbacks</h2>
  * Requires the 1.20.x baked-sprite texture API (SpriteContents) AND the
@@ -53,16 +61,19 @@ import java.util.concurrent.ConcurrentHashMap;
  * atlas-sprite pixels, APIs the shared-source forge build (Mojmap names)
  * does not expose without a second per-loader implementation; on forge,
  * and on older MC versions, the scan is compiled out and every pane
- * renders the full face. Anything unexpected (no model, no sprite,
- * unreadable image, degenerate result) also falls back to the full
- * face — exactly the pre-clipping behaviour. The scan is cached per
- * block state; states are interned by the game, so the cache is bounded
- * by the number of distinct glass variants in the world.
+ * renders the full face at the vanilla pane depth (the pre-scan
+ * behaviour — DRL upper halves keep skipping on forge). Anything
+ * unexpected (no model, no sprite, unreadable image, degenerate result)
+ * also falls back. The scan is cached per block state; states are
+ * interned by the game, so the cache is bounded by the number of
+ * distinct glass variants in the world.
  */
 final class PSDWindowBounds {
 
-    /** Full-face sentinel: top = 1, bottom = 0. */
-    private static final float[] FULL_FACE = {1, 0};
+    /** Vanilla pane depth fallback: the pane's platform-side face sits
+     *  4/16 toward the track from the block centre (both JCM's DRL APG
+     *  and MTR's own APG glass models). */
+    static final float DEFAULT_PANE_ALONG = 4F / 16;
 
 #if MC_VERSION >= "12001"
 #if LOADER == "fabric"
@@ -72,35 +83,153 @@ final class PSDWindowBounds {
      *  while still excluding frame panels (typically ≥ ~70 % opaque). */
     private static final int ALPHA_THRESHOLD = 170;
 
-    /** A pane face quad must span at least this much of the block face —
-     *  excludes the light strips, rims and side trims around the pane. */
-    private static final float MIN_PANE_AREA = 0.2F;
+    /** A pane-parallel quad must span at least this much of the block
+     *  face to be a frame/strip OCCLUDER — excludes micro slivers. */
+    private static final float MIN_OCCLUDER_AREA = 0.005F;
 
-    /** The pane slab (local z, 16ths): the platform-side pane face sits
-     *  around 4/16 toward the track from the block centre. */
-    private static final float PANE_MIN_ALONG = 0.1F;
-    private static final float PANE_MAX_ALONG = 0.4F;
+    /** A quad must span at least this much of the block face to be the
+     *  PANE candidate (the platform-facing quad with the largest area
+     *  defines the pane plane and the window's geometric bound). */
+    private static final float MIN_PANE_AREA = 0.05F;
 
-    /** A window narrower than this (block fraction) is treated as no
-     *  window at all. */
-    private static final float MIN_WINDOW = 0.05F;
+    /** Window scan resolution (rows over the block height). */
+    private static final int GRID = 128;
 
     private static final int CACHE_LIMIT = 512;
-    private static final Map<BlockState, float[]> CACHE = new ConcurrentHashMap<>();
+    private static final Map<BlockState, Bounds> CACHE = new ConcurrentHashMap<>();
+
+    /** One pane-parallel quad of the baked model, parsed. */
+    private static final class Quad {
+        final float[] px = new float[4], py = new float[4], pz = new float[4];
+        final float[] pu = new float[4], pv = new float[4];
+        final float area;            // area in the plane ⊥ the platform axis
+        final boolean facesPlatform; // normal points at the platform
+        final float along;           // plane position along the platform axis
+        final float yMin, yMax;      // block-space y extent
+        final Sprite sprite;
+        final int frameWidth, frameHeight;
+
+        Quad(BakedQuad baked, Direction platform, Direction facing) {
+            final int[] data = baked.getVertexData();
+            for (int i = 0; i < 4; i++) {
+                px[i] = Float.intBitsToFloat(data[i * 8]);
+                py[i] = Float.intBitsToFloat(data[i * 8 + 1]);
+                pz[i] = Float.intBitsToFloat(data[i * 8 + 2]);
+                pu[i] = Float.intBitsToFloat(data[i * 8 + 4]);
+                pv[i] = Float.intBitsToFloat(data[i * 8 + 5]);
+            }
+            /* Baked quads may be centred on the block ([-0.5, 0.5]) instead
+               of [0, 1] depending on the bake pipeline — a pane face always
+               spans most of the block, so any negative coordinate betrays
+               the centred convention. */
+            if (min(px) < -0.01F || min(py) < -0.01F || min(pz) < -0.01F) {
+                for (int i = 0; i < 4; i++) {
+                    px[i] += 0.5F;
+                    py[i] += 0.5F;
+                    pz[i] += 0.5F;
+                }
+            }
+            final float ax = px[1] - px[0], ay = py[1] - py[0], az = pz[1] - pz[0];
+            final float bx = px[3] - px[0], by = py[3] - py[0], bz = pz[3] - pz[0];
+            final float tx = ay * bz - az * by;
+            final float ty = az * bx - ax * bz;
+            final float tz = ax * by - ay * bx;
+            final float len = (float) Math.sqrt(tx * tx + ty * ty + tz * tz);
+            if (len < 1e-6F) {
+                throw new IllegalArgumentException("degenerate");
+            }
+            final float dotPlatform = (tx * platform.getOffsetX() + ty * platform.getOffsetY() + tz * platform.getOffsetZ()) / len;
+            if (Math.abs(dotPlatform) < 0.9F) {
+                throw new IllegalArgumentException("not pane-parallel");
+            }
+            facesPlatform = dotPlatform > 0;
+            float cx = 0, cy = 0, cz = 0;
+            float yMin = py[0], yMax = py[0];
+            for (int i = 0; i < 4; i++) {
+                cx += px[i];
+                cy += py[i];
+                cz += pz[i];
+                yMin = Math.min(yMin, py[i]);
+                yMax = Math.max(yMax, py[i]);
+            }
+            cx = cx / 4 - 0.5F;
+            cy = cy / 4 - 0.5F;
+            cz = cz / 4 - 0.5F;
+            along = cx * facing.getOffsetX() + cy * facing.getOffsetY() + cz * facing.getOffsetZ();
+            if (facing.getAxis() == Direction.Axis.X) {
+                area = (max(pz) - min(pz)) * (yMax - yMin);
+            } else if (facing.getAxis() == Direction.Axis.Z) {
+                area = (max(px) - min(px)) * (yMax - yMin);
+            } else {
+                throw new IllegalArgumentException("vertical facing");
+            }
+            this.yMin = yMin;
+            this.yMax = yMax;
+            sprite = baked.getSprite();
+            SpriteContents contents = sprite == null ? null : sprite.getContents();
+            NativeImage image = contents == null ? null : ((SpriteContentsAccessor) (Object) contents).jsblock$getImage();
+            if (image == null || image.getWidth() <= 0 || image.getHeight() <= 0) {
+                throw new IllegalArgumentException("no image");
+            }
+            /* Frame 0 of the original image: for static textures (every PSD
+               glass texture in practice) the image IS the one frame, so its
+               full height is the frame height. Animated textures degrade to
+               reading the stacked image — no frame-count API is needed (the
+               contents' own frame count is private in the 1.20.x mappings). */
+            frameWidth = image.getWidth();
+            frameHeight = image.getHeight();
+        }
+
+        /** Sprite row (frame-local) → atlas v coordinate. */
+        float rowToV(int row) {
+            final float local = (row + 0.5F) / frameHeight;
+            return sprite.getMinV() + local * (sprite.getMaxV() - sprite.getMinV());
+        }
+    }
+
+    /** The derived pane geometry of one block state. */
+    static final class Bounds {
+        /** Full-face sentinel: window = the whole block face at the vanilla
+         *  pane depth, no visible pane-parallel geometry. */
+        static final Bounds FULL_FACE = new Bounds(1, 0, DEFAULT_PANE_ALONG, false);
+
+        /** Window top (block space, 1 = block top). */
+        final float top;
+        /** Window bottom (block space, 0 = block bottom). */
+        final float bottom;
+        /** The pane's platform-side face plane, measured toward the track
+         *  from the block centre (vanilla: +4/16). The sandwich planes sit
+         *  just behind it. */
+        final float paneAlong;
+        /** Whether ANY pane-parallel quad has any visible pixel — the
+         *  render gate for DRL upper halves (their vanilla models are
+         *  fully invisible; a pack that gives them a visible frame/glass
+         *  turns them into real display surfaces). */
+        final boolean visibleGeometry;
+
+        Bounds(float top, float bottom, float paneAlong, boolean visibleGeometry) {
+            this.top = top;
+            this.bottom = bottom;
+            this.paneAlong = paneAlong;
+            this.visibleGeometry = visibleGeometry;
+        }
+    }
+
+    /** A window narrower than this (block fraction) is treated as no
+     *  window at all — kept next to the scan for the renderer's MIN_WINDOW. */
+    static final float MIN_WINDOW = 0.05F;
 
     /**
-     * The block's transparent window in block-space Y (0 = block bottom,
-     * 1 = block top): {@code [0] = window top, [1] = window bottom}. When
-     * the window cannot be derived this returns the full face
-     * ({@code {1, 0}}) — never null.
+     * The block's derived pane geometry (see the class javadoc). Never
+     * null; falls back to {@link Bounds#FULL_FACE}.
      */
-    static float[] window(org.mtr.mapping.holder.BlockState state, org.mtr.mapping.holder.Direction facing) {
+    static Bounds window(org.mtr.mapping.holder.BlockState state, org.mtr.mapping.holder.Direction facing) {
         final BlockState nativeState = (BlockState) state.data;
-        final float[] cached = CACHE.get(nativeState);
+        final Bounds cached = CACHE.get(nativeState);
         if (cached != null) {
             return cached;
         }
-        final float[] computed = compute(nativeState, (Direction) facing.data);
+        final Bounds computed = compute(nativeState, (Direction) facing.data);
         if (CACHE.size() > CACHE_LIMIT) {
             CACHE.clear();
         }
@@ -108,216 +237,207 @@ final class PSDWindowBounds {
         return computed;
     }
 
-    private static float[] compute(BlockState state, Direction facing) {
+    private static Bounds compute(BlockState state, Direction facing) {
         try {
             final MinecraftClient client = MinecraftClient.getInstance();
             if (client == null || client.getBlockRenderManager() == null) {
-                return FULL_FACE;
+                return Bounds.FULL_FACE;
             }
             final BakedModel model = client.getBlockRenderManager().getModel(state);
             if (model == null) {
-                return FULL_FACE;
+                return Bounds.FULL_FACE;
             }
 
             final Direction platform = facing.getOpposite();
             final Random random = Random.create();
 
-            float top = 1;
-            float bottom = 0;
-            boolean any = false;
-
+            /* Collect pane-parallel quads. */
+            final java.util.ArrayList<Quad> quads = new java.util.ArrayList<>();
             for (int d = 0; d <= 6; d++) {
                 final Direction side = d < 6 ? Direction.values()[d] : null;
-                final List<BakedQuad> quads = model.getQuads(state, side, random);
-                if (quads == null || quads.isEmpty()) {
+                final List<BakedQuad> list = model.getQuads(state, side, random);
+                if (list == null || list.isEmpty()) {
                     continue;
                 }
-                for (final BakedQuad quad : quads) {
-                    final float[] w = quadWindow(quad, platform, facing);
-                    if (w == null) {
-                        continue;
+                for (final BakedQuad baked : list) {
+                    try {
+                        quads.add(new Quad(baked, platform, facing));
+                    } catch (IllegalArgumentException ignored) {
+                        /* Not pane-parallel / degenerate / no sprite. */
                     }
-                    any = true;
-                    top = Math.min(top, w[0]);
-                    bottom = Math.max(bottom, w[1]);
                 }
             }
 
-            if (!any || top - bottom < MIN_WINDOW) {
-                return FULL_FACE;
+            /* The pane: the largest platform-facing quad. */
+            Quad pane = null;
+            boolean anyVisible = false;
+            for (final Quad quad : quads) {
+                if (quad.area < MIN_OCCLUDER_AREA) {
+                    continue;
+                }
+                try {
+                    if (scanVisible(quad)) {
+                        anyVisible = true;
+                    }
+                } catch (Throwable ignored) {
+                    /* Unreadable sprite — skip the visibility probe. */
+                }
+                if (quad.facesPlatform && quad.area >= MIN_PANE_AREA && (pane == null || quad.area > pane.area)) {
+                    pane = quad;
+                }
             }
-            return new float[]{top, bottom};
+            if (pane == null) {
+                /* No pane-scale platform-facing face — full-face fallback
+                   (with the visibility flag so DRL upper halves can still
+                   be gated). */
+                return new Bounds(1, 0, DEFAULT_PANE_ALONG, anyVisible);
+            }
+
+            /* Occlusion grid: mark every majority-opaque sprite row of every
+               occluder quad (pane's own texture bands AND separate frame
+               elements) as frame. */
+            final boolean[] occluded = new boolean[GRID];
+            for (final Quad quad : quads) {
+                if (quad.area < MIN_OCCLUDER_AREA) {
+                    continue;
+                }
+                try {
+                    markOcclusion(quad, occluded);
+                } catch (Throwable ignored) {
+                    /* Unreadable sprite — contributes no occlusion. */
+                }
+            }
+
+            /* Window: the largest unoccluded span, clipped to the pane's
+               own geometric extent. */
+            final int yFrom = clampRow(pane.yMin);
+            final int yTo = clampRow(pane.yMax);
+            int bestStart = -1, bestLen = 0;
+            int run = 0;
+            for (int y = yFrom; y <= yTo; y++) {
+                if (!occluded[y]) {
+                    run++;
+                    if (run > bestLen) {
+                        bestLen = run;
+                        bestStart = y - run + 1;
+                    }
+                } else {
+                    run = 0;
+                }
+            }
+            if (bestLen <= 0) {
+                return new Bounds(1, 0, pane.along, anyVisible);
+            }
+            final float top = (float) (bestStart + bestLen) / GRID;
+            final float bottom = (float) bestStart / GRID;
+            if (top - bottom < MIN_WINDOW) {
+                return new Bounds(1, 0, pane.along, anyVisible);
+            }
+            return new Bounds(top, bottom, pane.along, anyVisible);
         } catch (Throwable t) {
-            return FULL_FACE;
+            return Bounds.FULL_FACE;
         }
     }
 
-    /**
-     * The transparent window of ONE pane face quad, or null when the quad
-     * is not a platform-facing pane face / has no transparent region.
-     */
-    private static float[] quadWindow(BakedQuad quad, Direction platform, Direction facing) {
-        final int[] data = quad.getVertexData();
-        if (data == null || data.length < 32) {
-            return null;
-        }
-
-        final float[] px = new float[4], py = new float[4], pz = new float[4], pu = new float[4], pv = new float[4];
-        for (int i = 0; i < 4; i++) {
-            px[i] = Float.intBitsToFloat(data[i * 8]);
-            py[i] = Float.intBitsToFloat(data[i * 8 + 1]);
-            pz[i] = Float.intBitsToFloat(data[i * 8 + 2]);
-            pu[i] = Float.intBitsToFloat(data[i * 8 + 4]);
-            pv[i] = Float.intBitsToFloat(data[i * 8 + 5]);
-        }
-
-        /* Baked quads may be centred on the block ([-0.5, 0.5]) instead of
-           [0, 1] depending on the bake pipeline — a pane face always spans
-           most of the block, so any negative coordinate betrays the
-           centred convention. */
-        if (min(px) < -0.01F || min(py) < -0.01F || min(pz) < -0.01F) {
-            for (int i = 0; i < 4; i++) {
-                px[i] += 0.5F;
-                py[i] += 0.5F;
-                pz[i] += 0.5F;
+    /** Whether the quad's sampled region contains ANY visible pixel. */
+    private static boolean scanVisible(Quad quad) {
+        final NativeImage image = ((SpriteContentsAccessor) (Object) quad.sprite.getContents()).jsblock$getImage();
+        final int[][] rect = sampleRect(quad);
+        final int xFrom = rect[0][0], xTo = rect[0][1], yFrom = rect[1][0], yTo = rect[1][1];
+        final int columnStep = Math.max(1, (xTo - xFrom) / 16);
+        for (int y = yFrom; y <= yTo; y += Math.max(1, (yTo - yFrom) / 32)) {
+            for (int x = xFrom; x <= xTo; x += columnStep) {
+                if ((image.getOpacity(x, y) & 0xFF) > 0) {
+                    return true;
+                }
             }
         }
+        return false;
+    }
 
-        /* Geometric normal — must point AT the platform (the pane's
-           platform-side face). */
-        final float ax = px[1] - px[0], ay = py[1] - py[0], az = pz[1] - pz[0];
-        final float bx = px[3] - px[0], by = py[3] - py[0], bz = pz[3] - pz[0];
-        float nx = ay * bz - az * by;
-        float ny = az * bx - ax * bz;
-        float nz = ax * by - ay * bx;
-        final float len = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
-        if (len < 1e-6F) {
-            return null;
-        }
-        nx /= len;
-        ny /= len;
-        nz /= len;
-        final float towardsPlatform = nx * platform.getOffsetX() + ny * platform.getOffsetY() + nz * platform.getOffsetZ();
-        if (towardsPlatform < 0.9F) {
-            return null;
-        }
-
-        /* The quad must live in the pane slab: its centre, measured along
-           the facing axis (toward the track) from the block centre. */
-        float cx = 0, cy = 0, cz = 0;
-        for (int i = 0; i < 4; i++) {
-            cx += px[i];
-            cy += py[i];
-            cz += pz[i];
-        }
-        cx = cx / 4 - 0.5F;
-        cy = cy / 4 - 0.5F;
-        cz = cz / 4 - 0.5F;
-        final float along = cx * facing.getOffsetX() + cy * facing.getOffsetY() + cz * facing.getOffsetZ();
-        if (along < PANE_MIN_ALONG || along > PANE_MAX_ALONG) {
-            return null;
-        }
-
-        /* Face area (in the plane perpendicular to the facing axis) —
-           excludes the thin strips and trims around the pane. */
-        final float area;
-        if (facing.getAxis() == Direction.Axis.X) {
-            area = (max(pz) - min(pz)) * (max(py) - min(py));
-        } else if (facing.getAxis() == Direction.Axis.Z) {
-            area = (max(px) - min(px)) * (max(py) - min(py));
-        } else {
-            return null;
-        }
-        if (area < MIN_PANE_AREA) {
-            return null;
-        }
-
-        /* Scan the quad's sprite pixels (frame 0 of the original image,
-           via the baked sprite so atlas packing is unwound). */
-        final Sprite sprite = quad.getSprite();
-        if (sprite == null) {
-            return null;
-        }
-        final SpriteContents contents = sprite.getContents();
-        if (contents == null) {
-            return null;
-        }
-        final NativeImage image = ((SpriteContentsAccessor) (Object) contents).jsblock$getImage();
-        if (image == null || image.getWidth() <= 0 || image.getHeight() <= 0) {
-            return null;
-        }
-        /* Frame 0 of the original image: for static textures (every PSD
-           glass texture in practice) the image IS the one frame, so its
-           full height is the frame height. Animated textures degrade to
-           reading the stacked image — no frame-count API is needed (the
-           contents' own frame count is private in the 1.20.x mappings). */
-        final int frameWidth = image.getWidth();
-        final int frameHeight = image.getHeight();
-
-        final float uSpan = sprite.getMaxU() - sprite.getMinU();
-        final float vSpan = sprite.getMaxV() - sprite.getMinV();
-        if (uSpan <= 0 || vSpan <= 0) {
-            return null;
-        }
-        final float suMin = clamp01((min(pu) - sprite.getMinU()) / uSpan);
-        final float suMax = clamp01((max(pu) - sprite.getMinU()) / uSpan);
-        final float svMin = clamp01((min(pv) - sprite.getMinV()) / vSpan);
-        final float svMax = clamp01((max(pv) - sprite.getMinV()) / vSpan);
-        if (suMax - suMin < 1e-4F || svMax - svMin < 1e-4F) {
-            return null;
-        }
-
-        final int xFrom = (int) Math.floor(suMin * (frameWidth - 1));
-        final int xTo = (int) Math.ceil(suMax * (frameWidth - 1));
-        final int yFrom = (int) Math.floor(svMin * (frameHeight - 1));
-        final int yTo = (int) Math.ceil(svMax * (frameHeight - 1));
+    /** Marks the block-space y-ranges of the quad's majority-opaque sprite
+     *  rows (and, when the quad's sampled region is majority-opaque as a
+     *  whole, its full extent — small frame strips) as occluded. */
+    private static void markOcclusion(Quad quad, boolean[] occluded) {
+        final NativeImage image = ((SpriteContentsAccessor) (Object) quad.sprite.getContents()).jsblock$getImage();
+        final int[][] rect = sampleRect(quad);
+        final int xFrom = rect[0][0], xTo = rect[0][1], yFrom = rect[1][0], yTo = rect[1][1];
         final int columnStep = Math.max(1, (xTo - xFrom) / 16);
 
-        int firstRow = -1;
-        int lastRow = -1;
+        int opaqueRows = 0;
+        int totalRows = 0;
         for (int y = yFrom; y <= yTo; y++) {
-            boolean clear = false;
+            int opaque = 0, total = 0;
             for (int x = xFrom; x <= xTo; x += columnStep) {
-                if ((image.getOpacity(x, y) & 0xFF) < ALPHA_THRESHOLD) {
-                    clear = true;
-                    break;
+                total++;
+                if ((image.getOpacity(x, y) & 0xFF) >= ALPHA_THRESHOLD) {
+                    opaque++;
                 }
             }
-            if (clear) {
-                if (firstRow < 0) {
-                    firstRow = y;
+            totalRows++;
+            if (total > 0 && opaque * 2 >= total) {
+                opaqueRows++;
+                /* Map the row to block-space y through the quad's v→y
+                   mapping, clamped to the quad's own y extent. */
+                final float yA = vToY(quad, quad.rowToV(y));
+                final float yB = vToY(quad, quad.rowToV(Math.min(y + 1, quad.frameHeight - 1)));
+                final float lo = Math.max(quad.yMin, Math.min(yA, yB));
+                final float hi = Math.min(quad.yMax, Math.max(yA, yB));
+                if (hi > lo) {
+                    final int rFrom = clampRow(lo);
+                    final int rTo = clampRow(hi);
+                    for (int r = rFrom; r <= rTo; r++) {
+                        occluded[r] = true;
+                    }
                 }
-                lastRow = y;
             }
         }
-        if (firstRow < 0) {
-            return null;
+        /* Mostly-opaque quad (a frame strip / beam): occlude its whole
+           y extent — sub-pixel UV slivers would otherwise slip through
+           the row mapping. */
+        if (totalRows > 0 && opaqueRows * 2 >= totalRows) {
+            final int rFrom = clampRow(quad.yMin);
+            final int rTo = clampRow(quad.yMax);
+            for (int r = rFrom; r <= rTo; r++) {
+                occluded[r] = true;
+            }
         }
+    }
 
-        /* Map the transparent rows back to block-space Y through the
-           quad's own v→y mapping (linear for axis-aligned pane faces). */
+    /** The quad's sampled pixel rectangle in the sprite's frame-0 image. */
+    private static int[][] sampleRect(Quad quad) {
+        final float uSpan = quad.sprite.getMaxU() - quad.sprite.getMinU();
+        final float vSpan = quad.sprite.getMaxV() - quad.sprite.getMinV();
+        if (uSpan <= 0 || vSpan <= 0) {
+            throw new IllegalArgumentException("degenerate sprite");
+        }
+        final float suMin = clamp01((min(quad.pu) - quad.sprite.getMinU()) / uSpan);
+        final float suMax = clamp01((max(quad.pu) - quad.sprite.getMinU()) / uSpan);
+        final float svMin = clamp01((min(quad.pv) - quad.sprite.getMinV()) / vSpan);
+        final float svMax = clamp01((max(quad.pv) - quad.sprite.getMinV()) / vSpan);
+        return new int[][]{
+                {(int) Math.floor(suMin * (quad.frameWidth - 1)), (int) Math.ceil(suMax * (quad.frameWidth - 1))},
+                {(int) Math.floor(svMin * (quad.frameHeight - 1)), (int) Math.ceil(svMax * (quad.frameHeight - 1))}
+        };
+    }
+
+    /** Atlas v → block-space y through the quad's own (linear) v→y map. */
+    private static float vToY(Quad quad, float v) {
         int vMinIdx = 0, vMaxIdx = 0;
         for (int i = 1; i < 4; i++) {
-            if (pv[i] < pv[vMinIdx]) {
+            if (quad.pv[i] < quad.pv[vMinIdx]) {
                 vMinIdx = i;
             }
-            if (pv[i] > pv[vMaxIdx]) {
+            if (quad.pv[i] > quad.pv[vMaxIdx]) {
                 vMaxIdx = i;
             }
         }
-        if (pv[vMaxIdx] - pv[vMinIdx] < 1e-6F) {
-            return null;
-        }
-        final float slope = (py[vMaxIdx] - py[vMinIdx]) / (pv[vMaxIdx] - pv[vMinIdx]);
-        final float yAtFirst = py[vMinIdx] + (rowToV(firstRow, sprite, frameHeight) - pv[vMinIdx]) * slope;
-        final float yAtLast = py[vMinIdx] + (rowToV(lastRow, sprite, frameHeight) - pv[vMinIdx]) * slope;
-        return new float[]{Math.max(yAtFirst, yAtLast), Math.min(yAtFirst, yAtLast)};
+        final float slope = (quad.py[vMaxIdx] - quad.py[vMinIdx]) / (quad.pv[vMaxIdx] - quad.pv[vMinIdx]);
+        return quad.py[vMinIdx] + (v - quad.pv[vMinIdx]) * slope;
     }
 
-    /** Sprite row (frame-local) → atlas v coordinate. */
-    private static float rowToV(int row, Sprite sprite, int frameHeight) {
-        final float local = (row + 0.5F) / frameHeight;
-        return sprite.getMinV() + local * (sprite.getMaxV() - sprite.getMinV());
+    private static int clampRow(float y) {
+        return Math.max(0, Math.min(GRID - 1, (int) Math.floor(y * GRID)));
     }
 
     private static float min(float[] arr) {
@@ -342,17 +462,43 @@ final class PSDWindowBounds {
 #else
     /* Forge: the baked-sprite scan is fabric-only (see the class javadoc)
        — window clipping is unavailable and every pane renders the full
-       face (the pre-clipping behaviour of the glass sandwich). */
-    static float[] window(org.mtr.mapping.holder.BlockState state, org.mtr.mapping.holder.Direction facing) {
-        return FULL_FACE;
+       face at the vanilla pane depth (the pre-scan behaviour of the
+       glass sandwich, including the DRL upper-half skip). */
+    static final class Bounds {
+        static final Bounds FULL_FACE = new Bounds();
+        final float top = 1;
+        final float bottom = 0;
+        final float paneAlong = DEFAULT_PANE_ALONG;
+        final boolean visibleGeometry = false;
+        private Bounds() {
+        }
+    }
+
+    static final float MIN_WINDOW = 0.05F;
+
+    static Bounds window(org.mtr.mapping.holder.BlockState state, org.mtr.mapping.holder.Direction facing) {
+        return Bounds.FULL_FACE;
     }
 #endif
 #else
     /* Pre-1.20.1: no baked-sprite texture API — window clipping is
-       unavailable and every pane renders the full face (the pre-clipping
-       behaviour of the glass sandwich). */
-    static float[] window(org.mtr.mapping.holder.BlockState state, org.mtr.mapping.holder.Direction facing) {
-        return FULL_FACE;
+       unavailable and every pane renders the full face at the vanilla
+       pane depth (the pre-scan behaviour of the glass sandwich,
+       including the DRL upper-half skip). */
+    static final class Bounds {
+        static final Bounds FULL_FACE = new Bounds();
+        final float top = 1;
+        final float bottom = 0;
+        final float paneAlong = DEFAULT_PANE_ALONG;
+        final boolean visibleGeometry = false;
+        private Bounds() {
+        }
+    }
+
+    static final float MIN_WINDOW = 0.05F;
+
+    static Bounds window(org.mtr.mapping.holder.BlockState state, org.mtr.mapping.holder.Direction facing) {
+        return Bounds.FULL_FACE;
     }
 #endif
 }

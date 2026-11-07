@@ -65,33 +65,37 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  * <h2>Geometry</h2>
  * All faces live in the frame MTR's own PSD renderers use —
  * {@code translate(0.5+X, Y, 0.5+Z) → rotateY(-facing.asRotation())} — where
- * local +Z points toward the track, the glass pane occupies z∈[4/16, 6/16]
- * and the psd_top display plane sits at z = 2/16 - ε:
+ * local +Z points toward the track and the vanilla pane glass occupies
+ * z∈[4/16, 6/16]:
  *
  * <ul>
  *   <li><b>Glass</b> (bound per block half; the editor item binds both halves
  *       of a column at once): the <b>glass segment</b> the bound column
  *       belongs to (the contiguous glass/glass-end run between the doors —
  *       exactly the glass the brush merged, see {@link PSDRuns}) becomes a
- *       scripted panel <b>sandwiched INSIDE the pane</b> (the pane glass is
- *       z∈[4/16, 6/16]): an opaque white backing at z = 5/16 (pane centre,
- *       drawn double-sided) and, just behind the platform-side pane face at
- *       z = 4.5/16, the script canvas. The pane's own texture blends over the
- *       sandwich, so the script is visible exactly through the pane's
- *       <b>originally transparent window</b> while the opaque parts of the
- *       texture — the frame, divider bars, frosted bands, whatever the
- *       resource pack draws — stay fully visible and clip the canvas; nothing
- *       is painted over the frame. The white backing hides the script from
- *       the track side (passengers inside a stopped train see plain white
- *       through the window, never mirrored content).</li>
+ *       scripted panel <b>sandwiched INSIDE the pane</b>: an opaque white
+ *       backing 1/16 behind the pane's platform-side face (drawn
+ *       double-sided) and the script canvas 0.5/16 behind it — both at the
+ *       run's DERIVED pane depth (see {@link PSDWindowBounds}; vanilla
+ *       geometry → the classic 5/16 and 4.5/16). The pane's own texture
+ *       blends over the sandwich, so the script is visible exactly through
+ *       the pane's <b>originally transparent window</b> while the opaque
+ *       parts of the texture — the frame, divider bars, frosted bands,
+ *       whatever the resource pack draws — stay fully visible and clip the
+ *       canvas; nothing is painted over the frame. The white backing hides
+ *       the script from the track side (passengers inside a stopped train
+ *       see plain white through the window, never mirrored content).</li>
  *   <li><b>Window clipping</b> (see {@link PSDWindowBounds}): the backing and
  *       the canvas are additionally clipped to the pane's transparent
  *       window, derived at runtime from the block's actual baked model and
- *       texture alpha — resource packs replace both, and a pack whose
- *       "window" is a tint and whose "frame" is only semi-transparent would
- *       otherwise let sandwiched content (and the white backing itself) show
- *       through the frame region. Blocks whose window cannot be derived fall
- *       back to the full face, matching the pre-clipping behaviour.</li>
+ *       texture alpha <b>by occlusion</b> (yanyang.5) — every pane-parallel
+ *       quad's opaque rows count as frame, so packs whose pane texture is
+ *       fully transparent but whose frame strips are separate model
+ *       elements clip correctly too. Blocks whose window cannot be derived
+ *       fall back to the full face, matching the pre-clipping behaviour.
+ *       DRL upper halves (invisible in vanilla) only render when their
+ *       model actually shows something — a pack that gives them a visible
+ *       frame/glass turns them into display surfaces.</li>
  *   <li><b>Flush discipline</b>: the white backing is NOT drawn through the
  *       shared entity-phase vertex consumer. Deferred-batching pipelines
  *       (ImmediatelyFast + Iris/Sodium shaderpacks) may flush that shared
@@ -138,29 +142,31 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static final float TOP_BOTTOM_PADDING = 1.5F / 16;
     private static final float TOP_DISPLAY_Z = 2F / 16 - 0.05F / 16;
 
-    /** Glass pane faces in the local frame (16ths): the pane glass occupies
-     *  z∈[4/16, 6/16] (platform-side face at 4/16, track-side face at 6/16 —
-     *  the same geometry MTR's own APG glass models use, which
-     *  RenderAPGGlass draws its station band against). */
-    private static final float GLASS_PLATFORM_Z = 4F / 16;
-
-    /** The scripted sandwich lives INSIDE the pane: the white backing at the
-     *  pane centre and the script canvas just behind the platform-side pane
-     *  face. Both are separated from every pane face by 1/32 of a block — far
-     *  beyond any depth-precision z-fighting range — and because the pane's
-     *  translucent faces blend over them afterwards, the pane texture itself
-     *  decides where the sandwich shows: only through its transparent window
-     *  pixels, never over the frame. */
-    private static final float GLASS_BACKING_Z = 5F / 16;
-    private static final float GLASS_SCRIPT_Z = GLASS_PLATFORM_Z + 0.5F / 16;
+    /** The scripted sandwich lives INSIDE the pane: the white backing and
+     *  the script canvas sit just behind the pane's platform-side face,
+     *  both placed relative to the run's derived pane depth (see
+     *  {@link PSDWindowBounds.Bounds#paneAlong}; for the vanilla 4/16 pane
+     *  these are the classic 5/16 and 4.5/16). Both are separated from
+     *  every pane face by ≥ 1/32 of a block — far beyond any
+     *  depth-precision z-fighting range — and because the pane's
+     *  translucent faces blend over them afterwards, the pane texture
+     *  itself decides where the sandwich shows: only through its
+     *  transparent window pixels, never over the frame. */
+    private static final float GLASS_BACKING_OFFSET = 1F / 16;
+    private static final float GLASS_SCRIPT_OFFSET = 0.5F / 16;
 
     /** A window narrower than this (block fraction) is treated as no window. */
     private static final float MIN_WINDOW = 0.05F;
 
-    /** MTR ships a plain opaque white texture; the mapping-layer
-        Identifier/RenderLayer pair is loader-neutral (same statics MTR's
-        own MoreRenderLayers uses). */
-    private static final org.mtr.mapping.holder.Identifier WHITE_TEXTURE = new org.mtr.mapping.holder.Identifier("mtr", "textures/block/white.png");
+    /** A truly opaque white texture (16×16, every pixel 255,255,255,255).
+     *  Yanyang.5: MTR's own "white" texture (mtr:textures/block/white.png)
+     *  turned out to be a TRANSPARENT-WHITE utility sprite — fully
+     *  transparent except one corner pixel — so an entity-cutout quad
+     *  textured with it discards every fragment: the backing rendered
+     *  as pure nothing, which was the REAL root cause behind "the glass
+     *  never turns white" (not the flush discipline, not Iris). The mod
+     *  ships its own opaque white instead. */
+    private static final org.mtr.mapping.holder.Identifier WHITE_TEXTURE = new org.mtr.mapping.holder.Identifier("jsblock", "textures/block/white.png");
 
     /** Distance² gate — bindings beyond this are not driven. */
     private static final double MAX_DISTANCE_SQ = 192 * 192;
@@ -215,47 +221,56 @@ public final class PSDScriptRenderer implements RenderHelper {
         final boolean upper = IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
         final Object block = state.getBlock().data;
 
-        /* Yanyang fix: JCM's own DRL APG glass (and its end cap) has NO pane
-           in the upper half — the model is transparent above the ~2/16 light
-           strip (the DRL gate is full glass in the LOWER half only), unlike
-           MTR's own APG glass whose upper half carries a 9/16 pane. There
-           is no meaningful surface there, so the upper half of a DRL glass
-           column renders nothing at all — the lower half (the column's full
-           display surface) covers the whole segment. */
-        if (upper && (block instanceof APGGlassDRL || block instanceof APGGlassEndDRL)) {
-            return;
-        }
-
         /* The whole glass segment shares one canvas (see PSDRuns for the
            section walk and the anchor convention). */
         final PSDRuns.Run run = PSDRuns.glassRun(world, pos, facing);
 
         /* The pane's transparent window, per block, straight from the baked
            model + texture alpha (see PSDWindowBounds) — pack-dependent, so
-           nothing is hardcoded. The window IS the pane face's actual
-           transparent region (both its geometry extent and its texture
-           alpha), so half-height panes anchor correctly on their own — the
-           old code assumed every pane sits at the TOP of its block, which
-           is wrong for MTR's APG gates (their upper-half pane sits at the
-           BOTTOM of the upper block, world y 1.0–1.5625) and mislocated
-           the canvas over thin air. The shared canvas is clipped to the
-           UNION of the run's windows; the white backing uses each block's
-           own window. Blocks whose window can't be derived fall back to
-           the full face. */
+           nothing is hardcoded. v2 (yanyang.5) derives the window from
+           OCCLUSION — every pane-parallel quad's opaque rows count as
+           frame, whether they belong to the pane's own texture or to
+           separate frame/strip elements — and reports the pane's plane
+           depth so the sandwich follows the pack's pane position instead
+           of assuming the vanilla 4/16. The shared canvas is clipped to
+           the UNION of the run's windows; the white backing uses each
+           block's own window. Blocks whose window can't be derived fall
+           back to the full face. */
         final float[] blockTop = new float[run.width];
         final float[] blockBottom = new float[run.width];
         float windowTop = 1;
         float windowBottom = 0;
+        float paneAlong = PSDWindowBounds.DEFAULT_PANE_ALONG;
+        boolean anyVisibleGeometry = false;
         for (int i = 0; i < run.width; i++) {
-            final float[] w = PSDWindowBounds.window(world.getBlockState(run.start.offset(facing.rotateYClockwise(), i)), facing);
-            final float top = Math.min(w[0], 1);
-            final float bottom = Math.max(w[1], 0);
+            final PSDWindowBounds.Bounds b = PSDWindowBounds.window(world.getBlockState(run.start.offset(facing.rotateYClockwise(), i)), facing);
+            final float top = Math.min(b.top, 1);
+            final float bottom = Math.max(b.bottom, 0);
             blockTop[i] = top;
             blockBottom[i] = bottom;
             if (top - bottom >= MIN_WINDOW) {
                 windowTop = Math.min(windowTop, top);
                 windowBottom = Math.max(windowBottom, bottom);
             }
+            /* The sandwich sits just behind the DEEPEST pane in the run so
+               every block's pane stays in front of it. */
+            paneAlong = Math.max(paneAlong, b.paneAlong);
+            anyVisibleGeometry |= b.visibleGeometry;
+        }
+
+        /* Yanyang.5: DRL upper halves render ONLY when their model actually
+           shows something. The vanilla DRL upper model is fully invisible
+           (a transparent pane above the light strip) — content there would
+           float in mid-air, so it stays skipped (the yanyang.2 behaviour).
+           A resource pack that gives the upper half a visible frame or
+           glass (the yanyang.4 user pack's full-height screen doors)
+           flips this gate and the upper row becomes a real display
+           surface — the editor binds both halves of a column, so those
+           bindings just start working. Non-DRL glass (MTR's own APG,
+           whose upper half carries a real pane) always renders. */
+        final boolean drl = block instanceof APGGlassDRL || block instanceof APGGlassEndDRL;
+        if (upper && drl && !anyVisibleGeometry) {
+            return;
         }
 
         /* Canvas coordinates: y=0 at the block top, y grows downward; the
@@ -264,6 +279,13 @@ public final class PSDScriptRenderer implements RenderHelper {
         final int canvasWidth = run.width * 96;
         final int canvasHeight = Math.max(8, Math.round((windowTop - windowBottom) * 96));
         final float canvasTop = 1 - windowTop;
+
+        /* The sandwich planes track the run's pane depth: the script
+           canvas 0.5/16 behind the pane's platform-side face, the white
+           backing 1/16 behind it (vanilla pane → the classic 4.5/16 and
+           5/16). */
+        final float scriptZ = paneAlong + GLASS_SCRIPT_OFFSET;
+        final float backingZ = paneAlong + GLASS_BACKING_OFFSET;
 
         if (!shadowPass) {
             /* Opaque white backing at the pane centre, drawn double-sided per
@@ -276,7 +298,7 @@ public final class PSDScriptRenderer implements RenderHelper {
                translucent pane under deferred-batching pipelines (Immediately
                Fast + Iris), which used to make this quad fail the depth test
                behind the pane's front face and vanish. */
-            final StoredMatrixTransformations backing = glassTransform(run.start, facing, GLASS_BACKING_Z);
+            final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ);
             for (int i = 0; i < run.width; i++) {
                 if (blockTop[i] - blockBottom[i] < MIN_WINDOW) continue;
                 drawWhiteSync(backing, offset, i, blockTop[i], blockBottom[i], facing);
@@ -289,7 +311,7 @@ public final class PSDScriptRenderer implements RenderHelper {
            through the pane's originally transparent window while every
            opaque pixel of the pane texture (frame, bars, frosted bands —
            whatever the resource pack draws) stays visible in front of it. */
-        final StoredMatrixTransformations scriptSide = glassTransform(run.start, facing, GLASS_SCRIPT_Z);
+        final StoredMatrixTransformations scriptSide = glassTransform(run.start, facing, scriptZ);
         scriptSide.add(graphicsHolder -> graphicsHolder.translate(0, canvasTop, 0));
         replayScript(binding, pos, world, scriptSide, facing.getOpposite());
         if (!shadowPass) {
