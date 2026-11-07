@@ -19,12 +19,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Yanyang/PSD: when a script is bound to a psd_top block, the original
  * content (direction arrow / route map strip and the platform color strip)
- * must no longer render on <b>the whole contiguous psd_top run</b> — the
- * script canvas spans the entire band (see {@code PSDScriptRenderer}), so
- * MTR's own per-block slices must all go, not just the bound block's. The
- * run walk matches MTR's own {@code RenderRouteBase.getTextureNumber} chain
- * (contiguous psd_top blocks), so exactly the band the route map would have
- * spanned is silenced.
+ * must no longer render on <b>the psd_top group the bound block belongs
+ * to</b> — the stretch sitting on one wall section below (one brush-merged
+ * door run or one glass segment; see {@code PSDScriptRenderer} /
+ * {@code PSDRuns}, which derive the group from the wall below because the
+ * band's own SIDE_EXTENDED markers are only meaningful above a full-height
+ * PSD wall). The script canvas spans exactly that group, so every block of
+ * the group drops its slice, not just the bound one — while the
+ * <b>neighbouring groups</b> (above other doors and glass segments) keep
+ * MTR's own arrows and route maps.
  *
  * <p>Also cancels for <b>stale MTR block entities on JCM DRL glass</b>:
  * worlds that placed {@code jsblock:apg_glass_drl} /
@@ -53,7 +56,7 @@ public class RenderRouteBaseMixin {
                 final BlockState state = world.getBlockState(pos);
                 if (state.getBlock().data instanceof BlockPSDTop) {
                     final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDTop.FACING);
-                    if (PSDRuns.topRunHasScriptBinding(world, pos, facing)) {
+                    if (PSDRuns.topGroupHasScriptBinding(world, pos, facing)) {
                         ci.cancel();
                         return;
                     }

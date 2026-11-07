@@ -58,24 +58,33 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *
  * <ul>
  *   <li><b>Glass</b> (bound per block half; the editor item binds both halves
- *       of a column at once): the <b>entire contiguous glass segment</b> the
- *       bound column belongs to (every brush-merged glass/glass-end block up
- *       to the doors) turns into an opaque white panel — one quad pair just
- *       outside both pane faces (z = 4/16 - ε platform side, z = 6/16 + ε
- *       track side) spanning the whole segment. The script's captured draw
- *       calls replay ONLY on the platform-side face — the track-side face
- *       (what passengers inside a train see) stays plain white, so dynamic
- *       content is never visible mirrored from behind. The segment's shared
- *       canvas is segmentWidth×96 PIDS pixels wide (MTR-APG upper halves:
- *       segmentWidth×54, matching the 9-px gate glass; JCM DRL APG upper
- *       halves render nothing — that model has no pane above its 2-px light
- *       strip, the lower half is the column's display surface).</li>
- *   <li><b>Top</b> (bound to a psd_top block, whose own arrow/route content
- *       is cancelled band-wide by {@code RenderRouteBaseMixin}): the script's
- *       draw calls replay across the <b>entire contiguous psd_top run</b> —
- *       the same run MTR's own route map texture spans — as one
- *       runWidth×42 PIDS pixel canvas (side padding 0.125/16, top 7.5/16,
- *       bottom 1.5/16, straight from RenderPSDTop). No white base is forced;
+ *       of a column at once): the <b>glass segment</b> the bound column
+ *       belongs to (the contiguous glass/glass-end run between the doors —
+ *       exactly the glass the brush merged, see {@link PSDRuns}) becomes a
+ *       scripted panel <b>sandwiched INSIDE the pane</b> (the pane glass is
+ *       z∈[4/16, 6/16]): an opaque white backing at z = 5/16 (pane centre,
+ *       drawn double-sided) and, just behind the platform-side pane face at
+ *       z = 4.5/16, the script canvas. The pane's own texture blends over the
+ *       sandwich, so the script is visible exactly through the pane's
+ *       <b>originally transparent window</b> while the opaque parts of the
+ *       texture — the frame, divider bars, frosted bands, whatever the
+ *       resource pack draws — stay fully visible and clip the canvas; nothing
+ *       is painted over the frame. The white backing hides the script from
+ *       the track side (passengers inside a stopped train see plain white
+ *       through the window, never mirrored content). The segment's shared
+ *       canvas is segmentWidth×96 PIDS pixels (MTR-APG upper halves:
+ *       segmentWidth×54, matching the 9-px gate glass; JCM DRL APG upper halves
+ *       render nothing — that model has no pane above its 2-px light strip,
+ *       the lower half is the column's display surface).</li>
+ *   <li><b>Top</b> (bound to a psd_top block, whose own arrow/route content is
+ *       cancelled group-wide by {@code RenderRouteBaseMixin}): the script's
+ *       draw calls replay across the <b>psd_top group the bound block
+ *       belongs to</b> — the psd_top stretch sitting on one wall section
+ *       below (one brush-merged door run, or one glass segment; see
+ *       {@link PSDRuns} for why the wall below defines the sections) — as one
+ *       groupWidth×42 PIDS pixel canvas (side padding 0.125/16, top 7.5/16,
+ *       bottom 1.5/16, straight from RenderPSDTop). The rest of the psd_top
+ *       band keeps MTR's own arrows and route maps. No white base is forced;
  *       the script fully controls the content.</li>
  * </ul>
  *
@@ -102,9 +111,21 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static final float TOP_BOTTOM_PADDING = 1.5F / 16;
     private static final float TOP_DISPLAY_Z = 2F / 16 - 0.05F / 16;
 
-    /** Glass pane faces in the local frame (16ths). */
+    /** Glass pane faces in the local frame (16ths): the pane glass occupies
+     *  z∈[4/16, 6/16] (platform-side face at 4/16, track-side face at 6/16 —
+     *  the same geometry MTR's own APG glass models use, which
+     *  RenderAPGGlass draws its station band against). */
     private static final float GLASS_PLATFORM_Z = 4F / 16;
-    private static final float GLASS_TRACK_Z = 6F / 16;
+
+    /** The scripted sandwich lives INSIDE the pane: the white backing at the
+     *  pane centre and the script canvas just behind the platform-side pane
+     *  face. Both are separated from every pane face by 1/32 of a block — far
+     *  beyond any depth-precision z-fighting range — and because the pane's
+     *  translucent faces blend over them afterwards, the pane texture itself
+     *  decides where the sandwich shows: only through its transparent window
+     *  pixels, never over the frame. */
+    private static final float GLASS_BACKING_Z = 5F / 16;
+    private static final float GLASS_SCRIPT_Z = GLASS_PLATFORM_Z + 0.5F / 16;
 
     /** APG (half-height gate) upper-half glass height. */
     private static final float APG_UPPER_HEIGHT = 9F / 16;
@@ -175,49 +196,51 @@ public final class PSDScriptRenderer implements RenderHelper {
 
         final boolean apg = block instanceof BlockAPGGlass || block instanceof BlockAPGGlassEnd;
 
-        /* The whole brush-merged glass segment turns into the white panel —
-           one shared canvas spanning every glass/glass-end block between the
-           doors (see PSDRuns for the walk and the anchor convention). */
+        /* The whole glass segment shares one canvas (see PSDRuns for the
+           section walk and the anchor convention). */
         final PSDRuns.Run run = PSDRuns.glassRun(world, pos, facing);
         final float faceHeight = upper && apg ? APG_UPPER_HEIGHT : 1;
         final int canvasWidth = run.width * 96;
         final int canvasHeight = Math.round(faceHeight * 96);
 
-        final StoredMatrixTransformations platformSide = glassTransform(run.start, facing, GLASS_PLATFORM_Z - SMALL_OFFSET, false);
-        final StoredMatrixTransformations trackSide = glassTransform(run.start, facing, GLASS_TRACK_Z + SMALL_OFFSET, true);
-
         if (!shadowPass) {
-            // Opaque white base on both faces — the glass "becomes" a white panel.
-            scheduleWhite(platformSide, canvasWidth, canvasHeight, facing.getOpposite());
-            scheduleWhite(trackSide, canvasWidth, canvasHeight, facing);
+            /* Opaque white backing at the pane centre, drawn double-sided: it
+               reads as "the glass turned white" through the pane's transparent
+               window from BOTH sides, and it hides the script canvas from the
+               track side (train passengers never see mirrored content). The
+               pane's opaque frame pixels clip it — the frame itself stays
+               untouched. */
+            final StoredMatrixTransformations backing = glassTransform(run.start, facing, GLASS_BACKING_Z);
+            scheduleWhite(backing, canvasWidth, canvasHeight, facing.getOpposite());
+            scheduleWhite(backing, canvasWidth, canvasHeight, facing);
             driveScript(binding, pos, world, canvasWidth, canvasHeight);
         }
 
-        // The script content replays on the PLATFORM side only. The track
-        // side (visible from inside a stopped train) intentionally stays
-        // plain white — the dynamic texture would otherwise show up mirrored
-        // to riding passengers.
-        replayScript(binding, pos, world, platformSide, facing.getOpposite());
+        /* The script canvas sits just behind the platform-side pane face:
+           the translucent pane blends over it, so the content shows exactly
+           through the pane's originally transparent window while every
+           opaque pixel of the pane texture (frame, bars, frosted bands —
+           whatever the resource pack draws) stays visible in front of it. */
+        final StoredMatrixTransformations scriptSide = glassTransform(run.start, facing, GLASS_SCRIPT_Z);
+        replayScript(binding, pos, world, scriptSide, facing.getOpposite());
         if (!shadowPass) {
             replaySoundsOnce(binding, pos, world);
         }
     }
 
     /**
-     * The canvas frame for one glass face: the origin sits at the top-left of
-     * the face (as seen from that side — the track side is x-mirrored so the
-     * white base quad covers the pane symmetrically), y runs down, +Z faces
-     * the viewer.
+     * The canvas frame for the glass sandwich: the origin sits at the top-left
+     * of the pane face as seen from the platform side, y runs down, and +Z
+     * points toward the track (deeper into the pane). All sandwich planes
+     * (script at 4.5/16, backing at 5/16) use the same frame — only the z
+     * translation differs.
      */
-    private static StoredMatrixTransformations glassTransform(BlockPos pos, Direction facing, float z, boolean trackSide) {
+    private static StoredMatrixTransformations glassTransform(BlockPos pos, Direction facing, float z) {
         final StoredMatrixTransformations transform = new StoredMatrixTransformations(0.5 + pos.getX(), pos.getY(), 0.5 + pos.getZ());
         transform.add(graphicsHolder -> graphicsHolder.rotateYDegrees(-facing.asRotation()));
         transform.add(graphicsHolder -> graphicsHolder.translate(0, 1, 0));
         transform.add(graphicsHolder -> graphicsHolder.rotateZDegrees(180));
         transform.add(graphicsHolder -> graphicsHolder.translate(-0.5, 0, z));
-        if (trackSide) {
-            transform.add(graphicsHolder -> graphicsHolder.scale(-1, 1, 1));
-        }
         return transform;
     }
 
@@ -238,11 +261,12 @@ public final class PSDScriptRenderer implements RenderHelper {
         final boolean persistent = IBlock.getStatePropertySafe(state, BlockPSDTop.PERSISTENT) != BlockPSDTop.EnumPersistent.NONE;
         final float additionalOffset = persistent ? BlockPSDTop.PERSISTENT_OFFSET_SMALL : 0;
 
-        /* One canvas across the ENTIRE contiguous psd_top run — the same run
-           MTR's own route map texture spans (each psd_top renders its slice
-           of the run-wide texture; see RenderRouteBase.getTextureNumber).
-           Anchored at the run's left-most block, padded exactly like MTR's
-           own band. */
+        /* One canvas across the psd_top GROUP the bound block belongs to —
+           the psd_top stretch sitting on one wall section below (one door
+           run / one glass segment; see PSDRuns for why the wall below
+           defines the sections). Anchored at the group's left-most block,
+           padded exactly like MTR's own band; the rest of the band keeps
+           MTR's own arrows and route maps. */
         final PSDRuns.Run run = PSDRuns.topRun(world, pos, facing);
         final StoredMatrixTransformations transform = new StoredMatrixTransformations(0.5 + run.start.getX(), pos.getY(), 0.5 + run.start.getZ());
         transform.add(graphicsHolder -> graphicsHolder.rotateYDegrees(-facing.asRotation()));

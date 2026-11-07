@@ -4,35 +4,51 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
+import org.mtr.mod.block.BlockPSDAPGDoorBase;
 import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDAPGGlassEndBase;
 import org.mtr.mod.block.BlockPSDTop;
 
+import java.util.function.Predicate;
+
 /**
- * Yanyang/PSD: horizontal "run" walks for the merged-surface rendering.
+ * Yanyang/PSD: wall-section walks for the merged-surface rendering.
  *
- * <p>A PSD wall placed with MTR's brush is one row of glass / door / glass-end
- * blocks with a {@code psd_top} band above it. When the player binds a script
- * to one glass column or one {@code psd_top} block, the <b>whole merged
- * surface</b> it belongs to must change — the white panel and the script
- * canvas span the entire contiguous glass segment, and the script canvas
- * spans the entire contiguous psd_top run (the same run MTR's own route map
- * texture spans — see {@code RenderRouteBase.getTextureNumber}, which walks
- * the identical chain to slice the run-wide texture per block).</p>
+ * <p>A PSD wall is an alternating row of door runs and glass segments with a
+ * {@code psd_top} band above it. When the player binds a script to one glass
+ * column or one {@code psd_top} block, the <b>whole wall section it belongs
+ * to</b> changes — the doors between glass segments, and the rest of the
+ * psd_top band, keep their own content.</p>
+ *
+ * <h2>Why the wall below defines the psd_top sections</h2>
+ * The sections are derived from the <b>wall blocks below the band</b>, not
+ * from the psd_top blocks' own {@code SIDE_EXTENDED} markers: those are only
+ * mirrors of a <b>full-height PSD</b> wall below (see
+ * {@code BlockPSDTop.getActualState}, which reads the side from
+ * {@code BlockPSDGlass}/{@code BlockPSDDoor}/{@code BlockPSDGlassEnd}).
+ * Above an <b>APG</b> wall (half-height gates, like JCM's DRL APG) the band
+ * is placed by hand and every psd_top keeps its default side — the markers
+ * say nothing about the sections. The wall itself, however, always does:
+ * every placement (MTR's {@code ItemPSDAPGBase} and JCM's DRL twin) lays a
+ * door as one contiguous 2/3-wide run, glass fills between, and the brush
+ * merges glass into contiguous segments. So "the brush-merged door's top
+ * panels" is exactly the psd_top stretch sitting on one contiguous door
+ * run, and "the glass segment's top panels" the stretch on one contiguous
+ * glass/glass-end run.</p>
  *
  * <h2>Anchor convention</h2>
  * Both render transforms (glass face, psd_top band) are anchored at a block
  * position and draw their canvas toward {@code facing.rotateYClockwise()}
  * (the wall's "right", canvas +x); the canvas origin sits at the anchor
- * block's left edge. The anchor of a run is therefore its <b>left-most</b>
+ * block's left edge. The anchor of a section is therefore its <b>left-most</b>
  * block — the last block reached walking {@code facing.rotateYCounterclockwise()}.</p>
  */
 public final class PSDRuns {
 
-    /** Hard cap of one run walk — protects against pathological loops. */
+    /** Hard cap of one section walk — protects against pathological loops. */
     private static final int MAX_RUN_BLOCKS = 64;
 
-    /** One walked run: the left-most block (render anchor) and the width in blocks. */
+    /** One walked section: the left-most block (render anchor) and the width in blocks. */
     public static final class Run {
         public final BlockPos start;
         public final int width;
@@ -43,79 +59,117 @@ public final class PSDRuns {
         }
     }
 
+    /** The kind of wall section a band column sits on. */
+    private enum SectionKind {DOOR, GLASS, OTHER}
+
     private PSDRuns() {
     }
 
     /**
-     * The contiguous glass segment a bound glass block belongs to: glass and
-     * glass-end blocks chained along the wall axis at the same Y (doors and
-     * everything else break the chain). The returned anchor is the segment's
-     * left-most block.
+     * The glass segment a bound glass block belongs to: the contiguous
+     * glass/glass-end run at that level — doors and everything else break
+     * the chain, so this is exactly the glass the brush merged between the
+     * doors. The returned anchor is the segment's left-most block.
      */
     public static Run glassRun(World world, BlockPos pos, Direction facing) {
-        return walk(world, pos, facing, PSDRuns::isGlassLike);
+        return walk(world, pos, facing, cursor -> isGlassLike(world.getBlockState(cursor)));
     }
 
     /**
-     * The contiguous {@code psd_top} run a bound top block belongs to — the
-     * same chain MTR's route texture spans (every psd_top above the wall:
-     * above glass, doors and glass ends alike).
+     * The psd_top group a bound top block belongs to: the contiguous
+     * psd_top stretch that sits on <b>one wall section</b> — one contiguous
+     * door run (the brush-merged door's top panels) or one contiguous glass
+     * segment. The band's own SIDE_EXTENDED markers are NOT consulted (they
+     * are only meaningful above a full-height PSD wall, see the class doc);
+     * psd_tops without a PSD wall below fall back to the plain contiguous
+     * psd_top run.
      */
     public static Run topRun(World world, BlockPos pos, Direction facing) {
-        return walk(world, pos, facing, state -> state.getBlock().data instanceof BlockPSDTop);
+        final SectionKind kind = sectionKind(world, pos.down());
+        final Predicate<BlockPos> chained;
+        if (kind == SectionKind.OTHER) {
+            chained = cursor -> isPsdTop(world.getBlockState(cursor));
+        } else {
+            chained = cursor -> isPsdTop(world.getBlockState(cursor)) && sectionKind(world, cursor.down()) == kind;
+        }
+        return walk(world, pos, facing, chained);
     }
 
     /**
-     * Whether the contiguous psd_top run containing {@code pos} carries any
-     * TOP script binding — the signal for {@code RenderRouteBaseMixin} to
-     * drop MTR's own arrow/route content on <b>every</b> block of the band,
-     * not just the bound one (the script canvas spans the whole run).
+     * Whether the psd_top group containing {@code pos} (see {@link #topRun})
+     * carries any TOP script binding — the signal for
+     * {@code RenderRouteBaseMixin} to drop MTR's own arrow/route content on
+     * <b>that group only</b>: the script canvas spans exactly the group, so
+     * the neighboring groups above other doors and glass segments keep MTR's
+     * own arrows and route maps.
      */
-    public static boolean topRunHasScriptBinding(World world, BlockPos pos, Direction facing) {
-        BlockPos cursor = pos;
-        for (int i = 0; i < MAX_RUN_BLOCKS; i++) {
+    public static boolean topGroupHasScriptBinding(World world, BlockPos pos, Direction facing) {
+        if (hasTopBinding(pos)) return true;
+        if (!isPsdTop(world.getBlockState(pos))) return false;
+
+        final SectionKind kind = sectionKind(world, pos.down());
+        final Predicate<BlockPos> chained;
+        if (kind == SectionKind.OTHER) {
+            chained = cursor -> isPsdTop(world.getBlockState(cursor));
+        } else {
+            chained = cursor -> isPsdTop(world.getBlockState(cursor)) && sectionKind(world, cursor.down()) == kind;
+        }
+
+        BlockPos cursor = pos.offset(facing.rotateYCounterclockwise());
+        for (int i = 0; i < MAX_RUN_BLOCKS && chained.test(cursor); i++) {
             if (hasTopBinding(cursor)) return true;
-            final BlockState state = world.getBlockState(cursor);
-            if (!(state.getBlock().data instanceof BlockPSDTop)) break;
             cursor = cursor.offset(facing.rotateYCounterclockwise());
         }
         cursor = pos.offset(facing.rotateYClockwise());
-        for (int i = 0; i < MAX_RUN_BLOCKS; i++) {
-            final BlockState state = world.getBlockState(cursor);
-            if (!(state.getBlock().data instanceof BlockPSDTop)) break;
+        for (int i = 0; i < MAX_RUN_BLOCKS && chained.test(cursor); i++) {
             if (hasTopBinding(cursor)) return true;
             cursor = cursor.offset(facing.rotateYClockwise());
         }
         return false;
     }
 
-    private interface ChainRule {
-        boolean chained(BlockState state);
-    }
-
-    private static Run walk(World world, BlockPos pos, Direction facing, ChainRule rule) {
-        if (!rule.chained(world.getBlockState(pos))) {
+    /**
+     * Walks the contiguous section containing {@code pos} along the wall
+     * axis: counterclockwise to the section's left-most block (the anchor),
+     * then clockwise for the width.
+     */
+    private static Run walk(World world, BlockPos pos, Direction facing, Predicate<BlockPos> chained) {
+        if (!chained.test(pos)) {
             return new Run(pos, 1);
         }
         BlockPos start = pos;
         int width = 1;
+
         BlockPos cursor = pos.offset(facing.rotateYCounterclockwise());
-        while (width < MAX_RUN_BLOCKS && rule.chained(world.getBlockState(cursor))) {
+        while (width < MAX_RUN_BLOCKS && chained.test(cursor)) {
             start = cursor;
             width++;
             cursor = cursor.offset(facing.rotateYCounterclockwise());
         }
+
         cursor = pos.offset(facing.rotateYClockwise());
-        while (width < MAX_RUN_BLOCKS && rule.chained(world.getBlockState(cursor))) {
+        while (width < MAX_RUN_BLOCKS && chained.test(cursor)) {
             width++;
             cursor = cursor.offset(facing.rotateYClockwise());
         }
         return new Run(start, width);
     }
 
+    /** The kind of wall section supporting a band column. */
+    private static SectionKind sectionKind(World world, BlockPos pos) {
+        final Object block = world.getBlockState(pos).getBlock().data;
+        if (block instanceof BlockPSDAPGDoorBase) return SectionKind.DOOR;
+        if (block instanceof BlockPSDAPGGlassBase || block instanceof BlockPSDAPGGlassEndBase) return SectionKind.GLASS;
+        return SectionKind.OTHER;
+    }
+
     private static boolean isGlassLike(BlockState state) {
         final Object block = state.getBlock().data;
         return block instanceof BlockPSDAPGGlassBase || block instanceof BlockPSDAPGGlassEndBase;
+    }
+
+    private static boolean isPsdTop(BlockState state) {
+        return state.getBlock().data instanceof BlockPSDTop;
     }
 
     private static boolean hasTopBinding(BlockPos pos) {
