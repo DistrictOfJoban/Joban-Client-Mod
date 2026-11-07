@@ -51,6 +51,8 @@ import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.ArrivalsCacheClient;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -69,22 +71,29 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  * z∈[4/16, 6/16]:
  *
  * <ul>
- *   <li><b>Glass</b> (bound per block half; the editor item binds both halves
- *       of a column at once): the <b>glass segment</b> the bound column
- *       belongs to (the contiguous glass/glass-end run between the doors —
- *       exactly the glass the brush merged, see {@link PSDRuns}) becomes a
- *       scripted panel <b>sandwiched INSIDE the pane</b>: an opaque white
- *       backing 1/16 behind the pane's platform-side face (drawn
- *       double-sided) and the script canvas 0.5/16 behind it — both at the
- *       run's DERIVED pane depth (see {@link PSDWindowBounds}; vanilla
- *       geometry → the classic 5/16 and 4.5/16). The pane's own texture
- *       blends over the sandwich, so the script is visible exactly through
- *       the pane's <b>originally transparent window</b> while the opaque
- *       parts of the texture — the frame, divider bars, frosted bands,
- *       whatever the resource pack draws — stay fully visible and clip the
- *       canvas; nothing is painted over the frame. The white backing hides
- *       the script from the track side (passengers inside a stopped train
- *       see plain white through the window, never mirrored content).</li>
+ *   <li><b>Glass</b> (bound per block, whole segment at once — the editor
+ *       binds/unbinds every column, both halves, of the glass segment):
+ *       the <b>glass segment</b> the bound blocks belong to (the contiguous
+ *       glass/glass-end run between the doors — exactly the glass the brush
+ *       merged, see {@link PSDRuns}) becomes ONE scripted panel — a canvas
+ *       spanning the segment's full height (yanyang.6: the two block halves
+ *       of a full-height door are ONE glass, so the canvas merges them
+ *       vertically instead of drawing the script once per half) —
+ *       <b>sandwiched INSIDE the pane</b>: an opaque white backing 1/16
+ *       behind the pane's platform-side face (drawn double-sided) and the
+ *       script canvas 0.5/16 behind it — both at the run's DERIVED pane
+ *       depth (see {@link PSDWindowBounds}; vanilla geometry → the classic
+ *       5/16 and 4.5/16). The pane's own texture blends over the sandwich,
+ *       so the script is visible exactly through the pane's <b>originally
+ *       transparent window</b> while the opaque parts of the texture — the
+ *       frame, divider bars, frosted bands, whatever the resource pack
+ *       draws — stay fully visible and clip the canvas; nothing is painted
+ *       over the frame. The white backing hides the script from the track
+ *       side (passengers inside a stopped train see plain white through the
+ *       window, never mirrored content). Several bindings may point into
+ *       the same segment; the FIRST one encountered renders it and the
+ *       rest are skipped that pass — one canvas, one script run, one set
+ *       of sounds per segment.</li>
  *   <li><b>Window clipping</b> (see {@link PSDWindowBounds}): the backing and
  *       the canvas are additionally clipped to the pane's transparent
  *       window, derived at runtime from the block's actual baked model and
@@ -109,6 +118,16 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       {@code VertexConsumerProvider.Immediate} created and flushed inside
  *       the draw itself — so it always lands BEFORE the translucent pane,
  *       under every pipeline.</li>
+ *   <li><b>Vertical merge</b> (yanyang.6): when EVERY column of the segment
+ *       has an upper half that is a display surface (a glass block whose
+ *       model actually shows something — DRL uppers whose vanilla model is
+ *       fully invisible never join), the canvas spans both rows as one
+ *       frame: the window is the union of the lower-row windows
+ *       ([0,1] of the frame) and the upper-row windows ([1,2]), so the
+ *       script draws ONCE across the full-height glass instead of once per
+ *       half. A single missing or invisible upper drops the frame back to
+ *       one row — content must never float in open air above a column
+ *       without visible geometry.</li>
  *   <li><b>Top</b> (bound to a psd_top block, whose own arrow/route content is
  *       cancelled group-wide by {@code RenderRouteBaseMixin}): the script's
  *       draw calls replay across the <b>psd_top group the bound block
@@ -116,19 +135,21 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       below (one brush-merged door run, or one glass segment; see
  *       {@link PSDRuns} for why the wall below defines the sections) — as one
  *       groupWidth×42 PIDS pixel canvas (side padding 0.125/16, top 7.5/16,
- *       bottom 1.5/16, straight from RenderPSDTop). The rest of the psd_top
+ *       bottom 1.5/16, straight from RenderPSDTop). Multiple bindings in
+ *       the same group render the group once. The rest of the psd_top
  *       band keeps MTR's own arrows and route maps. No white base is forced;
  *       the script fully controls the content.</li>
  * </ul>
  *
  * <h2>Execution model</h2>
- * Scripts (JS and C++) are DRIVEN once per bound block per frame; the
- * captured draw calls are REPLAYED onto each visible face (the one merged
- * platform-side glass canvas / the one merged top canvas). Sounds replay
- * exactly once per frame. Shader shadow passes replay the last captured draw
- * calls (silhouette correctness) without executing scripts, uploading
- * textures or driving the C++ side — mirroring the eyecandy/PIDS shadow
- * contract.
+ * Scripts (JS and C++) are DRIVEN once per rendered section per frame (the
+ * first binding encountered per glass segment / psd_top group); the
+ * captured draw calls are REPLAYED onto the section's one merged canvas
+ * (the full-height glass canvas / the merged top canvas). Sounds replay
+ * exactly once per frame per section. Shader shadow passes replay the last
+ * captured draw calls (silhouette correctness) without executing scripts,
+ * uploading textures or driving the C++ side — mirroring the
+ * eyecandy/PIDS shadow contract.
  */
 public final class PSDScriptRenderer implements RenderHelper {
 
@@ -191,6 +212,12 @@ public final class PSDScriptRenderer implements RenderHelper {
         final double playerY = player.getY();
         final double playerZ = player.getZ();
 
+        /* One canvas per wall section per pass (yanyang.6): the editor binds
+           EVERY block of a glass segment / psd_top group, and legacy worlds
+           may still hold per-column bindings — whichever binding of a
+           section comes first renders it, the rest are skipped. */
+        final Set<BlockPos> renderedSections = new HashSet<>();
+
         PSDClientBindings.forEach(binding -> {
             final BlockPos pos = binding.pos;
             final double dx = pos.getX() + 0.5 - playerX;
@@ -202,11 +229,11 @@ public final class PSDScriptRenderer implements RenderHelper {
             final Object block = state.getBlock().data;
             if (binding.type == PSDWrapper.PSDType.TOP) {
                 if (block instanceof BlockPSDTop) {
-                    renderTop(binding, pos, state, world, shadowPass);
+                    renderTop(binding, pos, state, world, shadowPass, renderedSections);
                 }
             } else {
                 if (block instanceof BlockPSDAPGGlassBase) {
-                    renderGlass(binding, pos, state, world, shadowPass, offset);
+                    renderGlass(binding, pos, state, world, shadowPass, offset, renderedSections);
                 }
             }
         });
@@ -216,14 +243,24 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* Glass                                                                 */
     /* ==================================================================== */
 
-    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass, Vector3d offset) {
+    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass, Vector3d offset, Set<BlockPos> renderedSections) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING);
         final boolean upper = IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
-        final Object block = state.getBlock().data;
 
-        /* The whole glass segment shares one canvas (see PSDRuns for the
-           section walk and the anchor convention). */
-        final PSDRuns.Run run = PSDRuns.glassRun(world, pos, facing);
+        /* Yanyang.6: the segment is identified by its LOWER row — a binding
+           on either half of any column normalizes to the same anchor, and
+           the whole segment renders exactly ONE canvas per pass.
+           Previously every bound half drew its own row canvas, so a
+           two-block glass displayed the script TWICE (once per half) —
+           the two halves are ONE glass and now share one canvas. */
+        BlockPos base = pos;
+        if (upper && PSDRuns.isGlass(world.getBlockState(pos.down()))) {
+            base = pos.down();
+        }
+        final PSDRuns.Run run = PSDRuns.glassRun(world, base, facing);
+        if (!renderedSections.add(run.start)) {
+            return; // another binding of this segment already rendered it
+        }
 
         /* The pane's transparent window, per block, straight from the baked
            model + texture alpha (see PSDWindowBounds) — pack-dependent, so
@@ -232,53 +269,84 @@ public final class PSDScriptRenderer implements RenderHelper {
            frame, whether they belong to the pane's own texture or to
            separate frame/strip elements — and reports the pane's plane
            depth so the sandwich follows the pack's pane position instead
-           of assuming the vanilla 4/16. The shared canvas is clipped to
-           the UNION of the run's windows; the white backing uses each
-           block's own window. Blocks whose window can't be derived fall
-           back to the full face. */
-        final float[] blockTop = new float[run.width];
-        final float[] blockBottom = new float[run.width];
-        float windowTop = 1;
-        float windowBottom = 0;
+           of assuming the vanilla 4/16. */
+        final int width = run.width;
+        final float[] lowerTop = new float[width];
+        final float[] lowerBottom = new float[width];
+        final boolean[] lowerValid = new boolean[width];
+        final float[] upperTop = new float[width];
+        final float[] upperBottom = new float[width];
+        final boolean[] upperValid = new boolean[width];
         float paneAlong = PSDWindowBounds.DEFAULT_PANE_ALONG;
-        boolean anyVisibleGeometry = false;
-        for (int i = 0; i < run.width; i++) {
-            final PSDWindowBounds.Bounds b = PSDWindowBounds.window(world.getBlockState(run.start.offset(facing.rotateYClockwise(), i)), facing);
-            final float top = Math.min(b.top, 1);
-            final float bottom = Math.max(b.bottom, 0);
-            blockTop[i] = top;
-            blockBottom[i] = bottom;
-            if (top - bottom >= MIN_WINDOW) {
-                windowTop = Math.min(windowTop, top);
-                windowBottom = Math.max(windowBottom, bottom);
-            }
+        boolean allUppers = true;
+        for (int i = 0; i < width; i++) {
+            final BlockPos lowerPos = run.start.offset(facing.rotateYClockwise(), i);
+            final PSDWindowBounds.Bounds lowerBounds = PSDWindowBounds.window(world.getBlockState(lowerPos), facing);
+            lowerTop[i] = Math.min(lowerBounds.top, 1);
+            lowerBottom[i] = Math.max(lowerBounds.bottom, 0);
+            lowerValid[i] = lowerTop[i] - lowerBottom[i] >= MIN_WINDOW;
             /* The sandwich sits just behind the DEEPEST pane in the run so
                every block's pane stays in front of it. */
-            paneAlong = Math.max(paneAlong, b.paneAlong);
-            anyVisibleGeometry |= b.visibleGeometry;
+            paneAlong = Math.max(paneAlong, lowerBounds.paneAlong);
+
+            /* The column's upper half joins the merged frame only when it is
+               a display surface: a glass block whose model actually shows
+               something. DRL uppers whose vanilla model is fully invisible
+               never join (content would float in mid-air — the yanyang.2
+               behaviour); a pack that gives them visible geometry (the
+               yanyang.4 user pack's full-height screen doors) flips this
+               gate and the full column becomes one display. */
+            boolean includable = false;
+            final BlockState upperState = world.getBlockState(lowerPos.up());
+            final Object upperBlock = upperState.getBlock().data;
+            if (upperBlock instanceof BlockPSDAPGGlassBase) {
+                final PSDWindowBounds.Bounds upperBounds = PSDWindowBounds.window(upperState, facing);
+                final boolean drlUpper = upperBlock instanceof APGGlassDRL || upperBlock instanceof APGGlassEndDRL;
+                includable = !drlUpper || upperBounds.visibleGeometry;
+                if (includable) {
+                    upperTop[i] = Math.min(upperBounds.top, 1);
+                    upperBottom[i] = Math.max(upperBounds.bottom, 0);
+                    upperValid[i] = upperTop[i] - upperBottom[i] >= MIN_WINDOW;
+                    paneAlong = Math.max(paneAlong, upperBounds.paneAlong);
+                }
+            }
+            if (!includable) {
+                allUppers = false;
+            }
+        }
+        /* The vertical frame spans both rows only when EVERY column's upper
+           half is a display surface (walls are uniform) — a single
+           missing/invisible upper would leave canvas floating in open air
+           above that column. */
+        final float frameHeight = allUppers ? 2 : 1;
+
+        /* The shared window: the union of every column's windows — lower
+           row at [0,1] of the merged frame, upper row at [1,2]. Canvas
+           coordinates: y=0 at the frame top, y grows downward; the canvas
+           is clipped to the window, so script content (which lays out
+           against pids.height) never lands on the frame strips. */
+        float windowTop = Float.NEGATIVE_INFINITY;
+        float windowBottom = Float.POSITIVE_INFINITY;
+        for (int i = 0; i < width; i++) {
+            if (lowerValid[i]) {
+                windowTop = Math.max(windowTop, lowerTop[i]);
+                windowBottom = Math.min(windowBottom, lowerBottom[i]);
+            }
+            if (frameHeight > 1 && upperValid[i]) {
+                windowTop = Math.max(windowTop, 1 + upperTop[i]);
+                windowBottom = Math.min(windowBottom, 1 + upperBottom[i]);
+            }
+        }
+        if (windowTop - windowBottom < MIN_WINDOW) {
+            /* Nothing derivable anywhere — the full merged face, the
+               pre-clipping fallback. */
+            windowTop = frameHeight;
+            windowBottom = 0;
         }
 
-        /* Yanyang.5: DRL upper halves render ONLY when their model actually
-           shows something. The vanilla DRL upper model is fully invisible
-           (a transparent pane above the light strip) — content there would
-           float in mid-air, so it stays skipped (the yanyang.2 behaviour).
-           A resource pack that gives the upper half a visible frame or
-           glass (the yanyang.4 user pack's full-height screen doors)
-           flips this gate and the upper row becomes a real display
-           surface — the editor binds both halves of a column, so those
-           bindings just start working. Non-DRL glass (MTR's own APG,
-           whose upper half carries a real pane) always renders. */
-        final boolean drl = block instanceof APGGlassDRL || block instanceof APGGlassEndDRL;
-        if (upper && drl && !anyVisibleGeometry) {
-            return;
-        }
-
-        /* Canvas coordinates: y=0 at the block top, y grows downward; the
-           canvas is clipped to the window, so script content (which lays
-           out against pids.height) never lands on the frame strips. */
-        final int canvasWidth = run.width * 96;
+        final int canvasWidth = width * 96;
         final int canvasHeight = Math.max(8, Math.round((windowTop - windowBottom) * 96));
-        final float canvasTop = 1 - windowTop;
+        final float canvasTop = frameHeight - windowTop;
 
         /* The sandwich planes track the run's pane depth: the script
            canvas 0.5/16 behind the pane's platform-side face, the white
@@ -289,19 +357,25 @@ public final class PSDScriptRenderer implements RenderHelper {
 
         if (!shadowPass) {
             /* Opaque white backing at the pane centre, drawn double-sided per
-               block: it reads as "the glass turned white" through the pane's
-               transparent window from BOTH sides, and it hides the script
-               canvas from the track side (train passengers never see mirrored
-               content). Drawn through a private, synchronously flushed
-               immediate (see the class javadoc's flush-discipline note) —
-               the shared entity-phase consumer may only be flushed after the
-               translucent pane under deferred-batching pipelines (Immediately
-               Fast + Iris), which used to make this quad fail the depth test
-               behind the pane's front face and vanish. */
-            final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ);
-            for (int i = 0; i < run.width; i++) {
-                if (blockTop[i] - blockBottom[i] < MIN_WINDOW) continue;
-                drawWhiteSync(backing, offset, i, blockTop[i], blockBottom[i], facing);
+               block and row (each block's own window — the lower row and, on
+               a merged frame, the upper row): it reads as "the glass turned
+               white" through the pane's transparent window from BOTH sides,
+               and it hides the script canvas from the track side (train
+               passengers never see mirrored content). Drawn through a
+               private, synchronously flushed immediate (see the class
+               javadoc's flush-discipline note) — the shared entity-phase
+               consumer may only be flushed after the translucent pane under
+               deferred-batching pipelines (Immediately Fast + Iris), which
+               used to make this quad fail the depth test behind the pane's
+               front face and vanish. */
+            final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
+            for (int i = 0; i < width; i++) {
+                if (lowerValid[i]) {
+                    drawWhiteSync(backing, offset, i, lowerTop[i], lowerBottom[i], frameHeight, facing);
+                }
+                if (frameHeight > 1 && upperValid[i]) {
+                    drawWhiteSync(backing, offset, i, 1 + upperTop[i], 1 + upperBottom[i], frameHeight, facing);
+                }
             }
             driveScript(binding, pos, world, canvasWidth, canvasHeight);
         }
@@ -311,7 +385,7 @@ public final class PSDScriptRenderer implements RenderHelper {
            through the pane's originally transparent window while every
            opaque pixel of the pane texture (frame, bars, frosted bands —
            whatever the resource pack draws) stays visible in front of it. */
-        final StoredMatrixTransformations scriptSide = glassTransform(run.start, facing, scriptZ);
+        final StoredMatrixTransformations scriptSide = glassTransform(run.start, facing, scriptZ, frameHeight);
         scriptSide.add(graphicsHolder -> graphicsHolder.translate(0, canvasTop, 0));
         replayScript(binding, pos, world, scriptSide, facing.getOpposite());
         if (!shadowPass) {
@@ -322,14 +396,16 @@ public final class PSDScriptRenderer implements RenderHelper {
     /**
      * The canvas frame for the glass sandwich: the origin sits at the top-left
      * of the pane face as seen from the platform side, y runs down, and +Z
-     * points toward the track (deeper into the pane). All sandwich planes
-     * (script at 4.5/16, backing at 5/16) use the same frame — only the z
-     * translation differs.
+     * points toward the track (deeper into the pane). {@code frameHeight} is
+     * the number of block rows the canvas spans (2 for a merged full-height
+     * glass, 1 otherwise). All sandwich planes (script at 4.5/16, backing at
+     * 5/16 for the vanilla pane) use the same frame — only the z translation
+     * differs.
      */
-    private static StoredMatrixTransformations glassTransform(BlockPos pos, Direction facing, float z) {
+    private static StoredMatrixTransformations glassTransform(BlockPos pos, Direction facing, float z, float frameHeight) {
         final StoredMatrixTransformations transform = new StoredMatrixTransformations(0.5 + pos.getX(), pos.getY(), 0.5 + pos.getZ());
         transform.add(graphicsHolder -> graphicsHolder.rotateYDegrees(-facing.asRotation()));
-        transform.add(graphicsHolder -> graphicsHolder.translate(0, 1, 0));
+        transform.add(graphicsHolder -> graphicsHolder.translate(0, frameHeight, 0));
         transform.add(graphicsHolder -> graphicsHolder.rotateZDegrees(180));
         transform.add(graphicsHolder -> graphicsHolder.translate(-0.5, 0, z));
         return transform;
@@ -379,12 +455,13 @@ public final class PSDScriptRenderer implements RenderHelper {
 
     /**
      * The opaque white pane backing — one block-wide quad (canvas x
-     * ∈ [x, x+1], y ∈ [1-top, 1-bottom] in full-face canvas coordinates),
-     * drawn double-sided via BOTH windings (the entity-cutout layer culls
-     * back faces, so a second, reversed quad serves the track side).
+     * ∈ [x, x+1], y ∈ [frameTop-top, frameTop-bottom] in the merged frame's
+     * canvas coordinates), drawn double-sided via BOTH windings (the
+     * entity-cutout layer culls back faces, so a second, reversed quad
+     * serves the track side).
      */
-    private static void drawWhiteSync(StoredMatrixTransformations transform, Vector3d offset, float x, float top, float bottom, Direction facing) {
-        final float y = 1 - top;
+    private static void drawWhiteSync(StoredMatrixTransformations transform, Vector3d offset, float x, float top, float bottom, float frameTop, Direction facing) {
+        final float y = frameTop - top;
         final float height = top - bottom;
         drawSync(transform, offset, holder -> {
             holder.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(WHITE_TEXTURE));
@@ -397,7 +474,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* Top panel                                                             */
     /* ==================================================================== */
 
-    private static void renderTop(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass) {
+    private static void renderTop(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass, Set<BlockPos> renderedSections) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDTop.FACING);
         final boolean persistent = IBlock.getStatePropertySafe(state, BlockPSDTop.PERSISTENT) != BlockPSDTop.EnumPersistent.NONE;
         final float additionalOffset = persistent ? BlockPSDTop.PERSISTENT_OFFSET_SMALL : 0;
@@ -407,8 +484,12 @@ public final class PSDScriptRenderer implements RenderHelper {
            run / one glass segment; see PSDRuns for why the wall below
            defines the sections). Anchored at the group's left-most block,
            padded exactly like MTR's own band; the rest of the band keeps
-           MTR's own arrows and route maps. */
+           MTR's own arrows and route maps. Yanyang.6: the group renders
+           ONCE however many of its blocks carry bindings. */
         final PSDRuns.Run run = PSDRuns.topRun(world, pos, facing);
+        if (!renderedSections.add(run.start)) {
+            return; // another binding of this group already rendered it
+        }
         final StoredMatrixTransformations transform = new StoredMatrixTransformations(0.5 + run.start.getX(), pos.getY(), 0.5 + run.start.getZ());
         transform.add(graphicsHolder -> graphicsHolder.rotateYDegrees(-facing.asRotation()));
         transform.add(graphicsHolder -> graphicsHolder.translate(0, 1, 0));

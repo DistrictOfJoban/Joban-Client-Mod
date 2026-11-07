@@ -1,21 +1,24 @@
 package com.lx862.jcm.mod.item;
 
 import com.lx862.jcm.mod.gui.screen.PSDScriptSelectionScreen;
+import com.lx862.jcm.mod.scripting.psd.PSDRuns;
 import com.lx862.jcm.mod.scripting.psd.PSDWrapper;
 import org.mtr.mapping.holder.ActionResult;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
+import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.ItemSettings;
 import org.mtr.mapping.holder.ItemUsageContext;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.ItemExtension;
+import org.mtr.mod.block.BlockPSDAPGBase;
 import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDTop;
 import org.mtr.mod.block.IBlock;
 
-import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * The "PSD Script Editor" (屏蔽门脚本编辑器) — right-click any platform screen
@@ -24,10 +27,14 @@ import javax.annotation.Nullable;
  * scripted PIDS preset onto it, and any psd_top block to bind a type "top"
  * entry or PIDS preset. Lives in the same creative tab as MTR's brush.
  *
- * <p>Glass columns are two block halves — right-clicking either half opens
- * the selection screen for the whole column and a choice binds BOTH halves
- * (each half renders its own canvas; the editor resolves and passes the
- * partner position along).</p>
+ * <p>Yanyang.6: the editor manages the <b>whole surface the clicked block
+ * belongs to</b>, not just the clicked column — the renderer draws one merged
+ * canvas per glass segment / psd_top group, so a choice (including the
+ * "no script" entry) binds or unbinds <b>every block of that segment or
+ * group</b>: both halves of every glass column, or the group's psd_top
+ * blocks. Previously the binding lived only on the clicked column's two
+ * halves, and trying to unbind from any other block of the same glass left
+ * the (visually merged) script running with no way to remove it.</p>
  */
 public class ItemPSDScriptEditor extends ItemExtension {
 
@@ -44,24 +51,29 @@ public class ItemPSDScriptEditor extends ItemExtension {
 
         if (block instanceof BlockPSDAPGGlassBase) {
             if (world.isClient()) {
-                MinecraftClient.getInstance().openScreen(new Screen(new PSDScriptSelectionScreen(pos, findPartnerHalf(world, pos, state), PSDWrapper.PSDType.GLASS)));
+                final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING);
+                /* The segment is identified by its LOWER row — clicking
+                   either half of any column resolves to the same segment. */
+                BlockPos base = pos;
+                if (IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER
+                        && PSDRuns.isGlass(world.getBlockState(pos.down()))) {
+                    base = pos.down();
+                }
+                final PSDRuns.Run run = PSDRuns.glassRun(world, base, facing);
+                final List<BlockPos> positions = PSDRuns.glassRunPositions(world, run, facing);
+                MinecraftClient.getInstance().openScreen(new Screen(new PSDScriptSelectionScreen(positions, PSDWrapper.PSDType.GLASS)));
             }
             return ActionResult.SUCCESS;
         }
         if (block instanceof BlockPSDTop) {
             if (world.isClient()) {
-                MinecraftClient.getInstance().openScreen(new Screen(new PSDScriptSelectionScreen(pos, null, PSDWrapper.PSDType.TOP)));
+                final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDTop.FACING);
+                final PSDRuns.Run run = PSDRuns.topRun(world, pos, facing);
+                final List<BlockPos> positions = PSDRuns.topRunPositions(run, facing);
+                MinecraftClient.getInstance().openScreen(new Screen(new PSDScriptSelectionScreen(positions, PSDWrapper.PSDType.TOP)));
             }
             return ActionResult.SUCCESS;
         }
         return super.useOnBlock2(context);
-    }
-
-    /** The other half of a double glass block, or null when there is none. */
-    @Nullable
-    private static BlockPos findPartnerHalf(World world, BlockPos pos, BlockState state) {
-        final boolean upper = IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
-        final BlockPos partner = upper ? pos.down() : pos.up();
-        return world.getBlockState(partner).getBlock().data instanceof BlockPSDAPGGlassBase ? partner : null;
     }
 }

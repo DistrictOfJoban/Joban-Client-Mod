@@ -9,6 +9,8 @@ import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDAPGGlassEndBase;
 import org.mtr.mod.block.BlockPSDTop;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 /**
@@ -73,6 +75,41 @@ public final class PSDRuns {
      */
     public static Run glassRun(World world, BlockPos pos, Direction facing) {
         return walk(world, pos, facing, cursor -> isGlassLike(world.getBlockState(cursor)));
+    }
+
+    /** Whether the state is a PSD/APG glass or glass-end block (either
+     *  half) — the blocks a glass segment chains through. */
+    public static boolean isGlass(BlockState state) {
+        return isGlassLike(state);
+    }
+
+    /** Every binding position of a glass segment: both halves of every
+     *  column (the upper half only when the block above the lower half is
+     *  glass-like too). Yanyang.6: the editor binds/unbinds the WHOLE
+     *  segment — the renderer merges the segment into one canvas, so a
+     *  binding that only covers the clicked column left the rest of the
+     *  segment unmanageable from any other block. */
+    public static List<BlockPos> glassRunPositions(World world, Run run, Direction facing) {
+        final List<BlockPos> positions = new ArrayList<>();
+        for (int i = 0; i < run.width; i++) {
+            final BlockPos lower = run.start.offset(facing.rotateYClockwise(), i);
+            positions.add(lower);
+            final BlockPos upper = lower.up();
+            if (isGlassLike(world.getBlockState(upper))) {
+                positions.add(upper);
+            }
+        }
+        return positions;
+    }
+
+    /** Every binding position of a psd_top group: the group's psd_top
+     *  blocks (all of them are psd_top by the group walk). */
+    public static List<BlockPos> topRunPositions(Run run, Direction facing) {
+        final List<BlockPos> positions = new ArrayList<>();
+        for (int i = 0; i < run.width; i++) {
+            positions.add(run.start.offset(facing.rotateYClockwise(), i));
+        }
+        return positions;
     }
 
     /**

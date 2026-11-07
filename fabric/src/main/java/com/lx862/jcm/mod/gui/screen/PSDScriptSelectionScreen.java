@@ -30,14 +30,20 @@ import java.util.List;
 /**
  * The PSD Script Editor's selection screen — lists every {@code psdScripts}
  * entry of the clicked surface ("glass" / "top") plus every scripted PIDS
- * preset, with a "no script" entry to remove the binding. Selecting an entry
- * sends the bind packet to the server, which stores it and broadcasts it to
- * every player in the dimension.
+ * preset, with a "no script" entry to remove the binding. A choice applies
+ * to <b>every block of the clicked surface</b> (the whole glass segment —
+ * both halves of every column — or the whole psd_top group): each position
+ * gets its own bind packet, and the server stores them and broadcasts the
+ * updated list to every player in the dimension. The "currently selected"
+ * marker resolves from any binding found on those positions, so opening the
+ * editor from ANY block of the same glass shows (and can remove) the
+ * segment's script — yanyang.6: previously the lookup only covered the
+ * clicked column, and unbinding from any other block of the same visually
+ * merged glass silently did nothing.
  */
 public class PSDScriptSelectionScreen extends SavableScreen implements RenderHelper, GuiHelper {
-    private final BlockPos blockPos;
-    /** The other half of a glass column (null for psd_top bindings) — a choice binds both. */
-    private final BlockPos partnerPos;
+    /** Every block of the managed surface (whole glass segment / psd_top group). */
+    private final List<BlockPos> positions;
     private final PSDWrapper.PSDType type;
     private final TextFieldWidgetExtension searchBox;
     private final ListViewWidget listViewWidget;
@@ -63,18 +69,20 @@ public class PSDScriptSelectionScreen extends SavableScreen implements RenderHel
         }
     }
 
-    public PSDScriptSelectionScreen(BlockPos blockPos, BlockPos partnerPos, PSDWrapper.PSDType type) {
+    public PSDScriptSelectionScreen(List<BlockPos> positions, PSDWrapper.PSDType type) {
         super(false);
-        this.blockPos = blockPos;
-        this.partnerPos = partnerPos;
+        this.positions = positions;
         this.type = type;
         this.listViewWidget = new ListViewWidget();
         this.searchBox = new TextFieldWidgetExtension(0, 0, 0, 22, 60, TextCase.DEFAULT, null, TextUtil.translatable(TextCategory.GUI, "widget.search").getString());
 
-        final PSDBinding binding = PSDClientBindings.get(blockPos);
-        if (binding != null) {
-            this.currentScriptId = binding.scriptId;
-            this.currentIsPidsPreset = binding.pidsPreset;
+        for (BlockPos pos : positions) {
+            final PSDBinding binding = PSDClientBindings.get(pos);
+            if (binding != null && binding.type == type) {
+                this.currentScriptId = binding.scriptId;
+                this.currentIsPidsPreset = binding.pidsPreset;
+                break;
+            }
         }
     }
 
@@ -190,15 +198,15 @@ public class PSDScriptSelectionScreen extends SavableScreen implements RenderHel
     private void choose(Option option) {
         currentScriptId = option.id;
         currentIsPidsPreset = option.pidsPreset;
-        com.lx862.jcm.mod.registry.Networking.sendPacketToServer(new PSDScriptBindC2SPacket(blockPos, option.id, option.pidsPreset, type.name()));
-        if (partnerPos != null) {
-            com.lx862.jcm.mod.registry.Networking.sendPacketToServer(new PSDScriptBindC2SPacket(partnerPos, option.id, option.pidsPreset, type.name()));
+        /* One packet per block of the surface — the whole glass segment
+           (both halves of every column) or the whole psd_top group. */
+        for (BlockPos pos : positions) {
+            com.lx862.jcm.mod.registry.Networking.sendPacketToServer(new PSDScriptBindC2SPacket(pos, option.id, option.pidsPreset, type.name()));
         }
         /* Optimistically apply locally too — the server's authoritative
            broadcast replaces it a tick later. */
-        PSDClientBindings.acceptLocalBind(blockPos, option.id, option.pidsPreset, type);
-        if (partnerPos != null) {
-            PSDClientBindings.acceptLocalBind(partnerPos, option.id, option.pidsPreset, type);
+        for (BlockPos pos : positions) {
+            PSDClientBindings.acceptLocalBind(pos, option.id, option.pidsPreset, type);
         }
     }
 
