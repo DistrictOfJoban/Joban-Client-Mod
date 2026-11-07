@@ -16,6 +16,9 @@ import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.mtrscripting.mod.resource.PSDResourceProvider;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.util.math.MatrixStack;
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
@@ -24,23 +27,21 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.ClientPlayerEntity;
 import org.mtr.mapping.holder.Direction;
-import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MinecraftClient;
+import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mapping.holder.World;
+import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mod.InitClient;
-import org.mtr.mod.block.BlockAPGGlass;
-import org.mtr.mod.block.BlockAPGGlassEnd;
 import org.mtr.mod.block.BlockPSDAPGBase;
 import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDTop;
 import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.ArrivalsCacheClient;
-import org.mtr.mod.render.MainRenderer;
-import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import static com.lx862.jcm.mod.render.RenderHelper.ARGB_WHITE;
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
@@ -71,11 +72,28 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       resource pack draws — stay fully visible and clip the canvas; nothing
  *       is painted over the frame. The white backing hides the script from
  *       the track side (passengers inside a stopped train see plain white
- *       through the window, never mirrored content). The segment's shared
- *       canvas is segmentWidth×96 PIDS pixels (MTR-APG upper halves:
- *       segmentWidth×54, matching the 9-px gate glass; JCM DRL APG upper halves
- *       render nothing — that model has no pane above its 2-px light strip,
- *       the lower half is the column's display surface).</li>
+ *       through the window, never mirrored content).</li>
+ *   <li><b>Window clipping</b> (see {@link PSDWindowBounds}): the backing and
+ *       the canvas are additionally clipped to the pane's transparent
+ *       window, derived at runtime from the block's actual baked model and
+ *       texture alpha — resource packs replace both, and a pack whose
+ *       "window" is a tint and whose "frame" is only semi-transparent would
+ *       otherwise let sandwiched content (and the white backing itself) show
+ *       through the frame region. Blocks whose window cannot be derived fall
+ *       back to the full face, matching the pre-clipping behaviour.</li>
+ *   <li><b>Flush discipline</b>: the white backing is NOT drawn through the
+ *       shared entity-phase vertex consumer. Deferred-batching pipelines
+ *       (ImmediatelyFast + Iris/Sodium shaderpacks) may flush that shared
+ *       consumer's buffers only AFTER the translucent terrain — the pane
+ *       then already owns the depth buffer, and a depth-tested quad at the
+ *       pane centre silently fails the depth test behind the pane's front
+ *       face: the backing vanishes while text (which MTR's
+ *       {@code GraphicsHolder.drawText} renders through its own private,
+ *       synchronously flushed immediate) still shows. The backing therefore
+ *       replicates drawText's discipline — a private
+ *       {@code VertexConsumerProvider.Immediate} created and flushed inside
+ *       the draw itself — so it always lands BEFORE the translucent pane,
+ *       under every pipeline.</li>
  *   <li><b>Top</b> (bound to a psd_top block, whose own arrow/route content is
  *       cancelled group-wide by {@code RenderRouteBaseMixin}): the script's
  *       draw calls replay across the <b>psd_top group the bound block
@@ -99,8 +117,6 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  */
 public final class PSDScriptRenderer implements RenderHelper {
 
-    /** PIDS pixel scale — 96 px per block (PIDSPresetBase.BASE_SCALE). */
-    private static final float BASE_SCALE = 1 / 96F;
     private static final float SMALL_OFFSET = 0.0005F;
 
     /** psd_top display band paddings (16ths of the block), from RenderPSDTop
@@ -127,10 +143,10 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static final float GLASS_BACKING_Z = 5F / 16;
     private static final float GLASS_SCRIPT_Z = GLASS_PLATFORM_Z + 0.5F / 16;
 
-    /** APG (half-height gate) upper-half glass height. */
-    private static final float APG_UPPER_HEIGHT = 9F / 16;
+    /** A window narrower than this (block fraction) is treated as no window. */
+    private static final float MIN_WINDOW = 0.05F;
 
-    private static final Identifier WHITE_TEXTURE = new Identifier("mtr", "textures/block/white.png");
+    private static final net.minecraft.util.Identifier WHITE_TEXTURE_MC = new net.minecraft.util.Identifier("mtr", "textures/block/white.png");
 
     /** Distance² gate — bindings beyond this are not driven. */
     private static final double MAX_DISTANCE_SQ = 192 * 192;
@@ -138,8 +154,10 @@ public final class PSDScriptRenderer implements RenderHelper {
     private PSDScriptRenderer() {
     }
 
-    /** Called from MainRendererMixin at the head of MainRenderer.render. */
-    public static void renderAll() {
+    /** Called from MainRendererMixin at the head of MainRenderer.render.
+     * The camera {@code offset} feeds the synchronously-flushed backing
+     * quads (drawn directly, ahead of the queued-layer flush). */
+    public static void renderAll(Vector3d offset) {
         final MinecraftClient minecraftClient = MinecraftClient.getInstance();
         /* MTR's mapping wrappers are unrelated types — ClientWorld reaches the
            World-typed helpers (native driver, InitClient) through World.cast. */
@@ -168,7 +186,7 @@ public final class PSDScriptRenderer implements RenderHelper {
                 }
             } else {
                 if (block instanceof BlockPSDAPGGlassBase) {
-                    renderGlass(binding, pos, state, world, shadowPass);
+                    renderGlass(binding, pos, state, world, shadowPass, offset);
                 }
             }
         });
@@ -178,7 +196,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* Glass                                                                 */
     /* ==================================================================== */
 
-    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass) {
+    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass, Vector3d offset) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING);
         final boolean upper = IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
         final Object block = state.getBlock().data;
@@ -194,25 +212,61 @@ public final class PSDScriptRenderer implements RenderHelper {
             return;
         }
 
-        final boolean apg = block instanceof BlockAPGGlass || block instanceof BlockAPGGlassEnd;
-
         /* The whole glass segment shares one canvas (see PSDRuns for the
            section walk and the anchor convention). */
         final PSDRuns.Run run = PSDRuns.glassRun(world, pos, facing);
-        final float faceHeight = upper && apg ? APG_UPPER_HEIGHT : 1;
+
+        /* The pane's transparent window, per block, straight from the baked
+           model + texture alpha (see PSDWindowBounds) — pack-dependent, so
+           nothing is hardcoded. The window IS the pane face's actual
+           transparent region (both its geometry extent and its texture
+           alpha), so half-height panes anchor correctly on their own — the
+           old code assumed every pane sits at the TOP of its block, which
+           is wrong for MTR's APG gates (their upper-half pane sits at the
+           BOTTOM of the upper block, world y 1.0–1.5625) and mislocated
+           the canvas over thin air. The shared canvas is clipped to the
+           UNION of the run's windows; the white backing uses each block's
+           own window. Blocks whose window can't be derived fall back to
+           the full face. */
+        final float[] blockTop = new float[run.width];
+        final float[] blockBottom = new float[run.width];
+        float windowTop = 1;
+        float windowBottom = 0;
+        for (int i = 0; i < run.width; i++) {
+            final float[] w = PSDWindowBounds.window(world.getBlockState(run.start.offset(facing.rotateYClockwise(), i)), facing);
+            final float top = Math.min(w[0], 1);
+            final float bottom = Math.max(w[1], 0);
+            blockTop[i] = top;
+            blockBottom[i] = bottom;
+            if (top - bottom >= MIN_WINDOW) {
+                windowTop = Math.min(windowTop, top);
+                windowBottom = Math.max(windowBottom, bottom);
+            }
+        }
+
+        /* Canvas coordinates: y=0 at the block top, y grows downward; the
+           canvas is clipped to the window, so script content (which lays
+           out against pids.height) never lands on the frame strips. */
         final int canvasWidth = run.width * 96;
-        final int canvasHeight = Math.round(faceHeight * 96);
+        final int canvasHeight = Math.max(8, Math.round((windowTop - windowBottom) * 96));
+        final float canvasTop = 1 - windowTop;
 
         if (!shadowPass) {
-            /* Opaque white backing at the pane centre, drawn double-sided: it
-               reads as "the glass turned white" through the pane's transparent
-               window from BOTH sides, and it hides the script canvas from the
-               track side (train passengers never see mirrored content). The
-               pane's opaque frame pixels clip it — the frame itself stays
-               untouched. */
+            /* Opaque white backing at the pane centre, drawn double-sided per
+               block: it reads as "the glass turned white" through the pane's
+               transparent window from BOTH sides, and it hides the script
+               canvas from the track side (train passengers never see mirrored
+               content). Drawn through a private, synchronously flushed
+               immediate (see the class javadoc's flush-discipline note) —
+               the shared entity-phase consumer may only be flushed after the
+               translucent pane under deferred-batching pipelines (Immediately
+               Fast + Iris), which used to make this quad fail the depth test
+               behind the pane's front face and vanish. */
             final StoredMatrixTransformations backing = glassTransform(run.start, facing, GLASS_BACKING_Z);
-            scheduleWhite(backing, canvasWidth, canvasHeight, facing.getOpposite());
-            scheduleWhite(backing, canvasWidth, canvasHeight, facing);
+            for (int i = 0; i < run.width; i++) {
+                if (blockTop[i] - blockBottom[i] < MIN_WINDOW) continue;
+                drawWhiteSync(backing, offset, i, blockTop[i], blockBottom[i], facing);
+            }
             driveScript(binding, pos, world, canvasWidth, canvasHeight);
         }
 
@@ -222,6 +276,7 @@ public final class PSDScriptRenderer implements RenderHelper {
            opaque pixel of the pane texture (frame, bars, frosted bands —
            whatever the resource pack draws) stays visible in front of it. */
         final StoredMatrixTransformations scriptSide = glassTransform(run.start, facing, GLASS_SCRIPT_Z);
+        scriptSide.add(graphicsHolder -> graphicsHolder.translate(0, canvasTop, 0));
         replayScript(binding, pos, world, scriptSide, facing.getOpposite());
         if (!shadowPass) {
             replaySoundsOnce(binding, pos, world);
@@ -244,11 +299,51 @@ public final class PSDScriptRenderer implements RenderHelper {
         return transform;
     }
 
-    private static void scheduleWhite(StoredMatrixTransformations transform, int canvasWidth, int canvasHeight, Direction direction) {
-        MainRenderer.scheduleRender(WHITE_TEXTURE, false, QueuedRenderLayer.EXTERIOR, (graphicsHolder, offset) -> {
-            transform.transform(graphicsHolder, offset);
-            RenderHelper.drawTexture(graphicsHolder, 0, 0, 0, canvasWidth * BASE_SCALE, canvasHeight * BASE_SCALE, direction, ARGB_WHITE, MAX_RENDER_LIGHT);
-            graphicsHolder.pop();
+    /* ==================================================================== */
+    /* Synchronous backing draw (private immediate, see class javadoc)      */
+    /* ==================================================================== */
+
+    /**
+     * Draws through a PRIVATE {@code VertexConsumerProvider.Immediate} that
+     * is flushed synchronously at the end of this call — the same flush
+     * discipline MTR's own {@code GraphicsHolder.drawText} uses for every
+     * scripted text. Deferred-batching pipelines (ImmediatelyFast with
+     * Iris/Sodium shaderpacks) may hold the SHARED entity-phase consumer's
+     * buffers until after the translucent terrain; anything drawn through
+     * it from BEHIND a translucent face (the pane's platform-side face at
+     * 4/16 is in front of the pane-centre backing at 5/16) then fails the
+     * depth test and silently vanishes. A private immediate, drawn and
+     * flushed right here, always lands before the translucent pane.
+     */
+    private static void drawSync(StoredMatrixTransformations transform, Vector3d offset, Consumer<GraphicsHolder> drawer) {
+        try {
+            final MatrixStack matrices = new MatrixStack();
+            final BufferBuilder buffer = new BufferBuilder(256);
+            final VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(buffer);
+            GraphicsHolder.createInstanceSafe(matrices, immediate, holder -> {
+                transform.transform(holder, offset);
+                drawer.accept(holder);
+                holder.pop();
+            });
+            immediate.draw();
+        } catch (Throwable ignored) {
+            /* Never take the render thread down over a backing quad. */
+        }
+    }
+
+    /**
+     * The opaque white pane backing — one block-wide quad (canvas x
+     * ∈ [x, x+1], y ∈ [1-top, 1-bottom] in full-face canvas coordinates),
+     * drawn double-sided via BOTH windings (the entity-cutout layer culls
+     * back faces, so a second, reversed quad serves the track side).
+     */
+    private static void drawWhiteSync(StoredMatrixTransformations transform, Vector3d offset, float x, float top, float bottom, Direction facing) {
+        final float y = 1 - top;
+        final float height = top - bottom;
+        drawSync(transform, offset, holder -> {
+            holder.createVertexConsumer(new org.mtr.mapping.holder.RenderLayer(net.minecraft.client.render.RenderLayer.getEntityCutout(WHITE_TEXTURE_MC)));
+            holder.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), ARGB_WHITE, MAX_RENDER_LIGHT);
+            holder.drawTextureInWorld(x, y, 0, x + 1, y, 0, x + 1, y + height, 0, x, y + height, 0, 0, 0, 1, 1, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
         });
     }
 
