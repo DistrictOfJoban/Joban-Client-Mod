@@ -93,8 +93,13 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       occlusion</b> (yanyang.5) — every pane-parallel quad's opaque rows
  *       count as frame, so packs whose pane texture is fully transparent but
  *       whose frame strips are separate model elements clip correctly too.
- *       The COVERING is deliberately NOT alpha-clipped (yanyang.9): being a
- *       flat opaque quad BEHIND the pane it spans the pane's full geometric
+ *       Yanyang.10 completes the twin: the canvas is now clipped
+ *       HORIZONTALLY too — the run's largest contiguous transparent span
+ *       of columns, so the door frame's end stiles no longer half-eat the
+ *       first/last glyph of every script row (the yanyang.9
+ *       「脚本内容越界问题依然存在」 report). The COVERING is
+ *       deliberately NOT alpha-clipped (yanyang.9): being a flat opaque
+ *       quad BEHIND the pane it spans the pane's full geometric
  *       extent instead, so the pane's semi-transparent edge bands get solid
  *       colour behind them ("fully covered") while the opaque frame parts in
  *       front hide any excess. Blocks whose window cannot be derived
@@ -102,17 +107,23 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       DRL upper halves (invisible in vanilla) only render when their
  *       model actually shows something — a pack that gives them a visible
  *       frame/glass turns them into display surfaces.</li>
- *   <li><b>Draw path</b> (yanyang.8): the backing is drawn through the
+ *   <li><b>Draw path</b> (yanyang.10): the backing is drawn through the
  *       SAME deferred scheduled path as the script's own textures and
  *       rectangles — {@code MainRenderer.scheduleRender} on the shared
  *       queued layers, flushed at the end of {@code MainRenderer.render}
  *       on MTR's own matrix holder with the queued callback's camera
- *       offset. That is the exact carrier every scripted texture and
- *       text has provably rendered through under the users'
- *       ImmediatelyFast + Iris/Sodium pipelines since yanyang.1 (the
- *       yanyang.4 "deferred flush loses to the translucent pane"
- *       theory was wrong — script content behind the pane has been
- *       visible all along). The yanyang.4–7 backing instead flushed a
+ *       offset. The platform-facing BLACK quad is keyed onto
+ *       {@code LIGHT_2} so the flush itself creates the
+ *       {@code RenderLayer.getText} consumer — the identical carrier every
+ *       scripted texture and text has provably rendered through under the
+ *       users' ImmediatelyFast + Iris/Sodium pipelines since yanyang.1; the
+ *       track-facing WHITE quad rides {@code EXTERIOR} (entity-cutout, the
+ *       depth-writing layer) a hair deeper so its depth culls the black
+ *       quad's track-side back face. The yanyang.8/9 cover instead created
+ *       its own {@code getEntityCutout} consumer on LIGHT_2 — fine in the
+ *       shaderless pipeline, but the black cover vanished under shaders
+ *       (user report 2026-11-08 「开启光影时玻璃依然透明」). The
+ *       yanyang.4–7 backing instead flushed a
  *       private {@code VertexConsumerProvider.Immediate} around the
  *       shared Tessellator buffer synchronously, on a fresh identity
  *       matrix stack whose only camera handling was a baked-in relative
@@ -207,9 +218,22 @@ public final class PSDScriptRenderer implements RenderHelper {
     /** The covering tint toward the PLATFORM: fully opaque black (ARGB). */
     private static final int BACKING_COLOR = 0xFF000000;
 
+    /** Yanyang.10: the track-facing white quad sits this much DEEPER (in
+     *  the pane frame's local +Z, toward the track) than the black quad.
+     *  The black quad rides the cull-free, depth-write-free text layer, so
+     *  its back face would show on BOTH sides; the depth-writing white
+     *  quad renders first (EXTERIOR flushes before LIGHT_2) and its nearer
+     *  depth fails the black back face's LEQUAL test on the track side —
+     *  the two-sided/two-colour cover survives without co-planar
+     *  z-fighting. */
+    private static final float TRACK_BACK_Z = 0.0005F;
+
     /** Yanyang.9: the covering tint toward the TRACK — fully opaque white.
-     *  The covering quad is drawn through BOTH windings (the entity-cutout
-     *  layer culls back faces), so each side can carry its own colour: the
+     *  Yanyang.10: the cover is now TWO quads on two queued layers — the
+     *  platform-facing black quad rides LIGHT_2 (the text layer, see
+     *  {@link #BACKING_COLOR}), the track-facing white quad rides EXTERIOR
+     *  (entity-cutout, depth-writing) a hair deeper ({@link #TRACK_BACK_Z})
+     *  so its depth culls the black quad's track-side back face: the
      *  platform sees the real-PIDS black display behind the script content,
      *  while train passengers see plain white through the window (the
      *  pre-yanyang.8 original design colour; the yanyang.8 blanket-black
@@ -306,6 +330,13 @@ public final class PSDScriptRenderer implements RenderHelper {
         final boolean[] lowerValid = new boolean[width];
         final float[] lowerExtentTop = new float[width];
         final float[] lowerExtentBottom = new float[width];
+        /* Yanyang.10: the per-column HORIZONTAL window (block space,
+           [left, right] ⊂ [0,1]) — the strict alpha scan's horizontal
+           twin, so the canvas can dodge the door frame's vertical
+           stiles at the run's ends exactly like it dodges the
+           horizontal bands vertically. */
+        final float[] lowerHLeft = new float[width];
+        final float[] lowerHRight = new float[width];
         final float[] upperTop = new float[width];
         final float[] upperBottom = new float[width];
         final boolean[] upperValid = new boolean[width];
@@ -322,6 +353,8 @@ public final class PSDScriptRenderer implements RenderHelper {
             lowerValid[i] = lowerTop[i] - lowerBottom[i] >= MIN_WINDOW;
             lowerExtentTop[i] = lowerBounds.extentTop;
             lowerExtentBottom[i] = lowerBounds.extentBottom;
+            lowerHLeft[i] = lowerBounds.left;
+            lowerHRight[i] = lowerBounds.right;
             /* The sandwich sits just behind the DEEPEST pane in the run so
                every block's pane stays in front of it. */
             paneAlong = Math.max(paneAlong, lowerBounds.paneAlong);
@@ -346,6 +379,11 @@ public final class PSDScriptRenderer implements RenderHelper {
                     upperValid[i] = upperTop[i] - upperBottom[i] >= MIN_WINDOW;
                     upperExtentTop[i] = upperBounds.extentTop;
                     upperExtentBottom[i] = upperBounds.extentBottom;
+                    /* The column's horizontal window is the INTERSECTION of
+                       both rows' windows — a stile in either row clips the
+                       column for the whole merged frame. */
+                    lowerHLeft[i] = Math.max(lowerHLeft[i], upperBounds.left);
+                    lowerHRight[i] = Math.min(lowerHRight[i], upperBounds.right);
                     paneAlong = Math.max(paneAlong, upperBounds.paneAlong);
                 }
             }
@@ -384,7 +422,63 @@ public final class PSDScriptRenderer implements RenderHelper {
             windowBottom = 0;
         }
 
-        final int canvasWidth = width * 96;
+        /* The horizontal window (yanyang.10): each column's transparent
+           span is [i+left, i+1-right] in run coordinates; the canvas maps
+           onto the LARGEST CONTIGUOUS such span across the run (adjacent
+           columns' windows must actually touch — a mid-run vertical stile
+           splits the run and the canvas takes the wider side, exactly like
+           the vertical scan takes the largest unoccluded band). This is
+           the fix for the yanyang.9 report 「脚本内容越界问题依然存在」:
+           the canvas used to span every full column, so the script's own
+           row layout (SIDE_PADDING of 3 px against pids.width) put the
+           first/last glyph of every row right under the door frame's
+           end stiles — half a "海" swallowed left, half a "钟" right.
+           With the canvas mapped onto the transparent span, pids.width
+           IS the visible width and every script's layout adapts by
+           itself. Falls back to the full run (the pre-scan behaviour)
+           when no span of MIN_WINDOW survives. */
+        float segLeft = 0;
+        float segRight = width;
+        {
+            float bestL = 0, bestR = -1, curL = -1, curR = -1;
+            for (int i = 0; i < width; i++) {
+                final float a = i + lowerHLeft[i];
+                final float b = (i + 1) - lowerHRight[i];
+                if (b - a < MIN_WINDOW) {
+                    /* Column fully occluded — splits the span. */
+                    if (curL >= 0 && curR - curL > bestR - bestL) {
+                        bestL = curL;
+                        bestR = curR;
+                    }
+                    curL = -1;
+                } else if (curL < 0) {
+                    curL = a;
+                    curR = b;
+                } else if (a <= curR + 0.015625F) {
+                    /* Touching/overlapping the current span (1/64 slack for
+                       scan rounding) — extend it. */
+                    curR = Math.max(curR, b);
+                } else {
+                    if (curR - curL > bestR - bestL) {
+                        bestL = curL;
+                        bestR = curR;
+                    }
+                    curL = a;
+                    curR = b;
+                }
+            }
+            if (curL >= 0 && curR - curL > bestR - bestL) {
+                bestL = curL;
+                bestR = curR;
+            }
+            if (bestR - bestL >= MIN_WINDOW) {
+                segLeft = bestL;
+                segRight = bestR;
+            }
+        }
+
+        final int canvasWidth = Math.max(8, Math.round((segRight - segLeft) * 96));
+        final float canvasLeft = segLeft;
         final int canvasHeight = Math.max(8, Math.round((windowTop - windowBottom) * 96));
         final float canvasTop = frameHeight - windowTop;
 
@@ -397,7 +491,7 @@ public final class PSDScriptRenderer implements RenderHelper {
         final float backingZ = paneAlong + GLASS_BACKING_OFFSET;
 
         if (!shadowPass) {
-            /* Opaque covering, drawn double-sided per block and row — but at
+            /* Opaque covering, one two-quad pair per block and row — but at
                the pane's FULL GEOMETRIC EXTENT (yanyang.9), NOT the strict
                alpha window: the covering is a flat quad BEHIND the pane, so
                every opaque part of the pane/frame in front hides any excess
@@ -405,13 +499,13 @@ public final class PSDScriptRenderer implements RenderHelper {
                strict scan excludes as "frame") finally get solid colour
                behind them — the yanyang.8 leftover see-through strips at the
                window's top/bottom edges (user report 2026-11-08 「黑色覆盖
-               不完全」). Each side carries its own tint: BLACK toward the
-               platform (the PIDS display behind the script content), WHITE
-               toward the track (train passengers see a plain white panel,
-               never mirrored content — see TRACK_SIDE_COLOR). Scheduled onto
-               the same queued layers as the script's own textures (see
-               drawBacking) — the deferred end-of-render flush that has
-               carried every scripted quad correctly since yanyang.1. */
+               不完全」). Each side carries its own tint and its own queued
+               layer (yanyang.10, see drawBacking): BLACK toward the platform
+               on the text layer (shader-safe — the same carrier as the
+               script's own content), WHITE toward the track on the
+               depth-writing entity-cutout layer (train passengers see a
+               plain white panel, never mirrored content — see
+               TRACK_SIDE_COLOR). */
             final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
             for (int i = 0; i < width; i++) {
                 if (lowerExtentTop[i] > lowerExtentBottom[i]) {
@@ -430,7 +524,7 @@ public final class PSDScriptRenderer implements RenderHelper {
            opaque pixel of the pane texture (frame, bars, frosted bands —
            whatever the resource pack draws) stays visible in front of it. */
         final StoredMatrixTransformations scriptSide = glassTransform(run.start, facing, scriptZ, frameHeight);
-        scriptSide.add(graphicsHolder -> graphicsHolder.translate(0, canvasTop, 0));
+        scriptSide.add(graphicsHolder -> graphicsHolder.translate(canvasLeft, canvasTop, 0));
         replayScript(binding, pos, world, scriptSide, facing.getOpposite());
         if (!shadowPass) {
             replaySoundsOnce(binding, pos, world);
@@ -463,20 +557,33 @@ public final class PSDScriptRenderer implements RenderHelper {
     /**
      * The opaque pane covering — one block-wide quad (canvas x ∈ [x, x+1],
      * y ∈ [frameTop-top, frameTop-bottom] in the merged frame's canvas
-     * coordinates), drawn double-sided via BOTH windings with a PER-SIDE
-     * tint (the entity-cutout layer culls back faces): the platform-facing
-     * winding carries {@link #BACKING_COLOR} (black), the track-facing
-     * winding {@link #TRACK_SIDE_COLOR} (white).
+     * coordinates), drawn as TWO differently-scheduled quads (yanyang.10):
      *
-     * <p>Scheduled through {@code MainRenderer.scheduleRender} on
-     * {@code QueuedRenderLayer.LIGHT_2} — the identical carrier every
-     * scripted texture and rectangle uses (the QuadDrawCall /
-     * TextureWrapper / RectangleWrapper discipline). The callback runs
-     * at the queued-layer flush at the end of {@code MainRenderer.render},
-     * on MTR's own graphics holder: {@code transform.transform(holder,
-     * offset)} applies the world anchor minus the flush-time camera
-     * offset, pinning the quad to its glass under every pipeline the
-     * users run.</p>
+     * <ul>
+     *   <li><b>Platform-facing BLACK</b> — scheduled with the texture as
+     *       the queue key on {@code QueuedRenderLayer.LIGHT_2}: the flush
+     *       creates {@code RenderLayer.getText(BACKING_TEXTURE)} and this
+     *       callback writes into it WITHOUT creating another consumer —
+     *       the exact discipline of the PIDS TextureWrapper, the carrier
+     *       every scripted PIDS texture and text rides under the users'
+     *       Iris + ImmediatelyFast pipelines. The yanyang.8/9 cover instead
+     *       created its own {@code getEntityCutout} consumer; that layer
+     *       carried it fine in the shaderless pipeline but the black cover
+     *       vanished under shaders (user report 2026-11-08 「开启光影时
+     *       玻璃依然透明」). The text layer is cull-free and writes no
+     *       depth; the alpha-1 black tint blends opaque on both sides,
+     *       which is why the white winding below needs the depth buffer to
+     *       win the track side back.</li>
+     *   <li><b>Track-facing WHITE</b> — scheduled on
+     *       {@code QueuedRenderLayer.EXTERIOR} (flush creates the
+     *       depth-writing, culling entity-cutout layer), a hair
+     *       ({@link #TRACK_BACK_Z}) deeper. Platform side: its back face is
+     *       culled — invisible. Track side: it renders FIRST with depth
+     *       write, so the black quad's track-side back face (no depth write
+     *       of its own, LEQUAL test against the nearer white depth) fails
+     *       the test and vanishes — train passengers see plain white,
+     *       never mirrored content or the black back face.</li>
+     * </ul>
      *
      * <p>Yanyang.4–7 history: this quad was flushed synchronously through
      * a private {@code VertexConsumerProvider.Immediate} around the shared
@@ -490,11 +597,19 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static void drawBacking(StoredMatrixTransformations transform, float x, float top, float bottom, float frameTop, Direction facing) {
         final float y = frameTop - top;
         final float height = top - bottom;
-        MainRenderer.scheduleRender(QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
-            graphicsHolderNew.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(BACKING_TEXTURE));
+        MainRenderer.scheduleRender(BACKING_TEXTURE, false, QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
+            /* No createVertexConsumer here — the LIGHT_2 flush already
+               created the getText(BACKING_TEXTURE) consumer for this key
+               (the PIDS TextureWrapper discipline). */
             transform.transform(graphicsHolderNew, offset);
             graphicsHolderNew.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
-            graphicsHolderNew.drawTextureInWorld(x, y, 0, x + 1, y, 0, x + 1, y + height, 0, x, y + height, 0, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
+            graphicsHolderNew.pop();
+        });
+        MainRenderer.scheduleRender(BACKING_TEXTURE, false, QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
+            /* No createVertexConsumer here either — the EXTERIOR flush
+               creates the entity-cutout consumer for this key. */
+            transform.transform(graphicsHolderNew, offset);
+            graphicsHolderNew.drawTextureInWorld(x, y, TRACK_BACK_Z, x + 1, y, TRACK_BACK_Z, x + 1, y + height, TRACK_BACK_Z, x, y + height, TRACK_BACK_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
             graphicsHolderNew.pop();
         });
     }

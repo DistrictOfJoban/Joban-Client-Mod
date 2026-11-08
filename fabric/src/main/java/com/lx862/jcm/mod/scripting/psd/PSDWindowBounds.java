@@ -130,6 +130,15 @@ final class PSDWindowBounds {
         final boolean facesPlatform; // normal points at the platform
         final float along;           // plane position along the platform axis
         final float yMin, yMax;      // block-space y extent
+        /** Yanyang.10: whether the pane plane's horizontal axis runs along
+         *  block X (true when the wall FACES the X axis — normal ±X, so the
+         *  pane spreads in Z) or along block Z (facing Z, pane spreads in
+         *  X). Mirrors the axis choice of the {@code area} computation. */
+        final boolean hAlongX;
+        /** Yanyang.10: block-space extent along the pane's HORIZONTAL axis
+         *  (Z when facing X, X when facing Z) — the geometric bound of the
+         *  horizontal window scan. */
+        final float hMin, hMax;
         final Sprite sprite;
         final int frameWidth, frameHeight;
 
@@ -187,6 +196,14 @@ final class PSDWindowBounds {
             } else {
                 throw new IllegalArgumentException("vertical facing");
             }
+            hAlongX = facing.getAxis() == Direction.Axis.X;
+            if (hAlongX) {
+                hMin = min(pz);
+                hMax = max(pz);
+            } else {
+                hMin = min(px);
+                hMax = max(px);
+            }
             this.yMin = yMin;
             this.yMax = yMax;
             sprite = baked.getSprite();
@@ -209,13 +226,20 @@ final class PSDWindowBounds {
             final float local = (row + 0.5F) / frameHeight;
             return sprite.getMinV() + local * (sprite.getMaxV() - sprite.getMinV());
         }
+
+        /** Sprite column (frame-local) → atlas u coordinate (yanyang.10,
+         *  the horizontal twin of {@link #rowToV}). */
+        float columnToU(int col) {
+            final float local = (col + 0.5F) / frameWidth;
+            return sprite.getMinU() + local * (sprite.getMaxU() - sprite.getMinU());
+        }
     }
 
     /** The derived pane geometry of one block state. */
     static final class Bounds {
         /** Full-face sentinel: window = the whole block face at the vanilla
          *  pane depth, no visible pane-parallel geometry. */
-        static final Bounds FULL_FACE = new Bounds(1, 0, DEFAULT_PANE_ALONG, false, 1, 0);
+        static final Bounds FULL_FACE = new Bounds(1, 0, DEFAULT_PANE_ALONG, false, 1, 0, 0, 1);
 
         /** Window top (block space, 1 = block top) — the STRICT alpha
          *  window, for the script canvas (content must stay clear of the
@@ -246,14 +270,32 @@ final class PSDWindowBounds {
         final float extentTop;
         /** Yanyang.9: see {@link #extentTop}. */
         final float extentBottom;
+        /** Yanyang.10: window LEFT edge (block space, 0 = block's left edge
+         *  as seen from the platform) — the STRICT horizontal alpha window,
+         *  the exact horizontal twin of {@link #top}: sprite COLUMNS whose
+         *  majority of sampled pixels is at-or-above the frame threshold
+         *  count as occluded frame (door-frame stiles, printed edge bands,
+         *  frosted side gradients), whether they belong to the pane's own
+         *  texture or to separate vertical strip elements. The renderer
+         *  maps the canvas onto the run's largest contiguous transparent
+         *  horizontal span so script text never lands behind a stile —
+         *  the yanyang.9 "script content still overflows" report, where
+         *  the first/last glyph of every row was half-eaten by the door
+         *  frame's vertical stiles while the canvas spanned the full run. */
+        final float left;
+        /** Yanyang.10: window RIGHT edge (block space, 1 = block's right
+         *  edge) — strict, see {@link #left}. */
+        final float right;
 
-        Bounds(float top, float bottom, float paneAlong, boolean visibleGeometry, float extentTop, float extentBottom) {
+        Bounds(float top, float bottom, float paneAlong, boolean visibleGeometry, float extentTop, float extentBottom, float left, float right) {
             this.top = top;
             this.bottom = bottom;
             this.paneAlong = paneAlong;
             this.visibleGeometry = visibleGeometry;
             this.extentTop = extentTop;
             this.extentBottom = extentBottom;
+            this.left = left;
+            this.right = right;
         }
     }
 
@@ -332,7 +374,7 @@ final class PSDWindowBounds {
                 /* No pane-scale platform-facing face — full-face fallback
                    (with the visibility flag so DRL upper halves can still
                    be gated). */
-                return new Bounds(1, 0, DEFAULT_PANE_ALONG, anyVisible, 1, 0);
+                return new Bounds(1, 0, DEFAULT_PANE_ALONG, anyVisible, 1, 0, 0, 1);
             }
 
             /* Yanyang.9: the covering extent — the pane's own geometric
@@ -354,7 +396,7 @@ final class PSDWindowBounds {
             if (lenient != null) {
                 return lenient;
             }
-            return new Bounds(1, 0, pane.along, anyVisible, extentTop, extentBottom);
+            return new Bounds(1, 0, pane.along, anyVisible, extentTop, extentBottom, 0, 1);
         } catch (Throwable t) {
             return Bounds.FULL_FACE;
         }
@@ -362,15 +404,20 @@ final class PSDWindowBounds {
 
     /** The largest unoccluded y-span across every occluder quad under the
      *  given frame threshold, clipped to the pane's own geometric extent;
-     *  null when no span of {@link #MIN_WINDOW} survives. */
+     *  null when no span of {@link #MIN_WINDOW} survives. Yanyang.10: the
+     *  same scan now also derives the largest unoccluded HORIZONTAL span
+     *  (sprite columns instead of rows) — the window's left/right edges —
+     *  falling back to the full block width when no span survives. */
     private static Bounds scanWindow(java.util.ArrayList<Quad> quads, Quad pane, boolean anyVisible, int frameThreshold, float extentTop, float extentBottom) {
         final boolean[] occluded = new boolean[GRID];
+        final boolean[] occludedH = new boolean[GRID];
         for (final Quad quad : quads) {
             if (quad.area < MIN_OCCLUDER_AREA) {
                 continue;
             }
             try {
                 markOcclusion(quad, occluded, frameThreshold);
+                markOcclusionH(quad, occludedH, frameThreshold);
             } catch (Throwable ignored) {
                 /* Unreadable sprite — contributes no occlusion. */
             }
@@ -398,7 +445,104 @@ final class PSDWindowBounds {
         if (top - bottom < MIN_WINDOW) {
             return null;
         }
-        return new Bounds(top, bottom, pane.along, anyVisible, extentTop, extentBottom);
+        /* The horizontal twin: the largest unoccluded span of columns,
+           clipped to the pane's own horizontal geometric extent. No span
+           → the full block width (the pre-scan behaviour — the canvas
+           spans the run's every column). */
+        float hLeft = 0;
+        float hRight = 1;
+        final int hFrom = clampRow(pane.hMin);
+        final int hTo = clampRow(pane.hMax);
+        int hBestStart = -1, hBestLen = 0, hRun = 0;
+        for (int c = hFrom; c <= hTo; c++) {
+            if (!occludedH[c]) {
+                hRun++;
+                if (hRun > hBestLen) {
+                    hBestLen = hRun;
+                    hBestStart = c - hRun + 1;
+                }
+            } else {
+                hRun = 0;
+            }
+        }
+        if (hBestLen > 0) {
+            final float hR = (float) (hBestStart + hBestLen) / GRID;
+            final float hL = (float) hBestStart / GRID;
+            if (hR - hL >= MIN_WINDOW) {
+                hLeft = hL;
+                hRight = hR;
+            }
+        }
+        return new Bounds(top, bottom, pane.along, anyVisible, extentTop, extentBottom, hLeft, hRight);
+    }
+
+    /** The horizontal twin of {@link #markOcclusion} (yanyang.10): marks the
+     *  block-space horizontal ranges of the quad's sprite COLUMNS whose
+     *  sampled pixels are majority at-or-above {@code frameThreshold} (and,
+     *  when the quad's sampled region is majority-frame as a whole, its full
+     *  horizontal extent — vertical stile strips) as occluded. */
+    private static void markOcclusionH(Quad quad, boolean[] occluded, int frameThreshold) {
+        final NativeImage image = ((SpriteContentsAccessor) (Object) quad.sprite.getContents()).jsblock$getImage();
+        final int[][] rect = sampleRect(quad);
+        final int xFrom = rect[0][0], xTo = rect[0][1], yFrom = rect[1][0], yTo = rect[1][1];
+        final int rowStep = Math.max(1, (yTo - yFrom) / 16);
+
+        int frameCols = 0;
+        int totalCols = 0;
+        for (int x = xFrom; x <= xTo; x++) {
+            int frame = 0, total = 0;
+            for (int y = yFrom; y <= yTo; y += rowStep) {
+                total++;
+                if ((image.getOpacity(x, y) & 0xFF) >= frameThreshold) {
+                    frame++;
+                }
+            }
+            totalCols++;
+            if (total > 0 && frame * 2 >= total) {
+                frameCols++;
+                /* Map the column to block-space horizontal position through
+                   the quad's u→h mapping, clamped to the quad's own extent. */
+                final float hA = uToH(quad, quad.columnToU(x));
+                final float hB = uToH(quad, quad.columnToU(Math.min(x + 1, quad.frameWidth - 1)));
+                final float lo = Math.max(quad.hMin, Math.min(hA, hB));
+                final float hi = Math.min(quad.hMax, Math.max(hA, hB));
+                if (hi > lo) {
+                    final int rFrom = clampRow(lo);
+                    final int rTo = clampRow(hi);
+                    for (int r = rFrom; r <= rTo; r++) {
+                        occluded[r] = true;
+                    }
+                }
+            }
+        }
+        /* Mostly-frame quad (a vertical stile / strip): occlude its whole
+           horizontal extent — sub-pixel UV slivers would otherwise slip
+           through the column mapping. */
+        if (totalCols > 0 && frameCols * 2 >= totalCols) {
+            final int rFrom = clampRow(quad.hMin);
+            final int rTo = clampRow(quad.hMax);
+            for (int r = rFrom; r <= rTo; r++) {
+                occluded[r] = true;
+            }
+        }
+    }
+
+    /** Atlas u → block-space horizontal position through the quad's own
+     *  (linear) u→h map (the twin of {@link #vToY}). */
+    private static float uToH(Quad quad, float u) {
+        int uMinIdx = 0, uMaxIdx = 0;
+        for (int i = 1; i < 4; i++) {
+            if (quad.pu[i] < quad.pu[uMinIdx]) {
+                uMinIdx = i;
+            }
+            if (quad.pu[i] > quad.pu[uMaxIdx]) {
+                uMaxIdx = i;
+            }
+        }
+        final float hMin = quad.hAlongX ? quad.pz[uMinIdx] : quad.px[uMinIdx];
+        final float hMax = quad.hAlongX ? quad.pz[uMaxIdx] : quad.px[uMaxIdx];
+        final float slope = (hMax - hMin) / (quad.pu[uMaxIdx] - quad.pu[uMinIdx]);
+        return hMin + (u - quad.pu[uMinIdx]) * slope;
     }
 
     /** Whether the quad's sampled region contains ANY visible pixel. */
@@ -535,6 +679,8 @@ final class PSDWindowBounds {
         final boolean visibleGeometry = false;
         final float extentTop = 1;
         final float extentBottom = 0;
+        final float left = 0;
+        final float right = 1;
         private Bounds() {
         }
     }
@@ -558,6 +704,8 @@ final class PSDWindowBounds {
         final boolean visibleGeometry = false;
         final float extentTop = 1;
         final float extentBottom = 0;
+        final float left = 0;
+        final float right = 1;
         private Bounds() {
         }
     }
