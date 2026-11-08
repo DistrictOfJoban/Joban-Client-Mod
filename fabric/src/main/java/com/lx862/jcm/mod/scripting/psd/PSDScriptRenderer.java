@@ -16,22 +16,6 @@ import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.mtrscripting.mod.resource.PSDResourceProvider;
-/* The synchronous backing draw needs a RAW immediate-style consumer
-   (the shared Tessellator buffer + synchronous flush, see drawSync —
-   the exact discipline and buffer MTR's own GraphicsHolder.drawText
-   uses, which stays visible under every batching pipeline the users
-   run). The raw type names are loader-specific — Yarn on fabric,
-   Mojmap on forge — so this is the only loader branch in the file;
-   everything else sticks to the org.mtr.mapping abstractions. */
-#if LOADER == "fabric"
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.util.math.MatrixStack;
-#else
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import net.minecraft.client.renderer.MultiBufferSource;
-#endif
 import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
@@ -41,7 +25,6 @@ import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.ClientPlayerEntity;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.MinecraftClient;
-import org.mtr.mapping.holder.Vector3d;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.mapper.OptimizedRenderer;
@@ -51,14 +34,14 @@ import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDTop;
 import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.ArrivalsCacheClient;
+import org.mtr.mod.render.MainRenderer;
+import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
-import static com.lx862.jcm.mod.render.RenderHelper.ARGB_WHITE;
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
 /**
@@ -81,7 +64,7 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       spanning the segment's full height (yanyang.6: the two block halves
  *       of a full-height door are ONE glass, so the canvas merges them
  *       vertically instead of drawing the script once per half) —
- *       <b>sandwiched INSIDE the pane</b>: an opaque white backing
+ *       <b>sandwiched INSIDE the pane</b>: an opaque black backing
  *       0.45/16 behind the pane's platform-side face (drawn double-sided)
  *       and the script canvas 0.25/16 behind it — both at the run's
  *       DERIVED pane depth (see {@link PSDWindowBounds}; vanilla geometry
@@ -96,8 +79,8 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       transparent window</b> while the opaque parts of the texture — the
  *       frame, divider bars, frosted bands, whatever the resource pack
  *       draws — stay fully visible and clip the canvas; nothing is painted
- *       over the frame. The white backing hides the script from the track
- *       side (passengers inside a stopped train see plain white through the
+ *       over the frame. The black backing hides the script from the track
+ *       side (passengers inside a stopped train see plain black through the
  *       window, never mirrored content). Several bindings may point into
  *       the same segment; the FIRST one encountered renders it and the
  *       rest are skipped that pass — one canvas, one script run, one set
@@ -113,19 +96,24 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       DRL upper halves (invisible in vanilla) only render when their
  *       model actually shows something — a pack that gives them a visible
  *       frame/glass turns them into display surfaces.</li>
- *   <li><b>Flush discipline</b>: the white backing is NOT drawn through the
- *       shared entity-phase vertex consumer. Deferred-batching pipelines
- *       (ImmediatelyFast + Iris/Sodium shaderpacks) may flush that shared
- *       consumer's buffers only AFTER the translucent terrain — the pane
- *       then already owns the depth buffer, and a depth-tested quad at the
- *       pane centre silently fails the depth test behind the pane's front
- *       face: the backing vanishes while text (which MTR's
- *       {@code GraphicsHolder.drawText} renders through its own private,
- *       synchronously flushed immediate) still shows. The backing therefore
- *       replicates drawText's discipline — a private
- *       {@code VertexConsumerProvider.Immediate} created and flushed inside
- *       the draw itself — so it always lands BEFORE the translucent pane,
- *       under every pipeline.</li>
+ *   <li><b>Draw path</b> (yanyang.8): the backing is drawn through the
+ *       SAME deferred scheduled path as the script's own textures and
+ *       rectangles — {@code MainRenderer.scheduleRender} on the shared
+ *       queued layers, flushed at the end of {@code MainRenderer.render}
+ *       on MTR's own matrix holder with the queued callback's camera
+ *       offset. That is the exact carrier every scripted texture and
+ *       text has provably rendered through under the users'
+ *       ImmediatelyFast + Iris/Sodium pipelines since yanyang.1 (the
+ *       yanyang.4 "deferred flush loses to the translucent pane"
+ *       theory was wrong — script content behind the pane has been
+ *       visible all along). The yanyang.4–7 backing instead flushed a
+ *       private {@code VertexConsumerProvider.Immediate} around the
+ *       shared Tessellator buffer synchronously, on a fresh identity
+ *       matrix stack whose only camera handling was a baked-in relative
+ *       translate: the quads never received the camera rotation, so
+ *       without shaders they mis-projected into a free-floating slab
+ *       that drifted with every camera move, and under Iris the
+ *       out-of-band immediate draw was discarded outright.</li>
  *   <li><b>Vertical merge</b> (yanyang.6): when EVERY column of the segment
  *       has an upper half that is a display surface (a glass block whose
  *       model actually shows something — DRL uppers whose vanilla model is
@@ -172,7 +160,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static final float TOP_DISPLAY_Z = 2F / 16 - 0.05F / 16;
 
     /** The scripted sandwich lives INSIDE the pane, in its FRONT: the
-     *  white backing and the script canvas sit just behind the pane's
+     *  black backing and the script canvas sit just behind the pane's
      *  platform-side face, both placed relative to the run's derived pane
      *  depth (see {@link PSDWindowBounds.Bounds#paneAlong}; for the
      *  vanilla 4/16 pane these are 4.45/16 and 4.25/16).
@@ -200,15 +188,18 @@ public final class PSDScriptRenderer implements RenderHelper {
     /** A window narrower than this (block fraction) is treated as no window. */
     private static final float MIN_WINDOW = 0.05F;
 
-    /** A truly opaque white texture (16×16, every pixel 255,255,255,255).
-     *  Yanyang.5: MTR's own "white" texture (mtr:textures/block/white.png)
-     *  turned out to be a TRANSPARENT-WHITE utility sprite — fully
-     *  transparent except one corner pixel — so an entity-cutout quad
-     *  textured with it discards every fragment: the backing rendered
-     *  as pure nothing, which was the REAL root cause behind "the glass
-     *  never turns white" (not the flush discipline, not Iris). The mod
-     *  ships its own opaque white instead. */
-    private static final org.mtr.mapping.holder.Identifier WHITE_TEXTURE = new org.mtr.mapping.holder.Identifier("jsblock", "textures/block/white.png");
+    /** A fully opaque white texture (16×16, every pixel 255,255,255,255),
+     *  tinted {@link #BACKING_COLOR} at draw time — the covering quad's
+     *  colour comes from the vertex tint (white texture × black tint =
+     *  black), so a single asset serves the covering. Yanyang.5 history:
+     *  MTR's own "white" texture turned out to be a transparent-white
+     *  utility sprite, so the mod ships its own opaque one; yanyang.8:
+     *  the covering colour changed from white to black per user request
+     *  (real-PIDS look — dark display behind the script content). */
+    private static final org.mtr.mapping.holder.Identifier BACKING_TEXTURE = new org.mtr.mapping.holder.Identifier("jsblock", "textures/block/white.png");
+
+    /** The covering tint: fully opaque black (ARGB). */
+    private static final int BACKING_COLOR = 0xFF000000;
 
     /** Distance² gate — bindings beyond this are not driven. */
     private static final double MAX_DISTANCE_SQ = 192 * 192;
@@ -216,10 +207,12 @@ public final class PSDScriptRenderer implements RenderHelper {
     private PSDScriptRenderer() {
     }
 
-    /** Called from MainRendererMixin at the head of MainRenderer.render.
-     * The camera {@code offset} feeds the synchronously-flushed backing
-     * quads (drawn directly, ahead of the queued-layer flush). */
-    public static void renderAll(Vector3d offset) {
+    /** Called from MainRendererPSDMixin at the head of MainRenderer.render.
+     * Everything drawn here — the backing quads included — is SCHEDULED
+     * onto MTR's queued layers and flushed at the END of that same render
+     * call, on MTR's own graphics holder; camera anchoring comes from the
+     * queued callback's offset at flush time. */
+    public static void renderAll() {
         final MinecraftClient minecraftClient = MinecraftClient.getInstance();
         /* MTR's mapping wrappers are unrelated types — ClientWorld reaches the
            World-typed helpers (native driver, InitClient) through World.cast. */
@@ -254,7 +247,7 @@ public final class PSDScriptRenderer implements RenderHelper {
                 }
             } else {
                 if (block instanceof BlockPSDAPGGlassBase) {
-                    renderGlass(binding, pos, state, world, shadowPass, offset, renderedSections);
+                    renderGlass(binding, pos, state, world, shadowPass, renderedSections);
                 }
             }
         });
@@ -264,7 +257,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* Glass                                                                 */
     /* ==================================================================== */
 
-    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass, Vector3d offset, Set<BlockPos> renderedSections) {
+    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass, Set<BlockPos> renderedSections) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING);
         final boolean upper = IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
 
@@ -370,7 +363,7 @@ public final class PSDScriptRenderer implements RenderHelper {
         final float canvasTop = frameHeight - windowTop;
 
         /* The sandwich planes track the run's pane depth: the script
-           canvas 0.25/16 behind the pane's platform-side face, the white
+           canvas 0.25/16 behind the pane's platform-side face, the black
            backing 0.45/16 behind it (vanilla pane → 4.25/16 and 4.45/16;
            both in the pane slab's front, ahead of any pack-placed
            panel — see the constants' javadoc). */
@@ -378,25 +371,22 @@ public final class PSDScriptRenderer implements RenderHelper {
         final float backingZ = paneAlong + GLASS_BACKING_OFFSET;
 
         if (!shadowPass) {
-            /* Opaque white backing at the pane centre, drawn double-sided per
-               block and row (each block's own window — the lower row and, on
-               a merged frame, the upper row): it reads as "the glass turned
-               white" through the pane's transparent window from BOTH sides,
-               and it hides the script canvas from the track side (train
-               passengers never see mirrored content). Drawn through a
-               private, synchronously flushed immediate (see the class
-               javadoc's flush-discipline note) — the shared entity-phase
-               consumer may only be flushed after the translucent pane under
-               deferred-batching pipelines (Immediately Fast + Iris), which
-               used to make this quad fail the depth test behind the pane's
-               front face and vanish. */
+            /* Opaque black backing, drawn double-sided per block and row
+               (each block's own window — the lower row and, on a merged
+               frame, the upper row): it reads as "the glass turned black"
+               through the pane's transparent window from BOTH sides, and it
+               hides the script canvas from the track side (train passengers
+               never see mirrored content). Scheduled onto the same queued
+               layers as the script's own textures (see drawBacking) — the
+               deferred end-of-render flush that has carried every scripted
+               quad correctly since yanyang.1. */
             final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
             for (int i = 0; i < width; i++) {
                 if (lowerValid[i]) {
-                    drawWhiteSync(backing, offset, i, lowerTop[i], lowerBottom[i], frameHeight, facing);
+                    drawBacking(backing, i, lowerTop[i], lowerBottom[i], frameHeight, facing);
                 }
                 if (frameHeight > 1 && upperValid[i]) {
-                    drawWhiteSync(backing, offset, i, 1 + upperTop[i], 1 + upperBottom[i], frameHeight, facing);
+                    drawBacking(backing, i, 1 + upperTop[i], 1 + upperBottom[i], frameHeight, facing);
                 }
             }
             driveScript(binding, pos, world, canvasWidth, canvasHeight);
@@ -435,61 +425,44 @@ public final class PSDScriptRenderer implements RenderHelper {
     }
 
     /* ==================================================================== */
-    /* Synchronous backing draw (private immediate, see class javadoc)      */
+    /* Scheduled backing draw                                                */
     /* ==================================================================== */
 
     /**
-     * Draws through a PRIVATE {@code VertexConsumerProvider.Immediate}
-     * wrapping the SHARED TESSELLATOR's buffer, flushed synchronously at
-     * the end of this call — the exact buffer and flush discipline MTR's
-     * own {@code GraphicsHolder.drawText} uses for every scripted text
-     * (which provably stays visible under the users' ImmediatelyFast +
-     * Iris/Sodium pipelines, while fresh private buffers and the shared
-     * entity-phase consumer have both proven unreliable carriers for
-     * behind-the-pane quads). Deferred-batching pipelines may hold other
-     * consumers' buffers until after the translucent terrain; anything
-     * drawn through them from BEHIND a translucent face then fails the
-     * depth test and silently vanishes. The Tessellator immediate, drawn
-     * and flushed right here, always lands before the translucent pane.
+     * The opaque pane covering — one block-wide quad (canvas x ∈ [x, x+1],
+     * y ∈ [frameTop-top, frameTop-bottom] in the merged frame's canvas
+     * coordinates), tinted {@link #BACKING_COLOR}, drawn double-sided via
+     * BOTH windings (the entity-cutout layer culls back faces, so a
+     * second, reversed quad serves the track side).
+     *
+     * <p>Scheduled through {@code MainRenderer.scheduleRender} on
+     * {@code QueuedRenderLayer.LIGHT_2} — the identical carrier every
+     * scripted texture and rectangle uses (the QuadDrawCall /
+     * TextureWrapper / RectangleWrapper discipline). The callback runs
+     * at the queued-layer flush at the end of {@code MainRenderer.render},
+     * on MTR's own graphics holder: {@code transform.transform(holder,
+     * offset)} applies the world anchor minus the flush-time camera
+     * offset, pinning the quad to its glass under every pipeline the
+     * users run.</p>
+     *
+     * <p>Yanyang.4–7 history: this quad was flushed synchronously through
+     * a private {@code VertexConsumerProvider.Immediate} around the shared
+     * Tessellator buffer, drawn on a fresh identity matrix stack whose
+     * only camera handling was the baked-in relative translate — the
+     * camera rotation never reached the quads, so without shaders they
+     * mis-projected into a free-floating slab drifting with every camera
+     * move, and under Iris the out-of-band immediate draw was discarded
+     * outright (the "backing never shows" reports).</p>
      */
-    private static void drawSync(StoredMatrixTransformations transform, Vector3d offset, Consumer<GraphicsHolder> drawer) {
-        try {
-#if LOADER == "fabric"
-            final MatrixStack matrices = new MatrixStack();
-            final VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
-#else
-            final PoseStack matrices = new PoseStack();
-            final MultiBufferSource.BufferSource immediate = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-#endif
-            GraphicsHolder.createInstanceSafe(matrices, immediate, holder -> {
-                transform.transform(holder, offset);
-                drawer.accept(holder);
-                holder.pop();
-            });
-#if LOADER == "fabric"
-            immediate.draw();
-#else
-            immediate.endBatch();
-#endif
-        } catch (Throwable ignored) {
-            /* Never take the render thread down over a backing quad. */
-        }
-    }
-
-    /**
-     * The opaque white pane backing — one block-wide quad (canvas x
-     * ∈ [x, x+1], y ∈ [frameTop-top, frameTop-bottom] in the merged frame's
-     * canvas coordinates), drawn double-sided via BOTH windings (the
-     * entity-cutout layer culls back faces, so a second, reversed quad
-     * serves the track side).
-     */
-    private static void drawWhiteSync(StoredMatrixTransformations transform, Vector3d offset, float x, float top, float bottom, float frameTop, Direction facing) {
+    private static void drawBacking(StoredMatrixTransformations transform, float x, float top, float bottom, float frameTop, Direction facing) {
         final float y = frameTop - top;
         final float height = top - bottom;
-        drawSync(transform, offset, holder -> {
-            holder.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(WHITE_TEXTURE));
-            holder.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), ARGB_WHITE, MAX_RENDER_LIGHT);
-            holder.drawTextureInWorld(x, y, 0, x + 1, y, 0, x + 1, y + height, 0, x, y + height, 0, 0, 0, 1, 1, facing, ARGB_WHITE, MAX_RENDER_LIGHT);
+        MainRenderer.scheduleRender(QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
+            graphicsHolderNew.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(BACKING_TEXTURE));
+            transform.transform(graphicsHolderNew, offset);
+            graphicsHolderNew.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
+            graphicsHolderNew.drawTextureInWorld(x, y, 0, x + 1, y, 0, x + 1, y + height, 0, x, y + height, 0, 0, 0, 1, 1, facing, BACKING_COLOR, MAX_RENDER_LIGHT);
+            graphicsHolderNew.pop();
         });
     }
 
