@@ -20,6 +20,7 @@ import org.mtr.core.data.Platform;
 import org.mtr.core.operation.ArrivalResponse;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongImmutableList;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.mapping.holder.Axis;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.ClientPlayerEntity;
@@ -449,7 +450,7 @@ public final class PSDScriptRenderer implements RenderHelper {
            report.) Falls back to the full run (the pre-scan behaviour)
            when no span of MIN_WINDOW survives. */
         final Direction hWalk = facing.rotateYClockwise();
-        final boolean hMirror = (facing.getAxis() == Direction.Axis.Z ? hWalk.getOffsetX() : hWalk.getOffsetZ()) < 0;
+        final boolean hMirror = (facing.getAxis() == Axis.Z ? hWalk.getOffsetX() : hWalk.getOffsetZ()) < 0;
         float segLeft = 0;
         float segRight = width;
         {
@@ -628,8 +629,8 @@ public final class PSDScriptRenderer implements RenderHelper {
 #else
                 final com.mojang.blaze3d.vertex.PoseStack matrices =
                         ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
-                final com.mojang.blaze3d.vertex.MultiBufferSource.BufferSource immediate =
-                        com.mojang.blaze3d.vertex.MultiBufferSource.immediate(com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder());
+                final net.minecraft.client.renderer.MultiBufferSource.BufferSource immediate =
+                        net.minecraft.client.renderer.MultiBufferSource.immediate(com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder());
                 GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
                     transform.transform(priv, offset);
                     priv.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(BACKING_TEXTURE));
