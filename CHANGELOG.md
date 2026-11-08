@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## 2.3.0-prerelease.3-yanyang.12
+
+- **修复（PSD 脚本 / 玻璃）：脚本内容只渲染在整块玻璃的一角（左上 1/4）——`PSDWindowBounds` 的「pane」选取把窗口钳进了单个子面四边形的范围**（实机报告 2026-11-08「脚本仅完整渲染在整块玻璃的左上角 1/4 面积内」，MTR 原版全高屏蔽门）：yanyang.10/11 的窗口推导在烘焙模型里挑「面积最大的平台向四边形」当作整块玻璃面——但 MTR 原版 `psd_glass` 的模型（`psd_glass_middle_base`）由**两个 2px 厚的元素**拼成，玻璃面被拆成**多个子脸四边形**（各覆盖半张脸；晏阳材质包进一步细分），旧逻辑选中的那一个子四边形的 `hMin/hMax/yMin/yMax` 成了窗口的几何钳制范围——水平 / 垂直窗口双双被压进半张（或四分之一张）脸，画布随之塌缩进一个角。修复：pane 几何改为**全部平台向 pane 级四边形的并集**（`hMin/hMax/yMin/yMax/along` 取 min/max，`paneAlong` 取最深者——三明治仍在每片玻璃之后）；遮挡扫描本就逐四边形按各自 UV→块空间映射标记（`uToH`/`vToY`），无需改动——只有范围钳制是坏的。上下半交集、边缘语义跨度映射（`[i+left, i+right]`）、朝向镜像全部维持 yanyang.11 设计。
+- **修复（PSD 脚本 / 玻璃）：开光影（Iris）时黑底 / 白底仍不显示——底板绘制层从 entity-cutout 换到 drawText 同款 text 层**（实机报告 2026-11-08「开启光影时仍然不渲染黑色/白色底色」，Iris 1.7.6 + ComplementaryUnbound r5.5.1 + ImmediatelyFast 1.5.5）：yanyang.11 已把载波、矩阵、flush 纪律全部对齐 `GraphicsHolder.drawText`（私有 Immediate 包共享 Tessellator + 回调内同步 flush + 借用 flush 时刻相机矩阵），唯独消费者层仍是 `RenderLayer.getEntityCutout`——而在**同一个回调、同一私有 Immediate、同一矩阵**下，脚本文字（drawText → `RenderLayer.getText`）在用户光影环境里始终可见：Iris 会替换 entity 着色器程序，脱离其托管路径的裸 entity-cutout 直画落在管线上下文之外，text 层则原样放行——**层是最后一块差异**。修复：底板双绕向四边形改消费 `MoreRenderLayers.getLight2(BACKING_TEXTURE)`（字面就是 `RenderLayer.getText`，与 mtrscripting RectangleWrapper 画脚本 PIDS 矩形完全相同的层 + 顶点写入组合，生产验证多年）。text 层**写深度、不剔除背面**——深度舞步依旧成立：站台向黑面先写深度、深一丝的轨道向白面从站台侧 LEQUAL 失败（站台只见黑）、从轨道侧更近通过（轨道只见白）、脚本内容从轨道侧对着白面更近的深度失败（不透出镜像内容）；无光影视觉与 yanyang.9/11 一致。另：底板回调的异常不再完全静默——首次失败会在日志留一条 `[JCM] PSD backing carrier failed once` 面包屑（仍绝不影响渲染线程）。
+- **说明**：若本版在个别光影包下底板仍不显示，请回报光影包名 + `latest.log`（面包屑日志会直接指出失败点）。
+
 ## 2.3.0-prerelease.3-yanyang.11
 
 - **修复（PSD 脚本 / 玻璃）：yanyang.10 画布位置完全跑偏、比例完全错误——水平窗口公式把「窗口右边缘」当成了「右侧遮挡宽度**」（实机报告 2026-11-08「脚本渲染位置完全跑偏，比例完全错误且有一部分出现在了轨道侧」）：`PSDWindowBounds` 水平孪生扫描返回的 `left`/`right` 是窗口在块空间水平轴上的**边缘位置**（如 [0.06, 0.94]），而渲染器却按「遮挡宽度」计算列窗口 `[i+left, (i+1)-right]`——任何有真实窗口的列都算出 `(i+0.06, i+0.06)` 级的零宽区间被判「全遮挡」断开跨度，画布塌缩成一根错位的窄条（最坏 ~9 像素宽），三行内容挤成乱码。修复：按**边缘语义**重写列窗口映射 `[i+left, i+right]`，并补上朝向镜像——块空间水平轴（X/Z）与画布帧 +X（`facing.rotateYClockwise()`）在 SOUTH / WEST 朝向的墙上方向相反，此时窗口映射为 `[i+(1-right), i+(1-left)]`（yanyang.10 完全漏掉了镜像，同一贴图包在两朝向的墙上会得到左右颠倒的窗口）。最大连续透明跨度的拼接、整段回退、上下半取交集均维持设计；`uToH` 复核为镜像安全（以 u 极值顶点的实际水平坐标锚定，与实机验证过的 `vToY` 同构），无需改动。

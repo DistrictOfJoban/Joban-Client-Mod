@@ -360,9 +360,23 @@ final class PSDWindowBounds {
                 }
             }
 
-            /* The pane: the largest platform-facing quad. */
-            Quad pane = null;
+            /* The pane: the UNION of every platform-facing pane-scale
+               quad (yanyang.12). Vanilla MTR's psd_glass splits the pane
+               face into MULTIPLE sub-face quads — psd_glass_middle_base
+               uses two 2px-thick elements (z 0–8 and 8–16), each
+               contributing its own half-face platform-facing quad, and
+               the yanyang.11-and-earlier "largest single quad" pick
+               clipped the derived window to ONE sub-quad's extent —
+               the canvas then collapsed into a half- or quarter-face
+               pocket (the 2026-11-08 「左上角 1/4」 report). The union
+               spans what the pane actually covers; the occlusion scan
+               below already walks every quad's own UV mapping, so only
+               the extent clip needed widening. */
+            Quad paneAnchor = null;
             boolean anyVisible = false;
+            float paneHMin = Float.MAX_VALUE, paneHMax = -Float.MAX_VALUE;
+            float paneYMin = Float.MAX_VALUE, paneYMax = -Float.MAX_VALUE;
+            float paneAlong = -Float.MAX_VALUE;
             for (final Quad quad : quads) {
                 if (quad.area < MIN_OCCLUDER_AREA) {
                     continue;
@@ -374,11 +388,18 @@ final class PSDWindowBounds {
                 } catch (Throwable ignored) {
                     /* Unreadable sprite — skip the visibility probe. */
                 }
-                if (quad.facesPlatform && quad.area >= MIN_PANE_AREA && (pane == null || quad.area > pane.area)) {
-                    pane = quad;
+                if (quad.facesPlatform && quad.area >= MIN_PANE_AREA) {
+                    if (paneAnchor == null || quad.area > paneAnchor.area) {
+                        paneAnchor = quad;
+                    }
+                    paneHMin = Math.min(paneHMin, quad.hMin);
+                    paneHMax = Math.max(paneHMax, quad.hMax);
+                    paneYMin = Math.min(paneYMin, quad.yMin);
+                    paneYMax = Math.max(paneYMax, quad.yMax);
+                    paneAlong = Math.max(paneAlong, quad.along);
                 }
             }
-            if (pane == null) {
+            if (paneAnchor == null) {
                 /* No pane-scale platform-facing face — full-face fallback
                    (with the visibility flag so DRL upper halves can still
                    be gated). */
@@ -386,25 +407,25 @@ final class PSDWindowBounds {
             }
 
             /* Yanyang.9: the covering extent — the pane's own geometric
-               y-range grown by the margin, clamped to the block. Every
-               return path below carries it. */
-            final float extentTop = Math.min(1, pane.yMax + EXTENT_MARGIN);
-            final float extentBottom = Math.max(0, pane.yMin - EXTENT_MARGIN);
+               y-range (now the UNION's, yanyang.12) grown by the margin,
+               clamped to the block. Every return path below carries it. */
+            final float extentTop = Math.min(1, paneYMax + EXTENT_MARGIN);
+            final float extentBottom = Math.max(0, paneYMin - EXTENT_MARGIN);
 
             /* Window: the largest unoccluded span, clipped to the pane's
                own geometric extent. Two passes (yanyang.7): the STRICT
                pass first — semi-transparent frame strips must occlude —
                then the lenient legacy threshold when the strict pass
                finds no window (tinted-window packs keep their window). */
-            final Bounds strict = scanWindow(quads, pane, anyVisible, FRAME_ALPHA_STRICT, extentTop, extentBottom);
+            final Bounds strict = scanWindow(quads, paneYMin, paneYMax, paneHMin, paneHMax, paneAlong, anyVisible, FRAME_ALPHA_STRICT, extentTop, extentBottom);
             if (strict != null) {
                 return strict;
             }
-            final Bounds lenient = scanWindow(quads, pane, anyVisible, ALPHA_THRESHOLD, extentTop, extentBottom);
+            final Bounds lenient = scanWindow(quads, paneYMin, paneYMax, paneHMin, paneHMax, paneAlong, anyVisible, ALPHA_THRESHOLD, extentTop, extentBottom);
             if (lenient != null) {
                 return lenient;
             }
-            return new Bounds(1, 0, pane.along, anyVisible, extentTop, extentBottom, 0, 1);
+            return new Bounds(1, 0, paneAlong, anyVisible, extentTop, extentBottom, 0, 1);
         } catch (Throwable t) {
             return Bounds.FULL_FACE;
         }
@@ -416,7 +437,7 @@ final class PSDWindowBounds {
      *  same scan now also derives the largest unoccluded HORIZONTAL span
      *  (sprite columns instead of rows) — the window's left/right edges —
      *  falling back to the full block width when no span survives. */
-    private static Bounds scanWindow(java.util.ArrayList<Quad> quads, Quad pane, boolean anyVisible, int frameThreshold, float extentTop, float extentBottom) {
+    private static Bounds scanWindow(java.util.ArrayList<Quad> quads, float paneYMin, float paneYMax, float paneHMin, float paneHMax, float paneAlong, boolean anyVisible, int frameThreshold, float extentTop, float extentBottom) {
         final boolean[] occluded = new boolean[GRID];
         final boolean[] occludedH = new boolean[GRID];
         for (final Quad quad : quads) {
@@ -430,8 +451,8 @@ final class PSDWindowBounds {
                 /* Unreadable sprite — contributes no occlusion. */
             }
         }
-        final int yFrom = clampRow(pane.yMin);
-        final int yTo = clampRow(pane.yMax);
+        final int yFrom = clampRow(paneYMin);
+        final int yTo = clampRow(paneYMax);
         int bestStart = -1, bestLen = 0;
         int run = 0;
         for (int y = yFrom; y <= yTo; y++) {
@@ -459,8 +480,8 @@ final class PSDWindowBounds {
            spans the run's every column). */
         float hLeft = 0;
         float hRight = 1;
-        final int hFrom = clampRow(pane.hMin);
-        final int hTo = clampRow(pane.hMax);
+        final int hFrom = clampRow(paneHMin);
+        final int hTo = clampRow(paneHMax);
         int hBestStart = -1, hBestLen = 0, hRun = 0;
         for (int c = hFrom; c <= hTo; c++) {
             if (!occludedH[c]) {
@@ -481,7 +502,7 @@ final class PSDWindowBounds {
                 hRight = hR;
             }
         }
-        return new Bounds(top, bottom, pane.along, anyVisible, extentTop, extentBottom, hLeft, hRight);
+        return new Bounds(top, bottom, paneAlong, anyVisible, extentTop, extentBottom, hLeft, hRight);
     }
 
     /** The horizontal twin of {@link #markOcclusion} (yanyang.10): marks the

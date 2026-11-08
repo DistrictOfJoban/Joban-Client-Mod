@@ -36,6 +36,7 @@ import org.mtr.mod.block.BlockPSDTop;
 import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.ArrivalsCacheClient;
 import org.mtr.mod.render.MainRenderer;
+import org.mtr.mod.render.MoreRenderLayers;
 import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
@@ -240,6 +241,10 @@ public final class PSDScriptRenderer implements RenderHelper {
 
     /** Distance² gate — bindings beyond this are not driven. */
     private static final double MAX_DISTANCE_SQ = 192 * 192;
+
+    /** One-shot breadcrumb for the first backing-carrier failure
+     * (yanyang.12) — see drawBacking's catch. */
+    private static volatile boolean BACKING_CARRIER_WARNED = false;
 
     private PSDScriptRenderer() {
     }
@@ -578,7 +583,7 @@ public final class PSDScriptRenderer implements RenderHelper {
      * quad's depth fails the canvas content's LEQUAL test on the track
      * side, so script content never leaks through to the track).
      *
-     * <p><b>Carrier (yanyang.11)</b>: the schedule is now only a VEHICLE
+     * <p><b>Carrier (yanyang.11/12)</b>: the schedule is now only a VEHICLE
      * for the correct flush-time camera matrices — inside the callback the
      * quads are drawn through a PRIVATE {@code VertexConsumerProvider.
      * Immediate} wrapping the SHARED TESSELLATOR's buffer, flushed
@@ -600,6 +605,25 @@ public final class PSDScriptRenderer implements RenderHelper {
      * (through {@code NativeMatrixApplier.jcm$getMatrixStack()}), which
      * carries the full camera transform at flush time.</p>
      *
+     * <p><b>Layer (yanyang.12)</b>: yanyang.11 still drew the pair on
+     * {@code RenderLayer.getEntityCutout} and remained shader-invisible —
+     * in the very same callback, on the very same private immediate and
+     * matrices, scripted TEXT (drawText → {@code RenderLayer.getText})
+     * renders fine under the user's shaders, so the ENTITY-CUTOUT layer
+     * itself was the last remaining difference (Iris swaps the entity
+     * shader programs; a raw immediate entity-cutout draw outside Iris's
+     * managed path lands nowhere, while the text layer passes through).
+     * The backing now consumes {@code MoreRenderLayers.getLight2(
+     * BACKING_TEXTURE)} — literally {@code RenderLayer.getText}, the text
+     * family — the exact layer/vertex-writer combination mtrscripting's
+     * own RectangleWrapper uses for scripted PIDS quads. The text layer
+     * writes depth and does NOT cull, so the depth dance still gives each
+     * side its own colour: the platform-facing black writes depth first,
+     * the hair-deeper track-facing white fails LEQUAL from the platform
+     * (invisible there) and passes from the track (covers the black),
+     * while script content on the track side fails against the white's
+     * nearer depth — no mirrored content, same as yanyang.10/11.</p>
+     *
      * <p>Ordering: the backing rides the {@code LIGHT_2} queue's {@code ""}​
      * key, scheduled before the script's own textures (same queue, later
      * map keys) and text (the {@code TEXT} queue flushes after
@@ -618,7 +642,7 @@ public final class PSDScriptRenderer implements RenderHelper {
                         net.minecraft.client.render.VertexConsumerProvider.immediate(net.minecraft.client.render.Tessellator.getInstance().getBuffer());
                 GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
                     transform.transform(priv, offset);
-                    priv.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(BACKING_TEXTURE));
+                    priv.createVertexConsumer(MoreRenderLayers.getLight2(BACKING_TEXTURE));
                     /* Platform-facing BLACK winding. */
                     priv.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
                     /* Track-facing WHITE winding, a hair deeper. */
@@ -633,7 +657,7 @@ public final class PSDScriptRenderer implements RenderHelper {
                         net.minecraft.client.renderer.MultiBufferSource.immediate(com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder());
                 GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
                     transform.transform(priv, offset);
-                    priv.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(BACKING_TEXTURE));
+                    priv.createVertexConsumer(MoreRenderLayers.getLight2(BACKING_TEXTURE));
                     /* Platform-facing BLACK winding. */
                     priv.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
                     /* Track-facing WHITE winding, a hair deeper. */
@@ -642,8 +666,15 @@ public final class PSDScriptRenderer implements RenderHelper {
                 });
                 immediate.endBatch();
 #endif
-            } catch (Throwable ignored) {
-                /* Never take the render thread down over a backing quad. */
+            } catch (Throwable t) {
+                /* Never take the render thread down over a backing quad —
+                   but after eight shader-opaque rounds, the FIRST failure
+                   now leaves a breadcrumb in the log (yanyang.12). */
+                if (!BACKING_CARRIER_WARNED) {
+                    BACKING_CARRIER_WARNED = true;
+                    com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.warn(
+                            "[JCM] PSD backing carrier failed once: " + t, t);
+                }
             }
         });
     }
