@@ -270,21 +270,29 @@ final class PSDWindowBounds {
         final float extentTop;
         /** Yanyang.9: see {@link #extentTop}. */
         final float extentBottom;
-        /** Yanyang.10: window LEFT edge (block space, 0 = block's left edge
-         *  as seen from the platform) — the STRICT horizontal alpha window,
-         *  the exact horizontal twin of {@link #top}: sprite COLUMNS whose
-         *  majority of sampled pixels is at-or-above the frame threshold
-         *  count as occluded frame (door-frame stiles, printed edge bands,
-         *  frosted side gradients), whether they belong to the pane's own
-         *  texture or to separate vertical strip elements. The renderer
-         *  maps the canvas onto the run's largest contiguous transparent
-         *  horizontal span so script text never lands behind a stile —
-         *  the yanyang.9 "script content still overflows" report, where
-         *  the first/last glyph of every row was half-eaten by the door
-         *  frame's vertical stiles while the canvas spanned the full run. */
+        /** Yanyang.10 (semantics clarified yanyang.11): window LEFT edge,
+         *  in BLOCK SPACE along the pane's horizontal axis — block X when
+         *  the wall faces Z, block Z when it faces X; 0 = the block's
+         *  LOW-coordinate edge along that axis (which is the platform
+         *  viewer's left only for NORTH/EAST walls — the renderer applies
+         *  the facing mirror when mapping into run coordinates, see
+         *  PSDScriptRenderer's horizontal window). The STRICT horizontal
+         *  alpha window, the exact horizontal twin of {@link #top}: sprite
+         *  COLUMNS whose majority of sampled pixels is at-or-above the
+         *  frame threshold count as occluded frame (door-frame stiles,
+         *  printed edge bands, frosted side gradients), whether they
+         *  belong to the pane's own texture or to separate vertical strip
+         *  elements. The renderer maps the canvas onto the run's largest
+         *  contiguous transparent horizontal span so script text never
+         *  lands behind a stile — the yanyang.9 "script content still
+         *  overflows" report, where the first/last glyph of every row was
+         *  half-eaten by the door frame's vertical stiles while the canvas
+         *  spanned the full run. */
         final float left;
-        /** Yanyang.10: window RIGHT edge (block space, 1 = block's right
-         *  edge) — strict, see {@link #left}. */
+        /** Yanyang.10: window RIGHT edge (block space, 1 = the block's
+         *  HIGH-coordinate edge along the pane's horizontal axis) — an
+         *  EDGE POSITION, not an occlusion width; strict, see
+         *  {@link #left}. */
         final float right;
 
         Bounds(float top, float bottom, float paneAlong, boolean visibleGeometry, float extentTop, float extentBottom, float left, float right) {

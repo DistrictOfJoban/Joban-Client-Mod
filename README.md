@@ -253,6 +253,7 @@ ctest --test-dir native/build -C Release --output-on-failure
 
 | 版本 | 主题 |
 | --- | --- |
+| `2.3.0-prerelease.3-yanyang.11` | 修复 yanyang.10 回归「画布位置完全跑偏、比例完全错误」：水平窗口公式把扫描返回的窗口**右边缘**当成**右侧遮挡宽度**（`[i+left, (i+1)-right]` 应为 `[i+left, i+right]`），任何有真实窗口的列都算出零宽被判全遮挡、画布塌缩成错位窄条；并补上朝向镜像（块空间水平轴与画布帧 +X 在 SOUTH / WEST 墙上方向相反，窗口需映射为 `[i+(1-right), i+(1-left)]`）。修复「光影下黑底 / 白底从未显示过」：底板载体彻底换轨为 MTR `drawText` 同款「私有 Immediate 包共享 Tessellator + 同步 flush」（反汇编证实其为唯一在用户 Iris + Complementary + ImmediatelyFast 环境下从未失效的载体；所有队列载体均被 ImmediatelyFast 推迟到半透明地形后遭深度测试丢弃），两绕向（站台黑 / 轨道白，entityCutout 写深度 + 背面剔除）在队列回调内借用持有者矩阵（新增 `NativeMatrixApplier.jcm$getMatrixStack()` mixin 访问器——yanyang.4-7 私有 Immediate 唯一败因即裸单位矩阵）同步绘制，白面深度同时把画布内容挡在轨道侧之外（修「内容出现在轨道侧」） |
 | `2.3.0-prerelease.3-yanyang.10` | 修复「脚本内容越界依然存在」：画布补上**水平**窗口裁剪（垂直窗口的水平孪生——列采样 alpha 遮挡 + 最大连续透明跨度），画布从整段整格宽收缩到透明跨度、锚点平移到跨度起点，`pids.width` 即可见宽度，任何脚本的行布局（含右对齐 ETA / 跑马灯文本框）自动避开门框立柱，首尾字符不再被立柱咬掉；段中竖条断开跨度时取较宽一侧，窗口推导不可用整段回退。修复「开启光影时玻璃依然透明」：站台侧黑面从自建 entity-cutout 消费者（Iris 光影下被丢弃）改为脚本内容同款 **getText 层载体**（以纹理为队列 key 排 LIGHT_2、回调不再另建消费者——JCM PIDS 生态久经验证的光影安全路径），无光影视觉不变；轨道侧白面独立排 EXTERIOR 队列（entity-cutout 写深度）并深 0.0005，靠深度测试剔除黑面轨道侧背面，双面双色依然成立 |
 | `2.3.0-prerelease.3-yanyang.9` | 修复 yanyang.8 遗留的「黑色覆盖不完全」：底板此前沿用脚本画布的严格 alpha 窗口（半透明边缘色带被算作门框），玻璃窗口上下边缘留下可透视的窄条——底板是不透明纯色四边形，根本不需要 alpha 裁剪，现改为铺满面板自身的几何范围（+1/64 余量），不透明门框部件在前遮挡余量、半透明色带后方终于是实色（站台侧黑色、轨道侧同步全覆盖）。列车一侧按需求改回**白色**：双绕向双面绘制本就一西一东，站台绕向黑 (PIDS 黑底)、轨道绕向白 (原设计色)，车厢乘客隔窗只看到纯白面板；轨道侧白、站台侧黑互不干扰，仍不透出镜像内容。脚本画布继续用严格窗口（内容不落上色带/门框条带），随底板范围扩大，内容现严格落在黑区之内 |
 | `2.3.0-prerelease.3-yanyang.8` | 修复底板从未正确锚定的真正根因——yanyang.4 起的「私有 Immediate 同步 flush」画在裸单位矩阵栈上，相机旋转从未生效（不开光影时错位成悬浮色板随镜头漂移、开 Iris 被光影管线直接丢弃、站台侧不可见——实机三症同源）；yanyang.4 的「延迟 flush 输给半透明玻璃深度」理论被证伪（同一面板后的脚本画布每版可见）。底板改走脚本内容同款 `MainRenderer.scheduleRender` 延迟队列路径（LIGHT_2，帧尾在 MTR 自己的矩阵 holder 上 flush、以 flush 时相机偏移锚定世界坐标）。底板颜色按需求由白改黑：站台侧黑底 + 脚本内容（真实 PIDS 观感），轨道侧纯黑；复用 `jsblock:white` 纹理 + 黑色顶点色调，无新资源 |
@@ -264,6 +265,7 @@ ctest --test-dir native/build -C Release --output-on-failure
 | `prerelease.2-yanyang.1-hotfix.2` | 原生层两轮人工审查修复首次发布（8 + 3 项）：直接调用模式内存安全（arena 偏移 / 记录长度校验）、每帧 re-attach 泄漏扩容像素 arena、重载代际模块堆内存治理（`mtrCleanup`）、字符串缓存满后插入不可找回（改 16×8 固定分组）、同库多句柄共享锁 + 末句柄清理、空字符串中断 PIDS 帧、阴影阶段重复执行、无原生脚本车辆缓存淘汰、变换池回收滞留 |
 | `prerelease.2-yanyang.1-hotfix.1` | 热修：MTR 4 原生路线类别（高铁 / 轻轨）流入换乘类型链，原版高铁、轻轨线路正确从车侧线路图去除；Axiom 区块批量编辑纳入开门方向重扫；iOS 交叉编译腿回归 macos-latest（arm）runner |
 | `prerelease.2-yanyang.1` | 上游 v2.3.0-prerelease.2 全量同步（61 提交：脚本限流 / 防死循环、脚本核心解耦、BVE 声音卡死与 Iris / OptiFine 阴影修复等）；脚本化 PIDS 文字乱飘修复（世界锚点）；C++ SDK 与上游 API 面同步（Rect / fullAA / StateTracker 等） |
+| `yanyang.11` | PSD 覆盖板：修复水平窗口公式灾难性 bug（边缘 vs 遮挡宽度 + 朝向镜像）修画布跑偏；底板改 drawText 同款同步 flush 载体（光影下首次可望显示），白面深度挡住轨道侧内容泄露 |
 | `yanyang.10` | PSD 覆盖板：画布水平窗口裁剪（文字不再被门框立柱咬首尾）；站台黑面改 getText 层（光影安全），轨道白面独立深度层 |
 | `yanyang.9` | PSD 覆盖板：底板铺满面板几何范围（半透明边缘色带后方实色，修「黑色覆盖不完全」）；列车侧改回白色（双绕向各侧各色：站台黑 / 轨道白） |
 | `yanyang.8` | 脚本化 PIDS 渲染修复（yanyang.4 回归）；开门方向服务端持久记忆与 `getDirectionOfDoorOpening()`（C ABI 11）；原生桥扩至 8 平台（windows-arm64）；全模块执行 / 性能审计 20+ 项修复 |

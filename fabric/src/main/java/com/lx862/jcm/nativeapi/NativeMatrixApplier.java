@@ -13,4 +13,17 @@ public interface NativeMatrixApplier {
      * {@link #jcm$multiplyNativeMatrix(float[])}.
      */
     void jcm$multiplyNativeMatrix(float[] matrix, int floatOffset);
+
+    /**
+     * Yanyang.11: exposes the holder's wrapped raw pose so a queued render
+     * callback can rebuild a {@code GraphicsHolder} around a PRIVATE
+     * {@code VertexConsumerProvider} (the drawText carrier — see
+     * {@code PSDScriptRenderer#drawBacking}) without losing the flush-time
+     * camera matrices. Implemented by the {@code GraphicsHolderMatrixMixin}.
+     */
+#if LOADER == "fabric"
+    net.minecraft.client.util.math.MatrixStack jcm$getMatrixStack();
+#else
+    com.mojang.blaze3d.vertex.PoseStack jcm$getMatrixStack();
+#endif
 }

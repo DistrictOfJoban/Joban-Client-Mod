@@ -107,30 +107,24 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       DRL upper halves (invisible in vanilla) only render when their
  *       model actually shows something — a pack that gives them a visible
  *       frame/glass turns them into display surfaces.</li>
- *   <li><b>Draw path</b> (yanyang.10): the backing is drawn through the
- *       SAME deferred scheduled path as the script's own textures and
- *       rectangles — {@code MainRenderer.scheduleRender} on the shared
- *       queued layers, flushed at the end of {@code MainRenderer.render}
- *       on MTR's own matrix holder with the queued callback's camera
- *       offset. The platform-facing BLACK quad is keyed onto
- *       {@code LIGHT_2} so the flush itself creates the
- *       {@code RenderLayer.getText} consumer — the identical carrier every
- *       scripted texture and text has provably rendered through under the
- *       users' ImmediatelyFast + Iris/Sodium pipelines since yanyang.1; the
- *       track-facing WHITE quad rides {@code EXTERIOR} (entity-cutout, the
- *       depth-writing layer) a hair deeper so its depth culls the black
- *       quad's track-side back face. The yanyang.8/9 cover instead created
- *       its own {@code getEntityCutout} consumer on LIGHT_2 — fine in the
- *       shaderless pipeline, but the black cover vanished under shaders
- *       (user report 2026-11-08 「开启光影时玻璃依然透明」). The
- *       yanyang.4–7 backing instead flushed a
- *       private {@code VertexConsumerProvider.Immediate} around the
- *       shared Tessellator buffer synchronously, on a fresh identity
- *       matrix stack whose only camera handling was a baked-in relative
- *       translate: the quads never received the camera rotation, so
- *       without shaders they mis-projected into a free-floating slab
- *       that drifted with every camera move, and under Iris the
- *       out-of-band immediate draw was discarded outright.</li>
+ *   <li><b>Draw path</b> (yanyang.11): the backing is SCHEDULED onto
+ *       {@code MainRenderer.scheduleRender(LIGHT_2)} purely as a vehicle
+ *       for the correct flush-time camera matrices — inside the callback
+ *       its two windings are drawn through a PRIVATE
+ *       {@code VertexConsumerProvider.Immediate} wrapping the SHARED
+ *       TESSELLATOR's buffer and flushed SYNCHRONOUSLY, the exact buffer
+ *       and flush discipline of MTR's own {@code GraphicsHolder.drawText}
+ *       (the one carrier that has provably rendered under the users' Iris
+ *       + Complementary + ImmediatelyFast pipelines — all scripted text
+ *       rides it). The yanyang.8–10 queue-based carriers (a consumer
+ *       created inside the callback, then flush-pre-created
+ *       getText/entityCutout buffers) rendered fine without shaders but
+ *       NEVER under shaders — ImmediatelyFast defers those buffers until
+ *       after the translucent pane, where the depth test drops them; the
+ *       yanyang.4–7 private-immediate draw itself was fine, failing only
+ *       on its bare identity matrix stack, which the borrowed
+ *       {@code NativeMatrixApplier.jcm$getMatrixStack()} pose now fixes.
+ *   </li>
  *   <li><b>Vertical merge</b> (yanyang.6): when EVERY column of the segment
  *       has an upper half that is a display surface (a glass block whose
  *       model actually shows something — DRL uppers whose vanilla model is
@@ -218,27 +212,29 @@ public final class PSDScriptRenderer implements RenderHelper {
     /** The covering tint toward the PLATFORM: fully opaque black (ARGB). */
     private static final int BACKING_COLOR = 0xFF000000;
 
-    /** Yanyang.10: the track-facing white quad sits this much DEEPER (in
-     *  the pane frame's local +Z, toward the track) than the black quad.
-     *  The black quad rides the cull-free, depth-write-free text layer, so
-     *  its back face would show on BOTH sides; the depth-writing white
-     *  quad renders first (EXTERIOR flushes before LIGHT_2) and its nearer
-     *  depth fails the black back face's LEQUAL test on the track side —
-     *  the two-sided/two-colour cover survives without co-planar
-     *  z-fighting. */
+    /** Yanyang.10 (kept yanyang.11): the track-facing white quad sits this
+     *  much DEEPER (in the pane frame's local +Z, toward the track) than
+     *  the black quad. Both windings ride the depth-writing,
+     *  back-face-culling entity-cutout layer (yanyang.11's synchronous
+     *  private-immediate draw), so each side sees exactly its own winding;
+     *  the offset is belt-and-braces against any pack that disables
+     *  culling — the two quads would then depth-fight without it. */
     private static final float TRACK_BACK_Z = 0.0005F;
 
     /** Yanyang.9: the covering tint toward the TRACK — fully opaque white.
-     *  Yanyang.10: the cover is now TWO quads on two queued layers — the
-     *  platform-facing black quad rides LIGHT_2 (the text layer, see
-     *  {@link #BACKING_COLOR}), the track-facing white quad rides EXTERIOR
-     *  (entity-cutout, depth-writing) a hair deeper ({@link #TRACK_BACK_Z})
-     *  so its depth culls the black quad's track-side back face: the
-     *  platform sees the real-PIDS black display behind the script content,
-     *  while train passengers see plain white through the window (the
-     *  pre-yanyang.8 original design colour; the yanyang.8 blanket-black
-     *  made the track side dark too — user report 2026-11-08
-     *  「列车一侧未显示为白色」). */
+     *  The cover is two opposite windings on the entity-cutout layer
+     *  (yanyang.11: both drawn through the drawText carrier — a private
+     *  Immediate on the shared Tessellator, synchronously flushed inside
+     *  the scheduled callback; see drawBacking): the platform-facing
+     *  winding carries {@link #BACKING_COLOR} (black), the track-facing
+     *  winding this white, a hair deeper ({@link #TRACK_BACK_Z}). The
+     *  white quad's depth also fails the canvas content's LEQUAL test on
+     *  the track side, so script content never leaks through: the
+     *  platform sees the real-PIDS black display behind the script
+     *  content, while train passengers see plain white through the window
+     *  (the pre-yanyang.8 original design colour; the yanyang.8
+     *  blanket-black made the track side dark too — user report
+     *  2026-11-08 「列车一侧未显示为白色」). */
     private static final int TRACK_SIDE_COLOR = 0xFFFFFFFF;
 
     /** Distance² gate — bindings beyond this are not driven. */
@@ -248,10 +244,12 @@ public final class PSDScriptRenderer implements RenderHelper {
     }
 
     /** Called from MainRendererPSDMixin at the head of MainRenderer.render.
-     * Everything drawn here — the backing quads included — is SCHEDULED
-     * onto MTR's queued layers and flushed at the END of that same render
-     * call, on MTR's own graphics holder; camera anchoring comes from the
-     * queued callback's offset at flush time. */
+     * Everything drawn here is SCHEDULED onto MTR's queued layers and
+     * flushed within that same render call on MTR's own graphics holder;
+     * camera anchoring comes from the queued callback's offset at flush
+     * time. The backing quads additionally flush their own private
+     * immediate SYNCHRONOUSLY inside their callback (yanyang.11 — the
+     * drawText carrier; see drawBacking). */
     public static void renderAll() {
         final MinecraftClient minecraftClient = MinecraftClient.getInstance();
         /* MTR's mapping wrappers are unrelated types — ClientWorld reaches the
@@ -422,28 +420,43 @@ public final class PSDScriptRenderer implements RenderHelper {
             windowBottom = 0;
         }
 
-        /* The horizontal window (yanyang.10): each column's transparent
-           span is [i+left, i+1-right] in run coordinates; the canvas maps
-           onto the LARGEST CONTIGUOUS such span across the run (adjacent
-           columns' windows must actually touch — a mid-run vertical stile
-           splits the run and the canvas takes the wider side, exactly like
-           the vertical scan takes the largest unoccluded band). This is
-           the fix for the yanyang.9 report 「脚本内容越界问题依然存在」:
+        /* The horizontal window (yanyang.10; edge semantics fixed
+           yanyang.11): PSDWindowBounds reports each column's window as
+           BLOCK-SPACE EDGES [left, right] along the pane's horizontal
+           axis (block X when the wall faces Z, block Z when it faces X).
+           This loop maps those edges into RUN coordinates: the canvas
+           frame's +X runs along facing.rotateYClockwise(), so when that
+           walk OPPOSES the block's horizontal axis (SOUTH / WEST walls)
+           the block-space window maps as [i+(1-right), i+(1-left)],
+           otherwise as [i+left, i+right]. The canvas then maps onto the
+           LARGEST CONTIGUOUS such span across the run (adjacent columns'
+           windows must actually touch — a mid-run vertical stile splits
+           the run and the canvas takes the wider side, exactly like the
+           vertical scan takes the largest unoccluded band). This is the
+           fix for the yanyang.9 report 「脚本内容越界问题依然存在」:
            the canvas used to span every full column, so the script's own
            row layout (SIDE_PADDING of 3 px against pids.width) put the
            first/last glyph of every row right under the door frame's
            end stiles — half a "海" swallowed left, half a "钟" right.
            With the canvas mapped onto the transparent span, pids.width
            IS the visible width and every script's layout adapts by
-           itself. Falls back to the full run (the pre-scan behaviour)
+           itself. (The yanyang.10 formula computed the right edge as
+           `(i+1)-right`, treating the window's right EDGE as an
+           occlusion WIDTH — every column with a real window collapsed
+           to [i+left, i+left] or thinner, "fully occluded" split the
+           span, and the canvas degenerated into a sliver at a wrong
+           position: the 2026-11-08 「位置完全跑偏，比例完全错误」
+           report.) Falls back to the full run (the pre-scan behaviour)
            when no span of MIN_WINDOW survives. */
+        final Direction hWalk = facing.rotateYClockwise();
+        final boolean hMirror = (facing.getAxis() == Direction.Axis.Z ? hWalk.getOffsetX() : hWalk.getOffsetZ()) < 0;
         float segLeft = 0;
         float segRight = width;
         {
             float bestL = 0, bestR = -1, curL = -1, curR = -1;
             for (int i = 0; i < width; i++) {
-                final float a = i + lowerHLeft[i];
-                final float b = (i + 1) - lowerHRight[i];
+                final float a = hMirror ? i + (1 - lowerHRight[i]) : i + lowerHLeft[i];
+                final float b = hMirror ? i + (1 - lowerHLeft[i]) : i + lowerHRight[i];
                 if (b - a < MIN_WINDOW) {
                     /* Column fully occluded — splits the span. */
                     if (curL >= 0 && curR - curL > bestR - bestL) {
@@ -499,11 +512,10 @@ public final class PSDScriptRenderer implements RenderHelper {
                strict scan excludes as "frame") finally get solid colour
                behind them — the yanyang.8 leftover see-through strips at the
                window's top/bottom edges (user report 2026-11-08 「黑色覆盖
-               不完全」). Each side carries its own tint and its own queued
-               layer (yanyang.10, see drawBacking): BLACK toward the platform
-               on the text layer (shader-safe — the same carrier as the
-               script's own content), WHITE toward the track on the
-               depth-writing entity-cutout layer (train passengers see a
+               不完全」). Each side carries its own tint on its own winding
+               of the entity-cutout layer, all drawn through the drawText
+               carrier (yanyang.11, see drawBacking): BLACK toward the
+               platform, WHITE toward the track (train passengers see a
                plain white panel, never mirrored content — see
                TRACK_SIDE_COLOR). */
             final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
@@ -557,60 +569,81 @@ public final class PSDScriptRenderer implements RenderHelper {
     /**
      * The opaque pane covering — one block-wide quad (canvas x ∈ [x, x+1],
      * y ∈ [frameTop-top, frameTop-bottom] in the merged frame's canvas
-     * coordinates), drawn as TWO differently-scheduled quads (yanyang.10):
+     * coordinates), drawn as a two-winding pair on the depth-writing,
+     * back-face-culling entity-cutout layer (yanyang.8/9's proven visual
+     * design: the platform-facing winding carries {@link #BACKING_COLOR}
+     * (black), the track-facing winding {@link #TRACK_SIDE_COLOR} (white)
+     * a hair deeper — each side sees exactly its own quad, and the white
+     * quad's depth fails the canvas content's LEQUAL test on the track
+     * side, so script content never leaks through to the track).
      *
-     * <ul>
-     *   <li><b>Platform-facing BLACK</b> — scheduled with the texture as
-     *       the queue key on {@code QueuedRenderLayer.LIGHT_2}: the flush
-     *       creates {@code RenderLayer.getText(BACKING_TEXTURE)} and this
-     *       callback writes into it WITHOUT creating another consumer —
-     *       the exact discipline of the PIDS TextureWrapper, the carrier
-     *       every scripted PIDS texture and text rides under the users'
-     *       Iris + ImmediatelyFast pipelines. The yanyang.8/9 cover instead
-     *       created its own {@code getEntityCutout} consumer; that layer
-     *       carried it fine in the shaderless pipeline but the black cover
-     *       vanished under shaders (user report 2026-11-08 「开启光影时
-     *       玻璃依然透明」). The text layer is cull-free and writes no
-     *       depth; the alpha-1 black tint blends opaque on both sides,
-     *       which is why the white winding below needs the depth buffer to
-     *       win the track side back.</li>
-     *   <li><b>Track-facing WHITE</b> — scheduled on
-     *       {@code QueuedRenderLayer.EXTERIOR} (flush creates the
-     *       depth-writing, culling entity-cutout layer), a hair
-     *       ({@link #TRACK_BACK_Z}) deeper. Platform side: its back face is
-     *       culled — invisible. Track side: it renders FIRST with depth
-     *       write, so the black quad's track-side back face (no depth write
-     *       of its own, LEQUAL test against the nearer white depth) fails
-     *       the test and vanishes — train passengers see plain white,
-     *       never mirrored content or the black back face.</li>
-     * </ul>
+     * <p><b>Carrier (yanyang.11)</b>: the schedule is now only a VEHICLE
+     * for the correct flush-time camera matrices — inside the callback the
+     * quads are drawn through a PRIVATE {@code VertexConsumerProvider.
+     * Immediate} wrapping the SHARED TESSELLATOR's buffer, flushed
+     * SYNCHRONOUSLY right there ({@code immediate.draw()}). That is the
+     * exact buffer and flush discipline of MTR's own
+     * {@code GraphicsHolder.drawText} — the one carrier that has provably
+     * rendered under the users' Iris + Complementary + ImmediatelyFast
+     * pipelines through every yanyang round (all scripted text rides it;
+     * byte-for-byte the same private-immediate calls, per the MTR 4.0.5
+     * bytecode). No queue-based carrier ever showed the backing under
+     * shaders: yanyang.8/9's consumer created inside the LIGHT_2 callback
+     * and yanyang.10's flush-pre-created getText/entityCutout buffers are
+     * all deferred by ImmediatelyFast until after the translucent pane,
+     * where the depth test silently drops them — the field reports
+     * 「在光影下白底和黑底从未被显示出来过」. The yanyang.4–7 version of
+     * this same private-immediate draw showed fine without shaders and
+     * failed ONLY because it drew on a bare identity {@code MatrixStack};
+     * the matrices are now borrowed from the scheduled holder itself
+     * (through {@code NativeMatrixApplier.jcm$getMatrixStack()}), which
+     * carries the full camera transform at flush time.</p>
      *
-     * <p>Yanyang.4–7 history: this quad was flushed synchronously through
-     * a private {@code VertexConsumerProvider.Immediate} around the shared
-     * Tessellator buffer, drawn on a fresh identity matrix stack whose
-     * only camera handling was the baked-in relative translate — the
-     * camera rotation never reached the quads, so without shaders they
-     * mis-projected into a free-floating slab drifting with every camera
-     * move, and under Iris the out-of-band immediate draw was discarded
-     * outright (the "backing never shows" reports).</p>
+     * <p>Ordering: the backing rides the {@code LIGHT_2} queue's {@code ""}​
+     * key, scheduled before the script's own textures (same queue, later
+     * map keys) and text (the {@code TEXT} queue flushes after
+     * {@code LIGHT_2}) — its depth is therefore always written before any
+     * canvas content draws, on every pipeline.</p>
      */
     private static void drawBacking(StoredMatrixTransformations transform, float x, float top, float bottom, float frameTop, Direction facing) {
         final float y = frameTop - top;
         final float height = top - bottom;
-        MainRenderer.scheduleRender(BACKING_TEXTURE, false, QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
-            /* No createVertexConsumer here — the LIGHT_2 flush already
-               created the getText(BACKING_TEXTURE) consumer for this key
-               (the PIDS TextureWrapper discipline). */
-            transform.transform(graphicsHolderNew, offset);
-            graphicsHolderNew.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
-            graphicsHolderNew.pop();
-        });
-        MainRenderer.scheduleRender(BACKING_TEXTURE, false, QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
-            /* No createVertexConsumer here either — the EXTERIOR flush
-               creates the entity-cutout consumer for this key. */
-            transform.transform(graphicsHolderNew, offset);
-            graphicsHolderNew.drawTextureInWorld(x, y, TRACK_BACK_Z, x + 1, y, TRACK_BACK_Z, x + 1, y + height, TRACK_BACK_Z, x, y + height, TRACK_BACK_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
-            graphicsHolderNew.pop();
+        MainRenderer.scheduleRender(QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
+            try {
+#if LOADER == "fabric"
+                final net.minecraft.client.util.math.MatrixStack matrices =
+                        ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
+                final net.minecraft.client.render.VertexConsumerProvider.Immediate immediate =
+                        net.minecraft.client.render.VertexConsumerProvider.immediate(net.minecraft.client.render.Tessellator.getInstance().getBuffer());
+                GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
+                    transform.transform(priv, offset);
+                    priv.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(BACKING_TEXTURE));
+                    /* Platform-facing BLACK winding. */
+                    priv.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
+                    /* Track-facing WHITE winding, a hair deeper. */
+                    priv.drawTextureInWorld(x, y, TRACK_BACK_Z, x + 1, y, TRACK_BACK_Z, x + 1, y + height, TRACK_BACK_Z, x, y + height, TRACK_BACK_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
+                    priv.pop();
+                });
+                immediate.draw();
+#else
+                final com.mojang.blaze3d.vertex.PoseStack matrices =
+                        ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
+                final com.mojang.blaze3d.vertex.MultiBufferSource.BufferSource immediate =
+                        com.mojang.blaze3d.vertex.MultiBufferSource.immediate(com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder());
+                GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
+                    transform.transform(priv, offset);
+                    priv.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(BACKING_TEXTURE));
+                    /* Platform-facing BLACK winding. */
+                    priv.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
+                    /* Track-facing WHITE winding, a hair deeper. */
+                    priv.drawTextureInWorld(x, y, TRACK_BACK_Z, x + 1, y, TRACK_BACK_Z, x + 1, y + height, TRACK_BACK_Z, x, y + height, TRACK_BACK_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
+                    priv.pop();
+                });
+                immediate.endBatch();
+#endif
+            } catch (Throwable ignored) {
+                /* Never take the render thread down over a backing quad. */
+            }
         });
     }
 

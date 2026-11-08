@@ -36,6 +36,19 @@ public abstract class GraphicsHolderMatrixMixin implements NativeMatrixApplier {
     private static final ThreadLocal<float[]> jcm$NativePoseScratch =
             ThreadLocal.withInitial(() -> new float[16]);
 
+    /* Yanyang.11: raw pose access for the PSD backing's synchronous
+       private-immediate draw (PSDScriptRenderer.drawBacking) — lets a
+       queued callback rebuild a holder around a private
+       VertexConsumerProvider with the flush-time camera matrices intact. */
+    @Override
+#if LOADER == "fabric"
+    public MatrixStack jcm$getMatrixStack() {
+#else
+    public PoseStack jcm$getMatrixStack() {
+#endif
+        return matrixStack;
+    }
+
     @Override public void jcm$multiplyNativeMatrix(float[] values, int floatOffset) {
         final float[] scratch = jcm$NativePoseScratch.get();
         System.arraycopy(values, floatOffset, scratch, 0, 16);
