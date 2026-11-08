@@ -36,7 +36,6 @@ import org.mtr.mod.block.BlockPSDTop;
 import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.ArrivalsCacheClient;
 import org.mtr.mod.render.MainRenderer;
-import org.mtr.mod.render.MoreRenderLayers;
 import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
@@ -109,23 +108,32 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       DRL upper halves (invisible in vanilla) only render when their
  *       model actually shows something — a pack that gives them a visible
  *       frame/glass turns them into display surfaces.</li>
- *   <li><b>Draw path</b> (yanyang.11): the backing is SCHEDULED onto
- *       {@code MainRenderer.scheduleRender(LIGHT_2)} purely as a vehicle
- *       for the correct flush-time camera matrices — inside the callback
- *       its two windings are drawn through a PRIVATE
- *       {@code VertexConsumerProvider.Immediate} wrapping the SHARED
- *       TESSELLATOR's buffer and flushed SYNCHRONOUSLY, the exact buffer
- *       and flush discipline of MTR's own {@code GraphicsHolder.drawText}
- *       (the one carrier that has provably rendered under the users' Iris
- *       + Complementary + ImmediatelyFast pipelines — all scripted text
- *       rides it). The yanyang.8–10 queue-based carriers (a consumer
- *       created inside the callback, then flush-pre-created
- *       getText/entityCutout buffers) rendered fine without shaders but
- *       NEVER under shaders — ImmediatelyFast defers those buffers until
- *       after the translucent pane, where the depth test drops them; the
- *       yanyang.4–7 private-immediate draw itself was fine, failing only
- *       on its bare identity matrix stack, which the borrowed
- *       {@code NativeMatrixApplier.jcm$getMatrixStack()} pose now fixes.
+ *   <li><b>Draw path</b> (yanyang.13): the backing is SCHEDULED onto
+ *       {@code MainRenderer.scheduleRender(BACKING_TEXTURE, false, LIGHT)}
+ *       — the exact carrier MTR's own {@code RenderRailwaySign} uses for
+ *       its opaque sign plates (bytecode-verified against MTR 4.0.5). The
+ *       LIGHT queue pre-creates {@code MoreRenderLayers.getLight(texture,
+ *       false)} — literally {@code RenderLayer.getBeaconBeam(texture,
+ *       false)}: opaque, depth-writing, no-cull, fullbright — and the
+ *       callback simply transforms and writes its two windings onto that
+ *       consumer via {@code drawTextureInWorld}. Every yanyang.8–12
+ *       carrier instead drew the backing on the ENTITY-family layers
+ *       ({@code rendertype_text} via {@code getLight2} / {@code
+ *       rendertype_entity_cutout} via {@code getEntityCutout}), whether
+ *       through the main holder, flush-pre-created buffers, or the private
+ *       drawText-style immediate — and not one of them EVER showed under
+ *       the users' Iris 1.7.6 + ComplementaryUnbound r5.5.1 +
+ *       ImmediatelyFast 1.5.5 stacks (five rounds of field reports, shader
+ *       text always visible, backing never). Those are the layers Iris
+ *       format-extends (GLYPH/ENTITY) and routes through Complementary's
+ *       gbuffers_entities program chain — IPBR entity detection with
+ *       catch-all branches per unknown entity id, mc_midTexCoord-derived
+ *       material logic, shadow-sampled DoLighting — a pipeline tuned for
+ *       textured mobs that a flat tinted quad has never survived. The
+ *       beacon-beam carrier is the one quad path the users' own worlds
+ *       prove daily: every MTR railway-sign plate — the identical visual
+ *       design, an opaque flat-colour plate behind content — rides it and
+ *       renders under their exact shader stack.
  *   </li>
  *   <li><b>Vertical merge</b> (yanyang.6): when EVERY column of the segment
  *       has an upper half that is a display surface (a glass block whose
@@ -214,22 +222,24 @@ public final class PSDScriptRenderer implements RenderHelper {
     /** The covering tint toward the PLATFORM: fully opaque black (ARGB). */
     private static final int BACKING_COLOR = 0xFF000000;
 
-    /** Yanyang.10 (kept yanyang.11): the track-facing white quad sits this
+    /** Yanyang.10 (kept since): the track-facing white quad sits this
      *  much DEEPER (in the pane frame's local +Z, toward the track) than
-     *  the black quad. Both windings ride the depth-writing,
-     *  back-face-culling entity-cutout layer (yanyang.11's synchronous
-     *  private-immediate draw), so each side sees exactly its own winding;
-     *  the offset is belt-and-braces against any pack that disables
-     *  culling — the two quads would then depth-fight without it. */
+     *  the black quad. Both windings ride the depth-writing, NO-CULL
+     *  beacon-beam layer (yanyang.13's sign-plate carrier), so the offset
+     *  is what separates the two sides: the platform camera sees the
+     *  nearer black pass LEQUAL first while the deeper white fails, the
+     *  track camera the exact opposite — each side gets exactly its own
+     *  colour with no reliance on winding at all. */
     private static final float TRACK_BACK_Z = 0.0005F;
 
     /** Yanyang.9: the covering tint toward the TRACK — fully opaque white.
-     *  The cover is two opposite windings on the entity-cutout layer
-     *  (yanyang.11: both drawn through the drawText carrier — a private
-     *  Immediate on the shared Tessellator, synchronously flushed inside
-     *  the scheduled callback; see drawBacking): the platform-facing
-     *  winding carries {@link #BACKING_COLOR} (black), the track-facing
-     *  winding this white, a hair deeper ({@link #TRACK_BACK_Z}). The
+     *  The cover is two depth-separated windings on the beacon-beam layer
+     *  (yanyang.13: both drawn through the MTR sign-plate carrier — the
+     *  LIGHT queue's pre-created getLight(BACKING_TEXTURE, false)
+     *  consumer on the main scheduled holder; see drawBacking): the
+     *  platform-facing winding carries {@link #BACKING_COLOR} (black),
+     *  the track-facing winding this white, a hair deeper
+     *  ({@link #TRACK_BACK_Z}). The
      *  white quad's depth also fails the canvas content's LEQUAL test on
      *  the track side, so script content never leaks through: the
      *  platform sees the real-PIDS black display behind the script
@@ -253,9 +263,9 @@ public final class PSDScriptRenderer implements RenderHelper {
      * Everything drawn here is SCHEDULED onto MTR's queued layers and
      * flushed within that same render call on MTR's own graphics holder;
      * camera anchoring comes from the queued callback's offset at flush
-     * time. The backing quads additionally flush their own private
-     * immediate SYNCHRONOUSLY inside their callback (yanyang.11 — the
-     * drawText carrier; see drawBacking). */
+     * time. The backing quads ride the LIGHT queue's pre-created
+     * beacon-beam consumer (yanyang.13 — MTR's own sign-plate carrier;
+     * see drawBacking), flushing FIRST of all the queues each frame. */
     public static void renderAll() {
         final MinecraftClient minecraftClient = MinecraftClient.getInstance();
         /* MTR's mapping wrappers are unrelated types — ClientWorld reaches the
@@ -518,12 +528,11 @@ public final class PSDScriptRenderer implements RenderHelper {
                strict scan excludes as "frame") finally get solid colour
                behind them — the yanyang.8 leftover see-through strips at the
                window's top/bottom edges (user report 2026-11-08 「黑色覆盖
-               不完全」). Each side carries its own tint on its own winding
-               of the entity-cutout layer, all drawn through the drawText
-               carrier (yanyang.11, see drawBacking): BLACK toward the
-               platform, WHITE toward the track (train passengers see a
-               plain white panel, never mirrored content — see
-               TRACK_SIDE_COLOR). */
+               不完全」). Each side carries its own tint on its own winding,
+               both through the sign-plate carrier (yanyang.13, see
+               drawBacking): BLACK toward the platform, WHITE toward the
+               track (train passengers see a plain white panel, never
+               mirrored content — see TRACK_SIDE_COLOR). */
             final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
             for (int i = 0; i < width; i++) {
                 if (lowerExtentTop[i] > lowerExtentBottom[i]) {
@@ -576,100 +585,73 @@ public final class PSDScriptRenderer implements RenderHelper {
      * The opaque pane covering — one block-wide quad (canvas x ∈ [x, x+1],
      * y ∈ [frameTop-top, frameTop-bottom] in the merged frame's canvas
      * coordinates), drawn as a two-winding pair on the depth-writing,
-     * back-face-culling entity-cutout layer (yanyang.8/9's proven visual
-     * design: the platform-facing winding carries {@link #BACKING_COLOR}
-     * (black), the track-facing winding {@link #TRACK_SIDE_COLOR} (white)
-     * a hair deeper — each side sees exactly its own quad, and the white
-     * quad's depth fails the canvas content's LEQUAL test on the track
-     * side, so script content never leaks through to the track).
+     * NO-CULL beacon-beam layer (yanyang.8/9's proven visual design: the
+     * platform-facing winding carries {@link #BACKING_COLOR} (black), the
+     * track-facing winding {@link #TRACK_SIDE_COLOR} (white) a hair deeper —
+     * each side sees exactly its own quad, and the white quad's depth fails
+     * the canvas content's LEQUAL test on the track side, so script content
+     * never leaks through to the track).
      *
-     * <p><b>Carrier (yanyang.11/12)</b>: the schedule is now only a VEHICLE
-     * for the correct flush-time camera matrices — inside the callback the
-     * quads are drawn through a PRIVATE {@code VertexConsumerProvider.
-     * Immediate} wrapping the SHARED TESSELLATOR's buffer, flushed
-     * SYNCHRONOUSLY right there ({@code immediate.draw()}). That is the
-     * exact buffer and flush discipline of MTR's own
-     * {@code GraphicsHolder.drawText} — the one carrier that has provably
-     * rendered under the users' Iris + Complementary + ImmediatelyFast
-     * pipelines through every yanyang round (all scripted text rides it;
-     * byte-for-byte the same private-immediate calls, per the MTR 4.0.5
-     * bytecode). No queue-based carrier ever showed the backing under
-     * shaders: yanyang.8/9's consumer created inside the LIGHT_2 callback
-     * and yanyang.10's flush-pre-created getText/entityCutout buffers are
-     * all deferred by ImmediatelyFast until after the translucent pane,
-     * where the depth test silently drops them — the field reports
-     * 「在光影下白底和黑底从未被显示出来过」. The yanyang.4–7 version of
-     * this same private-immediate draw showed fine without shaders and
-     * failed ONLY because it drew on a bare identity {@code MatrixStack};
-     * the matrices are now borrowed from the scheduled holder itself
-     * (through {@code NativeMatrixApplier.jcm$getMatrixStack()}), which
-     * carries the full camera transform at flush time.</p>
+     * <p><b>Carrier (yanyang.13)</b>: the backing is scheduled EXACTLY like
+     * MTR's own {@code RenderRailwaySign} schedules its opaque sign plates
+     * — {@code scheduleRender(BACKING_TEXTURE, false, LIGHT, callback)},
+     * the LIGHT queue keyed by the texture, so the queue's own pre-created
+     * consumer for that key ({@code MoreRenderLayers.getLight(
+     * BACKING_TEXTURE, false)} = {@code RenderLayer.getBeaconBeam(...
+     * false)}: opaque, depth-writing, no-cull, fullbright) receives the
+     * windings, written with a plain {@code drawTextureInWorld} on the
+     * MAIN scheduled holder — no private immediate, no manual flush, no
+     * loader branches. This is the one quad carrier that has provably
+     * rendered under the users' Iris 1.7.6 + ComplementaryUnbound r5.5.1 +
+     * ImmediatelyFast 1.5.5 stack all along: every MTR railway-sign plate
+     * in the users' own worlds rides it (their servers are full of them),
+     * and mtrscripting's own QuadDrawCall defaults to this very queue.</p>
      *
-     * <p><b>Layer (yanyang.12)</b>: yanyang.11 still drew the pair on
-     * {@code RenderLayer.getEntityCutout} and remained shader-invisible —
-     * in the very same callback, on the very same private immediate and
-     * matrices, scripted TEXT (drawText → {@code RenderLayer.getText})
-     * renders fine under the user's shaders, so the ENTITY-CUTOUT layer
-     * itself was the last remaining difference (Iris swaps the entity
-     * shader programs; a raw immediate entity-cutout draw outside Iris's
-     * managed path lands nowhere, while the text layer passes through).
-     * The backing now consumes {@code MoreRenderLayers.getLight2(
-     * BACKING_TEXTURE)} — literally {@code RenderLayer.getText}, the text
-     * family — the exact layer/vertex-writer combination mtrscripting's
-     * own RectangleWrapper uses for scripted PIDS quads. The text layer
-     * writes depth and does NOT cull, so the depth dance still gives each
-     * side its own colour: the platform-facing black writes depth first,
-     * the hair-deeper track-facing white fails LEQUAL from the platform
-     * (invisible there) and passes from the track (covers the black),
-     * while script content on the track side fails against the white's
-     * nearer depth — no mirrored content, same as yanyang.10/11.</p>
+     * <p><b>Why the yanyang.8–12 carriers never showed under shaders</b>:
+     * every one of them drew the backing on the ENTITY-family layers —
+     * {@code getEntityCutout} (yanyang.8/9 main holder, yanyang.11 private
+     * immediate) or {@code getLight2} = {@code RenderLayer.getText}
+     * (yanyang.10 main holder pre-created, yanyang.12 private immediate on
+     * the shared Tessellator with the drawText discipline). Those are the
+     * layers Iris 1.7.6 format-extends (NEW_ENTITY → ENTITY,
+     * POSITION_COLOR_TEX_LIGHTMAP → GLYPH, per its MixinBufferBuilder) and
+     * routes through Complementary's {@code gbuffers_entities} program
+     * chain — the entity pipeline with IPBR texture recognition,
+     * per-entityId catch-all material branches, mc_midTexCoord-derived
+     * logic and shadow-sampled DoLighting. Script glyphs survive that
+     * chain, but a flat tinted quad never did — five rounds of field
+     * reports, shaderless always fine, under shaders never visible
+     * (「在光影下白底和黑底从未被显示出来过」 → 「开光影时仍不显示底
+     * 色」). The beacon-beam layer, by contrast, maps to Complementary's
+     * {@code gbuffers_beaconbeam} — a plain texture × vertex colour
+     * program with no entity detection at all — and Iris does not extend
+     * it into the entity family (its BLOCK format keeps the terrain
+     * extension path MTR's plates already ride daily).</p>
      *
-     * <p>Ordering: the backing rides the {@code LIGHT_2} queue's {@code ""}​
-     * key, scheduled before the script's own textures (same queue, later
-     * map keys) and text (the {@code TEXT} queue flushes after
-     * {@code LIGHT_2}) — its depth is therefore always written before any
-     * canvas content draws, on every pipeline.</p>
+     * <p>Ordering: the backing rides the {@code LIGHT} queue — the FIRST
+     * of MTR's queues to flush each frame — so its depth is always written
+     * before the script's own textures ({@code LIGHT_2}) and text
+     * ({@code TEXT}) draw, on every pipeline.</p>
      */
     private static void drawBacking(StoredMatrixTransformations transform, float x, float top, float bottom, float frameTop, Direction facing) {
         final float y = frameTop - top;
         final float height = top - bottom;
-        MainRenderer.scheduleRender(QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
+        MainRenderer.scheduleRender(BACKING_TEXTURE, false, QueuedRenderLayer.LIGHT, (graphicsHolderNew, offset) -> {
             try {
-#if LOADER == "fabric"
-                final net.minecraft.client.util.math.MatrixStack matrices =
-                        ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
-                final net.minecraft.client.render.VertexConsumerProvider.Immediate immediate =
-                        net.minecraft.client.render.VertexConsumerProvider.immediate(net.minecraft.client.render.Tessellator.getInstance().getBuffer());
-                GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
-                    transform.transform(priv, offset);
-                    priv.createVertexConsumer(MoreRenderLayers.getLight2(BACKING_TEXTURE));
-                    /* Platform-facing BLACK winding. */
-                    priv.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
-                    /* Track-facing WHITE winding, a hair deeper. */
-                    priv.drawTextureInWorld(x, y, TRACK_BACK_Z, x + 1, y, TRACK_BACK_Z, x + 1, y + height, TRACK_BACK_Z, x, y + height, TRACK_BACK_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
-                    priv.pop();
-                });
-                immediate.draw();
-#else
-                final com.mojang.blaze3d.vertex.PoseStack matrices =
-                        ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
-                final net.minecraft.client.renderer.MultiBufferSource.BufferSource immediate =
-                        net.minecraft.client.renderer.MultiBufferSource.immediate(com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder());
-                GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
-                    transform.transform(priv, offset);
-                    priv.createVertexConsumer(MoreRenderLayers.getLight2(BACKING_TEXTURE));
-                    /* Platform-facing BLACK winding. */
-                    priv.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
-                    /* Track-facing WHITE winding, a hair deeper. */
-                    priv.drawTextureInWorld(x, y, TRACK_BACK_Z, x + 1, y, TRACK_BACK_Z, x + 1, y + height, TRACK_BACK_Z, x, y + height, TRACK_BACK_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
-                    priv.pop();
-                });
-                immediate.endBatch();
-#endif
+                /* The LIGHT queue pre-created the getLight(BACKING_TEXTURE,
+                   false) beacon-beam consumer for this very key — the MTR
+                   sign-plate discipline (RenderRailwaySign's plate lambda
+                   does exactly this: transform, draw, pop, nothing else). */
+                transform.transform(graphicsHolderNew, offset);
+                /* Platform-facing BLACK winding. */
+                graphicsHolderNew.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
+                /* Track-facing WHITE winding, a hair deeper. */
+                graphicsHolderNew.drawTextureInWorld(x, y, TRACK_BACK_Z, x + 1, y, TRACK_BACK_Z, x + 1, y + height, TRACK_BACK_Z, x, y + height, TRACK_BACK_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
+                graphicsHolderNew.pop();
             } catch (Throwable t) {
                 /* Never take the render thread down over a backing quad —
-                   but after eight shader-opaque rounds, the FIRST failure
-                   now leaves a breadcrumb in the log (yanyang.12). */
+                   but after nine shader-opaque rounds, the FIRST failure
+                   still leaves a breadcrumb in the log (yanyang.12). */
                 if (!BACKING_CARRIER_WARNED) {
                     BACKING_CARRIER_WARNED = true;
                     com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.warn(
