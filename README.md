@@ -17,7 +17,7 @@
 
 > [!IMPORTANT]
 > - 本分支与原版 Joban Client Mod 使用同一 mod id（`jsblock`），**二者互斥，只能安装其一**。
-> - 分支持续跟踪整合原版 JCM 的每个版本（当前基线：[2.3.0-prerelease.3](https://github.com/DistrictOfJoban/Joban-Client-Mod)），并保持向后兼容：原版 JCM 资源包、`language: "cpp"` 老格式资源包均无需修改即可继续使用。
+> - 分支持续跟踪整合原版 JCM 的每个版本（当前基线：[v2.3.0 正式版](https://github.com/DistrictOfJoban/Joban-Client-Mod)），并保持向后兼容：原版 JCM 资源包、`language: "cpp"` 老格式资源包均无需修改即可继续使用。
 > - 兼容官方 MTR 与晏阳服务器定制 MTR 构建（MTR-Yanyang）：对 MTR 内部类布局的修补 mixin 均带运行时结构检测（成员名 + 字段描述符双重校验），所用 MTR 构建缺少对应成员或布局分歧时自动跳过该修补并在日志说明（仅失去对应优化，其余功能不受影响），不会在启动时崩溃。MTR-Yanyang 自 2026-11-04 起的新构建已恢复官方 4.0.x `CachedResource` 布局，内存泄漏修补在其实机环境同样生效。
 > - C++ 脚本开发文档：**[网页版开发文档](https://bugquantumcore.github.io/Joban-Client-Mod-Yanyang/)**（7 种语言）· [native/README.md](native/README.md)；完整修改历史见 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -253,6 +253,8 @@ ctest --test-dir native/build -C Release --output-on-failure
 
 | 版本 | 主题 |
 | --- | --- |
+| `2.3.0-1.0.0` | **主版本升级：同步上游 JCM v2.3.0 正式版**（主版本 2.3.0-prerelease.3 → 2.3.0，子版本 yanyang.13 → 1.0.0）：上游 v2.3.0 全部增量逐文件核对并入（绝大部分经 blob 级比对证实本分支已先行包含，真正缺项全部落地）。**语言文件全量同步**：新增韩语 / 荷兰语 / 荷兰语中古彩蛋语 / 法语四种新语言，日语并入上游更新，共 15 种语言。**修复「开光影时底色不显示（任何光影包均不显示）」**：对 Iris 1.7.6 字节码复盘定位结构性根因——Iris 按层透明度分相位 flush（NO_TRANSPARENCY → OPAQUE 批次在半透明区块**之前** flush，其余 → GENERAL_TRANSPARENT 在**之后**），而半透明玻璃面板会写深度，面板后方的底色四边形对 LEQUAL 必然失败——这正是 yanyang.10/12（getText 层）与 yanyang.13（beacon-beam 层）六轮失败的共同死因；底板双绕向（站台黑 / 轨道白）换轨 **EXTERIOR 队列（entity-cutout，MTR 路线牌同款载体）**，NO_TRANSPARENCY 分片使其落入 OPAQUE 批次先于玻璃落地——用户世界里每块 MTR 路线牌都在同一光影栈上走这条路径 |
+| `2.3.0-prerelease.3-yanyang.12/13` | 画布塌缩修复（pane 几何改为全部平台向四边形的并集，修「脚本仅完整渲染在整块玻璃左上角 1/4」）；底板两轮光影载体尝试（drawText 同款 text 层 → MTR 铁路标志牌 beacon-beam 层）——实机均证实不可见，但为 2.3.0-1.0.0 的 Iris 透明度分相位根因定位提供了排除证据 |
 | `2.3.0-prerelease.3-yanyang.11` | 修复 yanyang.10 回归「画布位置完全跑偏、比例完全错误」：水平窗口公式把扫描返回的窗口**右边缘**当成**右侧遮挡宽度**（`[i+left, (i+1)-right]` 应为 `[i+left, i+right]`），任何有真实窗口的列都算出零宽被判全遮挡、画布塌缩成错位窄条；并补上朝向镜像（块空间水平轴与画布帧 +X 在 SOUTH / WEST 墙上方向相反，窗口需映射为 `[i+(1-right), i+(1-left)]`）。修复「光影下黑底 / 白底从未显示过」：底板载体彻底换轨为 MTR `drawText` 同款「私有 Immediate 包共享 Tessellator + 同步 flush」（反汇编证实其为唯一在用户 Iris + Complementary + ImmediatelyFast 环境下从未失效的载体；所有队列载体均被 ImmediatelyFast 推迟到半透明地形后遭深度测试丢弃），两绕向（站台黑 / 轨道白，entityCutout 写深度 + 背面剔除）在队列回调内借用持有者矩阵（新增 `NativeMatrixApplier.jcm$getMatrixStack()` mixin 访问器——yanyang.4-7 私有 Immediate 唯一败因即裸单位矩阵）同步绘制，白面深度同时把画布内容挡在轨道侧之外（修「内容出现在轨道侧」） |
 | `2.3.0-prerelease.3-yanyang.10` | 修复「脚本内容越界依然存在」：画布补上**水平**窗口裁剪（垂直窗口的水平孪生——列采样 alpha 遮挡 + 最大连续透明跨度），画布从整段整格宽收缩到透明跨度、锚点平移到跨度起点，`pids.width` 即可见宽度，任何脚本的行布局（含右对齐 ETA / 跑马灯文本框）自动避开门框立柱，首尾字符不再被立柱咬掉；段中竖条断开跨度时取较宽一侧，窗口推导不可用整段回退。修复「开启光影时玻璃依然透明」：站台侧黑面从自建 entity-cutout 消费者（Iris 光影下被丢弃）改为脚本内容同款 **getText 层载体**（以纹理为队列 key 排 LIGHT_2、回调不再另建消费者——JCM PIDS 生态久经验证的光影安全路径），无光影视觉不变；轨道侧白面独立排 EXTERIOR 队列（entity-cutout 写深度）并深 0.0005，靠深度测试剔除黑面轨道侧背面，双面双色依然成立 |
 | `2.3.0-prerelease.3-yanyang.9` | 修复 yanyang.8 遗留的「黑色覆盖不完全」：底板此前沿用脚本画布的严格 alpha 窗口（半透明边缘色带被算作门框），玻璃窗口上下边缘留下可透视的窄条——底板是不透明纯色四边形，根本不需要 alpha 裁剪，现改为铺满面板自身的几何范围（+1/64 余量），不透明门框部件在前遮挡余量、半透明色带后方终于是实色（站台侧黑色、轨道侧同步全覆盖）。列车一侧按需求改回**白色**：双绕向双面绘制本就一西一东，站台绕向黑 (PIDS 黑底)、轨道绕向白 (原设计色)，车厢乘客隔窗只看到纯白面板；轨道侧白、站台侧黑互不干扰，仍不透出镜像内容。脚本画布继续用严格窗口（内容不落上色带/门框条带），随底板范围扩大，内容现严格落在黑区之内 |

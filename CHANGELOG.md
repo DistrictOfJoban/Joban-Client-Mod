@@ -1,5 +1,16 @@
 # 更新日志 / Changelog
 
+## 2.3.0-1.0.0
+
+- **主版本升级：同步上游 JCM v2.3.0 正式版**（主版本 2.3.0-prerelease.3 → 2.3.0，子版本编号同时由 yanyang.13 改为 **1.0.0**——本分支自此跟随上游正式版本号）：上游 v2.3.0（d239da8，2026-11-08 发布）相对本分支基线的全部增量已逐文件核对并入——其中绝大部分（CachedResource 内存泄漏修复、`MTR.Data.getConnectedRails` / `getVehicleMountDetail` / `getLiftFloors`、`pids.arrivals().length()`、TextUtil 向后兼容、TickableSoundInstance 修订、站点数据重复站台指派修复、frustum 剔除默认值等）经 blob 级比对证实本分支已先行包含（本分支基线为上游 11 月初的混合领先状态），真正需要落地的增量全部并入；唯 `ModelPropertiesPartMixin` 的显示部件性能修复上游版以本分支的超集实现保留（本分支版同含 DISPLAY-only + immutableVehicleCars 改动并额外带 null 安全与越界保护）。
+- **语言文件与上游全量同步**：新增上游四种新语言——**韩语 (ko_kr)**（含 11-07 更新）、**荷兰语 (nl_nl)**、**荷兰语·中古彩蛋语 (dum)**、**法语 (fr_fr)**；**日语 (ja_jp)** 并入上游 11-03 更新（eyecandy 自定义配置两条新键）；全语言键集合已与上游 d239da8 逐一比对（本分支自有键：`java_cpp_communication` 配置组、`psd_script` 界面组、`psd_script_editor` 物品——zh_cn/zh_hk/zh_tw/en_us 13 键、ja_jp 6 键，其余语言按 Minecraft 回退机制显示英文）。现共 15 种语言。
+- **修复（PSD 脚本 / 玻璃）：开光影时底色仍不显示（任何光影包均不显示）——第六轮载体修复，根因为 Iris 的透明度分相位 flush，底板换轨 EXTERIOR 队列（entity-cutout，MTR 路线牌同款载体）**（实机报告 2026-11-08「开光影时仍不显示底色，任何光影下都不显示」，附 latest.log：Iris 1.7.6 + ComplementaryUnbound r5.5.1 + ImmediatelyFast 1.5.5，yanyang.13 字标版；日志证实底板回调无异常——绘制干净执行却始终不可见）：对 Iris 1.7.6 字节码复盘找到结构性根因——Iris 以 `FullyBufferedMultiBufferSource` 接管实体阶段缓冲并按层透明度分片（`MixinCompositeRenderType`：NO_TRANSPARENCY → OPAQUE，其余 → GENERAL_TRANSPARENT），OPAQUE 批次在 `beginTranslucents`（半透明区块层**之前**）flush，GENERAL_TRANSPARENT 批次在 `endTranslucents`（半透明区块层**之后**）flush——而半透明玻璃面板会写深度，刻意放在面板后方的底色四边形对 LEQUAL 深度测试必然失败。这正解释了全部六轮失败：yanyang.10/12 的 `getText` 层与 yanyang.13 的 beacon-beam 层透明度分片均为 GENERAL_TRANSPARENT（同为 beacon-beam 的 MTR 铁路标志牌之所以一直可见，只因它们前方从来没有半透明玻璃）；yanyang.8/9/11 在回调内自建消费者与 yanyang.11/12 的私有 Immediate 带外同步 flush 则整体落在 ImmediatelyFast 包装的缓冲栈之外。修复：底板双绕向（站台黑 / 轨道白，yanyang.8/9 的成熟视觉设计，entityCutout 写深度 + 背面剔除各侧各色、白面深 0.0005 保证无光影路径深度舞步依旧）整体换轨 `MainRenderer.scheduleRender(BACKING_TEXTURE, false, EXTERIOR, …)`——与 MTR `RenderRouteBase` 路线牌完全同款纪律（以纹理为队列 key、flush 预建 `getExterior` 消费者、回调内仅 transform/draw/pop）；entityCutout 的 NO_TRANSPARENCY 分片使底板落入 Iris 的 OPAQUE 批次、先于玻璃面板落地，面板随后正常混合其上——用户世界里每一块 MTR 路线牌每天都在同一光影栈上走这条路径。无光影视觉不变（EXTERIOR 队列 ordinal 2，仍先于画布的 LIGHT_2/TEXT flush，深度序一致）；底板回调异常面包屑（`[JCM] PSD backing carrier failed once`）保留。
+- **说明**：本版若在个别光影包下底色仍不显示，请回报光影包名 + `latest.log`；面包屑日志会直接指出回调内失败点，而「无异常但不可见」将与光影包的 OPAQUE 实体批次处理相关。
+
+## 2.3.0-prerelease.3-yanyang.13（被 2.3.0-1.0.0 取代的中间尝试）
+
+- **修复尝试（已被取代）**：底板换轨 LIGHT 队列 beacon-beam 层（MTR 铁路标志牌载体）——实机证实该层透明度分片同为 GENERAL_TRANSPARENT，在玻璃面板后同样被深度测试丢弃；此轮日志（无回调异常 + 任何光影均不可见）为 2.3.0-1.0.0 的根因定位（Iris 透明度分相位 flush）提供了关键排除证据。
+
 ## 2.3.0-prerelease.3-yanyang.12
 
 - **修复（PSD 脚本 / 玻璃）：脚本内容只渲染在整块玻璃的一角（左上 1/4）——`PSDWindowBounds` 的「pane」选取把窗口钳进了单个子面四边形的范围**（实机报告 2026-11-08「脚本仅完整渲染在整块玻璃的左上角 1/4 面积内」，MTR 原版全高屏蔽门）：yanyang.10/11 的窗口推导在烘焙模型里挑「面积最大的平台向四边形」当作整块玻璃面——但 MTR 原版 `psd_glass` 的模型（`psd_glass_middle_base`）由**两个 2px 厚的元素**拼成，玻璃面被拆成**多个子脸四边形**（各覆盖半张脸；晏阳材质包进一步细分），旧逻辑选中的那一个子四边形的 `hMin/hMax/yMin/yMax` 成了窗口的几何钳制范围——水平 / 垂直窗口双双被压进半张（或四分之一张）脸，画布随之塌缩进一个角。修复：pane 几何改为**全部平台向 pane 级四边形的并集**（`hMin/hMax/yMin/yMax/along` 取 min/max，`paneAlong` 取最深者——三明治仍在每片玻璃之后）；遮挡扫描本就逐四边形按各自 UV→块空间映射标记（`uToH`/`vToY`），无需改动——只有范围钳制是坏的。上下半交集、边缘语义跨度映射（`[i+left, i+right]`）、朝向镜像全部维持 yanyang.11 设计。

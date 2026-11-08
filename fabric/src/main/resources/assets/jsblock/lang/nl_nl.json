@@ -1,0 +1,21 @@
+{
+    "block.jsblock.apg_door_drl": "APG (Disneyland Resort Lijn Varianten)",
+    "block.jsblock.auto_iron_door": "Automatische Ijzeren Deur",
+    "block.jsblock.block.rv_pids_pole": "Het moet geplaatst worden op een bestaande Railway Vision PIDS",
+    "block.jsblock.butterfly_light": "Deur sluiten indicatie (Vlinder licht)",
+    "block.jsblock.circle_wall_1": "Ronde Muur (1)",
+    "block.jsblock.circle_wall_2": "Ronde muur (2)",
+    "block.jsblock.circle_wall_3": "Ronde muur (3)",
+    "block.jsblock.circle_wall_4": "Ronde muur (4)",
+    "block.jsblock.circle_wall_5": "Ronde muur (5)",
+    "block.jsblock.circle_wall_6": "Ronde muur (6)",
+    "block.jsblock.circle_wall_7": "Ronde muur (7)",
+    "block.jsblock.departure_timer": "Vertrek Timer",
+    "block.jsblock.departure_pole": "Paal (Voor Vertrek Timer)",
+    "block.jsblock.exit_sign_even": "Uitgang Borden (Even)",
+    "block.jsblock.exit_sign_odd": "Uitgang Borden",
+    "block.jsblock.fire_alarm": "Brandalarm",
+    "block.jsblock.helpline_1": "Hulp Lijn (Met Sticker)",
+    "block.jsblock.helpline_2": "Hulp Lijn",
+    "block.jsblock.helpline_hkwk": "Hulp Lijn (West Kowloon Station Soort)"
+}
