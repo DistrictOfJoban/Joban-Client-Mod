@@ -112,6 +112,13 @@ final class PSDWindowBounds {
     /** Window scan resolution (rows over the block height). */
     private static final int GRID = 128;
 
+    /** Yanyang.9: the backing (not the canvas) spans the pane's geometric
+     *  extent grown by this margin (block fraction) — enough to swallow the
+     *  pane's own semi-transparent edge bands and hairline seams against
+     *  adjacent elements, far too little to peek past opaque frame parts at
+     *  any playable angle. */
+    private static final float EXTENT_MARGIN = 1F / 64;
+
     private static final int CACHE_LIMIT = 512;
     private static final Map<BlockState, Bounds> CACHE = new ConcurrentHashMap<>();
 
@@ -208,11 +215,14 @@ final class PSDWindowBounds {
     static final class Bounds {
         /** Full-face sentinel: window = the whole block face at the vanilla
          *  pane depth, no visible pane-parallel geometry. */
-        static final Bounds FULL_FACE = new Bounds(1, 0, DEFAULT_PANE_ALONG, false);
+        static final Bounds FULL_FACE = new Bounds(1, 0, DEFAULT_PANE_ALONG, false, 1, 0);
 
-        /** Window top (block space, 1 = block top). */
+        /** Window top (block space, 1 = block top) — the STRICT alpha
+         *  window, for the script canvas (content must stay clear of the
+         *  semi-transparent bands and strips). */
         final float top;
-        /** Window bottom (block space, 0 = block bottom). */
+        /** Window bottom (block space, 0 = block bottom) — strict, see
+         *  {@link #top}. */
         final float bottom;
         /** The pane's platform-side face plane, measured toward the track
          *  from the block centre (vanilla: +4/16). The sandwich planes sit
@@ -223,12 +233,27 @@ final class PSDWindowBounds {
          *  fully invisible; a pack that gives them a visible frame/glass
          *  turns them into real display surfaces). */
         final boolean visibleGeometry;
+        /** Yanyang.9: the pane's own geometric y-extent (grown by
+         *  {@link #EXTENT_MARGIN}, clamped to the block) — the COVERING
+         *  extent. The backing is a flat opaque quad BEHIND the pane, so it
+         *  does not need the alpha window at all: opaque frame parts in
+         *  front hide any excess while the pane's semi-transparent edge
+         *  bands (frosted strips, tint gradients — the rows the strict scan
+         *  excludes) get solid colour behind them, reading as "fully
+         *  covered". Previously the backing reused the strict window and
+         *  those bands stayed see-through — the yanyang.8 "coverage
+         *  incomplete" report. */
+        final float extentTop;
+        /** Yanyang.9: see {@link #extentTop}. */
+        final float extentBottom;
 
-        Bounds(float top, float bottom, float paneAlong, boolean visibleGeometry) {
+        Bounds(float top, float bottom, float paneAlong, boolean visibleGeometry, float extentTop, float extentBottom) {
             this.top = top;
             this.bottom = bottom;
             this.paneAlong = paneAlong;
             this.visibleGeometry = visibleGeometry;
+            this.extentTop = extentTop;
+            this.extentBottom = extentBottom;
         }
     }
 
@@ -307,23 +332,29 @@ final class PSDWindowBounds {
                 /* No pane-scale platform-facing face — full-face fallback
                    (with the visibility flag so DRL upper halves can still
                    be gated). */
-                return new Bounds(1, 0, DEFAULT_PANE_ALONG, anyVisible);
+                return new Bounds(1, 0, DEFAULT_PANE_ALONG, anyVisible, 1, 0);
             }
+
+            /* Yanyang.9: the covering extent — the pane's own geometric
+               y-range grown by the margin, clamped to the block. Every
+               return path below carries it. */
+            final float extentTop = Math.min(1, pane.yMax + EXTENT_MARGIN);
+            final float extentBottom = Math.max(0, pane.yMin - EXTENT_MARGIN);
 
             /* Window: the largest unoccluded span, clipped to the pane's
                own geometric extent. Two passes (yanyang.7): the STRICT
                pass first — semi-transparent frame strips must occlude —
                then the lenient legacy threshold when the strict pass
                finds no window (tinted-window packs keep their window). */
-            final Bounds strict = scanWindow(quads, pane, anyVisible, FRAME_ALPHA_STRICT);
+            final Bounds strict = scanWindow(quads, pane, anyVisible, FRAME_ALPHA_STRICT, extentTop, extentBottom);
             if (strict != null) {
                 return strict;
             }
-            final Bounds lenient = scanWindow(quads, pane, anyVisible, ALPHA_THRESHOLD);
+            final Bounds lenient = scanWindow(quads, pane, anyVisible, ALPHA_THRESHOLD, extentTop, extentBottom);
             if (lenient != null) {
                 return lenient;
             }
-            return new Bounds(1, 0, pane.along, anyVisible);
+            return new Bounds(1, 0, pane.along, anyVisible, extentTop, extentBottom);
         } catch (Throwable t) {
             return Bounds.FULL_FACE;
         }
@@ -332,7 +363,7 @@ final class PSDWindowBounds {
     /** The largest unoccluded y-span across every occluder quad under the
      *  given frame threshold, clipped to the pane's own geometric extent;
      *  null when no span of {@link #MIN_WINDOW} survives. */
-    private static Bounds scanWindow(java.util.ArrayList<Quad> quads, Quad pane, boolean anyVisible, int frameThreshold) {
+    private static Bounds scanWindow(java.util.ArrayList<Quad> quads, Quad pane, boolean anyVisible, int frameThreshold, float extentTop, float extentBottom) {
         final boolean[] occluded = new boolean[GRID];
         for (final Quad quad : quads) {
             if (quad.area < MIN_OCCLUDER_AREA) {
@@ -367,7 +398,7 @@ final class PSDWindowBounds {
         if (top - bottom < MIN_WINDOW) {
             return null;
         }
-        return new Bounds(top, bottom, pane.along, anyVisible);
+        return new Bounds(top, bottom, pane.along, anyVisible, extentTop, extentBottom);
     }
 
     /** Whether the quad's sampled region contains ANY visible pixel. */
@@ -502,6 +533,8 @@ final class PSDWindowBounds {
         final float bottom = 0;
         final float paneAlong = DEFAULT_PANE_ALONG;
         final boolean visibleGeometry = false;
+        final float extentTop = 1;
+        final float extentBottom = 0;
         private Bounds() {
         }
     }
@@ -523,6 +556,8 @@ final class PSDWindowBounds {
         final float bottom = 0;
         final float paneAlong = DEFAULT_PANE_ALONG;
         final boolean visibleGeometry = false;
+        final float extentTop = 1;
+        final float extentBottom = 0;
         private Bounds() {
         }
     }

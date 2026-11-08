@@ -64,8 +64,10 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       spanning the segment's full height (yanyang.6: the two block halves
  *       of a full-height door are ONE glass, so the canvas merges them
  *       vertically instead of drawing the script once per half) —
- *       <b>sandwiched INSIDE the pane</b>: an opaque black backing
- *       0.45/16 behind the pane's platform-side face (drawn double-sided)
+ *       <b>sandwiched INSIDE the pane</b>: an opaque covering
+ *       0.45/16 behind the pane's platform-side face (drawn double-sided
+ *       with a per-side tint — black toward the platform, white toward
+ *       the track, yanyang.9 — spanning the pane's full geometric extent)
  *       and the script canvas 0.25/16 behind it — both at the run's
  *       DERIVED pane depth (see {@link PSDWindowBounds}; vanilla geometry
  *       → 4.45/16 and 4.25/16). Yanyang.7: both planes sit in the FRONT of
@@ -79,19 +81,23 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       transparent window</b> while the opaque parts of the texture — the
  *       frame, divider bars, frosted bands, whatever the resource pack
  *       draws — stay fully visible and clip the canvas; nothing is painted
- *       over the frame. The black backing hides the script from the track
- *       side (passengers inside a stopped train see plain black through the
+ *       over the frame. The covering hides the script from the track
+ *       side (passengers inside a stopped train see plain white through the
  *       window, never mirrored content). Several bindings may point into
  *       the same segment; the FIRST one encountered renders it and the
  *       rest are skipped that pass — one canvas, one script run, one set
  *       of sounds per segment.</li>
- *   <li><b>Window clipping</b> (see {@link PSDWindowBounds}): the backing and
- *       the canvas are additionally clipped to the pane's transparent
- *       window, derived at runtime from the block's actual baked model and
- *       texture alpha <b>by occlusion</b> (yanyang.5) — every pane-parallel
- *       quad's opaque rows count as frame, so packs whose pane texture is
- *       fully transparent but whose frame strips are separate model
- *       elements clip correctly too. Blocks whose window cannot be derived
+ *   <li><b>Window clipping</b> (see {@link PSDWindowBounds}): the CANVAS is
+ *       clipped to the pane's strict transparent window, derived at runtime
+ *       from the block's actual baked model and texture alpha <b>by
+ *       occlusion</b> (yanyang.5) — every pane-parallel quad's opaque rows
+ *       count as frame, so packs whose pane texture is fully transparent but
+ *       whose frame strips are separate model elements clip correctly too.
+ *       The COVERING is deliberately NOT alpha-clipped (yanyang.9): being a
+ *       flat opaque quad BEHIND the pane it spans the pane's full geometric
+ *       extent instead, so the pane's semi-transparent edge bands get solid
+ *       colour behind them ("fully covered") while the opaque frame parts in
+ *       front hide any excess. Blocks whose window cannot be derived
  *       fall back to the full face, matching the pre-clipping behaviour.
  *       DRL upper halves (invisible in vanilla) only render when their
  *       model actually shows something — a pack that gives them a visible
@@ -198,8 +204,18 @@ public final class PSDScriptRenderer implements RenderHelper {
      *  (real-PIDS look — dark display behind the script content). */
     private static final org.mtr.mapping.holder.Identifier BACKING_TEXTURE = new org.mtr.mapping.holder.Identifier("jsblock", "textures/block/white.png");
 
-    /** The covering tint: fully opaque black (ARGB). */
+    /** The covering tint toward the PLATFORM: fully opaque black (ARGB). */
     private static final int BACKING_COLOR = 0xFF000000;
+
+    /** Yanyang.9: the covering tint toward the TRACK — fully opaque white.
+     *  The covering quad is drawn through BOTH windings (the entity-cutout
+     *  layer culls back faces), so each side can carry its own colour: the
+     *  platform sees the real-PIDS black display behind the script content,
+     *  while train passengers see plain white through the window (the
+     *  pre-yanyang.8 original design colour; the yanyang.8 blanket-black
+     *  made the track side dark too — user report 2026-11-08
+     *  「列车一侧未显示为白色」). */
+    private static final int TRACK_SIDE_COLOR = 0xFFFFFFFF;
 
     /** Distance² gate — bindings beyond this are not driven. */
     private static final double MAX_DISTANCE_SQ = 192 * 192;
@@ -288,9 +304,14 @@ public final class PSDScriptRenderer implements RenderHelper {
         final float[] lowerTop = new float[width];
         final float[] lowerBottom = new float[width];
         final boolean[] lowerValid = new boolean[width];
+        final float[] lowerExtentTop = new float[width];
+        final float[] lowerExtentBottom = new float[width];
         final float[] upperTop = new float[width];
         final float[] upperBottom = new float[width];
         final boolean[] upperValid = new boolean[width];
+        final boolean[] upperIncludable = new boolean[width];
+        final float[] upperExtentTop = new float[width];
+        final float[] upperExtentBottom = new float[width];
         float paneAlong = PSDWindowBounds.DEFAULT_PANE_ALONG;
         boolean allUppers = true;
         for (int i = 0; i < width; i++) {
@@ -299,6 +320,8 @@ public final class PSDScriptRenderer implements RenderHelper {
             lowerTop[i] = Math.min(lowerBounds.top, 1);
             lowerBottom[i] = Math.max(lowerBounds.bottom, 0);
             lowerValid[i] = lowerTop[i] - lowerBottom[i] >= MIN_WINDOW;
+            lowerExtentTop[i] = lowerBounds.extentTop;
+            lowerExtentBottom[i] = lowerBounds.extentBottom;
             /* The sandwich sits just behind the DEEPEST pane in the run so
                every block's pane stays in front of it. */
             paneAlong = Math.max(paneAlong, lowerBounds.paneAlong);
@@ -321,9 +344,12 @@ public final class PSDScriptRenderer implements RenderHelper {
                     upperTop[i] = Math.min(upperBounds.top, 1);
                     upperBottom[i] = Math.max(upperBounds.bottom, 0);
                     upperValid[i] = upperTop[i] - upperBottom[i] >= MIN_WINDOW;
+                    upperExtentTop[i] = upperBounds.extentTop;
+                    upperExtentBottom[i] = upperBounds.extentBottom;
                     paneAlong = Math.max(paneAlong, upperBounds.paneAlong);
                 }
             }
+            upperIncludable[i] = includable;
             if (!includable) {
                 allUppers = false;
             }
@@ -371,22 +397,28 @@ public final class PSDScriptRenderer implements RenderHelper {
         final float backingZ = paneAlong + GLASS_BACKING_OFFSET;
 
         if (!shadowPass) {
-            /* Opaque black backing, drawn double-sided per block and row
-               (each block's own window — the lower row and, on a merged
-               frame, the upper row): it reads as "the glass turned black"
-               through the pane's transparent window from BOTH sides, and it
-               hides the script canvas from the track side (train passengers
-               never see mirrored content). Scheduled onto the same queued
-               layers as the script's own textures (see drawBacking) — the
-               deferred end-of-render flush that has carried every scripted
-               quad correctly since yanyang.1. */
+            /* Opaque covering, drawn double-sided per block and row — but at
+               the pane's FULL GEOMETRIC EXTENT (yanyang.9), NOT the strict
+               alpha window: the covering is a flat quad BEHIND the pane, so
+               every opaque part of the pane/frame in front hides any excess
+               while the pane's semi-transparent edge bands (the rows the
+               strict scan excludes as "frame") finally get solid colour
+               behind them — the yanyang.8 leftover see-through strips at the
+               window's top/bottom edges (user report 2026-11-08 「黑色覆盖
+               不完全」). Each side carries its own tint: BLACK toward the
+               platform (the PIDS display behind the script content), WHITE
+               toward the track (train passengers see a plain white panel,
+               never mirrored content — see TRACK_SIDE_COLOR). Scheduled onto
+               the same queued layers as the script's own textures (see
+               drawBacking) — the deferred end-of-render flush that has
+               carried every scripted quad correctly since yanyang.1. */
             final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
             for (int i = 0; i < width; i++) {
-                if (lowerValid[i]) {
-                    drawBacking(backing, i, lowerTop[i], lowerBottom[i], frameHeight, facing);
+                if (lowerExtentTop[i] > lowerExtentBottom[i]) {
+                    drawBacking(backing, i, lowerExtentTop[i], lowerExtentBottom[i], frameHeight, facing);
                 }
-                if (frameHeight > 1 && upperValid[i]) {
-                    drawBacking(backing, i, 1 + upperTop[i], 1 + upperBottom[i], frameHeight, facing);
+                if (frameHeight > 1 && upperIncludable[i] && upperExtentTop[i] > upperExtentBottom[i]) {
+                    drawBacking(backing, i, 1 + upperExtentTop[i], 1 + upperExtentBottom[i], frameHeight, facing);
                 }
             }
             driveScript(binding, pos, world, canvasWidth, canvasHeight);
@@ -431,9 +463,10 @@ public final class PSDScriptRenderer implements RenderHelper {
     /**
      * The opaque pane covering — one block-wide quad (canvas x ∈ [x, x+1],
      * y ∈ [frameTop-top, frameTop-bottom] in the merged frame's canvas
-     * coordinates), tinted {@link #BACKING_COLOR}, drawn double-sided via
-     * BOTH windings (the entity-cutout layer culls back faces, so a
-     * second, reversed quad serves the track side).
+     * coordinates), drawn double-sided via BOTH windings with a PER-SIDE
+     * tint (the entity-cutout layer culls back faces): the platform-facing
+     * winding carries {@link #BACKING_COLOR} (black), the track-facing
+     * winding {@link #TRACK_SIDE_COLOR} (white).
      *
      * <p>Scheduled through {@code MainRenderer.scheduleRender} on
      * {@code QueuedRenderLayer.LIGHT_2} — the identical carrier every
@@ -461,7 +494,7 @@ public final class PSDScriptRenderer implements RenderHelper {
             graphicsHolderNew.createVertexConsumer(org.mtr.mapping.holder.RenderLayer.getEntityCutout(BACKING_TEXTURE));
             transform.transform(graphicsHolderNew, offset);
             graphicsHolderNew.drawTextureInWorld(x, y + height, 0, x + 1, y + height, 0, x + 1, y, 0, x, y, 0, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
-            graphicsHolderNew.drawTextureInWorld(x, y, 0, x + 1, y, 0, x + 1, y + height, 0, x, y + height, 0, 0, 0, 1, 1, facing, BACKING_COLOR, MAX_RENDER_LIGHT);
+            graphicsHolderNew.drawTextureInWorld(x, y, 0, x + 1, y, 0, x + 1, y + height, 0, x, y + height, 0, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
             graphicsHolderNew.pop();
         });
     }
