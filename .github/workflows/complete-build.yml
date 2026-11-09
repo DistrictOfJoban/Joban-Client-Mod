@@ -78,9 +78,14 @@ jobs:
           # (arm) capacity outage (jobs never acquired by a hosted runner)
           # forced the same pin for the two arm legs — macos-15 provisions
           # from a separate pool; revisit when the outage clears.
-          - os: macos-15
+          # Outage, part 3: the iOS leg also cross-compiles (it never ran
+          # ctest), and the intel runner's Xcode ships the same iPhoneOS
+          # SDK - arm64 device targets built fine on intel Macs for a
+          # decade before Apple Silicon existed.
+          - os: macos-15-intel
             platform: ios-arm64
             cross: ios
+            java-arch: x64
             cmake-arch: -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
     runs-on: ${{ matrix.os }}
     env:
