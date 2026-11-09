@@ -50,7 +50,7 @@ jobs:
             platform: macos-x64
             java-arch: x64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
-          - os: macos-latest
+          - os: macos-15
             platform: macos-arm64
             java-arch: aarch64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
@@ -66,8 +66,11 @@ jobs:
           # arm runner's Xcode too — and ctest is already skipped for cross
           # legs. The 2026-10-28/30 macos-latest (arm) provisioning outage
           # that forced the macos-15-intel pin has cleared; build on the arm
-          # image again (user-requested runner).
-          - os: macos-latest
+          # image again (user-requested runner). The 2026-11-09 macos-latest
+          # (arm) capacity outage (jobs never acquired by a hosted runner)
+          # forced the same pin for the two arm legs — macos-15 provisions
+          # from a separate pool; revisit when the outage clears.
+          - os: macos-15
             platform: ios-arm64
             cross: ios
             cmake-arch: -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
