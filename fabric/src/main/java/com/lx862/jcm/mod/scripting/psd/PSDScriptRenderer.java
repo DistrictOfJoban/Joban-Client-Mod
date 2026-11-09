@@ -749,17 +749,34 @@ public final class PSDScriptRenderer implements RenderHelper {
         final int g = (argb >>> 8) & 0xFF;
         final int b = argb & 0xFF;
         if (flip) {
-            /* Platform-facing: bottom-left → bottom-right → top-right → top-left. */
+            /* Platform-facing: bottom-left → bottom-right → top-right → top-left.
+               Loader note: the fluent element setters carry different names per
+               mapping — yarn texture/light/next vs mojmap uv/uv2/endVertex —
+               while vertex(Matrix4f,...)/color(int...) are identical on both. */
+#if LOADER == "fabric"
             vc.vertex(model, x, y + height, z).color(r, g, b, a).texture(0, 1).light(MAX_RENDER_LIGHT).next();
             vc.vertex(model, x + 1, y + height, z).color(r, g, b, a).texture(1, 1).light(MAX_RENDER_LIGHT).next();
             vc.vertex(model, x + 1, y, z).color(r, g, b, a).texture(1, 0).light(MAX_RENDER_LIGHT).next();
             vc.vertex(model, x, y, z).color(r, g, b, a).texture(0, 0).light(MAX_RENDER_LIGHT).next();
+#else
+            vc.vertex(model, x, y + height, z).color(r, g, b, a).uv(0, 1).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x + 1, y + height, z).color(r, g, b, a).uv(1, 1).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x + 1, y, z).color(r, g, b, a).uv(1, 0).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x, y, z).color(r, g, b, a).uv(0, 0).uv2(MAX_RENDER_LIGHT).endVertex();
+#endif
         } else {
             /* Track-facing: top-left → top-right → bottom-right → bottom-left. */
+#if LOADER == "fabric"
             vc.vertex(model, x, y, z).color(r, g, b, a).texture(0, 0).light(MAX_RENDER_LIGHT).next();
             vc.vertex(model, x + 1, y, z).color(r, g, b, a).texture(1, 0).light(MAX_RENDER_LIGHT).next();
             vc.vertex(model, x + 1, y + height, z).color(r, g, b, a).texture(1, 1).light(MAX_RENDER_LIGHT).next();
             vc.vertex(model, x, y + height, z).color(r, g, b, a).texture(0, 1).light(MAX_RENDER_LIGHT).next();
+#else
+            vc.vertex(model, x, y, z).color(r, g, b, a).uv(0, 0).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x + 1, y, z).color(r, g, b, a).uv(1, 0).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x + 1, y + height, z).color(r, g, b, a).uv(1, 1).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x, y + height, z).color(r, g, b, a).uv(0, 1).uv2(MAX_RENDER_LIGHT).endVertex();
+#endif
         }
     }
 
