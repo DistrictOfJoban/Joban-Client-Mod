@@ -50,9 +50,17 @@ jobs:
             platform: macos-x64
             java-arch: x64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
-          - os: macos-15
+          # 2026-11-09 macOS arm64 capacity outage, part 2: even the macos-15
+          # arm pool starved (this leg was cancelled in the queue four times
+          # while the iOS leg got through). Cross-compile the arm64 bridge on
+          # the intel runner instead - Xcode toolchains are universal, the
+          # produced dylib is identical; only this leg's JVM ctest run is
+          # skipped (the same trade the android/ios cross legs make).
+          # Revisit when the outage clears.
+          - os: macos-15-intel
             platform: macos-arm64
-            java-arch: aarch64
+            cross: macos-arm64
+            java-arch: x64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
           # Cross builds: the produced image cannot run on the build host,
           # so the JVM ctest suite is skipped there (source-level checks
