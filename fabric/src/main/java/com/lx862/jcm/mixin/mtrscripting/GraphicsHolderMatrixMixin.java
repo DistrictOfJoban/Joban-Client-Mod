@@ -22,8 +22,8 @@ public abstract class GraphicsHolderMatrixMixin implements NativeMatrixApplier {
 
     /* 2.3.0-1.0.1: re-exposed (was yanyang.11-12) — the backing carrier
        borrows the holder's raw pose to rebuild a GraphicsHolder around a
-       private immediate (the drawText discipline); see
-       PSDScriptRenderer#drawBacking. */
+       private immediate (the drawText discipline), keeping the flush-time
+       camera matrices intact; see PSDScriptRenderer#drawBacking. */
     @Override
 #if LOADER == "fabric"
     public MatrixStack jcm$getMatrixStack() {
@@ -48,19 +48,6 @@ public abstract class GraphicsHolderMatrixMixin implements NativeMatrixApplier {
        thread, reused every call. */
     private static final ThreadLocal<float[]> jcm$NativePoseScratch =
             ThreadLocal.withInitial(() -> new float[16]);
-
-    /* Yanyang.11: raw pose access for the PSD backing's synchronous
-       private-immediate draw (PSDScriptRenderer.drawBacking) — lets a
-       queued callback rebuild a holder around a private
-       VertexConsumerProvider with the flush-time camera matrices intact. */
-    @Override
-#if LOADER == "fabric"
-    public MatrixStack jcm$getMatrixStack() {
-#else
-    public PoseStack jcm$getMatrixStack() {
-#endif
-        return matrixStack;
-    }
 
     @Override public void jcm$multiplyNativeMatrix(float[] values, int floatOffset) {
         final float[] scratch = jcm$NativePoseScratch.get();
