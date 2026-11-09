@@ -20,6 +20,19 @@ public abstract class GraphicsHolderMatrixMixin implements NativeMatrixApplier {
     private PoseStack matrixStack;
 #endif
 
+    /* 2.3.0-1.0.1: re-exposed (was yanyang.11-12) — the backing carrier
+       borrows the holder's raw pose to rebuild a GraphicsHolder around a
+       private immediate (the drawText discipline); see
+       PSDScriptRenderer#drawBacking. */
+    @Override
+#if LOADER == "fabric"
+    public MatrixStack jcm$getMatrixStack() {
+#else
+    public PoseStack jcm$getMatrixStack() {
+#endif
+        return matrixStack;
+    }
+
 #if MC_VERSION >= "11903"
     /* Pooled JOML scratch (render thread): the old path allocated a fresh
        Matrix4f + Matrix3f per native pose application — per pose per car
