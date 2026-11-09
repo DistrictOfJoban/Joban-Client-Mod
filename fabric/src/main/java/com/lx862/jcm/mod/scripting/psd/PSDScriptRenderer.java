@@ -108,26 +108,19 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       DRL upper halves (invisible in vanilla) only render when their
  *       model actually shows something — a pack that gives them a visible
  *       frame/glass turns them into display surfaces.</li>
- *   <li><b>Draw path</b> (2.3.0-1.0.1): the backing rides the drawText
- *       carrier — a PRIVATE {@code MultiBufferSource.immediate} over the
- *       shared Tessellator, built and synchronously flushed inside a
- *       LIGHT_2 queue callback (the callback only borrows the flush-time
- *       camera matrices), writing its two windings with the manual glyph
- *       vertex sequence {@code vertex → color → texture → light → next}
- *       onto {@code RenderLayer.getText(white.png)}. That is byte-for-byte
- *       the pipeline the users' own script text rides — the one quad path
- *       proven visible behind the translucent pane under their Iris 1.7.6 +
- *       ComplementaryUnbound r5.5.1 + ImmediatelyFast 1.5.5 stack (script
- *       text has rendered through it every version since yanyang.1, while
- *       every other carrier failed). Seven user-tested rounds closed every
- *       alternative: all MTR-queue consumers (yanyang.8–10, yanyang.13
- *       beacon-beam, 2.3.0-1.0.0 EXTERIOR entity-cutout — including the
- *       identical-discipline route-sign carrier) stay invisible behind the
- *       pane on that stack, and the yanyang.11/12 private immediates were
- *       defeated by {@code drawTextureInWorld}'s NEW_ENTITY element order
- *       (its OVERLAY write lands in the glyph layer's LIGHTMAP slot —
- *       lightmap 0 — and leaves entity-format extension elements unfilled).
- *       See {@link #drawBacking} for the full post-mortem.</li>
+ *   <li><b>Draw path</b> (2.3.0-1.0.2): the backing rides TWO
+ *       proven-visible recipes verbatim, stacked at the same place —
+ *       carrier A: the script-rect pipeline (RectangleWrapper's exact
+ *       discipline — keyed LIGHT_2 queue over the cached {@code
+ *       getLight2} warm-up consumer, drawn with {@code
+ *       RenderHelper.drawTexture}), and carrier
+ *       B: RenderRouteBase's exact route-sign pipeline (keyed EXTERIOR
+ *       queue over the cached entity-cutout warm-up consumer). Eight
+ *       user-tested rounds proved every invented carrier fails on the
+ *       users' Iris 1.7.6 + ComplementaryUnbound r5.5.1 +
+ *       ImmediatelyFast 1.5.5 stack while these two MTR/JCM code paths
+ *       render visibly in the very same worlds; see {@link
+ *       #drawBacking} for the full post-mortem.</li>
  *   <li><b>Vertical merge</b> (yanyang.6): when EVERY column of the segment
  *       has an upper half that is a display surface (a glass block whose
  *       model actually shows something — DRL uppers whose vanilla model is
@@ -202,53 +195,50 @@ public final class PSDScriptRenderer implements RenderHelper {
     /** A window narrower than this (block fraction) is treated as no window. */
     private static final float MIN_WINDOW = 0.05F;
 
-    /** A fully opaque white texture (16×16, every pixel 255,255,255,255),
-     *  tinted {@link #BACKING_COLOR} at draw time — the covering quad's
-     *  colour comes from the vertex tint (white texture × black tint =
-     *  black), so a single asset serves the covering. Yanyang.5 history:
-     *  MTR's own "white" texture turned out to be a transparent-white
-     *  utility sprite, so the mod ships its own opaque one; yanyang.8:
-     *  the covering colour changed from white to black per user request
-     *  (real-PIDS look — dark display behind the script content). */
+    /** Both carriers' queue key and layer texture — this mod's own
+     *  FULLY OPAQUE white (16×16, every pixel 255,255,255,255),
+     *  tinted {@link #BACKING_COLOR} at draw time. Texture history:
+     *  MTR's own {@code mtr:white} utility sprite is a TRANSPARENT-white
+     *  in the users' YYMTR 4.0.5 build (the yanyang.5 finding — an
+     *  entity-cutout quad textured with it discards every fragment), so
+     *  the mod ships and uses its own opaque white. The KEYED
+     *  scheduleRender makes the queue's warm-up pre-create the CACHED
+     *  MoreRenderLayers layer for this very texture on the scheduled
+     *  holder — the same stable-instance discipline every visible
+     *  MTR/JCM draw uses (2.3.0-1.0.2, see drawBacking). */
     private static final org.mtr.mapping.holder.Identifier BACKING_TEXTURE = new org.mtr.mapping.holder.Identifier("jsblock", "textures/block/white.png");
 
     /** The covering tint toward the PLATFORM: fully opaque black (ARGB). */
     private static final int BACKING_COLOR = 0xFF000000;
 
-    /** Yanyang.10 (kept since): the track-facing white quad sits this
-     *  much DEEPER (in the pane frame's local +Z, toward the track) than
-     *  the black quad, and is submitted FIRST — on every cull/depth-write
-     *  state the platform sees black (nearer winding drawn last) and the
-     *  track sees white whenever the glyph layer writes depth (LEQUAL
-     *  fails for the farther black from the track camera); without depth
-     *  writes the track side degrades to black, never to nothing. */
+    /** The track-facing white quad sits this much DEEPER (in the pane
+     *  frame's local +Z, toward the track) than the black quad
+     *  (yanyang.10 heritage; both carriers keep the separation). */
     private static final float TRACK_BACK_Z = 0.0005F;
 
-    /** Yanyang.9: the covering tint toward the TRACK — fully opaque white.
-     *  The cover is two depth-separated opposite windings on the glyph
-     *  layer through the drawText carrier (2.3.0-1.0.1 — see drawBacking):
-     *  the platform-facing winding carries {@link #BACKING_COLOR} (black),
-     *  the track-facing winding this white, a hair deeper
-     *  ({@link #TRACK_BACK_Z}) and submitted first. The white quad's
-     *  depth also fails the canvas content's LEQUAL test on the track
-     *  side, so script content never leaks through: the platform sees the
-     *  real-PIDS black display behind the script content, while train
-     *  passengers see plain white through the window (the pre-yanyang.8
-     *  original design colour; the yanyang.8 blanket-black made the track
-     *  side dark too — user report 2026-11-08 「列车一侧未显示为白色」). */
+    /** Carrier B's whole pair sits this much deeper than carrier A's —
+     *  the two carriers draw the same-coloured quads at the same place,
+     *  and identical-colour z-fighting is invisible, but the separation
+     *  keeps the depth order deterministic (A nearer) on every
+     *  depth-write state (2.3.0-1.0.2). */
+    private static final float CARRIER_B_Z = 0.001F;
+
+    /** The covering tint toward the TRACK — fully opaque white. Train
+     *  passengers see a plain white panel, never mirrored content (the
+     *  white quad's depth fails the canvas content's LEQUAL test on the
+     *  track side, so script content never leaks through). */
     private static final int TRACK_SIDE_COLOR = 0xFFFFFFFF;
 
     /** Distance² gate — bindings beyond this are not driven. */
     private static final double MAX_DISTANCE_SQ = 192 * 192;
 
-    /** One-shot breadcrumb for the first backing-carrier failure
-     * (yanyang.12) — see drawBacking's catch. */
-    private static volatile boolean BACKING_CARRIER_WARNED = false;
-
-    /** One-shot confirmation that the 2.3.0-1.0.1 glyph carrier executed
-     * at least once without throwing — lets the next field log prove the
-     * new path ran (vs. silently doing nothing). */
-    private static volatile boolean BACKING_CARRIER_OK = false;
+    /** One-shot breadcrumbs per carrier (yanyang.12 heritage): the
+     *  first EXCEPTION and the first successful execution are each
+     *  logged once, so the next field log proves which carrier ran. */
+    private static volatile boolean BACKING_A_WARNED = false;
+    private static volatile boolean BACKING_A_OK = false;
+    private static volatile boolean BACKING_B_WARNED = false;
+    private static volatile boolean BACKING_B_OK = false;
 
     private PSDScriptRenderer() {
     }
@@ -257,9 +247,9 @@ public final class PSDScriptRenderer implements RenderHelper {
      * Everything drawn here is SCHEDULED onto MTR's queued layers and
      * flushed within that same render call on MTR's own graphics holder;
      * camera anchoring comes from the queued callback's offset at flush
-     * time. The backing quads ride the drawText carrier inside a LIGHT_2
-     * queue callback (2.3.0-1.0.1 — private immediate + glyph vertex
-     * sequence + synchronous flush; see drawBacking). */
+     * time. The backing quads ride TWO proven-visible carriers — the
+     * keyed LIGHT_2 script-rect pipeline and the keyed EXTERIOR
+     * route-sign pipeline (2.3.0-1.0.2; see drawBacking). */
     public static void renderAll() {
         final MinecraftClient minecraftClient = MinecraftClient.getInstance();
         /* MTR's mapping wrappers are unrelated types — ClientWorld reaches the
@@ -523,10 +513,10 @@ public final class PSDScriptRenderer implements RenderHelper {
                behind them — the yanyang.8 leftover see-through strips at the
                window's top/bottom edges (user report 2026-11-08 「黑色覆盖
                不完全」). Each side carries its own tint on its own winding,
-               both through the drawText carrier (2.3.0-1.0.1, see
-               drawBacking): BLACK toward the platform, WHITE toward the
-               track (train passengers see a plain white panel, never
-               mirrored content — see TRACK_SIDE_COLOR). */
+               through BOTH stacked carriers (2.3.0-1.0.2, see drawBacking):
+               BLACK toward the platform, WHITE toward the track (train
+               passengers see a plain white panel, never mirrored content
+               — see TRACK_SIDE_COLOR). */
             final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
             for (int i = 0; i < width; i++) {
                 if (lowerExtentTop[i] > lowerExtentBottom[i]) {
@@ -586,198 +576,130 @@ public final class PSDScriptRenderer implements RenderHelper {
      * LEQUAL test on the track side, so script content never leaks
      * through to the track).
      *
-     * <p><b>Carrier (2.3.0-1.0.1) — the drawText carrier, glyph-exact</b>:
-     * the backing is written onto a PRIVATE {@code
-     * MultiBufferSource.immediate(Tessellator.getInstance().getBuffer())}
-     * — the very source {@code GraphicsHolder.drawText} constructs — on
-     * the {@code RenderLayer.getText(white.png)} layer, with the manual
-     * glyph write sequence {@code vertex → color → texture → light →
-     * next}, flushed synchronously inside the LIGHT_2 queue callback (the
-     * callback only exists to borrow the flush-time camera matrices via
-     * {@code NativeMatrixApplier.jcm$getMatrixStack()}, exactly like
-     * TextWrapper's callbacks). This is byte-for-byte the pipeline the
-     * users' own script text rides — the one and only quad path proven
-     * visible behind the translucent pane under their Iris 1.7.6 +
-     * ComplementaryUnbound r5.5.1 + ImmediatelyFast 1.5.5 stack (the
-     * script text has rendered through it every version since yanyang.1,
-     * while every other carrier failed).</p>
+     * <p><b>Carriers (2.3.0-1.0.2) — copy the two proven-visible
+     * recipes, verbatim</b>. Eight failed rounds taught one lesson:
+     * inventing carriers does not work — the only quads VISIBLE behind
+     * the pane on the users' Iris 1.7.6 + ComplementaryUnbound r5.5.1 +
+     * ImmediatelyFast 1.5.5 stack are the ones MTR/JCM already draw
+     * through their OWN code paths, so the backing now rides TWO of
+     * those paths at once:</p>
      *
-     * <p><b>Why every previous carrier failed</b> — the final picture
-     * after seven user-tested rounds:
      * <ul>
-     *   <li><b>Everything routed through MTR's queue consumers</b>
-     *       (yanyang.8–10, yanyang.13 beacon-beam, 2.3.0-1.0.0
-     *       EXTERIOR entity-cutout) lands in Iris's
-     *       FullyBufferedMultiBufferSource — deferred to Iris's own
-     *       batch flushes — and never shows behind the pane. (The
-     *       2.3.0-1.0.0 round additionally falsified the
-     *       OPAQUE-at-beginTranslucents phase theory: route signs may
-     *       ride EXTERIOR visibly, but our identical-discipline quad on
-     *       the same queue stayed invisible — so the queue path as a
-     *       whole is unusable for this quad on the users' stack.)</li>
-     *   <li><b>Private-immediate draws via {@code drawTextureInWorld}</b>
-     *       (yanyang.11 entity-cutout, yanyang.12 getText) — the right
-     *       carrier, wrong writer: ImmediatelyFast replaces every
-     *       {@code VertexConsumerProvider.immediate} with its
-     *       BatchableBufferSource (fine — drawText's glyphs ride the same
-     *       class), but {@code drawTextureInWorld} writes the NEW_ENTITY
-     *       element order {@code vertex → color → texture → OVERLAY →
-     *       light → normal}. On the glyph format
-     *       (POSITION_COLOR_TEX_LIGHTMAP) the OVERLAY value
-     *       ({@code OverlayTexture.NO_OVERLAY} = 0) lands in the
-     *       LIGHTMAP slot — yanyang.12's quads rendered at lightmap 0 —
-     *       and on the entity-cutout format (NEW_ENTITY → Iris ENTITY
-     *       extension) the sequence leaves the extension elements
-     *       un-filled. Glyphs never hit either trap because
-     *       TextRenderer writes the exact 4-element glyph sequence.</li>
+     *   <li><b>Carrier A — the script-rect pipeline</b>
+     *       (RectangleWrapper's discipline — the path every
+     *       ctx.drawRect background rides): the KEYED {@code
+     *       scheduleRender(BACKING_TEXTURE, false, LIGHT_2, …)}, so
+     *       the queue's own warm-up pre-creates the CACHED {@code
+     *       MoreRenderLayers.getLight2(BACKING_TEXTURE)} = {@code
+     *       RenderLayer.getText(jsblock:white.png)} consumer on the
+     *       scheduled holder — a stable, cached layer instance, the
+     *       discipline every visible MTR/JCM draw uses — and the
+     *       callback does nothing but {@code transform.transform}
+     *       → {@code RenderHelper.drawTexture} (RectangleWrapper's
+     *       own helper; the reversed track winding via the same {@code
+     *       drawTextureInWorld} it delegates to) → {@code pop}.</li>
+     *   <li><b>Carrier B — the route-sign pipeline</b> (RenderRouteBase
+     *       verbatim — the path MTR's route signs, proven visible in
+     *       the user's world, ride; also the 2.3.0-1.0.0 design, whose
+     *       CI build failed before any user could ever try it): the
+     *       KEYED {@code scheduleRender(jsblock:white.png, false,
+     *       EXTERIOR, …)}, so the warm-up pre-creates the cached
+     *       {@code getExterior(jsblock:white.png)} entity-cutout
+     *       consumer, and the callback is transform → {@code
+     *       drawTextureInWorld} → pop, nothing else.</li>
      * </ul>
-     * The fix writes that exact sequence by hand — real light value in
-     * the lightmap, no overlay, no normal, nothing for any format
-     * extension to choke on.</p>
      *
-     * <p>Ordering: the WHITE track-facing winding is submitted FIRST
-     * (deeper, opposite winding), the BLACK platform-facing winding
-     * SECOND (nearer) — on every cull/depth-write state the platform sees
-     * black (nearer quad drawn last), and the track sees white whenever
-     * the glyph layer writes depth (LEQUAL fails for the farther black
-     * from the track camera); without depth writes the track side
-     * degrades to black (the pre-yanyang.9 look) — never to nothing.
-     * Relative to the script canvas: the backing is 0.2/16 deeper than
-     * the canvas plane, and its callback is scheduled before the
-     * script's own LIGHT_2 callbacks, so content always draws over it.</p>
+     * <p><b>Why every previous carrier failed — the post-mortem</b>:
+     * <ul>
+     *   <li>yanyang.8–10 used the no-key queue overload (warm-up
+     *       {@code getText(Identifier(""))}) and then switched the holder
+     *       mid-callback to a FRESH {@code getEntityCutout} instance —
+     *       a layer/instance discipline no visible recipe uses.</li>
+     *   <li>yanyang.11/12 and 2.3.0-1.0.1 drew through PRIVATE
+     *       immediates flushed synchronously inside the callback —
+     *       1.0.1 even byte-copied TextRenderer's glyph write sequence
+     *       onto {@code RenderLayer.getText} — yet stayed invisible
+     *       even though its carrier logged active, falsifying the
+     *       «synchronised glyph flush» theory wholesale.</li>
+     *   <li>yanyang.13 keyed the LIGHT queue — whose warm-up creates a
+     *       beacon-beam layer ({@code POSITION_COLOR}) — but {@code
+     *       drawTextureInWorld} writes the NEW_ENTITY element order: a
+     *       format mismatch no visible recipe ever has (the LCD textures
+     *       that ride beacon-beam queues do so via QuadDrawCall, which
+     *       switches the holder to {@code getLight(actualTexture)}
+     *       inside the callback — a consumer the no-key warm-up never
+     *       provided).</li>
+     * </ul></p>
+     *
+     * <p>Both carriers draw the same two windings at the same place
+     * (carrier B a hair deeper — {@link #CARRIER_B_Z} — so the
+     * same-colour quads never z-fight; whichever carrier survives the
+     * shader stack shows through, and without shaders the look is
+     * unchanged). Per carrier the BLACK platform winding is submitted
+     * first, the WHITE track winding second (yanyang.13's order); the
+     * canvas sits 0.2/16 in front of the backing plane, so content
+     * always draws over it.</p>
      */
     private static void drawBacking(StoredMatrixTransformations transform, float x, float top, float bottom, float frameTop, Direction facing) {
         final float y = frameTop - top;
         final float height = top - bottom;
-        MainRenderer.scheduleRender(QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
+
+        /* Carrier A — the script-rect (RectangleWrapper) discipline:
+           the KEYED LIGHT_2 queue pre-creates the cached
+           getText(jsblock:white.png) consumer on the scheduled holder;
+           the callback only transforms, draws and pops. */
+        MainRenderer.scheduleRender(BACKING_TEXTURE, false, QueuedRenderLayer.LIGHT_2, (graphicsHolderNew, offset) -> {
             try {
-#if LOADER == "fabric"
-                /* The drawText carrier, step by step (see the javadoc):
-                   borrow the callback holder's raw pose, build a private
-                   immediate over the shared Tessellator — the exact source
-                   GraphicsHolder.drawText constructs every call — write
-                   the two windings with the glyph vertex sequence, and
-                   flush synchronously, all inside this callback. */
-                final net.minecraft.client.util.math.MatrixStack matrices =
-                        ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
-                final net.minecraft.client.render.VertexConsumerProvider.Immediate immediate =
-                        net.minecraft.client.render.VertexConsumerProvider.immediate(net.minecraft.client.render.Tessellator.getInstance().getBuffer());
-                GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
-                    transform.transform(priv, offset);
-#if MC_VERSION >= "11903"
-                    final org.joml.Matrix4f model = matrices.peek().getPositionMatrix();
-#else
-#if MC_VERSION <= "11701"
-                    final net.minecraft.util.math.Matrix4f model = matrices.peek().getModel();
-#else
-                    final net.minecraft.util.math.Matrix4f model = matrices.peek().getPositionMatrix();
-#endif
-#endif
-                    final net.minecraft.client.render.VertexConsumer vc = immediate.getBuffer(
-                            net.minecraft.client.render.RenderLayer.getText(new net.minecraft.util.Identifier("jsblock", "textures/block/white.png")));
-                    /* Track-facing WHITE winding, deeper, submitted first. */
-                    glyphQuad(vc, model, x, y, height, TRACK_BACK_Z, TRACK_SIDE_COLOR, false);
-                    /* Platform-facing BLACK winding, nearer, submitted second. */
-                    glyphQuad(vc, model, x, y, height, 0, BACKING_COLOR, true);
-                    priv.pop();
-                });
-                immediate.draw();
-#else
-                final com.mojang.blaze3d.vertex.PoseStack matrices =
-                        ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
-                final net.minecraft.client.renderer.MultiBufferSource.BufferSource immediate =
-                        net.minecraft.client.renderer.MultiBufferSource.immediate(com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder());
-                GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
-                    transform.transform(priv, offset);
-#if MC_VERSION >= "11903"
-                    final org.joml.Matrix4f model = matrices.last().pose();
-#else
-                    final com.mojang.math.Matrix4f model = matrices.last().pose();
-#endif
-                    final com.mojang.blaze3d.vertex.VertexConsumer vc = immediate.getBuffer(
-                            net.minecraft.client.renderer.RenderType.text(new net.minecraft.resources.ResourceLocation("jsblock", "textures/block/white.png")));
-                    /* Track-facing WHITE winding, deeper, submitted first. */
-                    glyphQuad(vc, model, x, y, height, TRACK_BACK_Z, TRACK_SIDE_COLOR, false);
-                    /* Platform-facing BLACK winding, nearer, submitted second. */
-                    glyphQuad(vc, model, x, y, height, 0, BACKING_COLOR, true);
-                    priv.pop();
-                });
-                immediate.endBatch();
-#endif
-                if (!BACKING_CARRIER_OK) {
-                    BACKING_CARRIER_OK = true;
+                transform.transform(graphicsHolderNew, offset);
+                /* Platform-facing BLACK — RenderHelper.drawTexture, the
+                   exact call every visible script rect makes. */
+                RenderHelper.drawTexture(graphicsHolderNew, x, y, 0, 1, height, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
+                /* Track-facing WHITE, a hair deeper — the same writer
+                   (RenderHelper delegates to drawTextureInWorld), reversed
+                   winding (yanyang.13's geometry). */
+                graphicsHolderNew.drawTextureInWorld(x, y, TRACK_BACK_Z, x + 1, y, TRACK_BACK_Z, x + 1, y + height, TRACK_BACK_Z, x, y + height, TRACK_BACK_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
+                graphicsHolderNew.pop();
+                if (!BACKING_A_OK) {
+                    BACKING_A_OK = true;
                     com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.info(
-                            "[JCM] PSD backing glyph carrier active (drawText pipeline)");
+                            "[JCM] PSD backing carrier A active (script-rect pipeline)");
                 }
             } catch (Throwable t) {
                 /* Never take the render thread down over a backing quad —
-                   but after ten shader-opaque rounds, the FIRST failure
-                   still leaves a breadcrumb in the log (yanyang.12). */
-                if (!BACKING_CARRIER_WARNED) {
-                    BACKING_CARRIER_WARNED = true;
+                   but the FIRST failure still leaves a breadcrumb
+                   (yanyang.12). */
+                if (!BACKING_A_WARNED) {
+                    BACKING_A_WARNED = true;
                     com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.warn(
-                            "[JCM] PSD backing carrier failed once: " + t, t);
+                            "[JCM] PSD backing carrier A failed once: " + t, t);
                 }
             }
         });
-    }
 
-    /**
-     * One backing winding written with the EXACT glyph vertex sequence
-     * (vertex → color → texture → light → next — the TextRenderer.Drawer
-     * discipline; no overlay, no normal), so the quad rides the glyph
-     * layer the same way every visible script glyph does. {@code flip}
-     * selects the winding: {@code true} = platform-facing (the same
-     * corner order as the yanyang.8/9 drawTextureInWorld call),
-     * {@code false} = track-facing (reversed).
-     */
-#if LOADER == "fabric"
-#if MC_VERSION >= "11903"
-    private static void glyphQuad(net.minecraft.client.render.VertexConsumer vc, org.joml.Matrix4f model, float x, float y, float height, float z, int argb, boolean flip) {
-#else
-    private static void glyphQuad(net.minecraft.client.render.VertexConsumer vc, net.minecraft.util.math.Matrix4f model, float x, float y, float height, float z, int argb, boolean flip) {
-#endif
-#else
-#if MC_VERSION >= "11903"
-    private static void glyphQuad(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f model, float x, float y, float height, float z, int argb, boolean flip) {
-#else
-    private static void glyphQuad(com.mojang.blaze3d.vertex.VertexConsumer vc, com.mojang.math.Matrix4f model, float x, float y, float height, float z, int argb, boolean flip) {
-#endif
-#endif
-        final int a = (argb >>> 24) & 0xFF;
-        final int r = (argb >>> 16) & 0xFF;
-        final int g = (argb >>> 8) & 0xFF;
-        final int b = argb & 0xFF;
-        if (flip) {
-            /* Platform-facing: bottom-left → bottom-right → top-right → top-left.
-               Loader note: the fluent element setters carry different names per
-               mapping — yarn texture/light/next vs mojmap uv/uv2/endVertex —
-               while vertex(Matrix4f,...)/color(int...) are identical on both. */
-#if LOADER == "fabric"
-            vc.vertex(model, x, y + height, z).color(r, g, b, a).texture(0, 1).light(MAX_RENDER_LIGHT).next();
-            vc.vertex(model, x + 1, y + height, z).color(r, g, b, a).texture(1, 1).light(MAX_RENDER_LIGHT).next();
-            vc.vertex(model, x + 1, y, z).color(r, g, b, a).texture(1, 0).light(MAX_RENDER_LIGHT).next();
-            vc.vertex(model, x, y, z).color(r, g, b, a).texture(0, 0).light(MAX_RENDER_LIGHT).next();
-#else
-            vc.vertex(model, x, y + height, z).color(r, g, b, a).uv(0, 1).uv2(MAX_RENDER_LIGHT).endVertex();
-            vc.vertex(model, x + 1, y + height, z).color(r, g, b, a).uv(1, 1).uv2(MAX_RENDER_LIGHT).endVertex();
-            vc.vertex(model, x + 1, y, z).color(r, g, b, a).uv(1, 0).uv2(MAX_RENDER_LIGHT).endVertex();
-            vc.vertex(model, x, y, z).color(r, g, b, a).uv(0, 0).uv2(MAX_RENDER_LIGHT).endVertex();
-#endif
-        } else {
-            /* Track-facing: top-left → top-right → bottom-right → bottom-left. */
-#if LOADER == "fabric"
-            vc.vertex(model, x, y, z).color(r, g, b, a).texture(0, 0).light(MAX_RENDER_LIGHT).next();
-            vc.vertex(model, x + 1, y, z).color(r, g, b, a).texture(1, 0).light(MAX_RENDER_LIGHT).next();
-            vc.vertex(model, x + 1, y + height, z).color(r, g, b, a).texture(1, 1).light(MAX_RENDER_LIGHT).next();
-            vc.vertex(model, x, y + height, z).color(r, g, b, a).texture(0, 1).light(MAX_RENDER_LIGHT).next();
-#else
-            vc.vertex(model, x, y, z).color(r, g, b, a).uv(0, 0).uv2(MAX_RENDER_LIGHT).endVertex();
-            vc.vertex(model, x + 1, y, z).color(r, g, b, a).uv(1, 0).uv2(MAX_RENDER_LIGHT).endVertex();
-            vc.vertex(model, x + 1, y + height, z).color(r, g, b, a).uv(1, 1).uv2(MAX_RENDER_LIGHT).endVertex();
-            vc.vertex(model, x, y + height, z).color(r, g, b, a).uv(0, 1).uv2(MAX_RENDER_LIGHT).endVertex();
-#endif
-        }
+        /* Carrier B — RenderRouteBase's exact recipe: the KEYED EXTERIOR
+           queue pre-creates the cached entity-cutout consumer; the
+           callback only transforms, draws and pops. */
+        MainRenderer.scheduleRender(BACKING_TEXTURE, false, QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
+            try {
+                transform.transform(graphicsHolderNew, offset);
+                /* Platform-facing BLACK, a hair deeper than carrier A's. */
+                graphicsHolderNew.drawTextureInWorld(x, y + height, CARRIER_B_Z, x + 1, y + height, CARRIER_B_Z, x + 1, y, CARRIER_B_Z, x, y, CARRIER_B_Z, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
+                /* Track-facing WHITE, a hair deeper still. */
+                graphicsHolderNew.drawTextureInWorld(x, y, TRACK_BACK_Z + CARRIER_B_Z, x + 1, y, TRACK_BACK_Z + CARRIER_B_Z, x + 1, y + height, TRACK_BACK_Z + CARRIER_B_Z, x, y + height, TRACK_BACK_Z + CARRIER_B_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
+                graphicsHolderNew.pop();
+                if (!BACKING_B_OK) {
+                    BACKING_B_OK = true;
+                    com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.info(
+                            "[JCM] PSD backing carrier B active (route-sign pipeline)");
+                }
+            } catch (Throwable t) {
+                if (!BACKING_B_WARNED) {
+                    BACKING_B_WARNED = true;
+                    com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.warn(
+                            "[JCM] PSD backing carrier B failed once: " + t, t);
+                }
+            }
+        });
     }
 
     /* ==================================================================== */
