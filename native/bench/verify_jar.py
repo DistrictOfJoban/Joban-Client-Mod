@@ -2,7 +2,10 @@
 import argparse, json, re, zipfile
 from pathlib import Path
 
-def verify(path, version=None):
+DEFAULT_BRIDGES='windows-x64,windows-arm64,linux-x64,linux-arm64,macos-x64,macos-arm64,android-arm64,ios-arm64'
+
+def verify(path, version=None, platforms=None):
+    platforms=platforms or DEFAULT_BRIDGES.split(',')
     required=['NativeApiSession','NativeContentDriver','NativeContentSnapshot','NativeDisplayHelper','NativeMatrixApplier',
               'NativeVehicleDriver','NativeSnapshot','NativeHost','NativeScriptManager']
     forbidden=[b'wr2a03',b'jslcd_',b'yanyang-jslcd-pack',b'wr2-a03','若益宛'.encode(), '鸿雷行书'.encode(),b'Sans Lao']
@@ -15,8 +18,8 @@ def verify(path, version=None):
                 assert not any(token.lower() in data for token in forbidden),(path,name)
         for name in required: assert 'com/lx862/jcm/nativeapi/'+name+'.class' in names,(path,name)
         bridges=[name for name in names if name.startswith('assets/jcm/natives/') and name.endswith(('.dll','.so','.dylib'))]
-        assert len(bridges)==8,(path,bridges)
-        assert {name.split('/')[3] for name in bridges}=={'windows-x64','windows-arm64','linux-x64','linux-arm64','macos-x64','macos-arm64','android-arm64','ios-arm64'},(path,bridges)
+        assert len(bridges)==len(platforms),(path,bridges,platforms)
+        assert {name.split('/')[3] for name in bridges}==set(platforms),(path,bridges,platforms)
         assert not any(name.startswith('assets/') and name.endswith(('.cpp','.hpp','.so','.dll','.dylib')) and name not in bridges for name in names)
         config=json.loads(jar.read('mtrscripting.mixins.json'))
         for mixin in ['GraphicsHolderMatrixMixin','GlStateTrackerAccessor','RenderEyeCandyMixin','RenderLiftsMixin','RenderVehiclesMixin']:
@@ -27,8 +30,9 @@ def verify(path, version=None):
         metadata=json.loads(jar.read('build_metadata.json'))
         if version: assert metadata['version']==version,(path,metadata)
         assert re.fullmatch(r'1\.(17\.1|18\.2|19\.2|19\.4|20\.1|20\.4)',metadata['minecraftVersion']),metadata
-    return {'jar':path.name,'version':metadata['version'],'minecraft':metadata['minecraftVersion'],'bridges':8,'resource_pack_scan':'passed'}
+    return {'jar':path.name,'version':metadata['version'],'minecraft':metadata['minecraftVersion'],'bridges':len(platforms),'resource_pack_scan':'passed'}
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('paths',nargs='+',type=Path);parser.add_argument('--version');args=parser.parse_args()
-    print(json.dumps([verify(path,args.version) for path in args.paths],indent=2))
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('paths',nargs='+',type=Path);parser.add_argument('--version');parser.add_argument('--bridges',default=DEFAULT_BRIDGES,help='comma-separated platform list the jars must bundle (default: all eight)');args=parser.parse_args()
+    platforms=[p.strip() for p in args.bridges.split(',') if p.strip()]
+    print(json.dumps([verify(path,args.version,platforms) for path in args.paths],indent=2))

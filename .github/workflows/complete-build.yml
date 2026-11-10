@@ -1,13 +1,19 @@
-# Complete Build — produces fully importable, game-ready jars.
+# Complete Build — produces fully importable, game-ready test jars.
 #
 # Unlike the push/PR `build` workflow (which compiles the mod WITHOUT the
-# native bridges for speed), this pipeline mirrors the release pipeline:
-# it first builds the jcm_native_bridge on all eight platforms, then
-# bundles all eight bridges into every jar. The resulting 12 jars
-# (6 Minecraft versions x fabric/forge) can be dropped straight into a
-# live game and will load resource-pack C++ scripts such as vehicle
-# natives — the plain CI jars cannot, and the mod will log
-# "native bridge unavailable" for every native script instead.
+# native bridges for speed), this pipeline mirrors the release pipeline's
+# shape but, per the 2026-11-10 request, builds the jcm_native_bridge on
+# THREE platforms only (Windows x64, Linux x64, Android ARM64) so a test
+# jar lands in the Artifacts area as fast as possible. The three bundled
+# bridges cover the machines the testers actually play on; every other
+# platform simply reports "native bridge unavailable" — the full 8-platform
+# set remains the Release Build pipeline's job.
+#
+# The stamped jar version is `<mod-version>-build.<run number>`
+# (e.g. 2.3.0-1.0.0-build.1): the dispatch input carries the mod's own
+# version and the workflow appends GitHub's per-workflow run counter, so
+# every produced artifact is uniquely and monotonically versioned — no
+# more "which 2.3.0-1.0.x did I test" ambiguity.
 #
 # This workflow never tags, never creates a GitHub Release and never
 # publishes anywhere: the jars are only uploaded as workflow artifacts
@@ -19,7 +25,7 @@ on:
       mod-version:
         type: string
         required: true
-        description: Mod version string stamped into the jars (e.g. 2.3.0-beta-2.yanyang.4-shmtest1)
+        description: Base mod version stamped into the jars (e.g. 2.3.0-1.0.0); the workflow appends -build.<run number>
       retention-days:
         type: number
         required: false
@@ -27,66 +33,28 @@ on:
         description: Artifact retention in days
 permissions:
   contents: read
+env:
+  FULL_VERSION: ${{ inputs.mod-version }}-build.${{ github.run_number }}
 jobs:
   natives:
     strategy:
       fail-fast: false
       matrix:
+        # Testing trio (2026-11-10): Windows x64, Linux x64 and the
+        # Android ARM64 cross build. Everything else (windows-arm64,
+        # linux-arm64, both macOS and iOS) was removed from this
+        # pipeline to cut queue time — Release Build still ships them.
         include:
           - os: ubuntu-22.04
             platform: linux-x64
             java-arch: x64
-          - os: ubuntu-24.04-arm
-            platform: linux-arm64
-            java-arch: aarch64
           - os: windows-latest
             platform: windows-x64
             java-arch: x64
-          - os: windows-11-arm
-            platform: windows-arm64
-            java-arch: aarch64
-            python-version: '3.13'
-          - os: macos-15-intel
-            platform: macos-x64
-            java-arch: x64
-            cmake-arch: -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
-          # 2026-11-09 macOS arm64 capacity outage, part 2: even the macos-15
-          # arm pool starved (this leg was cancelled in the queue four times
-          # while the iOS leg got through). Cross-compile the arm64 bridge on
-          # the intel runner instead - Xcode toolchains are universal, the
-          # produced dylib is identical; only this leg's JVM ctest run is
-          # skipped (the same trade the android/ios cross legs make).
-          # Revisit when the outage clears.
-          - os: macos-15-intel
-            platform: macos-arm64
-            cross: macos-arm64
-            java-arch: x64
-            cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
-          # Cross builds: the produced image cannot run on the build host,
-          # so the JVM ctest suite is skipped there (source-level checks
-          # still run on the six native-platform jobs). Compilation itself
-          # still builds every probe and static-assert target.
           - os: ubuntu-latest
             platform: android-arm64
             cross: android
             cmake-arch: -DCMAKE_ANDROID_ABI=arm64-v8a
-          # iOS cross-compiles against the iPhoneOS SDK, which ships in the
-          # arm runner's Xcode too — and ctest is already skipped for cross
-          # legs. The 2026-10-28/30 macos-latest (arm) provisioning outage
-          # that forced the macos-15-intel pin has cleared; build on the arm
-          # image again (user-requested runner). The 2026-11-09 macos-latest
-          # (arm) capacity outage (jobs never acquired by a hosted runner)
-          # forced the same pin for the two arm legs — macos-15 provisions
-          # from a separate pool; revisit when the outage clears.
-          # Outage, part 3: the iOS leg also cross-compiles (it never ran
-          # ctest), and the intel runner's Xcode ships the same iPhoneOS
-          # SDK - arm64 device targets built fine on intel Macs for a
-          # decade before Apple Silicon existed.
-          - os: macos-15-intel
-            platform: ios-arm64
-            cross: ios
-            java-arch: x64
-            cmake-arch: -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
     runs-on: ${{ matrix.os }}
     env:
       NATIVE_TEST_PLATFORM: ${{ matrix.platform }}
@@ -101,7 +69,7 @@ jobs:
           architecture: ${{ matrix.java-arch || 'x64' }}
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version || '3.12' }}
+          python-version: '3.12'
       - name: Configure and build CMake targets
         shell: bash
         run: |
@@ -115,11 +83,6 @@ jobs:
             cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release \
               -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
               -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 ${{ matrix.cmake-arch }}
-          elif [ "${{ matrix.cross }}" = "ios" ]; then
-            # Cross-compile a Mach-O arm64 dylib against the iPhoneOS SDK.
-            # The bridge is JDK-free; side-loaders re-sign the image, so no
-            # signing identity here.
-            cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake-arch }}
           else
             cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake-arch }}
           fi
@@ -167,13 +130,13 @@ jobs:
           pattern: native-*
           path: native-dist
           merge-multiple: true
-      - name: Require all eight bridges before building
+      - name: Require the testing-trio bridges before building
         run: |
           set -euo pipefail
           found=$(find native-dist/bridges -type f | wc -l | tr -d ' ')
-          test "$found" = 8
-          echo "All 8 platform bridges present: $(find native-dist/bridges -type f -printf '%p\n' | sort | xargs -n1 basename | tr '\n' ' ')"
-      - name: Build both loaders with all eight native bridges
+          test "$found" = 3
+          echo "All 3 platform bridges present: $(find native-dist/bridges -type f -printf '%p\n' | sort | xargs -n1 basename | tr '\n' ' ')"
+      - name: Build both loaders with the three native bridges
         run: |
           chmod +x ./gradlew
           # Forge/Maven read-timeouts are transient — retry before failing the matrix leg.
@@ -187,7 +150,7 @@ jobs:
             done
           }
           try ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}" --console=plain
-          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="${{ inputs.mod-version }}" -Pnative_bridge_dir=native-dist/bridges --console=plain
+          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="${{ env.FULL_VERSION }}" -Pnative_bridge_dir=native-dist/bridges --console=plain
       - name: Audit documented Java API declarations
         run: |
           find .gradle ~/.gradle -name '*4.0.5*.jar' -type f > native/build-api-jars.txt
@@ -202,7 +165,7 @@ jobs:
               audit(Path(loader+'/build/classes/java/main'),jars,manifest)
           PY
       - name: Verify jar contents and absence of user resource packs
-        run: python3 native/bench/verify_jar.py --version "${{ inputs.mod-version }}" build/*.jar
+        run: python3 native/bench/verify_jar.py --version "${{ env.FULL_VERSION }}" --bridges windows-x64,linux-x64,android-arm64 build/*.jar
       - uses: actions/upload-artifact@v4
         with:
           name: complete-jars-${{ matrix.minecraft }}
@@ -211,8 +174,9 @@ jobs:
           if-no-files-found: error
   sdk:
     # Bundles the native script SDK (headers + sources + the three example
-    # modules compiled for all eight platforms) the same way the release
-    # pipeline does, so pack authors can test against this exact build.
+    # modules compiled for the testing-trio platforms) the same way the
+    # release pipeline does, so pack authors can test against this exact
+    # build.
     needs: natives
     runs-on: ubuntu-latest
     steps:
@@ -227,12 +191,12 @@ jobs:
       - name: Package the native SDK
         run: |
           set -euo pipefail
-          test "$(find native-dist/examples -type f | wc -l | tr -d ' ')" = 24
+          test "$(find native-dist/examples -type f | wc -l | tr -d ' ')" = 9
           python3 - <<'PY'
-          import subprocess,zipfile
+          import os, subprocess, zipfile
           from pathlib import Path
           files=subprocess.check_output(['git','ls-files','native'],text=True).splitlines()
-          with zipfile.ZipFile('jcm-native-sdk-${{ inputs.mod-version }}.zip','w',zipfile.ZIP_DEFLATED) as archive:
+          with zipfile.ZipFile(f'jcm-native-sdk-{os.environ["FULL_VERSION"]}.zip','w',zipfile.ZIP_DEFLATED) as archive:
               archive.write('LICENSE')
               for name in files:
                   path=Path(name)
@@ -242,7 +206,7 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: jcm-native-sdk-${{ inputs.mod-version }}
+          name: jcm-native-sdk-${{ env.FULL_VERSION }}
           path: jcm-native-sdk-*.zip
           retention-days: ${{ inputs.retention-days }}
           if-no-files-found: error
