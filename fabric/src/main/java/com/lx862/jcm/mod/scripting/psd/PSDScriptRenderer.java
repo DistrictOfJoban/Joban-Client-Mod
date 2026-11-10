@@ -109,35 +109,37 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       DRL upper halves (invisible in vanilla) only render when their
  *       model actually shows something — a pack that gives them a visible
  *       frame/glass turns them into display surfaces.</li>
- *   <li><b>Draw path</b> (2026-11-10, rounds 9–10): the backing rides
+ *   <li><b>Draw path</b> (2026-11-10, round 11): the backing rides
  *       TWO channels, one per regime —
- *       channel T: <b>the glyph pipeline</b> (see {@link
- *       #drawBackingGlyph}) — the exact machine that draws the script
- *       text visible on these very panes under the user's shaders: the
- *       no-key TEXT queue, a private Tessellator immediate, the real
- *       {@code TextRenderer.draw} with a {@code backgroundColor}, all
- *       synchronously flushed inside the callback — NO depth test at
- *       all (the SEE_THROUGH layer), gated to the platform-side
- *       camera so carrier B's white track panel keeps its side; since
- *       round 10 it is ALSO gated to shader pipelines
- *       ({@link com.lx862.jcm.mod.util.ShaderDetector}) — MTR drains
- *       its queues by QueuedRenderLayer ordinal with TEXT LAST, so a
- *       no-depth full-window rect would cover the script's
- *       depth-drawn images/shapes wherever they actually render
- *       (every no-shader pipeline; under Iris they are discarded
- *       behind the pane anyway) — and its geometry is trimmed to
- *       ~11 draws / ~99 quads per segment per frame (see {@link
- *       #GLYPH_ROWS}); and
+ *       channel N: <b>the NORMAL text layer, drawn as a plain quad</b>
+ *       (see {@link #drawBackingText}) — {@code RenderLayer.getText(
+ *       jsblock:white.png)}, the exact layer/program/texture-in-layer
+ *       binding every visible glyph on these panes rides (script text
+ *       and MTR's own PIDS text alike; bytecode-verified against the
+ *       vanilla jar — NO text is drawn, the quad is hand-written with
+ *       the glyph vertex sequence), through a private Tessellator
+ *       immediate synchronously flushed inside the callback — MTR
+ *       drawText's own discipline — gated to shader pipelines
+ *       ({@link com.lx862.jcm.mod.util.ShaderDetector}; without shaders
+ *       the depth-tested carrier B already carries the correct
+ *       sandwich, and a no-depth rect would cover the script's
+ *       depth-drawn images/shapes — MTR drains its queues by
+ *       QueuedRenderLayer ordinal with TEXT LAST), window-clipped (the
+ *       layer blends over the pane, flushed after it in Iris's
+ *       GENERAL_TRANSPARENT bucket), one quad per view via the
+ *       camera-side gate: BLACK toward the platform, WHITE toward the
+ *       track (round 11 「轨道侧还有一层白色底色」); and
  *       carrier B: RenderRouteBase's exact route-sign pipeline (keyed
  *       EXTERIOR queue over the cached entity-cutout warm-up consumer)
  *       at the full pane extent with both tints, which carries the
  *       two-colour look whenever depth-tested quad layers render at
- *       all (every no-shader pipeline). Nine user-tested rounds proved
+ *       all (every no-shader pipeline). Ten user-tested rounds proved
  *       every depth-tested quad carrier fails on the users' Iris 1.7.6
- *       + ComplementaryUnbound r5.5.1 stack while the SEE_THROUGH text
- *       layer — the one world-space layer with NO depth test at all —
- *       renders on those panes every single frame; see {@link
- *       #drawBacking} for the full post-mortem.</li>
+ *       + ComplementaryUnbound r5.5.1 stack while the NORMAL text
+ *       layer renders on those panes every single frame — rounds 9/10
+ *       drew channel T on the SEE_THROUGH variant (a different
+ *       program) and stayed invisible; see {@link #drawBacking} and
+ *       {@link #drawBackingText} for the full post-mortem.</li>
  *   <li><b>Vertical merge</b> (yanyang.6): when EVERY column of the segment
  *       has an upper half that is a display surface (a glass block whose
  *       model actually shows something — DRL uppers whose vanilla model is
@@ -212,19 +214,20 @@ public final class PSDScriptRenderer implements RenderHelper {
     /** A window narrower than this (block fraction) is treated as no window. */
     private static final float MIN_WINDOW = 0.05F;
 
-    /** Carrier B's queue key and layer texture — this mod's own
-     *  FULLY OPAQUE white (16×16, every pixel 255,255,255,255),
-     *  tinted {@link #BACKING_COLOR} at draw time. Texture history:
-     *  MTR's own {@code mtr:white} utility sprite is a TRANSPARENT-white
-     *  in the users' YYMTR 4.0.5 build (the yanyang.5 finding — an
-     *  entity-cutout quad textured with it discards every fragment), so
-     *  the mod ships and uses its own opaque white. The KEYED
-     *  scheduleRender makes the queue's warm-up pre-create the CACHED
-     *  MoreRenderLayers layer for this very texture on the scheduled
-     *  holder — the same stable-instance discipline every visible
-     *  MTR/JCM draw uses (see drawBacking). Channel T does not use this
-     *  texture at all — its background rectangles ride the FONT ATLAS
-     *  text layer (see drawBackingGlyph). */
+    /** Both channels' layer texture — this mod's own FULLY OPAQUE
+     *  white (16×16, every pixel 255,255,255,255), tinted {@link
+     *  #BACKING_COLOR} / {@link #TRACK_SIDE_COLOR} at draw time.
+     *  Texture history: MTR's own {@code mtr:white} utility sprite is a
+     *  TRANSPARENT-white in the users' YYMTR 4.0.5 build (the yanyang.5
+     *  finding — an entity-cutout quad textured with it discards every
+     *  fragment), so the mod ships and uses its own opaque white.
+     *  Carrier B's KEYED scheduleRender makes the queue's warm-up
+     *  pre-create the CACHED MoreRenderLayers layer for this very
+     *  texture on the scheduled holder — the same stable-instance
+     *  discipline every visible MTR/JCM draw uses (see drawBacking).
+     *  Channel N binds the same texture through the vanilla text-layer
+     *  factory ({@code RenderLayer.getText(jsblock:white.png)}, memoized
+     *  per identifier by vanilla itself — see drawBackingText). */
     private static final org.mtr.mapping.holder.Identifier BACKING_TEXTURE = new org.mtr.mapping.holder.Identifier("jsblock", "textures/block/white.png");
 
     /** The covering tint toward the PLATFORM: fully opaque black (ARGB). */
@@ -236,10 +239,10 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static final float TRACK_BACK_Z = 0.0005F;
 
     /** Carrier B's whole pair sits this much deeper than the backing
-     *  plane ({@link #GLASS_BACKING_OFFSET} + this) that channel T
-     *  draws on — channel T's SEE_THROUGH layer ignores depth entirely,
-     *  so the offset only matters where depth-tested quads render at
-     *  all (no-shader pipelines): it keeps carrier B deterministic and
+     *  plane ({@link #GLASS_BACKING_OFFSET} + this) that channel N
+     *  draws on — channel N's text layer ignores depth entirely, so
+     *  the offset only matters where depth-tested quads render at all
+     *  (no-shader pipelines): it keeps carrier B deterministic and
      *  clear of anything else at the same plane (2026-11-10; carrier A
      *  retired, its separation role inherited). */
     private static final float CARRIER_B_Z = 0.001F;
@@ -255,32 +258,13 @@ public final class PSDScriptRenderer implements RenderHelper {
 
     /** One-shot breadcrumbs per channel (yanyang.12 heritage): the
      *  first EXCEPTION and the first successful execution are each
-     *  logged once, so the next field log proves which channel ran. */
+     *  logged once, so the next field log proves which channel ran.
+     *  (Channel N is the round-11 text-layer quad carrier; carrier B
+     *  the EXTERIOR route-sign pipeline.) */
     private static volatile boolean BACKING_T_WARNED = false;
     private static volatile boolean BACKING_T_OK = false;
     private static volatile boolean BACKING_B_WARNED = false;
     private static volatile boolean BACKING_B_OK = false;
-
-    /** Channel T's glyph filler: rows of 'W' (dense glyph, exists in
-     *  every font, measured at runtime) whose pixels are tinted the
-     *  same colour as the per-row background rect, so the backing is
-     *  solid colour from the background rect alone regardless of how
-     *  any font pack shapes the glyph. 2026-11-10.
-     *
-     *  <p><b>Round 10 trim</b>: EIGHT 'W's per row instead of 32, and
-     *  every count pre-built. The glyphs are stretched by the
-     *  runtime-measured X scale to span the window either way, and a
-     *  stretched glyph covers the same FRACTION of its cell as an
-     *  unstretched one — eight wide 'W's are exactly as much insurance
-     *  as 32 narrow ones, at a quarter of the quad count (the per-row
-     *  background rect is the actual coverage; the ink only matters
-     *  in the hypothetical case of that rect's layer being discarded,
-     *  which looks broken in any tiling). Together with the halved
-     *  row count (see {@link #drawBackingGlyph}) a full-height window
-     *  is ~11 draw calls / ~99 quads per segment per frame instead of
-     *  ~21 / ~693 — and zero per-frame string allocation, the rows
-     *  being constants. */
-    private static final String[] GLYPH_ROWS = {"W", "WW", "WWW", "WWWW", "WWWWW", "WWWWWW", "WWWWWWW", "WWWWWWWW"};
 
     private PSDScriptRenderer() {
     }
@@ -302,9 +286,9 @@ public final class PSDScriptRenderer implements RenderHelper {
         if (PSDClientBindings.isEmpty()) return;
 
         final boolean shadowPass = OptimizedRenderer.renderingShadows();
-        /* Round 10: channel T (the no-depth-test glyph backing) is
-           gated to shader pipelines — the full story is on
-           drawBackingGlyph, the short version: without shaders the
+        /* Rounds 10/11: channel N (the no-depth-test text-layer quad
+           backing) is gated to shader pipelines — the full story is on
+           drawBackingText, the short version: without shaders the
            depth-tested carrier B already carries the correct sandwich
            (script images/shapes/text keep their proven layering over
            it), while a no-depth full-window rect on the TEXT queue
@@ -312,7 +296,7 @@ public final class PSDScriptRenderer implements RenderHelper {
            QueuedRenderLayer ordinal, TEXT = 8 = last) and paint over
            everything the script drew on the depth-tested queues.
            Under a shader pack those queues' content behind the pane
-           is discarded by the pipeline anyway (nine rounds proved
+           is discarded by the pipeline anyway (ten rounds proved
            it), so there is nothing visible left to cover — and the
            text still draws over the black (same queue, later
            submission). One reflective query per frame, no per-segment
@@ -576,25 +560,24 @@ public final class PSDScriptRenderer implements RenderHelper {
                passengers see a plain white panel, never mirrored content
                — see TRACK_SIDE_COLOR). */
             final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
-            /* Channel T FIRST (2026-11-10, the ninth round — see
-               drawBackingGlyph), and since round 10 ONLY on shader
-               pipelines: the glyph pipeline, the one machine that
-               provably draws behind the user's Iris + Complementary
-               stack, covering the window span the script canvas itself
-               maps onto (the same rect script content may legally paint
-               — anything narrower would leave the outer text rows
-               without backing, anything wider would paint over the pane
-               frame, since the SEE_THROUGH layer ignores depth
-               entirely). Without shaders the depth-tested carrier B
-               already carries the correct sandwich and channel T's
-               no-depth rect would cover the script's images/shapes
-               (they flush earlier — LIGHT ordinal 0 vs TEXT ordinal 8
-               — and cannot defend themselves against a layer that
-               ignores depth); see drawBackingGlyph. Skipped when no
-               window could be derived (carrier B alone, the pre-T
-               behaviour). */
+            /* Channel N (2026-11-10, round 11 — see drawBackingText),
+               ONLY on shader pipelines: the NORMAL text layer — the
+               one machine that provably draws behind the user's Iris
+               + Complementary stack — carrying ONE window-clipped
+               quad per view (BLACK toward the platform, WHITE toward
+               the track) with NO text drawing at all. The window span
+               is the same rect the script canvas maps onto: the layer
+               blends over the pane (flushed after it), so anything
+               wider would paint the pane frame. Without shaders the
+               depth-tested carrier B already carries the correct
+               sandwich, and channel N's no-depth rect would cover the
+               script's images/shapes (they flush earlier — LIGHT
+               ordinal 0 vs TEXT ordinal 8 — and cannot defend
+               themselves against a layer that ignores depth). Skipped
+               when no window could be derived (carrier B alone, the
+               pre-N behaviour). */
             if (shaderPack && windowTop - windowBottom >= MIN_WINDOW) {
-                drawBackingGlyph(backing, segLeft, segRight, windowBottom, windowTop, frameHeight, run.start, facing);
+                drawBackingText(backing, segLeft, segRight, windowBottom, windowTop, frameHeight, run.start, facing);
             }
             for (int i = 0; i < width; i++) {
                 if (lowerExtentTop[i] > lowerExtentBottom[i]) {
@@ -665,25 +648,29 @@ public final class PSDScriptRenderer implements RenderHelper {
      * else — RenderRouteBase's discipline verbatim.</p>
      *
      * <p><b>Why every depth-tested carrier failed under the user's
-     * shaders — the nine-round post-mortem</b>: the user's stack (Iris
+     * shaders — the ten-round post-mortem</b>: the user's stack (Iris
      * 1.7.6 + ComplementaryUnbound r5.5.1 + ImmediatelyFast, on YYMTR
      * 4.0.5) has now eaten, behind the pane, EVERY quad ever submitted
      * through a depth-tested layer — the MTR queue consumers in all
      * their forms (yanyang.8–10 fresh consumers, yanyang.13 beacon-beam,
-     * 2.3.0-1.0.0/1.0.2 EXTERIOR keyed, 1.0.2 LIGHT_2 keyed) AND private
-     * immediates with hand-written glyph-sequence vertices on
-     * {@code RenderLayer.getText} (2.3.0-1.0.1 — executed cleanly, logged
-     * active, still invisible: {@code getText} is NOT the layer the
-     * visible script text uses — it is depth-TESTED, unlike the
-     * SEE_THROUGH variant). The ONE thing that has rendered on these
-     * very panes under these very shaders, every version since
-     * yanyang.1, is the script text itself — {@code TextWrapper} →
-     * MTR's TEXT queue → {@code GraphicsHolder.drawText} → the real
-     * {@code TextRenderer.draw} on the SEE_THROUGH layer (NO depth
-     * test) through a private Tessellator immediate flushed
-     * synchronously inside the callback. Channel T ({@link
-     * #drawBackingGlyph}) now rides that exact machine with a
-     * {@code backgroundColor}; this carrier remains for the rest.</p>
+     * 2.3.0-1.0.0/1.0.2 EXTERIOR keyed, 1.0.2 LIGHT_2 keyed) AND the
+     * yanyang.11/12 private immediates, which wrote through {@code
+     * drawTextureInWorld} — a writer whose OVERLAY element lands in the
+     * text format's LIGHTMAP slot and whose trailing normal() overruns
+     * the stride, corrupting the quad (the 2.3.0-1.0.1 explanation).
+     * The ONE thing that has rendered on these very panes under these
+     * very shaders, every version since yanyang.1, is the script text
+     * itself — {@code TextWrapper} → MTR's TEXT queue → {@code
+     * GraphicsHolder.drawText} → the real {@code TextRenderer.draw} on
+     * the NORMAL text layer (bytecode-verified 2026-11-10: {@code
+     * TextLayerType.field_33993} = NORMAL, both text layers carry
+     * DepthTest "always" and a color-only write mask) through a private
+     * Tessellator immediate flushed synchronously inside the callback.
+     * Rounds 9/10 drew channel T on the SEE_THROUGH variant — a
+     * different program pair — and stayed invisible; round 11's channel
+     * N ({@link #drawBackingText}) rides the NORMAL layer itself, as a
+     * plain quad; this carrier remains for every pipeline where
+     * depth-tested quads render at all (no-shader setups).</p>
      *
      * <p>Per winding order the BLACK platform quad is submitted first,
      * the WHITE track quad second (yanyang.13's order); the canvas sits
@@ -721,96 +708,82 @@ public final class PSDScriptRenderer implements RenderHelper {
     }
 
     /* ==================================================================== */
-    /* Glyph-pipeline backing (channel T)                                    */
+    /* Text-layer quad backing (channel N)                                  */
     /* ==================================================================== */
 
     /**
-     * Channel T (2026-11-10, the ninth round) — the backing drawn by the
-     * glyph machine itself: {@code TextRenderer.draw(text, x, y, color,
-     * shadow, matrix, immediate, SEE_THROUGH, backgroundColor, light)},
-     * row by row, through a private {@code VertexConsumerProvider.immediate(
-     * Tessellator.getInstance().getBuffer())} flushed synchronously inside
-     * the callback — every element of this sentence is copied from the
-     * disassembly of MTR's {@code GraphicsHolder.drawText}, the exact call
-     * every VISIBLE script glyph on these panes rides (TextWrapper's
-     * discipline). The only deltas vs the proven-visible path: the string
-     * is a row of {@link #GLYPH_ROWS} glyphs and the 9th argument (the
-     * background color) is {@link #BACKING_COLOR} instead of 0 —
-     * {@code TextRenderer}'s own Drawer then draws, per row, ONE solid
-     * background rectangle spanning the whole line on the SEE_THROUGH
-     * text layer of the FONT ATLAS (the same layer, texture, immediate,
-     * program and draw order the visible script text uses; the layer has
-     * NO depth test, so nothing behind the pane can depth-reject it —
-     * the property that has kept the script text visible through nine
-     * failed quad rounds).
+     * Channel N (2026-11-10, round 11) — the backing as ONE plain textured
+     * quad on {@code RenderLayer.getText(jsblock:white.png)}, the NORMAL
+     * text layer: the exact layer, program ({@code rendertype_text}),
+     * texture-in-layer binding, translucent transparency, ALWAYS depth
+     * test and color-only write mask that every VISIBLE glyph on these
+     * panes rides (script text AND MTR's own PIDS text — bytecode-verified
+     * against the vanilla 1.20.1 jar: both text layers share DepthTest
+     * "always" 519 and WriteMask color=true/depth=false; the NORMAL and
+     * SEE_THROUGH variants differ only in program and are picked by
+     * {@code TextRenderer.draw} as {@code TextLayerType.field_33993} =
+     * NORMAL — what MTR's {@code GraphicsHolder.drawText} passes).
      *
-     * <p><b>Round 10 — the shader gate and the covering fix</b>: the
-     * MTR MainRenderer drains its queued layers by
-     * {@code QueuedRenderLayer} ordinal — {@code LIGHT} (0) → … →
-     * {@code EXTERIOR} (2) → … → {@code TEXT} (8, LAST) — all in the
-     * same pass (the no-texture {@code scheduleRender} overload
-     * submits every PSD draw into pass 0, verified against the MTR
-     * 4.0.5 bytecode). Script images and shapes ride the
-     * depth-tested {@code LIGHT} queue (QuadDrawCall's default), so
-     * they are flushed BEFORE this queue — and this queue's
-     * SEE_THROUGH layer ignores depth entirely. A full-window black
-     * rect here would therefore paint over every image and shape the
-     * script drew, in EVERY pipeline, shaders or not. The channel is
-     * consequently gated to shader pipelines
-     * ({@link ShaderDetector}): under Iris the depth-tested queues'
-     * content behind the pane is discarded by the pipeline anyway
-     * (the nine-round post-mortem — there is nothing visible left to
-     * cover), while without shaders the depth-tested carrier B alone
-     * carries the correct sandwich (images/shapes/text over the
-     * backing via depth, exactly the pre-round-9 look — nothing for
-     * channel T to do). The script's own TEXT rides this same queue
-     * and is submitted later (replay runs after the backing's
-     * scheduling in renderGlass), so the glyphs always draw over the
-     * black, in every regime.</p>
+     * <p><b>No text is drawn at all</b> (the user's 2026-11-10 「请尽量避
+     * 免使用文字填充黑色底色」): the quad is written by hand with the
+     * exact glyph vertex sequence — vertex → color → texture → light →
+     * next, NO overlay, NO normal — the discipline of 1.0.1's never-shipped
+     * {@code glyphQuad} (compile-fixed in 7f07a43), NOT {@code
+     * drawTextureInWorld} (whose OVERLAY write lands in this format's
+     * LIGHTMAP slot and whose trailing normal() overruns the stride —
+     * the yanyang.11/12 trap that masqueraded as "the layer is
+     * invisible").</p>
      *
-     * <p><b>Round 10 — the cost trim</b>: rows halved (each scaled up
-     * to 2× vertically — the background rects tile exactly at any
-     * scale, and a stretched glyph covers the same fraction of its
-     * cell), columns quartered (eight pre-built 'W' rows, see
-     * {@link #GLYPH_ROWS} — no per-frame substring). A full-height
-     * window is ~11 draw calls / ~99 quads per segment per frame
-     * instead of round 9's ~21 / ~693, and only under shaders; the
-     * rest of the recipe (queue, key, immediate, synchronous flush,
-     * camera-side gate) is untouched.</p>
+     * <p><b>Why channel T (rounds 9–10) was invisible</b>: it drew on the
+     * SEE_THROUGH variant ({@code getTextSeeThrough}, program {@code
+     * rendertype_translucent_text} + its background rect layer) — a
+     * DIFFERENT program pair that never rendered on the user's Iris
+     * 1.7.6 + ComplementaryUnbound r5.5.1 stack, while the NORMAL layer
+     * renders every script glyph and every MTR PIDS line daily. The
+     * immediate discipline (a private {@code VertexConsumerProvider.
+     * immediate(Tessellator.getInstance().getBuffer())} flushed
+     * synchronously inside the callback) is MTR {@code drawText}'s own,
+     * disassembled and replicated byte for byte; it is kept verbatim.</p>
      *
-     * <p>Coverage: rows of {@link #GLYPH_ROWS} 'W's are measured with the
-     * live {@code getWidth} (font-pack safe), then non-uniformly scaled
-     * to exactly the window span [left, right] × [bottom, top] (canvas
-     * block units × 96): the per-row background rect spans
-     * (startX−1 … rowWidth) × (y−1 … y+9) text pixels, so the R rows
-     * (round 9 chose R = ceil(h/9), round 10 halves it to ceil(h/18))
-     * at scale h/(9R) cover the height exactly and the X scale
-     * w/rowWidth pins the width; the 'W' glyph pixels are tinted the
-     * same black as the background, making the fill solid regardless of
-     * the background rect alone. The span is the script canvas's own
-     * rect — the same region script content may legally paint — so the
-     * pane frame never gets painted over (the SEE_THROUGH layer draws
-     * over everything, depth-wise; only the clip keeps it honest).</p>
+     * <p><b>Sides</b> (「另外请注意轨道侧还有一层白色底色」): the callback
+     * gates on the camera side of the pane — platform side draws the
+     * BLACK platform winding, track side the WHITE track winding
+     * (a hair deeper, {@link #TRACK_BACK_Z}). One quad per view; each
+     * winding faces its own camera, so no cull-state or depth-order
+     * assumption is needed (the layer tests no depth and writes none).
+     * Under the user's shaders carrier B stays invisible, so this
+     * channel now carries BOTH sides.</p>
      *
-     * <p>Ordering and sides: scheduled on MTR's TEXT queue — the same
-     * queue (and the same "" key list) the script's own text callbacks
-     * ride, BEFORE {@code replayScript} submits them, and each draw is
-     * synchronously flushed inside this callback — so the black lands
-     * before the glyphs and the content always draws over its backing.
-     * The SEE_THROUGH layer has no cull and no depth test, so its black
-     * would be equally visible from the TRACK side (carrier B's white
-     * panel territory, yanyang.9's user-requested look) — the callback
-     * therefore returns early whenever the camera sits on the track
-     * side of the pane (see the gate below), preserving B's white
-     * wherever B renders and leaving the shader-stack track side
-     * exactly as it is today. Under the user's shaders this is the
-     * PRIMARY backing from the platform; carrier B ({@link
-     * #drawBacking}) continues to carry the full-extent two-colour look
-     * wherever depth-tested quads render (no-shader pipelines).</p>
+     * <p><b>Clip</b>: the quad spans the derived transparent window
+     * ([left, right] × [bottom, top]) — the same rect the script canvas
+     * maps onto. The layer flushes AFTER the translucent pane (Iris
+     * GENERAL_TRANSPARENT bucket), so it blends over the pane's pixels;
+     * anything wider than the window would paint the pane frame, and
+     * the window is exactly where content may legally sit.</p>
+     *
+     * <p><b>Ordering vs content</b>: scheduled on MTR's TEXT queue with
+     * the shared "" key, BEFORE {@code replayScript} submits the text
+     * callbacks — same queue, same key list, FIFO — and flushed
+     * synchronously inside this callback, so the black always lands
+     * before the glyphs and the content draws over it. The script's
+     * images/shapes ride the depth-tested LIGHT queue (ordinal 0,
+     * flushed earlier) exactly as before — untouched by this channel,
+     * which stays gated to shader pipelines (see the renderGlass call
+     * site): without shaders carrier B already carries the correct
+     * sandwich, and a no-depth rect here would flush LAST (TEXT ordinal
+     * 8) and paint over those images/shapes.</p>
+     *
+     * <p><b>Cost</b> (「请确保该解决方案不会出现卡顿」): one quad (two
+     * triangles) per segment per frame, on a layer vanilla memoizes per
+     * texture identifier ({@code Util.memoize} inside {@code
+     * RenderLayer.getText}) — no glyph rows, no per-frame string work,
+     * and the only per-frame allocation is the same tiny Immediate
+     * wrapper every MTR {@code drawText} call already constructs.</p>
      */
-    private static void drawBackingGlyph(StoredMatrixTransformations transform, float left, float right, float bottom, float top, float frameTop, BlockPos anchor, Direction facing) {
+    private static void drawBackingText(StoredMatrixTransformations transform, float left, float right, float bottom, float top, float frameTop, BlockPos anchor, Direction facing) {
         final float y = frameTop - top;
         final float height = top - bottom;
+        final float width = right - left;
         final double anchorX = anchor.getX() + 0.5;
         final double anchorY = anchor.getY() + 0.5;
         final double anchorZ = anchor.getZ() + 0.5;
@@ -819,41 +792,29 @@ public final class PSDScriptRenderer implements RenderHelper {
                 /* Camera-side gate: facing points toward the TRACK, so a
                    camera with along = dot(camera - blockCenter, facing)
                    ≥ 0.25 is on (or past) the pane plane on the track
-                   side — carrier B's white panel owns that view, and the
-                   two-sided SEE_THROUGH black must never paint over it. */
+                   side — that view gets the WHITE quad; the platform
+                   view (the normal one) the BLACK quad. Exactly one
+                   quad is drawn per view. */
                 final org.mtr.mapping.holder.Vector3i fv = facing.getVector();
-                if ((offset.getXMapped() - anchorX) * fv.getX()
+                final double along = (offset.getXMapped() - anchorX) * fv.getX()
                         + (offset.getYMapped() - anchorY) * fv.getY()
-                        + (offset.getZMapped() - anchorZ) * fv.getZ() >= 0.25) {
-                    return;
-                }
-                /* Canvas pixel geometry: 96 px per block, same as the
-                   script canvas (PIDSPresetBase.BASE_SCALE = 1/96).
-                   Round 10: half the rows (each stretched up to 2x —
-                   the rects tile exactly at any scale and stretched
-                   ink covers the same fraction of its cell) and at
-                   most 8 columns (GLYPH_ROWS): ~11 draws / ~99 quads
-                   per full-height segment per frame. */
-                final float wPx = (right - left) * 96;
-                final float hPx = height * 96;
-                final int rows = Math.max(1, (int) Math.ceil(hPx / 18));
-                final int cols = Math.max(1, Math.min(GLYPH_ROWS.length, (int) Math.ceil(wPx / 6)));
-                final String row = GLYPH_ROWS[cols - 1];
+                        + (offset.getZMapped() - anchorZ) * fv.getZ();
+                final boolean trackSide = along >= 0.25;
 #if LOADER == "fabric"
+                /* The drawText carrier, step by step (disassembled from
+                   MTR's GraphicsHolder.drawText): borrow the callback
+                   holder's raw pose, build a private immediate over the
+                   shared Tessellator — the exact source drawText
+                   constructs every call — take the NORMAL text layer
+                   bound to our own opaque white, write the quad with the
+                   glyph vertex sequence, and flush synchronously, all
+                   inside this callback. */
                 final net.minecraft.client.util.math.MatrixStack matrices =
                         ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
                 final net.minecraft.client.render.VertexConsumerProvider.Immediate immediate =
                         net.minecraft.client.render.VertexConsumerProvider.immediate(net.minecraft.client.render.Tessellator.getInstance().getBuffer());
-                final net.minecraft.client.font.TextRenderer textRenderer =
-                        net.minecraft.client.MinecraftClient.getInstance().textRenderer;
-                final int rowWidth = textRenderer.getWidth(row);
-                final float sx = rowWidth > 0 ? wPx / rowWidth : 1;
-                final float sy = hPx / (rows * 9);
                 GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
                     transform.transform(priv, offset);
-                    priv.scale(com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE, com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE, com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE);
-                    priv.translate(left * 96, y * 96, 0);
-                    priv.scale(sx, sy, 1);
 #if MC_VERSION >= "11903"
                     final org.joml.Matrix4f model = matrices.peek().getPositionMatrix();
 #else
@@ -863,12 +824,16 @@ public final class PSDScriptRenderer implements RenderHelper {
                     final net.minecraft.util.math.Matrix4f model = matrices.peek().getPositionMatrix();
 #endif
 #endif
-                    for (int r = 0; r < rows; r++) {
-#if MC_VERSION >= "11903"
-                        textRenderer.draw(row, 0, r * 9, BACKING_COLOR, false, model, immediate, net.minecraft.client.font.TextRenderer.TextLayerType.SEE_THROUGH, BACKING_COLOR, MAX_RENDER_LIGHT);
-#else
-                        textRenderer.draw(row, 0, r * 9, BACKING_COLOR, false, model, immediate, true, BACKING_COLOR, MAX_RENDER_LIGHT);
-#endif
+                    final net.minecraft.client.render.VertexConsumer vc = immediate.getBuffer(
+                            net.minecraft.client.render.RenderLayer.getText(new net.minecraft.util.Identifier("jsblock", "textures/block/white.png")));
+                    if (trackSide) {
+                        /* WHITE toward the track — the user-requested
+                           second layer, at the same hair-deeper plane
+                           carrier B uses. */
+                        glyphQuad(vc, model, left, y, height, width, TRACK_BACK_Z, TRACK_SIDE_COLOR, false);
+                    } else {
+                        /* BLACK toward the platform. */
+                        glyphQuad(vc, model, left, y, height, width, 0, BACKING_COLOR, true);
                     }
                     priv.pop();
                 });
@@ -878,27 +843,21 @@ public final class PSDScriptRenderer implements RenderHelper {
                         ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
                 final net.minecraft.client.renderer.MultiBufferSource.BufferSource immediate =
                         net.minecraft.client.renderer.MultiBufferSource.immediate(com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder());
-                final net.minecraft.client.gui.Font font =
-                        net.minecraft.client.Minecraft.getInstance().font;
-                final int rowWidth = font.width(row);
-                final float sx = rowWidth > 0 ? wPx / rowWidth : 1;
-                final float sy = hPx / (rows * 9);
                 GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
                     transform.transform(priv, offset);
-                    priv.scale(com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE, com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE, com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE);
-                    priv.translate(left * 96, y * 96, 0);
-                    priv.scale(sx, sy, 1);
 #if MC_VERSION >= "11903"
                     final org.joml.Matrix4f model = matrices.last().pose();
 #else
                     final com.mojang.math.Matrix4f model = matrices.last().pose();
 #endif
-                    for (int r = 0; r < rows; r++) {
-#if MC_VERSION >= "11903"
-                        font.drawInBatch(row, 0, r * 9, BACKING_COLOR, false, model, immediate, net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH, BACKING_COLOR, MAX_RENDER_LIGHT);
-#else
-                        font.drawInBatch(row, 0, r * 9, BACKING_COLOR, false, model, immediate, true, BACKING_COLOR, MAX_RENDER_LIGHT);
-#endif
+                    final com.mojang.blaze3d.vertex.VertexConsumer vc = immediate.getBuffer(
+                            net.minecraft.client.renderer.RenderType.text(new net.minecraft.resources.ResourceLocation("jsblock", "textures/block/white.png")));
+                    if (trackSide) {
+                        /* WHITE toward the track. */
+                        glyphQuad(vc, model, left, y, height, width, TRACK_BACK_Z, TRACK_SIDE_COLOR, false);
+                    } else {
+                        /* BLACK toward the platform. */
+                        glyphQuad(vc, model, left, y, height, width, 0, BACKING_COLOR, true);
                     }
                     priv.pop();
                 });
@@ -907,19 +866,96 @@ public final class PSDScriptRenderer implements RenderHelper {
                 if (!BACKING_T_OK) {
                     BACKING_T_OK = true;
                     com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.info(
-                            "[JCM] PSD backing channel T active (glyph pipeline, shader pack in use)");
+                            "[JCM] PSD backing channel N active (text-layer quad, shader pack in use)");
                 }
             } catch (Throwable t) {
                 /* Never take the render thread down over a backing draw —
                    but the FIRST failure still leaves a breadcrumb
-                   (yanyang.12). */
+                   (yanyang.12 heritage). */
                 if (!BACKING_T_WARNED) {
                     BACKING_T_WARNED = true;
                     com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.warn(
-                            "[JCM] PSD backing channel T failed once: " + t, t);
+                            "[JCM] PSD backing channel N failed once: " + t, t);
                 }
             }
         });
+    }
+
+    /**
+     * One backing winding written with the EXACT glyph vertex sequence
+     * (vertex → color → texture → light → next — the TextRenderer.Drawer
+     * discipline, verified against the vanilla GlyphRenderer bytecode),
+     * so the quad rides the text layer the same way every visible script
+     * glyph does — the format is POSITION_COLOR_TEXTURE_LIGHT and this
+     * sequence fills exactly its four elements.
+     *
+     * <p><b>Winding lineage</b>: the glyphs themselves are written
+     * top-left → top-right → bottom-right → bottom-left (vanilla
+     * GlyphRenderer.render, Rectangle minX/minY → maxX/minY → maxX/maxY
+     * → minX/maxY) — THAT order is the one proven visible on this layer
+     * under the user's shaders, so the PLATFORM-facing quad uses it
+     * verbatim (the 1.0.1 draft instead copied carrier B's entity-cutout
+     * order — the reverse winding, an unproven lineage on this layer
+     * and potentially back-face-culled wherever the inherited cull
+     * state is on). {@code flip} = false (track-facing) is the reverse
+     * order — front-facing to the track camera by symmetry. {@code w}
+     * is the quad's width (the window span, run units); the camera-side
+     * gate in {@link #drawBackingText} draws exactly one of the two per
+     * view, so no cull-state or depth-order assumption is needed.</p>
+     */
+#if LOADER == "fabric"
+#if MC_VERSION >= "11903"
+    private static void glyphQuad(net.minecraft.client.render.VertexConsumer vc, org.joml.Matrix4f model, float x, float y, float height, float w, float z, int argb, boolean flip) {
+#else
+    private static void glyphQuad(net.minecraft.client.render.VertexConsumer vc, net.minecraft.util.math.Matrix4f model, float x, float y, float height, float w, float z, int argb, boolean flip) {
+#endif
+#else
+#if MC_VERSION >= "11903"
+    private static void glyphQuad(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f model, float x, float y, float height, float w, float z, int argb, boolean flip) {
+#else
+    private static void glyphQuad(com.mojang.blaze3d.vertex.VertexConsumer vc, com.mojang.math.Matrix4f model, float x, float y, float height, float w, float z, int argb, boolean flip) {
+#endif
+#endif
+        final int a = (argb >>> 24) & 0xFF;
+        final int r = (argb >>> 16) & 0xFF;
+        final int g = (argb >>> 8) & 0xFF;
+        final int b = argb & 0xFF;
+        if (flip) {
+            /* Platform-facing, the GLYPH winding verbatim: top-left →
+               top-right → bottom-right → bottom-left (vanilla
+               GlyphRenderer.render's own corner order — the winding
+               every visible script glyph on these panes carries).
+               Loader note: the fluent element setters carry different
+               names per mapping — yarn texture/light/next vs mojmap
+               uv/uv2/endVertex — while vertex(Matrix4f,...) and
+               color(int...) are identical on both. */
+#if LOADER == "fabric"
+            vc.vertex(model, x, y, z).color(r, g, b, a).texture(0, 0).light(MAX_RENDER_LIGHT).next();
+            vc.vertex(model, x + w, y, z).color(r, g, b, a).texture(1, 0).light(MAX_RENDER_LIGHT).next();
+            vc.vertex(model, x + w, y + height, z).color(r, g, b, a).texture(1, 1).light(MAX_RENDER_LIGHT).next();
+            vc.vertex(model, x, y + height, z).color(r, g, b, a).texture(0, 1).light(MAX_RENDER_LIGHT).next();
+#else
+            vc.vertex(model, x, y, z).color(r, g, b, a).uv(0, 0).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x + w, y, z).color(r, g, b, a).uv(1, 0).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x + w, y + height, z).color(r, g, b, a).uv(1, 1).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x, y + height, z).color(r, g, b, a).uv(0, 1).uv2(MAX_RENDER_LIGHT).endVertex();
+#endif
+        } else {
+            /* Track-facing: the reverse order — bottom-left →
+               bottom-right → top-right → top-left, front-facing to the
+               track camera by symmetry. */
+#if LOADER == "fabric"
+            vc.vertex(model, x, y + height, z).color(r, g, b, a).texture(0, 1).light(MAX_RENDER_LIGHT).next();
+            vc.vertex(model, x + w, y + height, z).color(r, g, b, a).texture(1, 1).light(MAX_RENDER_LIGHT).next();
+            vc.vertex(model, x + w, y, z).color(r, g, b, a).texture(1, 0).light(MAX_RENDER_LIGHT).next();
+            vc.vertex(model, x, y, z).color(r, g, b, a).texture(0, 0).light(MAX_RENDER_LIGHT).next();
+#else
+            vc.vertex(model, x, y + height, z).color(r, g, b, a).uv(0, 1).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x + w, y + height, z).color(r, g, b, a).uv(1, 1).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x + w, y, z).color(r, g, b, a).uv(1, 0).uv2(MAX_RENDER_LIGHT).endVertex();
+            vc.vertex(model, x, y, z).color(r, g, b, a).uv(0, 0).uv2(MAX_RENDER_LIGHT).endVertex();
+#endif
+        }
     }
 
     /* ==================================================================== */
