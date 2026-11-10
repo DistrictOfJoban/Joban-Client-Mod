@@ -7,6 +7,7 @@ import com.lx862.jcm.mod.block.APGGlassDRL;
 import com.lx862.jcm.mod.block.APGGlassEndDRL;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.jcm.mod.scripting.JCMScripting;
+import com.lx862.jcm.mod.util.ShaderDetector;
 import com.lx862.jcm.mod.scripting.pids.PIDSWrapper;
 import com.lx862.jcm.nativeapi.NativeContentDriver;
 import com.lx862.jcm.nativeapi.NativeScriptManager;
@@ -108,8 +109,8 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       DRL upper halves (invisible in vanilla) only render when their
  *       model actually shows something — a pack that gives them a visible
  *       frame/glass turns them into display surfaces.</li>
- *   <li><b>Draw path</b> (2026-11-10, ninth round): the backing rides
- *       TWO channels, one per proven regime —
+ *   <li><b>Draw path</b> (2026-11-10, rounds 9–10): the backing rides
+ *       TWO channels, one per regime —
  *       channel T: <b>the glyph pipeline</b> (see {@link
  *       #drawBackingGlyph}) — the exact machine that draws the script
  *       text visible on these very panes under the user's shaders: the
@@ -117,7 +118,16 @@ import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
  *       {@code TextRenderer.draw} with a {@code backgroundColor}, all
  *       synchronously flushed inside the callback — NO depth test at
  *       all (the SEE_THROUGH layer), gated to the platform-side
- *       camera so carrier B's white track panel keeps its side; and
+ *       camera so carrier B's white track panel keeps its side; since
+ *       round 10 it is ALSO gated to shader pipelines
+ *       ({@link com.lx862.jcm.mod.util.ShaderDetector}) — MTR drains
+ *       its queues by QueuedRenderLayer ordinal with TEXT LAST, so a
+ *       no-depth full-window rect would cover the script's
+ *       depth-drawn images/shapes wherever they actually render
+ *       (every no-shader pipeline; under Iris they are discarded
+ *       behind the pane anyway) — and its geometry is trimmed to
+ *       ~11 draws / ~99 quads per segment per frame (see {@link
+ *       #GLYPH_ROWS}); and
  *       carrier B: RenderRouteBase's exact route-sign pipeline (keyed
  *       EXTERIOR queue over the cached entity-cutout warm-up consumer)
  *       at the full pane extent with both tints, which carries the
@@ -255,8 +265,22 @@ public final class PSDScriptRenderer implements RenderHelper {
      *  every font, measured at runtime) whose pixels are tinted the
      *  same colour as the per-row background rect, so the backing is
      *  solid colour from the background rect alone regardless of how
-     *  any font pack shapes the glyph. 2026-11-10. */
-    private static final String GLYPH_ROW = "W".repeat(32);
+     *  any font pack shapes the glyph. 2026-11-10.
+     *
+     *  <p><b>Round 10 trim</b>: EIGHT 'W's per row instead of 32, and
+     *  every count pre-built. The glyphs are stretched by the
+     *  runtime-measured X scale to span the window either way, and a
+     *  stretched glyph covers the same FRACTION of its cell as an
+     *  unstretched one — eight wide 'W's are exactly as much insurance
+     *  as 32 narrow ones, at a quarter of the quad count (the per-row
+     *  background rect is the actual coverage; the ink only matters
+     *  in the hypothetical case of that rect's layer being discarded,
+     *  which looks broken in any tiling). Together with the halved
+     *  row count (see {@link #drawBackingGlyph}) a full-height window
+     *  is ~11 draw calls / ~99 quads per segment per frame instead of
+     *  ~21 / ~693 — and zero per-frame string allocation, the rows
+     *  being constants. */
+    private static final String[] GLYPH_ROWS = {"W", "WW", "WWW", "WWWW", "WWWWW", "WWWWWW", "WWWWWWW", "WWWWWWWW"};
 
     private PSDScriptRenderer() {
     }
@@ -278,6 +302,22 @@ public final class PSDScriptRenderer implements RenderHelper {
         if (PSDClientBindings.isEmpty()) return;
 
         final boolean shadowPass = OptimizedRenderer.renderingShadows();
+        /* Round 10: channel T (the no-depth-test glyph backing) is
+           gated to shader pipelines — the full story is on
+           drawBackingGlyph, the short version: without shaders the
+           depth-tested carrier B already carries the correct sandwich
+           (script images/shapes/text keep their proven layering over
+           it), while a no-depth full-window rect on the TEXT queue
+           would flush LAST (MTR drains the queues by
+           QueuedRenderLayer ordinal, TEXT = 8 = last) and paint over
+           everything the script drew on the depth-tested queues.
+           Under a shader pack those queues' content behind the pane
+           is discarded by the pipeline anyway (nine rounds proved
+           it), so there is nothing visible left to cover — and the
+           text still draws over the black (same queue, later
+           submission). One reflective query per frame, no per-segment
+           cost. */
+        final boolean shaderPack = !shadowPass && ShaderDetector.isShaderPackInUse();
         final double playerX = player.getX();
         final double playerY = player.getY();
         final double playerZ = player.getZ();
@@ -303,7 +343,7 @@ public final class PSDScriptRenderer implements RenderHelper {
                 }
             } else {
                 if (block instanceof BlockPSDAPGGlassBase) {
-                    renderGlass(binding, pos, state, world, shadowPass, renderedSections);
+                    renderGlass(binding, pos, state, world, shadowPass, shaderPack, renderedSections);
                 }
             }
         });
@@ -313,7 +353,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* Glass                                                                 */
     /* ==================================================================== */
 
-    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass, Set<BlockPos> renderedSections) {
+    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass, boolean shaderPack, Set<BlockPos> renderedSections) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING);
         final boolean upper = IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
 
@@ -537,16 +577,23 @@ public final class PSDScriptRenderer implements RenderHelper {
                — see TRACK_SIDE_COLOR). */
             final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
             /* Channel T FIRST (2026-11-10, the ninth round — see
-               drawBackingGlyph): the glyph pipeline, the one machine that
-               provably draws behind the user's Iris + Complementary stack,
-               covering the window span the script canvas itself maps onto
-               (the same rect script content may legally paint — anything
-               narrower would leave the outer text rows without backing,
-               anything wider would paint over the pane frame, since the
-               SEE_THROUGH layer ignores depth entirely). Skipped when no
+               drawBackingGlyph), and since round 10 ONLY on shader
+               pipelines: the glyph pipeline, the one machine that
+               provably draws behind the user's Iris + Complementary
+               stack, covering the window span the script canvas itself
+               maps onto (the same rect script content may legally paint
+               — anything narrower would leave the outer text rows
+               without backing, anything wider would paint over the pane
+               frame, since the SEE_THROUGH layer ignores depth
+               entirely). Without shaders the depth-tested carrier B
+               already carries the correct sandwich and channel T's
+               no-depth rect would cover the script's images/shapes
+               (they flush earlier — LIGHT ordinal 0 vs TEXT ordinal 8
+               — and cannot defend themselves against a layer that
+               ignores depth); see drawBackingGlyph. Skipped when no
                window could be derived (carrier B alone, the pre-T
                behaviour). */
-            if (windowTop - windowBottom >= MIN_WINDOW) {
+            if (shaderPack && windowTop - windowBottom >= MIN_WINDOW) {
                 drawBackingGlyph(backing, segLeft, segRight, windowBottom, windowTop, frameHeight, run.start, facing);
             }
             for (int i = 0; i < width; i++) {
@@ -687,7 +734,7 @@ public final class PSDScriptRenderer implements RenderHelper {
      * disassembly of MTR's {@code GraphicsHolder.drawText}, the exact call
      * every VISIBLE script glyph on these panes rides (TextWrapper's
      * discipline). The only deltas vs the proven-visible path: the string
-     * is a row of {@link #GLYPH_ROW} glyphs and the 9th argument (the
+     * is a row of {@link #GLYPH_ROWS} glyphs and the 9th argument (the
      * background color) is {@link #BACKING_COLOR} instead of 0 —
      * {@code TextRenderer}'s own Drawer then draws, per row, ONE solid
      * background rectangle spanning the whole line on the SEE_THROUGH
@@ -697,12 +744,47 @@ public final class PSDScriptRenderer implements RenderHelper {
      * the property that has kept the script text visible through nine
      * failed quad rounds).
      *
-     * <p>Coverage: rows of {@link #GLYPH_ROW} 'W's are measured with the
+     * <p><b>Round 10 — the shader gate and the covering fix</b>: the
+     * MTR MainRenderer drains its queued layers by
+     * {@code QueuedRenderLayer} ordinal — {@code LIGHT} (0) → … →
+     * {@code EXTERIOR} (2) → … → {@code TEXT} (8, LAST) — all in the
+     * same pass (the no-texture {@code scheduleRender} overload
+     * submits every PSD draw into pass 0, verified against the MTR
+     * 4.0.5 bytecode). Script images and shapes ride the
+     * depth-tested {@code LIGHT} queue (QuadDrawCall's default), so
+     * they are flushed BEFORE this queue — and this queue's
+     * SEE_THROUGH layer ignores depth entirely. A full-window black
+     * rect here would therefore paint over every image and shape the
+     * script drew, in EVERY pipeline, shaders or not. The channel is
+     * consequently gated to shader pipelines
+     * ({@link ShaderDetector}): under Iris the depth-tested queues'
+     * content behind the pane is discarded by the pipeline anyway
+     * (the nine-round post-mortem — there is nothing visible left to
+     * cover), while without shaders the depth-tested carrier B alone
+     * carries the correct sandwich (images/shapes/text over the
+     * backing via depth, exactly the pre-round-9 look — nothing for
+     * channel T to do). The script's own TEXT rides this same queue
+     * and is submitted later (replay runs after the backing's
+     * scheduling in renderGlass), so the glyphs always draw over the
+     * black, in every regime.</p>
+     *
+     * <p><b>Round 10 — the cost trim</b>: rows halved (each scaled up
+     * to 2× vertically — the background rects tile exactly at any
+     * scale, and a stretched glyph covers the same fraction of its
+     * cell), columns quartered (eight pre-built 'W' rows, see
+     * {@link #GLYPH_ROWS} — no per-frame substring). A full-height
+     * window is ~11 draw calls / ~99 quads per segment per frame
+     * instead of round 9's ~21 / ~693, and only under shaders; the
+     * rest of the recipe (queue, key, immediate, synchronous flush,
+     * camera-side gate) is untouched.</p>
+     *
+     * <p>Coverage: rows of {@link #GLYPH_ROWS} 'W's are measured with the
      * live {@code getWidth} (font-pack safe), then non-uniformly scaled
      * to exactly the window span [left, right] × [bottom, top] (canvas
      * block units × 96): the per-row background rect spans
-     * (startX−1 … rowWidth) × (y−1 … y+9) text pixels, so R = ceil(h/9)
-     * rows at scale h/(9R) cover the height exactly and the X scale
+     * (startX−1 … rowWidth) × (y−1 … y+9) text pixels, so the R rows
+     * (round 9 chose R = ceil(h/9), round 10 halves it to ceil(h/18))
+     * at scale h/(9R) cover the height exactly and the X scale
      * w/rowWidth pins the width; the 'W' glyph pixels are tinted the
      * same black as the background, making the fill solid regardless of
      * the background rect alone. The span is the script canvas's own
@@ -746,12 +828,17 @@ public final class PSDScriptRenderer implements RenderHelper {
                     return;
                 }
                 /* Canvas pixel geometry: 96 px per block, same as the
-                   script canvas (PIDSPresetBase.BASE_SCALE = 1/96). */
+                   script canvas (PIDSPresetBase.BASE_SCALE = 1/96).
+                   Round 10: half the rows (each stretched up to 2x —
+                   the rects tile exactly at any scale and stretched
+                   ink covers the same fraction of its cell) and at
+                   most 8 columns (GLYPH_ROWS): ~11 draws / ~99 quads
+                   per full-height segment per frame. */
                 final float wPx = (right - left) * 96;
                 final float hPx = height * 96;
-                final int rows = Math.max(1, (int) Math.ceil(hPx / 9));
-                final int cols = Math.max(1, Math.min(GLYPH_ROW.length(), (int) Math.ceil(wPx / 6)));
-                final String row = GLYPH_ROW.substring(0, cols);
+                final int rows = Math.max(1, (int) Math.ceil(hPx / 18));
+                final int cols = Math.max(1, Math.min(GLYPH_ROWS.length, (int) Math.ceil(wPx / 6)));
+                final String row = GLYPH_ROWS[cols - 1];
 #if LOADER == "fabric"
                 final net.minecraft.client.util.math.MatrixStack matrices =
                         ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
@@ -820,7 +907,7 @@ public final class PSDScriptRenderer implements RenderHelper {
                 if (!BACKING_T_OK) {
                     BACKING_T_OK = true;
                     com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.info(
-                            "[JCM] PSD backing channel T active (glyph background pipeline)");
+                            "[JCM] PSD backing channel T active (glyph pipeline, shader pack in use)");
                 }
             } catch (Throwable t) {
                 /* Never take the render thread down over a backing draw —
