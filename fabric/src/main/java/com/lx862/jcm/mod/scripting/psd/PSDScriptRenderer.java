@@ -253,6 +253,33 @@ public final class PSDScriptRenderer implements RenderHelper {
      *  track side, so script content never leaks through). */
     private static final int TRACK_SIDE_COLOR = 0xFFFFFFFF;
 
+    /** Channel N2's carrier glyph (round 12): ONE character whose
+     *  {@code TextRenderer.draw} call, with its background colour set to
+     *  the same tint, produces a solid rectangle through the exact
+     *  machine every VISIBLE script glyph rides — the glyph quad on the
+     *  NORMAL text layer (rendertype_text) plus the Drawer's background
+     *  rectangle (rendertype_text_background, the nametag program every
+     *  shader pack supports). 'W' is the densest ASCII glyph with a
+     *  measured advance; its pixels are tinted the same colour as the
+     *  background, so the stretched result is an undifferentiated solid
+     *  rectangle (no text is legible — the user's constraint is a visual
+     *  one, and one single tinted glyph reads as a plain colour block). */
+    private static final String BACKING_GLYPH_CHAR = "W";
+
+    /** Channel N2's private draw buffer — a DEDICATED BufferBuilder, NOT
+     *  the shared Tessellator: channel N2's platform half schedules on
+     *  MTR's LIGHT queue, whose keyed warm-up starts a batch on the
+     *  queue holder's own immediate over the Tessellator singleton — a
+     *  private immediate over the same singleton would collide with that
+     *  building batch on begin(). A dedicated buffer makes the synchronous
+     *  flush self-contained (the frame's only allocation is the light
+     *  Immediate wrapper, the same one every MTR drawText constructs). */
+#if LOADER == "fabric"
+    private static final net.minecraft.client.render.BufferBuilder N2_BUFFER = new net.minecraft.client.render.BufferBuilder(1024);
+#else
+    private static final com.mojang.blaze3d.vertex.BufferBuilder N2_BUFFER = new com.mojang.blaze3d.vertex.BufferBuilder(1024);
+#endif
+
     /** Distance² gate — bindings beyond this are not driven. */
     private static final double MAX_DISTANCE_SQ = 192 * 192;
 
@@ -260,9 +287,12 @@ public final class PSDScriptRenderer implements RenderHelper {
      *  first EXCEPTION and the first successful execution are each
      *  logged once, so the next field log proves which channel ran.
      *  (Channel N is the round-11 text-layer quad carrier; carrier B
-     *  the EXTERIOR route-sign pipeline.) */
+     *  the EXTERIOR route-sign pipeline; channel N2 the round-12
+     *  glyph-pipeline carrier.) */
     private static volatile boolean BACKING_T_WARNED = false;
     private static volatile boolean BACKING_T_OK = false;
+    private static volatile boolean BACKING_G2_WARNED = false;
+    private static volatile boolean BACKING_G2_OK = false;
     private static volatile boolean BACKING_B_WARNED = false;
     private static volatile boolean BACKING_B_OK = false;
 
@@ -545,6 +575,11 @@ public final class PSDScriptRenderer implements RenderHelper {
         final float scriptZ = paneAlong + GLASS_SCRIPT_OFFSET;
         final float backingZ = paneAlong + GLASS_BACKING_OFFSET;
 
+        /* The backing plane's transform, hoisted out of the shadow gate so
+           channel N2's track half (scheduled after replayScript, below) can
+           share it with everything drawn inside the gate. */
+        final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
+
         if (!shadowPass) {
             /* Opaque covering, one two-quad pair per block and row — but at
                the pane's FULL GEOMETRIC EXTENT (yanyang.9), NOT the strict
@@ -559,7 +594,6 @@ public final class PSDScriptRenderer implements RenderHelper {
                BLACK toward the platform, WHITE toward the track (train
                passengers see a plain white panel, never mirrored content
                — see TRACK_SIDE_COLOR). */
-            final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
             /* Channel N (2026-11-10, round 11 — see drawBackingText),
                ONLY on shader pipelines: the NORMAL text layer — the
                one machine that provably draws behind the user's Iris
@@ -578,6 +612,21 @@ public final class PSDScriptRenderer implements RenderHelper {
                pre-N behaviour). */
             if (shaderPack && windowTop - windowBottom >= MIN_WINDOW) {
                 drawBackingText(backing, segLeft, segRight, windowBottom, windowTop, frameHeight, run.start, facing);
+                /* Channel N2 platform half (2026-11-11, round 12 — see
+                   drawBackingGlyph2): the BLACK backing drawn by the glyph
+                   pipeline itself on the NORMAL layer, scheduled on the
+                   LIGHT queue BEFORE driveScript submits the script's
+                   image/shape callbacks — the same queue, FIFO — so it
+                   flushes first and every script element (images and
+                   shapes on LIGHT after it, text on TEXT) paints OVER
+                   it: the correct sandwich order, and unlike a TEXT-
+                   queue quad it can never cover the script's images.
+                   The layer tests no depth and writes none, but it
+                   flushes BEFORE the translucent pane (entity phase,
+                   ahead of endTranslucents) — the pane still blends
+                   over it, the same "behind the glass" look carrier B
+                   gives without shaders. */
+                drawBackingGlyph2(backing, segLeft, segRight, windowBottom, windowTop, frameHeight, run.start, facing, false);
             }
             for (int i = 0; i < width; i++) {
                 if (lowerExtentTop[i] > lowerExtentBottom[i]) {
@@ -599,6 +648,20 @@ public final class PSDScriptRenderer implements RenderHelper {
         scriptSide.add(graphicsHolder -> graphicsHolder.translate(canvasLeft, canvasTop, 0));
         replayScript(binding, pos, world, scriptSide, facing.getOpposite());
         if (!shadowPass) {
+            /* Channel N2 track half (round 12): scheduled AFTER
+               replayScript, so within the TEXT queue's shared "" list
+               it sits behind every script text callback — it flushes
+               LAST and paints the WHITE panel over everything the
+               track-side view would otherwise leak (mirrored text,
+               flipped images): the same "plain white panel" semantics
+               carrier B's depth-tested white quad gives on no-shader
+               pipelines, expressed on the layer that provably renders
+               under the user's shader stack. The camera-side gate
+               inside the callback keeps it inert on the platform
+               view. */
+            if (shaderPack && windowTop - windowBottom >= MIN_WINDOW) {
+                drawBackingGlyph2(backing, segLeft, segRight, windowBottom, windowTop, frameHeight, run.start, facing, true);
+            }
             replaySoundsOnce(binding, pos, world);
         }
     }
@@ -876,6 +939,199 @@ public final class PSDScriptRenderer implements RenderHelper {
                     BACKING_T_WARNED = true;
                     com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.warn(
                             "[JCM] PSD backing channel N failed once: " + t, t);
+                }
+            }
+        });
+    }
+
+    /* ==================================================================== */
+    /* Glyph-pipeline backing (channel N2, round 12)                        */
+    /* ==================================================================== */
+
+    /**
+     * Channel N2 (2026-11-11, round 12) — the backing drawn BY THE GLYPH
+     * MACHINE ITSELF, on the layer type every VISIBLE script glyph rides:
+     * {@code TextRenderer.draw(char, 0, 0, color, shadow=false, matrix,
+     * immediate, NORMAL, backgroundColor=color, light)} — one single
+     * {@link #BACKING_GLYPH_CHAR} whose pixels AND Drawer background are
+     * tinted the same colour, non-uniformly scaled to exactly the
+     * transparent window. Rounds 9–10 tried this machine on the
+     * SEE_THROUGH layer (a different program pair that never rendered on
+     * the user's stack); round 11 proved the NORMAL layer's OWN program
+     * renders every script glyph daily — but its hand-written quad clone
+     * (channel N) still came back invisible on EVERY shader pack (field
+     * report on build.92, 2026-11-11: both breadcrumbs present, no
+     * exceptions, still invisible), leaving exactly one untested
+     * variable: the glyph machine's own draw path (ImmediatelyFast
+     * intercepts TextRenderer draws into its font-atlas batches — the
+     * hand-written BufferBuilder route may simply have no visible
+     * precedent on this stack). Channel N2 removes that variable by
+     * riding the machine verbatim: same TextRenderer, same font atlas
+     * binding, same Drawer, same NORMAL layer choice MTR's
+     * {@code GraphicsHolder.drawText} passes
+     * ({@code TextLayerType.field_33993} = NORMAL — the round-11 bytecode
+     * finding), producing BOTH a glyph quad (rendertype_text) and a
+     * background rectangle (rendertype_text_background — the nametag
+     * program) in one call: two independently-proven carriers of the
+     * same solid colour.
+     *
+     * <p><b>No text is legible</b> (the user's 2026-11-10 constraint 「请
+     * 尽量避免使用文字填充黑色底色」): ONE character, stretched ~100×
+     * past legibility, with its glyph tinted the same colour as its
+     * background — the result is an undifferentiated solid rectangle,
+     * indistinguishable from a plain quad. This is NOT a grid of glyph
+     * rows (the round-9 approach the constraint rejected); it is a
+     * single tinted rectangle whose carrier happens to be the glyph
+     * pipeline — chosen because that pipeline is the ONLY thing proven
+     * to render behind the user's shaders, not for its typography.</p>
+     *
+     * <p><b>Sides and queues</b> (「另外请注意轨道侧还有一层白色底色」):
+     * each half schedules on the queue whose flush order gives it the
+     * correct sandwich position —</p>
+     * <ul>
+     * <li><b>Platform half (BLACK)</b> — scheduled on the LIGHT queue
+     * (ordinal 0) BEFORE {@code driveScript} submits the script's
+     * image/shape callbacks: it flushes FIRST, every script element
+     * (images and shapes behind it in the same queue's FIFO list, text
+     * on the later TEXT queue) paints over it, and the translucent pane
+     * still blends over it (the entity phase runs ahead of
+     * endTranslucents) — the exact sandwich order carrier B gives
+     * without shaders, and unlike a TEXT-queue rect it can never cover
+     * the script's images. The callback's camera-side gate renders it
+     * only on the platform view.</li>
+     * <li><b>Track half (WHITE)</b> — scheduled on the TEXT queue AFTER
+     * {@code replayScript} has submitted the text callbacks: within the
+     * shared "" list (FIFO) it flushes LAST, painting the plain white
+     * panel over everything the track-side view would otherwise leak —
+     * mirrored text, flipped images — the same semantics carrier B's
+     * depth-tested white quad gives without shaders, expressed on the
+     * layer that provably renders under the user's shaders.</li>
+     * </ul>
+     *
+     * <p><b>Geometry</b>: the window rect [left, right] × [bottom, top]
+     * in frame block units maps to the 96 px canvas (the script
+     * canvas's own scale, {@code PIDSPresetBase.BASE_SCALE}); the glyph
+     * draw sits at the window's top-left with a non-uniform scale
+     * mapping the Drawer's background rectangle — vanilla hardcodes it
+     * to (startX−1 … startX+advance) × (baseline−1 … baseline+9) text
+     * pixels — exactly onto [0, wPx] × [0, hPx]: scale x by
+     * wPx/(advance+1), y by hPx/10, then pre-translate by (1, 1) to
+     * cancel the −1 margins. The advance is measured live
+     * ({@code getWidth} — font-pack safe); the 10-px background height
+     * and the 1-px margins are vanilla constants of the Drawer and do
+     * not depend on the font.</p>
+     *
+     * <p><b>Buffer discipline</b>: a DEDICATED static BufferBuilder
+     * ({@link #N2_BUFFER}) — NOT the Tessellator singleton — because the
+     * LIGHT queue's keyed warm-up starts a batch on the queue holder's
+     * own immediate over that singleton, and a private immediate
+     * beginning a batch over the same building buffer would collide; the
+     * dedicated buffer makes the synchronous flush self-contained. The
+     * per-call Immediate wrapper is the same lightweight object every
+     * MTR {@code drawText} constructs. Cost: ONE draw call (two quads —
+     * glyph + background) per segment per frame per active side, zero
+     * string work beyond the single-char measurement, zero allocation
+     * beyond the Immediate wrapper.</p>
+     */
+    private static void drawBackingGlyph2(StoredMatrixTransformations transform, float left, float right, float bottom, float top, float frameTop, BlockPos anchor, Direction facing, boolean trackSide) {
+        final float y = frameTop - top;
+        final float height = top - bottom;
+        final double anchorX = anchor.getX() + 0.5;
+        final double anchorY = anchor.getY() + 0.5;
+        final double anchorZ = anchor.getZ() + 0.5;
+        MainRenderer.scheduleRender(trackSide ? QueuedRenderLayer.TEXT : QueuedRenderLayer.LIGHT, (graphicsHolderNew, offset) -> {
+            try {
+                /* Camera-side gate: facing points toward the TRACK, so a
+                   camera with along = dot(camera - blockCenter, facing)
+                   ≥ 0.25 is on (or past) the pane plane on the track
+                   side — exactly one half renders per view. */
+                final org.mtr.mapping.holder.Vector3i fv = facing.getVector();
+                final double along = (offset.getXMapped() - anchorX) * fv.getX()
+                        + (offset.getYMapped() - anchorY) * fv.getY()
+                        + (offset.getZMapped() - anchorZ) * fv.getZ();
+                if ((along >= 0.25) != trackSide) {
+                    return; // the other half owns this view
+                }
+                final int color = trackSide ? TRACK_SIDE_COLOR : BACKING_COLOR;
+
+                /* Window pixel geometry: 96 px per block, same as the
+                   script canvas (PIDSPresetBase.BASE_SCALE = 1/96). */
+                final float wPx = (right - left) * 96;
+                final float hPx = height * 96;
+#if LOADER == "fabric"
+                final net.minecraft.client.util.math.MatrixStack matrices =
+                        ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
+                final net.minecraft.client.render.VertexConsumerProvider.Immediate immediate =
+                        net.minecraft.client.render.VertexConsumerProvider.immediate(N2_BUFFER);
+                final net.minecraft.client.font.TextRenderer textRenderer =
+                        net.minecraft.client.MinecraftClient.getInstance().textRenderer;
+                final int advance = textRenderer.getWidth(BACKING_GLYPH_CHAR);
+                if (advance > 0 && wPx > 0 && hPx > 0) {
+                    final float sx = wPx / (advance + 1);
+                    final float sy = hPx / 10;
+                    GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
+                        transform.transform(priv, offset);
+                        priv.scale(com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE, com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE, com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE);
+                        priv.translate(left * 96, y * 96, 0);
+                        priv.scale(sx, sy, 1);
+                        priv.translate(1, 1, 0);
+#if MC_VERSION >= "11903"
+                        final org.joml.Matrix4f model = matrices.peek().getPositionMatrix();
+                        textRenderer.draw(BACKING_GLYPH_CHAR, 0, 0, color, false, model, immediate, net.minecraft.client.font.TextRenderer.TextLayerType.NORMAL, color, MAX_RENDER_LIGHT);
+#else
+#if MC_VERSION <= "11701"
+                        final net.minecraft.util.math.Matrix4f model = matrices.peek().getModel();
+#else
+                        final net.minecraft.util.math.Matrix4f model = matrices.peek().getPositionMatrix();
+#endif
+                        textRenderer.draw(BACKING_GLYPH_CHAR, 0, 0, color, false, model, immediate, false, color, MAX_RENDER_LIGHT);
+#endif
+                        priv.pop();
+                    });
+                    immediate.draw();
+                }
+#else
+                final com.mojang.blaze3d.vertex.PoseStack matrices =
+                        ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolderNew).jcm$getMatrixStack();
+                final net.minecraft.client.renderer.MultiBufferSource.BufferSource immediate =
+                        net.minecraft.client.renderer.MultiBufferSource.immediate(N2_BUFFER);
+                final net.minecraft.client.gui.Font font =
+                        net.minecraft.client.Minecraft.getInstance().font;
+                final int advance = font.width(BACKING_GLYPH_CHAR);
+                if (advance > 0 && wPx > 0 && hPx > 0) {
+                    final float sx = wPx / (advance + 1);
+                    final float sy = hPx / 10;
+                    GraphicsHolder.createInstanceSafe(matrices, immediate, priv -> {
+                        transform.transform(priv, offset);
+                        priv.scale(com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE, com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE, com.lx862.jcm.mod.data.pids.preset.PIDSPresetBase.BASE_SCALE);
+                        priv.translate(left * 96, y * 96, 0);
+                        priv.scale(sx, sy, 1);
+                        priv.translate(1, 1, 0);
+#if MC_VERSION >= "11903"
+                        final org.joml.Matrix4f model = matrices.last().pose();
+                        font.drawInBatch(BACKING_GLYPH_CHAR, 0, 0, color, false, model, immediate, net.minecraft.client.gui.Font.DisplayMode.NORMAL, color, MAX_RENDER_LIGHT);
+#else
+                        final com.mojang.math.Matrix4f model = matrices.last().pose();
+                        font.drawInBatch(BACKING_GLYPH_CHAR, 0, 0, color, false, model, immediate, false, color, MAX_RENDER_LIGHT);
+#endif
+                        priv.pop();
+                    });
+                    immediate.endBatch();
+                }
+#endif
+                if (!BACKING_G2_OK) {
+                    BACKING_G2_OK = true;
+                    com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.info(
+                            "[JCM] PSD backing channel N2 active (glyph pipeline, " + (trackSide ? "track" : "platform") + " half)");
+                }
+            } catch (Throwable t) {
+                /* Never take the render thread down over a backing draw —
+                   but the FIRST failure still leaves a breadcrumb
+                   (yanyang.12 heritage). */
+                if (!BACKING_G2_WARNED) {
+                    BACKING_G2_WARNED = true;
+                    com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.warn(
+                            "[JCM] PSD backing channel N2 failed once: " + t, t);
                 }
             }
         });
