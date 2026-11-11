@@ -1,6 +1,6 @@
 # PSD 屏蔽门底色（黑/白背板）在 Iris 光影下不渲染 —— 完整复盘与接手文档
 
-> **文档目的**：本 bug 已经历十二轮修复尝试（yanyang.4–13 + 2.3.0-1.0.0/1.0.1/1.0.2 + 第九至十二轮）。
+> **文档目的**：本 bug 已经历十三轮修复尝试（yanyang.4–13 + 2.3.0-1.0.0/1.0.1/1.0.2 + 第九至十二轮代码轮 + 第十三轮纯取证轮）。
 > 本文档提炼全部历史记录、反汇编实证、已证伪与未测试的方案矩阵，以及后续诊断流程——
 > 供任何接手者（人类工程师或 Claude 等 AI 助手）直接续作，不必重新踩坑。
 
@@ -42,6 +42,39 @@
 ```
 
 **MTR 原版 PIDS（`RenderPIDS`）只画文字**（`graphicsHolder.drawText`，同一 TEXT 队列）——这就是它们在用户光影下可见的原因。
+
+### 2.1 可见文字在 IF + Iris 下的完整管线（第十三轮源码级取证，2026-11-11）
+
+对 Iris 1.20.1 分支源码 + ImmediatelyFast v1.5.5 源码的完整取证，把上面这条可见路径逐环节展开为：
+
+```
+MTR drawText 的私有 immediate 构造
+  → ImmediatelyFast `MixinVertexConsumerProvider` @Overwrite `Immediate.immediate(Map, BufferBuilder)`
+  → 实际得到 IF 的 BatchableBufferSource（fallback=构造参数，仅作占位）
+  → TextRenderer.draw → GlyphRenderer.render → source.getBuffer(RenderLayer.getText(字体图集))
+  → BatchableBufferSource.getOrCreateBufferBuilder：text 层 areVerticesNotShared=true
+     → 不走 fallback/预注册 map，而是 BufferBuilderPool.get() 池化新 buffer → begin(QUADS, P_C_T_L)
+  → Iris `MixinBufferBuilder.iris$extendFormat`：POSITION_COLOR_TEX_LIGHTMAP(24B) → GLYPH(52B)
+     （endVertex HEAD 注入回填 Normal/iris_Entity/mc_midTexCoord/at_tangent；
+       QUADS 满 4 顶点触发 fillExtendedData → NormalHelper.computeFaceNormal 从顶点位置算面法线，非零）
+  → immediate.draw()（MTR drawText 回调内当场同步 flush）
+  → BatchableBufferSource.draw(layer)（isRenderingLevel=true → 跳过 renderWithExtendedVertexFormat 切换）
+  → vanilla RenderLayer.MultiPhase.draw → startDrawing → ShaderPhase
+     → RenderSystem.setShader(GameRenderer::getRendertypeTextShader)  ← ★求值时机就在此刻★
+  → Iris `MixinGameRenderer.iris$overrideTextShader`（HEAD, cancellable）：
+       ShadowRenderer.ACTIVE? → SHADOW_TEXT（阴影 pass）
+       HandRenderer.isActive()? → HAND_TEXT
+       isBlockEntities()? → TEXT_BE（BlockTrans）
+       shouldOverrideShaders()（= isRenderingWorld && isMainBound，实体阶段 true）
+         → ShaderKey.TEXT —— ExtendedShader，光影包程序 = ProgramId.EntitiesTrans
+  → Complementary 无 entities_translucent override → fallback 到 gbuffers_water 程序
+  → BufferRenderer.drawWithGlobalProgram(builtBuffer)：GLYPH 格式绑属性 → 绘制 ✓ 可见
+```
+
+**关键结论**：ShaderKey.TEXT 的三个定义（Iris `ShaderKey.java`）：
+- `ProgramId.EntitiesTrans`（**不是 gbuffers_textured**——分析 Complementary `gbuffers_textured.glsl` 对 text 问题是错方向）
+- `AlphaTests.ONE_TENTH_ALPHA`（alpha < 0.1 丢弃——纯白不透明 alpha=1.0 安全）
+- `IrisVertexFormats.GLYPH`（52B 扩展格式，vsh 读 gl_Normal/gl_Color/gl_MultiTexCoord0，回填机制自洽）
 
 ---
 
@@ -134,6 +167,18 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 
 ---
 
+## 5.6 第十三轮取证要点（纯取证轮，零代码变更，2026-11-11）
+
+本日对 Iris 1.20.1 分支与 ImmediatelyFast v1.5.5 的源码取证结论（源码文件已拉至 `/home/z/psd12/`）：
+
+1. **通道 N2 与可见文字的路径已逐环节对齐**（见 §2.1）——私有 immediate、TextRenderer.draw、字形机器、字体图集 UV、同色背景、当场 flush、IF 池化 buffer、实体阶段求值的同一 ExtendedShader(TEXT)。理论上 build.93（第十二轮产物）与可见文字**零差异**。
+2. **「世界主 immediate 直写 + endBatch flush」方案已否决**（本日一度实施后回滚）：IF `BatchableBufferSource.getLayerOrder()` 把不透明非 text 层排 order 0、text 层（minecraft 图集）order 2、translucent 层排 100_000_000+——世界主源 endBatch 时**脚本图片（LIGHT 层）会先画、黑底（text 层）后画 → 黑底盖图**，round 11 隐患复活；且该 flush 路径在用户栈上无可见先例（MTR 文字从不进世界主源）。
+3. **IF 的 text 层永远写池化 buffer**（`areVerticesNotShared=true` → `BufferBuilderPool.get()`）——私有 immediate 的 fallback 构造参数（N2_BUFFER 或 Tessellator 单例）在 IF 下**无实质作用**；纯 Iris 下各自独立 fallback buffer 互不冲突。N2_BUFFER 的存在是纯 Iris 下的防冲突正确选择（LIGHT 队列预热不碰它）。
+4. **Iris MixinBufferBuilder 的 normal 回填**在 QUADS 模式满 4 顶点时自动触发，从顶点位置计算面法线（非零、非 NaN）——「normal 为零导致 NaN 剔除」的假说被否定（机制自洽，UV0@16 与 PolygonView 偏移对齐验证无误）。
+5. **Complementary 取证**（r5.5.1，`/home/z/psd12/comp/`）：无 `rendertype_text` / `entities_translucent` override（后者 fallback gbuffers_water）；`gbuffers_textured.glsl`（粒子程序）的粒子检测逻辑不会丢弃纯白不透明像素（雪分支要求 `a<0.765`、水粒子要求蓝色占优、篝火烟雾要求 `a<0.99`）。
+
+---
+
 ## 6. 本版（第十二轮）验证流程（给用户 / 测试者）
 
 1. 下载 Complete Build 产物（版本号 `2.3.0-1.0.0-build.<N>`，构建自本提交）。
@@ -150,14 +195,15 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 
 ## 7. 若本版仍不可见——后续候选与诊断
 
-### 7.0 第十二轮之后的形势判断
+### 7.0 第十二轮之后的形势判断（第十三轮取证后修订）
 
-若通道 N2（字形管线本体）也不可见，则可以断言：**用户光影栈丢弃的不是某种顶点写法，而是「实体阶段内、无 GUI 上下文的全部 text 程序几何」中除可见文字外的某种剩余维度**。届时候选（按优先级）：
+若通道 N2（字形管线本体 + 当场 flush，与可见文字零理论差异）也不可见，则解释空间已收窄到「可见文字与 N2 之间不可静态观测的差异」——即运行时状态/环境交互，而非代码路径。届时候选（按优先级）：
 
-1. **ImmediatelyFast 排除复测**（最高优先）：卸载 IF 1.5.5 单测——若 N2 无 IF 时可见，则 IF 对「非 TextRenderer 直调路径外的 draw 调用」或对 LIGHT 队列时机内 flush 的处理是根因，后续方向改为兼容（如探测 IF 在场时改走 TEXT 队列）。
-2. **`seeThrough=true` 的 nametag 语义 A/B**：把 N2 的层参数换 SEE_THROUGH 重测（第九/十轮的 SEE_THROUGH 败在字形行列阵 + `backgroundColor` 上；单字符 + 同色组合从未在 SEE_THROUGH 上测过）——用于隔离「NORMAL vs SEE_THROUGH 程序在该栈下的可见性」本身。
-3. **光影包侧程序替换检测**：拉取 ComplementaryUnbound r5.5.1 的 `shaders/`（Modrinth CDN 可下）检查其 `rendertype_text` / `gbuffers_textured` 系 fragment shader 对 `texture` 采样 alpha 的处理（如 `alphaTest` / `discard` 阈值）与对非字体图集纹理尺寸的假设。
-4. **极端候选**：把底板画为「真实的可见文字」——例如把脚本文本本身改为带背景色的样式（修改 mtrscripting 的 TextWrapper 传 `backgroundColor`），彻底回到 vanilla 语义的 GUI 文本渲染（代价：观感与文字绑定，需用户同意）。
+1. **ImmediatelyFast 排除复测**（最高优先）：卸载 IF 1.5.5 单测 build.93——**N2 从未在无 IF 下测过**（旧通道的排除结论不适用于 N2）。若可见：根因是 IF 对 LIGHT 队列时机内（或队列回调上下文内）flush 的处理；后续向「N2 调度改 TEXT 队列」或「探测 IF 在场时延迟 flush」方向兼容。若仍不可见：IF 洗清。
+2. **无 IF + 不同光影包矩阵**（与 1 同批）：BSL / Photon / 简包各测——若全部不可见则锁定 Iris 共性；若个别可见则比对光影包 entities_translucent 程序差异。
+3. **`seeThrough=true` 的 nametag 语义 A/B**：N2 层参数换 SEE_THROUGH（`rendertype_text_see_through`，nametag 透视语义，另有独立程序 TEXT 见 ShaderKey 表）——单字符 + 同色组合从未在 SEE_THROUGH 上测过。
+4. **Iris 调试手段**：`iris.debug` 选项 / F3 + 光影包切换对照 / （进阶）RenderDoc 截帧确认 N2 字形是否进入 draw call——把「不可见」定位到 GL 层还是批次层。
+5. **终极候选**：修改 mtrscripting 的 TextWrapper 传 `backgroundColor`（把脚本文本本身带上背景色）——彻底 vanilla GUI 文本语义（观感与文字绑定，需用户同意）。
 
 ### 7.1 先查日志分流
 
@@ -167,7 +213,7 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 
 ### 7.2 剩余变量：纹理 / 程序组合
 
-通道 N 与可见文字的唯一剩余差异是 **Sampler0 绑的是我们的白纹理而非字体图集页**。个别光影包的 `rendertype_text` 补丁可能假定纹理是字体图集（尺寸/alpha 语义）。候选：
+（第十三轮取证后注：通道 N2 已用字体图集 + 字形 UV + TextRenderer.draw，本节 A 候选已被 N2 覆盖；保留供通道 N 或其他变体参考。）通道 N 与可见文字的唯一剩余差异是 **Sampler0 绑的是我们的白纹理而非字体图集页**。个别光影包的 `rendertype_text` 补丁可能假定纹理是字体图集（尺寸/alpha 语义）。候选：
 
 - **A（首选）**：用**字体图集自身的纯白字形区**做 UV——把四边形 UV 映射到某个实心字符（如 U+2588 全块，或实测字体图集中的不透明像素区）的图集矩形上，纹理 key 换成该图集页（如何拿到图集 Identifier：`GlyphRenderer` 持有；或退化用 `RenderLayer.getText(new Identifier("minecraft","textures/font/ascii.png"))` 之类固定页 + 精心挑 UV）。零新纹理、程序/纹理组合与可见文字完全一致。
 - **B**：自定义 `RenderLayer.MultiPhase` 完整克隆 getText 的 phase 链（同 program/transparency/depth/writemask/lightmap/texture），另加显式 `Cull` phase。用于隔离「继承剔除态」变量（如果怀疑绕向）。
@@ -189,18 +235,20 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 - ImmediatelyFast 是唯一根因的假设（卸载后仍不显示）——**但那是旧通道矩阵的结论，通道 N2 从未在无 IF 下测过**（见 7.0 候选 1）。
 - 「getText 带深度测试所以不可见」的假设（实证②证伪：两个 text 层都是 GL_ALWAYS、只写颜色）。
 - **手写 quad 于 NORMAL text 层 + glyph 顶点序 + 私有 immediate 同步 flush**（第十一轮通道 N）——日志证实完整执行、任何光影均不可见。
+- **世界主 immediate 直写 + endBatch flush**（第十三轮方案，实施后回滚）——IF `getLayerOrder` 令 endBatch 时不透明 LIGHT 层先画、text 层后画 → 黑底盖图（三明治坍塌）；且无可见先例。**不要再走此方向**。
 
 ---
 
 ## 8. 构建 / 部署备忘（本仓库工具链）
 
 - **版本**：`gradle.properties` 的 `mod_version=2.3.0-1.0.0`；Complete Build 产物版本号 = `<基础版本>-build.<github.run_number>`（例：`2.3.0-1.0.0-build.91`）。Release Build 全平台全量发布（勿动）；Complete Build 仅 3 平台原生桥（Win x64 / Linux x64 / Android ARM64，按用户 2026-11-10 要求精简）。
-- **提交**：本机 git push 网络不通——用 Git Data API 三步提交（参见 `scripts/push_round10.py` 的模式：GET 当前 HEAD → POST blob/tree/commit → PATCH ref）。token 在 `/home/z/.gh_token_chmod_tmp`。
+- **提交**：本机 git push 网络不通——用 Git Data API 三步提交（参见 `/home/z/my-project/push_round12.py`：GET 当前 HEAD → POST blob/tree/commit → PATCH ref）。token 在 `/home/z/.gh/token`（2026-11-11 更新）。
 - **触发构建**：workflow_dispatch `Complete Build`，入参只传 `{"mod-version": "2.3.0-1.0.0"}`（**不要**传 retention-days 等额外字段，会 422）。
 - **监视**：`/home/z/my-project/scripts/watch_build_run.py <runId>`；构建产物在 run artifacts。
 - **反汇编工具链**（本轮自建，/tmp 清理后需重建）：Python class 解析器 `/home/z/psd11/classdump.py`（修复了 Code 属性头 u4 多读的 bug）；原版类按 HTTP range 从 piston-data 拉（`/home/z/psd11/vanilla_fetch.py`）；MTR 4.0.5 jar 同法从 Modrinth CDN 拉（`/home/z/psd11/mr_fetch.py`）；MTR 源码直接从 GitHub `Minecraft-Transit-Railway/Minecraft-Transit-Railway` master 取（`fabric/src/main/java/org/mtr/mod/render/*.java`）；Yarn 映射 `maven.fabricmc.net` 的 tiny.gz。
+- **第十三轮新增源码库存**（`/home/z/psd12/`）：Iris 1.20.1 分支关键源码（`irismixin_MixinGameRenderer.java`、`iris_IrisRenderingPipeline.java`、`ShaderKey/ShaderMap/ShaderAccess`、`MixinBufferBuilder/IrisVertexFormats/BufferBuilderPolygonView/NormalHelper` 等）；ImmediatelyFast v1.5.5 关键源码（`if_MixinVertexConsumerProvider.java`、`if_BatchableBufferSource.java`、`if_IrisCompat.java`）；ComplementaryUnbound r5.5.1 解包（`comp/shaders/`）；Iris 1.7.6 jar（`iris.jar`，取自 Modrinth CDN，大文件需 curl 分段拉取）。
 - **关键 Yarn/intermediary 对照**（1.20.1）：`RenderLayer=fkf(class_1921)`、`RenderPhase=fke(class_4668)`、`TextRenderer=eov(class_327)`、`TextLayerType: field_33993=NORMAL, field_33994=SEE_THROUGH, field_33995=POLYGON_OFFSET`、`GlyphRenderer=err(class_382)`、`VertexConsumer=ein(class_4588)`、`BufferBuilder=eie(class_287)`、`RenderLayer.getText=m(fkf).r(method_23028)(Identifier)acq(class_2960)`、`getBeaconBeam=e(method_23592)`、`getEntityCutout=c(method_23576)`；phase：`fke.h=TRANSLUCENT`、`fke.c=NO_TRANSPARENCY`、`fke.ay=DepthTest("always",519)`、`fke.aD=WriteMask(true,false)`、`fke.as=Lightmap(true)`。
 
 ---
 
-*文档生成于第十一轮修复（2026-11-10）。维护者：BugQuantumCore / Z.ai 会话记录。*
+*文档生成于第十一轮修复（2026-11-10）；第十二轮（2026-11-11）与第十三轮取证（2026-11-11）更新。维护者：BugQuantumCore / Z.ai 会话记录。*
