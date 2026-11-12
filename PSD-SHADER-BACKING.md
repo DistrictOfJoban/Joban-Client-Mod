@@ -1,6 +1,6 @@
 # PSD 屏蔽门底色（黑/白背板）在 Iris 光影下不渲染 —— 完整复盘与接手文档
 
-> **文档目的**：本 bug 已经历十五轮修复尝试（yanyang.4–13 + 2.3.0-1.0.0/1.0.1/1.0.2 + 第九至十四轮代码轮 + 第十三轮纯取证轮 + 第十五轮）。
+> **文档目的**：本 bug 已经历十六轮修复尝试（yanyang.4–13 + 2.3.0-1.0.0/1.0.1/1.0.2 + 第九至十四轮代码轮 + 第十三轮纯取证轮 + 第十五轮 + 第十六轮（第二轮取证 + 通道 R））。
 > 本文档提炼全部历史记录、反汇编实证、已证伪与未测试的方案矩阵，以及后续诊断流程——
 > 供任何接手者（人类工程师或 Claude 等 AI 助手）直接续作，不必重新踩坑。
 
@@ -76,6 +76,14 @@ MTR drawText 的私有 immediate 构造
 - `AlphaTests.ONE_TENTH_ALPHA`（alpha < 0.1 丢弃——纯白不透明 alpha=1.0 安全）
 - `IrisVertexFormats.GLYPH`（52B 扩展格式，vsh 读 gl_Normal/gl_Color/gl_MultiTexCoord0，回填机制自洽）
 
+### 2.2 第二轮取证（2026-11-12，原版 client.jar 字节码，工具链 /home/z/psd16）——通道 Q 证伪后的三项决定性结论
+
+对第十五轮 build.96 实测结果（文字可见、U+2588 行含同色橙条纹全部不可见、面包屑+metrics 齐现）做变量消除法收束后，对 Mojang 官方 1.20.1 client.jar 重建反汇编工具链（Python class 解析器 `classdump.py` + ProGuard client.txt 混淆名对照；前身 /home/z/psd11 已随沙盒重置丢失），三项结论改写了问题模型：
+
+1. **字形内容是第十五轮唯一幸存变量 ⇒ 用户的字体包（Source Han Sans Font Pack 1.20）提供的 U+2588 栅格化为全透明**。推导链：① vanilla 对缺失码点渲染 `SpecialGlyphs.MISSING` —— 逐像素反汇编证实是 **5×8 空心边框（边框像素 0xFFFFFFFF 不透明、内部全透明）**，即「可见的豆腐框」而非空白，且 advance = 6；② 通道 Q 的 metrics 实测 advance = 9（字形**存在**、advance 正常）；③ CJK 文字（同字体栈）可见；④ ⇒ U+2588 字形「存在但画不出」——位图 chars 网格行错位或 TTF 空轮廓，字体包侧的栅格化损坏。这同时解释第十四（holder.drawText(U+2588)）与第十五（wrapper(U+2588×29)）两代载体：**只要内容是 U+2588，任何管线复刻都救不了**。
+2. **背景矩形（backgroundColor）机制 = 字形免疫的实心四边形**（`Font$StringRenderOutput.finish` 反汇编）：每行文字的背景是 `BakedGlyph$Effect` 四边形，使用 `FontSet.whiteGlyph()` —— **`SpecialGlyphs.WHITE`（5×8 每像素 0xFFFFFFFF）由 vanilla 自己合成并烘焙进字体图集**（任何字体包不参与其栅格化）——的 UV 区域，经 `whiteGlyph.renderType(NORMAL)` 与字形**完全相同的 RenderLayer / 图集纹理 / 程序 / 绘制调用**画出；矩形尺寸只由字符串 advance 决定（Drawer 按字符位置连续绘制、**空格同样覆盖**——玩家名牌背景即其每日证明）。矩形 y 范围 (y−1 … y+10)（11px、比行高大 2px——行距 9px 时天然重叠成无缝色场）。
+3. **第十一轮「实证②」部分证伪**：`RenderType.text`（lambda `C`，字符串名 "text"）**没有 DepthTest 相位、没有 WriteMask 相位**（深度测试/写掩码继承外部状态——实体阶段即 LEQUAL + 写深度）；带 `DepthTest "always"(fke.ay)` + `COLOR_WRITE(fke.aD)` 的是 **SEE_THROUGH 变体**（lambda `x` "text_intensity_see_through" / `y` "text_see_through"）——第十一轮把两个 SEE_THROUGH lambda 的相位链误读成了 getText/getTextSeeThrough。无光影下文字在玻璃后可见的真正机制是**绘制顺序**：实体阶段（MainRenderer 是实体渲染器）文字先画、半透明地形（玻璃）后画并叠加混合——文字被玻璃「罩染」而非穿透深度。该顺序对 TEXT 队列里先于脚本回放提交的一切内容同样成立。
+
 ---
 
 ## 3. 本轮（第十一轮）反汇编三大实证
@@ -137,7 +145,8 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 | 第十一轮 | build.92 | 通道 N：`RenderLayer.getText(jsblock:white.png)`（NORMAL 层）+ 手写 glyph 顶点序 + 私有 immediate + 同步 flush + 相机侧门控（站台黑/轨道白各一四边形）+ 光影门控 + 窗口裁剪 | 不可见（**任何光影包**；日志证实 `channel N active` 出现、无异常——手写 quad 路径完整执行却不渲染） |
 | 第十二轮 | build.93/94 | **通道 N2**：`TextRenderer.draw(单字符W, NORMAL, backgroundColor=同色)` 字形管线本体（同色字形 quad + 背景 quad 双程序冗余）+ 非均匀矩阵拉伸铺满窗口 + 双侧分层调度（站台黑→LIGHT 队列最先 / 轨道白→TEXT 队列最后）+ 专用 BufferBuilder + 光影门控 | **不可见**（build.94 实测 2026-11-11：三条面包屑齐现、无异常；含两欢开关光影对照） |
 | **第十四轮** | **build.95** | **通道 P：`holder.drawText(U+2588 全块单字符, …)` —— TextWrapper.drawTransformed 语句级逐句复刻（同队列/同 "" key/持有者本体 scale+drawText，零私有构造、零原生类）+ 双侧（站台黑先提交/轨道白后提交）+ 橙/白 6px 诊断条纹（一次实测三分：路径/色彩/已修复）** | **不可见**（实机报告 2026-11-12，附两份 latest.log——**未装 / 已装 ImmediatelyFast 各一，均不显示**；日志证实 `channel P active (holder drawText, platform half)` + metrics 行出现、无 `failed once`、无 `degenerate`——回调完整执行；用户未到轨道侧，track half 面包屑未出现属预期） |
-| **第十五轮** | **本版** | **通道 Q：底板就是脚本文本——真实 `TextWrapper` 行（`TextWrapper.create().text(U+2588×N).pos(0,y).size(w,h).stretchXY().color(色).run(world, SMT.copy(), facing, MAX_RENDER_LIGHT)`）经 `PIDSDrawCall.run → drawTransformed → scheduleRender(TEXT)` 本体机具，从 renderAll 头部提交（与脚本 replay 同一快照）** + 四变量一次性全消（String 重载/无样式字体 → MutableText+`mtr:mtr` 样式；28×16 拉伸单字形 → 未拉伸文本行；纯黑 0xFF000000 → 近黑 0xFF0A0A0A；手写回调 → wrapper 本体）+ 调度时玩家侧门控（避开 Iris 阴影 pass 队列快照陷阱）+ 首末行橙/白诊断条纹（第十三轮三分法延续） | **待实测** |
+| **第十五轮** | **build.96** | **通道 Q：底板就是脚本文本——真实 `TextWrapper` 行（`TextWrapper.create().text(U+2588×N).pos(0,y).size(w,h).stretchXY().color(色).run(world, SMT.copy(), facing, MAX_RENDER_LIGHT)`）经 `PIDSDrawCall.run → drawTransformed → scheduleRender(TEXT)` 本体机具，从 renderAll 头部提交（与脚本 replay 同一快照）** + 四变量一次性全消（String 重载/无样式字体 → MutableText+`mtr:mtr` 样式；28×16 拉伸单字形 → 未拉伸文本行；纯黑 0xFF000000 → 近黑 0xFF0A0A0A；手写回调 → wrapper 本体）+ 调度时玩家侧门控（避开 Iris 阴影 pass 队列快照陷阱）+ 首末行橙/白诊断条纹（第十三轮三分法延续） | **不可见**（实机报告 2026-11-12：文字可见、底色与橙白条纹均不可见；日志证实面包屑 + metrics（window 255x150px, advance 9, mtr font OFF, rows 17 x cols 29）齐现、无异常——第十五轮把管线变量全部清零后，字形内容成为唯一幸存差异 → 字体包的 U+2588 栅格化全透明，见 §2.2） |
+| **第十六轮** | **本版** | **通道 R：底板是脚本文本自己的背景矩形——真实 `TextWrapper` 行 `text(空格×N).fontMC().color(色).jcm$backgroundColor(色)`，`TextWrapper.drawText` 检测到背景色后直调真 `TextRenderer.draw(String,…,NORMAL,backgroundColor,light)`（N2 的可编译直调形态）+ 私有 immediate（Tessellator 单例，MTR drawText 同款构造）+ 回调内当场 flush + wrapper 本体 TEXT 队列调度（Q 的时机原样）+ 顶部真实字符字形探针行（「底色R16测试」橙、脚本 1.725 缩放——Q 谱系仅换字形）+ 首橙/末白诊断条纹 + 空格 advance 归零时数字回退** | **待实测** |
 
 **矩阵透视**（第十四轮修订）：截至第十三轮的排除法已将变量收敛到一个从未被测试过的组合：**「由 TextWrapper 的语句序列在队列持有者本体上提交的 drawText」**——即字面意义上的可见路径本身。历轮失败载体全部在这件事上偏离：深度测试队列消费者（缓冲 OPAQUE 段——车辆证明其在开阔空间可见、玻璃后不可见）、SEE_THROUGH 程序对、手写 quad（哪怕在 NORMAL 层上）、甚至真 TextRenderer.draw 但经我们的私有 immediate / 借用矩阵 / LIGHT 队列提交。第十四轮不再模仿，直接复用：与可见文字共享调度、持有者、scale 调用序列与 drawText 方法本身，仅字符内容（单个 U+2588 全块）、颜色（黑/白）与拉伸系数不同；橙/白诊断条纹用可见文字的原色在同一路径上把「路径失败 / 色彩失败 / 成功」三个结局在一次实测中分开。
 
@@ -202,22 +211,39 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 5. **近黑填充 + 诊断条纹**：站台半首行橙（`0xFC9700`）/末行白/中间近黑（`0xFF0A0A0A`——若第十四轮的条纹其实可见而仅纯黑死亡，则近黑直接绕过该失败族，视觉仍为纯黑）；轨道半全白。三分诊断不变：全不可见 ⇒ 路径；仅条纹 ⇒ 色彩；全部可见 ⇒ 已修复。
 6. **面包屑与 metrics**：`[JCM] PSD backing channel Q active (wrapper text rows, platform|track half)` + metrics 行（窗口尺寸 / advance（styled 与 vanilla 两个值）/ **mtr 字体开闭** / 行×列 / 条纹说明）——两个 advance 值与字体状态可直接判定 U+2588 实际由哪个字体族提供，为下一轮（如需）预留证据。
 
+### 5.9 第十六轮实现要点（`drawBackingTextRows` + `TextWrapper.jcm$backgroundColor`，通道 R）
+
+1. **底板 = 脚本文本自己的背景矩形**：每行是真实 `TextWrapper`——`create().text(空格×N).fontMC().color(c).jcm$backgroundColor(c).pos(0,y).size(wPx,rowH).stretchXY()` 后 `run(world, transform.copy(), facing, MAX_RENDER_LIGHT)`。`TextWrapper.drawText` 检测到 `jcm$bgColor != 0` 时改走 `jcm$drawTextWithBackground`：回调持有者自己的矩阵（`NativeMatrixApplier.jcm$getMatrixStack()`）+ 私有 `VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer())`（MTR `drawText` 反汇编实证的同款构造；TEXT 队列无预热、单例无 batch 冲突；IF 下工厂被 @Overwrite、text 层走池化 buffer 与 drawText 无差别）+ 直调真 `TextRenderer.draw(String, x, y, color, shadow, model, immediate, NORMAL, backgroundColor, light)` + 回调内 `immediate.draw()` 当场 flush。`#if LOADER`/`#if MC_VERSION` 守卫逐字沿用第十二轮 N2 已在六版本双加载器上编译通过的形态（forge 侧 `Font.drawInBatch` + `MultiBufferSource.immediate(Tesselator.getInstance().getBuilder())`）。
+2. **字形免疫**：空格字形栅格化为空（矩形照样画）；矩形由 vanilla 合成 `SpecialGlyphs.WHITE` × 背景色 ARGB 构成——字体包无法损坏它。填充字符 advance 以 `GraphicsHolder.getTextWidth(" ")` 一次性实测（与绘制同走原版默认字体、`fontMC()` 空样式，测量与绘制永不脱节）；advance < 1 时回退数字 "0" 并记录 metrics。
+3. **行几何**：9px 行距 × ~11px 矩形高（y−1..y+10）→ 上下各重叠 ~2px 的无缝色场；列数 `ceil((wPx+2)/advance)`（+2 覆盖 Drawer 的 ±1px 边距），wrapper 自己的 stretchXY 裁 ≤1 字符溢出；末行压到剩余高度。
+4. **诊断件**（站台半）：顶部一行**字形探针**（`"\u5E95\u8272R16\u6D4B\u8BD5"` 橙 0xFFFC9700、脚本自己的 1.725 行缩放——第十五轮通道 Q 谱系原样、仅换字形这一变量）；矩形行首条橙 / 末条白。三分：全可见 ⇒ 修复；仅探针可见 ⇒ 背景矩形路径死亡；全不可见 ⇒ 提交上下文问题（§7.0-17 预案）。
+5. **调度与门控原样**：renderAll 头部提交、站台半先于 `replayScript`（同 `""` key FIFO，脚本内容画于其上）、轨道半全白行后置（盖镜像）、调度时玩家侧门控（`along ≥ 0.25`）、`ShaderDetector` 光影门控、载体 B 与无光影观感零改动。
+6. **面包屑**：`[JCM] PSD backing channel R active (text-background rows, platform|track half)` + metrics（窗口 / 填充字符与 advance / 行×列 / 探针与条纹说明）。
+
 ---
 
-## 6. 本版（第十五轮）验证流程（给用户 / 测试者）
+## 6. 本版（第十六轮）验证流程（给用户 / 测试者）
 
-1. 下载 Complete Build 产物（版本号 `2.3.0-1.0.0-build.9x`，构建自本提交；下文面包屑均为 `channel Q`）。
-2. **无光影**：观感不变（载体 B 独撑；`channel Q` 面包屑**不应**出现）。
+1. 下载 Complete Build 产物（版本号 `2.3.0-1.0.0-build.9x`，构建自本提交；下文面包屑均为 `channel R`）。
+2. **无光影**：观感不变（载体 B 独撑；`channel R` 面包屑**不应**出现）。
 3. **开 Iris + ComplementaryUnbound r5.5.1**（用户主环境），站台侧看绑定脚本的屏蔽门玻璃，回报三选一：
-   - ① **黑底、顶部橙条、底部白条全部出现** → 已修复（条纹为诊断件，下版移除）；`latest.log` 应有 `channel Q active (wrapper text rows, platform half)` 与 metrics 行。
-   - ② **只有橙/白条纹行、中间黑底仍缺** → 色彩问题实锤（但纯黑已换成近黑 0x0A0A0A 仍死——下轮做色彩阶梯 0x1E/0x2A…）；请附 `latest.log`。
-   - ③ **三者全不可见、只有橙色到站文字** → wrapper 行与脚本行在用户栈上仍被区别对待（按 §7.0-15 续诊）；请附光影包名 + `latest.log`。
-4. **轨道侧**（乘车回头看）：应见纯白面板（`channel Q active (… track half)`）。
-5. 性能：应无可感知帧率变化（每段每帧每侧 ~17 次 drawText 行，与脚本文字行同量级；若修复则下版池化优化）。
+   - ① **黑底、顶部橙色条纹与「底色R16测试」橙色文字行、底部白条全部出现** → 已修复（条纹与探针为诊断件，下版移除）；`latest.log` 应有 `channel R active (text-background rows, platform half)` 与 metrics 行（填充字符 / advance / 行×列）。
+   - ② **只有「底色R16测试」文字行可见、黑底与橙白条纹仍缺** → 字形探针（= 第十五轮路径 + 可见字形）活了而背景矩形死了——背景矩形路径本身在该光影栈不渲染（Q-3 RenderDoc / Q-5 换光影包矩阵定位）；请附光影包名 + `latest.log`。
+   - ③ **连「底色R16测试」文字行也不可见、只有橙色到站文字** → 我们的提交上下文被区别对待（Q 行与探针行同上下文同字形族仍死）→ §7.0-17 第十七轮预案；请附 `latest.log`。
+4. **轨道侧**（乘车回头看）：应见纯白面板（`channel R active (… track half)`）。
+5. 性能：应无可感知帧率变化（每段每帧每侧 ~17 行 + 1 探针行，与脚本文字行同量级；若修复则下版池化优化）。
 
 ---
 
 ## 7. 若本版仍不可见——后续候选与诊断
+
+### 7.0-17 第十七轮预案（2026-11-12，第十六轮后预置）：把底板行注入脚本的回放列表
+
+若第十六轮结局③（探针行也不可见）：通道 R 的探针行与脚本回放行的差异只剩**提交上下文**——同一 wrapper、同一字形族、同一颜色，唯一区别是「脚本行经 `RenderManager.invoke` 从捕获列表回放，我们的行在 renderAll 直接 `run()`」。第十七轮直接消除这最后一项：`driveScript` 提交捕获后（`saveRenderCalls` 的 takeFrom 交换完成、实例 renderManager 持有本帧列表时），把底板 wrapper **插入实例 renderManager 的捕获列表头部**（`ScriptRenderManager` 需新增 `@ApiInternal jcm$prepend(RenderDrawCall)`；站台半插头、轨道半 append 尾——注意列表在两 pass（阴影 + 主）各回放一次、下一帧 takeFrom 时 release+清空，无累积），底板行即与脚本行**同一个 invoke 循环、同一个 TransformCapturePool 快照、同一个 scriptSide 变换**地回放——零上下文差异，剩余变量只有 wrapper 字段值（内容/颜色/尺寸）。若连这都不可见，则只剩「内容字符串本身」被区别对待的荒谬结论——届时必须 RenderDoc 截帧（Q-3）。
+
+### 7.0-16 第十六轮之后的形势判断（2026-11-12，预置）
+
+通道 R 已把「字形栅格化」从底板中完全剥离（vanilla 合成白色区域 × 背景色）。若结局②（探针可见、矩形不可见）：字形路径在本上下文**能活**（通道 Q 之死确系 U+2588 栅格化），死的是 `TextRenderer.draw` 的 backgroundColor 分支——候选：① 背景矩形的 Effect 四边形在 Iris GLYPH 扩展格式下的 normal 回填/绕向问题（renderEffect 的顶点序与字形不同——`BakedGlyph.renderEffect` 反汇编在 /home/z/psd16 可复验）；② Complementary 的 EntitiesTrans→gbuffers_water 程序对「纯色不透明四边形」的分支处理（Q-3 RenderDoc / Q-5 换包对照可定位）；③ 退路：探针行证明「真实字符字形」在本上下文可见——第十七轮可直接用**深色字符行**做底色（视觉约束的最终妥协方案，需用户同意）或 §7.0-17 的注入变体。若结局①：移除条纹与探针、池化 wrapper 与 SMT 副本、发布。
 
 ### 7.0-15 第十五轮之后的形势判断（2026-11-12，预置）
 
@@ -277,6 +303,8 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 - **世界主 immediate 直写 + endBatch flush**（第十三轮方案，实施后回滚）——IF `getLayerOrder` 令 endBatch 时不透明 LIGHT 层先画、text 层后画 → 黑底盖图（三明治坍塌）；且无可见先例。**不要再走此方向**。
 - **手写回调复刻 TextWrapper 语句序列 + 持有者 drawText(String) + 单字形拉伸**（第十四轮通道 P，build.95）——面包屑 + metrics 齐现、无异常、未装 / 已装 IF 均不可见。**手写路径全部证伪；不要再手写任何 drawText 复刻。**
 - **ImmediatelyFast 是唯一根因的假设**（第十四轮两份日志实证：未装 / 已装均不显示）——IF 也非本模组及其上游的前置依赖，修复不得依赖其存在或缺失；其接管 immediate 工厂的效应已被第十三轮取证纳入模型（对 drawText 与我们的构造无差别）。
+- **「任何完整字体的 U+2588 都是实心块」的假设**（第十四/十五轮的前提）——用户字体栈实测 advance 9（字形存在）但两轮 U+2588 载体全隐形，而缺失码点会渲染**可见的**豆腐框（SpecialGlyphs.MISSING 反汇编）⇒ 唯一自洽解释是**该字体包的 U+2588 栅格化为全透明**。**不要再把 U+2588（或任何未经该环境实证的字符）用作底色载体**。
+- **「两个 text 层都带 DepthTest always」（第十一轮实证②的前半）**——第二轮取证证伪：NORMAL text 层无深度相位（继承 LEQUAL+写深度）；always + 只写颜色是 SEE_THROUGH 变体的相位。文字在玻璃后可见靠绘制顺序（实体阶段先画、半透明玻璃后画），不靠深度 always。**不要再基于「text 层无深度」做深度相关推论**。
 
 ---
 
@@ -287,9 +315,10 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 - **触发构建**：workflow_dispatch `Complete Build`，入参只传 `{"mod-version": "2.3.0-1.0.0"}`（**不要**传 retention-days 等额外字段，会 422）。
 - **监视**：`/home/z/my-project/scripts/watch_build_run.py <runId>`；构建产物在 run artifacts。
 - **反汇编工具链**（本轮自建，/tmp 清理后需重建）：Python class 解析器 `/home/z/psd11/classdump.py`（修复了 Code 属性头 u4 多读的 bug）；原版类按 HTTP range 从 piston-data 拉（`/home/z/psd11/vanilla_fetch.py`）；MTR 4.0.5 jar 同法从 Modrinth CDN 拉（`/home/z/psd11/mr_fetch.py`）；MTR 源码直接从 GitHub `Minecraft-Transit-Railway/Minecraft-Transit-Railway` master 取（`fabric/src/main/java/org/mtr/mod/render/*.java`）；Yarn 映射 `maven.fabricmc.net` 的 tiny.gz。
-- **第十三轮新增源码库存**（`/home/z/psd12/`）：Iris 1.20.1 分支关键源码（`irismixin_MixinGameRenderer.java`、`iris_IrisRenderingPipeline.java`、`ShaderKey/ShaderMap/ShaderAccess`、`MixinBufferBuilder/IrisVertexFormats/BufferBuilderPolygonView/NormalHelper` 等）；ImmediatelyFast v1.5.5 关键源码（`if_MixinVertexConsumerProvider.java`、`if_BatchableBufferSource.java`、`if_IrisCompat.java`）；ComplementaryUnbound r5.5.1 解包（`comp/shaders/`）；Iris 1.7.6 jar（`iris.jar`，取自 Modrinth CDN，大文件需 curl 分段拉取）。
+- **第十三轮新增源码库存**（`/home/z/psd12/`）：Iris 1.20.1 分支关键源码（`irismixin_MixinGameRenderer.java`、`iris_IrisRenderingPipeline.java`、`ShaderKey/ShaderMap/ShaderAccess`、`MixinBufferBuilder/IrisVertexFormats/BufferBuilderPolygonView/NormalHelper` 等）；ImmediatelyFast v1.5.5 关键源码（`if_MixinVertexConsumerProvider.java`、`if_BatchableBufferSource.java`、`if_IrisCompat.java`）；ComplementaryUnbound r5.5.1 解包（`comp/shaders/`）；Iris 1.7.6 jar（`iris.jar`，取自 Modrinth CDN，大文件需 curl 分段拉取）。**（注意：/home/z/psd11 与 /home/z/psd12 已随 2026-11-12 沙盒重置丢失，GitHub token 同失——下文 psd16 为重建版）**
+- **第十六轮工具链**（`/home/z/psd16/`）：自制 Python class 解析器 + 字节码反汇编器 `classdump.py`（支持 CP 解析 / Code 属性 / 主流操作码 / GitHub blob-API 拉取源码）；原版 1.20.1 `client.jar`（piston-data）+ ProGuard `client_mappings.txt`（混淆名对照：Font=eov、FontSet=ern、BakedGlyph=err、BakedGlyph$Effect=err$a、SpecialGlyphs=ert、RenderType=fkf、Font$StringRenderOutput=eov$b）；MTR 4.0.6 分支（≈4.0.5）关键类源码（MainRenderer/MoreRenderLayers/QueuedRenderLayer/StoredMatrixTransformations，经 blob API）。核心反汇编结论见 §2.2。
 - **关键 Yarn/intermediary 对照**（1.20.1）：`RenderLayer=fkf(class_1921)`、`RenderPhase=fke(class_4668)`、`TextRenderer=eov(class_327)`、`TextLayerType: field_33993=NORMAL, field_33994=SEE_THROUGH, field_33995=POLYGON_OFFSET`、`GlyphRenderer=err(class_382)`、`VertexConsumer=ein(class_4588)`、`BufferBuilder=eie(class_287)`、`RenderLayer.getText=m(fkf).r(method_23028)(Identifier)acq(class_2960)`、`getBeaconBeam=e(method_23592)`、`getEntityCutout=c(method_23576)`；phase：`fke.h=TRANSLUCENT`、`fke.c=NO_TRANSPARENCY`、`fke.ay=DepthTest("always",519)`、`fke.aD=WriteMask(true,false)`、`fke.as=Lightmap(true)`。
 
 ---
 
-*文档生成于第十一轮修复（2026-11-10）；第十二轮（2026-11-11）、第十三轮取证（2026-11-11）与第十四轮（2026-11-11，通道 P + 诊断条纹）更新；第十五轮（2026-11-12，通道 Q：真实 TextWrapper 行，build.95 证伪通道 P 后四变量一次性全消）。维护者：BugQuantumCore / Z.ai 会话记录。*
+*文档生成于第十一轮修复（2026-11-10）；第十二轮（2026-11-11）、第十三轮取证（2026-11-11）与第十四轮（2026-11-11，通道 P + 诊断条纹）更新；第十五轮（2026-11-12，通道 Q：真实 TextWrapper 行，build.95 证伪通道 P 后四变量一次性全消）；第十六轮（2026-11-12，第二轮取证 §2.2 + 通道 R：脚本文本自己的背景矩形，build.96 证伪通道 Q 后字形免疫载体 + 字形探针）。维护者：BugQuantumCore / Z.ai 会话记录。*

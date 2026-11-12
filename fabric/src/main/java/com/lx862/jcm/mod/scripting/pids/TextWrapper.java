@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.scripting.pids;
 
 import com.lx862.jcm.mod.util.CachedIdentifiers;
 import com.lx862.jcm.mod.util.TextUtil;
+import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.mod.util.JSUtil;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.Identifier;
@@ -36,6 +37,19 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
     protected double marqueeProgressOverride;
     protected double marqueeDurationOverride;
     protected boolean naturalLight;
+
+    /** Round 16 (channel R): when non-zero, every line ALSO carries a
+     *  nametag-style background rectangle in this colour, drawn by the
+     *  REAL TextRenderer through its {@code backgroundColor} parameter —
+     *  a BakedGlyph$Effect quad over the font atlas's vanilla-synthesized
+     *  WHITE glyph region, on the very same RenderLayer/texture/program
+     *  the glyphs themselves ride. The fill is therefore COMPLETELY
+     *  glyph-independent: no character rasterization is involved in the
+     *  rectangle (only the string's advances size it), which is what makes
+     *  it immune to the font-pack glyph corruption that killed rounds
+     *  14-15's U+2588 rows (see PSD-SHADER-BACKING.md round 16). Zero =
+     *  off (default); set from the PSD backing carrier only. */
+    protected int jcm$bgColor;
 
     /** Marquee glyph cache: per-character formatted texts and measured
      *  widths, rebuilt only when the marquee string <i>or its style</i>
@@ -121,6 +135,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         this.marqueeDurationOverride = -1;
         this.marqueeProgressOverride = -1;
         this.naturalLight = false;
+        this.jcm$bgColor = 0;
         this.jcm$marqueeStr = null;
         this.jcm$marqueeFont = null;
         this.jcm$marqueeBold = false;
@@ -230,6 +245,18 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         return this;
     }
 
+    /** Round 16 (channel R): a nametag-style background rectangle behind
+     *  every line, drawn by the real TextRenderer's own {@code
+     *  backgroundColor} mechanism on the glyphs' very RenderLayer — see
+     *  the field javadoc. The glyph tint should normally be set to the
+     *  SAME colour ({@link #color(int)}) so any glyph that does render
+     *  blends seamlessly into the rectangle. */
+    @ApiInternal
+    public TextWrapper jcm$backgroundColor(int color) {
+        this.jcm$bgColor = color;
+        return this;
+    }
+
     public TextWrapper renderType(String renderType) {
         this.renderType = QueuedRenderLayer.valueOf(renderType);
         return this;
@@ -314,7 +341,61 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         } else if(this.alignment == 1) {
             startX -= totalW;
         }
-        graphicsHolder.drawText(text, startX, y, color, shadow, light);
+        if(this.jcm$bgColor != 0) {
+            /* Round 16 (channel R): route the line through the real
+               TextRenderer with a backgroundColor — MTR's GraphicsHolder
+              .drawText hardcodes bg=0, so the call is issued directly
+               here with the holder's own matrix, over the same private
+               immediate construction drawText itself uses (round-11
+               disassembly), synchronously flushed inside this callback.
+               The background rectangle is a BakedGlyph$Effect quad on the
+               glyphs' own RenderLayer — glyph-independent by construction. */
+            jcm$drawTextWithBackground(graphicsHolder, text.getString(), startX, y, color, this.jcm$bgColor, shadow, light);
+        } else {
+            graphicsHolder.drawText(text, startX, y, color, shadow, light);
+        }
+    }
+
+    /** The round-16 background-rect draw: TextRenderer.draw(String, …,
+     * backgroundColor, light) on the callback holder's matrix, through a
+     * private Immediate over the shared Tessellator buffer — the exact
+     * construction every MTR GraphicsHolder.drawText performs internally
+     * (round-11 bytecode forensics), synchronously flushed before the
+     * callback returns, exactly like drawText's own discipline. The
+     * loader/version guards mirror the proven round-12 (channel N2)
+     * invocation, which shipped on all six MC versions × both loaders. */
+    private void jcm$drawTextWithBackground(GraphicsHolder graphicsHolder, String text, int x, int y, int color, int backgroundColor, boolean shadow, int light) {
+#if LOADER == "fabric"
+        final net.minecraft.client.util.math.MatrixStack matrices =
+                ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolder).jcm$getMatrixStack();
+        final net.minecraft.client.render.VertexConsumerProvider.Immediate immediate =
+                net.minecraft.client.render.VertexConsumerProvider.immediate(net.minecraft.client.render.Tessellator.getInstance().getBuffer());
+#if MC_VERSION >= "11903"
+        final org.joml.Matrix4f model = matrices.peek().getPositionMatrix();
+        net.minecraft.client.MinecraftClient.getInstance().textRenderer.draw(text, x, y, color, shadow, model, immediate, net.minecraft.client.font.TextRenderer.TextLayerType.NORMAL, backgroundColor, light);
+#else
+#if MC_VERSION <= "11701"
+        final net.minecraft.util.math.Matrix4f model = matrices.peek().getModel();
+#else
+        final net.minecraft.util.math.Matrix4f model = matrices.peek().getPositionMatrix();
+#endif
+        net.minecraft.client.MinecraftClient.getInstance().textRenderer.draw(text, x, y, color, shadow, model, immediate, false, backgroundColor, light);
+#endif
+        immediate.draw();
+#else
+        final com.mojang.blaze3d.vertex.PoseStack matrices =
+                ((com.lx862.jcm.nativeapi.NativeMatrixApplier) (Object) graphicsHolder).jcm$getMatrixStack();
+        final net.minecraft.client.renderer.MultiBufferSource.BufferSource immediate =
+                net.minecraft.client.renderer.MultiBufferSource.immediate(com.mojang.blaze3d.vertex.Tesselator.getInstance().getBuilder());
+#if MC_VERSION >= "11903"
+        final org.joml.Matrix4f model = matrices.last().pose();
+        net.minecraft.client.Minecraft.getInstance().font.drawInBatch(text, x, y, color, shadow, model, immediate, net.minecraft.client.gui.Font.DisplayMode.NORMAL, backgroundColor, light);
+#else
+        final com.mojang.math.Matrix4f model = matrices.last().pose();
+        net.minecraft.client.Minecraft.getInstance().font.drawInBatch(text, x, y, color, shadow, model, immediate, false, backgroundColor, light);
+#endif
+        immediate.endBatch();
+#endif
     }
 
     private void drawMarqueeText(GraphicsHolder graphicsHolder, String str, int color, boolean shadow, int light, double durationOverride, double progressOverride) {
