@@ -1,6 +1,6 @@
 # PSD 屏蔽门底色（黑/白背板）在 Iris 光影下不渲染 —— 完整复盘与接手文档
 
-> **文档目的**：本 bug 已经历十三轮修复尝试（yanyang.4–13 + 2.3.0-1.0.0/1.0.1/1.0.2 + 第九至十二轮代码轮 + 第十三轮纯取证轮）。
+> **文档目的**：本 bug 已经历十五轮修复尝试（yanyang.4–13 + 2.3.0-1.0.0/1.0.1/1.0.2 + 第九至十四轮代码轮 + 第十三轮纯取证轮 + 第十五轮）。
 > 本文档提炼全部历史记录、反汇编实证、已证伪与未测试的方案矩阵，以及后续诊断流程——
 > 供任何接手者（人类工程师或 Claude 等 AI 助手）直接续作，不必重新踩坑。
 
@@ -136,7 +136,8 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 | 第十轮 | build.91 | 通道 T + `ShaderDetector` 光影门控 + 开销削减 | 不可见（同上；日志证实 `channel T active` 出现、无异常） |
 | 第十一轮 | build.92 | 通道 N：`RenderLayer.getText(jsblock:white.png)`（NORMAL 层）+ 手写 glyph 顶点序 + 私有 immediate + 同步 flush + 相机侧门控（站台黑/轨道白各一四边形）+ 光影门控 + 窗口裁剪 | 不可见（**任何光影包**；日志证实 `channel N active` 出现、无异常——手写 quad 路径完整执行却不渲染） |
 | 第十二轮 | build.93/94 | **通道 N2**：`TextRenderer.draw(单字符W, NORMAL, backgroundColor=同色)` 字形管线本体（同色字形 quad + 背景 quad 双程序冗余）+ 非均匀矩阵拉伸铺满窗口 + 双侧分层调度（站台黑→LIGHT 队列最先 / 轨道白→TEXT 队列最后）+ 专用 BufferBuilder + 光影门控 | **不可见**（build.94 实测 2026-11-11：三条面包屑齐现、无异常；含两欢开关光影对照） |
-| **第十四轮** | **本版** | **通道 P：`holder.drawText(U+2588 全块单字符, …)` —— TextWrapper.drawTransformed 语句级逐句复刻（同队列/同 "" key/持有者本体 scale+drawText，零私有构造、零原生类）+ 双侧（站台黑先提交/轨道白后提交）+ 橙/白 6px 诊断条纹（一次实测三分：路径/色彩/已修复）** | **待实测** |
+| **第十四轮** | **build.95** | **通道 P：`holder.drawText(U+2588 全块单字符, …)` —— TextWrapper.drawTransformed 语句级逐句复刻（同队列/同 "" key/持有者本体 scale+drawText，零私有构造、零原生类）+ 双侧（站台黑先提交/轨道白后提交）+ 橙/白 6px 诊断条纹（一次实测三分：路径/色彩/已修复）** | **不可见**（实机报告 2026-11-12，附两份 latest.log——**未装 / 已装 ImmediatelyFast 各一，均不显示**；日志证实 `channel P active (holder drawText, platform half)` + metrics 行出现、无 `failed once`、无 `degenerate`——回调完整执行；用户未到轨道侧，track half 面包屑未出现属预期） |
+| **第十五轮** | **本版** | **通道 Q：底板就是脚本文本——真实 `TextWrapper` 行（`TextWrapper.create().text(U+2588×N).pos(0,y).size(w,h).stretchXY().color(色).run(world, SMT.copy(), facing, MAX_RENDER_LIGHT)`）经 `PIDSDrawCall.run → drawTransformed → scheduleRender(TEXT)` 本体机具，从 renderAll 头部提交（与脚本 replay 同一快照）** + 四变量一次性全消（String 重载/无样式字体 → MutableText+`mtr:mtr` 样式；28×16 拉伸单字形 → 未拉伸文本行；纯黑 0xFF000000 → 近黑 0xFF0A0A0A；手写回调 → wrapper 本体）+ 调度时玩家侧门控（避开 Iris 阴影 pass 队列快照陷阱）+ 首末行橙/白诊断条纹（第十三轮三分法延续） | **待实测** |
 
 **矩阵透视**（第十四轮修订）：截至第十三轮的排除法已将变量收敛到一个从未被测试过的组合：**「由 TextWrapper 的语句序列在队列持有者本体上提交的 drawText」**——即字面意义上的可见路径本身。历轮失败载体全部在这件事上偏离：深度测试队列消费者（缓冲 OPAQUE 段——车辆证明其在开阔空间可见、玻璃后不可见）、SEE_THROUGH 程序对、手写 quad（哪怕在 NORMAL 层上）、甚至真 TextRenderer.draw 但经我们的私有 immediate / 借用矩阵 / LIGHT 队列提交。第十四轮不再模仿，直接复用：与可见文字共享调度、持有者、scale 调用序列与 drawText 方法本身，仅字符内容（单个 U+2588 全块）、颜色（黑/白）与拉伸系数不同；橙/白诊断条纹用可见文字的原色在同一路径上把「路径失败 / 色彩失败 / 成功」三个结局在一次实测中分开。
 
@@ -180,7 +181,7 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 
 ---
 
-## 5.7 第十四轮实现要点（`drawBackingHolderText`，通道 P）
+## 5.7 第十四轮实现要点（`drawBackingHolderText`，通道 P；build.95 实测证伪）
 
 1. **逐句复刻，零自造环节**：回调内仅做相机侧门控（`along ≥ 0.25` 判轨道侧）后，依次执行 `transform.transform(graphicsHolderNew, offset)`（窗口左上角已烘焙进 SMT）→ `holder.scale(BASE_SCALE, BASE_SCALE, BASE_SCALE)` → `holder.scale(sx, sy, 1)` → `holder.drawText(BACKING_GLYPH_CHAR, 0, 0, color, false, MAX_RENDER_LIGHT)` → `pop`——与 `TextWrapper.drawTransformed`（可见文字的提交代码）语句一一对应；私有 immediate / 矩阵借用 / `createInstanceSafe` 全部不再出现，drawText 内部的一切（私有 immediate 构造、NORMAL 层、字体图集、同步 flush）由 MTR 自己的代码完成。
 2. **U+2588 全块单字符**：字形本身就是实心矩形；advance 与 9px 行高运行时实测（`GraphicsHolder.getTextWidth`），非均匀拉伸铺满派生透明窗口。视觉为纯色块，无文字图案（用户约束为视觉约束）。源码中以 `"\u2588"` 转义书写，编码免疫。
@@ -188,25 +189,49 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 4. **诊断条纹**（仅站台半，本版临时）：顶边 6px 橙（`0xFC9700`，可见到站文字原色）+ 底边 6px 白，同一语句序列、同一拉伸机制——一次实测三分定位（见 §6）。
 5. **异常安全**：drawText 链以 push/pop 深度计数器 + finally 兜底（泄漏的姿态会污染同帧后续所有绘制）；几何退化（advance=0 / 窗口空）显式 WARN 而非假面包屑（第十二轮的教训：面包屑在 if 块外，draw 被跳过也会记 active）。
 6. **通道 N / N2 整体移除**（实机证伪）；载体 B 原样保留。新通道零原生 Minecraft 类引用（全部走 MTR 映射层 API），六个 MC 版本 × 双加载器无 `#if` 直编。
+7. **实测结果（2026-11-12，build.95）**：**完整执行、依然不可见**（未装 / 已装 ImmediatelyFast 均测，两份日志）。由此通道 P 与可见文字的剩余差异收敛为**四项**：① 重载与字体——`drawText(String, …)`（原版默认字体）vs 可见文字的 `drawText(MutableText, …)` + `TextUtil.withFontStyle(mtr:mtr)` 样式（MTR 自带 **TTF 字体**：`mtr:mtr` 首个 provider 为 `noto-sans-semibold.ttf`，其 cmap **含 U+2588**，2026-11-12 取证实测——MTR 仓库 `fabric/src/main/font_template.json` 证实 mtr:mtr = ttf provider（Noto Sans + Noto Serif CJK TC）；`useMTRFont` 配置无默认值（false），开着则可见文字骑 TTF 字形）；② 几何——单字形 ~28×16 非均匀拉伸 vs 未拉伸文本行；③ 色彩——纯黑 vs 可见橙；④ 提交者——手写回调体 vs wrapper 本体。第十五轮将四项一次性全消。
 
 ---
 
-## 6. 本版（第十四轮）验证流程（给用户 / 测试者）
+## 5.8 第十五轮实现要点（`drawBackingWrapperText`，通道 Q）
 
-1. 下载 Complete Build 产物（版本号 `2.3.0-1.0.0-build.95`，构建自本提交）。
-2. **无光影**：观感不变（载体 B 独撑；`channel P` 面包屑**不应**出现）。
+1. **底板就是脚本文本**：`TextWrapper.create().text("\u2588"×N).pos(0, y).size(wPx, rowH).stretchXY().color(色)` 后直接 `run(world, transform.copy(), facing, MAX_RENDER_LIGHT)`——`PIDSDrawCall.run` 本体链（super.run → SMT 追加 `jcm$position`（BASE_SCALE+translate）→ `drawTransformed`（真正的 `scheduleRender(TEXT)` + 回调））与 replayScript **同一个类、同一个方法链**，仅字段值不同；格式化（`getFormattedText` → `TextUtil.withFontStyle(mtr:mtr)`）在 drain 时由 wrapper 自己完成，与可见文字逐字节同源。
+2. **从 renderAll 头部提交（关键时机）**：不能在队列回调内部再 `run()` wrapper——**Iris 下 `MainRenderer.render` 每帧跑两次（阴影 pass + 主 pass），各自快照并清空 `RENDERS`**（`MainRendererPSDMixin` 在两处 HEAD 都注入）；回调内调度的 wrapper 行会落进下一帧**阴影 pass** 的快照、被阴影图消费掉、永不上屏。故相机侧门控提前到**调度时**用玩家坐标求值（`along = dot(player − blockCenter, facing) ≥ 0.25` 判轨道侧）；玩家坐标与相机仅第三人称跨栏构图时有偏差（罕见、cosmetic——且可见文字因同层继承剔除态本就无轨道侧视图）。
+3. **未拉伸行 + wrapper 自带 fit**：每行 `ceil(wPx/advance)` 个全块字符，`stretchXY()` 仅裁掉 ≤1 字符溢出（scaleX ∈ (8/9, 1]），末行剩余高度被 stretchXY 的 y 分量压缩——零手写缩放；advance 以 wrapper 同源样式一次性实测（`TextUtil.withFont(...)` 后的 `getTextWidth`），mtr 字体开/关均与实际渲染一致。
+4. **每行独立 SMT 副本**：`run()` 向传入的 SMT **追加** `jcm$position` 消费者（replay 路径为此给每个捕获调用发 `TransformCapturePool` 快照）——共享实例会累积每行平移；`transform.copy()` 每行一份（测试版开销；量产后可入池）。
+5. **近黑填充 + 诊断条纹**：站台半首行橙（`0xFC9700`）/末行白/中间近黑（`0xFF0A0A0A`——若第十四轮的条纹其实可见而仅纯黑死亡，则近黑直接绕过该失败族，视觉仍为纯黑）；轨道半全白。三分诊断不变：全不可见 ⇒ 路径；仅条纹 ⇒ 色彩；全部可见 ⇒ 已修复。
+6. **面包屑与 metrics**：`[JCM] PSD backing channel Q active (wrapper text rows, platform|track half)` + metrics 行（窗口尺寸 / advance（styled 与 vanilla 两个值）/ **mtr 字体开闭** / 行×列 / 条纹说明）——两个 advance 值与字体状态可直接判定 U+2588 实际由哪个字体族提供，为下一轮（如需）预留证据。
+
+---
+
+## 6. 本版（第十五轮）验证流程（给用户 / 测试者）
+
+1. 下载 Complete Build 产物（版本号 `2.3.0-1.0.0-build.9x`，构建自本提交；下文面包屑均为 `channel Q`）。
+2. **无光影**：观感不变（载体 B 独撑；`channel Q` 面包屑**不应**出现）。
 3. **开 Iris + ComplementaryUnbound r5.5.1**（用户主环境），站台侧看绑定脚本的屏蔽门玻璃，回报三选一：
-   - ① **黑底、顶部橙条、底部白条全部出现** → 已修复（条纹为诊断件，下版移除）；`latest.log` 应有 `channel P active (holder drawText, platform half)` 与 metrics 行。
-   - ② **只有橙条与白条、中间黑底仍缺** → 路径已通、**纯黑被丢弃**（色彩问题实锤；下轮按 §7.1-P 修色彩）；请附 `latest.log`。
-   - ③ **三者全不可见、只有橙色到站文字** → 路径仍有未知差异（按 §7.0-14 续诊）；请附光影包名 + `latest.log`。
-4. **轨道侧**（乘车回头看）：应见纯白面板（`channel P active (… track half)`）。
-5. 性能：应无可感知帧率变化（每段每帧每侧至多 3 次 drawText）。
+   - ① **黑底、顶部橙条、底部白条全部出现** → 已修复（条纹为诊断件，下版移除）；`latest.log` 应有 `channel Q active (wrapper text rows, platform half)` 与 metrics 行。
+   - ② **只有橙/白条纹行、中间黑底仍缺** → 色彩问题实锤（但纯黑已换成近黑 0x0A0A0A 仍死——下轮做色彩阶梯 0x1E/0x2A…）；请附 `latest.log`。
+   - ③ **三者全不可见、只有橙色到站文字** → wrapper 行与脚本行在用户栈上仍被区别对待（按 §7.0-15 续诊）；请附光影包名 + `latest.log`。
+4. **轨道侧**（乘车回头看）：应见纯白面板（`channel Q active (… track half)`）。
+5. 性能：应无可感知帧率变化（每段每帧每侧 ~17 次 drawText 行，与脚本文字行同量级；若修复则下版池化优化）。
 
 ---
 
 ## 7. 若本版仍不可见——后续候选与诊断
 
-### 7.0-14 第十四轮之后的形势判断（2026-11-11）
+### 7.0-15 第十五轮之后的形势判断（2026-11-12，预置）
+
+通道 Q 已把可见文字与底板之间的**全部已知差异**消除（同 wrapper、同字体样式、同未拉伸几何、近黑色、同队列同时机同 key 提交）。若仍不可见（结局③），则说明差异不在提交侧，而在**内容本身**——脚本行与底板行唯一剩下的区别是**字符串内容与颜色**（脚本行 = 到站文字字符 + 橙色；底板行 = U+2588×N + 近黑/白/橙）。候选（按序）：
+
+- **Q-1 字符内容 A/B**：底板行改用与脚本完全相同的字符集（如一行「讲淀黄庄」文字以近黑着色铺满——临时诊断版）——若可见则 U+2588 字形本身在该字体栈/光影下有问题（换字符：`█` → `▉`/`■`/全角空格底色）。
+- **Q-2 色彩阶梯**（若结局②）：0x0A0A0A → 0x1E1E1E → 0x2A2A2A → 深灰蓝（PIDS 黑底常见色）逐步试探，定位丢弃阈值。
+- **Q-3 RenderDoc / `iris.debug` 截帧**（P-5 延续）：确认底板行字形是否进入 draw call、被哪个程序消费、输出什么颜色。
+- **Q-4 终极方案（P-6 延续）**：修改 `TextWrapper`/`PSDScriptContext`，让脚本自己的到站文字携带 `backgroundColor`（背景矩形随每个字形行自动画出——nametag 同机制，`rendertype_text_background` 程序）——观感与文字行绑定（底色只在有文字处出现），需用户同意。
+- **Q-5 无 IF + 其他光影包矩阵**（P-7 延续）：BSL/Photon + Iris 复测，定位 Complementary 特有 vs Iris 通用。
+
+若结局①（全部可见）：移除条纹行、池化 wrapper 与 SMT 副本、发布。
+
+### 7.0-14 第十四轮之后的形势判断（2026-11-11，已被 build.95 实测取代）
 
 先明确两个本轮新确立的现场事实（改写了问题模型）：
 
@@ -221,10 +246,9 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 
 ### 7.1 先查日志分流（本版）
 
-- **无 `channel P active` 且无 `failed once`/`degenerate`**：回调没跑——绑定/驱动层问题（`PSDClientBindings`、`MainRendererPSDMixin`），或光影门控误判（`ShaderDetector`）。
-- **有 `failed once: <异常>`**：按栈修。
-- **有 `degenerate: window …px, U+2588 advance N — nothing drawn`**：字体包未提供全块字形或窗口推导退化——把 advance 值与窗口尺寸附在报告里（advance=0 → 换字符；窗口 0×N → 窗口推导问题）。
-- **`channel P active` 两半都出现且无异常、仍不可见** → 进入 7.0-14。
+- **无 `channel Q active` 且无 `degenerate`**：行没提交——检查门控（`shaderPack`、`MIN_WINDOW`、玩家侧 `along` 计算）或绑定层（`PSDClientBindings`、`MainRendererPSDMixin`）；若 metrics 行也没出现但 platform half 面包屑有，检查 `Q_ADVANCE` 退化分支。
+- **有 `degenerate: U+2588 advance N — nothing drawn`**：advance 量宽失败（字体栈异常）——把 advance 值附在报告里。
+- **`channel Q active` 两半都出现且无异常、仍不可见** → 进入 7.0-15。
 
 ### 7.2 剩余变量：纹理 / 程序组合
 
@@ -251,7 +275,8 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 - **手写 quad 于 NORMAL text 层 + glyph 顶点序 + 私有 immediate 同步 flush**（第十一轮通道 N，build.92）——日志证实完整执行、任何光影均不可见。
 - **真 `TextRenderer.draw` 字形机器 + 同色背景，经我们的私有 immediate + 借用矩阵提交于 LIGHT 队列**（第十二轮通道 N2，build.93/94）——build.94 三面包屑齐现、无异常、两欢开关光影对照后仍不可见。
 - **世界主 immediate 直写 + endBatch flush**（第十三轮方案，实施后回滚）——IF `getLayerOrder` 令 endBatch 时不透明 LIGHT 层先画、text 层后画 → 黑底盖图（三明治坍塌）；且无可见先例。**不要再走此方向**。
-- **ImmediatelyFast 是唯一根因的假设**（旧通道矩阵下卸载复测仍不显示）——IF 也非本模组及其上游的前置依赖，修复不得依赖其存在或缺失；其接管 immediate 工厂的效应已被第十三轮取证纳入模型（对 drawText 与我们的构造无差别）。
+- **手写回调复刻 TextWrapper 语句序列 + 持有者 drawText(String) + 单字形拉伸**（第十四轮通道 P，build.95）——面包屑 + metrics 齐现、无异常、未装 / 已装 IF 均不可见。**手写路径全部证伪；不要再手写任何 drawText 复刻。**
+- **ImmediatelyFast 是唯一根因的假设**（第十四轮两份日志实证：未装 / 已装均不显示）——IF 也非本模组及其上游的前置依赖，修复不得依赖其存在或缺失；其接管 immediate 工厂的效应已被第十三轮取证纳入模型（对 drawText 与我们的构造无差别）。
 
 ---
 
@@ -267,4 +292,4 @@ text 层顶点格式 = `POSITION_COLOR_TEXTURE_LIGHT`——所以 **`GraphicsHol
 
 ---
 
-*文档生成于第十一轮修复（2026-11-10）；第十二轮（2026-11-11）、第十三轮取证（2026-11-11）与第十四轮（2026-11-11，通道 P + 诊断条纹）更新。维护者：BugQuantumCore / Z.ai 会话记录。*
+*文档生成于第十一轮修复（2026-11-10）；第十二轮（2026-11-11）、第十三轮取证（2026-11-11）与第十四轮（2026-11-11，通道 P + 诊断条纹）更新；第十五轮（2026-11-12，通道 Q：真实 TextWrapper 行，build.95 证伪通道 P 后四变量一次性全消）。维护者：BugQuantumCore / Z.ai 会话记录。*
