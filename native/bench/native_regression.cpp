@@ -1,10 +1,77 @@
 #include <mtr/gfx.hpp>
 #include <mtr/gfx2d.hpp>
+#include <mtr/psd.hpp>
 #include <cstdio>
 #include <cstring>
 #include <vector>
 
 int main() {
+    /* Station pools must stay within the validated PSD snapshot extent,
+       including nested routes/exits and hostile offsets/counts. */
+    {
+        alignas(8) uint8_t blob[512]{};
+        auto* snap = reinterpret_cast<JcmPsdSnapshot*>(blob);
+        snap->string_pool_offset = 400;
+        snap->string_pool_len = 3;
+        snap->station_offset = 128;
+        auto* station = reinterpret_cast<JcmPsdStation*>(blob + 128);
+        station->station_id = 42;
+        station->name_offset = 400;
+        station->name_len = 3;
+        station->interchange_offset = 224;
+        station->interchange_count = 1;
+        station->connecting_offset = 256;
+        station->connecting_count = 1;
+        station->exit_offset = 272;
+        station->exit_count = 1;
+        station->platform_offset = 288;
+        station->platform_count = 1;
+        station->connected_station_offset = 288;
+        station->connected_station_count = 1;
+        auto* interchange = reinterpret_cast<JcmPsdStationInterchange*>(blob + 224);
+        interchange->route_id = 43;
+        interchange->name_offset = 400;
+        interchange->name_len = 3;
+        auto* group = reinterpret_cast<JcmPsdStationConnectingGroup*>(blob + 256);
+        group->route_offset = 224;
+        group->route_count = 1;
+        auto* exit = reinterpret_cast<JcmExit*>(blob + 272);
+        exit->destination_offset = 288;
+        exit->destination_count = 1;
+        auto* ref = reinterpret_cast<JcmStrRef*>(blob + 288);
+        ref->offset = 400;
+        ref->len = 3;
+        std::memcpy(blob + 400, "PSD", 3);
+        mtr::Psd psd(snap, 403);
+        const auto value = psd.stop();
+        if (!psd.has_station() || value.id() != 42 || value.name() != "PSD"
+                || value.interchange(0).id() != 43 || value.connecting(0).route(0).id() != 43
+                || value.exit(0).destination(0) != "PSD" || value.platform(0) != "PSD") {
+            std::fprintf(stderr, "FAIL: valid PSD station pools changed\n"); return 1;
+        }
+        station->name_len = INT32_MAX;
+        station->interchange_count = INT32_MAX;
+        group->route_offset = -8;
+        exit->destination_offset = 400;
+        ref->offset = 402;
+        if (value.name() != "" || value.interchange_count() != 0 || value.interchange(0).id() != 0
+                || value.connecting(0).route_count() != 0 || value.exit(0).destination_count() != 0
+                || value.platform(0) != "" || value.connected_station(0) != "") {
+            std::fprintf(stderr, "FAIL: malformed PSD nested pools were not bounded\n"); return 1;
+        }
+        for (int32_t offset : {-1, 0, 129, 400, INT32_MAX}) {
+            snap->station_offset = offset;
+            if (mtr::Psd(snap, 403).has_station()) {
+                std::fprintf(stderr, "FAIL: malformed PSD station offset accepted\n"); return 1;
+            }
+        }
+        snap->station_offset = 128;
+        if (mtr::Psd(snap, 127).has_station() || mtr::Psd(snap, 402).has_station()
+                || mtr::Psd(nullptr, 0).stop().ok()) {
+            std::fprintf(stderr, "FAIL: short PSD snapshot accepted\n"); return 1;
+        }
+        std::puts("NATIVE REGRESSION OK: bounded PSD station and nested pools");
+    }
     JcmFrameInput in{};
     mtr::GraphicsTexture texture;
     texture.create(in, 5, 4);

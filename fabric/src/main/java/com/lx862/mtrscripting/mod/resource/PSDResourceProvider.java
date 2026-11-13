@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.lx862.jcm.mod.scripting.JCMScripting;
+import com.lx862.jcm.mod.scripting.psd.PSDBinding;
 import com.lx862.jcm.mod.scripting.psd.PSDWrapper;
 import com.lx862.jcm.nativeapi.NativeScriptManager;
 import com.lx862.mtrscripting.core.primitive.ParsedScript;
@@ -68,6 +69,9 @@ public class PSDResourceProvider implements ScriptResourceProvider {
             try {
                 final JsonObject scriptObject = entryElement.getAsJsonObject();
                 final String scriptEntryId = scriptObject.get("id").getAsString();
+                if (scriptEntryId.isEmpty() || scriptEntryId.length() > PSDBinding.MAX_SCRIPT_ID_LENGTH) {
+                    throw new IllegalArgumentException("PSD script id must contain 1.." + PSDBinding.MAX_SCRIPT_ID_LENGTH + " characters");
+                }
 
                 PSDWrapper.PSDType type;
                 if (scriptObject.has("type")) {

@@ -55,8 +55,11 @@ public class ItemPSDScriptEditor extends ItemExtension {
                 /* The segment is identified by its LOWER row — clicking
                    either half of any column resolves to the same segment. */
                 BlockPos base = pos;
+                final BlockState lowerState = world.getBlockState(pos.down());
                 if (IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER
-                        && PSDRuns.isGlass(world.getBlockState(pos.down()))) {
+                        && PSDRuns.isGlass(lowerState)
+                        && IBlock.getStatePropertySafe(lowerState, IBlock.HALF) == IBlock.DoubleBlockHalf.LOWER
+                        && IBlock.getStatePropertySafe(lowerState, BlockPSDAPGBase.FACING) == facing) {
                     base = pos.down();
                 }
                 final PSDRuns.Run run = PSDRuns.glassRun(world, base, facing);

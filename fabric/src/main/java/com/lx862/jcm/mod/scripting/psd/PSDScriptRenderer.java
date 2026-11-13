@@ -95,6 +95,15 @@ public final class PSDScriptRenderer implements RenderHelper {
     private PSDScriptRenderer() {
     }
 
+    /** Discard resource-pack-dependent geometry after a model/texture reload. */
+    public static void reset() {
+        PSDWindowBounds.reset();
+        shaderBackingPlatformLogged = false;
+        shaderBackingTrackLogged = false;
+        BACKING_B_WARNED = false;
+        BACKING_B_OK = false;
+    }
+
     /** Schedule into MTR's queues before MainRenderer flushes them. */
     public static void renderAll() {
         final MinecraftClient minecraftClient = MinecraftClient.getInstance();
@@ -126,6 +135,9 @@ public final class PSDScriptRenderer implements RenderHelper {
 
         PSDClientBindings.forEach(binding -> {
             final BlockPos pos = binding.pos;
+            // The first binding marks every member of its section. Checking
+            // here avoids scanning the same N-block wall N times per pass.
+            if (renderedSections.contains(pos)) return;
             final double dx = pos.getX() + 0.5 - cameraX;
             final double dy = pos.getY() + 0.5 - cameraY;
             final double dz = pos.getZ() + 0.5 - cameraZ;
@@ -160,7 +172,7 @@ public final class PSDScriptRenderer implements RenderHelper {
            two-block glass displayed the script TWICE (once per half) —
            the two halves are ONE glass and now share one canvas. */
         BlockPos base = pos;
-        if (upper && PSDRuns.isGlass(world.getBlockState(pos.down()))) {
+        if (upper && isMatchingGlass(world.getBlockState(pos.down()), facing, IBlock.DoubleBlockHalf.LOWER)) {
             base = pos.down();
         }
         final PSDRuns.Run run = PSDRuns.glassRun(world, base, facing);
@@ -203,6 +215,7 @@ public final class PSDScriptRenderer implements RenderHelper {
         boolean allUppers = true;
         for (int i = 0; i < width; i++) {
             final BlockPos lowerPos = run.start.offset(facing.rotateYClockwise(), i);
+            renderedSections.add(lowerPos);
             final PSDWindowBounds.Bounds lowerBounds = PSDWindowBounds.window(world.getBlockState(lowerPos), facing);
             lowerTop[i] = Math.min(lowerBounds.top, 1);
             lowerBottom[i] = Math.max(lowerBounds.bottom, 0);
@@ -227,7 +240,8 @@ public final class PSDScriptRenderer implements RenderHelper {
             boolean includable = false;
             final BlockState upperState = world.getBlockState(lowerPos.up());
             final Object upperBlock = upperState.getBlock().data;
-            if (upperBlock instanceof BlockPSDAPGGlassBase) {
+            if ((!upper || !base.equals(pos)) && isMatchingGlass(upperState, facing, IBlock.DoubleBlockHalf.UPPER)) {
+                renderedSections.add(lowerPos.up());
                 final PSDWindowBounds.Bounds upperBounds = PSDWindowBounds.window(upperState, facing);
                 final boolean drlUpper = upperBlock instanceof APGGlassDRL || upperBlock instanceof APGGlassEndDRL;
                 includable = !drlUpper || upperBounds.visibleGeometry;
@@ -389,10 +403,14 @@ public final class PSDScriptRenderer implements RenderHelper {
                         paneAlong + GLASS_BACKING_OFFSET, frameHeight);
                 for (int i = 0; i < width; i++) {
                     if (lowerExtentTop[i] > lowerExtentBottom[i]) {
-                        drawBacking(backing, i, lowerExtentTop[i], lowerExtentBottom[i], frameHeight, facing);
+                        drawBacking(backing, PSDBackingGeometry.runLeft(i, lowerExtentLeft[i], lowerExtentRight[i], hMirror),
+                                PSDBackingGeometry.runRight(i, lowerExtentLeft[i], lowerExtentRight[i], hMirror),
+                                lowerExtentTop[i], lowerExtentBottom[i], frameHeight, facing);
                     }
                     if (frameHeight > 1 && upperIncludable[i] && upperExtentTop[i] > upperExtentBottom[i]) {
-                        drawBacking(backing, i, 1 + upperExtentTop[i], 1 + upperExtentBottom[i], frameHeight, facing);
+                        drawBacking(backing, PSDBackingGeometry.runLeft(i, upperExtentLeft[i], upperExtentRight[i], hMirror),
+                                PSDBackingGeometry.runRight(i, upperExtentLeft[i], upperExtentRight[i], hMirror),
+                                1 + upperExtentTop[i], 1 + upperExtentBottom[i], frameHeight, facing);
                     }
                 }
             }
@@ -410,6 +428,12 @@ public final class PSDScriptRenderer implements RenderHelper {
         if (!shadowPass) {
             replaySoundsOnce(binding, pos, world);
         }
+    }
+
+    private static boolean isMatchingGlass(BlockState state, Direction facing, IBlock.DoubleBlockHalf half) {
+        return PSDRuns.isGlass(state)
+                && IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING) == facing
+                && IBlock.getStatePropertySafe(state, IBlock.HALF) == half;
     }
 
     /**
@@ -436,7 +460,8 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* ==================================================================== */
 
     /** Depth-tested black/white covering for non-shader pipelines. */
-    private static void drawBacking(StoredMatrixTransformations transform, float x, float top, float bottom, float frameTop, Direction facing) {
+    private static void drawBacking(StoredMatrixTransformations transform, float left, float right, float top, float bottom, float frameTop, Direction facing) {
+        if (right <= left || top <= bottom) return;
         final float y = frameTop - top;
         final float height = top - bottom;
 
@@ -446,11 +471,14 @@ public final class PSDScriptRenderer implements RenderHelper {
         MainRenderer.scheduleRender(BACKING_TEXTURE, false, QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
             try {
                 transform.transform(graphicsHolderNew, offset);
-                /* Platform-facing BLACK. */
-                graphicsHolderNew.drawTextureInWorld(x, y + height, CARRIER_B_Z, x + 1, y + height, CARRIER_B_Z, x + 1, y, CARRIER_B_Z, x, y, CARRIER_B_Z, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
-                /* Track-facing WHITE, a hair deeper. */
-                graphicsHolderNew.drawTextureInWorld(x, y, TRACK_BACK_Z + CARRIER_B_Z, x + 1, y, TRACK_BACK_Z + CARRIER_B_Z, x + 1, y + height, TRACK_BACK_Z + CARRIER_B_Z, x, y + height, TRACK_BACK_Z + CARRIER_B_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
-                graphicsHolderNew.pop();
+                try {
+                    /* Platform-facing BLACK. */
+                    graphicsHolderNew.drawTextureInWorld(left, y + height, CARRIER_B_Z, right, y + height, CARRIER_B_Z, right, y, CARRIER_B_Z, left, y, CARRIER_B_Z, 0, 0, 1, 1, facing.getOpposite(), BACKING_COLOR, MAX_RENDER_LIGHT);
+                    /* Track-facing WHITE, a hair deeper. */
+                    graphicsHolderNew.drawTextureInWorld(left, y, TRACK_BACK_Z + CARRIER_B_Z, right, y, TRACK_BACK_Z + CARRIER_B_Z, right, y + height, TRACK_BACK_Z + CARRIER_B_Z, left, y + height, TRACK_BACK_Z + CARRIER_B_Z, 0, 0, 1, 1, facing, TRACK_SIDE_COLOR, MAX_RENDER_LIGHT);
+                } finally {
+                    graphicsHolderNew.pop();
+                }
                 if (!BACKING_B_OK) {
                     BACKING_B_OK = true;
                     com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.info(
@@ -508,6 +536,9 @@ public final class PSDScriptRenderer implements RenderHelper {
         final PSDRuns.Run run = PSDRuns.topRun(world, pos, facing);
         if (!renderedSections.add(run.start)) {
             return; // another binding of this group already rendered it
+        }
+        for (int i = 0; i < run.width; i++) {
+            renderedSections.add(run.start.offset(facing.rotateYClockwise(), i));
         }
         final StoredMatrixTransformations transform = new StoredMatrixTransformations(0.5 + run.start.getX(), pos.getY(), 0.5 + run.start.getZ());
         transform.add(graphicsHolder -> graphicsHolder.rotateYDegrees(-facing.asRotation()));

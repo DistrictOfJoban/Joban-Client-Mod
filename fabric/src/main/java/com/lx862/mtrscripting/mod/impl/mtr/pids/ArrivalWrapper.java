@@ -61,12 +61,7 @@ public class ArrivalWrapper {
     }
 
     public @ValueNullable SimplifiedRoute route() {
-        for(SimplifiedRoute route : MinecraftClientData.getInstance().simplifiedRoutes) {
-            if(route.getId() == routeId()) {
-                return route;
-            }
-        }
-        return null;
+        return MinecraftClientData.getInstance().simplifiedRouteIdMap.get(routeId());
     }
 
     public long routeId() {

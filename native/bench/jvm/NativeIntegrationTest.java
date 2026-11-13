@@ -70,6 +70,9 @@ public class NativeIntegrationTest {
   Fixture first=new Fixture(),second=new Fixture();
   NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
   ByteBuffer snapshot=ByteBuffer.allocateDirect(184).order(ByteOrder.nativeOrder());snapshot.limit(184);
+  check(NativeChannel.render(module,"heap-buffer",ByteBuffer.allocate(184),184,0)==null,
+    "heap snapshot is rejected without recursive transport fallback");
+  if(isPollerPlane) check(NativeChannel.ensurePollerPlane(),"invalid heap snapshot leaves poller usable");
   for(int i=0;i<2;i++){
    Fixture fixture=i==0?first:second;String key="fixture"+i;
    var frames=NativeScriptManager.render(key,"test:probe",snapshot,0,m->fixture,fixture,null);
@@ -158,6 +161,17 @@ public class NativeIntegrationTest {
     check(data.getInt(stationOffset+72)==2&&data.getInt(stationOffset+80)==1&&data.getInt(stationOffset+88)==2,"PSD station connected/exit/platform counts");
     int connectingOffset=data.getInt(stationOffset+68);
     check(data.getInt(connectingOffset+8)==1,"PSD connecting group route count");
+    /* Exercise every capacity boundary, including the aligned route-exit
+       string-ref reservation. The production driver only retries these
+       two overflow types; an IllegalArgumentException must not strand a
+       valid large station in its four-second error backoff. */
+    for (int capacity=128; capacity<data.limit(); capacity++) {
+     try {
+      NativeContentSnapshot.psd(ByteBuffer.allocate(capacity),psd);
+      throw new AssertionError("PSD undersized snapshot unexpectedly fit: "+capacity);
+     } catch (java.nio.BufferOverflowException | IndexOutOfBoundsException expected) { }
+    }
+    check(true,"PSD snapshot capacity boundaries are retryable");
    } else {
     var lift=new com.lx862.mtrscripting.mod.impl.mtr.lift.LiftWrapper();wrapper=lift;NativeContentSnapshot.lift(data,lift);
     check(data.getDouble(48)==4&&data.getLong(0)==9223372036854775000L,"Lift offset and ID");

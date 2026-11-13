@@ -219,6 +219,28 @@ int main(int argc, char** argv) {
     status = jcm_module_render(legacy, "k", 1,
             reinterpret_cast<int64_t>(snapshot), 256, 0, desc);
     CHECK(status == JCM_SHM_OK, "second direct render reuses instance state");
+    for (int32_t probe : {0x4A434D01, 0x4A434D02}) {
+        std::memcpy(snapshot, &probe, sizeof(probe));
+        status = jcm_module_render(legacy, "k", 1, reinterpret_cast<int64_t>(snapshot), 256, 0, desc);
+        int32_t kept = -1;
+        int64_t bytes = -1;
+        std::memcpy(&kept, desc + 4, sizeof(kept));
+        std::memcpy(&bytes, desc + 16, sizeof(bytes));
+        CHECK(status == JCM_SHM_OK && kept == 0 && bytes == 0,
+              "null or undersized native record arena is safely discarded");
+    }
+    std::memset(snapshot, 0, sizeof(snapshot));
+    /* Validate PSD bounds before dispatch, even if the module would reject
+       its resource kind: no native code may read a short header or a pool
+       extending past the actual driver buffer. */
+    CHECK(jcm_module_render(legacy, "bad-psd", 7, reinterpret_cast<int64_t>(snapshot),
+              127, 4, desc) == JCM_SHM_ERR_SNAPSHOT, "short PSD header rejected");
+    int32_t poolOffset = 128, poolLength = 129;
+    std::memcpy(snapshot + 116, &poolOffset, sizeof(poolOffset));
+    std::memcpy(snapshot + 120, &poolLength, sizeof(poolLength));
+    CHECK(jcm_module_render(legacy, "bad-psd", 7, reinterpret_cast<int64_t>(snapshot),
+              256, 4, desc) == JCM_SHM_ERR_SNAPSHOT, "PSD pool past buffer rejected");
+    std::memset(snapshot, 0, sizeof(snapshot));
     jcm_module_dispose_instance(legacy, "k", 1, 0, -1);
     jcm_reclaimer_quiesce();
     CHECK(jcm_reclaimer_pending() == 0, "instance memory reclaimed off-thread");

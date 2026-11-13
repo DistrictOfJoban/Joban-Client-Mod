@@ -79,13 +79,17 @@ public class VehicleDataCache {
         long lastPlatformId = 0;
         int stopIdx = 0;
         for(RouteStopsData routeStopsData : simplifiedStopsData.routeStopsData) {
+            if(routeStopsData.stops.isEmpty()) continue;
             long routeId = routeStopsData.routeId;
             SimplifiedRoute route = VehicleDataCache.mtrData.routeIdMap.get(routeId);
             stopsData.routeToRun.add(routeId);
 
             Station destinationStation = VehicleDataCache.mtrData.stationIdMap.get(routeStopsData.stops.get(routeStopsData.stops.size()-1).stationId);
 
-            int routeStopIdx = 0;
+            List<SimplifiedRoutePlatform> platforms = route == null ? java.util.Collections.emptyList() : route.getPlatforms();
+            long[] platformIds = new long[platforms.size()];
+            for(int i = 0; i < platforms.size(); i++) platformIds[i] = platforms.get(i).getPlatformId();
+            RoutePlatformMatcher platformMatcher = new RoutePlatformMatcher(platformIds);
             List<VehicleWrapper.Stop> routeStops = new ArrayList<>();
             for(SimplifiedStop simplifiedStop : routeStopsData.stops) {
                 Station station = VehicleDataCache.mtrData.stationIdMap.get(simplifiedStop.stationId);
@@ -94,9 +98,9 @@ public class VehicleDataCache {
                 thisStop.destinationStation = destinationStation;
 
                 if(route != null) {
-                    List<SimplifiedRoutePlatform> platforms = route.getPlatforms();
-                    if(routeStopIdx < platforms.size()) {
-                        SimplifiedRoutePlatform simplifiedRoutePlatform = platforms.get(routeStopIdx);
+                    int routePlatformIndex = platformMatcher.match(simplifiedStop.platformId);
+                    if(routePlatformIndex >= 0) {
+                        SimplifiedRoutePlatform simplifiedRoutePlatform = platforms.get(routePlatformIndex);
                         final InterchangeRouteModes interchangeModes = new InterchangeRouteModes();
                         mtrData.stationInterchangeMap.getOrDefault(simplifiedStop.stationId, java.util.Collections.emptyList())
                                 .forEach(e -> interchangeModes.add(e.color, e.name, e.getTransportMode(),
@@ -116,7 +120,7 @@ public class VehicleDataCache {
                 }
 
                 boolean shouldAppendStop = false;
-                if(lastPlatformId == simplifiedStop.platformId) {
+                if(!stopsData.allStops.isEmpty() && lastPlatformId == simplifiedStop.platformId) {
                     VehicleWrapper.Stop prevStop = stopsData.allStops.get(stopsData.allStops.size()-1);
                     prevStop.roundUpRoute = thisStop;
                     prevStop.reverseAtPlatform = true;
@@ -129,7 +133,6 @@ public class VehicleDataCache {
                 stopsData.stopIdxToRouteStops.put(stopIdx, routeStops);
                 lastPlatformId = simplifiedStop.platformId;
                 if(shouldAppendStop) stopIdx++;
-                routeStopIdx++;
             }
         }
 

@@ -20,7 +20,8 @@ jobs:
           java-version: 21
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          # Windows ARM64 CPython distributions start at 3.13.
+          python-version: ${{ matrix.os == 'windows-11-arm' && '3.13' || '3.12' }}
       - name: Build and test
         shell: bash
         run: |

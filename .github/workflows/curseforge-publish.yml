@@ -64,10 +64,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           FILE_NAME: JCM-${{ matrix.loader }}-${{ inputs.publish-tag }}+${{ matrix.minecraft }}.jar
+          RELEASE_TAG: v${{ inputs.publish-tag }}
         run: |
           set -euo pipefail
           mkdir -p dist
-          gh release download "v${{ inputs.publish-tag }}" \
+          gh release download "$RELEASE_TAG" \
             --repo "${{ github.repository }}" \
             --pattern "$FILE_NAME" \
             --dir dist

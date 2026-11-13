@@ -149,6 +149,7 @@ public class PSDScriptSelectionScreen extends SavableScreen implements RenderHel
             if (preset instanceof ScriptPIDSPreset) scriptedPresets.add(preset);
         }
         for (PIDSPresetBase preset : scriptedPresets) {
+            if (preset.getId().isEmpty() || preset.getId().length() > PSDBinding.MAX_SCRIPT_ID_LENGTH) continue;
             options.add(new Option(preset.getId(), preset.getName(), true, false, 0xFF00A870));
         }
         return options;

@@ -57,9 +57,9 @@ public class ScriptInstanceManager {
                 ScriptInstance<?> instance = entry.getValue();
                 removedInstance++;
                 instances.remove(entry.getKey());
-                if(instance.isCreateFunctionInvoked()) {
-                    instance.getScript().invokeDisposeFunctions(instance, null);
-                }
+                // A create task may still be in flight. Cleanup must queue
+                // behind it even before isCreateFunctionInvoked becomes true.
+                instance.getScript().invokeDisposeFunctions(instance, null);
             }
         }
 
@@ -75,7 +75,6 @@ public class ScriptInstanceManager {
     public void reset() {
         for(ScriptInstance<?> instance : new HashMap<>(instances).values()) {
             instance.getScript().invokeDisposeFunctions(instance, null);
-            instance.getContextObject().dispose();
         }
         instances.clear();
     }

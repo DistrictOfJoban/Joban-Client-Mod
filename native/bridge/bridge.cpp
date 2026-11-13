@@ -1440,7 +1440,16 @@ bool resolve_captured_resources(Instance& inst) {
 void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
                          int32_t* kept_records, int32_t* new_records_len) {
     uint8_t* base = const_cast<uint8_t*>(static_cast<const uint8_t*>(out.records));
-    const int64_t total = out.records_len > 0 ? out.records_len : 0;
+    *kept_records = 0;
+    *new_records_len = 0;
+    /* This walk precedes Java's arena-descriptor validation. Do not read
+       a null arena or bytes beyond the module's reported allocation, and
+       keep the resulting stream representable by Java's int-sized view.
+       Capacity zero is the legacy ABI convention: use its written length. */
+    if (!base || out.record_count <= 0 || out.records_len <= 0
+            || out.records_len > INT32_MAX || out.records_capacity < 0) return;
+    const int64_t total = out.records_capacity > 0
+            ? std::min(out.records_len, out.records_capacity) : out.records_len;
     uint8_t* p = base;
     int64_t pos = 0;   /* consumed bytes; bounds are judged on REMAINING
                           bytes (total - pos), never via pointer addition —
@@ -1503,8 +1512,7 @@ void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
         pos += size;
     }
     *kept_records = kept;
-    *new_records_len = static_cast<int32_t>(write - const_cast<uint8_t*>(
-            static_cast<const uint8_t*>(out.records)));
+    *new_records_len = static_cast<int32_t>(write - base);
 }
 
 /** Module-owned zeroed fallback for dispose-without-live-buffer: grown to
@@ -1519,6 +1527,17 @@ const void* fallback_snapshot(BridgeModule& mod, const Instance& inst) {
     const int64_t want = inst.snapshot_len > 256 ? inst.snapshot_len : 256;
     if (static_cast<int64_t>(mod.zero_snapshot.size()) < want) {
         mod.zero_snapshot.assign(static_cast<size_t>(want), 0);
+    }
+    // The same module can serve different content kinds. Remove the PSD
+    // sentinel/pool header before reusing the fallback for another kind.
+    std::memset(mod.zero_snapshot.data(), 0, sizeof(JcmPsdSnapshot));
+    if (inst.resource_kind == MTR_RESOURCE_PSD) {
+        /* ABI 13 uses -1 for an absent station. Zero would point at the
+           snapshot header and make dispose() see a fictitious station. */
+        auto* psd = reinterpret_cast<JcmPsdSnapshot*>(mod.zero_snapshot.data());
+        psd->station_offset = -1;
+        psd->string_pool_offset = sizeof(JcmPsdSnapshot);
+        psd->string_pool_len = 0;
     }
     return mod.zero_snapshot.data();
 }
@@ -1630,6 +1649,21 @@ BridgeModule* open_module(const char* path) {
 int32_t run_frame_locked(BridgeModule& mod, const char* key,
                          const void* snapshot, int64_t snapshotLen,
                          int32_t kind, JcmFrameOutput& out) {
+    if (kind == MTR_RESOURCE_PSD) {
+        /* The SDK uses the declared pool end as its snapshot bound. Check
+           that bound against the actual driver buffer on BOTH invocation
+           planes before any module can read the header or station pools. */
+        if (!snapshot || snapshotLen < static_cast<int64_t>(sizeof(JcmPsdSnapshot))) {
+            return JCM_SHM_ERR_SNAPSHOT;
+        }
+        JcmPsdSnapshot header;
+        std::memcpy(&header, snapshot, sizeof(header));
+        if (header.string_pool_offset < static_cast<int32_t>(sizeof(header))
+                || header.string_pool_len < 0
+                || static_cast<int64_t>(header.string_pool_offset) + header.string_pool_len > snapshotLen) {
+            return JCM_SHM_ERR_SNAPSHOT;
+        }
+    }
     Instance& inst = mod.instances[key];
     /* Assign only on change: instance keys are stable for the whole life of
        an instance, and they exceed SSO length, so an unconditional assign

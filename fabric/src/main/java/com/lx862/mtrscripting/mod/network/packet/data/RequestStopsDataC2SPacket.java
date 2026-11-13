@@ -52,6 +52,7 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
         }
 
         Main tscInstance = InitAccessorMixin.getMain();
+        if(tscInstance == null) return; // Simulator may not be initialized during server startup.
         World playerWorld = serverPlayerEntity.getEntityWorld();
         String tscDimensionId = Init.getWorldId(playerWorld);
 
@@ -80,40 +81,52 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
                             for(Vehicle vehicle : vehicles) {
                                 if(vehicle.getId() == vehicleId) {
                                     vehicleFound = true;
-                                    int routeIdx = 0;
                                     VehicleDataCache.SimplifiedStopsData simplifiedStopsData = new VehicleDataCache.SimplifiedStopsData();
                                     if(!depot.routes.isEmpty()) {
-                                        Route belongingRoute = depot.routes.get(routeIdx);
-                                        VehicleDataCache.RouteStopsData routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
+                                        // Snapshot each route's platform sequence once. Keeping original
+                                        // indices is essential: destinations are indexed before deduplication.
+                                        ObjectArrayList<ObjectArrayList<RoutePlatformData>> routePlatforms = new ObjectArrayList<>();
+                                        long[][] platformIds = new long[depot.routes.size()][];
+                                        for(int routeIndex = 0; routeIndex < depot.routes.size(); routeIndex++) {
+                                            ObjectArrayList<RoutePlatformData> platforms = depot.routes.get(routeIndex).getRoutePlatforms();
+                                            routePlatforms.add(platforms);
+                                            platformIds[routeIndex] = new long[platforms.size()];
+                                            for(int platformIndex = 0; platformIndex < platforms.size(); platformIndex++) {
+                                                platformIds[routeIndex][platformIndex] = platforms.get(platformIndex).getPlatform().getId();
+                                            }
+                                        }
+                                        RouteStopCursor cursor = new RouteStopCursor(platformIds);
+                                        VehicleDataCache.RouteStopsData routeStopsData = null;
                                         ObjectImmutableList<PathData> vehiclePath = vehicle.vehicleExtraData.immutablePath;
 
-                                        for(int i = 0; i < vehiclePath.size(); i++) {
+                                        for(int i = 0; i < vehiclePath.size() && cursor.hasNext(); i++) {
                                             PathData currentPath = vehiclePath.get(i);
                                             if(!currentPath.getRail().isPlatform() || currentPath.getDwellTime() <= 0) continue;
-                                            ObjectArrayList<RoutePlatformData> routePlatforms = deduplicateRoutePlatform(belongingRoute.getRoutePlatforms());
-                                            int routePlatformIndex = routeStopsData.stops.size();
-                                            boolean finalRouteStop = routePlatformIndex == routePlatforms.size()-1;
-                                            RoutePlatformData routePlatformData = routePlatforms.get(routePlatformIndex);
-
-                                            long platformId = routePlatformData.getPlatform().getId();
-                                            long stationId = routePlatformData.getPlatform().area == null ? 0 : routePlatformData.getPlatform().area.getId();
-                                            String destination = belongingRoute.getDestination(routePlatformIndex);
-                                            String customDestination = routePlatformData.getCustomDestination();
                                             double distance = currentPath.getEndDistance();
                                             boolean turnbackPlatform = (i+1 < vehiclePath.size()) && vehiclePath.get(i+1).isOppositeRail(currentPath);
 
-                                            VehicleDataCache.SimplifiedStop stopObject = new VehicleDataCache.SimplifiedStop(destination, customDestination, stationId, platformId, distance, turnbackPlatform);
-                                            routeStopsData.addStop(stopObject);
-                                            if(finalRouteStop) {
-                                                routeIdx++;
-                                                simplifiedStopsData.addRouteStopsData(routeStopsData);
-                                                if(routeIdx >= depot.routes.size()) break;
-                                                belongingRoute = depot.routes.get(routeIdx);
-                                                routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
-                                                // Next route also has the same RoutePlatform assigned
-                                                if(!routePlatforms.isEmpty() && belongingRoute.getRoutePlatforms().get(0).getPlatform().getId() == platformId) {
-                                                    routeStopsData.addStop(stopObject);
+                                            // One dwell can finish a route and start the next. Rebuild
+                                            // route-specific destinations instead of copying the old stop.
+                                            while(cursor.hasNext()) {
+                                                int routeIndex = cursor.routeIndex();
+                                                int platformIndex = cursor.platformIndex();
+                                                Route belongingRoute = depot.routes.get(routeIndex);
+                                                if(routeStopsData == null) {
+                                                    routeStopsData = new VehicleDataCache.RouteStopsData(belongingRoute.getId());
                                                 }
+                                                RoutePlatformData routePlatformData = routePlatforms.get(routeIndex).get(platformIndex);
+                                                long platformId = routePlatformData.getPlatform().getId();
+                                                long stationId = routePlatformData.getPlatform().area == null ? 0 : routePlatformData.getPlatform().area.getId();
+                                                String destination = belongingRoute.getDestination(platformIndex);
+                                                String customDestination = routePlatformData.getCustomDestination();
+                                                routeStopsData.addStop(new VehicleDataCache.SimplifiedStop(destination, customDestination, stationId, platformId, distance, turnbackPlatform));
+
+                                                boolean sharedBoundary = cursor.advance();
+                                                if(cursor.routeIndex() != routeIndex) {
+                                                    simplifiedStopsData.addRouteStopsData(routeStopsData);
+                                                    routeStopsData = null;
+                                                }
+                                                if(!sharedBoundary) break;
                                             }
                                         }
                                     }
@@ -145,16 +158,4 @@ public class RequestStopsDataC2SPacket extends PacketHandler {
         }
     }
 
-    private static ObjectArrayList<RoutePlatformData> deduplicateRoutePlatform(ObjectArrayList<RoutePlatformData> list) {
-        ObjectArrayList<RoutePlatformData> newList = new ObjectArrayList<>();
-        long lastPlatId = 0;
-        for(RoutePlatformData routePlatformData : list) {
-            if(lastPlatId != routePlatformData.getPlatform().getId()) {
-                newList.add(routePlatformData);
-            }
-            lastPlatId = routePlatformData.getPlatform().getId();
-        }
-
-        return newList;
-    }
 }

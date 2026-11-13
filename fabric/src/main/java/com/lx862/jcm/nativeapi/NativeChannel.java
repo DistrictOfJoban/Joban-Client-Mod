@@ -282,9 +282,11 @@ public final class NativeChannel {
         try {
             final long address = NativeArenaView.addressOf(snapshot);
             if (address == 0) {
-                /* heap buffer (test fixtures / exotic callers): the shm
-                   protocol only speaks raw addresses — use the direct call. */
-                return renderDirect(module, instanceKey, snapshot, snapshotLen, resourceKind);
+                /* Neither invocation plane can read a heap buffer. On a
+                   poller-only JVM, routing it through renderDirect would
+                   immediately come back here until StackOverflowError
+                   poisoned the shared-memory channel for the session. */
+                return null;
             }
             final NativeShm region = ensureShm();
             if (region == null) {

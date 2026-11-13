@@ -73,9 +73,10 @@ public abstract class ParsedScript {
      * flight — which is every frame while a slow script runs.
      */
     public boolean willInvokeRender(ScriptInstance<?> instance) {
-        return !instance.shouldInvalidate()
+        return !instance.isDisposing() && !instance.shouldInvalidate()
                 && (instance.scriptTask == null || instance.scriptTask.isDone())
-                && !duringFailCooldown();
+                && !duringFailCooldown()
+                && TimingJS.globalElapsed() - instance.lastExecuteTime >= rateLimit;
     }
 
     public static class Configuration {

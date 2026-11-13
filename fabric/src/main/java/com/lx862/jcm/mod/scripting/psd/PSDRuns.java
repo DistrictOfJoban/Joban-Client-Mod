@@ -4,10 +4,12 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
+import org.mtr.mod.block.BlockPSDAPGBase;
 import org.mtr.mod.block.BlockPSDAPGDoorBase;
 import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDAPGGlassEndBase;
 import org.mtr.mod.block.BlockPSDTop;
+import org.mtr.mod.block.IBlock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +76,13 @@ public final class PSDRuns {
      * doors. The returned anchor is the segment's left-most block.
      */
     public static Run glassRun(World world, BlockPos pos, Direction facing) {
-        return walk(world, pos, facing, cursor -> isGlassLike(world.getBlockState(cursor)));
+        final IBlock.DoubleBlockHalf half = IBlock.getStatePropertySafe(world.getBlockState(pos), IBlock.HALF);
+        return walk(world, pos, facing, cursor -> {
+            final BlockState state = world.getBlockState(cursor);
+            return isGlassLike(state)
+                    && IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING) == facing
+                    && IBlock.getStatePropertySafe(state, IBlock.HALF) == half;
+        });
     }
 
     /** Whether the state is a PSD/APG glass or glass-end block (either
@@ -95,7 +103,10 @@ public final class PSDRuns {
             final BlockPos lower = run.start.offset(facing.rotateYClockwise(), i);
             positions.add(lower);
             final BlockPos upper = lower.up();
-            if (isGlassLike(world.getBlockState(upper))) {
+            final BlockState upperState = world.getBlockState(upper);
+            if (isGlassLike(upperState)
+                    && IBlock.getStatePropertySafe(upperState, BlockPSDAPGBase.FACING) == facing
+                    && IBlock.getStatePropertySafe(upperState, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER) {
                 positions.add(upper);
             }
         }
@@ -125,9 +136,9 @@ public final class PSDRuns {
         final SectionKind kind = sectionKind(world, pos.down());
         final Predicate<BlockPos> chained;
         if (kind == SectionKind.OTHER) {
-            chained = cursor -> isPsdTop(world.getBlockState(cursor));
+            chained = cursor -> isPsdTopFacing(world.getBlockState(cursor), facing);
         } else {
-            chained = cursor -> isPsdTop(world.getBlockState(cursor)) && sectionKind(world, cursor.down()) == kind;
+            chained = cursor -> isPsdTopFacing(world.getBlockState(cursor), facing) && sectionKind(world, cursor.down()) == kind;
         }
         return walk(world, pos, facing, chained);
     }
@@ -147,9 +158,9 @@ public final class PSDRuns {
         final SectionKind kind = sectionKind(world, pos.down());
         final Predicate<BlockPos> chained;
         if (kind == SectionKind.OTHER) {
-            chained = cursor -> isPsdTop(world.getBlockState(cursor));
+            chained = cursor -> isPsdTopFacing(world.getBlockState(cursor), facing);
         } else {
-            chained = cursor -> isPsdTop(world.getBlockState(cursor)) && sectionKind(world, cursor.down()) == kind;
+            chained = cursor -> isPsdTopFacing(world.getBlockState(cursor), facing) && sectionKind(world, cursor.down()) == kind;
         }
 
         BlockPos cursor = pos.offset(facing.rotateYCounterclockwise());
@@ -207,6 +218,10 @@ public final class PSDRuns {
 
     private static boolean isPsdTop(BlockState state) {
         return state.getBlock().data instanceof BlockPSDTop;
+    }
+
+    private static boolean isPsdTopFacing(BlockState state, Direction facing) {
+        return isPsdTop(state) && IBlock.getStatePropertySafe(state, BlockPSDTop.FACING) == facing;
     }
 
     private static boolean hasTopBinding(BlockPos pos) {

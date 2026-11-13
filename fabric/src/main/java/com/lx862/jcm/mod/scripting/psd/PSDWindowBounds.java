@@ -75,6 +75,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 final class PSDWindowBounds {
 
+    /** Block states survive F3+T, but their baked models and sprite pixels do not. */
+    static void reset() {
+#if MC_VERSION >= "12001"
+#if LOADER == "fabric"
+        CACHE.clear();
+#endif
+#endif
+    }
+
     /** Vanilla pane depth fallback: the pane's platform-side face sits
      *  4/16 toward the track from the block centre (both JCM's DRL APG
      *  and MTR's own APG glass models). */

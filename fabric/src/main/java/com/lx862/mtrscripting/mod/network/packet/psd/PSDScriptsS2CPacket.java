@@ -24,7 +24,11 @@ public class PSDScriptsS2CPacket extends PacketHandler {
     public PSDScriptsS2CPacket(PacketBufferReceiver packetBufferReceiver) {
         this.dimension = packetBufferReceiver.readString();
         final int size = packetBufferReceiver.readInt();
-        this.bindings = new ArrayList<>(Math.max(0, size));
+        // MTR's PacketBufferSender fragments large logical messages itself.
+        // Do not cap legitimate whole-dimension snapshots by a transport-frame
+        // count. Grow only as entries are decoded, not from an untrusted size.
+        if (size < 0) throw new IllegalArgumentException("Invalid PSD binding count: " + size);
+        this.bindings = new ArrayList<>(Math.min(size, 1024));
         for (int i = 0; i < size; i++) {
             final int x = packetBufferReceiver.readInt();
             final int y = packetBufferReceiver.readInt();

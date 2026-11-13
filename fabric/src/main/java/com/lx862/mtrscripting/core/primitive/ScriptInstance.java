@@ -16,6 +16,7 @@ public abstract class ScriptInstance<T> {
     private double lastExecutionDurationMs;
     private double beginExecuteTime = -1;
     private boolean createFunctionInvoked = false;
+    private volatile boolean disposalRequested;
     public Future<?> scriptTask;
     public double lastExecuteTime;
 
@@ -64,6 +65,17 @@ public abstract class ScriptInstance<T> {
 
     public boolean isCreateFunctionInvoked() {
         return this.createFunctionInvoked;
+    }
+
+    /** Stop accepting frames before queueing cleanup behind any running task. */
+    public synchronized boolean beginDisposal() {
+        if (disposalRequested) return false;
+        disposalRequested = true;
+        return true;
+    }
+
+    public boolean isDisposing() {
+        return disposalRequested;
     }
 
     public boolean executionTimedOut(int thresholdMs) {
