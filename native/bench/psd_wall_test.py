@@ -49,9 +49,10 @@ public final class BlockEntity {public final Object data;public BlockEntity(Obje
 import java.util.*;
 public final class World {
  public final Object data=new Object();
+ public int reads;
  public final Map<BlockPos,BlockState> blocks=new HashMap<>();
  public final Map<BlockPos,BlockEntity> entities=new HashMap<>();
- public BlockState getBlockState(BlockPos p){return blocks.getOrDefault(p,new BlockState(new Object()));}
+ public BlockState getBlockState(BlockPos p){reads++;return blocks.getOrDefault(p,new BlockState(new Object()));}
  public BlockEntity getBlockEntity(BlockPos p){return entities.get(p);}
 }''',
     'org/mtr/mod/block/IBlock.java': '''package org.mtr.mod.block;
@@ -98,7 +99,10 @@ public final class CustomResourceLoader {
     'com/lx862/jcm/mod/util/JCMLogger.java': '''package com.lx862.jcm.mod.util;
 public final class JCMLogger {public static void warn(String message,Object... args){}}''',
     'com/lx862/jcm/mod/scripting/psd/PSDClientBindings.java': '''package com.lx862.jcm.mod.scripting.psd;
-public final class PSDClientBindings {public static PSDBinding get(org.mtr.mapping.holder.BlockPos p){return null;}}''',
+public final class PSDClientBindings {
+ public static final java.util.Map<org.mtr.mapping.holder.BlockPos,PSDBinding> bindings=new java.util.HashMap<>();
+ public static PSDBinding get(org.mtr.mapping.holder.BlockPos p){return bindings.get(p);}
+}''',
 })
 
 

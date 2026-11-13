@@ -1449,7 +1449,7 @@ void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
     if (!base || out.record_count <= 0 || out.records_len <= 0
             || out.records_len > INT32_MAX || out.records_capacity < 0) return;
     const int64_t total = out.records_capacity > 0
-            ? std::min(out.records_len, out.records_capacity) : out.records_len;
+            ? (std::min)(out.records_len, out.records_capacity) : out.records_len;
     uint8_t* p = base;
     int64_t pos = 0;   /* consumed bytes; bounds are judged on REMAINING
                           bytes (total - pos), never via pointer addition —

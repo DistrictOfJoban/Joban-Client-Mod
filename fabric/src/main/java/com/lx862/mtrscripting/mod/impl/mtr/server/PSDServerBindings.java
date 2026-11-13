@@ -193,7 +193,7 @@ public final class PSDServerBindings {
         final PSDScriptsS2CPacket packet = new PSDScriptsS2CPacket(dimension, snapshot(state));
         MinecraftServerHelper.iteratePlayers(ServerWorld.cast(state.world), player -> {
             if (subscribers.contains(player.data)) {
-                com.lx862.jcm.mod.registry.Networking.sendPacketToClient(player, packet);
+                com.lx862.jcm.mod.registry.Networking.sendPacketToClient(PlayerEntity.cast(player), packet);
             }
         });
     }

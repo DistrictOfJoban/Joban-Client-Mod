@@ -61,9 +61,54 @@ public final class PSDWallTest {
         check(PSDRuns.topRun(world, anchor, facing).width == 1, "top run crossed facing boundary");
     }
 
+    private static void checkSectionLength(Direction facing, int startCoordinate, int length) {
+        final World glassWorld = new World(), topWorld = new World();
+        final BlockPos origin = new BlockPos(0, 4, 0);
+        final Direction along = facing.rotateYClockwise();
+        final int endCoordinate = startCoordinate + length - 1;
+        for (int coordinate = startCoordinate; coordinate <= endCoordinate; coordinate++) {
+            final BlockPos pos = origin.offset(along, coordinate);
+            glassWorld.blocks.put(pos, glass(facing, IBlock.DoubleBlockHalf.LOWER));
+            topWorld.blocks.put(pos, new BlockState(new BlockPSDTop()).with(BlockPSDTop.FACING, facing));
+            topWorld.blocks.put(pos.down(), glass(facing, IBlock.DoubleBlockHalf.LOWER));
+        }
+        PSDClientBindings.bindings.clear();
+        final BlockPos bound = origin.offset(along, startCoordinate);
+        PSDClientBindings.bindings.put(bound, new PSDBinding(bound, "test:top", false, PSDWrapper.PSDType.TOP));
+        for (int coordinate = startCoordinate; coordinate <= endCoordinate; coordinate++) {
+            final BlockPos pos = origin.offset(along, coordinate);
+            final int gridStart = Math.floorDiv(coordinate, 64) * 64;
+            final int expectedStart = length <= 64 ? startCoordinate : Math.max(startCoordinate, gridStart);
+            final int expectedEnd = length <= 64 ? endCoordinate : Math.min(endCoordinate, gridStart + 63);
+            final BlockPos expectedAnchor = origin.offset(along, expectedStart);
+            glassWorld.reads = 0;
+            final PSDRuns.Run glassRun = PSDRuns.glassRun(glassWorld, pos, facing);
+            check(glassRun.start.equals(expectedAnchor) && glassRun.width == expectedEnd - expectedStart + 1,
+                    facing + ": glass anchor/width depends on binding position at " + coordinate + " in length " + length);
+            check(glassWorld.reads <= 140, facing + ": glass segmentation performed an unbounded scan");
+            final PSDRuns.Run topRun = PSDRuns.topRun(topWorld, pos, facing);
+            check(topRun.start.equals(expectedAnchor) && topRun.width == glassRun.width,
+                    facing + ": top and glass disagree on deterministic section at " + coordinate);
+            if (length > 64) {
+                check(expectedStart >= gridStart && expectedEnd < gridStart + 64,
+                        facing + ": long section crossed its aligned interval");
+            }
+            final boolean sameCanvas = length <= 64 || Math.floorDiv(coordinate, 64) == Math.floorDiv(startCoordinate, 64);
+            check(PSDRuns.topGroupHasScriptBinding(topWorld, pos, facing) == sameCanvas,
+                    facing + ": a different canvas suppressed this top panel's vanilla content at " + coordinate);
+        }
+        PSDClientBindings.bindings.clear();
+    }
+
     public static void main(String[] args) {
-        for (Direction facing : Direction.values()) checkWall(facing);
+        for (Direction facing : Direction.values()) {
+            checkWall(facing);
+            checkSectionLength(facing, 60, 8);   // Short sections cross grid lines unchanged.
+            checkSectionLength(facing, -17, 64); // Exactly the limit is still one canvas.
+            checkSectionLength(facing, 17, 65);
+            checkSectionLength(facing, -70, 130);
+        }
         checkSections();
-        System.out.println("PSD wall regression: all orientations, adjacent door states, dimension replacement and section boundaries passed");
+        System.out.println("PSD wall regression: all orientations, door states, world replacement and deterministic 8/64/65/130-block sections passed");
     }
 }

@@ -22,7 +22,7 @@ public record BlockPos(int x,int y,int z) {public int getX(){return x;}public in
     'org/mtr/mapping/holder/World.java': '''package org.mtr.mapping.holder;
 import java.util.*;
 public class World {
- public final Map<BlockPos,BlockState> blocks=new HashMap<>();public final List<PlayerEntity> players=new ArrayList<>();
+ public final Map<BlockPos,BlockState> blocks=new HashMap<>();public final List<ServerPlayerEntity> players=new ArrayList<>();
  public boolean loaded=true;public int blockReads;
  public BlockState getBlockState(BlockPos p){blockReads++;return blocks.getOrDefault(p,new BlockState(new Object()));}
  public boolean isChunkLoaded(int x,int z){return loaded;}
@@ -33,11 +33,12 @@ public final class ServerWorld extends World {public static ServerWorld cast(Wor
 public class PlayerEntity {
  public final Object data;public final World world;
  public PlayerEntity(Object data,World world){this.data=data;this.world=world;}
- public static PlayerEntity cast(ServerPlayerEntity p){return p;}
+ public static PlayerEntity cast(ServerPlayerEntity p){return new PlayerEntity(p.data,p.world);}
 }''',
     'org/mtr/mapping/holder/ServerPlayerEntity.java': '''package org.mtr.mapping.holder;
-public final class ServerPlayerEntity extends PlayerEntity {
- public ServerPlayerEntity(Object data,World world){super(data,world);}
+public final class ServerPlayerEntity {
+ public final Object data;public final World world;
+ public ServerPlayerEntity(Object data,World world){this.data=data;this.world=world;}
  public World getEntityWorld(){return world;}public boolean isHolding(Object item){return true;}
  public BlockPos getBlockPos(){return new BlockPos(0,0,0);}public Name getName(){return new Name();}
  public static final class Name {public String getString(){return "test";}}
@@ -49,7 +50,7 @@ import java.nio.file.Path;
 public final class MinecraftServer {private final Path root;public MinecraftServer(Path root){this.root=root;}public Path getSavePath(WorldSavePath path){return root;}}''',
     'org/mtr/mapping/mapper/MinecraftServerHelper.java': '''package org.mtr.mapping.mapper;
 import org.mtr.mapping.holder.*;import java.util.function.Consumer;
-public final class MinecraftServerHelper {public static void iteratePlayers(ServerWorld world,Consumer<PlayerEntity> f){world.players.forEach(f);}}''',
+public final class MinecraftServerHelper {public static void iteratePlayers(ServerWorld world,Consumer<ServerPlayerEntity> f){world.players.forEach(f);}}''',
     'org/mtr/mod/Init.java': '''package org.mtr.mod;
 public final class Init {public static String getWorldId(org.mtr.mapping.holder.World world){return "test/world";}}''',
     'com/lx862/jcm/mod/registry/Items.java': '''package com.lx862.jcm.mod.registry;

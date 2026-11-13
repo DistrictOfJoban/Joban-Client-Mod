@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class FilesJS {
-    private static final Path rootMinecraftPath = MinecraftClient.getInstance().getRunDirectoryMapped().toPath();
+    private static final Path rootMinecraftPath = MinecraftClient.getInstance().getRunDirectoryMapped().toPath().toAbsolutePath().normalize();
     private static final Path dataPath = rootMinecraftPath.resolve("data").resolve("mtrscripting");
 
     private FilesJS() {
@@ -21,14 +21,14 @@ public class FilesJS {
         Path p = resolvePathSafe(rootMinecraftPath, paths);
         File f = p.toFile();
         if(!f.exists()) return null;
-        return new DataReaderJS(() -> new FileInputStream(f));
+        return new DataReaderJS(() -> new FileInputStream(resolvePathSafe(rootMinecraftPath, p.toString()).toFile()));
     }
 
     public static DataReaderJS readData(String... paths) throws IOException {
         Path p = resolvePathSafe(dataPath, paths);
         File f = p.toFile();
         if(!f.exists()) return null;
-        return new DataReaderJS(() -> new FileInputStream(f));
+        return new DataReaderJS(() -> new FileInputStream(resolvePathSafe(dataPath, p.toString()).toFile()));
     }
 
     public static void saveData(String content, String... paths) throws IOException {
@@ -44,7 +44,7 @@ public class FilesJS {
     }
 
     public static void deleteData(String... paths) throws IOException {
-        Path p = resolvePathSafe(dataPath, paths);
+        Path p = ScriptFilePath.resolve(dataPath, false, paths);
         Files.deleteIfExists(p);
     }
 
@@ -63,22 +63,6 @@ public class FilesJS {
      * @throws IOException If path is located outside of the specified rootPath
      */
     private static Path resolvePathSafe(Path rootPath, String... paths) throws IOException {
-        Path p = rootPath;
-        for(String str : paths) {
-            p = p.resolve(str);
-        }
-        ensurePathNotEscaped(p, rootPath);
-        return p;
-    }
-
-    private static void ensurePathNotEscaped(Path targetPath, Path constrainedPath) throws IOException {
-        Path pPath = targetPath.normalize();
-        while(true) {
-            if(pPath == null) {
-                throw new IOException(String.format("Path must be within the \"%s\" directory!", targetPath.getFileName().toString()));
-            }
-            if(pPath.equals(constrainedPath)) break;
-            pPath = pPath.getParent();
-        }
+        return ScriptFilePath.resolve(rootPath, true, paths);
     }
 }

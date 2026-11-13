@@ -17,6 +17,7 @@
 #include "api.hpp"
 #include "text.hpp"
 #include "util.hpp"
+#include "vehicle.hpp"
 #include <cstring>
 
 namespace mtr {

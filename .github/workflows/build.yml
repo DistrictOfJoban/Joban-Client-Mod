@@ -7,7 +7,7 @@
 # (-Pnative_bridge_dir is not passed), so they cannot load any resource-pack
 # C++ script in a live game; every native script logs "native bridge
 # unavailable". For game-ready jars use the "Complete Build" workflow or a
-# Release, both of which bundle all eight platform bridges.
+# Release. Complete Build bundles the testing trio; Release bundles all eight.
 
 name: build
 on: [pull_request, push]
