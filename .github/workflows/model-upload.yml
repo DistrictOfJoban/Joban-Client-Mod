@@ -1,0 +1,41 @@
+name: Model Upload Checks
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/model-upload.yml'
+      - 'fabric/src/main/java/com/lx862/mtrscripting/core/util/model/**'
+      - 'native/bench/model_upload_test.py'
+      - 'native/bench/jvm/ModelUploadTest.java'
+  pull_request:
+    paths:
+      - '.github/workflows/model-upload.yml'
+      - 'fabric/src/main/java/com/lx862/mtrscripting/core/util/model/**'
+      - 'native/bench/model_upload_test.py'
+      - 'native/bench/jvm/ModelUploadTest.java'
+permissions:
+  contents: read
+jobs:
+  model-upload:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify model coordinates, upload and GL state restoration
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1-mesa-dri
+          mkdir -p native/build-gl
+          curl --fail --location --retry 3 'https://api.modrinth.com/maven/maven/modrinth/minecraft-transit-railway/FABRIC-4.0.5+1.20.1/minecraft-transit-railway-FABRIC-4.0.5+1.20.1.jar' -o native/build-gl/mtr.jar
+          xvfb-run -a python3 native/bench/model_upload_test.py --mtr-jar native/build-gl/mtr.jar --work native/build-gl/test

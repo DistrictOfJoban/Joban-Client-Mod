@@ -49,8 +49,8 @@ public class RawMeshBuilderJS {
 
     public RawMeshBuilderJS vertex(ScriptVector3f position) {
         float x = position.x();
-        float y = position.x();
-        float z = position.x();
+        float y = position.y();
+        float z = position.z();
         buildingVertex.position = new Vector3f(x, -y, -z);
         return this;
     }

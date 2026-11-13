@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.core.util.model;
 import com.lx862.jcm.mixin.mtrscripting.GlStateTrackerAccessor;
 import com.lx862.jcm.mixin.mtrscripting.OptimizedModelAccessor;
 import com.lx862.jcm.mixin.mtrscripting.OptimizedModelWrapperAccessor;
+import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL33;
@@ -33,6 +34,21 @@ public final class ModelUploadTest {
         check(b.getMesh().vertices.get(0).position.getY() == -.6f, "production builder flips the Y axis");
         check(b.getMesh().faces.size() == 2, "production builder triangulates the quad");
         return b.asRawModel();
+    }
+
+    private static void vectorVertexCoordinates() {
+        final RawMeshBuilderJS b = new RawMeshBuilderJS(4, "interior", new Identifier("test:vector"));
+        b.vertex(new ScriptVector3f(1.25f, -2.5f, 3.75f)).endVertex();
+        b.vertex(1.25, -2.5, 3.75).endVertex();
+        final var vectorPosition = b.getMesh().vertices.get(0).position;
+        final var scalarPosition = b.getMesh().vertices.get(1).position;
+        check(vectorPosition.getX() == 1.25f && vectorPosition.getY() == 2.5f
+                        && vectorPosition.getZ() == -3.75f,
+                "vector overload retains distinct axes and flips Y/Z");
+        check(vectorPosition.getX() == scalarPosition.getX()
+                        && vectorPosition.getY() == scalarPosition.getY()
+                        && vectorPosition.getZ() == scalarPosition.getZ(),
+                "vector and scalar vertex overloads agree");
     }
 
     private static List<VertexArray> parts(ModelJS model) {
@@ -66,6 +82,7 @@ public final class ModelUploadTest {
         try {
             GLFW.glfwMakeContextCurrent(window);
             GL.createCapabilities();
+            vectorVertexCoordinates();
             System.out.println("GL renderer: " + GL33.glGetString(GL33.GL_RENDERER));
             System.out.println("MTR GPU classes: " + GlStateTracker.class.getProtectionDomain().getCodeSource().getLocation());
             int vao = GL33.glGenVertexArrays(), vbo = GL33.glGenBuffers(), ebo = GL33.glGenBuffers();
