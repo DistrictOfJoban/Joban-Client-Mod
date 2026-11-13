@@ -84,6 +84,8 @@ if(BUILD_TESTING)
     add_test(NAME psd_binding_lifecycle COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/bench/psd_bindings_test.py --build ${CMAKE_CURRENT_BINARY_DIR})
     add_test(NAME text_background_geometry COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/bench/text_background_test.py --build ${CMAKE_CURRENT_BINARY_DIR})
     add_test(NAME psd_z_order COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/bench/psd_z_order_test.py --build ${CMAKE_CURRENT_BINARY_DIR})
+    add_test(NAME shader_pass_detection COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/bench/shader_pass_test.py --build ${CMAKE_CURRENT_BINARY_DIR})
+    add_test(NAME psd_render_pass COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/bench/psd_render_pass_test.py --build ${CMAKE_CURRENT_BINARY_DIR})
   endif()
   # Headless regression for the JNI-FREE planes. The bridge TU is linked
   # into the executables with NO JVM anywhere: a fake vtable stands in for

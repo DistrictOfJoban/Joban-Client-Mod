@@ -31,7 +31,6 @@ import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
-import org.mtr.mapping.mapper.OptimizedRenderer;
 import org.mtr.mod.InitClient;
 import org.mtr.mod.block.BlockPSDAPGBase;
 import org.mtr.mod.block.BlockPSDAPGGlassBase;
@@ -106,7 +105,11 @@ public final class PSDScriptRenderer implements RenderHelper {
         if (world == null || player == null) return;
         if (PSDClientBindings.isEmpty()) return;
 
-        final boolean shadowPass = OptimizedRenderer.renderingShadows();
+        // Another MainRenderer HEAD hook updates JCM's OptimizedRenderer
+        // cache. Its order relative to this hook is unspecified: that cache
+        // can still describe the preceding shadow/camera pass. Query the
+        // current pass here before gating backings, scripts and sounds.
+        final boolean shadowPass = ShaderDetector.isRenderingShadowPass();
         final boolean shaderPack = !shadowPass && ShaderDetector.isShaderPackInUse();
         // Use the rendered camera, not the player body: third-person and
         // detached cameras can be on the opposite side of the glass.
