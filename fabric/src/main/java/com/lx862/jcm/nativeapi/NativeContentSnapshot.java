@@ -283,9 +283,8 @@ public final class NativeContentSnapshot {
                     buffer.putInt(ex + 8, exit.destinations().size());
                     /* The str-ref array is appended into the pool stream,
                        4-aligned — same as the vehicle writer. */
-                    buffer.position((buffer.position() + 3) & ~3);
-                    final int strRefBase = exit.destinations().isEmpty() ? 0 : buffer.position();
-                    buffer.position(buffer.position() + exit.destinations().size() * 8);
+                    final int strRefBase = exit.destinations().isEmpty()
+                            ? 0 : out.reserve(exit.destinations().size() * 8, 4);
                     buffer.putInt(ex + 12, strRefBase);
                     for (int k = 0; k < exit.destinations().size(); k++) {
                         out.string(strRefBase + k * 8, exit.destinations().get(k));

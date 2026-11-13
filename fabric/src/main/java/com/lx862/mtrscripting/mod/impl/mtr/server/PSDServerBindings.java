@@ -14,11 +14,13 @@ import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.MinecraftServer;
 import org.mtr.mapping.holder.PlayerEntity;
 import org.mtr.mapping.holder.ServerPlayerEntity;
+import org.mtr.mapping.holder.ServerWorld;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.holder.WorldSavePath;
 import org.mtr.mod.Init;
 import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDTop;
+import org.mtr.mapping.mapper.MinecraftServerHelper;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -26,10 +28,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 /**
  * The server half of the PSD script binding feature — storage, validation
@@ -57,11 +64,13 @@ import java.util.Map;
 public final class PSDServerBindings {
 
     private static final Map<String, DimensionState> DIMENSIONS = new HashMap<>();
-    /* Players that asked for a dimension's bindings (join / dimension
-       switch) — the broadcast targets. Refreshed on every request; stale
-       entries (player left) are individually try-caught and the whole map
-       drops on server stop. */
-    private static final Map<String, List<ServerPlayerEntity>> SUBSCRIBERS = new HashMap<>();
+    /* Track raw player identities weakly: mapping wrappers can be recreated
+       for each packet, and disconnected players must not stay alive until
+       the server stops. Broadcasts enumerate only currently connected players. */
+    private static final Map<String, Set<Object>> SUBSCRIBERS = new HashMap<>();
+    // The editor can modify all 64 columns of the surface clicked in reach.
+    private static final double MAX_EDIT_DISTANCE_SQ = 72D * 72D;
+    private static final long SAVE_RETRY_NANOS = 5_000_000_000L;
 
     private PSDServerBindings() {
     }
@@ -69,18 +78,36 @@ public final class PSDServerBindings {
     private static final class DimensionState {
         final String dimension;
         final Path file;
+        final World world;
         final Map<BlockPos, PSDBinding> bindings = new HashMap<>();
         boolean dirty;
+        boolean broadcastPending;
+        long retrySaveAt;
 
-        DimensionState(String dimension, Path file) {
+        DimensionState(String dimension, Path file, World world) {
             this.dimension = dimension;
             this.file = file;
+            this.world = world;
         }
     }
 
     /* ==================================================================== */
     /* Lifecycle                                                             */
     /* ==================================================================== */
+
+    /** Coalesce an editor surface's per-block packets into one save and sync. */
+    public static void onServerTick() {
+        final long now = System.nanoTime();
+        for (DimensionState state : DIMENSIONS.values()) {
+            if (state.dirty && (state.retrySaveAt == 0 || now - state.retrySaveAt >= 0)) {
+                save(state);
+            }
+            if (state.broadcastPending) {
+                state.broadcastPending = false;
+                broadcast(state.dimension, state);
+            }
+        }
+    }
 
     public static void onServerStopping(MinecraftServer minecraftServer) {
         for (DimensionState state : DIMENSIONS.values()) {
@@ -98,12 +125,10 @@ public final class PSDServerBindings {
         /* SECURITY: never trust the client-supplied dimension string — it is
            only used to build the storage path. The answer always describes
            the player's ACTUAL current dimension, derived server-side. */
-        final String dimension = Init.getWorldId(player.getEntityWorld());
-        final DimensionState state = ensureLoaded(minecraftServer, dimension);
-        final List<ServerPlayerEntity> subscribers = SUBSCRIBERS.computeIfAbsent(dimension, key -> new ArrayList<>());
-        if (!subscribers.contains(player)) {
-            subscribers.add(player);
-        }
+        final World world = player.getEntityWorld();
+        final String dimension = Init.getWorldId(world);
+        final DimensionState state = ensureLoaded(minecraftServer, dimension, world);
+        SUBSCRIBERS.computeIfAbsent(dimension, key -> Collections.newSetFromMap(new WeakHashMap<>())).add(player.data);
         send(minecraftServer, PlayerEntity.cast(player), new PSDScriptsS2CPacket(dimension, snapshot(state)));
     }
 
@@ -116,6 +141,7 @@ public final class PSDServerBindings {
             JCMLogger.warn("Player {} tried to bind a PSD script without holding the PSD Script Editor", player.getName().getString());
             return;
         }
+        if (scriptId == null || scriptId.length() > PSDBinding.MAX_SCRIPT_ID_LENGTH || typeName == null) return;
 
         final PSDWrapper.PSDType type;
         try {
@@ -125,6 +151,12 @@ public final class PSDServerBindings {
         }
 
         final BlockPos pos = new BlockPos(x, y, z);
+        final BlockPos playerPos = player.getBlockPos();
+        final double dx = (double) x - playerPos.getX();
+        final double dy = (double) y - playerPos.getY();
+        final double dz = (double) z - playerPos.getZ();
+        // Reject remote edits before getBlockState can synchronously load chunks.
+        if (dx * dx + dy * dy + dz * dz > MAX_EDIT_DISTANCE_SQ || !world.isChunkLoaded(x >> 4, z >> 4)) return;
         final BlockState state = world.getBlockState(pos);
         final Object block = state.getBlock().data;
         final boolean blockMatches = type == PSDWrapper.PSDType.TOP
@@ -134,15 +166,17 @@ public final class PSDServerBindings {
             return;
         }
 
-        final DimensionState dimensionState = ensureLoaded(minecraftServer, dimension);
-        if (scriptId == null || scriptId.isEmpty()) {
-            dimensionState.bindings.remove(pos);
+        final DimensionState dimensionState = ensureLoaded(minecraftServer, dimension, world);
+        final PSDBinding previous = dimensionState.bindings.get(pos);
+        if (scriptId.isEmpty()) {
+            if (dimensionState.bindings.remove(pos) == null) return;
         } else {
+            if (previous != null && previous.scriptId.equals(scriptId)
+                    && previous.pidsPreset == pidsPreset && previous.type == type) return;
             dimensionState.bindings.put(pos, new PSDBinding(pos, scriptId, pidsPreset, type));
         }
         dimensionState.dirty = true;
-        save(dimensionState);
-        broadcast(dimension, dimensionState);
+        dimensionState.broadcastPending = true;
     }
 
     /* ==================================================================== */
@@ -154,18 +188,14 @@ public final class PSDServerBindings {
     }
 
     private static void broadcast(String dimension, DimensionState state) {
-        final List<ServerPlayerEntity> subscribers = SUBSCRIBERS.get(dimension);
+        final Set<Object> subscribers = SUBSCRIBERS.get(dimension);
         if (subscribers == null || subscribers.isEmpty()) return;
         final PSDScriptsS2CPacket packet = new PSDScriptsS2CPacket(dimension, snapshot(state));
-        for (ServerPlayerEntity player : subscribers) {
-            try {
-                if (Init.getWorldId(player.getEntityWorld()).equals(dimension)) {
-                    com.lx862.jcm.mod.registry.Networking.sendPacketToClient(PlayerEntity.cast(player), packet);
-                }
-            } catch (Throwable ignored) {
-                // Player disconnected between subscribe and broadcast.
+        MinecraftServerHelper.iteratePlayers(ServerWorld.cast(state.world), player -> {
+            if (subscribers.contains(player.data)) {
+                com.lx862.jcm.mod.registry.Networking.sendPacketToClient(PlayerEntity.cast(player), packet);
             }
-        }
+        });
     }
 
     private static List<PSDBinding> snapshot(DimensionState state) {
@@ -176,12 +206,12 @@ public final class PSDServerBindings {
     /* Storage                                                               */
     /* ==================================================================== */
 
-    private static DimensionState ensureLoaded(MinecraftServer minecraftServer, String dimension) {
+    private static DimensionState ensureLoaded(MinecraftServer minecraftServer, String dimension, World world) {
         DimensionState state = DIMENSIONS.get(dimension);
         if (state == null) {
             final Path file = minecraftServer.getSavePath(WorldSavePath.getRootMapped())
                     .resolve("mtr").resolve(dimension).resolve("psd-scripts").resolve("bindings.json");
-            state = new DimensionState(dimension, file);
+            state = new DimensionState(dimension, file, world);
             load(state);
             DIMENSIONS.put(dimension, state);
         }
@@ -238,9 +268,16 @@ public final class PSDServerBindings {
             try (BufferedWriter writer = Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
                 writer.write(root.toString());
             }
-            Files.move(tmp, state.file, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            try {
+                Files.move(tmp, state.file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                // Some world-save filesystems cannot atomically rename files.
+                Files.move(tmp, state.file, StandardCopyOption.REPLACE_EXISTING);
+            }
             state.dirty = false;
+            state.retrySaveAt = 0;
         } catch (IOException e) {
+            state.retrySaveAt = System.nanoTime() + SAVE_RETRY_NANOS;
             JCMLogger.warn("Could not save PSD script bindings to {}: {}", state.file, e.getMessage());
         }
     }
@@ -248,5 +285,6 @@ public final class PSDServerBindings {
     /** Test/integration hook: forget all in-memory dimension state. */
     public static void resetForTest() {
         DIMENSIONS.clear();
+        SUBSCRIBERS.clear();
     }
 }

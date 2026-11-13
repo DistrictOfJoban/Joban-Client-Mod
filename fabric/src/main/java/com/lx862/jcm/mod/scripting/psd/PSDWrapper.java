@@ -295,7 +295,9 @@ public class PSDWrapper {
                 wrapper = new PSDStationWrapper(station);
                 cache.put(station.getId(), wrapper);
             }
-            return wrapper;
+            // Scripts may sort/clear the returned lists, including nested
+            // exit destinations. Never expose the cache's mutable graph.
+            return new PSDStationWrapper(wrapper);
         }
 
         /** Clear the station cache (dimension/world switch, resource reload). */
@@ -341,6 +343,18 @@ public class PSDWrapper {
             for(Station connected : station.connectedStations) {
                 connectedStationNames.add(connected.getName());
             }
+        }
+
+        private PSDStationWrapper(PSDStationWrapper source) {
+            station = source.station;
+            interchanges.addAll(source.interchanges); // interchange entries are immutable
+            source.connectingInterchanges.forEach((name, routes) ->
+                    connectingInterchanges.put(name, new ArrayList<>(routes)));
+            for (PSDExitWrapper exit : source.exits) {
+                exits.add(new PSDExitWrapper(exit.name, new ArrayList<>(exit.destinations)));
+            }
+            platformNames.addAll(source.platformNames);
+            connectedStationNames.addAll(source.connectedStationNames);
         }
 
         private PSDInterchangeWrapper wrapInterchange(Route route) {
@@ -448,7 +462,11 @@ public class PSDWrapper {
             // Built on the render thread, just like the enclosing PSD wrapper.
             // A private list preserves the mutable script API without letting
             // a script sort/clear the cache shared with another PSD instance.
-            this.stops = new ArrayList<>(PSDRouteStopCache.stopsOf(route, simplifiedRoute));
+            final List<PSDStopWrapper> cachedStops = PSDRouteStopCache.stopsOf(route, simplifiedRoute);
+            this.stops = new ArrayList<>(cachedStops.size());
+            for (PSDStopWrapper stop : cachedStops) {
+                this.stops.add(new PSDStopWrapper(stop));
+            }
         }
 
         public long id() {
@@ -498,6 +516,20 @@ public class PSDWrapper {
         private final List<PSDExitWrapper> exits = new ArrayList<>();
         private final @ValueNullable Station station;
         private final @ValueNullable Platform platform;
+
+        private PSDStopWrapper(PSDStopWrapper source) {
+            name = source.name;
+            destinationName = source.destinationName;
+            customDestination = source.customDestination;
+            station = source.station;
+            platform = source.platform;
+            interchanges.addAll(source.interchanges);
+            source.connectingInterchanges.forEach((name, routes) ->
+                    connectingInterchanges.put(name, new ArrayList<>(routes)));
+            for (PSDExitWrapper exit : source.exits) {
+                exits.add(new PSDExitWrapper(exit.name, new ArrayList<>(exit.destinations)));
+            }
+        }
 
         @ApiInternal
         public PSDStopWrapper(Route route, SimplifiedRoutePlatform routePlatform, String terminusDestination) {
@@ -693,7 +725,7 @@ public class PSDWrapper {
         }
 
         public @ValueNullable PSDArrivalWrapper get(int i) {
-            return i >= arrivals.size() ? null : arrivals.get(i);
+            return i < 0 || i >= arrivals.size() ? null : arrivals.get(i);
         }
 
         public void forEach(Consumer<PSDArrivalWrapper> consumer) {
@@ -750,7 +782,7 @@ public class PSDWrapper {
          * dwell while any door unit of the wall reports an open value.
          */
         public boolean isDoorOpen() {
-            return psd.isDoorOpen();
+            return arrived() && !departed() && psd.isDoorOpen();
         }
 
         /** Remaining milliseconds until arrival (negative once arrived). */

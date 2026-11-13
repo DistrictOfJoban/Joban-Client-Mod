@@ -150,7 +150,7 @@ jobs:
             done
           }
           try ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}" --console=plain
-          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="${{ env.FULL_VERSION }}" -Pnative_bridge_dir=native-dist/bridges --console=plain
+          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="$FULL_VERSION" -Pnative_bridge_dir=native-dist/bridges --console=plain
       - name: Audit documented Java API declarations
         run: |
           find .gradle ~/.gradle -name '*4.0.5*.jar' -type f > native/build-api-jars.txt
@@ -165,7 +165,7 @@ jobs:
               audit(Path(loader+'/build/classes/java/main'),jars,manifest)
           PY
       - name: Verify jar contents and absence of user resource packs
-        run: python3 native/bench/verify_jar.py --version "${{ env.FULL_VERSION }}" --bridges windows-x64,linux-x64,android-arm64 build/*.jar
+        run: python3 native/bench/verify_jar.py --version "$FULL_VERSION" --bridges windows-x64,linux-x64,android-arm64 build/*.jar
       - uses: actions/upload-artifact@v4
         with:
           name: complete-jars-${{ matrix.minecraft }}

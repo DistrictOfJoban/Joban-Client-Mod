@@ -13,6 +13,8 @@ on:
         description: Version without the v prefix
 permissions:
   contents: read
+env:
+  RELEASE_VERSION: ${{ inputs.publish-tag }}
 jobs:
   model-upload:
     runs-on: ubuntu-22.04
@@ -173,7 +175,7 @@ jobs:
             done
           }
           try ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}" --console=plain
-          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="${{ inputs.publish-tag }}" -Pnative_bridge_dir=native-dist/bridges --console=plain
+          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="$RELEASE_VERSION" -Pnative_bridge_dir=native-dist/bridges --console=plain
       - name: Audit documented Java API declarations
         run: |
           find .gradle ~/.gradle -name '*4.0.5*.jar' -type f > native/build-api-jars.txt
@@ -188,7 +190,7 @@ jobs:
               audit(Path(loader+'/build/classes/java/main'),jars,manifest)
           PY
       - name: Verify jar contents and absence of user resource packs
-        run: python3 native/bench/verify_jar.py --version "${{ inputs.publish-tag }}" build/*.jar
+        run: python3 native/bench/verify_jar.py --version "$RELEASE_VERSION" build/*.jar
       - uses: actions/upload-artifact@v4
         with:
           name: jars-${{ matrix.minecraft }}
@@ -218,10 +220,10 @@ jobs:
         run: |
           test "$(find release-jars -name '*.jar' -type f | wc -l)" -eq 12
           python3 - <<'PY'
-          import subprocess,zipfile
+          import os,subprocess,zipfile
           from pathlib import Path
           files=subprocess.check_output(['git','ls-files','native'],text=True).splitlines()
-          with zipfile.ZipFile('jcm-native-sdk-${{ inputs.publish-tag }}.zip','w',zipfile.ZIP_DEFLATED) as archive:
+          with zipfile.ZipFile('jcm-native-sdk-' + os.environ['RELEASE_VERSION'] + '.zip','w',zipfile.ZIP_DEFLATED) as archive:
               archive.write('LICENSE')
               for name in files:
                   path=Path(name)

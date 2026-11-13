@@ -84,18 +84,17 @@ public class RhinoParsedScript extends ParsedScript {
     @Override
     public Future<?> invokeCreateFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
         return invokeJSFunctions(instance, createFunctions, () -> {
-                finishCallback.run();
                 instance.setCreateFunctionInvoked(true);
+                if (finishCallback != null) finishCallback.run();
         },
                 // Ensure create function is re-invoked after error.
-                // Note: This will leak memory when the create function is invoked again, but not sure if there's a good solution without manually introducing checkpoint for disposing.
                 () -> instance.setCreateFunctionInvoked(false)
         );
     }
 
     @Override
     public void invokeRenderFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
-        if(instance.shouldInvalidate() || instance.scriptTask != null && !instance.scriptTask.isDone()) {
+        if(instance.isDisposing() || instance.shouldInvalidate() || instance.scriptTask != null && !instance.scriptTask.isDone()) {
             return;
         }
         if(instance.isCreateFunctionInvoked()) {
@@ -107,30 +106,40 @@ public class RhinoParsedScript extends ParsedScript {
 
     @Override
     public void invokeDisposeFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
-        invokeJSFunctions(instance, disposeFunctions, finishCallback, null);
+        if (!instance.beginDisposal()) return;
+        // Serialize cleanup behind create/render; never rate-limit disposal
+        // or close resources while the worker is still using them.
+        invokeJSFunctions(instance, disposeFunctions, finishCallback, null, true);
     }
 
     private Future<?> invokeJSFunctions(ScriptInstance<?> scriptInstance, List<Function> functions, Runnable finishExecutionCallback, Runnable errorCallback) {
-        if(duringFailCooldown()) return null;
-        if(TimingJS.globalElapsed() - scriptInstance.lastExecuteTime < rateLimit) return null;
+        return invokeJSFunctions(scriptInstance, functions, finishExecutionCallback, errorCallback, false);
+    }
+
+    private Future<?> invokeJSFunctions(ScriptInstance<?> scriptInstance, List<Function> functions, Runnable finishExecutionCallback, Runnable errorCallback, boolean disposing) {
+        if (!disposing && (scriptInstance.isDisposing() || duringFailCooldown())) return null;
+        if (!disposing && TimingJS.globalElapsed() - scriptInstance.lastExecuteTime < rateLimit) return null;
 
         return scriptManager.submitScriptTask(executorService, () -> {
-            if(duringFailCooldown()) return;
-            if(Thread.currentThread().isInterrupted()) return;
+            if (!disposing && (duringFailCooldown() || Thread.currentThread().isInterrupted())) return;
 
+            boolean succeeded = false;
             try {
                 Context cx = Context.enter();
                 cx.setLanguageVersion(Context.VERSION_ES6);
                 cx.setClassShutter(new MTRRhinoClassShutter(scriptManager.getClassShutter()));
                 timing.prepareForScript(scriptInstance);
                 scriptInstance.beginTrackExecuteTime();
-                for(Function func : functions) {
-                    func.call(cx, scope, scope, new Object[] {
-                        scriptInstance.getContextObject(),
-                        scriptInstance.getOrCreateStateObject(() -> cx.newObject(scope)),
-                        scriptInstance.getWrapperObject()
-                    });
+                if (!disposing || scriptInstance.isCreateFunctionInvoked()) {
+                    for(Function func : functions) {
+                        func.call(cx, scope, scope, new Object[] {
+                            scriptInstance.getContextObject(),
+                            scriptInstance.getOrCreateStateObject(() -> cx.newObject(scope)),
+                            scriptInstance.getWrapperObject()
+                        });
+                    }
                 }
+                succeeded = true;
             } catch (Exception e) {
                 scriptManager.getLogger().error("[MTR Scripting via JCM {}] Error executing JS Script {}!", MTRScriptingMod.VERSION, displayName);
                 if(e instanceof RhinoException) {
@@ -151,13 +160,24 @@ public class RhinoParsedScript extends ParsedScript {
                 lastFailedTime = System.currentTimeMillis();
                 capturedScriptException = capturedException;
                 if(errorCallback != null) errorCallback.run();
-                scriptInstance.getContextObject().dispose();
+                // Discard an incomplete frame without destroying resources
+                // held by an already-created instance. It will retry render
+                // with the same state after cooldown; closing its textures
+                // here would make that state permanently unusable.
+                scriptInstance.getContextObject().resetForNextRun();
+                if (disposing || !scriptInstance.isCreateFunctionInvoked()) {
+                    scriptInstance.getContextObject().dispose();
+                }
             } finally {
-                scriptInstance.endTrackExecuteTime();
-                Context.exit();
+                try {
+                    scriptInstance.endTrackExecuteTime();
+                    Context.exit();
+                } finally {
+                    if (disposing) scriptInstance.getContextObject().dispose();
+                }
             }
 
-            if(finishExecutionCallback != null) {
+            if((succeeded || disposing) && finishExecutionCallback != null) {
                 try {
                     finishExecutionCallback.run();
                 } catch (Exception e) {
@@ -205,6 +225,6 @@ public class RhinoParsedScript extends ParsedScript {
     }
 
     private static boolean likelyDueToUndefinedParam(String s) {
-        return (s.startsWith("Can't find method") || s.startsWith("Java constructor for")) && s.contains("org.mozilla.javascript.Undefined");
+        return s != null && (s.startsWith("Can't find method") || s.startsWith("Java constructor for")) && s.contains("org.mozilla.javascript.Undefined");
     }
 }

@@ -4,10 +4,12 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
+import org.mtr.mod.block.BlockPSDAPGBase;
 import org.mtr.mod.block.BlockPSDAPGDoorBase;
 import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDAPGGlassEndBase;
 import org.mtr.mod.block.BlockPSDTop;
+import org.mtr.mod.block.IBlock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,10 +46,13 @@ import java.util.function.Predicate;
  * (the wall's "right", canvas +x); the canvas origin sits at the anchor
  * block's left edge. The anchor of a section is therefore its <b>left-most</b>
  * block — the last block reached walking {@code facing.rotateYCounterclockwise()}.</p>
+ * <p>Sections longer than 64 blocks are split at aligned 64-block boundaries
+ * along that signed axis. Editing, rendering and top-panel suppression use
+ * the same slice; shorter sections keep their original physical anchor.</p>
  */
 public final class PSDRuns {
 
-    /** Hard cap of one section walk — protects against pathological loops. */
+    /** Maximum canvas width; longer sections use deterministic aligned slices. */
     private static final int MAX_RUN_BLOCKS = 64;
 
     /** One walked section: the left-most block (render anchor) and the width in blocks. */
@@ -74,7 +79,13 @@ public final class PSDRuns {
      * doors. The returned anchor is the segment's left-most block.
      */
     public static Run glassRun(World world, BlockPos pos, Direction facing) {
-        return walk(world, pos, facing, cursor -> isGlassLike(world.getBlockState(cursor)));
+        final IBlock.DoubleBlockHalf half = IBlock.getStatePropertySafe(world.getBlockState(pos), IBlock.HALF);
+        return walk(world, pos, facing, cursor -> {
+            final BlockState state = world.getBlockState(cursor);
+            return isGlassLike(state)
+                    && IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING) == facing
+                    && IBlock.getStatePropertySafe(state, IBlock.HALF) == half;
+        });
     }
 
     /** Whether the state is a PSD/APG glass or glass-end block (either
@@ -95,7 +106,10 @@ public final class PSDRuns {
             final BlockPos lower = run.start.offset(facing.rotateYClockwise(), i);
             positions.add(lower);
             final BlockPos upper = lower.up();
-            if (isGlassLike(world.getBlockState(upper))) {
+            final BlockState upperState = world.getBlockState(upper);
+            if (isGlassLike(upperState)
+                    && IBlock.getStatePropertySafe(upperState, BlockPSDAPGBase.FACING) == facing
+                    && IBlock.getStatePropertySafe(upperState, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER) {
                 positions.add(upper);
             }
         }
@@ -125,9 +139,9 @@ public final class PSDRuns {
         final SectionKind kind = sectionKind(world, pos.down());
         final Predicate<BlockPos> chained;
         if (kind == SectionKind.OTHER) {
-            chained = cursor -> isPsdTop(world.getBlockState(cursor));
+            chained = cursor -> isPsdTopFacing(world.getBlockState(cursor), facing);
         } else {
-            chained = cursor -> isPsdTop(world.getBlockState(cursor)) && sectionKind(world, cursor.down()) == kind;
+            chained = cursor -> isPsdTopFacing(world.getBlockState(cursor), facing) && sectionKind(world, cursor.down()) == kind;
         }
         return walk(world, pos, facing, chained);
     }
@@ -141,26 +155,11 @@ public final class PSDRuns {
      * own arrows and route maps.
      */
     public static boolean topGroupHasScriptBinding(World world, BlockPos pos, Direction facing) {
+        if (!isPsdTopFacing(world.getBlockState(pos), facing)) return false;
         if (hasTopBinding(pos)) return true;
-        if (!isPsdTop(world.getBlockState(pos))) return false;
-
-        final SectionKind kind = sectionKind(world, pos.down());
-        final Predicate<BlockPos> chained;
-        if (kind == SectionKind.OTHER) {
-            chained = cursor -> isPsdTop(world.getBlockState(cursor));
-        } else {
-            chained = cursor -> isPsdTop(world.getBlockState(cursor)) && sectionKind(world, cursor.down()) == kind;
-        }
-
-        BlockPos cursor = pos.offset(facing.rotateYCounterclockwise());
-        for (int i = 0; i < MAX_RUN_BLOCKS && chained.test(cursor); i++) {
-            if (hasTopBinding(cursor)) return true;
-            cursor = cursor.offset(facing.rotateYCounterclockwise());
-        }
-        cursor = pos.offset(facing.rotateYClockwise());
-        for (int i = 0; i < MAX_RUN_BLOCKS && chained.test(cursor); i++) {
-            if (hasTopBinding(cursor)) return true;
-            cursor = cursor.offset(facing.rotateYClockwise());
+        final Run run = topRun(world, pos, facing);
+        for (int i = 0; i < run.width; i++) {
+            if (hasTopBinding(run.start.offset(facing.rotateYClockwise(), i))) return true;
         }
         return false;
     }
@@ -168,7 +167,11 @@ public final class PSDRuns {
     /**
      * Walks the contiguous section containing {@code pos} along the wall
      * axis: counterclockwise to the section's left-most block (the anchor),
-     * then clockwise for the width.
+     * then clockwise for the width. Sections of at most 64 blocks stay intact,
+     * even across grid boundaries. Once a 65th block proves a longer section,
+     * use an aligned 64-block interval along the signed canvas axis. Every
+     * binding in that interval then gets the same anchor without an unbounded
+     * search for the physical wall's left end.
      */
     private static Run walk(World world, BlockPos pos, Direction facing, Predicate<BlockPos> chained) {
         if (!chained.test(pos)) {
@@ -178,16 +181,37 @@ public final class PSDRuns {
         int width = 1;
 
         BlockPos cursor = pos.offset(facing.rotateYCounterclockwise());
-        while (width < MAX_RUN_BLOCKS && chained.test(cursor)) {
+        while (width <= MAX_RUN_BLOCKS && chained.test(cursor)) {
             start = cursor;
             width++;
             cursor = cursor.offset(facing.rotateYCounterclockwise());
         }
 
         cursor = pos.offset(facing.rotateYClockwise());
-        while (width < MAX_RUN_BLOCKS && chained.test(cursor)) {
+        while (width <= MAX_RUN_BLOCKS && chained.test(cursor)) {
             width++;
             cursor = cursor.offset(facing.rotateYClockwise());
+        }
+        if (width <= MAX_RUN_BLOCKS) return new Run(start, width);
+
+        final Direction along = facing.rotateYClockwise();
+        final long coordinate = along == Direction.EAST ? pos.getX()
+                : along == Direction.WEST ? -(long) pos.getX()
+                : along == Direction.SOUTH ? pos.getZ() : -(long) pos.getZ();
+        final int leftLimit = (int) Math.floorMod(coordinate, (long) MAX_RUN_BLOCKS);
+        final int rightLimit = MAX_RUN_BLOCKS - 1 - leftLimit;
+        start = pos;
+        width = 1;
+        cursor = pos.offset(facing.rotateYCounterclockwise());
+        for (int i = 0; i < leftLimit && chained.test(cursor); i++) {
+            start = cursor;
+            width++;
+            cursor = cursor.offset(facing.rotateYCounterclockwise());
+        }
+        cursor = pos.offset(along);
+        for (int i = 0; i < rightLimit && chained.test(cursor); i++) {
+            width++;
+            cursor = cursor.offset(along);
         }
         return new Run(start, width);
     }
@@ -207,6 +231,10 @@ public final class PSDRuns {
 
     private static boolean isPsdTop(BlockState state) {
         return state.getBlock().data instanceof BlockPSDTop;
+    }
+
+    private static boolean isPsdTopFacing(BlockState state, Direction facing) {
+        return isPsdTop(state) && IBlock.getStatePropertySafe(state, BlockPSDTop.FACING) == facing;
     }
 
     private static boolean hasTopBinding(BlockPos pos) {

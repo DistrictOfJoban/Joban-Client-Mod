@@ -17,6 +17,8 @@
 #include "api.hpp"
 #include "text.hpp"
 #include "util.hpp"
+#include "vehicle.hpp"
+#include <cstring>
 
 namespace mtr {
 
@@ -311,176 +313,189 @@ private:
 
 /* ------------------------------------------------------------------ */
 /* Station (ABI 13) — the complete info of the PSD's station           */
-/*                                                                     */
-/* Mirrors the JS psd.stop() wrapper (PSDWrapper.PSDStationWrapper).    */
-/* Unlike the list accessors above, every accessor here is             */
-/* null-safe and bounds-checked with SAFE DEFAULTS instead of throws:  */
-/* an absent station, a short blob or an out-of-range index yields     */
-/* ok()==false / 0 / -1 / an empty StrView — a module must never crash */
-/* on partial data.                                                    */
 /* ------------------------------------------------------------------ */
 
-/** One route calling at the station (JS: psd.stop().interchanges()[i]). */
-class PsdStationInterchange {
-public:
-    PsdStationInterchange() : blob_(nullptr), ic_(nullptr) {}
-    PsdStationInterchange(const void* blob, const JcmPsdStationInterchange* ic)
-        : blob_(blob), ic_(ic) {}
+namespace detail {
 
-    /** The route id. */
-    int64_t id() const { return ic_ ? ic_->route_id : 0; }
-    int32_t color() const { return ic_ ? ic_->color : 0; }
-    StrView name() const { return ic_ ? pool(ic_->name_offset, ic_->name_len) : StrView{}; }
-    /* -1 when older server data omits it. */
-    int32_t transport_mode() const { return ic_ ? ic_->transport_mode : -1; }
-    /* Canonical transport type id ("train", "train_metro", ...), "" = unresolved. */
-    StrView get_transport_type() const { return ic_ ? pool(ic_->type_offset, ic_->type_len) : StrView{}; }
+/* The bridge validates the advertised pool end against the actual buffer
+   length before invoking a PSD module. Standalone SDK callers with partial
+   data can supply the real byte length to Psd(snapshot, bytes). The legacy
+   single-pointer constructor requires at least a readable snapshot header. */
+class PsdSnapshotView {
+public:
+    PsdSnapshotView(const void* blob = nullptr, size_t bytes = static_cast<size_t>(-1))
+        : blob_(static_cast<const uint8_t*>(blob)), bytes_(0) {
+        if (!blob_ || bytes < sizeof(JcmPsdSnapshot)
+                || reinterpret_cast<uintptr_t>(blob_) % alignof(JcmPsdSnapshot) != 0) return;
+        JcmPsdSnapshot header;
+        std::memcpy(&header, blob_, sizeof(header));
+        if (header.string_pool_offset < static_cast<int32_t>(sizeof(header))
+                || header.string_pool_len < 0) return;
+        const uint64_t end = static_cast<uint64_t>(header.string_pool_offset)
+                + static_cast<uint64_t>(header.string_pool_len);
+        if (end <= bytes) bytes_ = static_cast<size_t>(end);
+    }
+
+    bool valid() const { return bytes_ >= sizeof(JcmPsdSnapshot); }
+    const void* blob() const { return blob_; }
+    size_t bytes() const { return bytes_; }
+
+    template <typename T>
+    const T* at(int32_t offset, int32_t count = 1) const {
+        if (offset < static_cast<int32_t>(sizeof(JcmPsdSnapshot)) || count <= 0
+                || static_cast<size_t>(offset) > bytes_
+                || static_cast<size_t>(count) > (bytes_ - static_cast<size_t>(offset)) / sizeof(T)) return nullptr;
+        const auto* ptr = blob_ + offset;
+        if (reinterpret_cast<uintptr_t>(ptr) % alignof(T) != 0) return nullptr;
+        return reinterpret_cast<const T*>(ptr);
+    }
+
+    template <typename T>
+    const T* checked(const T* ptr) const {
+        const uintptr_t base = reinterpret_cast<uintptr_t>(blob_);
+        const uintptr_t address = reinterpret_cast<uintptr_t>(ptr);
+        if (!ptr || address < base || address - base > INT32_MAX) return nullptr;
+        return at<T>(static_cast<int32_t>(address - base));
+    }
+
+    StrView string(int32_t offset, int32_t len) const {
+        const char* ptr = at<char>(offset, len);
+        return ptr ? make_view(ptr, len) : StrView{};
+    }
 
 private:
-    StrView pool(int32_t offset, int32_t len) const {
-        if (len <= 0 || offset < 0) return StrView{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        return make_view(reinterpret_cast<const char*>(base + offset), len);
-    }
-    const void* blob_;
+    const uint8_t* blob_;
+    size_t bytes_;
+};
+
+} /* namespace detail */
+
+/** Station accessors return safe defaults for absent or invalid ranges. */
+class PsdStationInterchange {
+public:
+    PsdStationInterchange() : ic_(nullptr) {}
+    PsdStationInterchange(const void* blob, const JcmPsdStationInterchange* ic,
+                          size_t bytes = static_cast<size_t>(-1))
+        : view_(blob, bytes), ic_(view_.checked(ic)) {}
+
+    int64_t id() const { return ic_ ? ic_->route_id : 0; }
+    int32_t color() const { return ic_ ? ic_->color : 0; }
+    StrView name() const { return ic_ ? view_.string(ic_->name_offset, ic_->name_len) : StrView{}; }
+    int32_t transport_mode() const { return ic_ ? ic_->transport_mode : -1; }
+    StrView get_transport_type() const { return ic_ ? view_.string(ic_->type_offset, ic_->type_len) : StrView{}; }
+
+private:
+    detail::PsdSnapshotView view_;
     const JcmPsdStationInterchange* ic_;
 };
 
-/** The routes of one walkable connecting station, grouped under its name
-    (JS: psd.stop().connectingInterchanges(), a Map keyed by station name). */
+/** Routes of one walkable connecting station, grouped under its name. */
 class PsdStationConnectingGroup {
 public:
-    PsdStationConnectingGroup() : blob_(nullptr), group_(nullptr) {}
-    PsdStationConnectingGroup(const void* blob, const JcmPsdStationConnectingGroup* group)
-        : blob_(blob), group_(group) {}
+    PsdStationConnectingGroup() : group_(nullptr) {}
+    PsdStationConnectingGroup(const void* blob, const JcmPsdStationConnectingGroup* group,
+                              size_t bytes = static_cast<size_t>(-1))
+        : view_(blob, bytes), group_(view_.checked(group)) {}
 
-    /** The connecting (walkable) station's name. */
-    StrView name() const { return group_ ? pool(group_->station_name_offset, group_->station_name_len) : StrView{}; }
-
-    int32_t route_count() const { return group_ ? group_->route_count : 0; }
-    /** Route i of the group; an out-of-range index yields an absent
-        wrapper (id 0, empty name) instead of throwing. */
+    StrView name() const { return group_ ? view_.string(group_->station_name_offset, group_->station_name_len) : StrView{}; }
+    int32_t route_count() const {
+        return group_ && view_.at<JcmPsdStationInterchange>(group_->route_offset, group_->route_count)
+                ? group_->route_count : 0;
+    }
     PsdStationInterchange route(int32_t i) const {
-        if (!group_ || i < 0 || i >= group_->route_count) return PsdStationInterchange{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        return PsdStationInterchange(blob_, reinterpret_cast<const JcmPsdStationInterchange*>(base + group_->route_offset) + i);
+        if (i < 0 || i >= route_count()) return PsdStationInterchange{};
+        return PsdStationInterchange(view_.blob(), view_.at<JcmPsdStationInterchange>(group_->route_offset) + i, view_.bytes());
     }
 
 private:
-    StrView pool(int32_t offset, int32_t len) const {
-        if (len <= 0 || offset < 0) return StrView{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        return make_view(reinterpret_cast<const char*>(base + offset), len);
-    }
-    const void* blob_;
+    detail::PsdSnapshotView view_;
     const JcmPsdStationConnectingGroup* group_;
 };
 
-/** One station exit (JS: psd.stop().exits()[i]) — an exit letter plus its
-    destination landmarks. */
+/** A station exit and its destination landmarks. */
 class PsdStationExit {
 public:
-    PsdStationExit() : blob_(nullptr), exit_(nullptr) {}
-    PsdStationExit(const void* blob, const JcmExit* exit)
-        : blob_(blob), exit_(exit) {}
+    PsdStationExit() : exit_(nullptr) {}
+    PsdStationExit(const void* blob, const JcmExit* exit, size_t bytes = static_cast<size_t>(-1))
+        : view_(blob, bytes), exit_(view_.checked(exit)) {}
 
-    /** The exit name/letter, e.g. "A". */
-    StrView name() const { return exit_ ? pool(exit_->name_offset, exit_->name_len) : StrView{}; }
-
-    int32_t destination_count() const { return exit_ ? exit_->destination_count : 0; }
-    /** Destination landmark i; an empty StrView when out of range. */
+    StrView name() const { return exit_ ? view_.string(exit_->name_offset, exit_->name_len) : StrView{}; }
+    int32_t destination_count() const {
+        return exit_ && view_.at<JcmStrRef>(exit_->destination_offset, exit_->destination_count)
+                ? exit_->destination_count : 0;
+    }
     StrView destination(int32_t i) const {
-        if (!exit_ || i < 0 || i >= exit_->destination_count) return StrView{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        const JcmStrRef* ref = reinterpret_cast<const JcmStrRef*>(base + exit_->destination_offset) + i;
-        if (ref->len <= 0 || ref->offset < 0) return StrView{};
-        return make_view(reinterpret_cast<const char*>(base + ref->offset), ref->len);
+        if (i < 0 || i >= destination_count()) return StrView{};
+        const auto* ref = view_.at<JcmStrRef>(exit_->destination_offset) + i;
+        return view_.string(ref->offset, ref->len);
     }
 
 private:
-    StrView pool(int32_t offset, int32_t len) const {
-        if (len <= 0 || offset < 0) return StrView{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        return make_view(reinterpret_cast<const char*>(base + offset), len);
-    }
-    const void* blob_;
+    detail::PsdSnapshotView view_;
     const JcmExit* exit_;
 };
 
-/** The station this PSD's platform belongs to (JS: psd.stop()) — ok() is
-    false when the snapshot carries no station (station_offset == -1). */
+/** The station this PSD's platform belongs to (JS: psd.stop()). */
 class PsdStation {
 public:
-    PsdStation() : blob_(nullptr), station_(nullptr) {}
-    PsdStation(const void* blob, const JcmPsdStation* station)
-        : blob_(blob), station_(station) {}
+    PsdStation() : station_(nullptr) {}
+    PsdStation(const void* blob, const JcmPsdStation* station, size_t bytes = static_cast<size_t>(-1))
+        : view_(blob, bytes), station_(view_.checked(station)) {}
 
     bool ok() const { return station_ != nullptr; }
-
     int64_t id() const { return station_ ? station_->station_id : 0; }
-    StrView name() const { return station_ ? pool(station_->name_offset, station_->name_len) : StrView{}; }
-    /** ARGB, 0 = unset. */
+    StrView name() const { return station_ ? view_.string(station_->name_offset, station_->name_len) : StrView{}; }
     int32_t color() const { return station_ ? station_->color : 0; }
-    /** "#RRGGBB" (MTR's own formatting), "" when unset. */
-    StrView color_hex() const { return station_ ? pool(station_->color_hex_offset, station_->color_hex_len) : StrView{}; }
-
-    /** Fare zones, 0 = unset. */
+    StrView color_hex() const { return station_ ? view_.string(station_->color_hex_offset, station_->color_hex_len) : StrView{}; }
     int64_t zone1() const { return station_ ? station_->zone1 : 0; }
     int64_t zone2() const { return station_ ? station_->zone2 : 0; }
     int64_t zone3() const { return station_ ? station_->zone3 : 0; }
 
-    /** Every route calling at this station; out-of-range indices yield
-        absent wrappers instead of throwing. */
-    int32_t interchange_count() const { return station_ ? station_->interchange_count : 0; }
+    int32_t interchange_count() const {
+        return station_ && view_.at<JcmPsdStationInterchange>(station_->interchange_offset, station_->interchange_count)
+                ? station_->interchange_count : 0;
+    }
     PsdStationInterchange interchange(int32_t i) const {
-        if (!station_ || i < 0 || i >= station_->interchange_count) return PsdStationInterchange{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        return PsdStationInterchange(blob_, reinterpret_cast<const JcmPsdStationInterchange*>(base + station_->interchange_offset) + i);
+        if (i < 0 || i >= interchange_count()) return PsdStationInterchange{};
+        return PsdStationInterchange(view_.blob(), view_.at<JcmPsdStationInterchange>(station_->interchange_offset) + i, view_.bytes());
     }
-
-    /** Walkable connecting stations, each with its calling routes. */
-    int32_t connecting_count() const { return station_ ? station_->connecting_count : 0; }
+    int32_t connecting_count() const {
+        return station_ && view_.at<JcmPsdStationConnectingGroup>(station_->connecting_offset, station_->connecting_count)
+                ? station_->connecting_count : 0;
+    }
     PsdStationConnectingGroup connecting(int32_t i) const {
-        if (!station_ || i < 0 || i >= station_->connecting_count) return PsdStationConnectingGroup{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        return PsdStationConnectingGroup(blob_, reinterpret_cast<const JcmPsdStationConnectingGroup*>(base + station_->connecting_offset) + i);
+        if (i < 0 || i >= connecting_count()) return PsdStationConnectingGroup{};
+        return PsdStationConnectingGroup(view_.blob(), view_.at<JcmPsdStationConnectingGroup>(station_->connecting_offset) + i, view_.bytes());
     }
-
-    /** Names of stations physically connected to this one. */
-    int32_t connected_station_count() const { return station_ ? station_->connected_station_count : 0; }
+    int32_t connected_station_count() const {
+        return station_ && view_.at<JcmStrRef>(station_->connected_station_offset, station_->connected_station_count)
+                ? station_->connected_station_count : 0;
+    }
     StrView connected_station(int32_t i) const {
-        if (!station_ || i < 0 || i >= station_->connected_station_count) return StrView{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        const JcmStrRef* ref = reinterpret_cast<const JcmStrRef*>(base + station_->connected_station_offset) + i;
-        if (ref->len <= 0 || ref->offset < 0) return StrView{};
-        return make_view(reinterpret_cast<const char*>(base + ref->offset), ref->len);
+        if (i < 0 || i >= connected_station_count()) return StrView{};
+        const auto* ref = view_.at<JcmStrRef>(station_->connected_station_offset) + i;
+        return view_.string(ref->offset, ref->len);
     }
-
-    /** Station exits (name/letter plus destination landmarks). */
-    int32_t exit_count() const { return station_ ? station_->exit_count : 0; }
+    int32_t exit_count() const {
+        return station_ && view_.at<JcmExit>(station_->exit_offset, station_->exit_count)
+                ? station_->exit_count : 0;
+    }
     PsdStationExit exit(int32_t i) const {
-        if (!station_ || i < 0 || i >= station_->exit_count) return PsdStationExit{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        return PsdStationExit(blob_, reinterpret_cast<const JcmExit*>(base + station_->exit_offset) + i);
+        if (i < 0 || i >= exit_count()) return PsdStationExit{};
+        return PsdStationExit(view_.blob(), view_.at<JcmExit>(station_->exit_offset) + i, view_.bytes());
     }
-
-    /** The station's platform numbers ("1", "2", ...), numbers first. */
-    int32_t platform_count() const { return station_ ? station_->platform_count : 0; }
+    int32_t platform_count() const {
+        return station_ && view_.at<JcmStrRef>(station_->platform_offset, station_->platform_count)
+                ? station_->platform_count : 0;
+    }
     StrView platform(int32_t i) const {
-        if (!station_ || i < 0 || i >= station_->platform_count) return StrView{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        const JcmStrRef* ref = reinterpret_cast<const JcmStrRef*>(base + station_->platform_offset) + i;
-        if (ref->len <= 0 || ref->offset < 0) return StrView{};
-        return make_view(reinterpret_cast<const char*>(base + ref->offset), ref->len);
+        if (i < 0 || i >= platform_count()) return StrView{};
+        const auto* ref = view_.at<JcmStrRef>(station_->platform_offset) + i;
+        return view_.string(ref->offset, ref->len);
     }
 
 private:
-    StrView pool(int32_t offset, int32_t len) const {
-        if (len <= 0 || offset < 0) return StrView{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(blob_);
-        return make_view(reinterpret_cast<const char*>(base + offset), len);
-    }
-    const void* blob_;
+    detail::PsdSnapshotView view_;
     const JcmPsdStation* station_;
 };
 
@@ -500,7 +515,9 @@ public:
         TOP   = 1
     };
 
-    explicit Psd(const JcmPsdSnapshot* snap) : snap_(snap) {}
+    explicit Psd(const JcmPsdSnapshot* snap) : Psd(snap, static_cast<size_t>(-1)) {}
+    Psd(const JcmPsdSnapshot* snap, size_t bytes)
+        : view_(snap, bytes), snap_(view_.valid() ? snap : &empty_snapshot()) {}
 
     /** The binding surface — Psd::GLASS or Psd::TOP. */
     Type type() const { return static_cast<Type>(snap_->psd_type); }
@@ -533,11 +550,10 @@ public:
     PsdRouteList routes() const { return PsdRouteList(snap_, snap_->route_count, snap_->route_offset); }
 
     /* ABI 13: the complete station info (JS: psd.stop()). */
-    bool has_station() const { return snap_->station_offset != -1; }
+    bool has_station() const { return station().ok(); }
     PsdStation station() const {
-        if (snap_->station_offset < 0) return PsdStation{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
-        return PsdStation(snap_, reinterpret_cast<const JcmPsdStation*>(base + snap_->station_offset));
+        const auto* value = view_.at<JcmPsdStation>(snap_->station_offset);
+        return value ? PsdStation(snap_, value, view_.bytes()) : PsdStation{};
     }
     /** Alias of station() — parity with the JS psd.stop(). */
     PsdStation stop() const { return station(); }
@@ -545,11 +561,17 @@ public:
     const JcmPsdSnapshot& raw() const { return *snap_; }
 
 private:
-    StrView pool(int32_t offset, int32_t len) const {
-        if (len <= 0 || offset < 0) return StrView{};
-        const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
-        return make_view(reinterpret_cast<const char*>(base + offset), len);
+    static const JcmPsdSnapshot& empty_snapshot() {
+        static const JcmPsdSnapshot empty = [] {
+            JcmPsdSnapshot value{};
+            value.station_offset = -1;
+            value.string_pool_offset = sizeof(JcmPsdSnapshot);
+            return value;
+        }();
+        return empty;
     }
+    StrView pool(int32_t offset, int32_t len) const { return view_.string(offset, len); }
+    detail::PsdSnapshotView view_;
     const JcmPsdSnapshot* snap_;
 };
 

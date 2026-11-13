@@ -11,7 +11,9 @@ import subprocess
 
 STUBS = {
     'org/mtr/mapping/holder/BlockPos.java': """package org.mtr.mapping.holder;
-public record BlockPos(int x, int y, int z) {}""",
+public record BlockPos(int x, int y, int z) {
+ public int getX(){return x;}public int getY(){return y;}public int getZ(){return z;}
+}""",
     'org/mtr/mapping/holder/BlockState.java': """package org.mtr.mapping.holder;
 public class BlockState {
     public static class Block { public Object data; Block(Object data) { this.data = data; } }
@@ -79,6 +81,30 @@ public class MinecraftClientWrapper {
 }""",
     'com/lx862/mtrscripting/mod/gui/hud/SortableScriptInstance.java': """package com.lx862.mtrscripting.mod.gui.hud;
 public interface SortableScriptInstance { int getSortScore(); }""",
+    'org/mtr/mapping/registry/PacketHandler.java': """package org.mtr.mapping.registry;
+import org.mtr.mapping.tool.PacketBufferSender;
+public abstract class PacketHandler {public abstract void write(PacketBufferSender b);public void runClient(){}}""",
+    'org/mtr/mapping/tool/PacketBufferSender.java': """package org.mtr.mapping.tool;
+import java.io.*;
+// Match MTR Mapping's logical wire format: fixed-width int character counts
+// followed by UTF-16 chars, not Minecraft's VarInt/UTF-8 string encoding.
+public final class PacketBufferSender {
+ private final ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+ private final DataOutputStream data=new DataOutputStream(bytes);
+ public void writeInt(int value){try{data.writeInt(value);}catch(IOException e){throw new UncheckedIOException(e);}}
+ public void writeBoolean(boolean value){try{data.writeBoolean(value);}catch(IOException e){throw new UncheckedIOException(e);}}
+ public void writeString(String value){writeInt(value.length());try{for(int i=0;i<value.length();i++)data.writeChar(value.charAt(i));}catch(IOException e){throw new UncheckedIOException(e);}}
+ public byte[] bytes(){return bytes.toByteArray();}
+}""",
+    'org/mtr/mapping/tool/PacketBufferReceiver.java': """package org.mtr.mapping.tool;
+import java.io.*;
+public final class PacketBufferReceiver {
+ private final DataInputStream data;
+ public PacketBufferReceiver(byte[] bytes){data=new DataInputStream(new ByteArrayInputStream(bytes));}
+ public int readInt(){try{return data.readInt();}catch(IOException e){throw new UncheckedIOException(e);}}
+ public boolean readBoolean(){try{return data.readBoolean();}catch(IOException e){throw new UncheckedIOException(e);}}
+ public String readString(){int count=readInt();char[] chars=new char[count];try{for(int i=0;i<count;i++)chars[i]=data.readChar();}catch(IOException e){throw new UncheckedIOException(e);}return new String(chars);}
+}""",
 }
 
 
@@ -100,7 +126,9 @@ def main():
     for name in ['PSDBinding', 'PSDClientBindings', 'PSDScriptInstance', 'PSDPidsScriptInstance']:
         sources.append(base / ('com/lx862/jcm/mod/scripting/psd/' + name + '.java'))
     sources += [base / 'com/lx862/mtrscripting/core/annotation/ApiInternal.java',
-                Path(__file__).with_name('java') / 'PSDBindingsTest.java']
+                base / 'com/lx862/mtrscripting/mod/network/packet/psd/PSDScriptsS2CPacket.java',
+                Path(__file__).with_name('java') / 'PSDBindingsTest.java',
+                Path(__file__).with_name('java') / 'PSDScriptsPacketTest.java']
     classes = work / 'classes'
     classes.mkdir(exist_ok=True)
     argfile = work / 'sources.txt'
@@ -110,6 +138,7 @@ def main():
         return str(Path(java_home) / 'bin' / (name + ('.exe' if os.name == 'nt' else ''))) if java_home else name
     subprocess.run([tool('javac'), '-J-Dfile.encoding=UTF-8', '--release', '17', '-encoding', 'UTF-8', '-d', str(classes), '@' + str(argfile)], check=True)
     subprocess.run([tool('java'), '-cp', str(classes), 'com.lx862.jcm.test.PSDBindingsTest'], check=True)
+    subprocess.run([tool('java'), '-cp', str(classes), 'com.lx862.jcm.test.PSDScriptsPacketTest'], check=True)
 
 
 if __name__ == '__main__':

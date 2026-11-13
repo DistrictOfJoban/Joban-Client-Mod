@@ -20,7 +20,7 @@ public class ArrivalsWrapper {
     }
 
     public @ValueNullable ArrivalWrapper get(int i) {
-        return i >= arrivals.size() ? null : arrivals.get(i);
+        return i < 0 || i >= arrivals.size() ? null : arrivals.get(i);
     }
 
     public boolean mixedCarLength() {

@@ -62,7 +62,14 @@ struct ContentProbe : mtr::ScriptBase<ContentState, Adapter> {
 #endif
         api.context().call("mark",{"render"}); state.frames++;
     }
-    void dispose(Adapter::Context& context,ContentState&,const Adapter::Wrapper&) override {
+    void dispose(Adapter::Context& context,ContentState&,const Adapter::Wrapper& wrapper) override {
+#if CONTENT_KIND == 4
+        if (wrapper.width() == 0 && (wrapper.has_station() || wrapper.stop().ok())) {
+            throw std::runtime_error("PSD empty dispose snapshot must not invent a station");
+        }
+#else
+        (void)wrapper;
+#endif
         mtr::Api(context.input()).context().call("mark",{"dispose"});
     }
 };

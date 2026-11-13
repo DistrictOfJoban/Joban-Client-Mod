@@ -20,7 +20,7 @@ import org.mtr.mod.client.CustomResourceLoader;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +61,14 @@ public final class PSDWallScanner {
     /** Hard cap of one wall run — protects against pathological loops. */
     private static final int MAX_RUN_BLOCKS = 1024;
 
-    private static final Map<BlockPos, CachedRun> CACHE = new HashMap<>();
+    private static final int MAX_CACHED_RUNS = 256;
+    private static final Map<BlockPos, CachedRun> CACHE = new LinkedHashMap<BlockPos, CachedRun>(16, 0.75F, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<BlockPos, CachedRun> eldest) {
+            return size() > MAX_CACHED_RUNS;
+        }
+    };
+    private static Object cachedWorldData;
 
     private PSDWallScanner() {
     }
@@ -73,13 +80,16 @@ public final class PSDWallScanner {
         public final int number;
         /** World along-axis coordinate of the unit center (axis = rotateYClockwise of facing). */
         public final double alongCenter;
+        /** Exact number of panels in this unit, never panels from its neighbour. */
+        private final int width;
         public boolean open;
         public boolean locked;
 
-        DoorUnit(BlockPos pos, int number, double alongCenter) {
+        DoorUnit(BlockPos pos, int number, double alongCenter, int width) {
             this.pos = pos;
             this.number = number;
             this.alongCenter = alongCenter;
+            this.width = width;
         }
     }
 
@@ -109,6 +119,7 @@ public final class PSDWallScanner {
     /** Drops the whole cache (world leave / resource reload). */
     public static void reset() {
         CACHE.clear();
+        cachedWorldData = null;
     }
 
     /**
@@ -117,6 +128,11 @@ public final class PSDWallScanner {
      * walk itself always happens at the glass level.
      */
     public static WallRun scan(World world, BlockPos anchor) {
+        // A dimension switch need not pass through a disconnected client tick.
+        if (cachedWorldData != world.data) {
+            CACHE.clear();
+            cachedWorldData = world.data;
+        }
         final BlockPos glassAnchor = resolveGlassAnchor(world, anchor);
         if (glassAnchor == null) {
             return new WallRun(false, Direction.NORTH, new ArrayList<>(), anchor);
@@ -139,21 +155,28 @@ public final class PSDWallScanner {
     private static BlockPos resolveGlassAnchor(World world, BlockPos anchor) {
         final BlockState anchorState = world.getBlockState(anchor);
         final Object anchorBlock = anchorState.getBlock().data;
-        if (anchorBlock instanceof BlockPSDAPGDoorBase || anchorBlock instanceof BlockPSDAPGBase) {
-            final boolean upper = IBlock.getStatePropertySafe(anchorState, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
-            return upper ? anchor.down() : anchor;
+        if (anchorBlock instanceof BlockPSDAPGBase) {
+            return resolveLowerHalf(world, anchor, anchorState);
         }
         if (anchorBlock instanceof BlockPSDTop) {
             for (int down = 1; down <= 3; down++) {
                 final BlockPos below = anchor.down(down);
                 final BlockState belowState = world.getBlockState(below);
-                if (belowState.getBlock().data instanceof BlockPSDAPGBase) {
-                    final boolean upper = IBlock.getStatePropertySafe(belowState, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
-                    return upper ? below.down() : below;
+                if (belowState.getBlock().data instanceof BlockPSDAPGBase
+                        && IBlock.getStatePropertySafe(belowState, BlockPSDAPGBase.FACING)
+                        == IBlock.getStatePropertySafe(anchorState, BlockPSDTop.FACING)) {
+                    return resolveLowerHalf(world, below, belowState);
                 }
             }
         }
         return null;
+    }
+
+    @Nullable
+    private static BlockPos resolveLowerHalf(World world, BlockPos pos, BlockState state) {
+        if (IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.LOWER) return pos;
+        final BlockPos below = pos.down();
+        return isWallBlock(world, below, IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING)) ? below : null;
     }
 
     private static WallRun walk(World world, BlockPos glassAnchor) {
@@ -168,13 +191,13 @@ public final class PSDWallScanner {
         // Walk both directions from the anchor while the chain stays PSD wall blocks.
         final ObjectArrayList<BlockPos> rightSide = new ObjectArrayList<>(); // +wallAxis, nearest first
         BlockPos cursor = glassAnchor.offset(wallAxis);
-        while (isWallBlock(world, cursor) && rightSide.size() < MAX_RUN_BLOCKS) {
+        while (rightSide.size() + 1 < MAX_RUN_BLOCKS && isWallBlock(world, cursor, facing)) {
             rightSide.add(cursor);
             cursor = cursor.offset(wallAxis);
         }
         final ObjectArrayList<BlockPos> leftSide = new ObjectArrayList<>(); // -wallAxis, nearest first
         cursor = glassAnchor.offset(wallAxis.getOpposite());
-        while (isWallBlock(world, cursor) && leftSide.size() < MAX_RUN_BLOCKS) {
+        while (leftSide.size() + rightSide.size() + 1 < MAX_RUN_BLOCKS && isWallBlock(world, cursor, facing)) {
             leftSide.add(cursor);
             cursor = cursor.offset(wallAxis.getOpposite());
         }
@@ -198,12 +221,14 @@ public final class PSDWallScanner {
                 if (current == null || side == IBlock.EnumSide.LEFT) {
                     currentFirstAlong = alongOf(pos, wallAxis);
                     unitWidth = 1;
-                    current = new DoorUnit(pos, doors.size() + 1, currentFirstAlong + 0.5);
+                    current = new DoorUnit(pos, doors.size() + 1, currentFirstAlong + 0.5, unitWidth);
                     doors.add(current);
                 } else {
                     // MIDDLE / RIGHT panel of the same unit — widen its center.
                     unitWidth++;
-                    current = replaceCenter(doors, current, currentFirstAlong + unitWidth * 0.5);
+                    // Coordinates decrease while walking NORTH/WEST. Average
+                    // the actual end panels rather than always adding width.
+                    current = replaceCenter(doors, current, (currentFirstAlong + alongOf(pos, wallAxis)) / 2 + 0.5, unitWidth);
                 }
             } else {
                 current = null;
@@ -214,18 +239,19 @@ public final class PSDWallScanner {
         return new WallRun(true, facing, doors, glassAnchor);
     }
 
-    private static DoorUnit replaceCenter(List<DoorUnit> doors, DoorUnit unit, double newCenter) {
-        if (unit.alongCenter == newCenter) return unit;
-        final DoorUnit replacement = new DoorUnit(unit.pos, unit.number, newCenter);
+    private static DoorUnit replaceCenter(List<DoorUnit> doors, DoorUnit unit, double newCenter, int width) {
+        final DoorUnit replacement = new DoorUnit(unit.pos, unit.number, newCenter, width);
         replacement.open = unit.open;
         replacement.locked = unit.locked;
         doors.set(doors.size() - 1, replacement);
         return replacement;
     }
 
-    private static boolean isWallBlock(World world, BlockPos pos) {
-        final Object block = world.getBlockState(pos).getBlock().data;
-        return block instanceof BlockPSDAPGBase;
+    private static boolean isWallBlock(World world, BlockPos pos, Direction facing) {
+        final BlockState state = world.getBlockState(pos);
+        return state.getBlock().data instanceof BlockPSDAPGBase
+                && IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING) == facing
+                && IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.LOWER;
     }
 
     private static double alongOf(BlockPos pos, Direction wallAxis) {
@@ -246,9 +272,12 @@ public final class PSDWallScanner {
             double value = 0;
             boolean locked = false;
             BlockPos cursor = door.pos;
-            for (int i = 0; i < 3; i++) { // a unit is at most 3 blocks wide
+            for (int i = 0; i < door.width; i++) {
                 final BlockState state = world.getBlockState(cursor);
-                if (!(state.getBlock().data instanceof BlockPSDAPGDoorBase)) break;
+                if (!(state.getBlock().data instanceof BlockPSDAPGDoorBase)
+                        || IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING) != run.facing
+                        || IBlock.getStatePropertySafe(state, IBlock.HALF) != IBlock.DoubleBlockHalf.LOWER
+                        || (i > 0 && IBlock.getStatePropertySafe(state, BlockPSDAPGDoorBase.SIDE) == IBlock.EnumSide.LEFT)) break;
                 locked |= !IBlock.getStatePropertySafe(state, BlockPSDAPGDoorBase.UNLOCKED);
                 final org.mtr.mapping.holder.BlockEntity blockEntity = world.getBlockEntity(cursor);
                 if (blockEntity != null && blockEntity.data instanceof BlockPSDAPGDoorBase.BlockEntityBase) {

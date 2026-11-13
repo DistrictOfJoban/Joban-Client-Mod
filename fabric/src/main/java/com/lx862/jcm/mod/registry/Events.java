@@ -35,7 +35,8 @@ public class Events {
         JCMRegistry.REGISTRY.eventRegistry.registerEndWorldTick(DoorDirectionManager::onWorldTick);
 
         /* Yanyang/PSD: server-side PSD script binding storage — loads per
-           dimension on first use, saves on every change and at shutdown. */
+           dimension on first use, batches changes per tick and saves at shutdown. */
+        JCMRegistry.REGISTRY.eventRegistry.registerStartServerTick(PSDServerBindings::onServerTick);
         JCMRegistry.REGISTRY.eventRegistry.registerServerStopping(PSDServerBindings::onServerStopping);
     }
 
@@ -119,6 +120,7 @@ public class Events {
     }
 
     public static void onClientReloadResource() {
+        com.lx862.jcm.mod.scripting.psd.PSDScriptRenderer.reset();
         /* Yanyang: reset the C++ script runtime BEFORE the JS side re-parses.
            Without this, F3+T kept every dlopen'd module running (an updated
            .so with the same script id was silently ignored — the declaration

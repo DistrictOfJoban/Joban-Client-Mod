@@ -56,19 +56,23 @@ __PRODUCTION_RENDER_ALL__
 
  private static void renderGlass(PSDBinding binding,BlockPos pos,BlockState state,World world,
    boolean shadow,boolean shaders,Set<BlockPos> sections,double cameraX,double cameraZ) {
-  glassCalls++;glassShadow=shadow;glassShader=shaders;
+  glassCalls++;glassShadow=shadow;glassShader=shaders;sections.add(pos);
  }
  private static void renderTop(PSDBinding binding,BlockPos pos,BlockState state,World world,
-   boolean shadow,Set<BlockPos> sections) {topCalls++;topShadow=shadow;}
+   boolean shadow,Set<BlockPos> sections) {topCalls++;topShadow=shadow;sections.add(pos);}
  private static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
  private static void checkPass(boolean live,boolean cached,boolean pack) {
   IrisApi.shadow=live;IrisApi.pack=pack;OptimizedRenderer.cached=cached;
-  glassCalls=topCalls=0;renderAll();
-  check(glassCalls==1 && topCalls==1,"nearby glass/top must each render once; far binding must be culled");
+  glassCalls=topCalls=World.reads=0;renderAll();
+  check(glassCalls==1 && topCalls==1,"duplicate binding reached renderer; nearby glass/top must each render once");
+  check(World.reads==2,"duplicate or distant binding performed an unnecessary world lookup");
   check(glassShadow==live && topShadow==live,"PSD routed using stale shadow cache: live="+live+", cached="+cached);
   check(glassShader==(!live && pack),"shader backing must run only in the current camera pass");
  }
  public static void main(String[] args) {
+  PSDClientBindings.bindings.add(new PSDBinding(new BlockPos(0),PSDWrapper.PSDType.GLASS));
+  PSDClientBindings.bindings.add(new PSDBinding(new BlockPos(1),PSDWrapper.PSDType.TOP));
+  // Distinct BlockPos objects at the same coordinates represent legacy duplicate bindings.
   PSDClientBindings.bindings.add(new PSDBinding(new BlockPos(0),PSDWrapper.PSDType.GLASS));
   PSDClientBindings.bindings.add(new PSDBinding(new BlockPos(1),PSDWrapper.PSDType.TOP));
   PSDClientBindings.bindings.add(new PSDBinding(new BlockPos(1000),PSDWrapper.PSDType.GLASS));
@@ -82,21 +86,24 @@ __PRODUCTION_RENDER_ALL__
   renderAll();check(IrisApi.reads==reads,"missing player queried render state");
   MinecraftClient.INSTANCE.player=new ClientPlayerEntity();PSDClientBindings.bindings.clear();
   renderAll();check(IrisApi.reads==reads,"empty binding set queried render state");
-  System.out.println("PSD production renderAll: alternating live/cached passes, shader toggles, glass/top routing and early exits passed");
+  System.out.println("PSD production renderAll: alternating live/cached passes, shader toggles, duplicate sections, glass/top routing and early exits passed");
  }
 }
 final class OptimizedRenderer {static boolean cached;static boolean renderingShadows(){return cached;}}
 final class ClientPlayerEntity {}
 final class BlockPos {
  final int x;BlockPos(int x){this.x=x;}int getX(){return x;}int getY(){return 0;}int getZ(){return 0;}
+ @Override public boolean equals(Object other){return other instanceof BlockPos && ((BlockPos)other).x==x;}
+ @Override public int hashCode(){return x;}
 }
 final class BlockState {
  final Object data;BlockState(Object data){this.data=data;}Block getBlock(){return new Block(data);}
  static final class Block {final Object data;Block(Object data){this.data=data;}}
 }
 final class World {
+ static int reads;
  static World cast(World w){return w;}
- BlockState getBlockState(BlockPos p){return new BlockState(p.x==1?new BlockPSDTop():new BlockPSDAPGGlassBase());}
+ BlockState getBlockState(BlockPos p){reads++;return new BlockState(p.x==1?new BlockPSDTop():new BlockPSDAPGGlassBase());}
 }
 final class BlockPSDTop {} final class BlockPSDAPGGlassBase {}
 final class PSDWrapper {enum PSDType {GLASS,TOP}}
@@ -180,6 +187,13 @@ def main():
     if mutant.returncode == 0 or 'PSD routed using stale shadow cache' not in mutant.stderr:
         raise AssertionError('Old cached gate must fail the production routing assertions: ' + mutant.stdout + mutant.stderr)
     print('Mutation check: old cached-pass assignment fails the same routing test as expected')
+    repeated, count = re.subn(r'if\s*\(renderedSections\.contains\(pos\)\)\s*return;', '', body)
+    if count != 1:
+        raise AssertionError('Expected exactly one section-level duplicate gate')
+    mutant = run_case('no-section-shortcut', repeated)
+    if mutant.returncode == 0 or 'duplicate binding reached renderer' not in mutant.stderr:
+        raise AssertionError('Removing the early duplicate gate must fail: ' + mutant.stdout + mutant.stderr)
+    print('Mutation check: removing the section shortcut repeats rendering and fails as expected')
 
 
 if __name__ == '__main__':
