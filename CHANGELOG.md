@@ -1,5 +1,16 @@
 # 更新日志 / Changelog
 
+## 2.3.0-1.0.0-build.99（2026-11-13 屏蔽门光影底色覆盖与轨道侧朝向修复）
+
+- 光影底色改用真实 TextRenderer 的空字符串背景矩形，精确缩放到面板尺寸。修复非整数空格 advance 被逐字取整后累计误差、右侧底色填不满的问题；不再依赖字体包的空格宽度，也不再逐行拼底。
+- 底色覆盖烘焙模型的完整玻璃几何范围，包含半透明边带；脚本布局仍使用严格透明窗口。移除 R17 测试文字、橙白条纹及测试文字预留的顶部空白。
+- 轨道侧白板通过实际矩阵翻转反转面朝向，并停止提交该侧的镜像脚本内容。使用实际渲染相机及派生玻璃深度判断侧别，兼容第三人称和更改玻璃深度的模型。
+- 底色在每帧渲染时回放，脱离异步 JS 捕获完成回调；慢脚本、脚本错误冷却及纯 C++ 脚本不会阻止底板绘制或延迟黑白侧切换。每个玻璃半块只需一个背景绘制调用。
+- 修复 PSD 自动 Z 顺序被矩阵翻转二次取反，导致后绘制文字退到黑底后的问题；复用同一绘制对象时不再持续累加 Z 变换。C++ PIDS 预设使用独立 psd_pids 状态，与 JS 共用修正后的 PSD 上下文。
+- 修复同名脚本切换 PIDS/PSD 来源、表面类型、方块替换及换世界时旧 PSD 实例未正确失效的问题。运行中的脚本任务不再被替换 wrapper 快照；文本绘制异常也会恢复矩阵栈。
+- 修复站点缓存首次更新时间的整数溢出导致缓存永不过期；站点/停站缓存查询移到渲染线程构建阶段，脚本获得独立的停站列表容器。
+- 新增背景矩形、四向几何、绑定生命周期及真实矩阵 Z 顺序回归测试，并纳入 Complete Build 的 CTest。自动测试与编译验证不能替代 Iris + Complementary 的游戏画面复测；本条目不声称已通过实装视觉验收。
+
 ## 2.3.0-1.0.0-build.98（2026-11-12 第十七轮：通道 S——底板行注入脚本自己的回放列表，平面 + 提交两项幸存差异一次全消）
 
 - **修复（PSD 脚本 / 玻璃）：开光影时底色与探针全部不可见、只有到站文字——第十七轮：通道 S，底板行不再自己提交，而是拼进脚本自己的捕获回放列表，与可见文字同一个 invoke 循环、同一个 TransformCapturePool 快照、同一个 +0.25/16 平面**（实机报告 2026-11-12「底色R16测试不可见，只有到站文字」，附 latest.log：2.3.0-1.0.0-build.97，MC 1.20.1 + Iris 1.7.6 + ComplementaryUnbound r5.5.1 + ImmediatelyFast 1.5.5 + 思源黑体字体包 1.20；日志证实 `[JCM] PSD backing channel R active (text-background rows, platform half)` + metrics（window 255x150px, fill 'space' advance 2, rows 15 x cols 129）+ `carrier B active` 面包屑齐现、无 `failed once`、无 `degenerate`——第十六轮的背景矩形行与**真实字形探针行**（「底色R16测试」，与可见到站文字同字形族、同色、同 wrapper 机器）全部不可见）。**本轮定性：build.97 结局③彻底证伪了第十五轮的 U+2588 栅格化理论**——真实可见字形族的探针行同样死，字形内容不是变量；逐行比对探针行与脚本回放行（同队列同 key 同回调形状）后，仅剩两项幸存差异：① **平面**——底板行骑 +0.45/16 底板平面（十一至十六轮在该平面上的全部载体无一存活，而 +0.25/16 脚本平面上的文字从未失效；无光影时 +0.45/16 的载体 B 可见，几何/深度无碍——观察性定罪，机理需 RenderDoc 级取证）；② **提交方式**——我们的行从 renderAll 头部直接 `run()`，脚本行经 `ScriptRenderManager.invoke` 从捕获列表回放。修复：**通道 S（`buildBackingRows` + `injectBackingRows` + 新增 `ScriptRenderManager.jcm$inject(RenderDrawCall, atHead)`）**——底板行（探针「底色R17测试」+ 首橙/末白/中间近黑背景矩形行，字段与 R16 逐字一致）在 renderGlass 渲染线程构建（玩家侧门控在构建时求值），交 `driveScript` 新增的注入参数；在脚本捕获提交回调内（executor 线程，`saveRenderCalls` 的 takeFrom 交换**之后**）拼进实例回放列表：站台半倒序插头（底板先 flush、脚本文本后画其上）、轨道半顺序 append 尾（白板盖镜像）——底板行与脚本行从此**零上下文差异**（同 invoke 循环 / 同 per-call 快照 / 同 scriptSide 平面 / 同 `run()→drawTransformed→scheduleRender(TEXT)` 链），差异只剩 wrapper 字段值。时序安全：脚本异步捕获在途时本帧重放上一次完整列表（底板+脚本永不单飞）；fail-cooldown 期间底板与文字一致冻结；下一帧 takeFrom 统一 release+清空注入行，无累积。异常安全（try/catch + `failed once` WARN）与 degenerate WARN 保留。已知限制：纯 native 脚本预设（无 JS ParsedScript）无注入点（用户场景 pids_1a.js 为 JS，不受影响）。面包屑改在注入点打：`[JCM] PSD backing channel S active (replay-injected rows, platform|track half)` + metrics 行。`PSD-SHADER-BACKING.md` 同步更新至第十七轮（§2.2 补证伪记录、§4 矩阵表补 R16 实测与 S 行、新增 §5.10 实现要点、§6 验证流程、§7.0-17 标记已执行、新增 §7.0-18 预案、§7.1 日志分流、§7.4 追加三条证伪/定罪）。

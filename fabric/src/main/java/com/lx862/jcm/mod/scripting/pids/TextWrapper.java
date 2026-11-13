@@ -51,6 +51,12 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
      *  off (default); set from the PSD backing carrier only. */
     protected int jcm$bgColor;
 
+    /** Exact-size, glyph-free fill used by the PSD backing. An empty text
+     *  run still emits the vanilla background Effect quad, whose bounds
+     *  are [-1, 1] x [-1, 9]. Scaling those bounds avoids rounding a TTF
+     *  space's fractional advance once per column. */
+    private boolean jcm$bgRectangle;
+
     /** Marquee glyph cache: per-character formatted texts and measured
      *  widths, rebuilt only when the marquee string <i>or its style</i>
      *  changes (the formatted text embeds fontId/bold/italic, so the cache
@@ -136,6 +142,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         this.marqueeProgressOverride = -1;
         this.naturalLight = false;
         this.jcm$bgColor = 0;
+        this.jcm$bgRectangle = false;
         this.jcm$marqueeStr = null;
         this.jcm$marqueeFont = null;
         this.jcm$marqueeBold = false;
@@ -257,6 +264,16 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         return this;
     }
 
+    /** Draws one background rectangle covering {@code pos .. pos + size}.
+     *  Uses the real text renderer's background path, with no font metrics
+     *  or glyphs. The ordinary text API retains its existing semantics. */
+    @ApiInternal
+    public TextWrapper jcm$backgroundRectangle(int color) {
+        this.jcm$bgColor = color;
+        this.jcm$bgRectangle = true;
+        return this;
+    }
+
     public TextWrapper renderType(String renderType) {
         this.renderType = QueuedRenderLayer.valueOf(renderType);
         return this;
@@ -269,7 +286,13 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
 
     @Override
     public void validate() {
-        if(this.textContent == null) throw new IllegalArgumentException("Text must be filled");
+        if (this.jcm$bgRectangle) {
+            if (!Double.isFinite(this.w) || !Double.isFinite(this.h) || this.w <= 0 || this.h <= 0) {
+                throw new IllegalArgumentException("Background rectangle size must be finite and positive");
+            }
+        } else if (this.textContent == null) {
+            throw new IllegalArgumentException("Text must be filled");
+        }
     }
 
     @Override
@@ -278,58 +301,71 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         MainRenderer.scheduleRender(this.renderType, (graphicsHolderNew, offset) -> {
 //          graphicsHolderNew.push(); // Applied with storedMatrixTransformations.transform
             storedMatrixTransformations.transform(graphicsHolderNew, offset);
-            graphicsHolderNew.scale((float)this.scale, (float)this.scale, (float)this.scale);
-
-            List<MutableText> texts = new ArrayList<>();
-            final MutableText originalText = getFormattedText(textContent);
-
-            int actualW = GraphicsHolder.getTextWidth(originalText);
-            int actualH = 9;
-
-            if(this.overflowMode == 1) { // Stretch XY
-                if(actualW > this.w) {
-                    graphicsHolderNew.scale((float)(this.w / actualW), 1, 1);
+            try {
+                if (this.jcm$bgRectangle) {
+                    // TextRenderer's empty-run background spans [-1,1] x
+                    // [-1,9]. Map it exactly onto [0,w] x [0,h], retaining
+                    // the normal text depth and the caller's face transform.
+                    graphicsHolderNew.scale((float) (this.w / 2), (float) (this.h / 10), 1);
+                    graphicsHolderNew.translate(1, 1, 0);
+                    jcm$drawTextWithBackground(graphicsHolderNew, "", 0, 0,
+                            this.jcm$bgColor, this.jcm$bgColor, false, textLight);
+                    return;
                 }
-                if(actualH > this.h) {
-                    graphicsHolderNew.scale(1, (float)(this.h / actualH), 1);
-                }
-            } else if(this.overflowMode == 2) { // Scale XY
-                double minScale = Math.min(actualW > this.w ? this.w / actualW : 1, actualH > this.h ? this.h / actualH : 1);
-                graphicsHolderNew.translate(0, (this.h - (actualH * minScale)) / 2, 0); // Center it vertically
-                graphicsHolderNew.scale((float)minScale, (float)minScale, 0);
-            }
+                graphicsHolderNew.scale((float)this.scale, (float)this.scale, (float)this.scale);
 
-            if(this.overflowMode == 3) { // Wrap Text
-                StringBuilder curLine = new StringBuilder();
-                int wSoFar = 0;
-                for(int i = 0; i < this.textContent.length(); i++) {
-                    char c = this.textContent.charAt(i);
-                    wSoFar += GraphicsHolder.getTextWidth(String.valueOf(c));
-                    if(wSoFar > this.w) {
+                List<MutableText> texts = new ArrayList<>();
+                final MutableText originalText = getFormattedText(textContent);
+
+                int actualW = GraphicsHolder.getTextWidth(originalText);
+                int actualH = 9;
+
+                if(this.overflowMode == 1) { // Stretch XY
+                    if(actualW > this.w) {
+                        graphicsHolderNew.scale((float)(this.w / actualW), 1, 1);
+                    }
+                    if(actualH > this.h) {
+                        graphicsHolderNew.scale(1, (float)(this.h / actualH), 1);
+                    }
+                } else if(this.overflowMode == 2) { // Scale XY
+                    double minScale = Math.min(actualW > this.w ? this.w / actualW : 1, actualH > this.h ? this.h / actualH : 1);
+                    graphicsHolderNew.translate(0, (this.h - (actualH * minScale)) / 2, 0); // Center it vertically
+                    graphicsHolderNew.scale((float)minScale, (float)minScale, 0);
+                }
+
+                if(this.overflowMode == 3) { // Wrap Text
+                    StringBuilder curLine = new StringBuilder();
+                    int wSoFar = 0;
+                    for(int i = 0; i < this.textContent.length(); i++) {
+                        char c = this.textContent.charAt(i);
+                        wSoFar += GraphicsHolder.getTextWidth(String.valueOf(c));
+                        if(wSoFar > this.w) {
+                            texts.add(getFormattedText(curLine.toString()));
+                            curLine = new StringBuilder(String.valueOf(c));
+                            wSoFar = 0;
+                        } else {
+                            curLine.append(c);
+                        }
+                    }
+                    if(curLine.length() > 0) {
                         texts.add(getFormattedText(curLine.toString()));
-                        curLine = new StringBuilder(String.valueOf(c));
-                        wSoFar = 0;
-                    } else {
-                        curLine.append(c);
+                    }
+                } else {
+                    texts.add(getFormattedText(this.textContent));
+                }
+
+                if(this.overflowMode == 4 && actualW > this.w) { // Marquee
+                    drawMarqueeText(graphicsHolderNew, texts.get(0).getString(), this.color, this.shadow, textLight, this.marqueeDurationOverride, this.marqueeProgressOverride);
+                } else {
+                    int i = 0;
+                    for(MutableText text : texts) {
+                        drawText(graphicsHolderNew, text, (int)(i*(9*this.lineHeight)), this.color, this.shadow, textLight);
+                        i++;
                     }
                 }
-                if(curLine.length() > 0) {
-                    texts.add(getFormattedText(curLine.toString()));
-                }
-            } else {
-                texts.add(getFormattedText(this.textContent));
+            } finally {
+                graphicsHolderNew.pop();
             }
-
-            if(this.overflowMode == 4 && actualW > this.w) { // Marquee
-                drawMarqueeText(graphicsHolderNew, texts.get(0).getString(), this.color, this.shadow, textLight, this.marqueeDurationOverride, this.marqueeProgressOverride);
-            } else {
-                int i = 0;
-                for(MutableText text : texts) {
-                    drawText(graphicsHolderNew, text, (int)(i*(9*this.lineHeight)), this.color, this.shadow, textLight);
-                    i++;
-                }
-            }
-            graphicsHolderNew.pop();
         });
     }
 

@@ -12,7 +12,7 @@ import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.World;
-import org.mtr.mod.block.BlockPSDAPGBase;
+import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDTop;
 
 /**
@@ -26,12 +26,17 @@ import org.mtr.mod.block.BlockPSDTop;
 @ApiInternal
 public class PSDScriptInstance extends ScriptInstance<PSDWrapper> implements SortableScriptInstance {
     private final BlockPos blockPos;
+    private final PSDWrapper.PSDType type;
+    private final Object worldData;
     private ScriptSoundManager soundManager;
     private ScriptRenderManager renderManager;
 
-    public PSDScriptInstance(BlockPos blockPos, String scriptId, ParsedScript script) {
-        super(new PSDScriptContext(scriptId), script);
-        this.blockPos = blockPos;
+    public PSDScriptInstance(PSDBinding binding, ParsedScript script) {
+        super(new PSDScriptContext(binding.scriptId), script);
+        this.blockPos = binding.pos;
+        this.type = binding.type;
+        final org.mtr.mapping.holder.ClientWorld world = MinecraftClient.getInstance().getWorldMapped();
+        this.worldData = world == null ? null : world.data;
         this.soundManager = new ScriptSoundManager();
         this.renderManager = new ScriptRenderManager();
     }
@@ -55,12 +60,14 @@ public class PSDScriptInstance extends ScriptInstance<PSDWrapper> implements Sor
 
     @Override
     public boolean shouldInvalidate() {
-        if (MinecraftClient.getInstance().getWorldMapped() == null) return true;
-        final World world = World.cast(MinecraftClient.getInstance().getWorldMapped());
+        final org.mtr.mapping.holder.ClientWorld clientWorld = MinecraftClient.getInstance().getWorldMapped();
+        if (clientWorld == null || clientWorld.data != worldData) return true;
+        final World world = World.cast(clientWorld);
         final BlockState state = world.getBlockState(blockPos);
         final Object block = state.getBlock().data;
-        final boolean stillPsd = block instanceof BlockPSDAPGBase || block instanceof BlockPSDTop;
-        return !stillPsd || !PSDClientBindings.isSameBinding(blockPos, getContextObject().getName());
+        final boolean stillPsd = type == PSDWrapper.PSDType.TOP
+                ? block instanceof BlockPSDTop : block instanceof BlockPSDAPGGlassBase;
+        return !stillPsd || !PSDClientBindings.isSameBinding(blockPos, getContextObject().getName(), false, type);
     }
 
     @Override

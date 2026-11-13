@@ -63,10 +63,12 @@ public final class PSDClientBindings {
         return BINDINGS.get(pos);
     }
 
-    /** True when the position's binding still runs the given script id (used by instance invalidation). */
-    public static boolean isSameBinding(BlockPos pos, String scriptId) {
+    /** Script ids are scoped by source (PSD or PIDS), and a changed surface
+     *  also requires a fresh instance and canvas. */
+    public static boolean isSameBinding(BlockPos pos, String scriptId, boolean pidsPreset, PSDWrapper.PSDType type) {
         final PSDBinding binding = BINDINGS.get(pos);
-        return binding != null && binding.scriptId.equals(scriptId);
+        return binding != null && binding.scriptId.equals(scriptId)
+                && binding.pidsPreset == pidsPreset && binding.type == type;
     }
 
     /** Iterates the current bindings without copying — the render pass calls

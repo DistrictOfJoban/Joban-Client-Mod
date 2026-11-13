@@ -103,6 +103,30 @@ public final class NativeContentDriver {
         }
     }
 
+    /** Native PIDS presets hosted by a PSD use the PSD depth direction.
+     *  Their state is distinct from ordinary PIDS blocks at the same position. */
+    public static void psdPidsDrive(String script, PIDSWrapper wrapper, World world) {
+        run(key("psd_pids", script, wrapper.blockPos().rawBlockPos()), script, NativeScriptManager.MTR_RESOURCE_PIDS, wrapper,
+                b -> NativeContentSnapshot.pids(b, wrapper),
+                () -> new com.lx862.jcm.mod.scripting.psd.PSDScriptContext(script));
+    }
+
+    public static void psdPidsReplay(String script, BlockPos blockPos, World world, StoredMatrixTransformations transform, Direction facing, int light) {
+        State state = STATES.get(key("psd_pids", script, blockPos));
+        if (state == null) return;
+        for (AbstractScriptContext context : state.contexts.values()) {
+            ((PIDSScriptContext) context).getRenderManager().invoke(world, transform, facing, light);
+        }
+    }
+
+    public static void psdPidsReplaySounds(String script, BlockPos blockPos, World world) {
+        State state = STATES.get(key("psd_pids", script, blockPos));
+        if (state == null) return;
+        for (AbstractScriptContext context : state.contexts.values()) {
+            ((PIDSScriptContext) context).getSoundManager().invoke(world, new ScriptVector3f(blockPos));
+        }
+    }
+
     /** PSD (platform screen door) glass / top-panel scripts — same shape as
      *  the PIDS path, but with the rich JcmPsdSnapshot and PSDScriptContext
      *  contexts. Drive/replay are separate so a glass binding can draw on

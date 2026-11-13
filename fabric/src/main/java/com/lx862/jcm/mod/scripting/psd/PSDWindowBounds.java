@@ -239,7 +239,7 @@ final class PSDWindowBounds {
     static final class Bounds {
         /** Full-face sentinel: window = the whole block face at the vanilla
          *  pane depth, no visible pane-parallel geometry. */
-        static final Bounds FULL_FACE = new Bounds(1, 0, DEFAULT_PANE_ALONG, false, 1, 0, 0, 1);
+        static final Bounds FULL_FACE = new Bounds(1, 0, DEFAULT_PANE_ALONG, false, 1, 0, 0, 1, 0, 1);
 
         /** Window top (block space, 1 = block top) — the STRICT alpha
          *  window, for the script canvas (content must stay clear of the
@@ -270,6 +270,11 @@ final class PSDWindowBounds {
         final float extentTop;
         /** Yanyang.9: see {@link #extentTop}. */
         final float extentBottom;
+        /** Geometric covering edges in the same block-axis coordinates as
+         *  {@link #left}/{@link #right}. These include semitransparent edge
+         *  bands; the strict script window must not trim the solid backing. */
+        final float extentLeft;
+        final float extentRight;
         /** Yanyang.10 (semantics clarified yanyang.11): window LEFT edge,
          *  in BLOCK SPACE along the pane's horizontal axis — block X when
          *  the wall faces Z, block Z when it faces X; 0 = the block's
@@ -295,13 +300,15 @@ final class PSDWindowBounds {
          *  {@link #left}. */
         final float right;
 
-        Bounds(float top, float bottom, float paneAlong, boolean visibleGeometry, float extentTop, float extentBottom, float left, float right) {
+        Bounds(float top, float bottom, float paneAlong, boolean visibleGeometry, float extentTop, float extentBottom, float extentLeft, float extentRight, float left, float right) {
             this.top = top;
             this.bottom = bottom;
             this.paneAlong = paneAlong;
             this.visibleGeometry = visibleGeometry;
             this.extentTop = extentTop;
             this.extentBottom = extentBottom;
+            this.extentLeft = extentLeft;
+            this.extentRight = extentRight;
             this.left = left;
             this.right = right;
         }
@@ -403,7 +410,7 @@ final class PSDWindowBounds {
                 /* No pane-scale platform-facing face — full-face fallback
                    (with the visibility flag so DRL upper halves can still
                    be gated). */
-                return new Bounds(1, 0, DEFAULT_PANE_ALONG, anyVisible, 1, 0, 0, 1);
+                return new Bounds(1, 0, DEFAULT_PANE_ALONG, anyVisible, 1, 0, 0, 1, 0, 1);
             }
 
             /* Yanyang.9: the covering extent — the pane's own geometric
@@ -411,21 +418,23 @@ final class PSDWindowBounds {
                clamped to the block. Every return path below carries it. */
             final float extentTop = Math.min(1, paneYMax + EXTENT_MARGIN);
             final float extentBottom = Math.max(0, paneYMin - EXTENT_MARGIN);
+            final float extentLeft = Math.max(0, paneHMin - EXTENT_MARGIN);
+            final float extentRight = Math.min(1, paneHMax + EXTENT_MARGIN);
 
             /* Window: the largest unoccluded span, clipped to the pane's
                own geometric extent. Two passes (yanyang.7): the STRICT
                pass first — semi-transparent frame strips must occlude —
                then the lenient legacy threshold when the strict pass
                finds no window (tinted-window packs keep their window). */
-            final Bounds strict = scanWindow(quads, paneYMin, paneYMax, paneHMin, paneHMax, paneAlong, anyVisible, FRAME_ALPHA_STRICT, extentTop, extentBottom);
+            final Bounds strict = scanWindow(quads, paneYMin, paneYMax, paneHMin, paneHMax, paneAlong, anyVisible, FRAME_ALPHA_STRICT, extentTop, extentBottom, extentLeft, extentRight);
             if (strict != null) {
                 return strict;
             }
-            final Bounds lenient = scanWindow(quads, paneYMin, paneYMax, paneHMin, paneHMax, paneAlong, anyVisible, ALPHA_THRESHOLD, extentTop, extentBottom);
+            final Bounds lenient = scanWindow(quads, paneYMin, paneYMax, paneHMin, paneHMax, paneAlong, anyVisible, ALPHA_THRESHOLD, extentTop, extentBottom, extentLeft, extentRight);
             if (lenient != null) {
                 return lenient;
             }
-            return new Bounds(1, 0, paneAlong, anyVisible, extentTop, extentBottom, 0, 1);
+            return new Bounds(1, 0, paneAlong, anyVisible, extentTop, extentBottom, extentLeft, extentRight, 0, 1);
         } catch (Throwable t) {
             return Bounds.FULL_FACE;
         }
@@ -437,7 +446,7 @@ final class PSDWindowBounds {
      *  same scan now also derives the largest unoccluded HORIZONTAL span
      *  (sprite columns instead of rows) — the window's left/right edges —
      *  falling back to the full block width when no span survives. */
-    private static Bounds scanWindow(java.util.ArrayList<Quad> quads, float paneYMin, float paneYMax, float paneHMin, float paneHMax, float paneAlong, boolean anyVisible, int frameThreshold, float extentTop, float extentBottom) {
+    private static Bounds scanWindow(java.util.ArrayList<Quad> quads, float paneYMin, float paneYMax, float paneHMin, float paneHMax, float paneAlong, boolean anyVisible, int frameThreshold, float extentTop, float extentBottom, float extentLeft, float extentRight) {
         final boolean[] occluded = new boolean[GRID];
         final boolean[] occludedH = new boolean[GRID];
         for (final Quad quad : quads) {
@@ -502,7 +511,7 @@ final class PSDWindowBounds {
                 hRight = hR;
             }
         }
-        return new Bounds(top, bottom, paneAlong, anyVisible, extentTop, extentBottom, hLeft, hRight);
+        return new Bounds(top, bottom, paneAlong, anyVisible, extentTop, extentBottom, extentLeft, extentRight, hLeft, hRight);
     }
 
     /** The horizontal twin of {@link #markOcclusion} (yanyang.10): marks the
@@ -708,6 +717,8 @@ final class PSDWindowBounds {
         final boolean visibleGeometry = false;
         final float extentTop = 1;
         final float extentBottom = 0;
+        final float extentLeft = 0;
+        final float extentRight = 1;
         final float left = 0;
         final float right = 1;
         private Bounds() {
@@ -733,6 +744,8 @@ final class PSDWindowBounds {
         final boolean visibleGeometry = false;
         final float extentTop = 1;
         final float extentBottom = 0;
+        final float extentLeft = 0;
+        final float extentRight = 1;
         final float left = 0;
         final float right = 1;
         private Bounds() {

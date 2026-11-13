@@ -87,37 +87,6 @@ public class ScriptRenderManager {
     }
 
     /**
-     * Splices an externally-prepared draw call into this manager's replay
-     * list (Yanyang round 17, PSD channel S): {@code atHead} inserts it
-     * BEFORE the captured calls — the spliced row flushes ahead of the
-     * script's own callbacks within the same queued layer — otherwise
-     * AFTER them (flushes last).
-     *
-     * <p>Called from the capture-commit callback (the script executor
-     * thread) immediately after {@link #takeFrom} handed this manager the
-     * fresh capture. The spliced calls then replay through the very same
-     * {@link #invoke} loop, the same per-call {@link TransformCapturePool}
-     * snapshots and the same {@code run() → drawTransformed →
-     * scheduleRender} submission as the script's own calls — zero
-     * submission-context difference (the round-17 elimination: sixteen
-     * rounds of PSD backing forensics left exactly two variables between
-     * the invisible backing rows and the proven-visible script text — the
-     * backing's own deeper z-plane and its direct-from-renderAll
-     * submission; see PSD-SHADER-BACKING.md in the repo root). Spliced
-     * calls are released by the next {@code takeFrom}/{@link #reset()}
-     * sweep exactly like captured ones.</p>
-     */
-    @ApiInternal
-    public synchronized void jcm$inject(RenderDrawCall<?> drawCall, boolean atHead) {
-        drawCall.validate();
-        if (atHead) {
-            this.drawCalls.add(0, drawCall);
-        } else {
-            this.drawCalls.add(drawCall);
-        }
-    }
-
-    /**
      * Takes the captured draw calls out of {@code other} without copying.
      *
      * <p>The JS capture path (VehicleScriptCallsHolder.Captured.capture) used

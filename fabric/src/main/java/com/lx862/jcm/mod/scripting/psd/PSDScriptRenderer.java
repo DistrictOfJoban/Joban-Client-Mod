@@ -16,7 +16,6 @@ import com.lx862.mtrscripting.core.primitive.ParsedScript;
 import com.lx862.mtrscripting.core.primitive.ScriptInstance;
 import com.lx862.mtrscripting.core.primitive.UniqueKey;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
-import com.lx862.mtrscripting.core.util.render.RenderDrawCall;
 import com.lx862.mtrscripting.core.util.render.ScriptRenderManager;
 import com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager;
 import com.lx862.mtrscripting.mod.resource.PSDResourceProvider;
@@ -50,150 +49,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
 /**
- * The per-frame PSD script render pass, driven from a HEAD injection into
- * {@code MainRenderer.render} (the same queued-render pipeline MTR's own PSD
- * renderers schedule into).
+ * One script canvas per bound glass segment or top-panel group.
+ * Script layout uses the transparent window; the opaque glass backing uses
+ * the pane's full geometric extent, including its translucent edge bands.
  *
- * <h2>Geometry</h2>
- * All faces live in the frame MTR's own PSD renderers use —
- * {@code translate(0.5+X, Y, 0.5+Z) → rotateY(-facing.asRotation())} — where
- * local +Z points toward the track and the vanilla pane glass occupies
- * z∈[4/16, 6/16]:
- *
- * <ul>
- *   <li><b>Glass</b> (bound per block, whole segment at once — the editor
- *       binds/unbinds every column, both halves, of the glass segment):
- *       the <b>glass segment</b> the bound blocks belong to (the contiguous
- *       glass/glass-end run between the doors — exactly the glass the brush
- *       merged, see {@link PSDRuns}) becomes ONE scripted panel — a canvas
- *       spanning the segment's full height (yanyang.6: the two block halves
- *       of a full-height door are ONE glass, so the canvas merges them
- *       vertically instead of drawing the script once per half) —
- *       <b>sandwiched INSIDE the pane</b>: an opaque covering
- *       0.45/16 behind the pane's platform-side face (drawn double-sided
- *       with a per-side tint — black toward the platform, white toward
- *       the track, yanyang.9 — spanning the pane's full geometric extent)
- *       and the script canvas 0.25/16 behind it — both at the run's
- *       DERIVED pane depth (see {@link PSDWindowBounds}; vanilla geometry
- *       → 4.45/16 and 4.25/16). Yanyang.7: both planes sit in the FRONT of
- *       the pane slab, ahead of the +0.5/16 plane where every canvas has
- *       provably rendered — packs place their own (white diffuser) panels
- *       behind that plane (the yanyang pack's sits between +0.5/16 and the
- *       old backing plane +1/16, which is why three rounds of "the glass
- *       never turns white" fixes never showed: the backing rendered fine,
- *       behind the pack's panel). The pane's own texture blends over the sandwich,
- *       so the script is visible exactly through the pane's <b>originally
- *       transparent window</b> while the opaque parts of the texture — the
- *       frame, divider bars, frosted bands, whatever the resource pack
- *       draws — stay fully visible and clip the canvas; nothing is painted
- *       over the frame. The covering hides the script from the track
- *       side (passengers inside a stopped train see plain white through the
- *       window, never mirrored content). Several bindings may point into
- *       the same segment; the FIRST one encountered renders it and the
- *       rest are skipped that pass — one canvas, one script run, one set
- *       of sounds per segment.</li>
- *   <li><b>Window clipping</b> (see {@link PSDWindowBounds}): the CANVAS is
- *       clipped to the pane's strict transparent window, derived at runtime
- *       from the block's actual baked model and texture alpha <b>by
- *       occlusion</b> (yanyang.5) — every pane-parallel quad's opaque rows
- *       count as frame, so packs whose pane texture is fully transparent but
- *       whose frame strips are separate model elements clip correctly too.
- *       Yanyang.10 completes the twin: the canvas is now clipped
- *       HORIZONTALLY too — the run's largest contiguous transparent span
- *       of columns, so the door frame's end stiles no longer half-eat the
- *       first/last glyph of every script row (the yanyang.9
- *       「脚本内容越界问题依然存在」 report). The COVERING is
- *       deliberately NOT alpha-clipped (yanyang.9): being a flat opaque
- *       quad BEHIND the pane it spans the pane's full geometric
- *       extent instead, so the pane's semi-transparent edge bands get solid
- *       colour behind them ("fully covered") while the opaque frame parts in
- *       front hide any excess. Blocks whose window cannot be derived
- *       fall back to the full face, matching the pre-clipping behaviour.
- *       DRL upper halves (invisible in vanilla) only render when their
- *       model actually shows something — a pack that gives them a visible
- *       frame/glass turns them into display surfaces.</li>
- *   <li><b>Draw path</b> (2026-11-12, round 17): the backing rides
- *       TWO channels, one per regime —
- *       channel S: <b>replay-injected rows</b> (see
- *       {@link #buildBackingRows} and {@link #injectBackingRows}) — the
- *       backing rows are built as fresh {@link TextWrapper}s (the
- *       platform half near-black with the round-17 glyph probe row and
- *       diagnostic stripes, the track half white, every line carrying
- *       a nametag-style background rectangle via the real
- *       TextRenderer's {@code backgroundColor} mechanism) and then
- *       <b>spliced into the script's own capture list at
- *       capture-commit time</b> — they replay through the very same
- *       {@code ScriptRenderManager.invoke} loop, the same per-call
- *       {@code TransformCapturePool} snapshots, the same
- *       {@code scriptSide} transform (the proven-visible +0.25/16
- *       plane) and the same {@code run() → drawTransformed() →
- *       scheduleRender(TEXT)} submission as the script's own text —
- *       zero submission-context difference left (round 17 eliminated
- *       the last two survivors: the backing's own deeper +0.45/16
- *       plane, on which EVERY carrier of sixteen prior rounds died
- *       under the user's shader stack while everything on the script
- *       plane always lived, and the direct-from-renderAll submission),
- *       gated to shader pipelines ({@link
- *       com.lx862.jcm.mod.util.ShaderDetector}; without shaders the
- *       depth-tested carrier B already carries the correct sandwich,
- *       and a no-depth fill would cover the script's depth-drawn
- *       images/shapes — MTR drains its queues by QueuedRenderLayer
- *       ordinal with TEXT LAST); and
- *       carrier B: RenderRouteBase's exact route-sign pipeline (keyed
- *       EXTERIOR queue over the cached entity-cutout warm-up consumer)
- *       at the full pane extent with both tints, which carries the
- *       two-colour look whenever depth-tested quad layers render at
- *       all (every no-shader pipeline). Sixteen user-tested rounds
- *       proved every OTHER carrier fails on the users' shader stack —
- *       every depth-tested quad form (buffered opaque entity segments
- *       die behind the translucent pane while vehicles prove they
- *       live in open space), the SEE_THROUGH program pair (rounds
- *       9/10), a hand-written NORMAL-layer quad through a private
- *       immediate (round 11), the real TextRenderer glyph machine
- *       through our own immediate on the LIGHT queue (round 12), the
- *       queue holder's own drawText with a hand-copied statement
- *       sequence (round 14), REAL TextWrapper rows of U+2588 FULL
- *       BLOCK through the script's very wrapper machinery (round 15:
- *       executed cleanly per the log, still invisible), and round 16's
- *       glyph-free text-BACKGROUND rectangles plus a real-glyph probe
- *       row — whose field test (build.97) killed the U+2588-rasterization
- *       theory for good: the probe row's visible-family CJK glyphs died
- *       too, while the script's own rows lived, narrowing the kill to
- *       the probe's two remaining differences (its +0.45/16 plane and
- *       its direct submission); see {@link #drawBacking} and
- *       {@link #buildBackingRows} for the full post-mortem.</li>
- *   <li><b>Vertical merge</b> (yanyang.6): when EVERY column of the segment
- *       has an upper half that is a display surface (a glass block whose
- *       model actually shows something — DRL uppers whose vanilla model is
- *       fully invisible never join), the canvas spans both rows as one
- *       frame: the window is the union of the lower-row windows
- *       ([0,1] of the frame) and the upper-row windows ([1,2]), so the
- *       script draws ONCE across the full-height glass instead of once per
- *       half. A single missing or invisible upper drops the frame back to
- *       one row — content must never float in open air above a column
- *       without visible geometry.</li>
- *   <li><b>Top</b> (bound to a psd_top block, whose own arrow/route content is
- *       cancelled group-wide by {@code RenderRouteBaseMixin}): the script's
- *       draw calls replay across the <b>psd_top group the bound block
- *       belongs to</b> — the psd_top stretch sitting on one wall section
- *       below (one brush-merged door run, or one glass segment; see
- *       {@link PSDRuns} for why the wall below defines the sections) — as one
- *       groupWidth×42 PIDS pixel canvas (side padding 0.125/16, top 7.5/16,
- *       bottom 1.5/16, straight from RenderPSDTop). Multiple bindings in
- *       the same group render the group once. The rest of the psd_top
- *       band keeps MTR's own arrows and route maps. No white base is forced;
- *       the script fully controls the content.</li>
- * </ul>
- *
- * <h2>Execution model</h2>
- * Scripts (JS and C++) are DRIVEN once per rendered section per frame (the
- * first binding encountered per glass segment / psd_top group); the
- * captured draw calls are REPLAYED onto the section's one merged canvas
- * (the full-height glass canvas / the merged top canvas). Sounds replay
- * exactly once per frame per section. Shader shadow passes replay the last
- * captured draw calls (silhouette correctness) without executing scripts,
- * uploading textures or driving the C++ side — mirroring the
- * eyecandy/PIDS shadow contract.
+ * <p>Shader backings use TextWrapper's real text-background path at the
+ * script plane. Each pane rectangle has an exact size independent of font
+ * metrics. The track view reverses the actual matrix/winding and shows a
+ * plain white panel. Backings are replayed on the render thread every frame,
+ * independently of asynchronous JS captures or native script availability.
+ * Non-shader backings retain MTR's keyed exterior-layer pipeline.
  */
 public final class PSDScriptRenderer implements RenderHelper {
 
@@ -207,184 +72,31 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static final float TOP_BOTTOM_PADDING = 1.5F / 16;
     private static final float TOP_DISPLAY_Z = 2F / 16 - 0.05F / 16;
 
-    /** The scripted sandwich lives INSIDE the pane, in its FRONT: the
-     *  black backing and the script canvas sit just behind the pane's
-     *  platform-side face, both placed relative to the run's derived pane
-     *  depth (see {@link PSDWindowBounds.Bounds#paneAlong}; for the
-     *  vanilla 4/16 pane these are 4.45/16 and 4.25/16).
-     *
-     *  <p>Yanyang.7 repositioning: the yanyang.5/6 layout put the canvas
-     *  at +0.5/16 and the backing at +1/16 — the canvas rendered (its
-     *  text stayed visible through every round) but the backing never
-     *  showed, because the user's pack carries its OWN white diffuser
-     *  panel whose front face lies between those two planes (+0.5/16 to
-     *  +1/16): the backing rendered correctly, merely behind the pack's
-     *  panel. Both planes now sit between the pane face and the
-     *  proven-visible +0.5/16 frontier — the backing at +0.45/16 is
-     *  therefore guaranteed in front of any such panel, with the canvas
-     *  0.2/16 ahead of it.</p>
-     *
-     *  <p>The planes stay ≥ 0.25/16 from the pane's platform face and
-     *  0.2/16 from each other — clear of depth-precision z-fighting at
-     *  any playable distance — and the pane's translucent faces still
-     *  blend over both, so the pane texture itself decides where the
-     *  sandwich shows: only through its transparent window pixels, never
-     *  over the frame. */
+    // Local +Z points toward the track. Keep shader backings on the proven
+    // script plane; the deeper exterior-layer plane is for non-shader renders.
     private static final float GLASS_BACKING_OFFSET = 0.45F / 16;
     private static final float GLASS_SCRIPT_OFFSET = 0.25F / 16;
-
-    /** A window narrower than this (block fraction) is treated as no window. */
     private static final float MIN_WINDOW = 0.05F;
-
-    /** Carrier B's layer texture — this mod's own FULLY OPAQUE
-     *  white (16×16, every pixel 255,255,255,255), tinted {@link
-     *  #BACKING_COLOR} / {@link #TRACK_SIDE_COLOR} at draw time.
-     *  Texture history: MTR's own {@code mtr:white} utility sprite is a
-     *  TRANSPARENT-white in the users' YYMTR 4.0.5 build (the yanyang.5
-     *  finding — an entity-cutout quad textured with it discards every
-     *  fragment), so the mod ships and uses its own opaque white.
-     *  Carrier B's KEYED scheduleRender makes the queue's warm-up
-     *  pre-create the CACHED MoreRenderLayers layer for this very
-     *  texture on the scheduled holder — the same stable-instance
-     *  discipline every visible MTR/JCM draw uses (see drawBacking).
-     *  (Rounds 11-12's channels N/N2 also bound this texture / the
-     *  font atlas through the vanilla text-layer factory; rounds 14-15
-     *  need no texture of their own at all — the backing draws through
-     *  the script text machinery itself, glyph rows on the font
-     *  stack.) */
-    private static final org.mtr.mapping.holder.Identifier BACKING_TEXTURE = new org.mtr.mapping.holder.Identifier("jsblock", "textures/block/white.png");
-
-    /** The covering tint toward the PLATFORM: fully opaque black (ARGB). */
+    private static final org.mtr.mapping.holder.Identifier BACKING_TEXTURE =
+            new org.mtr.mapping.holder.Identifier("jsblock", "textures/block/white.png");
     private static final int BACKING_COLOR = 0xFF000000;
-
-    /** The track-facing white quad sits this much DEEPER (in the pane
-     *  frame's local +Z, toward the track) than the black quad
-     *  (yanyang.10 heritage; carrier B keeps the separation). */
-    private static final float TRACK_BACK_Z = 0.0005F;
-
-    /** Carrier B's whole pair sits this much deeper than the backing
-     *  plane ({@link #GLASS_BACKING_OFFSET} + this) — the text layer's
-     *  depth handling is inherited state, so the offset only matters
-     * where depth-tested quads render at all (no-shader pipelines,
-     * carrier B's only regime since round 17 moved the shader-side
-     * backing onto the script plane): it keeps carrier B deterministic
-     * and clear of anything else at the same plane (2026-11-10; carrier
-     * A retired, its separation role inherited). */
-    private static final float CARRIER_B_Z = 0.001F;
-
-    /** The covering tint toward the TRACK — fully opaque white. Train
-     *  passengers see a plain white panel, never mirrored content (the
-     *  white quad's depth fails the canvas content's LEQUAL test on the
-     *  track side, so script content never leaks through). */
+    private static final int SHADER_BACKING_COLOR = 0xFF0A0A0A;
     private static final int TRACK_SIDE_COLOR = 0xFFFFFFFF;
-
-    /** Channel R's fill tint toward the PLATFORM: NEAR black (10,10,10),
-     *  not pure black. Round 15 heritage: 0x0A0A0A reads as plain black
-     *  on any display while dodging any pure-black handling in the
-     *  shader pack. Carried over unchanged — round 16 changes the
-     *  CARRIER (text background rectangles), not the tint. */
-    private static final int Q_FILL_COLOR = 0xFF0A0A0A;
-
-    /** The text row pitch every TextWrapper row is laid out on (vanilla
-     *  text px — TextWrapper.drawTransformed's own layout constant).
-     *  The round-16 background rectangles are ~11px tall (the Drawer's
-     *  y−1..y+10 constants), so the 9px pitch overlaps them by ~2px — a
-     *  seamless solid field with no hairlines. */
-    private static final float Q_TEXT_ROW_PX = 9;
-
-    /** The glyph probe row's reserved height (probe row = ~16px at the
-     *  script's own 1.725 scale + a 2px gap) before the first background
-     *  rectangle stripe begins. */
-    private static final float PROBE_ROW_PX = 18;
-
-    /** Camera-side gate threshold, in blocks along the pane normal
-     *  (facing points toward the track). Rounds 14-16 heritage. */
-    private static final double Q_CAMERA_GATE = 0.25;
-
-    /** Round-17 diagnostic stripe colour — the EXACT orange of the
-     *  builtin PIDS 1A arrival text (pids_1a.js {@code color(0xFC9700)}),
-     *  with an EXPLICIT opaque alpha (round 15 left it at 0x00FC9700 and
-     *  relied on TextRenderer's alpha==0 → opaque forcing, which vanilla
-     *  does apply — but never rely on a quirk in a diagnostic). Painted on
-     *  the platform half's FIRST background stripe AND on the glyph probe
-     *  row, so ONE field test separates the remaining failure families:
-     *  <ol>
-     *    <li>everything invisible — the spliced rows die even INSIDE the
-     *        script's own replay list, on the script's own plane, through
-     *        the script's own invoke loop → the wrapper field values are
-     *        the only survivors left → RenderDoc frame capture (see
-     *        PSD-SHADER-BACKING.md §7.0-18);</li>
-     *    <li>probe glyphs visible but rectangles missing — the replay
-     *        context is FIXED and the background-rect path itself dies on
-     *        this stack → round 18 falls back to visible-glyph dark
-     *        character rows;</li>
-     *    <li>everything visible — FIXED; stripes and probe get removed in
-     *        the follow-up build.</li>
-     *  </ol>
-     *  Remove once the backing's shader visibility is settled. */
-    private static final int DIAG_STRIPE_COLOR = 0xFFFC9700;
-
-    /** Round-17 glyph probe row: real characters in the script's own
-     *  visual language (CJK + latin + digits, the exact glyph families
-     *  pids_1a.js renders visibly on these very panes), configured as a
-     *  PLAIN TextWrapper row with the script's own 1.725 scale — riding
-     *  the SAME spliced-replay path as the rectangle rows. Round 16's
-     *  build.97 field test proved this exact glyph family dies when
-     *  submitted directly from renderAll on the +0.45/16 plane while the
-     *  script's own rows live — this row now differs from the script's
-     *  visible rows in NOTHING but its field values. Written as unicode
-     *  escapes so the source stays encoding-proof through the API push
-     *  and every loader's compiler. */
-    private static final String R_PROBE_TEXT = "\u5E95\u8272R17\u6D4B\u8BD5";
+    private static final float TRACK_BACK_Z = 0.0005F;
+    private static final float CARRIER_B_Z = 0.001F;
 
     /** Distance² gate — bindings beyond this are not driven. */
     private static final double MAX_DISTANCE_SQ = 192 * 192;
 
-    /** One-shot breadcrumbs per channel (yanyang.12 heritage): the
-     *  first EXCEPTION and the first successful execution are each
-     *  logged once, so the next field log proves which channel ran.
-     *  (Channel S is the round-17 replay-injected carrier — its "active"
-     *  lines fire at the actual splice, from the capture-commit
-     *  callback; carrier B the EXTERIOR route-sign pipeline.) */
-    private static volatile boolean BACKING_S_WARNED = false;
-    private static volatile boolean BACKING_S_OK_PLATFORM = false;
-    private static volatile boolean BACKING_S_OK_TRACK = false;
-    private static volatile boolean BACKING_B_WARNED = false;
-    private static volatile boolean BACKING_B_OK = false;
-
-    /** Channel S fill metrics, measured once on first use (render
-     *  thread, at row-build time): the advance of one fill character as
-     *  the background rows will actually draw it. The rows use {@code
-     *  fontMC()} — NO font style, the vanilla default font — exactly
-     *  matching the String overload the background path feeds the real
-     *  TextRenderer with, so measurement and drawing can never disagree.
-     *  The fill character is a SPACE (its glyph rasterizes to nothing —
-     *  only the advance matters, and the background rectangle is drawn
-     *  per character position regardless of glyph pixels, nametag-
-     *  behaviour proven); if a font pack somehow zeroes the space
-     *  advance, the digit fallback keeps the rectangles sized. */
-    private static int R_ADVANCE = Integer.MIN_VALUE;
-    private static String R_FILL_CHAR = " ";
-    private static int R_VANILLA_SPACE_ADVANCE;
-
-    /** The channel S metrics line, assembled at row-build time (render
-     *  thread, once) and logged at the first successful splice — see
-     *  {@link #injectBackingRows}. */
-    private static volatile String S_METRICS;
+    private static boolean shaderBackingPlatformLogged;
+    private static boolean shaderBackingTrackLogged;
+    private static boolean BACKING_B_WARNED;
+    private static boolean BACKING_B_OK;
 
     private PSDScriptRenderer() {
     }
 
-    /** Called from MainRendererPSDMixin at the head of MainRenderer.render.
-     * Everything drawn here is SCHEDULED onto MTR's queued layers and
-     * flushed within that same render call on MTR's own graphics holder;
-     * camera anchoring comes from the queued callback's offset at flush
-     * time. The backing rides TWO channels, one per regime — channel S
-     * (round 17: replay-injected text-background rows through the script's
-     * own capture list, shader pipelines only; see buildBackingRows and
-     * injectBackingRows) and
-     * carrier B (the keyed EXTERIOR route-sign pipeline, every
-     * no-shader pipeline; see drawBacking). */
+    /** Schedule into MTR's queues before MainRenderer flushes them. */
     public static void renderAll() {
         final MinecraftClient minecraftClient = MinecraftClient.getInstance();
         /* MTR's mapping wrappers are unrelated types — ClientWorld reaches the
@@ -395,26 +107,13 @@ public final class PSDScriptRenderer implements RenderHelper {
         if (PSDClientBindings.isEmpty()) return;
 
         final boolean shadowPass = OptimizedRenderer.renderingShadows();
-        /* Rounds 10+: the no-depth-test text-pipeline backing
-           (channel S since round 17; T/N/N2/P/Q/R before it) is
-           gated to shader pipelines — the full story is on
-           buildBackingRows, the short version: without shaders
-           the depth-tested carrier B already carries the correct
-           sandwich (script images/shapes/text keep their proven
-           layering over it), while a no-depth full-window fill on the
-           TEXT queue would flush LAST (MTR drains the queues by
-           QueuedRenderLayer ordinal, TEXT = 8 = last) and paint over
-           everything the script drew on the depth-tested queues.
-           Under a shader pack those queues' content behind the pane
-           is discarded by the pipeline anyway (thirteen rounds
-           proved it), so there is nothing visible left to cover —
-           and the text still draws over the black (same queue, later
-           submission). One reflective query per frame, no per-segment
-           cost. */
         final boolean shaderPack = !shadowPass && ShaderDetector.isShaderPackInUse();
-        final double playerX = player.getX();
-        final double playerY = player.getY();
-        final double playerZ = player.getZ();
+        // Use the rendered camera, not the player body: third-person and
+        // detached cameras can be on the opposite side of the glass.
+        final org.mtr.mapping.holder.Vector3d camera = minecraftClient.getGameRendererMapped().getCamera().getPos();
+        final double cameraX = camera.getXMapped();
+        final double cameraY = camera.getYMapped();
+        final double cameraZ = camera.getZMapped();
 
         /* One canvas per wall section per pass (yanyang.6): the editor binds
            EVERY block of a glass segment / psd_top group, and legacy worlds
@@ -424,9 +123,9 @@ public final class PSDScriptRenderer implements RenderHelper {
 
         PSDClientBindings.forEach(binding -> {
             final BlockPos pos = binding.pos;
-            final double dx = pos.getX() + 0.5 - playerX;
-            final double dy = pos.getY() + 0.5 - playerY;
-            final double dz = pos.getZ() + 0.5 - playerZ;
+            final double dx = pos.getX() + 0.5 - cameraX;
+            final double dy = pos.getY() + 0.5 - cameraY;
+            final double dz = pos.getZ() + 0.5 - cameraZ;
             if (dx * dx + dy * dy + dz * dz > MAX_DISTANCE_SQ) return;
 
             final BlockState state = world.getBlockState(pos);
@@ -437,7 +136,7 @@ public final class PSDScriptRenderer implements RenderHelper {
                 }
             } else {
                 if (block instanceof BlockPSDAPGGlassBase) {
-                    renderGlass(binding, pos, state, world, shadowPass, shaderPack, renderedSections, playerX, playerY, playerZ);
+                    renderGlass(binding, pos, state, world, shadowPass, shaderPack, renderedSections, cameraX, cameraZ);
                 }
             }
         });
@@ -447,7 +146,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* Glass                                                                 */
     /* ==================================================================== */
 
-    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass, boolean shaderPack, Set<BlockPos> renderedSections, double playerX, double playerY, double playerZ) {
+    private static void renderGlass(PSDBinding binding, BlockPos pos, BlockState state, World world, boolean shadowPass, boolean shaderPack, Set<BlockPos> renderedSections, double cameraX, double cameraZ) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING);
         final boolean upper = IBlock.getStatePropertySafe(state, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER;
 
@@ -480,6 +179,8 @@ public final class PSDScriptRenderer implements RenderHelper {
         final boolean[] lowerValid = new boolean[width];
         final float[] lowerExtentTop = new float[width];
         final float[] lowerExtentBottom = new float[width];
+        final float[] lowerExtentLeft = new float[width];
+        final float[] lowerExtentRight = new float[width];
         /* Yanyang.10: the per-column HORIZONTAL window (block space,
            [left, right] ⊂ [0,1]) — the strict alpha scan's horizontal
            twin, so the canvas can dodge the door frame's vertical
@@ -493,7 +194,9 @@ public final class PSDScriptRenderer implements RenderHelper {
         final boolean[] upperIncludable = new boolean[width];
         final float[] upperExtentTop = new float[width];
         final float[] upperExtentBottom = new float[width];
-        float paneAlong = PSDWindowBounds.DEFAULT_PANE_ALONG;
+        final float[] upperExtentLeft = new float[width];
+        final float[] upperExtentRight = new float[width];
+        float paneAlong = Float.NEGATIVE_INFINITY;
         boolean allUppers = true;
         for (int i = 0; i < width; i++) {
             final BlockPos lowerPos = run.start.offset(facing.rotateYClockwise(), i);
@@ -503,6 +206,8 @@ public final class PSDScriptRenderer implements RenderHelper {
             lowerValid[i] = lowerTop[i] - lowerBottom[i] >= MIN_WINDOW;
             lowerExtentTop[i] = lowerBounds.extentTop;
             lowerExtentBottom[i] = lowerBounds.extentBottom;
+            lowerExtentLeft[i] = lowerBounds.extentLeft;
+            lowerExtentRight[i] = lowerBounds.extentRight;
             lowerHLeft[i] = lowerBounds.left;
             lowerHRight[i] = lowerBounds.right;
             /* The sandwich sits just behind the DEEPEST pane in the run so
@@ -529,6 +234,8 @@ public final class PSDScriptRenderer implements RenderHelper {
                     upperValid[i] = upperTop[i] - upperBottom[i] >= MIN_WINDOW;
                     upperExtentTop[i] = upperBounds.extentTop;
                     upperExtentBottom[i] = upperBounds.extentBottom;
+                    upperExtentLeft[i] = upperBounds.extentLeft;
+                    upperExtentRight[i] = upperBounds.extentRight;
                     /* The column's horizontal window is the INTERSECTION of
                        both rows' windows — a stile in either row clips the
                        column for the whole merged frame. */
@@ -647,90 +354,56 @@ public final class PSDScriptRenderer implements RenderHelper {
         final int canvasHeight = Math.max(8, Math.round((windowTop - windowBottom) * 96));
         final float canvasTop = frameHeight - windowTop;
 
-        /* The sandwich planes track the run's pane depth: the script
-           canvas 0.25/16 behind the pane's platform-side face, the black
-           backing 0.45/16 behind it (vanilla pane → 4.25/16 and 4.45/16;
-           both in the pane slab's front, ahead of any pack-placed
-           panel — see the constants' javadoc). Round 17: the SHADER-side
-           backing rows no longer draw on the 0.45/16 plane at all —
-           they ride the script canvas plane through the replay
-           injection (see below); only carrier B (no-shader regimes)
-           still uses backingZ. */
+        if (!Float.isFinite(paneAlong)) paneAlong = PSDWindowBounds.DEFAULT_PANE_ALONG;
         final float scriptZ = paneAlong + GLASS_SCRIPT_OFFSET;
-        final float backingZ = paneAlong + GLASS_BACKING_OFFSET;
-
-        /* Carrier B's plane: the backing plane's transform, used ONLY by
-           the depth-tested EXTERIOR quads of no-shader pipelines. */
-        final StoredMatrixTransformations backing = glassTransform(run.start, facing, backingZ, frameHeight);
-
-        /* Channel S (round 17) row sets, built on the render thread (the
-           geometry and the player-side gate live here) and spliced into
-           the script's own capture list at capture-commit time — see
-           buildBackingRows and injectBackingRows. The platform half is
-           spliced at the list HEAD (its rows flush before the script's
-           own callbacks in the TEXT queue's shared "" list, so the
-           script text paints over the rectangles); the track half at
-           the TAIL (WHITE rows flush after everything, covering the
-           mirrored track-side view — carrier B's "plain white panel"
-           semantics). The player-side gate inside buildBackingRows
-           returns null for the half this view doesn't own, so at most
-           one set is non-null per frame. */
-        ObjectArrayList<RenderDrawCall<?>> backingHead = null;
-        ObjectArrayList<RenderDrawCall<?>> backingTail = null;
+        final org.mtr.mapping.holder.Vector3i normal = facing.getVector();
+        final boolean trackSide = PSDBackingGeometry.isTrackSide(cameraX, cameraZ,
+                run.start.getX(), run.start.getZ(), normal.getX(), normal.getZ(), scriptZ);
 
         if (!shadowPass) {
-            /* Opaque covering, one two-quad pair per block and row — but at
-               the pane's FULL GEOMETRIC EXTENT (yanyang.9), NOT the strict
-               alpha window: the covering is a flat quad BEHIND the pane, so
-               every opaque part of the pane/frame in front hides any excess
-               while the pane's semi-transparent edge bands (the rows the
-               strict scan excludes as "frame") finally get solid colour
-               behind them — the yanyang.8 leftover see-through strips at the
-               window's top/bottom edges (user report 2026-11-08 「黑色覆盖
-               不完全」). Each side carries its own tint on its own winding
-               through carrier B (2026-11-10, see drawBacking):
-               BLACK toward the platform, WHITE toward the track (train
-               passengers see a plain white panel, never mirrored content
-               — see TRACK_SIDE_COLOR). */
-            /* Channel S (2026-11-12, round 17 — see buildBackingRows),
-               ONLY on shader pipelines: the backing rows are BUILT here
-               and handed to driveScript, which splices them into the
-               script's freshly-captured replay list the moment the
-               capture commits — they then replay through the script's
-               own invoke loop on the script's own canvas plane,
-               eliminating the last two variables sixteen prior rounds
-               left (the +0.45/16 backing plane, on which every carrier
-               died under the user's shaders, and the direct submission
-               context — round 16's build.97 probe row with REAL glyphs
-               died on exactly those two differences while the script's
-               own rows lived). Without shaders the depth-tested
-               carrier B already carries the correct sandwich. Skipped
-               when no window could be derived (carrier B alone). */
-            if (shaderPack && windowTop - windowBottom >= MIN_WINDOW) {
-                backingHead = buildBackingRows(segLeft, segRight, windowBottom, windowTop, run.start, facing, false, playerX, playerY, playerZ);
-                backingTail = buildBackingRows(segLeft, segRight, windowBottom, windowTop, run.start, facing, true, playerX, playerY, playerZ);
-            }
-            for (int i = 0; i < width; i++) {
-                if (lowerExtentTop[i] > lowerExtentBottom[i]) {
-                    drawBacking(backing, i, lowerExtentTop[i], lowerExtentBottom[i], frameHeight, facing);
+            if (shaderPack) {
+                final ScriptRenderManager backingCalls = new ScriptRenderManager();
+                for (int i = 0; i < width; i++) {
+                    addShaderBacking(backingCalls, width, i, lowerExtentLeft[i], lowerExtentRight[i],
+                            lowerExtentTop[i], lowerExtentBottom[i], frameHeight, hMirror, trackSide);
+                    if (frameHeight > 1 && upperIncludable[i]) {
+                        addShaderBacking(backingCalls, width, i, upperExtentLeft[i], upperExtentRight[i],
+                                1 + upperExtentTop[i], 1 + upperExtentBottom[i], frameHeight, hMirror, trackSide);
+                    }
                 }
-                if (frameHeight > 1 && upperIncludable[i] && upperExtentTop[i] > upperExtentBottom[i]) {
-                    drawBacking(backing, i, 1 + upperExtentTop[i], 1 + upperExtentBottom[i], frameHeight, facing);
+                // The backing uses the same per-call snapshot/invoke/queued TEXT
+                // path as script text. It is frame-local: slow, failed and native
+                // scripts cannot delay a side change or lose the solid panel.
+                final StoredMatrixTransformations backingSide = glassTransform(run.start, facing, scriptZ, frameHeight);
+                if (trackSide) {
+                    backingSide.add(graphicsHolder -> graphicsHolder.translate(width, 0, TRACK_BACK_Z));
+                    backingSide.add(graphicsHolder -> graphicsHolder.rotateYDegrees(180));
+                }
+                backingCalls.invoke(world, backingSide, trackSide ? facing : facing.getOpposite(), MAX_RENDER_LIGHT);
+                logShaderBacking(trackSide);
+            } else {
+                final StoredMatrixTransformations backing = glassTransform(run.start, facing,
+                        paneAlong + GLASS_BACKING_OFFSET, frameHeight);
+                for (int i = 0; i < width; i++) {
+                    if (lowerExtentTop[i] > lowerExtentBottom[i]) {
+                        drawBacking(backing, i, lowerExtentTop[i], lowerExtentBottom[i], frameHeight, facing);
+                    }
+                    if (frameHeight > 1 && upperIncludable[i] && upperExtentTop[i] > upperExtentBottom[i]) {
+                        drawBacking(backing, i, 1 + upperExtentTop[i], 1 + upperExtentBottom[i], frameHeight, facing);
+                    }
                 }
             }
-            driveScript(binding, pos, world, canvasWidth, canvasHeight, backingHead, backingTail);
+            driveScript(binding, pos, world, canvasWidth, canvasHeight);
         }
 
-        /* The script canvas sits just behind the platform-side pane face:
-           the translucent pane blends over it, so the content shows exactly
-           through the pane's originally transparent window while every
-           opaque pixel of the pane texture (frame, bars, frosted bands —
-           whatever the resource pack draws) stays visible in front of it.
-           Round 17: the channel S backing rows ride THIS SAME transform —
-           they are spliced into the very list replayScript replays below. */
-        final StoredMatrixTransformations scriptSide = glassTransform(run.start, facing, scriptZ, frameHeight);
-        scriptSide.add(graphicsHolder -> graphicsHolder.translate(canvasLeft, canvasTop, 0));
-        replayScript(binding, pos, world, scriptSide, facing.getOpposite());
+        // A shader track view is intentionally a plain white panel. Do not
+        // submit mirrored script text/images there; queue ordering alone is
+        // not an occlusion guarantee across different shader render layers.
+        if (!shaderPack || !trackSide) {
+            final StoredMatrixTransformations scriptSide = glassTransform(run.start, facing, scriptZ, frameHeight);
+            scriptSide.add(graphicsHolder -> graphicsHolder.translate(canvasLeft, canvasTop, 0));
+            replayScript(binding, pos, world, scriptSide, facing.getOpposite());
+        }
         if (!shadowPass) {
             replaySoundsOnce(binding, pos, world);
         }
@@ -759,67 +432,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* Scheduled backing draw                                                */
     /* ==================================================================== */
 
-    /**
-     * The opaque pane covering — one block-wide quad (canvas x ∈ [x, x+1],
-     * y ∈ [frameTop-top, frameTop-bottom] in the merged frame's canvas
-     * coordinates), drawn as a two-winding pair (yanyang.8/9's proven
-     * visual design: the platform-facing winding carries {@link
-     * #BACKING_COLOR} (black), the track-facing winding {@link
-     * #TRACK_SIDE_COLOR} (white) a hair deeper — each side sees exactly
-     * its own quad, and the white quad's depth fails the canvas content's
-     * LEQUAL test on the track side, so script content never leaks
-     * through to the track).
-     *
-     * <p><b>Carrier B (2026-11-10) — the route-sign pipeline, kept for
-     * every pipeline where depth-tested quads render at all</b> (that is
-     * every no-shader setup, where this carrier has carried the correct
-     * two-colour look since yanyang.9): the KEYED {@code
-     * scheduleRender(BACKING_TEXTURE, false, EXTERIOR, …)}, so the
-     * queue's warm-up pre-creates the cached {@code
-     * getExterior(BACKING_TEXTURE)} entity-cutout consumer, and the
-     * callback is transform → {@code drawTextureInWorld} → pop, nothing
-     * else — RenderRouteBase's discipline verbatim.</p>
-     *
-     * <p><b>Why every depth-tested carrier failed under the user's
-     * shaders — the ten-round post-mortem</b>: the user's stack (Iris
-     * 1.7.6 + ComplementaryUnbound r5.5.1 + ImmediatelyFast, on YYMTR
-     * 4.0.5) has now eaten, behind the pane, EVERY quad ever submitted
-     * through a depth-tested layer — the MTR queue consumers in all
-     * their forms (yanyang.8–10 fresh consumers, yanyang.13 beacon-beam,
-     * 2.3.0-1.0.0/1.0.2 EXTERIOR keyed, 1.0.2 LIGHT_2 keyed) AND the
-     * yanyang.11/12 private immediates, which wrote through {@code
-     * drawTextureInWorld} — a writer whose OVERLAY element lands in the
-     * text format's LIGHTMAP slot and whose trailing normal() overruns
-     * the stride, corrupting the quad (the 2.3.0-1.0.1 explanation).
-     * The ONE thing that has rendered on these very panes under these
-     * very shaders, every version since yanyang.1, is the script text
-     * itself — {@code TextWrapper} → MTR's TEXT queue → {@code
-     * GraphicsHolder.drawText} → the real {@code TextRenderer.draw} on
-     * the NORMAL text layer (bytecode-verified 2026-11-10: {@code
-     * TextLayerType.field_33993} = NORMAL, both text layers carry
-     * DepthTest "always" and a color-only write mask) through a private
-     * Tessellator immediate flushed synchronously inside the callback.
-     * Rounds 9/10 drew channel T on the SEE_THROUGH variant — a
-     * different program pair — and stayed invisible; round 11's channel
-     * N (hand quad) and round 12's channel N2 (the real glyph machine
-     * through a private immediate) rode the NORMAL layer and STILL
-     * stayed invisible (build.94, 2026-11-11); round 14's channel P
-     * (the holder's own drawText, hand-copied statements), round 15's
-     * channel Q (real TextWrapper rows of U+2588 — executed cleanly yet
-     * invisible) and round 16's channel R (the script text's own
-     * BACKGROUND rectangles — glyph-free by construction, plus a
-     * real-glyph probe row) all died identically on the +0.45/16
-     * backing plane; round 17's channel S therefore carries the
-     * shader-pipeline regime through the script's own replay list
-     * instead (see buildBackingRows); this carrier remains for every
-     * pipeline where depth-tested quads render at all (no-shader
-     * setups).</p>
-     *
-     * <p>Per winding order the BLACK platform quad is submitted first,
-     * the WHITE track quad second (yanyang.13's order); the canvas sits
-     * 0.2/16 in front of the backing plane, so content always draws
-     * over it.</p>
-     */
+    /** Depth-tested black/white covering for non-shader pipelines. */
     private static void drawBacking(StoredMatrixTransformations transform, float x, float top, float bottom, float frameTop, Direction facing) {
         final float y = frameTop - top;
         final float height = top - bottom;
@@ -850,235 +463,27 @@ public final class PSDScriptRenderer implements RenderHelper {
         });
     }
 
-    /* ==================================================================== */
-    /* Replay-injected backing (channel S, round 17)                                */
-    /* ==================================================================== */
-
-    /**
-     * Channel S (2026-11-12, round 17) — the backing rows join the script's
-     * own replay list: they are BUILT here as plain {@link TextWrapper}s
-     * (no transform, no submission — {@code invoke} supplies both at replay
-     * time) and returned for {@link #driveScript} to splice into the
-     * instance's freshly-committed capture list via {@link
-     * #injectBackingRows}.
-     *
-     * <p><b>Why rounds 14-16 died and this should not</b>: build.97
-     * (round 16) ended the glyph-content theory. Its probe row — REAL
-     * characters from the script's own visible glyph families, the
-     * script's own 1.725 scale, the proven orange, through the wrapper's
-     * very {@code run()} machinery — stayed invisible while the script's
-     * own CJK rows rendered on the very same pane. With content, colour,
-     * font, wrapper class, queue, key and frame geometry all eliminated,
-     * exactly TWO differences survived between the probe and the visible
-     * script rows: <b>the plane</b> (the backing's own
-     * {@code paneAlong + 0.45/16} — on which EVERY carrier of sixteen
-     * rounds died under the user's Iris+Complementary stack while
-     * everything on the script's {@code paneAlong + 0.25/16} plane always
-     * lived) and <b>the submission</b> (our direct {@code run()} from
-     * renderAll head vs the script rows' replay through {@code
-     * ScriptRenderManager.invoke}). Round 17 eliminates both at once:
-     * the spliced rows replay through the script's own invoke loop, on
-     * the script's own plane, against per-call {@code TransformCapturePool}
-     * snapshots — the ONLY remaining difference to the visible text is
-     * the wrapper field values (fill string, colour, position).</p>
-     *
-     * <p><b>Row content</b> (unchanged from round 16): each row is
-     * {@code text(fillChars).fontMC().color(c).jcm$backgroundColor(c)} —
-     * spaces (or a digit fallback if a pack zeroes the space advance)
-     * sized to the window, so every line carries a nametag-style
-     * background rectangle drawn by the real TextRenderer's {@code
-     * backgroundColor} mechanism over the font atlas's vanilla-synthesized
-     * {@code SpecialGlyphs.WHITE} region, on the very same
-     * RenderLayer/texture/program the visible glyphs ride — the fill is
-     * glyph-independent by construction (see {@link TextWrapper}'s
-     * {@code jcm$backgroundColor} javadoc for the round-16 forensics).</p>
-     *
-     * <p><b>Diagnostics</b> (one field test, three outcomes — see
-     * {@link #DIAG_STRIPE_COLOR}): a glyph PROBE row of real characters
-     * rides above the rectangles, and the platform half's first background
-     * stripe is orange and its last white. All visible ⇒ fixed
-     * (stripes/probe out next build); probe visible but rectangles
-     * missing ⇒ the replay context is fixed and the background-rect path
-     * itself dies on this stack (round 18: visible-glyph dark character
-     * rows); everything invisible ⇒ the wrapper field values are the only
-     * survivors left ⇒ RenderDoc frame capture (PSD-SHADER-BACKING.md
-     * §7.0-18).</p>
-     *
-     * <p><b>Cost</b> (test build): one TextWrapper per row per segment per
-     * frame (~17 rows for a 255px window) — the same order as the script's
-     * own text rows, none of it on no-shader pipelines (the channel stays
-     * {@link com.lx862.jcm.mod.util.ShaderDetector}-gated). A shipping
-     * round can pool the wrappers if this works.</p>
-     *
-     * @return the rows in flush order (probe first, then the rectangles
-     *         top-down), or {@code null} when this view doesn't own the
-     *         requested half (player-side gate) or the geometry degenerated
-     */
-    private static ObjectArrayList<RenderDrawCall<?>> buildBackingRows(float left, float right, float bottom, float top, BlockPos anchor, Direction facing, boolean trackSide, double playerX, double playerY, double playerZ) {
-        /* Camera-side gate at BUILD time (rounds 15-17 — the shadow-pass
-           trap, see the class docs): facing points toward the TRACK, so a
-           player with along = dot(player - blockCenter, facing) >=
-           Q_CAMERA_GATE is on (or past) the pane plane on the track side
-           — exactly one half is built per view. */
-        final org.mtr.mapping.holder.Vector3i fv = facing.getVector();
-        final double along = (playerX - anchor.getX() - 0.5) * fv.getX()
-                + (playerY - anchor.getY() - 0.5) * fv.getY()
-                + (playerZ - anchor.getZ() - 0.5) * fv.getZ();
-        if ((along >= Q_CAMERA_GATE) != trackSide) {
-            return null; // the other half owns this view
-        }
-
-        /* Window pixel geometry: 96 px per block, the same canvas scale
-           the script itself draws on. The fill advance is measured once
-           with the EXACT font the rows will draw in — fontMC, the
-           vanilla default font, matching the String overload the
-           background path feeds the real TextRenderer with. */
-        final float wPx = (right - left) * 96;
-        final float hPx = (top - bottom) * 96;
-        if (wPx <= 0 || hPx <= 0) {
-            return null;
-        }
-        if (R_ADVANCE == Integer.MIN_VALUE) {
-            final int spaceAdvance = GraphicsHolder.getTextWidth(" ");
-            R_VANILLA_SPACE_ADVANCE = spaceAdvance;
-            if (spaceAdvance >= 1) {
-                R_FILL_CHAR = " ";
-                R_ADVANCE = spaceAdvance;
-            } else {
-                /* A font pack that zeroes the space advance would
-                   collapse every rectangle — fall back to a digit, whose
-                   advance every sane pack keeps (the script's own ETA
-                   digits render visibly through it). */
-                R_FILL_CHAR = "0";
-                R_ADVANCE = Math.max(1, GraphicsHolder.getTextWidth("0"));
-            }
-        }
-        final int advance = R_ADVANCE;
-        if (advance <= 0) {
-            if (!BACKING_S_WARNED) {
-                BACKING_S_WARNED = true;
-                com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.warn(
-                        "[JCM] PSD backing channel S degenerate: fill advance " + advance + " — nothing drawn");
-            }
-            return null;
-        }
-
-        /* +2 covers the Drawer's 1px rectangle margins on both sides;
-           the wrapper's own stretchXY trims ≤1 character of overhang. */
-        final int cols = Math.max(1, (int) Math.ceil((wPx + 2) / advance));
-        final StringBuilder rowBuilder = new StringBuilder(cols);
-        for (int i = 0; i < cols; i++) {
-            rowBuilder.append(R_FILL_CHAR);
-        }
-        final String rowText = rowBuilder.toString();
-
-        final ObjectArrayList<RenderDrawCall<?>> rows = new ObjectArrayList<>();
-
-        /* The glyph probe row (platform half only): real characters in
-           the script's own visual language, the proven orange, the
-           script's own 1.725 row scale — now riding the SAME spliced
-           replay path as the rectangles. */
-        if (!trackSide) {
-            final TextWrapper probe = TextWrapper.create();
-            probe.text(R_PROBE_TEXT).scale(1.725).size((wPx / 1.725) - 4, 9).stretchXY().fontMC().color(DIAG_STRIPE_COLOR).pos(2, 1);
-            rows.add(probe);
-        }
-
-        /* The rectangle rows: the platform half starts below the probe
-           row and paints its FIRST stripe orange and its LAST white;
-           the track half is all white. */
-        final float startY = trackSide ? 0 : PROBE_ROW_PX;
-        int rectRows = 0;
-        for (float y = startY; y < hPx; y += Q_TEXT_ROW_PX) {
-            final float rowH = Math.min(Q_TEXT_ROW_PX, hPx - y);
-            final boolean topStripe = !trackSide && y == startY;
-            final boolean bottomStripe = !trackSide && y + Q_TEXT_ROW_PX >= hPx;
-            final int color = trackSide ? TRACK_SIDE_COLOR
-                    : topStripe ? DIAG_STRIPE_COLOR
-                    : bottomStripe ? TRACK_SIDE_COLOR
-                    : Q_FILL_COLOR;
-
-            final TextWrapper wrapper = TextWrapper.create();
-            /* fontMC — the vanilla default font — so the wrapper's
-               measured width (getFormattedText → empty style) and the
-               background path's String-overload advances can never
-               disagree. The glyph tint EQUALS the rectangle colour: any
-               glyph pixels that render blend seamlessly into the fill. */
-            wrapper.text(rowText).pos(0, y).size(wPx, rowH).stretchXY().fontMC().color(color).jcm$backgroundColor(color);
-            rows.add(wrapper);
-            rectRows++;
-        }
-        if (rectRows <= 0 && rows.isEmpty()) {
-            return null; // window shorter than the probe row and no rows at all
-        }
-
-        /* The metrics line for the first successful splice (render-thread
-           assembly; logged from the capture-commit callback — see
-           injectBackingRows). */
-        if (!trackSide && S_METRICS == null) {
-            S_METRICS = "window " + Math.round(wPx) + "x" + Math.round(hPx)
-                    + "px, fill '" + (R_FILL_CHAR.equals(" ") ? "space" : R_FILL_CHAR) + "' advance " + R_ADVANCE
-                    + " (vanilla space " + R_VANILLA_SPACE_ADVANCE + "), rows " + rectRows + " x cols " + cols
-                    + ", probe row orange glyphs + stripes orange(top)/white(bottom)";
-        }
-        return rows;
+    /** One exact rectangle per pane half, including translucent margins. */
+    private static void addShaderBacking(ScriptRenderManager calls, int runWidth, int column,
+                                         float extentLeft, float extentRight, float top, float bottom,
+                                         float frameHeight, boolean mirrored, boolean trackSide) {
+        final float left = PSDBackingGeometry.runLeft(column, extentLeft, extentRight, mirrored);
+        final float right = PSDBackingGeometry.runRight(column, extentLeft, extentRight, mirrored);
+        if (right <= left || top <= bottom) return;
+        final float x = PSDBackingGeometry.viewLeft(runWidth, left, right, trackSide);
+        calls.draw(TextWrapper.create()
+                .pos(x * 96, (frameHeight - top) * 96)
+                .size((right - left) * 96, (top - bottom) * 96)
+                .jcm$backgroundRectangle(trackSide ? TRACK_SIDE_COLOR : SHADER_BACKING_COLOR));
     }
 
-    /**
-     * Splices the pre-built channel S rows into the instance's
-     * freshly-committed replay list — head for the platform half (rows
-     * flush before the script's own callbacks in the TEXT queue's shared
-     * "" list, so the script text paints over the rectangles), tail for
-     * the track half (WHITE rows flush after everything — the "plain
-     * white panel" semantics of carrier B's depth-tested quad, expressed
-     * on the replay path).
-     *
-     * <p>Runs INSIDE the capture-commit callback (the script executor
-     * thread, right after {@code saveRenderCalls}'s takeFrom swap handed
-     * the instance its fresh capture), so the spliced rows and the
-     * script's own calls replay as ONE list through ONE invoke loop —
-     * each against its own {@code TransformCapturePool.acquire(scriptSide)}
-     * snapshot, exactly like the script's own text. Exception-guarded:
-     * the callback runs on the executor, and a throw here must never
-     * break the script task machinery.</p>
-     */
-    private static void injectBackingRows(ScriptRenderManager renderManager, ObjectArrayList<RenderDrawCall<?>> rows, boolean tail) {
-        if (rows == null || rows.isEmpty()) return;
-        try {
-            if (tail) {
-                for (int i = 0; i < rows.size(); i++) {
-                    renderManager.jcm$inject(rows.get(i), false);
-                }
-                if (!BACKING_S_OK_TRACK) {
-                    BACKING_S_OK_TRACK = true;
-                    com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.info(
-                            "[JCM] PSD backing channel S active (replay-injected rows, track half)");
-                }
-            } else {
-                /* Head injection walks the list BACKWARDS so the built
-                   order (probe first, rectangles top-down) is preserved
-                   at the list head. */
-                for (int i = rows.size() - 1; i >= 0; i--) {
-                    renderManager.jcm$inject(rows.get(i), true);
-                }
-                if (!BACKING_S_OK_PLATFORM) {
-                    BACKING_S_OK_PLATFORM = true;
-                    com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.info(
-                            "[JCM] PSD backing channel S active (replay-injected rows, platform half)");
-                    final String metrics = S_METRICS;
-                    if (metrics != null) {
-                        com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.info(
-                                "[JCM] PSD backing channel S metrics: " + metrics);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            if (!BACKING_S_WARNED) {
-                BACKING_S_WARNED = true;
-                com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.warn(
-                        "[JCM] PSD backing channel S failed once: " + e, e);
-            }
-        }
+    private static void logShaderBacking(boolean trackSide) {
+        if (trackSide ? shaderBackingTrackLogged : shaderBackingPlatformLogged) return;
+        if (trackSide) shaderBackingTrackLogged = true;
+        else shaderBackingPlatformLogged = true;
+        com.lx862.mtrscripting.mod.MTRScriptingModClient.LOGGER.info(
+                "[JCM] PSD shader backing active (exact pane rectangles, "
+                        + (trackSide ? "track side, reversed winding)" : "platform side)"));
     }
 
     /* ==================================================================== */
@@ -1125,80 +530,52 @@ public final class PSDScriptRenderer implements RenderHelper {
     /* ==================================================================== */
 
     private static void driveScript(PSDBinding binding, BlockPos pos, World world, int canvasWidth, int canvasHeight) {
-        driveScript(binding, pos, world, canvasWidth, canvasHeight, null, null);
-    }
-
-    /**
-     * Drives the script and — the round-17 channel S twist — splices the
-     * pre-built backing rows into the instance's replay list the moment
-     * the script's capture commits. The injection runs inside the
-     * capture-commit callback (the script executor thread, right after
-     * {@code saveRenderCalls}'s takeFrom swap), so the rows join the very
-     * list {@link #replayScript} replays below: same invoke loop, same
-     * per-call TransformCapturePool snapshots, same scriptSide transform —
-     * see {@link #injectBackingRows}.
-     *
-     * @param backingHead the platform-half rows (HEAD splice, may be null)
-     * @param backingTail the track-half rows (TAIL splice, may be null)
-     */
-    private static void driveScript(PSDBinding binding, BlockPos pos, World world, int canvasWidth, int canvasHeight, ObjectArrayList<RenderDrawCall<?>> backingHead, ObjectArrayList<RenderDrawCall<?>> backingTail) {
+        final boolean runNative = NativeScriptManager.isLoaded(binding.scriptId);
         if (binding.pidsPreset) {
             final PIDSPresetBase preset = PIDSManager.getPreset(binding.scriptId);
             if (!(preset instanceof ScriptPIDSPreset)) return;
-            final ScriptPIDSPreset scriptPreset = (ScriptPIDSPreset) preset;
+            final ParsedScript parsedScript = ((ScriptPIDSPreset) preset).parsedScripts;
+            final ScriptInstance<PIDSWrapper> instance = parsedScript == null ? null
+                    : JCMScripting.getScriptManager().getInstanceManager().getInstance(
+                            new UniqueKey("psd_pids", binding.scriptId, pos.getX(), pos.getY(), pos.getZ()),
+                            () -> new PSDPidsScriptInstance(binding, parsedScript));
+            final boolean runJs = instance instanceof PSDPidsScriptInstance && parsedScript.willInvokeRender(instance);
+            if (!runNative && !runJs) return;
 
             final PIDSWrapper wrapper = synthesizePidsWrapper(binding, pos, canvasWidth, canvasHeight);
-            if (wrapper == null) return;
-
-            if (NativeScriptManager.isLoaded(binding.scriptId)) {
-                NativeContentDriver.pidsDrive(binding.scriptId, wrapper, world);
-            }
-
-            final ParsedScript parsedScript = scriptPreset.parsedScripts;
-            if (parsedScript == null) return;
-            final ScriptInstance<PIDSWrapper> instance = JCMScripting.getScriptManager().getInstanceManager().getInstance(
-                    new UniqueKey("psd_pids", binding.scriptId, pos.getX(), pos.getY(), pos.getZ()),
-                    () -> new PSDPidsScriptInstance(pos, binding.scriptId, parsedScript));
-            if (!(instance instanceof PSDPidsScriptInstance)) return;
+            if (runNative) NativeContentDriver.psdPidsDrive(binding.scriptId, wrapper, world);
+            if (!runJs) return;
             final PSDPidsScriptInstance psdInstance = (PSDPidsScriptInstance) instance;
-
             instance.setWrapperObject(wrapper);
-            instance.getScript().invokeRenderFunctions(instance, () -> {
+            parsedScript.invokeRenderFunctions(instance, () -> {
                 final PSDScriptContext context = (PSDScriptContext) psdInstance.getContextObject();
                 psdInstance.saveRenderCalls(context.getRenderManager());
                 psdInstance.saveSoundCalls(context.getSoundManager());
                 context.resetForNextRun();
-                injectBackingRows(psdInstance.getRenderManager(), backingHead, false);
-                injectBackingRows(psdInstance.getRenderManager(), backingTail, true);
             });
         } else {
             final PSDResourceProvider.PSDScriptConfiguration config = MtrScriptingResourceManager.psd.getScript(binding.scriptId);
             if (config == null) return;
+            final ParsedScript parsedScript = config.parsedScript();
+            final ScriptInstance<PSDWrapper> instance = parsedScript == null ? null
+                    : JCMScripting.getScriptManager().getInstanceManager().getInstance(
+                            new UniqueKey("psd", binding.scriptId, pos.getX(), pos.getY(), pos.getZ()),
+                            () -> new PSDScriptInstance(binding, parsedScript));
+            final boolean runJs = instance instanceof PSDScriptInstance && parsedScript.willInvokeRender(instance);
+            if (!runNative && !runJs) return;
 
             final Platform platform = findPlatform(pos, binding.type);
             final PSDWallScanner.WallRun wallRun = PSDWallScanner.scan(world, pos);
             final PSDWrapper wrapper = new PSDWrapper(binding.type, pos, canvasWidth, canvasHeight, platform, wallRun, config.dataFetchMode());
-
-            if (NativeScriptManager.isLoaded(binding.scriptId)) {
-                NativeContentDriver.psdDrive(binding.scriptId, wrapper, world);
-            }
-
-            final ParsedScript parsedScript = config.parsedScript();
-            if (parsedScript == null) return;
-            final ScriptInstance<PSDWrapper> instance = JCMScripting.getScriptManager().getInstanceManager().getInstance(
-                    new UniqueKey("psd", binding.scriptId, pos.getX(), pos.getY(), pos.getZ()),
-                    () -> new PSDScriptInstance(pos, binding.scriptId, parsedScript));
-            if (!(instance instanceof PSDScriptInstance)) return;
+            if (runNative) NativeContentDriver.psdDrive(binding.scriptId, wrapper, world);
+            if (!runJs) return;
             final PSDScriptInstance psdInstance = (PSDScriptInstance) instance;
-
             instance.setWrapperObject(wrapper);
-            instance.getScript().invokeRenderFunctions(instance, () -> {
+            parsedScript.invokeRenderFunctions(instance, () -> {
                 final PSDScriptContext context = (PSDScriptContext) psdInstance.getContextObject();
                 psdInstance.saveRenderCalls(context.getRenderManager());
                 psdInstance.saveSoundCalls(context.getSoundManager());
                 context.resetForNextRun();
-                injectBackingRows(psdInstance.getRenderManager(), backingHead, false);
-                injectBackingRows(psdInstance.getRenderManager(), backingTail, true);
             });
         }
     }
@@ -1211,7 +588,7 @@ public final class PSDScriptRenderer implements RenderHelper {
 
             // Native replay (main pass only — the driver never ran on shadows).
             if (NativeScriptManager.isLoaded(binding.scriptId)) {
-                NativeContentDriver.pidsReplay(binding.scriptId, pos, world, transform, drawDirection, MAX_RENDER_LIGHT);
+                NativeContentDriver.psdPidsReplay(binding.scriptId, pos, world, transform, drawDirection, MAX_RENDER_LIGHT);
             }
 
             final ParsedScript parsedScript = scriptPreset.parsedScripts;
@@ -1242,7 +619,7 @@ public final class PSDScriptRenderer implements RenderHelper {
     private static void replaySoundsOnce(PSDBinding binding, BlockPos pos, World world) {
         if (binding.pidsPreset) {
             if (NativeScriptManager.isLoaded(binding.scriptId)) {
-                NativeContentDriver.pidsReplaySounds(binding.scriptId, pos, world);
+                NativeContentDriver.psdPidsReplaySounds(binding.scriptId, pos, world);
             }
             final ScriptInstance<?> instance = JCMScripting.getScriptManager().getInstanceManager().getInstance(
                     new UniqueKey("psd_pids", binding.scriptId, pos.getX(), pos.getY(), pos.getZ()));

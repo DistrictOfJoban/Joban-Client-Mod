@@ -33,9 +33,10 @@ public abstract class PIDSDrawCall<T extends PIDSDrawCall<?>> extends RenderDraw
     /** Z-offset consumer for auto z-ordering; fields set by
      *  {@link #incrementZOrder(int, double)} each frame, allocated once. */
     private final Consumer<GraphicsHolder> jcm$zOffset = graphicsHolder ->
-            graphicsHolder.translate(0, 0, PIDSDrawCall.this.jcm$zValue * PIDSDrawCall.this.jcm$zStep);
+            graphicsHolder.translate(0, 0, -PIDSDrawCall.this.jcm$zValue * PIDSDrawCall.this.jcm$zStep);
     private double jcm$zValue;
     private double jcm$zStep;
+    private boolean jcm$hasZOrder;
 
     public PIDSDrawCall(double defaultW, double defaultH) {
         this.w = defaultW;
@@ -64,14 +65,10 @@ public abstract class PIDSDrawCall<T extends PIDSDrawCall<?>> extends RenderDraw
         int zToUse = this.zOrderOverride == -1 ? contextZIndex : this.zOrderOverride;
         this.jcm$zValue = zToUse;
         this.jcm$zStep = stepValue;
-        if(storedMatrixTransformations == null) {
-            storedMatrixTransformations = new StoredMatrixTransformations();
-        }
-        /* One persistent consumer re-added per frame (the previous entry is
-           dropped when the wrapper's transform list is cleared for reuse);
-           the old code allocated a fresh SMT plus a capturing lambda per
-           draw call per frame. */
-        storedMatrixTransformations.add(this.jcm$zOffset);
+        this.jcm$hasZOrder = true;
+        // Keep auto-z outside the wrapper's persistent matrices. A JS script
+        // can reuse the same wrapper on every frame without clearing them.
+        // Appending here made the same offset accumulate indefinitely.
     }
 
     public void draw(PIDSScriptContext ctx) {
@@ -81,6 +78,12 @@ public abstract class PIDSDrawCall<T extends PIDSDrawCall<?>> extends RenderDraw
     @Override
     public void run(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
         super.run(world, storedMatrixTransformations, facing, light);
+        if (this.jcm$hasZOrder) {
+            // RenderDrawCall converts script matrices with Rx(180) M Rx(-180).
+            // The former offset at M's tail therefore became Tz(-z * step).
+            // Append that equivalent translation once to this replay snapshot.
+            storedMatrixTransformations.add(this.jcm$zOffset);
+        }
         storedMatrixTransformations.add(this.jcm$position);
         drawTransformed(storedMatrixTransformations, facing, light);
     }
@@ -97,6 +100,9 @@ public abstract class PIDSDrawCall<T extends PIDSDrawCall<?>> extends RenderDraw
         this.w = defaultW;
         this.h = defaultH;
         this.zOrderOverride = -1;
+        this.jcm$hasZOrder = false;
+        this.jcm$zValue = 0;
+        this.jcm$zStep = 0;
         if (this.storedMatrixTransformations != null) {
             /* Clear rather than null: the SMT instance is reused, its entries
                are re-added per frame. Compiled JS matrices set their own SMT

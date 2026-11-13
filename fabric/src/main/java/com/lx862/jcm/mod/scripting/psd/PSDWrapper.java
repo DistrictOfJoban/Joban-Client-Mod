@@ -80,6 +80,7 @@ public class PSDWrapper {
 
     private final BlockPos blockPos;
     private final @ValueNullable Platform platform;
+    private final @ValueNullable PSDStationWrapper stationWrapper;
     private final PSDWallScanner.WallRun wallRun;
     private final DataFetchMode dataFetchMode;
     private final PSDArrivalsWrapper arrivalsWrapper;
@@ -92,6 +93,9 @@ public class PSDWrapper {
         this.width = width;
         this.height = height;
         this.platform = platform;
+        // Cache lookups traverse mutable client data. Capture them on the
+        // render thread, before handing this wrapper to a JS worker.
+        this.stationWrapper = platform == null || platform.area == null ? null : PSDStationWrapper.of(platform.area);
         this.wallRun = wallRun;
         this.dataFetchMode = dataFetchMode;
 
@@ -144,7 +148,7 @@ public class PSDWrapper {
      * or null when no platform (or no station) is in range.
      */
     public @ValueNullable PSDStationWrapper stop() {
-        return platform == null || platform.area == null ? null : PSDStationWrapper.of(platform.area);
+        return stationWrapper;
     }
 
     /* ---------------- Routes ---------------- */
@@ -282,7 +286,7 @@ public class PSDWrapper {
         @ApiInternal
         public static PSDStationWrapper of(Station station) {
             final long now = System.currentTimeMillis();
-            if(now - cacheStamp > CACHE_TTL_MILLIS) {
+            if(cacheStamp == Long.MIN_VALUE || now - cacheStamp > CACHE_TTL_MILLIS) {
                 cache.clear();
                 cacheStamp = now;
             }
@@ -436,12 +440,15 @@ public class PSDWrapper {
     /** One route calling at the platform, with its full stop list (dataFetchMode ALL/MANDATORY). */
     public static class PSDRouteWrapper {
         public final Route route;
-        private final @ValueNullable SimplifiedRoute simplifiedRoute;
+        private final List<PSDStopWrapper> stops;
 
         @ApiInternal
         public PSDRouteWrapper(Route route, @ValueNullable SimplifiedRoute simplifiedRoute) {
             this.route = route;
-            this.simplifiedRoute = simplifiedRoute;
+            // Built on the render thread, just like the enclosing PSD wrapper.
+            // A private list preserves the mutable script API without letting
+            // a script sort/clear the cache shared with another PSD instance.
+            this.stops = new ArrayList<>(PSDRouteStopCache.stopsOf(route, simplifiedRoute));
         }
 
         public long id() {
@@ -473,12 +480,11 @@ public class PSDWrapper {
             return MagicRouteTypes.extendedType(route.getId(), route.getTransportMode(), route.getRouteType());
         }
 
-        /** The route's stops in order. Empty unless the entry uses dataFetchMode ALL/MANDATORY.
-            Memoized per route id (see PSDRouteStopCache) — the render path asks
-            for the same graphs every frame and building them walks the client's
-            per-station interchange maps. */
+        /** The route's stops captured on the render thread. Empty unless the
+         *  entry uses dataFetchMode ALL/MANDATORY. Expensive graph construction
+         *  is memoized per route id; JS getters never access that shared cache. */
         public List<PSDStopWrapper> stops() {
-            return PSDRouteStopCache.stopsOf(route, simplifiedRoute);
+            return stops;
         }
     }
 
