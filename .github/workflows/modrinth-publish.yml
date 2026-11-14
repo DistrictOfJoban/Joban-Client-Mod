@@ -1,0 +1,75 @@
+name: Modrinth Publish
+run-name: Modrinth ${{ inputs.tag }} (${{ inputs.dry-run && 'preflight' || 'publish' }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing GitHub release tag (no rebuild)
+        type: string
+        required: true
+        default: v2.3.0-1.0.0
+      project-id:
+        description: Modrinth project ID
+        type: string
+        required: true
+        default: kMMJcRqY
+      dry-run:
+        description: Verify assets, project and existing versions without uploading
+        type: boolean
+        required: true
+        default: true
+
+permissions:
+  contents: read
+
+# Share the lock with the older external uploader to prevent duplicate uploads.
+concurrency:
+  group: external-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test publisher with mocked services
+        run: python3 scripts/test_publish_modrinth.py
+      - name: Download existing GitHub release assets and manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p modrinth-release/jars
+          TAG_PATH=$(jq -rn --arg tag "$TAG" '$tag | @uri')
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG_PATH" > modrinth-release/release.json
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.jar' --dir modrinth-release/jars
+      - name: Verify and publish Modrinth versions
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MR_PROJECT: ${{ inputs.project-id }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          set -euo pipefail
+          ARGS=(--release-json modrinth-release/release.json --jars-dir modrinth-release/jars --project-id "$MR_PROJECT" --output-json modrinth-release/result.json)
+          if [ "$DRY_RUN" = true ]; then
+            ARGS+=(--dry-run)
+          fi
+          python3 scripts/publish_modrinth.py "${ARGS[@]}"
+      - name: Preserve publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: modrinth-publication-${{ github.run_id }}
+          path: |
+            modrinth-release/release.json
+            modrinth-release/result.json
+          if-no-files-found: ignore
+          retention-days: 30
