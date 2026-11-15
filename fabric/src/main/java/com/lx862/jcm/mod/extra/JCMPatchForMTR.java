@@ -21,8 +21,8 @@ public class JCMPatchForMTR {
     private final static int RAIL_CULLING_AREA_LIMIT = Integer.MAX_VALUE / 2;
     private static boolean cachedRenderingShadow = false;
     private static final Long2IntArrayMap liftInstructions = new Long2IntArrayMap();
-    public static Identifier LIFT_DING_SOUND = new Identifier("minecraft:block.note_block.pling");
-    public static Map<BlockPos, BlockState> cachedRailNodeState = new HashMap<>();
+    public static final Identifier LIFT_DING_SOUND = new Identifier("minecraft:block.note_block.pling");
+    public static final Map<BlockPos, BlockState> cachedRailNodeState = new HashMap<>();
     public static boolean isSitting = false;
     public static boolean wasSneaking = false;
 

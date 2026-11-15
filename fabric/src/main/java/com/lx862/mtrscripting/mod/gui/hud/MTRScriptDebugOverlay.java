@@ -25,6 +25,7 @@ public class MTRScriptDebugOverlay {
     private static final int COLOR_BLUE = 0xFFCCCCFF;
     private static final int COLOR_YELLOW = 0xFFFFFF00;
     private static final int COLOR_WHITE = 0xFFFFFFFF;
+    private static final Identifier TAB_CHANGE_SOUND_ID = new Identifier("ui.button.click");
     private static final List<ScriptDebugSource> debugSources = new ArrayList<>();
     private static int sourceIndex;
 
@@ -211,7 +212,7 @@ public class MTRScriptDebugOverlay {
         if(sourceIndex-1 >= 0) {
             sourceIndex--;
             ClientPlayerEntity player = MinecraftClient.getInstance().getPlayerMapped();
-            if(player != null) player.playSound(SoundHelper.createSoundEvent(new Identifier("ui.button.click")), 1, 1);
+            if(player != null) player.playSound(SoundHelper.createSoundEvent(TAB_CHANGE_SOUND_ID), 1, 1);
         }
     }
 
@@ -219,7 +220,7 @@ public class MTRScriptDebugOverlay {
         if(sourceIndex+1 < debugSources.size()) {
             sourceIndex++;
             ClientPlayerEntity player = MinecraftClient.getInstance().getPlayerMapped();
-            if(player != null) player.playSound(SoundHelper.createSoundEvent(new Identifier("ui.button.click")), 1, 1);
+            if(player != null) player.playSound(SoundHelper.createSoundEvent(TAB_CHANGE_SOUND_ID), 1, 1);
         }
     }
 

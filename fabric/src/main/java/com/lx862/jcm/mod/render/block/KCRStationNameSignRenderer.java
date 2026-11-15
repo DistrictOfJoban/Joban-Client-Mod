@@ -1,5 +1,6 @@
 package com.lx862.jcm.mod.render.block;
 
+import com.lx862.jcm.mod.Constants;
 import com.lx862.jcm.mod.block.entity.KCRStationNameSignBlockEntity;
 import com.lx862.jcm.mod.data.BlockProperties;
 import com.lx862.jcm.mod.render.IDrawingJoban;
@@ -15,6 +16,8 @@ import org.mtr.mod.block.IBlock;
 import org.mtr.mod.data.IGui;
 
 public class KCRStationNameSignRenderer extends JCMBlockEntityRenderer<KCRStationNameSignBlockEntity> {
+    private static final Identifier FONT_ID = Constants.id("kcr_sign");
+
     public KCRStationNameSignRenderer(Argument dispatcher) {
         super(dispatcher);
     }
@@ -37,7 +40,7 @@ public class KCRStationNameSignRenderer extends JCMBlockEntityRenderer<KCRStatio
             if(i == 1) graphicsHolder.rotateYDegrees(180); // Other side
             graphicsHolder.translate(0, -0.05, -0.175);
             graphicsHolder.scale(0.021F, 0.021F, 0.021F);
-            IDrawingJoban.drawStringWithFont(graphicsHolder, stationName, new Identifier("jsblock:kcr_sign"), IGui.HorizontalAlignment.CENTER, IGui.VerticalAlignment.CENTER, 0, 0, 60, 32, 1, 0xEEEEEE, false, GraphicsHolder.getDefaultLight(), null);
+            IDrawingJoban.drawStringWithFont(graphicsHolder, stationName, FONT_ID, IGui.HorizontalAlignment.CENTER, IGui.VerticalAlignment.CENTER, 0, 0, 60, 32, 1, 0xEEEEEE, false, GraphicsHolder.getDefaultLight(), null);
             graphicsHolder.pop();
         }
     }

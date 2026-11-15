@@ -20,6 +20,7 @@ import java.util.List;
 import static com.lx862.jcm.mod.render.RenderHelper.MAX_RENDER_LIGHT;
 
 public class TextWrapper extends PIDSDrawCall<TextWrapper> {
+    private static final Identifier DEFAULT_FONT_ID = new Identifier(Init.MOD_ID, "mtr");
     protected String textContent;
     protected Identifier fontId;
     protected QueuedRenderLayer renderType;
@@ -43,7 +44,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         this.marqueeDurationOverride = -1;
         this.marqueeProgressOverride = -1;
         this.renderType = QueuedRenderLayer.TEXT;
-        this.fontId = new Identifier(Init.MOD_ID, "mtr");
+        this.fontId = DEFAULT_FONT_ID;
     }
 
     public static TextWrapper create() {

@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.core.util.render;
 import com.lx862.jcm.mod.render.RenderHelper;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import org.mtr.mapping.holder.*;
+import org.mtr.mod.Init;
 import org.mtr.mod.data.IGui;
 import org.mtr.mod.render.MainRenderer;
 import org.mtr.mod.render.MoreRenderLayers;
@@ -10,7 +11,7 @@ import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.render.StoredMatrixTransformations;
 
 public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
-    private static final Identifier WHITE_TEXTURE = new Identifier("mtr", "textures/block/white.png");
+    private static final Identifier BLANK_TEXTURE_ID = new Identifier(Init.MOD_ID, "textures/block/white.png");
     private final QuadDefinition quadDefinition;
     private Direction normalOverride = null;
     private Identifier textureId;
@@ -23,7 +24,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
     private float v2 = 1;
 
     public QuadDrawCall() {
-        this.textureId = WHITE_TEXTURE;
+        this.textureId = BLANK_TEXTURE_ID;
         this.quadDefinition = new QuadDefinition();
         this.renderType = QueuedRenderLayer.LIGHT;
     }

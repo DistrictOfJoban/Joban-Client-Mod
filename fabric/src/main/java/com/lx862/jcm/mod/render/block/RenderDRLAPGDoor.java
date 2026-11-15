@@ -55,7 +55,8 @@ public class RenderDRLAPGDoor<T extends APGDoorDRLBlockEntity> extends BlockEnti
                 if (half) {
                     final Block block = world.getBlockState(blockPos.offset(side ? facing.rotateYClockwise() : facing.rotateYCounterclockwise())).getBlock();
                     if (block.data instanceof BlockAPGGlass || block.data instanceof BlockAPGGlassEnd) {
-                        MainRenderer.scheduleRender(new Identifier(String.format("mtr:textures/block/apg_door_light_%s.png", open > 0 ? "on" : "off")), false, open > 0 ? QueuedRenderLayer.LIGHT_TRANSLUCENT : QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
+                        String textureId = "mtr:textures/block/apg_door_light_" + (open > 0 ? "on" : "off") + ".png";
+                        MainRenderer.scheduleRender(new Identifier(textureId), false, open > 0 ? QueuedRenderLayer.LIGHT_TRANSLUCENT : QueuedRenderLayer.EXTERIOR, (graphicsHolderNew, offset) -> {
                             storedMatrixTransformationsLight.transform(graphicsHolderNew, offset);
                             graphicsHolderNew.translate(side ? -0.515625 : 0.515625, 0, 0);
                             graphicsHolderNew.scale(0.5F, 1, 1);
