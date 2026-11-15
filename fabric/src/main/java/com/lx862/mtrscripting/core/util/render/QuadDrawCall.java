@@ -16,6 +16,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
     private Identifier textureId;
     private QueuedRenderLayer renderType;
     private int color = 0xFFFFFF;
+    private int light = -1;
     private float u1 = 0;
     private float v1 = 0;
     private float u2 = 1;
@@ -103,6 +104,11 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
         return this;
     }
 
+    public QuadDrawCall light(int light) {
+        this.light = light;
+        return this;
+    }
+
     public QuadDrawCall copy() {
         QuadDrawCall copy = new QuadDrawCall()
                 .texture(this.textureId)
@@ -111,6 +117,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
                 .corner3(new ScriptVector3f(this.quadDefinition.x3, this.quadDefinition.y3, this.quadDefinition.z3))
                 .corner4(new ScriptVector3f(this.quadDefinition.x4, this.quadDefinition.y4, this.quadDefinition.z4))
                 .color(this.color)
+                .light(this.light)
                 .uv(this.u1, this.v1, this.u2, this.v2)
                 .renderType(this.renderType.toString())
                 .setMatrices(storedMatrixTransformations);
@@ -119,8 +126,8 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
     }
 
     @Override
-    public void run(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int light) {
-        super.run(world, storedMatrixTransformations, facing, light);
+    public void run(World world, StoredMatrixTransformations storedMatrixTransformations, Direction facing, int lightOverride) {
+        super.run(world, storedMatrixTransformations, facing, lightOverride);
 
         MainRenderer.scheduleRender(renderType, (graphicsHolderNew, offset) -> {
             graphicsHolderNew.createVertexConsumer(getRenderType(textureId));
@@ -148,7 +155,7 @@ public class QuadDrawCall extends RenderDrawCall<QuadDrawCall> {
                     v2,
                     this.normalOverride != null ? this.normalOverride : facing,
                     RenderHelper.ARGB_BLACK + this.color,
-                    renderTypeIsInterior ? IGui.MAX_LIGHT_INTERIOR : light
+                    this.light != -1 ? lightOverride : renderTypeIsInterior ? IGui.MAX_LIGHT_INTERIOR : lightOverride
             );
             graphicsHolderNew.pop();
         });
