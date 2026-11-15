@@ -6,7 +6,7 @@ import org.mtr.mapping.holder.Identifier;
 public class JSUtil {
     public static Identifier parseId(String str) {
         if(str.startsWith("./")) {
-            return ScriptResourceUtil.idr(str.substring(2, str.length()-1));
+            return ScriptResourceUtil.idr(str.substring(2));
         }
         return ScriptResourceUtil.id(str);
     }
