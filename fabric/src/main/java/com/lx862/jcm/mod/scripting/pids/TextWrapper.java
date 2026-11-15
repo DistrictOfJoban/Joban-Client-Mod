@@ -210,7 +210,7 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
                         curLine.append(c);
                     }
                 }
-                if(curLine.length() > 0) {
+                if(!curLine.isEmpty()) {
                     texts.add(getFormattedText(curLine.toString()));
                 }
             } else {
@@ -238,7 +238,13 @@ public class TextWrapper extends PIDSDrawCall<TextWrapper> {
         } else if(this.alignment == 1) {
             startX -= totalW;
         }
+
+        graphicsHolder.push();
+        // HACK: Flip it so text shadow would render behind instead of in-front.
+        // To be investigated to why this happens by default.
+        graphicsHolder.scale(1, 1, -1);
         graphicsHolder.drawText(text, startX, y, color, shadow, light);
+        graphicsHolder.pop();
     }
 
     private void drawMarqueeText(GraphicsHolder graphicsHolder, String str, int color, boolean shadow, int light, double durationOverride, double progressOverride) {
