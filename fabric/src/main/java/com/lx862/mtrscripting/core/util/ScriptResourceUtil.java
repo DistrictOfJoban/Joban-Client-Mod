@@ -83,8 +83,11 @@ public class ScriptResourceUtil {
     @ApiInternal
     public static void executeScript(ParsedScript script, Identifier scriptLocation, String scriptContent) {
         scriptLocationStack.push(scriptLocation);
-        script.parseScriptContent(scriptContent, scriptLocation.getNamespace() + ":" + scriptLocation.getPath());
-        scriptLocationStack.pop();
+        try {
+            script.parseScriptContent(scriptContent, scriptLocation.getNamespace() + ":" + scriptLocation.getPath());
+        } finally {
+            scriptLocationStack.pop();
+        }
     }
 
     public static void includeScript(Object pathOrIdentifier) {

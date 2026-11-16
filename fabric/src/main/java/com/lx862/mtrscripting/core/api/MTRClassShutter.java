@@ -36,9 +36,7 @@ public class MTRClassShutter {
             ClassRule.parse("jdk.*"),
             // Scripting Core
             ClassRule.parse("com.lx862.mtrscripting.core.util.*"),
-            ClassRule.parse("com.lx862.mtrscripting.core.integration.*"),
-            // Rhino JS Engine
-            ClassRule.parse("com.lx862.mtrscripting.lib.org.mozilla.*")
+            ClassRule.parse("com.lx862.mtrscripting.core.integration.*")
         );
         denyClass(
             ClassRule.parse("java.lang.invoke.*"),
@@ -50,10 +48,17 @@ public class MTRClassShutter {
             ClassRule.parse("java.lang.Shutdown"),
             ClassRule.parse("java.lang.SecurityManager"),
             ClassRule.parse("java.lang.System"),
+            ClassRule.parse("java.lang.Runtime"),
+            ClassRule.parse("java.lang.ProcessHandle"),
+            ClassRule.parse("java.lang.ThreadGroup"),
+            ClassRule.parse("java.awt.Robot"),
             ClassRule.parse("java.util.jar.*"),
             ClassRule.parse("java.util.zip.*"),
             ClassRule.parse("jdk.internal.*"),
-            ClassRule.parse("jdk.nashorn.*")
+            ClassRule.parse("jdk.nashorn.*"),
+            ClassRule.parse("jdk.jshell.*"),
+            ClassRule.parse("jdk.jfr.*"),
+            ClassRule.parse("com.lx862.mtrscripting.lib.org.mozilla.javascript.Context")
         );
     }
 

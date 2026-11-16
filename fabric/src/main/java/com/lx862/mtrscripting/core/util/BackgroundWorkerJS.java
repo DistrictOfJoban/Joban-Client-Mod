@@ -17,7 +17,7 @@ public class BackgroundWorkerJS {
     public void submit(Runnable scriptTask) {
         workerThread.submit(() -> {
             try {
-                scriptTask.run();
+                invoke(scriptTask);
             } catch (Exception e) {
                 Throwable underlyingException = e instanceof WrappedException ? ((WrappedException)e).getWrappedException() : e;
 
@@ -26,6 +26,11 @@ public class BackgroundWorkerJS {
                 }
             }
         });
+    }
+
+    @ApiInternal
+    protected void invoke(Runnable scriptTask) {
+        scriptTask.run();
     }
 
     @ApiInternal

@@ -95,8 +95,10 @@ public class MTRScriptDebugOverlay {
                     double executionMs = scriptInstance.getLastExecutionDurationMs();
 
                     if(scriptInstance.getScript().duringFailCooldown()) {
+                        Throwable ex = scriptInstance.getScript().getCapturedScriptException();
+                        String exMessage = ex.getMessage() == null ? ex.toString() : ex.getMessage();
                         graphicsHolder.drawText(String.format("%s FAILED", keyName), 0, 0, COLOR_RED, true, MAX_LIGHT);
-                        for(String exLine : Splitter.fixedLength(60).split(scriptInstance.getScript().getCapturedScriptException().getMessage())) {
+                        for(String exLine : Splitter.fixedLength(60).split(exMessage)) {
                             graphicsHolder.translate(0, 10, 0);
                             graphicsHolder.drawText(String.format(exLine), 5, 0, COLOR_RED, true, MAX_LIGHT);
                         }

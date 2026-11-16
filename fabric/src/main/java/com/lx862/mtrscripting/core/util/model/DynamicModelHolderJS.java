@@ -26,6 +26,6 @@ public class DynamicModelHolderJS {
     }
 
     public void close() {
-        uploadedModel.close();
+        if(uploadedModel != null) uploadedModel.close();
     }
 }

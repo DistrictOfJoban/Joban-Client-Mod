@@ -27,6 +27,7 @@ public class RhinoParsedScript extends ParsedScript {
     private final List<Function> createFunctions;
     private final List<Function> renderFunctions;
     private final List<Function> disposeFunctions;
+    private final MTRRhinoClassShutter rhinoClassShutter;
 
     private static final Map<String, Script> compiledScriptCache = new HashMap<>();
 
@@ -35,6 +36,7 @@ public class RhinoParsedScript extends ParsedScript {
         this.createFunctions = new ArrayList<>();
         this.renderFunctions = new ArrayList<>();
         this.disposeFunctions = new ArrayList<>();
+        this.rhinoClassShutter = new MTRRhinoClassShutter(scriptManager.getClassShutter());
     }
 
     @Override
@@ -42,7 +44,7 @@ public class RhinoParsedScript extends ParsedScript {
         try {
             Context cx = Context.enter();
             cx.setLanguageVersion(Context.VERSION_ES6);
-            cx.setClassShutter(new MTRRhinoClassShutter(scriptManager.getClassShutter()));
+            cx.setClassShutter(this.rhinoClassShutter);
             scope = new ImporterTopLevel(cx);
             parseScriptContent("\"use strict\";", "Use Strict Statement");
             ScriptResourceUtil.beginParseScript(this);
@@ -107,7 +109,10 @@ public class RhinoParsedScript extends ParsedScript {
 
     @Override
     public void invokeDisposeFunctions(ScriptInstance<?> instance, Runnable finishCallback) {
-        invokeJSFunctions(instance, disposeFunctions, finishCallback, null);
+        invokeJSFunctions(instance, disposeFunctions, () -> {
+            instance.getContextObject().dispose();
+            if(finishCallback != null) finishCallback.run();
+        }, null);
     }
 
     private Future<?> invokeJSFunctions(ScriptInstance<?> scriptInstance, List<Function> functions, Runnable finishExecutionCallback, Runnable errorCallback) {
@@ -121,7 +126,7 @@ public class RhinoParsedScript extends ParsedScript {
             try {
                 Context cx = Context.enter();
                 cx.setLanguageVersion(Context.VERSION_ES6);
-                cx.setClassShutter(new MTRRhinoClassShutter(scriptManager.getClassShutter()));
+                cx.setClassShutter(this.rhinoClassShutter);
                 timing.prepareForScript(scriptInstance);
                 scriptInstance.beginTrackExecuteTime();
                 for(Function func : functions) {
