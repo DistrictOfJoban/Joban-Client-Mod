@@ -71,8 +71,8 @@ public abstract class PIDSBlockEntity extends JCMBlockEntityBase {
     }
 
     public void setData(String[] customMessages, LongAVLTreeSet filteredPlatforms, boolean[] rowHidden, boolean hidePlatformNumber, String pidsPresetId) {
-        System.arraycopy(customMessages, 0, this.customMessages, 0, customMessages.length);
-        System.arraycopy(rowHidden, 0, this.rowHidden, 0, rowHidden.length);
+        System.arraycopy(customMessages, 0, this.customMessages, 0, Math.min(customMessages.length, this.customMessages.length));
+        System.arraycopy(rowHidden, 0, this.rowHidden, 0, Math.min(rowHidden.length, this.rowHidden.length));
         this.hidePlatformNumber = hidePlatformNumber;
         this.pidsPresetId = pidsPresetId;
         this.platformIds.clear();

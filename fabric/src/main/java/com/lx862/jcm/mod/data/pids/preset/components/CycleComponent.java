@@ -32,8 +32,8 @@ public class CycleComponent extends PIDSComponent {
 
     @Override
     public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
-        if(components.isEmpty()) return;
         List<PIDSComponent> filteredComponents = components.stream().filter(e -> e.canRender(context)).collect(Collectors.toList());
+        if(filteredComponents.isEmpty()) return;
 
         if(cycleTime == -1 && !filteredComponents.isEmpty()) {
             filteredComponents.get(0).render(graphicsHolder, guiDrawing, facing, context); // Render first available component

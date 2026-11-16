@@ -59,11 +59,7 @@ public class KVPair {
 
     public int getInt(String key, int fallback) {
         Object value = get(key);
-        if(Integer.class.isInstance(value)) {
-            return (Integer)value;
-        } else {
-            return ((Double)value).intValue();
-        }
+        return value instanceof Number ? ((Number) value).intValue() : fallback;
     }
 
     public double getDouble(String key, double fallback) {

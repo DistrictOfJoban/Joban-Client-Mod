@@ -7,15 +7,16 @@ import org.mtr.mapping.mapper.GuiDrawing;
 
 @Deprecated
 public class TextRenderingManager implements RenderHelper {
+    @Deprecated
     public static void draw(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, TextInfo text, double x, double y) {
-        drawInternal(graphicsHolder, guiDrawing, text, null, x, y);
+        drawInternal(graphicsHolder, text, x, y);
     }
 
     public static void draw(GraphicsHolder graphicsHolder, TextInfo text, Direction facing, double x, double y) {
-        drawInternal(graphicsHolder, null, text, facing, x, y);
+        drawInternal(graphicsHolder, text, x, y);
     }
 
-    private static void drawInternal(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, TextInfo text, Direction facing, double x, double y) {
+    private static void drawInternal(GraphicsHolder graphicsHolder, TextInfo text, double x, double y) {
         if(text.getContent().isEmpty()) return;
         VanillaTextRenderer.draw(graphicsHolder, text, x, y);
     }

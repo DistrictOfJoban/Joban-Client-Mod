@@ -5,12 +5,9 @@ This is a minor release focused on bug-fixes.
 ## General
 - Fix typing an alphabet into a numeric GUI text field could crash the client
 - Fix inappropriately configured Sound Looper could repeatedly crash the server
+- Fix Fare Saver's "Prefix"/"Currency" feature not working.
 
 ## Technical
-
-### Sign Coloring
-- The text for MTR Railway Sign may now be colored using the `textColor` property.
-- Various minor optimizations
 
 ### Scripting
 - Add `QuadDrawCall.light()` for rendering the quad with a custom light value.

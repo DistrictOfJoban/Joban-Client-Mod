@@ -10,7 +10,6 @@ public class TextInfo {
     private Identifier fontId;
     private TextAlignment textAlignment = TextAlignment.LEFT;
     private int textColor;
-    private boolean forScrollingText = false;
 
     public TextInfo(String content) {
         this.content = content;
@@ -30,15 +29,6 @@ public class TextInfo {
 
     public TextAlignment getTextAlignment() {
         return textAlignment;
-    }
-
-    public boolean isForScrollingText() {
-        return this.forScrollingText;
-    }
-
-    public TextInfo withScrollingText() {
-        this.forScrollingText = true;
-        return this;
     }
 
     public TextInfo withColor(int color) {
@@ -79,6 +69,6 @@ public class TextInfo {
     public boolean equals(Object o) {
         if(!(o instanceof TextInfo)) return false;
         TextInfo other = ((TextInfo) o);
-        return other.content.equals(content) && other.textColor == textColor && this.forScrollingText == other.forScrollingText && this.fontId.equals(other.fontId);
+        return other.content.equals(content) && other.textColor == textColor && this.fontId.equals(other.fontId);
     }
 }

@@ -53,18 +53,8 @@ public abstract class TextComponent extends PIDSComponent {
         graphicsHolder.translate(x, y, 0);
         graphicsHolder.scale((float)scale, (float)scale, (float)scale);
         double textWidth = GraphicsHolder.getTextWidth(finalText.toMutableText());
-        if(textOverflowMode == TextOverflowMode.MARQUEE && textWidth > width) {
-            finalText = finalText.withScrollingText();
-        } else {
-            RenderHelper.scaleToFit(graphicsHolder, textWidth, width, textOverflowMode == TextOverflowMode.SCALE, 14);
-        }
-
-        if(guiDrawing != null) {
-            TextRenderingManager.draw(graphicsHolder, guiDrawing, finalText, 0, 0);
-        } else {
-            TextRenderingManager.draw(graphicsHolder, finalText, facing, 0, 0);
-        }
-
+        RenderHelper.scaleToFit(graphicsHolder, textWidth, width, textOverflowMode == TextOverflowMode.SCALE, 14);
+        TextRenderingManager.draw(graphicsHolder, finalText, facing, 0, 0);
         graphicsHolder.pop();
     }
 

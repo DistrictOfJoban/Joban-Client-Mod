@@ -11,6 +11,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AutoIronDoorBlockEntity extends JCMBlockEntityBase {
     public static final int DETECT_RADIUS = 3;
+    private static final Identifier DOOR_OPEN_SOUND_ID = new Identifier("minecraft:block.iron_door.open");
+    private static final Identifier DOOR_CLOSE_SOUND_ID = new Identifier("minecraft:block.iron_door.close");
+
     public AutoIronDoorBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(BlockEntities.AUTO_IRON_DOOR.get(), blockPos, blockState);
     }
@@ -24,22 +27,24 @@ public class AutoIronDoorBlockEntity extends JCMBlockEntityBase {
             BlockState state = world.getBlockState(pos);
 
             Box box = new Box(pos.getX() - DETECT_RADIUS, pos.getY() - DETECT_RADIUS, pos.getZ() - DETECT_RADIUS, pos.getX() + DETECT_RADIUS, pos.getY() + DETECT_RADIUS, pos.getZ() + DETECT_RADIUS);
-            AtomicBoolean haveNearbyPlayer = new AtomicBoolean(false);
+            AtomicBoolean playerDetected = new AtomicBoolean(false);
+
+            boolean doorOpened = IBlock.getStatePropertySafe(state, new Property<>(DoorBlockAbstractMapping.getOpenMapped().data));
 
             MinecraftServerHelper.iteratePlayers(ServerWorld.cast(getWorld2()), (player) -> {
-                if(!player.isSpectator() && box.contains(player.getPos())) {
-                    boolean alreadyOpened = IBlock.getStatePropertySafe(state, new Property<>(DoorBlockAbstractMapping.getOpenMapped().data));
+                if(playerDetected.get()) return;
 
-                    if(!alreadyOpened) {
-                        world.playSound(null, pos, SoundHelper.createSoundEvent(new Identifier("minecraft:block.iron_door.open")), SoundCategory.BLOCKS, 1, 1);
+                if(!player.isSpectator() && box.contains(player.getPos())) {
+                    if(!doorOpened) {
+                        world.playSound(null, pos, SoundHelper.createSoundEvent(DOOR_OPEN_SOUND_ID), SoundCategory.BLOCKS, 1, 1);
                         world.setBlockState(pos, state.with(new Property<>(DoorBlockAbstractMapping.getOpenMapped().data), true));
                     }
-                    haveNearbyPlayer.set(true);
+                    playerDetected.set(true);
                 }
             });
 
-            if(!haveNearbyPlayer.get() && IBlock.getStatePropertySafe(state, new Property<>(DoorBlockAbstractMapping.getOpenMapped().data))) {
-                world.playSound((PlayerEntity) null, getPos2(), SoundHelper.createSoundEvent(new Identifier("minecraft:block.iron_door.close")), SoundCategory.BLOCKS, 1, 1);
+            if(!playerDetected.get() && doorOpened) {
+                world.playSound(null, getPos2(), SoundHelper.createSoundEvent(DOOR_CLOSE_SOUND_ID), SoundCategory.BLOCKS, 1, 1);
                 world.setBlockState(getPos2(), state.with(new Property<>(DoorBlockAbstractMapping.getOpenMapped().data), false));
             }
         }

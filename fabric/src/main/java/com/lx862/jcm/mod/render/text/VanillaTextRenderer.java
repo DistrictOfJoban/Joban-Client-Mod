@@ -9,23 +9,14 @@ import org.mtr.mapping.mapper.GraphicsHolder;
  */
 @Deprecated
 public class VanillaTextRenderer implements RenderHelper {
-    public static void draw(GraphicsHolder graphicsHolder, TextInfo text, double x, double y) {
-        drawInternal(graphicsHolder, text, x, y);
+    public static void draw(GraphicsHolder graphicsHolder, TextInfo textInfo, double x, double y) {
+        drawInternal(graphicsHolder, textInfo.toMutableText(), textInfo.getTextAlignment(), textInfo.getTextColor(), x, y);
     }
 
-    private static void drawInternal(GraphicsHolder graphicsHolder, TextInfo text, double x, double y) {
-        int textWidth = GraphicsHolder.getTextWidth(text.toMutableText());
-        double finalX = text.getTextAlignment().getX(x, textWidth);
+    private static void drawInternal(GraphicsHolder graphicsHolder, MutableText text, TextAlignment textAlignment, int textColor, double x, double y) {
+        int textWidth = GraphicsHolder.getTextWidth(text);
+        double finalX = textAlignment.getX(x, textWidth);
 
-        if(text.isForScrollingText()) {
-            drawScrollingText(graphicsHolder, text, finalX, y);
-        } else {
-            MutableText finalText = text.toMutableText();
-            graphicsHolder.drawText(finalText, (int)finalX, (int)y, text.getTextColor(), false, MAX_RENDER_LIGHT);
-        }
-    }
-
-    // HEAVY WIP
-    public static void drawScrollingText(GraphicsHolder graphicsHolder, TextInfo text, double x, double y) {
+        graphicsHolder.drawText(text, (int)finalX, (int)y, textColor, false, MAX_RENDER_LIGHT);
     }
 }

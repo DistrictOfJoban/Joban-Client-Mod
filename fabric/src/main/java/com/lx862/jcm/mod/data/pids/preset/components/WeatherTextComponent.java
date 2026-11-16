@@ -23,7 +23,7 @@ public class WeatherTextComponent extends TextComponent {
 
     @Override
     public void render(GraphicsHolder graphicsHolder, GuiDrawing guiDrawing, Direction facing, PIDSContext context) {
-        drawText(graphicsHolder, guiDrawing, facing, context.world.isRaining() ? rainyText : context.world.isThundering() ? thunderstormText : sunnyText);
+        drawText(graphicsHolder, guiDrawing, facing, context.world.isThundering() ? thunderstormText : context.world.isRaining() ? rainyText : sunnyText);
     }
 
     public static PIDSComponent parseComponent(double x, double y, double width, double height, JsonObject jsonObject) {

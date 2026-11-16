@@ -22,6 +22,9 @@ public class ArrivalETAComponent extends TextComponent {
     private final boolean useAbsoluteTime;
     private final boolean showDeparture;
     private final int arrivalIndex;
+
+    private static final SimpleDateFormat HHMMFormatter = new SimpleDateFormat("HH:mm");
+
     public ArrivalETAComponent(double x, double y, double width, double height, KVPair additionalParam) {
         super(x, y, width, height, additionalParam);
         this.arrivalIndex = additionalParam.getInt("arrivalIndex", 0);
@@ -44,7 +47,7 @@ public class ArrivalETAComponent extends TextComponent {
         final MutableText etaText;
 
         if(useAbsoluteTime) {
-            etaText = TextUtil.literal(new SimpleDateFormat("HH:mm").format(new Date(arrival.getArrival())));
+            etaText = TextUtil.literal(HHMMFormatter.format(new Date(arrival.getArrival())));
         } else {
             if(remSec >= 60) {
                 etaText = TextUtil.translatable(cycleStringTranslation("gui.mtr.arrival_min_cjk", "gui.mtr.arrival_min"), remSec / 60);

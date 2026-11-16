@@ -19,7 +19,7 @@ public abstract class JCMBlock extends BlockExtension {
      */
     public void loopStructure(BlockState state, World world, BlockPos sourcePos, BiConsumer<BlockState, BlockEntity> callback) {
         for(BlockPos bPos : getAllPos(state, world, sourcePos)) {
-            BlockState bs = world.getBlockState(sourcePos);
+            BlockState bs = world.getBlockState(bPos);
             BlockEntity be = BlockUtil.getBlockEntityOrNull(world, bPos);
             if(be != null) callback.accept(bs, be);
         }

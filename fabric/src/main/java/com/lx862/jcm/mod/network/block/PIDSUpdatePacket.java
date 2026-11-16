@@ -27,8 +27,12 @@ public class PIDSUpdatePacket extends PacketHandler {
         this.rowHidden = new boolean[rows];
         this.filteredPlatforms = new LongAVLTreeSet();
 
-        JCMPacketHandlerHelper.readArray(packetBufferReceiver, i -> this.customMessages[i] = packetBufferReceiver.readString());
-        JCMPacketHandlerHelper.readArray(packetBufferReceiver, i -> this.rowHidden[i] = packetBufferReceiver.readBoolean());
+        JCMPacketHandlerHelper.readArray(packetBufferReceiver, i -> {
+            if(i < this.customMessages.length) this.customMessages[i] = packetBufferReceiver.readString();
+        });
+        JCMPacketHandlerHelper.readArray(packetBufferReceiver, i -> {
+            if(i < this.rowHidden.length) this.rowHidden[i] = packetBufferReceiver.readBoolean();
+        });
         JCMPacketHandlerHelper.readArray(packetBufferReceiver, i -> filteredPlatforms.add(packetBufferReceiver.readLong()));
 
         this.hidePlatformNumber = packetBufferReceiver.readBoolean();
