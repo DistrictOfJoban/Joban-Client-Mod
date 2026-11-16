@@ -77,8 +77,11 @@ public class IntegerTextField extends AlwaysRenderedTextField implements GuiHelp
 
     @Override
     public void setText2(String s) {
-        super.setText2(s);
-        if(this.changeListener != null) this.changeListener.accept(Long.parseLong(s));
+        try {
+            long value = Long.parseLong(s);
+            super.setText2(s);
+            this.changeListener.accept(value);
+        } catch (NumberFormatException ignored) {}
     }
 
     protected void drawPrefix(GraphicsHolder graphicsHolder) {
