@@ -63,7 +63,7 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
             boolean emittingRedstonePower = bl1 || bl2 || bl3 || bl4 || bl5 || bl6;
             if(needRedstone && !emittingRedstonePower) return;
 
-            final SoundCategory category = SOURCE_LIST[soundCategory];
+            final SoundCategory category = SOURCE_LIST[Math.max(0, Math.min(soundCategory, SOURCE_LIST.length-1))];
             final Identifier identifier;
             try {
                 identifier = new Identifier(soundID);
@@ -109,7 +109,7 @@ public class SoundLooperBlockEntity extends JCMBlockEntityBase {
     }
 
     public int getSoundCategory() {
-        if (soundCategory > SoundLooperBlockEntity.SOURCE_LIST.length) {
+        if (soundCategory >= SoundLooperBlockEntity.SOURCE_LIST.length) {
             soundCategory = 0;
         }
         return soundCategory;

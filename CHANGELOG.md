@@ -4,6 +4,7 @@ This is a minor release focused on bug-fixes.
 
 ## General
 - Fix typing an alphabet into a numeric GUI text field could crash the client
+- Fix inappropriately configured Sound Looper could repeatedly crash the server
 
 ## Technical
 
