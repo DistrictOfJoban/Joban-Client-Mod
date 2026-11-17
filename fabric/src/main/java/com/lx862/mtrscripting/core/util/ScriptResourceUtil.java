@@ -56,6 +56,7 @@ import java.util.function.Supplier;
 public class ScriptResourceUtil {
     private static final Stack<Identifier> scriptLocationStack = new Stack<>();
     private static ParsedScript activeParsingScript;
+    private static final ThreadLocal<ParsedScript> executingScriptInCurrentThread = new ThreadLocal<>();
 
     public static final boolean ANTE_FLAG = false;
 
@@ -78,6 +79,23 @@ public class ScriptResourceUtil {
     @ApiInternal
     public static void finishParseScript() {
         activeParsingScript = null;
+    }
+
+    @ApiInternal
+    public static void beginExecuteScript(ParsedScript parsedScript) {
+        executingScriptInCurrentThread.set(parsedScript);
+    }
+
+    @ApiInternal
+    public static void finishExecuteScript() {
+        executingScriptInCurrentThread.remove();
+    }
+
+    @ApiInternal
+    public static ParsedScript getActiveScript() {
+        ParsedScript ps = executingScriptInCurrentThread.get();
+        if(ps == null) return activeParsingScript;
+        return ps;
     }
 
     @ApiInternal

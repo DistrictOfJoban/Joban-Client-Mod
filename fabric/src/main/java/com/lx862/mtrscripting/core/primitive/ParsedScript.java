@@ -65,6 +65,9 @@ public abstract class ParsedScript {
     public abstract void exposeClass(String name, Class<?> cl);
     public abstract void exposeClassInstance(String name, Object classInstance);
 
+    public abstract void preExecuteScript();
+    public abstract void postExecuteScript();
+
     public static class Configuration {
         private final List<ScriptContent> content;
         private final String scriptingLanguage;

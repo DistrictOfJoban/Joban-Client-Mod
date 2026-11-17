@@ -69,7 +69,7 @@ public class RhinoParsedScript extends ParsedScript {
             }
         } finally {
             ScriptResourceUtil.finishParseScript();
-            Context.exit();
+            postExecuteScript();
         }
         return this;
     }
@@ -124,9 +124,9 @@ public class RhinoParsedScript extends ParsedScript {
             if(Thread.currentThread().isInterrupted()) return;
 
             try {
-                Context cx = Context.enter();
-                cx.setLanguageVersion(Context.VERSION_ES6);
-                cx.setClassShutter(this.rhinoClassShutter);
+                preExecuteScript();
+                Context cx = Context.getCurrentContext();
+                ScriptResourceUtil.beginExecuteScript(this);
                 timing.prepareForScript(scriptInstance);
                 scriptInstance.beginTrackExecuteTime();
                 for(Function func : functions) {
@@ -159,6 +159,7 @@ public class RhinoParsedScript extends ParsedScript {
                 scriptInstance.getContextObject().dispose();
             } finally {
                 scriptInstance.endTrackExecuteTime();
+                ScriptResourceUtil.finishExecuteScript();
                 Context.exit();
             }
 
@@ -195,6 +196,18 @@ public class RhinoParsedScript extends ParsedScript {
     @Override
     public void exposeClassInstance(String name, Object classInstance) {
         scope.put(name, scope, new NativeJavaObject(scope, classInstance, com.lx862.mtrscripting.lib.org.mozilla.javascript.lc.type.TypeInfo.OBJECT));
+    }
+
+    @Override
+    public void preExecuteScript() {
+        Context cx = Context.enter();
+        cx.setLanguageVersion(Context.VERSION_ES6);
+        cx.setClassShutter(this.rhinoClassShutter);
+    }
+
+    @Override
+    public void postExecuteScript() {
+        Context.exit();
     }
 
     public static void clearScriptCache() {
