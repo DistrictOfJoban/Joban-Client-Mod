@@ -11,6 +11,9 @@ This is a minor release focused on bug-fixes.
 
 ### Scripting
 - Add `QuadDrawCall.light()` for rendering the quad with a custom light value.
+- Revise Scripting Restriction list, most scripts should be unaffected.
+- **Eyecandy Scripting:**
+  - Fix`EyecandyWrapper.isCrosshairTarget()` not returning a consistent value with vanilla in adventure mode.
 - **PIDS Scripting:**
   - Fix `TextWrapper.shadowed()` having the shadow rendered in-front of the text instead of behind.
 

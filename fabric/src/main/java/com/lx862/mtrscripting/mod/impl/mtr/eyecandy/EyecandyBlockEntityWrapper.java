@@ -113,8 +113,9 @@ public class EyecandyBlockEntityWrapper {
     }
 
     public boolean isCrosshairTarget() {
-        HitResult hitResult = MinecraftClient.getInstance().getCrosshairTargetMapped();
+        if(MinecraftClient.getInstance().getCameraEntityMapped() == null) return false;
 
+        HitResult hitResult = MinecraftClient.getInstance().getCameraEntityMapped().raycast(20.0, 0, false);
         if(BlockHitResult.isInstance(hitResult)) {
             return BlockHitResult.cast(hitResult).getBlockPos().equals(be.getPos2());
         }
