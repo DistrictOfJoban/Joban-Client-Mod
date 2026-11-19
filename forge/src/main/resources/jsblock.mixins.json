@@ -30,6 +30,7 @@
     "mtrpatch.RailMathMixin",
     "mtrpatch.RawMeshMixin",
     "mtrpatch.RenderRailsMixin",
+    "mtrpatch.RenderLiftsMixin",
     "mtrpatch.RenderVehiclesMixin",
     "mtrpatch.VehicleResourceMixin",
     "mtrpatch.VehicleSelectorScreenMixin",
