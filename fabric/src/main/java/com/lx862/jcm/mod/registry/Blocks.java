@@ -8,6 +8,7 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.RenderLayer;
 import org.mtr.mapping.registry.BlockRegistryObject;
 import org.mtr.mod.block.IBlock;
+import org.mtr.mod.block.BlockTicketBarrier;
 
 import static com.lx862.jcm.mod.block.SpotLampBlock.LIT;
 
@@ -80,8 +81,9 @@ public final class Blocks {
     public static final BlockRegistryObject STATION_CEILING_WRL_POLE = JCMRegistry.registerBlockItem("station_ceiling_wrl_pole", () -> new Block(new StationCeilingWRL2Pole(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject STATION_CEILING_WRL_POLE_SINGLE = JCMRegistry.registerBlockItem("station_ceiling_wrl_single_pole", () -> new Block(new StationCeilingWRLPole(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject TCL_EMG_STOP_BUTTON = JCMRegistry.registerBlockItem("tcl_emg_stop_button", () -> new Block(new TCLEmergencyButtonBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
-    public static final BlockRegistryObject THALES_TICKET_BARRIER_ENTRANCE = JCMRegistry.registerBlockItem("thales_ticket_barrier_entrance", () -> new Block(new ThalesTicketBarrier(true)), ItemGroups.MAIN);
-    public static final BlockRegistryObject THALES_TICKET_BARRIER_EXIT = JCMRegistry.registerBlockItem("thales_ticket_barrier_exit", () -> new Block(new ThalesTicketBarrier(false)), ItemGroups.MAIN);
+    public static final BlockRegistryObject THALES_TICKET_BARRIER_ENTRANCE = JCMRegistry.registerBlockItem("thales_ticket_barrier_entrance", () -> new Block(new ThalesTicketBarrier(BlockTicketBarrier.EnumTicketBarrierMode.ENTRANCE)), ItemGroups.MAIN);
+    public static final BlockRegistryObject THALES_TICKET_BARRIER_EXIT = JCMRegistry.registerBlockItem("thales_ticket_barrier_exit", () -> new Block(new ThalesTicketBarrier(BlockTicketBarrier.EnumTicketBarrierMode.EXIT)), ItemGroups.MAIN);
+    public static final BlockRegistryObject THALES_TICKET_BARRIER_TWOWAY = JCMRegistry.registerBlockItem("thales_ticket_barrier_twoway", () -> new Block(new ThalesTicketBarrier(BlockTicketBarrier.EnumTicketBarrierMode.TWOWAY)), ItemGroups.MAIN);
     public static final BlockRegistryObject THALES_TICKET_BARRIER_BARE = JCMRegistry.registerBlockItem("thales_ticket_barrier_bare", () -> new Block(new ThalesTicketBarrierBareBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject TML_EMG_STOP_BUTTON = JCMRegistry.registerBlockItem("tml_emg_stop_button", () -> new Block(new TMLEmergencyButtonBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false, state -> 15).strength(4.0f).nonOpaque())), ItemGroups.MAIN);
     public static final BlockRegistryObject TML_EMG_STOP_BUTTON_WALL = JCMRegistry.registerBlockItem("tml_emg_stop_button_wall", () -> new Block(new TMLEmergencyButtonWallBlock(org.mtr.mod.Blocks.createDefaultBlockSettings(false).strength(4.0f).nonOpaque())), ItemGroups.MAIN);

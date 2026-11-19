@@ -70,6 +70,7 @@
 	"block.jsblock.thales_ticket_barrier_bare": "Thales Ticket Barrier (Bare Metal)",
 	"block.jsblock.thales_ticket_barrier_entrance": "Thales Ticket Barrier (Entrance)",
 	"block.jsblock.thales_ticket_barrier_exit": "Thales Ticket Barrier (Exit)",
+	"block.jsblock.thales_ticket_barrier_twoway": "Thales Ticket Barrier (Two-Way)",
 	"block.jsblock.tml_emg_stop_button": "Emergency Train Stop Button (Standing, TML)",
 	"block.jsblock.tml_emg_stop_button_wall": "Emergency Train Stop Button (Wall mounted, TML)",
 	"block.jsblock.train_model_e44": "Train Model (E44)",

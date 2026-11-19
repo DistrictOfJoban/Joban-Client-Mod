@@ -5,8 +5,8 @@ import org.mtr.mod.block.BlockTicketBarrier;
 import org.mtr.mod.block.IBlock;
 
 public class ThalesTicketBarrier extends BlockTicketBarrier {
-    public ThalesTicketBarrier(boolean isEntrance) {
-        super(isEntrance);
+    public ThalesTicketBarrier(BlockTicketBarrier.EnumTicketBarrierMode mode) {
+        super(mode);
     }
 
     @Override
