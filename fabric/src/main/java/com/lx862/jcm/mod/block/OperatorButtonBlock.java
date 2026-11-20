@@ -47,6 +47,11 @@ public class OperatorButtonBlock extends WallAttachedBlock implements BlockWithE
             boolean pass = false;
             ItemStack[] itemStacks = new ItemStack[]{player.getMainHandStack(), player.getOffHandStack()};
             for(ItemStack stack : itemStacks) {
+                // Expiry check
+                if(stack.getItem().data instanceof ItemDepotDriverKey && stack.getTag() != null && stack.getTag().getLong("expiry_time") < System.currentTimeMillis()) {
+                    continue;
+                }
+
                 if(be == null) {
                     if(stack.getItem().data instanceof ItemDriverKey) {
                         pass = true;
@@ -55,10 +60,6 @@ public class OperatorButtonBlock extends WallAttachedBlock implements BlockWithE
                     if(be.canOpen(stack)) {
                         pass = true;
                     }
-                }
-                // Expiry check
-                if(stack.getItem().data instanceof ItemDepotDriverKey && stack.getOrCreateTag().getLong("expiry_time") < System.currentTimeMillis()) {
-                    pass = false;
                 }
                 if(pass) break;
             }
