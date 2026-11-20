@@ -312,9 +312,11 @@ public class VehicleWrapper {
 
     /* Start getters */
     public boolean isRendered() {
-        return anyVehicleCarVisible;
+        return anyVehicleCarVisible || VehicleRidingMovement.isRiding(this.vehicleExtension.getId());
     }
     public boolean isCarRendered(int... cars) {
+        if(VehicleRidingMovement.isRiding(this.vehicleExtension.getId())) return true;
+
         for(int car : cars) {
             if(vehicleExtension.persistentVehicleData.rayTracing[car]) return true;
         }

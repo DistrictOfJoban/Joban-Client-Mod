@@ -13,6 +13,8 @@ This is a minor release focused on bug-fixes.
 ### Scripting
 - Add `QuadDrawCall.light()` for rendering the quad with a custom light value.
 - Revise Scripting Restriction list, most scripts should be unaffected.
+- **Vehicle Scripting:**
+  - Fix `isRendered()` and `isCarRendered()` sometimes returning false when onboard a train, even though it is rendered.
 - **Eyecandy Scripting:**
   - Fix`EyecandyWrapper.isCrosshairTarget()` not returning a consistent value with vanilla in adventure mode.
 - **PIDS Scripting:**
