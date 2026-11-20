@@ -20,10 +20,11 @@ public abstract class PIDSPresetBase implements RenderHelper {
     private final String id;
     private final String name;
     private final List<String> blacklist;
+    private final List<String> whitelist;
     protected final Identifier thumbnail;
     public final boolean builtin;
 
-    public PIDSPresetBase(String id, @Nullable String name, Identifier thumbnail, List<String> blacklistedPIDS, boolean builtin) {
+    public PIDSPresetBase(String id, @Nullable String name, Identifier thumbnail, List<String> blacklistedPIDS, List<String> whitelistedPIDS, boolean builtin) {
         this.id = id;
         if(name == null) {
             this.name = id;
@@ -31,6 +32,7 @@ public abstract class PIDSPresetBase implements RenderHelper {
             this.name = name;
         }
         this.blacklist = blacklistedPIDS;
+        this.whitelist = whitelistedPIDS;
         this.builtin = builtin;
         this.thumbnail = thumbnail;
     }
@@ -48,7 +50,11 @@ public abstract class PIDSPresetBase implements RenderHelper {
     }
 
     public boolean typeAllowed(String pidsType) {
-        return !blacklist.contains(pidsType);
+        if (whitelist.size() > 0) {
+            return whitelist.contains(pidsType);
+        } else {
+            return !blacklist.contains(pidsType);
+        }
     }
 
     public abstract int getTextColor();

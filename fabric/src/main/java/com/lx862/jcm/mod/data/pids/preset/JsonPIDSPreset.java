@@ -45,8 +45,8 @@ public class JsonPIDSPreset extends PIDSPresetBase {
     private final int textColor;
     private final boolean[] rowHidden;
 
-    public JsonPIDSPreset(String id, @Nullable String name, Identifier thumbnail, List<String> blacklist, Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, boolean hidePlatform, int textColor) {
-        super(id, name, thumbnail, blacklist, builtin);
+    public JsonPIDSPreset(String id, @Nullable String name, Identifier thumbnail, List<String> blacklist, List<String> whitelist, Identifier background, @Nullable String fontId, TextOverflowMode textOverflowMode, boolean[] rowHidden, boolean showClock, boolean showWeather, boolean topPadding, boolean builtin, boolean hidePlatform, int textColor) {
+        super(id, name, thumbnail, blacklist, whitelist, builtin);
         this.background = background;
         this.showClock = showClock;
         this.showWeather = showWeather;
@@ -77,6 +77,7 @@ public class JsonPIDSPreset extends PIDSPresetBase {
 
         final boolean[] rowHidden;
         List<String> blackList = new ArrayList<>();
+        List<String> whiteList = new ArrayList<>();
 
         if(rootJsonObject.has("hideRow")) {
             JsonArray arr = rootJsonObject.getAsJsonArray("hideRow");
@@ -95,7 +96,14 @@ public class JsonPIDSPreset extends PIDSPresetBase {
             }
         }
 
-        return new JsonPIDSPreset(id, name, thumbnail, blackList, background, font, textOverflowMode, rowHidden, showClock, showWeather, topPadding, builtin, hidePlatform, textColor);
+        if(rootJsonObject.has("whitelist")) {
+            JsonArray arr = rootJsonObject.getAsJsonArray("whitelist");
+            for(int i = 0; i < arr.size(); i++) {
+                whiteList.add(arr.get(i).getAsString());
+            }
+        }
+
+        return new JsonPIDSPreset(id, name, thumbnail, blackList, whiteList, background, font, textOverflowMode, rowHidden, showClock, showWeather, topPadding, builtin, hidePlatform, textColor);
     }
 
     @Override

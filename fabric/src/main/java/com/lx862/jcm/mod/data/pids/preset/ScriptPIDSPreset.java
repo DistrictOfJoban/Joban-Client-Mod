@@ -31,8 +31,8 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
     private static final Identifier DEFAULT_THUMBNAIL = Constants.id("textures/gui/pids_preview_js.png");
     public final ParsedScript parsedScripts;
 
-    public ScriptPIDSPreset(String id, @Nullable String name, Identifier thumbnail, List<String> blacklist, boolean builtin, ParsedScript parsedScripts) {
-        super(id, name, thumbnail, blacklist, builtin);
+    public ScriptPIDSPreset(String id, @Nullable String name, Identifier thumbnail, List<String> blacklist, List<String> whitelist, boolean builtin, ParsedScript parsedScripts) {
+        super(id, name, thumbnail, blacklist, whitelist, builtin);
         this.parsedScripts = parsedScripts;
     }
 
@@ -74,16 +74,23 @@ public class ScriptPIDSPreset extends PIDSPresetBase {
         }
 
         List<String> blackList = new ArrayList<>();
+        List<String> whiteList = new ArrayList<>();
         if(rootJsonObject.has("blacklist")) {
             JsonArray blacklistedPIDS = rootJsonObject.getAsJsonArray("blacklist");
             for(int i = 0; i < blacklistedPIDS.size(); i++) {
                 blackList.add(blacklistedPIDS.get(i).getAsString());
             }
         }
+        if(rootJsonObject.has("whitelist")) {
+            JsonArray whitelistedPIDS = rootJsonObject.getAsJsonArray("whitelist");
+            for(int i = 0; i < whitelistedPIDS.size(); i++) {
+                whiteList.add(whitelistedPIDS.get(i).getAsString());
+            }
+        }
 
         try {
             ParsedScript script = scripts.isEmpty() ? null : JCMScripting.getScriptManager().parseScript(id + " (pids)", "pids", scripts, JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value());
-            return script == null ? null : new ScriptPIDSPreset(id, name, thumbnail, blackList, builtin, script);
+            return script == null ? null : new ScriptPIDSPreset(id, name, thumbnail, blackList, whiteList, builtin, script);
         } catch (Exception e) {
             logError("parsing PIDS script (" + id + ")", e);
             return null;
