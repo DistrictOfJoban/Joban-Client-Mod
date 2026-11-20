@@ -15,7 +15,7 @@
     },
     {
       "id": "door_cls_psd",
-      "name": "RV PIDS (Door Closing PSD)",
+      "name": "Hong Kong Railway Vision PIDS (Door Closing PSD)",
       "builtin": true,
       "background": "jsblock:textures/pids/rv_door_cls_psd.png",
       "color": "000000",
@@ -28,7 +28,7 @@
     },
     {
       "id": "door_cls_apg",
-      "name": "RV PIDS (Door Closing APG)",
+      "name": "Hong Kong Railway Vision PIDS (Door Closing APG)",
       "builtin": true,
       "background": "jsblock:textures/pids/rv_door_cls_apg.png",
       "color": "000000",
@@ -41,7 +41,7 @@
     },
     {
       "id": "door_cls_train",
-      "name": "RV PIDS (Door Closing)",
+      "name": "Hong Kong Railway Vision PIDS (Door Closing)",
       "builtin": true,
       "background": "jsblock:textures/pids/rv_door_cls_train.png",
       "color": "000000",
@@ -72,6 +72,20 @@
       "builtin": true,
       "thumbnail": "jsblock:textures/pids/thumbnail/pids_1a.png",
       "scriptFiles": ["jsblock:scripts/builtin/pids_1a.js"]
+    },
+    {
+      "id": "vertical_pids_1",
+      "name": "Vertical PIDS (1 Arrival)",
+      "builtin": true,
+      "thumbnail": "jsblock:textures/pids/thumbnail/vertical_pids_1.png",
+      "scriptFiles": ["jsblock:scripts/builtin/vertical_pids_1.js"]
+    },
+    {
+      "id": "vertical_pids_8",
+      "name": "Vertical PIDS (8 Arrivals)",
+      "builtin": true,
+      "thumbnail": "jsblock:textures/pids/thumbnail/vertical_pids_8.png",
+      "scriptFiles": ["jsblock:scripts/builtin/vertical_pids_8.js"]
     }
   ]
 }

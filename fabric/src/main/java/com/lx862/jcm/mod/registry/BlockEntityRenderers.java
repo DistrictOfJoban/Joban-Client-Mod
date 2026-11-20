@@ -20,6 +20,7 @@ public final class BlockEntityRenderers {
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_BLUE, (dispatcher) -> new StaticSignalLightRenderer<>(dispatcher, 0xFF0000FF, true));
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.SIGNAL_LIGHT_GREEN, (dispatcher) -> new StaticSignalLightRenderer<>(dispatcher, 0xFF00FF00, false));
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.PIDS_1A, PIDS1ARenderer::new);
+        JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.VERTICAL_PIDS, VerticalPIDSRenderer::new);
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.PIDS_PROJECTOR, PIDSProjectorRenderer::new);
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.LCD_PIDS, LCDPIDSRenderer::new);
         JCMRegistryClient.registerBlockEntityRenderer(BlockEntities.RV_PIDS, RVPIDSRenderer::new);
