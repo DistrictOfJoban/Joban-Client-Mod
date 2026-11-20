@@ -6,7 +6,7 @@ This is a minor release focused on bug-fixes.
 - Fix typing an alphabet into a numeric GUI text field could crash the client
 - Fix inappropriately configured Sound Looper could repeatedly crash the server
 - Fix Fare Saver's "Prefix"/"Currency" feature not working.
-- Fix Lift frustum culling not applied on forge
+- Fix inconsistent behavior and bugs on Forge version, as compared to Fabric.
 
 ## Technical
 
