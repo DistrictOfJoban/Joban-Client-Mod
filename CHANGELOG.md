@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## 2.3.0-1.0.1-hotfix.1（2026-11-21 修复纯服务端加载崩溃）
+
+- **修复（服务端 / 物品注册）：JCM 在纯 Fabric 服务端启动失败——`Could not execute entrypoint stage 'main' due to errors, provided by 'jsblock' at 'com.lx862.jcm.entrypoint.Main'`，根因 `NoClassDefFoundError: net.minecraft.class_437`（客户端 `Screen`）**（实机报告 2026-11-21，附 latest (6).log：MTR 4.0.5（YYMTR-fab.4.0.5 1.20.1_2026.11.06.3087）+ JCM-Yanyang-fabric-2.3.0-1.0.1+1.20.1，Fabric Loader 0.19.5，1.20.1 纯服务端；崩溃链 `Main.onInitialize → JCM.initialize → JCMRegistry.register → Items.<clinit> → Registry.registerItem → Items.lambda$static$3(Items.java:17)`）。定位：`ItemPSDScriptEditor` 是双端注册的 common 物品类，但其 `useOnBlock2` 方法体内直接 `new Screen(new PSDScriptSelectionScreen(...))`——JVM 在**定义（defineClass）该物品类时**校验方法体赋值性，需要解析 `PSDScriptSelectionScreen`（extends SavableScreen → ... → `net.minecraft.class_437`）的父类链，服务端没有客户端类，物品注册瞬间抛 NoClassDefFoundError。修复：两处开屏改走新增的 `ClientHelper.openPSDScriptSelectionScreen(List<BlockPos>, PSDWrapper.PSDType)`——与既有 8 个 GUI 数据包相同的客户端隔离模式（`ClientHelper` 只在 `world.isClient()` 分支内被静态调用，服务端永不加载该类；静态调用本身不触发校验期目标类加载）；`ItemPSDScriptEditor` 回归纯 mapping-holder 引用。Fabric 与 Forge 共源（`setupFiles` 同步），两端同修。
+- **审计与回归防护**：对 fabric 源集做了服务端可达闭包静态审计（entrypoint 链 → 注册表 → 全部 block / blockentity / common mixin）：其余客户端类型引用全部位于仅客户端加载的类（GUI 包、AmberUI、渲染器、`JCMClient`、`ClientHelper` 既有方法、client 分区 mixin）或方法体内的静态调用（校验不触发加载），无第二处 defineClass 期触发点；`jsblock.mixins.json` / `mtrscripting.mixins.json` 的 client / common 分区无错置。新增 **Server Smoke Test** 工作流（`server-smoke.yml`）：每次 push 以 JDK 25 工具链构建 1.20.1 fabric jar，在临时目录组装最小纯服务端（fabric loader 0.16.14 启动器 + fabric-api 0.92.6+1.20.1 + MTR FABRIC-4.0.5+1.20.1），真实启动至 `Done`，断言日志无 `Could not execute entrypoint` / `NoClassDefFoundError` 且 `jsblock` 成功加载——本次这类「common 类定义期客户端引用」回归今后会在 CI 直接红。
+- **版本**：`2.3.0-1.0.1-hotfix.1`；gradle.properties 同步（仓库基线此前停在 2.3.0-1.0.0，落后于已发布的 2.3.0-1.0.1）。
+
 ## 2.3.0-1.0.0（2026-11-14）
 
 - 基于上游 JCM v2.3.0 正式版，提供车辆、PIDS、电梯、装饰物与屏蔽门的 JS / C++ 混合脚本。
