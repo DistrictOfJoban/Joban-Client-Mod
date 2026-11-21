@@ -1,6 +1,6 @@
 package com.lx862.jcm.mod.item;
 
-import com.lx862.jcm.mod.gui.screen.PSDScriptSelectionScreen;
+import com.lx862.jcm.mod.network.gui.ClientHelper;
 import com.lx862.jcm.mod.scripting.psd.PSDRuns;
 import com.lx862.jcm.mod.scripting.psd.PSDScriptingRules;
 import com.lx862.jcm.mod.scripting.psd.PSDWrapper;
@@ -10,8 +10,6 @@ import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.ItemSettings;
 import org.mtr.mapping.holder.ItemUsageContext;
-import org.mtr.mapping.holder.MinecraftClient;
-import org.mtr.mapping.holder.Screen;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.ItemExtension;
 import org.mtr.mod.block.BlockPSDAPGBase;
@@ -71,7 +69,17 @@ public class ItemPSDScriptEditor extends ItemExtension {
                 }
                 final PSDRuns.Run run = PSDRuns.glassRun(world, base, facing);
                 final List<BlockPos> positions = PSDRuns.glassRunPositions(world, run, facing);
-                MinecraftClient.getInstance().openScreen(new Screen(new PSDScriptSelectionScreen(positions, PSDWrapper.PSDType.GLASS)));
+                /* Yanyang/hotfix: the selection screen lives in the client
+                   hierarchy (extends net.minecraft Screen), so referencing it
+                   from this common, server-loaded item made the JVM verifier
+                   pull net.minecraft.class_437 while DEFINING the item class
+                   on a dedicated server — NoClassDefFoundError at
+                   Items.<clinit> (reported on JCM 2.3.0-1.0.1+1.20.1, a pure
+                   Fabric server). The opener now lives in ClientHelper, the
+                   same client-isolation pattern as the GUI packets: the helper
+                   is only ever loaded from inside this world.isClient()
+                   branch, so a dedicated server never defines it. */
+                ClientHelper.openPSDScriptSelectionScreen(positions, PSDWrapper.PSDType.GLASS);
             }
             return ActionResult.SUCCESS;
         }
@@ -86,7 +94,7 @@ public class ItemPSDScriptEditor extends ItemExtension {
                 final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDTop.FACING);
                 final PSDRuns.Run run = PSDRuns.topRun(world, pos, facing);
                 final List<BlockPos> positions = PSDRuns.topRunPositions(run, facing);
-                MinecraftClient.getInstance().openScreen(new Screen(new PSDScriptSelectionScreen(positions, PSDWrapper.PSDType.TOP)));
+                ClientHelper.openPSDScriptSelectionScreen(positions, PSDWrapper.PSDType.TOP);
             }
             return ActionResult.SUCCESS;
         }

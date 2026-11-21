@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.network.gui;
 import com.lx862.jcm.mod.data.EnquiryScreenType;
 import com.lx862.jcm.mod.data.TransactionEntry;
 import com.lx862.jcm.mod.gui.screen.*;
+import com.lx862.jcm.mod.scripting.psd.PSDWrapper;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.holder.MinecraftClient;
 import org.mtr.mapping.holder.Screen;
@@ -50,5 +51,13 @@ public final class ClientHelper {
 		if(type == EnquiryScreenType.CLASSIC) {
 			MinecraftClient.getInstance().openScreen(new Screen(new EnquiryScreen(pos, entries, remainingBalance)));
 		}
+	}
+
+	/* Yanyang/hotfix: dedicated-server-safe opener for the PSD Script Editor
+	   item. The item class itself is common (it is registered on both sides),
+	   so it must not reference PSDScriptSelectionScreen directly — see the
+	   comment in ItemPSDScriptEditor. */
+	public static void openPSDScriptSelectionScreen(List<BlockPos> positions, PSDWrapper.PSDType type) {
+		MinecraftClient.getInstance().openScreen(new Screen(new PSDScriptSelectionScreen(positions, type)));
 	}
 }
