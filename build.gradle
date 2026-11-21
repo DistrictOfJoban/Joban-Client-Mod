@@ -93,6 +93,17 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
                 }
         }
 
+        /* The JDK 25 toolchain must not raise the bytecode level: every
+           JavaCompile task keeps options.release at java_version — the
+           fabric module already declared it, and the forge module needs it
+           too, because ForgeGradle 6's reobf reads the class files with an
+           ASM that stops far below class file 69. (Without this, the forge
+           jars came out as Java 25 class files and reobfJar failed with
+           "Unsupported class file major version 69".) */
+        tasks.withType(JavaCompile).configureEach {
+                it.options.release = java_version
+        }
+
         /* Manifold support */
         tasks.withType(JavaCompile).forEach {
                 it.options.compilerArgs += [ // Dependencies declared in subproject
