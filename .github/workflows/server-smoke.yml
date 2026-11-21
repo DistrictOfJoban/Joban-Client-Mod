@@ -64,7 +64,7 @@ jobs:
               if [ "$n" -ge 3 ]; then return 1; fi
               echo "::warning::gradle attempt ${n} failed; retrying in 30s"
               sleep 30
-            fi
+            done
           }
           try ./gradlew setupFiles -Pminecraft_version="$MC_VERSION" --console=plain
           NOW=$(date '+%Y-%m-%d-%H.%M')
