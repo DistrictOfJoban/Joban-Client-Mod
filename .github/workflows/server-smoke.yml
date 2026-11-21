@@ -75,17 +75,29 @@ jobs:
       - name: Assemble a minimal dedicated server
         run: |
           set -euo pipefail
+          # Runner DNS blips (2026-11-21: meta.fabricmc.net + lwjgl resolves
+          # failed for a minute across several jobs) must not read as a code
+          # regression — retry every download a few times.
+          fetch() {
+            local n=0
+            until curl -sfL --retry 3 --retry-delay 5 -o "$1" "$2"; do
+              n=$((n+1))
+              if [ "$n" -ge 4 ]; then return 1; fi
+              echo "::warning::download attempt ${n} failed; retrying in 15s"
+              sleep 15
+            done
+          }
           mkdir -p server/mods
           cp build/JCM-fabric-*.jar server/mods/jcm.jar
           cd server
           # Standalone fabric server launcher (downloads the vanilla server
           # jar + loader libraries on first boot).
-          curl -sfL -o fabric-server.jar \
+          fetch fabric-server.jar \
             "https://meta.fabricmc.net/v2/versions/loader/${MC_VERSION}/${LOADER_VERSION}/${LAUNCHER_VERSION}/server/jar"
-          curl -sfL -o mods/fabric-api.jar \
+          fetch mods/fabric-api.jar \
             "https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/${FABRIC_API//+/%2B}/fabric-api-${FABRIC_API//+/%2B}.jar"
           # Same MTR artifact coordinates the gradle build itself resolves.
-          curl -sfL -o mods/mtr.jar \
+          fetch mods/mtr.jar \
             "https://maven.modrinth.com/minecraft-transit-railway/${MTR_MAVEN_VERSION//+/%2B}/minecraft-transit-railway-${MTR_MAVEN_VERSION//+/%2B}.jar"
           echo "eula=true" > eula.txt
           cat > server.properties <<'EOF'
