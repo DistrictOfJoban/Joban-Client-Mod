@@ -22,7 +22,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-      - name: Set up JDK 21
+      - name: Set up JDK 25 (build toolchain)
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: 25
+      - name: Set up JDK 21 (Gradle daemon)
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
@@ -58,7 +63,10 @@ jobs:
             done
           }
           NOW=$(date '+%Y-%m-%d-%H.%M')
-          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Partifact_date=".artifact_$NOW"
+          # Yanyang: the mod and the Yanyang MTR builds run on Java 25 —
+          # compile the jars with a JDK 25 toolchain (Gradle 8.14's daemon
+          # stays on 21 for ForgeGradle 6; see build.gradle).
+          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Partifact_date=".artifact_$NOW" -Pjcm_build_jdk=25
       - name: Stamp CI-jar warning into the artifact
         run: |
           cat > build/README-IMPORT-WARNING.txt <<'EOF'

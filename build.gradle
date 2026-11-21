@@ -68,6 +68,31 @@ configure(subprojects.findAll {it.name != 'rhino'}) {
                 full_mod_version = version + artifact_date
         }
 
+        /* ------------------------------------------------------------------
+         * Yanyang: build with a JDK 25 compiler.
+         *
+         * The mod and the Yanyang MTR builds it ships against run on Java
+         * 25, so the jars are compiled with a JDK 25 toolchain. Gradle 8.14
+         * (kept for the ForgeGradle 6 module) cannot itself run on Java 25,
+         * so this is a TOOLCHAIN switch, not a daemon JVM upgrade: the
+         * daemon keeps running on the CI's Java 21, while every JavaCompile
+         * task forks a JDK 25 javac (auto-detected from the tool cache or
+         * resolved by the foojay resolver in settings.gradle). Bytecode
+         * targets are unchanged — options.release stays at java_version,
+         * so the class files still load on the Minecraft minimum.
+         *
+         * Enabled by passing -Pjcm_build_jdk=25 (the CI build jobs do);
+         * without the property the daemon's own JDK compiles, as before.
+         * ------------------------------------------------------------------ */
+        def jcm_build_jdk = rootProject.findProperty('jcm_build_jdk')
+        if (jcm_build_jdk != null) {
+                tasks.withType(JavaCompile).configureEach {
+                        javaCompiler = javaToolchains.compilerFor {
+                                languageVersion = JavaLanguageVersion.of(jcm_build_jdk as int)
+                        }
+                }
+        }
+
         /* Manifold support */
         tasks.withType(JavaCompile).forEach {
                 it.options.compilerArgs += [ // Dependencies declared in subproject

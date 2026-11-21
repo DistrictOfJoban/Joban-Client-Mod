@@ -152,6 +152,10 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
+          java-version: 25
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
         with:
@@ -175,7 +179,9 @@ jobs:
             done
           }
           try ./gradlew setupFiles -Pminecraft_version="${{ matrix.minecraft }}" --console=plain
-          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="$RELEASE_VERSION" -Pnative_bridge_dir=native-dist/bridges --console=plain
+          # Yanyang: build the jars with a JDK 25 toolchain (daemon stays on
+          # Java 21 — Gradle 8.14 / ForgeGradle 6; see build.gradle).
+          try ./gradlew build -Pminecraft_version="${{ matrix.minecraft }}" -Pmod_version="$RELEASE_VERSION" -Pnative_bridge_dir=native-dist/bridges -Pjcm_build_jdk=25 --console=plain
       - name: Audit documented Java API declarations
         run: |
           find .gradle ~/.gradle -name '*4.0.5*.jar' -type f > native/build-api-jars.txt
