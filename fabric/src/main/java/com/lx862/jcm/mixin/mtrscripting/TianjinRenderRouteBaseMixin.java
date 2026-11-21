@@ -10,7 +10,8 @@ import org.mtr.mod.block.BlockPSDAPGBase;
 import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDTop;
 import org.mtr.mod.block.IBlock;
-import org.spongepowered.asm.mixin.Coerce;
+import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -27,8 +28,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * direction arrows, next-station displays) must stop rendering for exactly
  * that segment/group — the same rule JCM applies to MTR's own content.
  *
- * <p>Targets are string-based: JCM does not depend on the mod, so its
- * classes must stay off the compile classpath. The config plugin
+ * <p>Targets are string-based and the mixin is {@code @Pseudo} — JCM does
+ * not depend on the mod, so its classes stay off the compile classpath
+ * (the annotation processor must not try to resolve them either). The config plugin
  * ({@code JcmMixinPlugin}) only registers this mixin when <b>every</b>
  * target class is present, and every injection is {@code require = 0}, so a
  * future Tianjin Metro build that renames a renderer or changes a
@@ -46,6 +48,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
         "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinJinjing",
         "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinTRT",
 }, remap = false)
+@Pseudo
 public class TianjinRenderRouteBaseMixin {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true, require = 0)
