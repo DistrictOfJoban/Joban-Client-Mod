@@ -83,7 +83,7 @@ jobs:
             until curl -sfL --retry 3 --retry-delay 5 -o "$1" "$2"; do
               n=$((n+1))
               if [ "$n" -ge 4 ]; then return 1; fi
-              echo "::warning::download attempt ${n} failed; retrying in 15s"
+              echo "::warning::download of $2 (attempt ${n}) failed; retrying in 15s"
               sleep 15
             done
           }
@@ -96,9 +96,11 @@ jobs:
             "https://meta.fabricmc.net/v2/versions/loader/${MC_VERSION}/${LOADER_VERSION}/${LAUNCHER_VERSION}/server/jar"
           fetch mods/fabric-api.jar \
             "https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/${FABRIC_API//+/%2B}/fabric-api-${FABRIC_API//+/%2B}.jar"
-          # Same MTR artifact coordinates the gradle build itself resolves.
+          # Same MTR artifact and repository the gradle build itself resolves
+          # (fabric/build.gradle uses https://api.modrinth.com/maven — the
+          # maven.modrinth.com alias does not resolve from GitHub runners).
           fetch mods/mtr.jar \
-            "https://maven.modrinth.com/minecraft-transit-railway/${MTR_MAVEN_VERSION//+/%2B}/minecraft-transit-railway-${MTR_MAVEN_VERSION//+/%2B}.jar"
+            "https://api.modrinth.com/maven/minecraft-transit-railway/${MTR_MAVEN_VERSION//+/%2B}/minecraft-transit-railway-${MTR_MAVEN_VERSION//+/%2B}.jar"
           echo "eula=true" > eula.txt
           cat > server.properties <<'EOF'
           online-mode=false
