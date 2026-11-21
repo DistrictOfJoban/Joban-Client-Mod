@@ -1,0 +1,120 @@
+# Server Smoke Test — boot a minimal DEDICATED (pure server-side) Fabric
+# server with the freshly built JCM jar and assert the common entrypoint
+# stage survives it.
+#
+# Why this exists: 2026-11-21, JCM 2.3.0-1.0.1+1.20.1 failed to start on a
+# pure Fabric dedicated server with
+#   Could not execute entrypoint stage 'main' ... provided by 'jsblock'
+#   Caused by: java.lang.NoClassDefFoundError: net.minecraft.class_437
+# The PSD Script Editor item (a COMMON, both-sides-registered class) had
+# `new Screen(new PSDScriptSelectionScreen(...))` inline in its method
+# body, so the JVM verifier pulled the client-only Screen hierarchy while
+# DEFINING the item class at registration time. The compiler cannot catch
+# this — only actually booting a server can. This workflow does exactly
+# that on every push.
+#
+# What it asserts, in order:
+#   1. the jar builds (JDK 25 toolchain, same flags as the build workflow);
+#   2. a dedicated server with ONLY fabric-api + MTR + JCM boots to "Done";
+#   3. the log contains no entrypoint failure and no NoClassDefFoundError /
+#      ClassNotFoundException (any missing class, client or not);
+#   4. jsblock actually loaded (mod list + JCM banner line).
+#
+# The matrix is intentionally just 1.20.1 for now — the reported
+# environment, and the class-loading behaviour under test is
+# version-independent. Extending it to the other five MC versions only
+# needs the matching MTR/fabric-api coordinates in the assemble step.
+name: Server Smoke Test
+on: [pull_request, push, workflow_dispatch]
+permissions:
+  contents: read
+env:
+  MC_VERSION: "1.20.1"
+  LOADER_VERSION: "0.16.14"
+  LAUNCHER_VERSION: "1.1.0"
+  FABRIC_API: "0.92.6+1.20.1"
+  MTR_MAVEN_VERSION: "FABRIC-4.0.5+1.20.1"
+jobs:
+  fabric-dedicated-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
+      - name: Build the fabric jar (JDK 25 toolchain, no natives)
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          try() {
+            local n=0
+            until "$@"; do
+              n=$((n+1))
+              if [ "$n" -ge 3 ]; then return 1; fi
+              echo "::warning::gradle attempt ${n} failed; retrying in 30s"
+              sleep 30
+            fi
+          }
+          try ./gradlew setupFiles -Pminecraft_version="$MC_VERSION" --console=plain
+          NOW=$(date '+%Y-%m-%d-%H.%M')
+          try ./gradlew build -Pminecraft_version="$MC_VERSION" -Partifact_date=".artifact_$NOW" -Pjcm_build_jdk=25 --console=plain
+          ./gradlew --stop || true
+          ls -la build/
+          test "$(find build -maxdepth 1 -name 'JCM-fabric-*.jar' | wc -l)" -eq 1
+      - name: Assemble a minimal dedicated server
+        run: |
+          set -euo pipefail
+          mkdir -p server/mods
+          cp build/JCM-fabric-*.jar server/mods/jcm.jar
+          cd server
+          # Standalone fabric server launcher (downloads the vanilla server
+          # jar + loader libraries on first boot).
+          curl -sfL -o fabric-server.jar \
+            "https://meta.fabricmc.net/v2/versions/loader/${MC_VERSION}/${LOADER_VERSION}/${LAUNCHER_VERSION}/server/jar"
+          curl -sfL -o mods/fabric-api.jar \
+            "https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/${FABRIC_API//+/%2B}/fabric-api-${FABRIC_API//+/%2B}.jar"
+          # Same MTR artifact coordinates the gradle build itself resolves.
+          curl -sfL -o mods/mtr.jar \
+            "https://maven.modrinth.com/minecraft-transit-railway/${MTR_MAVEN_VERSION//+/%2B}/minecraft-transit-railway-${MTR_MAVEN_VERSION//+/%2B}.jar"
+          echo "eula=true" > eula.txt
+          cat > server.properties <<'EOF'
+          online-mode=false
+          level-type=minecraft\:flat
+          generate-structures=false
+          spawn-monsters=false
+          view-distance=4
+          max-tick-time=-1
+          EOF
+          ls -la mods/
+      - name: Boot the server to "Done" and assert a clean entrypoint stage
+        run: |
+          set -euo pipefail
+          cd server
+          # First boot downloads the vanilla jar and generates a world; the
+          # SIGTERM lets the server save and exit cleanly inside the budget.
+          timeout --signal=SIGTERM --kill-after=30s 600 \
+            java -Xmx2G -jar fabric-server.jar nogui > boot.log 2>&1 || true
+          echo '----- last 60 lines of boot.log -----'
+          tail -n 60 boot.log
+          echo '-------------------------------------'
+          # 1) no entrypoint failure, no missing class of any kind
+          if grep -nE "Could not execute entrypoint|NoClassDefFoundError|ClassNotFoundException" boot.log; then
+            echo "::error::server log contains a classloading/entrypoint failure"
+            exit 1
+          fi
+          # 2) JCM actually loaded (fabric mod list line + JCM banner)
+          grep -n "jsblock" boot.log
+          grep -n "Joban Client Mod" boot.log
+          # 3) the server reached the "Done" prompt
+          grep -n "Done (" boot.log
