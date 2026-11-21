@@ -562,10 +562,15 @@ final class PSDWindowBounds {
                 }
             }
         }
-        /* Mostly-frame quad (a vertical stile / strip): occlude its whole
-           horizontal extent — sub-pixel UV slivers would otherwise slip
-           through the column mapping. */
-        if (totalCols > 0 && frameCols * 2 >= totalCols) {
+        /* Mostly-frame SMALL quad (a vertical stile / strip, span at most
+           half the block): occlude its whole horizontal extent — sub-pixel
+           UV slivers would otherwise slip through the column mapping.
+           Yanyang.13: restricted to small quads, the horizontal twin of the
+           markOcclusion shortcut fix (see there) — a majority-opaque
+           full-width pane with a real window (psd_glass_2's half-panel
+           design) must keep that window instead of being flattened into
+           "all frame". */
+        if (totalCols > 0 && frameCols * 2 >= totalCols && quad.hMax - quad.hMin < 0.5F) {
             final int rFrom = clampRow(quad.hMin);
             final int rTo = clampRow(quad.hMax);
             for (int r = rFrom; r <= rTo; r++) {
@@ -646,10 +651,22 @@ final class PSDWindowBounds {
                 }
             }
         }
-        /* Mostly-frame quad (a frame strip / beam): occlude its whole
-           y extent — sub-pixel UV slivers would otherwise slip through
-           the row mapping. */
-        if (totalRows > 0 && frameRows * 2 >= totalRows) {
+        /* Mostly-frame SMALL quad (a frame strip / beam, span at most half
+           the block): occlude its whole y extent — sub-pixel UV slivers
+           would otherwise slip through the row mapping. Yanyang.13: the
+           shortcut is now restricted to geometrically SMALL quads. MTR's
+           second glass style (psd_glass_2, 128px textures) paints a HALF
+           panel design — a transparent window above a solid LED panel —
+           whose pane quad is majority-opaque (70 of 128 rows) yet still
+           carries a ~47% window. The old unrestricted shortcut read that
+           majority as "the whole quad is frame", which erased the window
+           entirely; both scan passes then found no window and the renderer
+           fell back to the FULL face, so the script canvas spanned the LED
+           panel and the frame (the 2026-11-21 「脚本显示范围超出透明部分」
+           report). A full-size pane is always fully covered by its own
+           row/column scan, so the shortcut adds nothing there — only true
+           strips (a few pixels tall) still need it. */
+        if (totalRows > 0 && frameRows * 2 >= totalRows && quad.yMax - quad.yMin < 0.5F) {
             final int rFrom = clampRow(quad.yMin);
             final int rTo = clampRow(quad.yMax);
             for (int r = rFrom; r <= rTo; r++) {

@@ -18,35 +18,53 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Yanyang/PSD × Tianjin Metro: the Tianjin Metro mod ({@code ziyue.tjmetro})
- * renders its PSD content through its <b>own copy</b> of MTR's
- * RenderRouteBase pipeline ({@code ziyue.tjmetro.mod.render.RenderRouteBase},
- * and its renderers even override {@code render()} with the copied body), so
- * JCM's {@code RenderRouteBaseMixin} on MTR's class never sees it. When a
- * script is bound to a glass segment / psd_top group of a Tianjin PSD wall,
- * the mod's own original content (route map strip, station name strip,
+ * Yanyang/PSD × Tianjin Metro: the Tianjin Metro mod ({@code tjmetro}) renders
+ * its PSD content through its <b>own copy</b> of MTR's RenderRouteBase
+ * pipeline, and its renderers even override {@code render()} with the copied
+ * body, so JCM's {@code RenderRouteBaseMixin} on MTR's class never sees it.
+ * When a script is bound to a glass segment / psd_top group of a Tianjin PSD
+ * wall, the mod's own original content (route map strip, station name strip,
  * direction arrows, next-station displays) must stop rendering for exactly
  * that segment/group — the same rule JCM applies to MTR's own content.
  *
- * <p>Targets are string-based and the mixin is {@code @Pseudo} — JCM does
- * not depend on the mod, so its classes stay off the compile classpath
- * (the annotation processor must not try to resolve them either). The config plugin
- * ({@code JcmMixinPlugin}) only registers this mixin when <b>every</b>
- * target class is present, and every injection is {@code require = 0}, so a
- * future Tianjin Metro build that renames a renderer or changes a
- * {@code render} signature degrades to a log warning instead of a crash.</p>
+ * <p><b>Relocated package names (2026-11-21 fix):</b> the Tianjin Metro mod
+ * is a multi-loader build — its published jars carry the classes under
+ * {@code fabric.ziyue.tjmetro.*} (Fabric) and {@code forge.ziyue.tjmetro.*}
+ * (Forge), NOT the {@code ziyue.tjmetro.*} names its GitHub sources use.
+ * The original hook targeted the unrelocated names, which never exist at
+ * runtime, so the mixin silently never applied and Tianjin walls kept
+ * rendering their original content behind script canvases (the 2026-11-21
+ * report). Targets are now the relocated names for both loaders; only the
+ * installed loader's set exists at runtime, the other half of the
+ * {@code @Pseudo} multi-target list simply never loads.</p>
+ *
+ * <p>Targets are string-based and the mixin is {@code @Pseudo} — JCM does not
+ * depend on the mod, so its classes stay off the compile classpath (the
+ * annotation processor must not try to resolve them either). The config
+ * plugin ({@code JcmMixinPlugin}) only registers this mixin when every
+ * target class of the MATCHING loader prefix is present, and every injection
+ * is {@code require = 0}, so a future Tianjin Metro build that renames a
+ * renderer or changes a {@code render} signature degrades to a log warning
+ * instead of a crash.</p>
  *
  * <p>The {@code @Coerce}d first parameter covers each target's own entity
  * type — they all extend MTR's {@code BlockPSDTop.BlockEntityBase} (Tianjin
- * reuses MTR's block-entity base for its PSD tops and APG glass).</p>
+ * reuses MTR's block-entity base for its PSD tops and APG glass; MTR's own
+ * classes are NOT relocated).</p>
  */
 @Mixin(targets = {
-        "ziyue.tjmetro.mod.render.RenderRouteBase",
-        "ziyue.tjmetro.mod.render.RenderPSDTopTianjin",
-        "ziyue.tjmetro.mod.render.RenderPSDTopTianjinBMT",
-        "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinBMT",
-        "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinJinjing",
-        "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinTRT",
+        "fabric.ziyue.tjmetro.mod.render.RenderRouteBase",
+        "fabric.ziyue.tjmetro.mod.render.RenderPSDTopTianjin",
+        "fabric.ziyue.tjmetro.mod.render.RenderPSDTopTianjinBMT",
+        "fabric.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinBMT",
+        "fabric.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinJinjing",
+        "fabric.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinTRT",
+        "forge.ziyue.tjmetro.mod.render.RenderRouteBase",
+        "forge.ziyue.tjmetro.mod.render.RenderPSDTopTianjin",
+        "forge.ziyue.tjmetro.mod.render.RenderPSDTopTianjinBMT",
+        "forge.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinBMT",
+        "forge.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinJinjing",
+        "forge.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinTRT",
 }, remap = false)
 @Pseudo
 public class TianjinRenderRouteBaseMixin {

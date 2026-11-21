@@ -50,21 +50,40 @@ public class JcmMixinPlugin implements IMixinConfigPlugin {
     private Boolean cachedResourceModern;
 
     /**
-     * Tianjin Metro (ziyue.tjmetro) render-pipeline classes hooked by
+     * Tianjin Metro (tjmetro) render-pipeline classes hooked by
      * {@code mtrscripting.TianjinRenderRouteBaseMixin} — JCM does not depend
-     * on the mod, so the mixin may only apply when its targets exist.
+     * on the mod, so the mixin may only apply when its targets exist. The
+     * mod is a multi-loader build whose jars RELOCATE the classes: the
+     * GitHub sources live under {@code ziyue.tjmetro.*}, but the published
+     * Fabric jar carries them as {@code fabric.ziyue.tjmetro.*} and the
+     * Forge jar as {@code forge.ziyue.tjmetro.*} — the un-relocated names
+     * never exist at runtime (the 2026-11-21 "Tianjin original content
+     * still renders" report was exactly that mismatch). The two sets are
+     * checked independently per loader: only the installed loader's set is
+     * ever on the classpath, and the plugin must not veto the mixin for one
+     * loader because the other loader's classes are absent.
      */
-    private static final String[] TIANJIN_RENDER_TARGETS = {
-            "ziyue.tjmetro.mod.render.RenderRouteBase",
-            "ziyue.tjmetro.mod.render.RenderPSDTopTianjin",
-            "ziyue.tjmetro.mod.render.RenderPSDTopTianjinBMT",
-            "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinBMT",
-            "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinJinjing",
-            "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinTRT",
+    private static final String[] TIANJIN_RENDER_TARGETS_FABRIC = {
+            "fabric.ziyue.tjmetro.mod.render.RenderRouteBase",
+            "fabric.ziyue.tjmetro.mod.render.RenderPSDTopTianjin",
+            "fabric.ziyue.tjmetro.mod.render.RenderPSDTopTianjinBMT",
+            "fabric.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinBMT",
+            "fabric.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinJinjing",
+            "fabric.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinTRT",
+    };
+    private static final String[] TIANJIN_RENDER_TARGETS_FORGE = {
+            "forge.ziyue.tjmetro.mod.render.RenderRouteBase",
+            "forge.ziyue.tjmetro.mod.render.RenderPSDTopTianjin",
+            "forge.ziyue.tjmetro.mod.render.RenderPSDTopTianjinBMT",
+            "forge.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinBMT",
+            "forge.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinJinjing",
+            "forge.ziyue.tjmetro.mod.render.RenderAPGGlassTianjinTRT",
     };
 
-    /** Result of the Tianjin render-pipeline presence probe, cached. */
-    private Boolean tianjinRenderersPresent;
+    /** Result of the Tianjin render-pipeline presence probe per loader
+     *  prefix, cached. */
+    private Boolean tianjinRenderersPresentFabric;
+    private Boolean tianjinRenderersPresentForge;
 
     @Override
     public void onLoad(String mixinPackage) {
@@ -82,7 +101,7 @@ public class JcmMixinPlugin implements IMixinConfigPlugin {
             return shouldApplyCachedResourcePatch(mixinClassName, targetClassName);
         }
         if (mixinClassName.endsWith("mtrscripting.TianjinRenderRouteBaseMixin")) {
-            return shouldApplyTianjinRenderHooks();
+            return shouldApplyTianjinRenderHooks(targetClassName);
         }
         if (mixinClassName.endsWith("mtrscripting.BlockPSDAPGBaseAccessor")) {
             return shouldApplyIsApgAccessor(targetClassName);
@@ -308,27 +327,37 @@ public class JcmMixinPlugin implements IMixinConfigPlugin {
     }
 
     /**
-     * The Tianjin Metro hooks only apply when EVERY target class is on the
-     * classpath (the mixin is multi-target; a missing target is a hard
-     * mixin error, not a warning). Missing targets mean the mod — or this
-     * version of it — is absent, and JCM simply keeps its own behaviour.
+     * The Tianjin Metro hooks only apply when EVERY target class of the
+     * TARGET'S OWN loader prefix is on the classpath (the mixin is
+     * multi-target; a missing target is a hard mixin error, not a warning).
+     * Missing targets mean the mod — or this loader's build of it — is
+     * absent, and JCM simply keeps its own behaviour.
      */
-    private boolean shouldApplyTianjinRenderHooks() {
-        if (tianjinRenderersPresent == null) {
-            boolean allPresent = true;
-            for (String target : TIANJIN_RENDER_TARGETS) {
-                if (!classResourceExists(target)) {
-                    allPresent = false;
-                    break;
-                }
-            }
-            tianjinRenderersPresent = allPresent;
-            if (!allPresent) {
-                System.err.println("[JCM] Skipped mtrscripting.TianjinRenderRouteBaseMixin:"
-                        + " the Tianjin Metro mod (ziyue.tjmetro) render pipeline is not on the classpath.");
+    private boolean shouldApplyTianjinRenderHooks(String targetClassName) {
+        final boolean forgeTarget = targetClassName.startsWith("forge.");
+        final String[] targets = forgeTarget ? TIANJIN_RENDER_TARGETS_FORGE : TIANJIN_RENDER_TARGETS_FABRIC;
+        final Boolean cached = forgeTarget ? tianjinRenderersPresentForge : tianjinRenderersPresentFabric;
+        if (cached != null) {
+            return cached;
+        }
+        boolean allPresent = true;
+        for (String target : targets) {
+            if (!classResourceExists(target)) {
+                allPresent = false;
+                break;
             }
         }
-        return tianjinRenderersPresent;
+        if (forgeTarget) {
+            tianjinRenderersPresentForge = allPresent;
+        } else {
+            tianjinRenderersPresentFabric = allPresent;
+        }
+        if (!allPresent) {
+            System.err.println("[JCM] Skipped mtrscripting.TianjinRenderRouteBaseMixin for " + targetClassName
+                    + ": the Tianjin Metro mod (" + (forgeTarget ? "forge" : "fabric") + ".ziyue.tjmetro)"
+                    + " render pipeline is not on the classpath.");
+        }
+        return allPresent;
     }
 
     /**
