@@ -65,7 +65,7 @@ __PRODUCTION_RENDER_ALL__
   IrisApi.shadow=live;IrisApi.pack=pack;OptimizedRenderer.cached=cached;
   glassCalls=topCalls=World.reads=0;renderAll();
   check(glassCalls==1 && topCalls==1,"duplicate binding reached renderer; nearby glass/top must each render once");
-  check(World.reads==2,"duplicate or distant binding performed an unnecessary world lookup");
+  check(World.reads==3,"unexpected world lookups: expected glass + top + top's below-wall probe; duplicate or distant bindings must not touch the world");
   check(glassShadow==live && topShadow==live,"PSD routed using stale shadow cache: live="+live+", cached="+cached);
   check(glassShader==(!live && pack),"shader backing must run only in the current camera pass");
  }
@@ -92,9 +92,11 @@ __PRODUCTION_RENDER_ALL__
 final class OptimizedRenderer {static boolean cached;static boolean renderingShadows(){return cached;}}
 final class ClientPlayerEntity {}
 final class BlockPos {
- final int x;BlockPos(int x){this.x=x;}int getX(){return x;}int getY(){return 0;}int getZ(){return 0;}
- @Override public boolean equals(Object other){return other instanceof BlockPos && ((BlockPos)other).x==x;}
- @Override public int hashCode(){return x;}
+ final int x,y;BlockPos(int x){this(x,0);}BlockPos(int x,int y){this.x=x;this.y=y;}
+ int getX(){return x;}int getY(){return y;}int getZ(){return 0;}
+ BlockPos down(){return new BlockPos(x,y-1);}
+ @Override public boolean equals(Object other){return other instanceof BlockPos && ((BlockPos)other).x==x && ((BlockPos)other).y==y;}
+ @Override public int hashCode(){return x*31+y;}
 }
 final class BlockState {
  final Object data;BlockState(Object data){this.data=data;}Block getBlock(){return new Block(data);}
@@ -103,7 +105,14 @@ final class BlockState {
 final class World {
  static int reads;
  static World cast(World w){return w;}
- BlockState getBlockState(BlockPos p){reads++;return new BlockState(p.x==1?new BlockPSDTop():new BlockPSDAPGGlassBase());}
+ /* Row y==0 carries the bound surfaces (x==1 is the psd_top band, the
+    rest full-height glass); below it (y<0) is the full-height wall the
+    top band sits on - what PSDScriptingRules.isScriptableTop probes. */
+ BlockState getBlockState(BlockPos p){
+  reads++;
+  if(p.y==0) return new BlockState(p.x==1?new BlockPSDTop():new BlockPSDAPGGlassBase());
+  return new BlockState(new BlockPSDAPGGlassBase());
+ }
 }
 final class BlockPSDTop {} final class BlockPSDAPGGlassBase {}
 final class PSDWrapper {enum PSDType {GLASS,TOP}}
@@ -115,6 +124,12 @@ final class PSDClientBindings {
  static final List<PSDBinding> bindings=new ArrayList<>();
  static boolean isEmpty(){return bindings.isEmpty();}
  static void forEach(Consumer<PSDBinding> f){bindings.forEach(f);}
+}
+/* Yanyang full-height gate mirrored onto the stub block model: every stub
+   glass is full-height, and a top band scripts only above a wall block. */
+final class PSDScriptingRules {
+ static boolean isScriptableGlass(Object block){return block instanceof BlockPSDAPGGlassBase;}
+ static boolean isScriptableTop(World world,BlockPos pos){return world.getBlockState(pos.down()).getBlock().data instanceof BlockPSDAPGGlassBase;}
 }
 final class MinecraftClient {
  static final MinecraftClient INSTANCE=new MinecraftClient();

@@ -5,12 +5,18 @@ import com.lx862.jcm.mod.registry.Networking;
 import com.lx862.mtrscripting.mod.impl.mtr.server.PSDServerBindings;
 import org.mtr.mapping.holder.*;
 import org.mtr.mod.block.BlockPSDAPGGlassBase;
+import org.mtr.mod.block.BlockPSDTop;
 import java.nio.file.*;
 import java.util.Comparator;
 
 public final class PSDServerBindingsTest {
     private static void check(boolean condition, String message) {
         if (!condition) throw new AssertionError(message);
+    }
+
+    /** A half-height APG-style gate pane — jcm$invokeIsAPG() == true. */
+    private static final class HalfHeightGlass extends BlockPSDAPGGlassBase {
+        @Override public boolean jcm$invokeIsAPG() { return true; }
     }
 
     private static int storedCount(Path file) throws Exception {
@@ -62,7 +68,21 @@ public final class PSDServerBindingsTest {
             PSDServerBindings.handleQuery(server, player, "test/world");
             check(Networking.sent.get(0).bindings().size() == 3, "saved state failed to reload");
             PSDServerBindings.onServerStopping(server);
-            System.out.println("PSD server regression: batching, persistence/reload, wrapper alias dedupe, disconnect and unloaded/remote guards passed");
+
+            // Yanyang full-height gate: a new script on a half-height gate,
+            // and a top band not above a full-height wall, are both rejected
+            // without dirtying or broadcasting the dimension state.
+            world.blocks.put(new BlockPos(5, 0, 0), new BlockState(new HalfHeightGlass()));
+            world.blocks.put(new BlockPos(6, 0, 0), new BlockState(new HalfHeightGlass()));
+            world.blocks.put(new BlockPos(6, 1, 0), new BlockState(new BlockPSDTop()));
+            Networking.sent.clear();
+            PSDServerBindings.handleBind(server, player, 5, 0, 0, "test:gate", false, "GLASS");
+            PSDServerBindings.handleBind(server, player, 6, 1, 0, "test:gate", false, "TOP");
+            PSDServerBindings.onServerTick();
+            check(Networking.sent.isEmpty(), "half-height / not-above-wall bind was not rejected by the full-height gate");
+            check(storedCount(file) == 3, "rejected bind mutated the persisted state");
+            PSDServerBindings.onServerStopping(server);
+            System.out.println("PSD server regression: batching, persistence/reload, wrapper alias dedupe, disconnect, unloaded/remote guards and full-height gate rejections passed");
         } finally {
             PSDServerBindings.resetForTest();
             try (var paths = Files.walk(save)) {

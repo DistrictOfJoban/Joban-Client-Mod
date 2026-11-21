@@ -18,7 +18,7 @@ STUBS = {name: source for name, source in BINDING_STUBS.items() if name in {
 }}
 STUBS.update({
     'org/mtr/mapping/holder/BlockPos.java': '''package org.mtr.mapping.holder;
-public record BlockPos(int x,int y,int z) {public int getX(){return x;}public int getY(){return y;}public int getZ(){return z;}}''',
+public record BlockPos(int x,int y,int z) {public int getX(){return x;}public int getY(){return y;}public int getZ(){return z;}public BlockPos down(){return new BlockPos(x,y-1,z);}}''',
     'org/mtr/mapping/holder/World.java': '''package org.mtr.mapping.holder;
 import java.util.*;
 public class World {
@@ -63,6 +63,22 @@ public final class JCMLogger {public static void warn(String s,Object... args){}
     'com/lx862/mtrscripting/mod/network/packet/psd/PSDScriptsS2CPacket.java': '''package com.lx862.mtrscripting.mod.network.packet.psd;
 import java.util.List;import com.lx862.jcm.mod.scripting.psd.PSDBinding;
 public record PSDScriptsS2CPacket(String dimension,List<PSDBinding> bindings) {}''',
+    # PSDScriptingRules (compiled for real below) classifies half-height
+    # gates through MTR's BlockPSDAPGBase and the mixin invoker interface.
+    'org/mtr/mod/block/BlockPSDAPGBase.java': '''package org.mtr.mod.block;
+public class BlockPSDAPGBase {}''',
+    'org/mtr/mod/block/BlockPSDAPGDoorBase.java': '''package org.mtr.mod.block;
+public class BlockPSDAPGDoorBase extends BlockPSDAPGBase {}''',
+    'com/lx862/jcm/mixin/mtrscripting/BlockPSDAPGBaseAccessor.java': '''package com.lx862.jcm.mixin.mtrscripting;
+public interface BlockPSDAPGBaseAccessor { boolean jcm$invokeIsAPG(); }''',
+    # The production mixin makes every BlockPSDAPGBase implement the accessor
+    # at runtime; the stub glass models a FULL-height pane (isAPG() == false)
+    # so the full-height-only gate in handleBind keeps accepting these binds.
+    # (Overrides the plain BINDING_STUBS copy, which other tests share.)
+    'org/mtr/mod/block/BlockPSDAPGGlassBase.java': '''package org.mtr.mod.block;
+public class BlockPSDAPGGlassBase extends BlockPSDAPGBase implements com.lx862.jcm.mixin.mtrscripting.BlockPSDAPGBaseAccessor {
+ public boolean jcm$invokeIsAPG() { return false; }
+}''',
 })
 
 
@@ -94,6 +110,7 @@ def main():
         sources.append(target)
     base = repo / 'fabric/src/main/java'
     sources += [base / 'com/lx862/jcm/mod/scripting/psd/PSDBinding.java',
+                base / 'com/lx862/jcm/mod/scripting/psd/PSDScriptingRules.java',
                 base / 'com/lx862/mtrscripting/mod/impl/mtr/server/PSDServerBindings.java',
                 Path(__file__).with_name('java') / 'PSDServerBindingsTest.java']
     classes = work / 'classes'
