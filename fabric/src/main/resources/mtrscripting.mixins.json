@@ -1,9 +1,11 @@
 {
   "required": true,
   "package": "com.lx862.jcm.mixin",
-  "compatibilityLevel": "JAVA_16",
+  "plugin": "com.lx862.jcm.mixin.JcmMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
     "mtrscripting.BlockEntityEyecandyMixin",
+    "mtrscripting.BlockPSDAPGBaseAccessor",
     "mtrscripting.InitAccessorMixin",
     "mtrscripting.MainAccessorMixin",
     "mtrscripting.SidingAccessorMixin"
@@ -32,7 +34,8 @@
     "mtrscripting.VertexAttributeStateAccessor",
     "mtrscripting.GraphicsHolderMatrixMixin",
     "mtrscripting.StoredMatrixTransformationsMixin",
-    "mtrscripting.SpriteContentsAccessor"
+    "mtrscripting.SpriteContentsAccessor",
+    "mtrscripting.TianjinRenderRouteBaseMixin"
   ],
   "injectors": {
     "defaultRequire": 1

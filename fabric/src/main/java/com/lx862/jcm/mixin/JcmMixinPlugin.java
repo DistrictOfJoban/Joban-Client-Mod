@@ -49,6 +49,23 @@ public class JcmMixinPlugin implements IMixinConfigPlugin {
     /** Result of the CachedResource layout probe, cached across calls. */
     private Boolean cachedResourceModern;
 
+    /**
+     * Tianjin Metro (ziyue.tjmetro) render-pipeline classes hooked by
+     * {@code mtrscripting.TianjinRenderRouteBaseMixin} — JCM does not depend
+     * on the mod, so the mixin may only apply when its targets exist.
+     */
+    private static final String[] TIANJIN_RENDER_TARGETS = {
+            "ziyue.tjmetro.mod.render.RenderRouteBase",
+            "ziyue.tjmetro.mod.render.RenderPSDTopTianjin",
+            "ziyue.tjmetro.mod.render.RenderPSDTopTianjinBMT",
+            "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinBMT",
+            "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinJinjing",
+            "ziyue.tjmetro.mod.render.RenderAPGGlassTianjinTRT",
+    };
+
+    /** Result of the Tianjin render-pipeline presence probe, cached. */
+    private Boolean tianjinRenderersPresent;
+
     @Override
     public void onLoad(String mixinPackage) {
     }
@@ -63,6 +80,12 @@ public class JcmMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.endsWith("mtrpatch.CachedResourceMixin")
                 || mixinClassName.endsWith("mtrpatch.CachedResourceAccessorMixin")) {
             return shouldApplyCachedResourcePatch(mixinClassName, targetClassName);
+        }
+        if (mixinClassName.endsWith("mtrscripting.TianjinRenderRouteBaseMixin")) {
+            return shouldApplyTianjinRenderHooks();
+        }
+        if (mixinClassName.endsWith("mtrscripting.BlockPSDAPGBaseAccessor")) {
+            return shouldApplyIsApgAccessor(targetClassName);
         }
         return true;
     }
@@ -282,6 +305,49 @@ public class JcmMixinPlugin implements IMixinConfigPlugin {
             return true;
         }
         return false;
+    }
+
+    /**
+     * The Tianjin Metro hooks only apply when EVERY target class is on the
+     * classpath (the mixin is multi-target; a missing target is a hard
+     * mixin error, not a warning). Missing targets mean the mod — or this
+     * version of it — is absent, and JCM simply keeps its own behaviour.
+     */
+    private boolean shouldApplyTianjinRenderHooks() {
+        if (tianjinRenderersPresent == null) {
+            boolean allPresent = true;
+            for (String target : TIANJIN_RENDER_TARGETS) {
+                if (!classResourceExists(target)) {
+                    allPresent = false;
+                    break;
+                }
+            }
+            tianjinRenderersPresent = allPresent;
+            if (!allPresent) {
+                System.err.println("[JCM] Skipped mtrscripting.TianjinRenderRouteBaseMixin:"
+                        + " the Tianjin Metro mod (ziyue.tjmetro) render pipeline is not on the classpath.");
+            }
+        }
+        return tianjinRenderersPresent;
+    }
+
+    /**
+     * The isAPG() invoker requires that the MTR build actually declares the
+     * member (every known MTR 4.0.x/4.1 build does; a hypothetical fork
+     * without it would crash the accessor apply). Same raw-bytes probe
+     * philosophy as the CachedResource guard — fail open when unreadable.
+     */
+    private boolean shouldApplyIsApgAccessor(String targetClassName) {
+        try {
+            final byte[] classBytes = readRawClassBytes(targetClassName);
+            return classBytes == null || hasUtf8Constant(classBytes, "isAPG");
+        } catch (Throwable t) {
+            return true; // fail open — official MTR path
+        }
+    }
+
+    private static boolean classResourceExists(String className) {
+        return JcmMixinPlugin.class.getClassLoader().getResource(className.replace('.', '/') + ".class") != null;
     }
 
     private static String shortName(String className) {

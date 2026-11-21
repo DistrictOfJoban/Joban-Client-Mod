@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lx862.jcm.mod.registry.Items;
 import com.lx862.jcm.mod.scripting.psd.PSDBinding;
+import com.lx862.jcm.mod.scripting.psd.PSDScriptingRules;
 import com.lx862.jcm.mod.scripting.psd.PSDWrapper;
 import com.lx862.jcm.mod.util.JCMLogger;
 import com.lx862.mtrscripting.mod.network.packet.psd.PSDScriptsS2CPacket;
@@ -164,6 +165,19 @@ public final class PSDServerBindings {
                 : block instanceof BlockPSDAPGGlassBase; // glass + glass end, PSD and APG alike
         if (!blockMatches) {
             return;
+        }
+
+        /* Yanyang: only FULL-height PSD walls carry scripts — half-height
+           gates (MTR's APG, JCM's DRL twin, addon gates like the Tianjin
+           Metro ones) must not be scriptable, and a psd_top only scripts
+           above a full-height wall. Unbinds (empty script id) stay allowed
+           so legacy half-height bindings remain removable. */
+        if (!scriptId.isEmpty()) {
+            if (type == PSDWrapper.PSDType.TOP) {
+                if (!PSDScriptingRules.isScriptableTop(world, pos)) return;
+            } else {
+                if (PSDScriptingRules.isHalfHeightPsd(block)) return;
+            }
         }
 
         final DimensionState dimensionState = ensureLoaded(minecraftServer, dimension, world);

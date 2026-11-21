@@ -8,6 +8,8 @@ import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.holder.World;
 import org.mtr.mapping.mapper.GraphicsHolder;
+import org.mtr.mod.block.BlockPSDAPGBase;
+import org.mtr.mod.block.BlockPSDAPGGlassBase;
 import org.mtr.mod.block.BlockPSDTop;
 import org.mtr.mod.block.IBlock;
 import org.mtr.mod.render.RenderRouteBase;
@@ -17,17 +19,28 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Yanyang/PSD: when a script is bound to a psd_top block, the original
- * content (direction arrow / route map strip and the platform color strip)
- * must no longer render on <b>the psd_top group the bound block belongs
- * to</b> — the stretch sitting on one wall section below (one brush-merged
- * door run or one glass segment; see {@code PSDScriptRenderer} /
- * {@code PSDRuns}, which derive the group from the wall below because the
- * band's own SIDE_EXTENDED markers are only meaningful above a full-height
- * PSD wall). The script canvas spans exactly that group, so every block of
- * the group drops its slice, not just the bound one — while the
- * <b>neighbouring groups</b> (above other doors and glass segments) keep
- * MTR's own arrows and route maps.
+ * Yanyang/PSD: when a script is bound to a psd_top group or a glass segment,
+ * the ORIGINAL content (direction arrow / route map strip and the platform
+ * color strip, plus the station-name strip MTR paints on APG glass) must no
+ * longer render on <b>the group / segment the bound block belongs to</b> —
+ * the stretch sitting on one wall section below (one brush-merged door run
+ * or one glass segment; see {@code PSDScriptRenderer} / {@code PSDRuns},
+ * which derive the group from the wall below because the band's own
+ * SIDE_EXTENDED markers are only meaningful above a full-height PSD wall).
+ * The script canvas spans exactly that group/segment, so every block of it
+ * drops its slice, not just the bound one — while the <b>neighbouring
+ * groups</b> (above other doors and glass segments) keep MTR's own arrows
+ * and route maps.
+ *
+ * <p>The cancellation keys off the BLOCK at the entity's position, not the
+ * entity type: psd_top group bindings cancel every {@code BlockPSDTop}
+ * entity's pass, and glass segment bindings cancel the pass of ANY entity
+ * sitting on a scripted glass block — that covers MTR's own APG glass
+ * entities too (their renderer paints the same content family onto the
+ * upper glass half), which the previous {@code instanceof
+ * BlockPSDTop.BlockEntity} check silently missed. The Tianjin Metro mod's
+ * renderers do not go through this class at all; they are hooked by
+ * {@link TianjinRenderRouteBaseMixin}.</p>
  *
  * <p>Also cancels for <b>stale MTR block entities on JCM DRL glass</b>:
  * worlds that placed {@code jsblock:apg_glass_drl} /
@@ -48,18 +61,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = RenderRouteBase.class, remap = false)
 public class RenderRouteBaseMixin {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void jsblock$cancelForScriptedTop(BlockPSDTop.BlockEntityBase entity, float tickDelta, GraphicsHolder graphicsHolder, int light, int overlay, CallbackInfo ci) {
-        if (entity instanceof BlockPSDTop.BlockEntity) {
-            final World world = entity.getWorld2();
+    private void jsblock$cancelForScriptedPsd(BlockPSDTop.BlockEntityBase entity, float tickDelta, GraphicsHolder graphicsHolder, int light, int overlay, CallbackInfo ci) {
+        final World world = entity.getWorld2();
+        if (world != null) {
             final BlockPos pos = entity.getPos2();
-            if (world != null) {
-                final BlockState state = world.getBlockState(pos);
-                if (state.getBlock().data instanceof BlockPSDTop) {
-                    final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDTop.FACING);
-                    if (PSDRuns.topGroupHasScriptBinding(world, pos, facing)) {
-                        ci.cancel();
-                        return;
-                    }
+            final BlockState state = world.getBlockState(pos);
+            final Object block = state.getBlock().data;
+            if (block instanceof BlockPSDTop) {
+                final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDTop.FACING);
+                if (PSDRuns.topGroupHasScriptBinding(world, pos, facing)) {
+                    ci.cancel();
+                    return;
+                }
+            } else if (block instanceof BlockPSDAPGGlassBase) {
+                final Direction facing = IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING);
+                if (PSDRuns.glassRunHasScriptBinding(world, pos, facing)) {
+                    ci.cancel();
+                    return;
                 }
             }
         }
@@ -67,9 +85,9 @@ public class RenderRouteBaseMixin {
         /* Stale MTR apg_glass/apg_glass_end BEs sitting on JCM DRL glass
            blocks (old worlds, see class doc) — MTR's own route content must
            not float over the DRL's open upper half. */
-        final World world = entity.getWorld2();
-        if (world != null) {
-            final Object block = world.getBlockState(entity.getPos2()).getBlock().data;
+        final World world2 = entity.getWorld2();
+        if (world2 != null) {
+            final Object block = world2.getBlockState(entity.getPos2()).getBlock().data;
             if (block instanceof APGGlassDRL || block instanceof APGGlassEndDRL) {
                 ci.cancel();
             }

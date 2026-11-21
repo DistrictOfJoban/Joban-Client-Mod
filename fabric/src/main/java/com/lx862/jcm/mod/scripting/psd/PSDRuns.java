@@ -165,6 +165,34 @@ public final class PSDRuns {
     }
 
     /**
+     * Whether the glass segment containing {@code pos} (either half of any
+     * column) carries any GLASS script binding — the signal for
+     * {@code RenderRouteBaseMixin} and the Tianjin Metro renderer hooks to
+     * drop the ORIGINAL glass content (direction arrow / route map strip,
+     * station-name strip, color strip) on <b>that segment only</b>. The
+     * neighbour segments above other doors keep their content.
+     */
+    public static boolean glassRunHasScriptBinding(World world, BlockPos pos, Direction facing) {
+        final BlockState state = world.getBlockState(pos);
+        if (!isGlassLike(state) || IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING) != facing) return false;
+        if (hasGlassBinding(pos)) return true;
+        final Run run = glassRun(world, pos, facing);
+        for (int i = 0; i < run.width; i++) {
+            final BlockPos lower = run.start.offset(facing.rotateYClockwise(), i);
+            if (hasGlassBinding(lower)) return true;
+            final BlockPos upper = lower.up();
+            final BlockState upperState = world.getBlockState(upper);
+            if (isGlassLike(upperState)
+                    && IBlock.getStatePropertySafe(upperState, BlockPSDAPGBase.FACING) == facing
+                    && IBlock.getStatePropertySafe(upperState, IBlock.HALF) == IBlock.DoubleBlockHalf.UPPER
+                    && hasGlassBinding(upper)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Walks the contiguous section containing {@code pos} along the wall
      * axis: counterclockwise to the section's left-most block (the anchor),
      * then clockwise for the width. Sections of at most 64 blocks stay intact,
@@ -240,5 +268,10 @@ public final class PSDRuns {
     private static boolean hasTopBinding(BlockPos pos) {
         final PSDBinding binding = PSDClientBindings.get(pos);
         return binding != null && binding.type == PSDWrapper.PSDType.TOP;
+    }
+
+    private static boolean hasGlassBinding(BlockPos pos) {
+        final PSDBinding binding = PSDClientBindings.get(pos);
+        return binding != null && binding.type == PSDWrapper.PSDType.GLASS;
     }
 }

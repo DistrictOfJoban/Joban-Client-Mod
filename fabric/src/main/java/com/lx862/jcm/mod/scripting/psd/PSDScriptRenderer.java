@@ -146,11 +146,16 @@ public final class PSDScriptRenderer implements RenderHelper {
             final BlockState state = world.getBlockState(pos);
             final Object block = state.getBlock().data;
             if (binding.type == PSDWrapper.PSDType.TOP) {
-                if (block instanceof BlockPSDTop) {
+                /* Yanyang: a psd_top only scripts above a FULL-height wall —
+                   legacy bindings on a half-height gate's band (or a floating
+                   band) are not driven. */
+                if (block instanceof BlockPSDTop && PSDScriptingRules.isScriptableTop(world, pos)) {
                     renderTop(binding, pos, state, world, shadowPass, renderedSections);
                 }
             } else {
-                if (block instanceof BlockPSDAPGGlassBase) {
+                /* Yanyang: half-height gates carry no scripts — legacy
+                   bindings on them are not driven. */
+                if (PSDScriptingRules.isScriptableGlass(block)) {
                     renderGlass(binding, pos, state, world, shadowPass, shaderPack, renderedSections, cameraX, cameraZ);
                 }
             }
