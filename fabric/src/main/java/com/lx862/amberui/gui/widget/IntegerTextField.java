@@ -80,7 +80,7 @@ public class IntegerTextField extends AlwaysRenderedTextField implements GuiHelp
         try {
             long value = Long.parseLong(s);
             super.setText2(s);
-            this.changeListener.accept(value);
+            if(this.changeListener != null) this.changeListener.accept(value);
         } catch (NumberFormatException ignored) {}
     }
 
