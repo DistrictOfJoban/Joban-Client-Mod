@@ -697,12 +697,15 @@ public final class NativeScriptManager {
     /* Registries (validate() + debug overlay)                             */
     /* ------------------------------------------------------------------ */
 
+    /* hotfix.2: eyecandy placed by legacy builds can carry no model_id NBT tag,
+       in which case the resource layer resolves the script entry id to null.
+       ConcurrentHashMap.containsKey/get(null) throws NPE, so guard here. */
     public static boolean isLoaded(String scriptId) {
-        return MODULES.containsKey(scriptId);
+        return scriptId != null && MODULES.containsKey(scriptId);
     }
 
     public static boolean isSkipped(String scriptId) {
-        return SKIPPED.containsKey(scriptId);
+        return scriptId != null && SKIPPED.containsKey(scriptId);
     }
 
     /** Unmodifiable, flattened view of loaded modules (debug overlay). */
@@ -716,6 +719,7 @@ public final class NativeScriptManager {
 
     /** Loaded modules for one script id, in declaration order (never null). */
     public static List<NativeScriptModule> getModules(String scriptId) {
+        if (scriptId == null) return Collections.emptyList(); // hotfix.2: CHM.get(null) NPEs
         final List<NativeScriptModule> list = MODULES.get(scriptId);
         if (list == null) return Collections.emptyList();
         synchronized (list) { return Collections.unmodifiableList(new ArrayList<>(list)); }

@@ -220,6 +220,7 @@ public final class NativeContentDriver {
 
     public static VoxelShape shape(BlockEyeCandy.BlockEntity block,boolean collision) {
         String script=com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager.eyecandy.getScriptEntryId(block.getModelId());
+        if(script==null) return null; // hotfix.2: no model_id tag -> null entry id
         State state=STATES.get(key("eyecandy",script,block.getPos2()));
         if(state==null) return null;
         VoxelShape shape=null;
@@ -232,6 +233,7 @@ public final class NativeContentDriver {
     }
     public static boolean blockUse(BlockEyeCandy.BlockEntity block,BlockUseEvent event) {
         String script=com.lx862.mtrscripting.mod.resource.MtrScriptingResourceManager.eyecandy.getScriptEntryId(block.getModelId());
+        if(script==null) return false; // hotfix.2: no model_id tag -> null entry id
         if(!NativeScriptManager.isLoaded(script)) return false;
         State state=STATES.get(key("eyecandy",script,block.getPos2()));
         if(state!=null) for(AbstractScriptContext context:state.contexts.values()) ((EyeCandyScriptContext)context).events().onBlockUse.trigger(event);
