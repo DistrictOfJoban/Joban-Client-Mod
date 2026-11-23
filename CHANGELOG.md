@@ -2,6 +2,8 @@
 
 This is a minor release focused on bug-fixes.
 
+Both server and client are advised to be updated for the best experience.
+
 ## General
 - Fix typing an alphabet into a numeric GUI text field could crash the client
 - Fix inappropriately configured Sound Looper could repeatedly crash the server
