@@ -7,7 +7,7 @@ JCM Yanyang **2.3.0-1.0.1-hotfix.3**，一轮全库代码审查带来的稳定�
 - **GUI 与渲染**：跑马灯（MARQUEE）溢出文本此前静默不绘制（空实现）——现在降级为普通裁剪文本，内容可见；未设置字体的文本条目在缓存比较时不再抛空指针；根级资源路径（如 `mtr:script.js`）的相对路径解析不再空指针崩溃。
 - **脚本错误通知**：逐条隔离执行——单条通知抛异常不再阻塞其余通知；玩家在错误排队后离开世界不再崩溃。
 - **性能**：客户端没有任何屏蔽门脚本绑定时，玻璃 / 顶板分组扫描完全跳过世界方块遍历。
-- **构建可复现性**：钉住全部动态 `+` 依赖版本（Fabric Loom 1.10.5、Mixin 0.7.38、foojay 1.0.0、Manifold 2026.1.16）；Forge 端补齐与 Fabric 一致的完整 Manifold 注解处理器集。六个 Minecraft 版本 × Fabric / Forge 全部以 JDK 25 工具链构建，native 全套件本地 20/20 绿。发布期间 GitHub `macos-latest`（macOS 26）runner 供给拥堵，两个 macOS arm 腿临时钉到 `macos-15` 镜像（arm64 硬件与测试覆盖不变，拥堵清后恢复）。
+- **构建可复现性**：钉住全部动态 `+` 依赖版本（Fabric Loom 1.10.5、Mixin 0.7.38、foojay 1.0.0、Manifold 2026.1.16）；Forge 端补齐与 Fabric 一致的完整 Manifold 注解处理器集。六个 Minecraft 版本 × Fabric / Forge 全部以 JDK 25 工具链构建，native 全套件本地 20/20 绿。发布期间 GitHub 托管 macOS ARM64 runner 容量整体不可用，两个 macOS arm 腿临时改为在 x64（intel）runner 上用 Xcode 交叉编译产出相同的 arm64 原生库（同 2026-10-28 的处理方式；ARM64 真机 JVM 集成测试仍由 Linux ARM64 腿原生覆盖，macOS ARM runner 恢复后回补）。
 
 ## 升级说明
 

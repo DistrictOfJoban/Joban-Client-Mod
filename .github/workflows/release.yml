@@ -60,16 +60,21 @@ jobs:
             platform: macos-x64
             java-arch: x64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
-          # The macos-latest fleet (macOS 26 images) is congested again on
-          # 2026-11-25 — both arm jobs sat queued for their full 15-minute
-          # pending window and were auto-cancelled, twice in a row, while the
-          # macos-15 fleet (the intel leg above) picked up runners within
-          # seconds. Pin both arm legs to macos-15 for this release: it is the
-          # same arm64 hardware the JVM ctest suite needs, so no coverage is
-          # lost. Revert to macos-latest once the congestion clears.
-          - os: macos-15
+          # 2026-11-25: the entire hosted macOS ARM64 capacity is
+          # unavailable (both the macos-latest/macOS 26 and the macos-15 arm
+          # fleets sat queued for their full 15-minute pending window and
+          # were auto-cancelled, three dispatches in a row), while x64
+          # macos-15-intel runners are picked up within seconds. Cross-compile
+          # the macOS arm64 bridge from the intel Xcode toolchain —
+          # CMAKE_OSX_ARCHITECTURES=arm64 produces the identical dylib from
+          # either host. Marked cross so the JVM ctest suite is skipped (an
+          # x64 host cannot execute arm64 images); ARM64 JVM integration
+          # stays covered natively by the linux-arm64 leg. Restore the arm
+          # runner once the fleet recovers.
+          - os: macos-15-intel
             platform: macos-arm64
-            java-arch: aarch64
+            cross: osx-arm64
+            java-arch: x64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
           # Cross builds: the produced image cannot run on the build host,
           # so the JVM ctest suite is skipped there (source-level checks
@@ -80,11 +85,10 @@ jobs:
             cross: android
             cmake-arch: -DCMAKE_ANDROID_ABI=arm64-v8a
           # iOS cross-compiles against the iPhoneOS SDK, which ships in the
-          # runner's Xcode too — and ctest is already skipped for cross legs.
-          # macos-15 pin for the same 2026-11-25 macos-latest (macOS 26)
-          # queue congestion as the macos-arm64 leg above; the arm64 Xcode
-          # toolchain produces the identical dylib.
-          - os: macos-15
+          # intel image's Xcode too — and ctest is already skipped for cross
+          # legs. macos-15-intel pin: same 2026-11-25 macOS ARM64 fleet outage
+          # as the macos-arm64 leg above (same mitigation as 2026-10-28).
+          - os: macos-15-intel
             platform: ios-arm64
             cross: ios
             cmake-arch: -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
