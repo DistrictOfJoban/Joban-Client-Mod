@@ -60,7 +60,14 @@ jobs:
             platform: macos-x64
             java-arch: x64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
-          - os: macos-latest
+          # The macos-latest fleet (macOS 26 images) is congested again on
+          # 2026-11-25 — both arm jobs sat queued for their full 15-minute
+          # pending window and were auto-cancelled, twice in a row, while the
+          # macos-15 fleet (the intel leg above) picked up runners within
+          # seconds. Pin both arm legs to macos-15 for this release: it is the
+          # same arm64 hardware the JVM ctest suite needs, so no coverage is
+          # lost. Revert to macos-latest once the congestion clears.
+          - os: macos-15
             platform: macos-arm64
             java-arch: aarch64
             cmake-arch: -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
@@ -73,11 +80,11 @@ jobs:
             cross: android
             cmake-arch: -DCMAKE_ANDROID_ABI=arm64-v8a
           # iOS cross-compiles against the iPhoneOS SDK, which ships in the
-          # arm runner's Xcode too — and ctest is already skipped for cross
-          # legs. The 2026-10-28/30 macos-latest (arm) provisioning outage
-          # that forced the macos-15-intel pin has cleared; build on the arm
-          # image again (user-requested runner).
-          - os: macos-latest
+          # runner's Xcode too — and ctest is already skipped for cross legs.
+          # macos-15 pin for the same 2026-11-25 macos-latest (macOS 26)
+          # queue congestion as the macos-arm64 leg above; the arm64 Xcode
+          # toolchain produces the identical dylib.
+          - os: macos-15
             platform: ios-arm64
             cross: ios
             cmake-arch: -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
