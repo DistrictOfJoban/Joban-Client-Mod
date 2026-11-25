@@ -25,7 +25,10 @@ public class EnquiryUpdateGUIPacket extends PacketHandler {
         // The string is read before valueOf, so the stream position is
         // unaffected: an unknown enum name falls back to CLASSIC instead of
         // disconnecting the client with an IllegalArgumentException.
-        final EnquiryScreenType parsedType;
+        /* Blank finals cannot be re-assigned in a catch block (the try block
+           may have completed the assignment before the exception was thrown),
+           so resolve through a non-final local. */
+        EnquiryScreenType parsedType;
         try {
             parsedType = EnquiryScreenType.valueOf(packetBufferReceiver.readString());
         } catch (IllegalArgumentException e) {
