@@ -102,6 +102,7 @@ public final class JCMLogger {public static void warn(String message,Object... a
 public final class PSDClientBindings {
  public static final java.util.Map<org.mtr.mapping.holder.BlockPos,PSDBinding> bindings=new java.util.HashMap<>();
  public static PSDBinding get(org.mtr.mapping.holder.BlockPos p){return bindings.get(p);}
+ public static boolean isEmpty(){return bindings.isEmpty();}
 }''',
 })
 

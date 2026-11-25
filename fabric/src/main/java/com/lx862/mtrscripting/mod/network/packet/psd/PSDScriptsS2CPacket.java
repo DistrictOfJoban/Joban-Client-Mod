@@ -3,7 +3,7 @@ package com.lx862.mtrscripting.mod.network.packet.psd;
 import com.lx862.jcm.mod.scripting.psd.PSDBinding;
 import com.lx862.jcm.mod.scripting.psd.PSDClientBindings;
 import com.lx862.jcm.mod.scripting.psd.PSDWrapper;
-import com.lx862.mtrscripting.mod.MTRScriptingModClient;
+import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
@@ -44,7 +44,7 @@ public class PSDScriptsS2CPacket extends PacketHandler {
             try {
                 parsedType = PSDWrapper.PSDType.valueOf(type);
             } catch (IllegalArgumentException e) {
-                MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Received unknown PSD script type {}, skipping this binding!", type);
+                JCMLogger.warn("[MTR Scripting via JCM] Received unknown PSD script type {}, skipping this binding!", type);
                 continue;
             }
             this.bindings.add(new PSDBinding(new org.mtr.mapping.holder.BlockPos(x, y, z), scriptId, pidsPreset, parsedType));
