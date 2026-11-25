@@ -261,8 +261,13 @@ public interface ScriptResourceProvider {
         if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value()) {
             MTRScriptingModClient.LOGGER.error("[MTR Scripting] Error while {}!", action, e);
             MTRContentScripting.getScriptManager().scriptErrorNotifier.queue(() -> {
-                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(VanillaTextWrapper.literal("[MTR] Error while " + action + "!").withColor("RED").withHoverText(VanillaTextWrapper.literal(e.getMessage()).withColor("RED")).impl()), false);
-                MinecraftClient.getInstance().getPlayerMapped().sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+                // The queue is flushed when the player is in a world, but the
+                // player may still have left between queueing and flushing.
+                final ClientPlayerEntity player = MinecraftClient.getInstance().getPlayerMapped();
+                if (player != null) {
+                    player.sendMessage(Text.cast(VanillaTextWrapper.literal("[MTR] Error while " + action + "!").withColor("RED").withHoverText(VanillaTextWrapper.literal(e.getMessage()).withColor("RED")).impl()), false);
+                    player.sendMessage(Text.cast(TextHelper.setStyle(TextHelper.literal("See Console for details."), Style.getEmptyMapped().withColor(TextFormatting.RED))), false);
+                }
             });
         } else {
             MTRScriptingModClient.LOGGER.error("[MTR Scripting] Error while {}: {}", action, e.getMessage());

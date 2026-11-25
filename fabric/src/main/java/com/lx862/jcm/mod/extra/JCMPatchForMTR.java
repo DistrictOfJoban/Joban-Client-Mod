@@ -68,7 +68,12 @@ public class JCMPatchForMTR {
             Identifier basePathId = new Identifier(basePath);
             String relative = resource.toLowerCase(Locale.ROOT).replace('\\', '/');
 
-            String resolvedPath = FileSystems.getDefault().getPath(basePathId.getPath()).getParent().resolve(relative)
+            // getParent() is null for a single-segment path (e.g.
+            // "mtr:script.js"), which would NPE; resolve the bare relative
+            // path itself in that case instead.
+            final java.nio.file.Path basePathFile = FileSystems.getDefault().getPath(basePathId.getPath());
+            final java.nio.file.Path parentPath = basePathFile.getParent();
+            final String resolvedPath = (parentPath == null ? java.nio.file.Path.of(relative) : parentPath.resolve(relative))
                     .normalize().toString().replace('\\', '/');
             return CustomResourceTools.formatIdentifier(basePathId.getNamespace() + ":" + resolvedPath, extension);
         }

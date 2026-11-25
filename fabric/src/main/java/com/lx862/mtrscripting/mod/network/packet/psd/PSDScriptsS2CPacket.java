@@ -3,6 +3,7 @@ package com.lx862.mtrscripting.mod.network.packet.psd;
 import com.lx862.jcm.mod.scripting.psd.PSDBinding;
 import com.lx862.jcm.mod.scripting.psd.PSDClientBindings;
 import com.lx862.jcm.mod.scripting.psd.PSDWrapper;
+import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
@@ -36,7 +37,17 @@ public class PSDScriptsS2CPacket extends PacketHandler {
             final String scriptId = packetBufferReceiver.readString();
             final boolean pidsPreset = packetBufferReceiver.readBoolean();
             final String type = packetBufferReceiver.readString();
-            this.bindings.add(new PSDBinding(new org.mtr.mapping.holder.BlockPos(x, y, z), scriptId, pidsPreset, PSDWrapper.PSDType.valueOf(type)));
+            // All fields are read above, so the stream position is unaffected
+            // by skipping a malformed entry: an unknown enum name must not
+            // disconnect the client with an IllegalArgumentException.
+            final PSDWrapper.PSDType parsedType;
+            try {
+                parsedType = PSDWrapper.PSDType.valueOf(type);
+            } catch (IllegalArgumentException e) {
+                MTRScriptingModClient.LOGGER.warn("[MTR Scripting via JCM] Received unknown PSD script type {}, skipping this binding!", type);
+                continue;
+            }
+            this.bindings.add(new PSDBinding(new org.mtr.mapping.holder.BlockPos(x, y, z), scriptId, pidsPreset, parsedType));
         }
     }
 

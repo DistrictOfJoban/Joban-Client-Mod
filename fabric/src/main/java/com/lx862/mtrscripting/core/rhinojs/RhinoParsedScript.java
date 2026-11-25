@@ -140,24 +140,32 @@ public class RhinoParsedScript extends ParsedScript {
                     }
                 }
                 succeeded = true;
-            } catch (Exception e) {
-                scriptManager.getLogger().error("[MTR Scripting via JCM {}] Error executing JS Script {}!", MTRScriptingMod.VERSION, displayName);
-                if(e instanceof RhinoException) {
-                    RhinoException re = ((RhinoException)e);
-                    scriptManager.getLogger().error(cleanRhinoExceptionMessage(re.getMessage()));
-                    for(String ste : re.getScriptStackTrace().split("\n")) {
-                        scriptManager.getLogger().error("{}", ste);
-                    }
+            } catch (Throwable e) {
+                // Catch Throwable, not just Exception: an Error (e.g.
+                // StackOverflowError from runaway recursion) used to escape
+                // this worker and kill the whole script task thread. Log it
+                // as fatal and let the cooldown/failure handling below keep
+                // the retry policy in charge.
+                if (e instanceof Error) {
+                    scriptManager.getLogger().fatal("[MTR Scripting via JCM {}] Fatal error executing JS Script {}!", MTRScriptingMod.VERSION, displayName, e);
                 } else {
-                    scriptManager.getLogger().error("", e);
-                }
+                    scriptManager.getLogger().error("[MTR Scripting via JCM {}] Error executing JS Script {}!", MTRScriptingMod.VERSION, displayName);
+                    if(e instanceof RhinoException) {
+                        RhinoException re = ((RhinoException)e);
+                        scriptManager.getLogger().error(cleanRhinoExceptionMessage(re.getMessage()));
+                        for(String ste : re.getScriptStackTrace().split("\n")) {
+                            scriptManager.getLogger().error("{}", ste);
+                        }
+                    } else {
+                        scriptManager.getLogger().error("", e);
+                    }
 
-                if(likelyDueToUndefinedParam(e.getMessage())) {
-                    scriptManager.getLogger().warn("[MTR Scripting via JCM {}] [WARN] One or more parameter is UNDEFINED, is your variable assigned?", MTRScriptingMod.VERSION);
+                    if(likelyDueToUndefinedParam(e.getMessage())) {
+                        scriptManager.getLogger().warn("[MTR Scripting via JCM {}] [WARN] One or more parameter is UNDEFINED, is your variable assigned?", MTRScriptingMod.VERSION);
+                    }
                 }
 
                 Exception capturedException = new Exception(cleanRhinoExceptionMessage(e.getMessage()), e);
-                lastFailedTime = System.currentTimeMillis();
                 capturedScriptException = capturedException;
                 if(errorCallback != null) errorCallback.run();
                 // Discard an incomplete frame without destroying resources
@@ -170,6 +178,10 @@ public class RhinoParsedScript extends ParsedScript {
                 }
             } finally {
                 try {
+                    // Any failure path (Throwable included) enters the fail
+                    // cooldown: succeeded is only set at the end of the try
+                    // block, so a thrown Error also lands here.
+                    if (!succeeded) lastFailedTime = System.currentTimeMillis();
                     scriptInstance.endTrackExecuteTime();
                     Context.exit();
                 } finally {

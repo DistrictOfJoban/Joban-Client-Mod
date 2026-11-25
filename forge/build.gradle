@@ -1,6 +1,6 @@
 plugins {
     id "net.minecraftforge.gradle" version "6.0.36"
-    id "org.spongepowered.mixin" version "+"
+    id "org.spongepowered.mixin" version "0.7.38"
 }
 
 minecraft {
@@ -26,8 +26,18 @@ sourceSets.main.resources { srcDir "src/generated/resources" }
 dependencies {
     minecraft "net.minecraftforge:forge:${rootProject.minecraft_version}-${project.properties["forge_version_$rootProject.minecraft_version"]}"
     implementation fg.deobf("maven.modrinth:minecraft-transit-railway:FORGE-${rootProject.mtr_version}+${rootProject.minecraft_version}")
-    annotationProcessor "org.spongepowered:mixin:+:processor"
-    annotationProcessor 'systems.manifold:manifold-preprocessor:+'
+    annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
+    // Manifold javac plugin: the same four artifacts as the fabric module —
+    // the manifold-preprocessor artifact alone only carries the module; the
+    // core + util + rt jars provide the actual -Xplugin:Manifold plugin and
+    // its runtime. Pinned to the version declared in
+    // fabric/gradle.properties (manifold_preprocessor) as a literal on
+    // purpose: this build cannot resolve properties from the fabric
+    // subproject's gradle.properties. Keep the two in sync.
+    annotationProcessor 'systems.manifold:manifold:2026.1.16'
+    annotationProcessor 'systems.manifold:manifold-util:2026.1.16'
+    annotationProcessor 'systems.manifold:manifold-rt:2026.1.16'
+    annotationProcessor 'systems.manifold:manifold-preprocessor:2026.1.16'
 
     if(project.merged_mc_version_int >= 11802) {
         jarJar(group: 'folk.sisby', name: 'kaleido-config', version: "[0.3.3,1.0)")

@@ -155,6 +155,8 @@ public final class PSDRuns {
      * own arrows and route maps.
      */
     public static boolean topGroupHasScriptBinding(World world, BlockPos pos, Direction facing) {
+        // No bindings at all — skip the world walk entirely.
+        if (PSDClientBindings.isEmpty()) return false;
         if (!isPsdTopFacing(world.getBlockState(pos), facing)) return false;
         if (hasTopBinding(pos)) return true;
         final Run run = topRun(world, pos, facing);
@@ -173,6 +175,8 @@ public final class PSDRuns {
      * neighbour segments above other doors keep their content.
      */
     public static boolean glassRunHasScriptBinding(World world, BlockPos pos, Direction facing) {
+        // No bindings at all — skip the world walk entirely.
+        if (PSDClientBindings.isEmpty()) return false;
         final BlockState state = world.getBlockState(pos);
         if (!isGlassLike(state) || IBlock.getStatePropertySafe(state, BlockPSDAPGBase.FACING) != facing) return false;
         if (hasGlassBinding(pos)) return true;

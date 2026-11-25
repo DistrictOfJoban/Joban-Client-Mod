@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.network.gui;
 
 import com.lx862.jcm.mod.data.EnquiryScreenType;
 import com.lx862.jcm.mod.data.TransactionEntry;
+import com.lx862.jcm.mod.util.JCMLogger;
 import org.mtr.mapping.holder.BlockPos;
 import org.mtr.mapping.registry.PacketHandler;
 import org.mtr.mapping.tool.PacketBufferReceiver;
@@ -21,7 +22,17 @@ public class EnquiryUpdateGUIPacket extends PacketHandler {
 
     public EnquiryUpdateGUIPacket(PacketBufferReceiver packetBufferReceiver) {
         this.entries = new ArrayList<>();
-        this.type = EnquiryScreenType.valueOf(packetBufferReceiver.readString());
+        // The string is read before valueOf, so the stream position is
+        // unaffected: an unknown enum name falls back to CLASSIC instead of
+        // disconnecting the client with an IllegalArgumentException.
+        final EnquiryScreenType parsedType;
+        try {
+            parsedType = EnquiryScreenType.valueOf(packetBufferReceiver.readString());
+        } catch (IllegalArgumentException e) {
+            JCMLogger.warn("Received unknown enquiry screen type, falling back to CLASSIC!", e);
+            parsedType = EnquiryScreenType.CLASSIC;
+        }
+        this.type = parsedType;
         this.pos = BlockPos.fromLong(packetBufferReceiver.readLong());
         this.remainingBalance = packetBufferReceiver.readInt();
 

@@ -28,6 +28,9 @@ public class DoorDirectionsS2CPacket extends PacketHandler {
         this.routeId = packetBufferReceiver.readLong();
         this.complete = packetBufferReceiver.readBoolean();
         final int size = packetBufferReceiver.readInt();
+        // A negative size is malformed and would otherwise throw
+        // NegativeArraySizeException and disconnect the client.
+        if (size < 0) throw new IllegalArgumentException("Invalid door direction count: " + size);
         this.platformIds = new long[size];
         this.left = new boolean[size];
         this.right = new boolean[size];

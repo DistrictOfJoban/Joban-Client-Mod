@@ -5,6 +5,8 @@ import org.mtr.mapping.holder.Identifier;
 import org.mtr.mapping.holder.MutableText;
 import org.mtr.mapping.holder.TextFormatting;
 
+import java.util.Objects;
+
 public class TextInfo {
     private final String content;
     private Identifier fontId;
@@ -79,6 +81,7 @@ public class TextInfo {
     public boolean equals(Object o) {
         if(!(o instanceof TextInfo)) return false;
         TextInfo other = ((TextInfo) o);
-        return other.content.equals(content) && other.textColor == textColor && this.forScrollingText == other.forScrollingText && this.fontId.equals(other.fontId);
+        // fontId is null until withFont() is called — use a null-safe compare.
+        return other.content.equals(content) && other.textColor == textColor && this.forScrollingText == other.forScrollingText && Objects.equals(this.fontId, other.fontId);
     }
 }

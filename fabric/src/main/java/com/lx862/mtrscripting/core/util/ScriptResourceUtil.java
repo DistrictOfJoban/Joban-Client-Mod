@@ -57,6 +57,10 @@ public class ScriptResourceUtil {
     private static final Stack<Identifier> scriptLocationStack = new Stack<>();
     private static ParsedScript activeParsingScript;
 
+    /** Guards include() recursion: a script that (transitively) includes
+     * itself would otherwise recurse until StackOverflowError. */
+    private static final int MAX_INCLUDE_DEPTH = 32;
+
     public static final boolean ANTE_FLAG = false;
 
     private static final FontRenderContext FONT_CONTEXT = new FontRenderContext(new AffineTransform(), true, false);
@@ -99,6 +103,14 @@ public class ScriptResourceUtil {
         if (!isParsingStage()) throw new RuntimeException(
             "Cannot use include() in Runtime Stage, as all scripts has been parsed and finalized at this point!"
         );
+        if (scriptLocationStack.size() >= MAX_INCLUDE_DEPTH) {
+            final Identifier currentLocation = scriptLocationStack.isEmpty() ? null : scriptLocationStack.peek();
+            throw new RuntimeException(String.format(
+                "Script include depth exceeded %d levels (circular include?) at %s",
+                MAX_INCLUDE_DEPTH,
+                currentLocation == null ? "(unknown)" : currentLocation.getNamespace() + ":" + currentLocation.getPath()
+            ));
+        }
         Identifier identifier;
         if (pathOrIdentifier instanceof Identifier) {
             identifier = (Identifier) pathOrIdentifier;

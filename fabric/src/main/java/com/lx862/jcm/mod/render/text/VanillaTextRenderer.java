@@ -27,5 +27,7 @@ public class VanillaTextRenderer implements RenderHelper {
 
     // HEAVY WIP
     public static void drawScrollingText(GraphicsHolder graphicsHolder, TextInfo text, double x, double y) {
+        // TODO: implement true marquee; degrade to plain (clipped) text instead of drawing nothing.
+        graphicsHolder.drawText(text.toMutableText(), (int)x, (int)y, text.getTextColor(), false, MAX_RENDER_LIGHT);
     }
 }
