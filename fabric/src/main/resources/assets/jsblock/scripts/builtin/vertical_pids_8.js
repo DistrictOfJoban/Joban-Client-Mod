@@ -24,7 +24,11 @@ function render(ctx, state, pids) {
             linesRight.push("");
             linesColor.push(0xFF9900);
 
-            let etaText = TextUtil.cycleString(PIDSUtil.getETAText(arrival.arrivalTime()));
+            let realtimePrefix = "";
+            if (!arrival.realtime() && TextUtil.cycleString(PIDSUtil.getETAText(arrival.arrivalTime())) != "") {
+                realtimePrefix = "*";
+            }
+            let etaText = realtimePrefix + TextUtil.cycleString(PIDSUtil.getETAText(arrival.arrivalTime()));
             let carText = TextUtil.cycleString(PIDSUtil.getCarText(arrival.carCount()));
             
             let etaOrCarText = etaText;
@@ -64,31 +68,31 @@ function render(ctx, state, pids) {
             continue;
         }
 
-        let textWidth = 35.5;
+        let textWidth = 27.5;
         if (linesLeft[i] == "" || linesRight[i] == "") {
-            textWidth = 76;
+            textWidth = 55;
         }
 
         if (linesLeft[i] != "") {
             Text.create()
-                .text(linesLeft[i])
-                .scale(1.725)
+                .text(TextUtil.cycleString(linesLeft[i]))
+                .scale(0.9)
                 .size(textWidth, 10)
                 .stretchXY()
                 .fontMC()
-                .pos(5, 5 + i * 11)
+                .pos(5, 5 + i * 8.36)
                 .color(linesColor[i])
                 .draw(ctx);
         }
 
         if (linesRight[i] != "") {
             Text.create()
-                .text(linesRight[i])
-                .scale(1.725)
+                .text(TextUtil.cycleString(linesRight[i]))
+                .scale(0.9)
                 .size(textWidth, 10)
                 .stretchXY()
                 .fontMC()
-                .pos(5, 5 + i * 11)
+                .pos(60, 5 + i * 8.36)
                 .color(linesColor[i])
                 .rightAlign()
                 .draw(ctx);

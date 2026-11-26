@@ -11,7 +11,7 @@
       "showClock": true,
       "fonts": "mtr:mtr",
       "hideRow": [false, false, false, false],
-      "blacklist": ["pids_1a"]
+      "blacklist": ["pids_1a", "vertical_pids"]
     },
     {
       "id": "door_cls_psd",
@@ -24,7 +24,7 @@
       "showClock": true,
       "fonts": "mtr:mtr",
       "hideRow": [true, true, true, false],
-      "blacklist": ["pids_1a"]
+      "blacklist": ["pids_1a", "vertical_pids"]
     },
     {
       "id": "door_cls_apg",
@@ -37,7 +37,7 @@
       "showClock": true,
       "fonts": "mtr:mtr",
       "hideRow": [true, true, true, false],
-      "blacklist": ["pids_1a"]
+      "blacklist": ["pids_1a", "vertical_pids"]
     },
     {
       "id": "door_cls_train",
@@ -50,7 +50,7 @@
       "showClock": true,
       "fonts": "mtr:mtr",
       "hideRow": [true, true, true, false],
-      "blacklist": ["pids_1a"]
+      "blacklist": ["pids_1a", "vertical_pids"]
     },
     {
       "id": "lcd_pids",
@@ -64,28 +64,31 @@
       "hidePlatform": true,
       "fonts": "jsblock:pids_lcd",
       "hideRow": [false, false, false, false],
-      "blacklist": ["pids_1a"]
+      "blacklist": ["pids_1a", "vertical_pids"]
     },
     {
       "id": "pids_1a",
       "name": "PIDS 1A",
       "builtin": true,
       "thumbnail": "jsblock:textures/pids/thumbnail/pids_1a.png",
-      "scriptFiles": ["jsblock:scripts/builtin/pids_1a.js"]
+      "scriptFiles": ["jsblock:scripts/builtin/pids_1a.js"],
+      "blacklist": ["vertical_pids", "pids_projector"]
     },
     {
       "id": "vertical_pids_1",
       "name": "Vertical PIDS (1 Arrival)",
       "builtin": true,
       "thumbnail": "jsblock:textures/pids/thumbnail/vertical_pids_1.png",
-      "scriptFiles": ["jsblock:scripts/builtin/vertical_pids_1.js"]
+      "scriptFiles": ["jsblock:scripts/builtin/vertical_pids_1.js"],
+      "whitelist": ["vertical_pids", "pids_projector"]
     },
     {
       "id": "vertical_pids_8",
       "name": "Vertical PIDS (8 Arrivals)",
       "builtin": true,
       "thumbnail": "jsblock:textures/pids/thumbnail/vertical_pids_8.png",
-      "scriptFiles": ["jsblock:scripts/builtin/vertical_pids_8.js"]
+      "scriptFiles": ["jsblock:scripts/builtin/vertical_pids_8.js"],
+      "whitelist": ["vertical_pids", "pids_projector"]
     }
   ]
 }

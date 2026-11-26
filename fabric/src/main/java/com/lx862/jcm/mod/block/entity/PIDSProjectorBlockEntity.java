@@ -62,7 +62,7 @@ public class PIDSProjectorBlockEntity extends PIDSBlockEntity {
 
     @Override
     public int getRowAmount() {
-        return 4;
+        return 16;
     }
 
     @Override

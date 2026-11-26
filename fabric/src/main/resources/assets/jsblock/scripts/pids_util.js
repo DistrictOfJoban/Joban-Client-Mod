@@ -25,9 +25,9 @@ const PIDSUtil = {
     },
     getCarText(len) {
         if(len <= 1) {
-            return `${len}卡|${len}-car`;
+            return `${len} 卡|${len}-car`;
         } else {
-            return `${len}卡|${len}-cars`;
+            return `${len} 卡|${len}-cars`;
         }
     },
     formatDateTime(d) {

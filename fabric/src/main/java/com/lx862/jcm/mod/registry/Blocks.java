@@ -135,6 +135,7 @@ public final class Blocks {
             TML_EMG_STOP_BUTTON_WALL,
             THALES_TICKET_BARRIER_ENTRANCE,
             THALES_TICKET_BARRIER_EXIT,
+            THALES_TICKET_BARRIER_TWOWAY,
             MTR_TRESPASS_SIGN,
             WATER_MACHINE
         );

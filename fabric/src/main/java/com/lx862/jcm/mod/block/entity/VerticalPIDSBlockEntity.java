@@ -30,6 +30,6 @@ public class VerticalPIDSBlockEntity extends PIDSBlockEntity {
 
     @Override
     public boolean isKeyBlock() {
-        return true;
+        return true; // We only have a single block
     }
 }
