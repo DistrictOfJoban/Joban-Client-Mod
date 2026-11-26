@@ -26,7 +26,7 @@ public class VerticalPIDSRenderer extends PIDSRenderer<VerticalPIDSBlockEntity> 
                 graphicsHolderNew.rotateYDegrees(90);
                 graphicsHolderNew.translate(-0.4375, -1.4375, 0.434);
             });
-            pidsPreset.render(blockEntity, graphicsHolder, storedMatrixTransformations, world, blockEntity.getPos2(), facing, targetPlatformIds, arrivals, rowHidden, tickDelta, 0, 0, 84, 169, light);
+            pidsPreset.render(blockEntity, graphicsHolder, storedMatrixTransformations, world, blockEntity.getPos2(), facing, targetPlatformIds, arrivals, rowHidden, tickDelta, 0, 0, 65, 130, light);
         }
     }
 }
