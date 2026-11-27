@@ -50,6 +50,14 @@ STUBS = {
  'com/lx862/mtrscripting/lib/org/mozilla/javascript/NativeObject.java': 'package com.lx862.mtrscripting.lib.org.mozilla.javascript; public class NativeObject extends java.util.HashMap<Object,Object> {public void put(String key,NativeObject owner,Object value){put(key,value);}}',
  'com/lx862/mtrscripting/core/util/ConsoleJS.java': 'package com.lx862.mtrscripting.core.util; public class ConsoleJS {public static void log(String... args){} public void count(String name){} }',
  'org/mtr/core/data/TransportMode.java': 'package org.mtr.core.data; public enum TransportMode {TRAIN,BOAT,CABLE_CAR,AIRPLANE}',
+ # FangSu stop-status lookups (ABI 14) in NativeContentSnapshot.psd and the
+ # real FangSuStopStatus bridge compiled below: SimplifiedRoute/SimplifiedRoute
+ # stubs satisfy the route-resolution path, MinecraftClientData mirrors the
+ # real static map accessor, ObjectArrayList is MTR's relocated fastutil list.
+ 'org/mtr/libraries/it/unimi/dsi/fastutil/objects/ObjectArrayList.java': 'package org.mtr.libraries.it.unimi.dsi.fastutil.objects; public class ObjectArrayList<E> extends java.util.ArrayList<E> {}',
+ 'org/mtr/core/data/SimplifiedRoutePlatform.java': 'package org.mtr.core.data; public class SimplifiedRoutePlatform { public long getPlatformId(){return 0;} }',
+ 'org/mtr/core/data/SimplifiedRoute.java': 'package org.mtr.core.data; public class SimplifiedRoute { public org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList<org.mtr.core.data.SimplifiedRoutePlatform> getPlatforms(){return new org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList<>();} }',
+ 'org/mtr/mod/client/MinecraftClientData.java': 'package org.mtr.mod.client; public class MinecraftClientData { private static final MinecraftClientData INSTANCE=new MinecraftClientData(); public static MinecraftClientData getInstance(){return INSTANCE;} public final java.util.Map<Long,org.mtr.core.data.SimplifiedRoute> simplifiedRouteIdMap=new java.util.HashMap<>(); }',
  'com/lx862/jcm/nativeapi/NativeHost.java': """package com.lx862.jcm.nativeapi;
  public class NativeHost {
   private static final NativeHost INSTANCE=new NativeHost(); public static NativeHost get(){return INSTANCE;}
@@ -93,7 +101,7 @@ def main():
  for path,content in STUBS.items():
   f=work/'src'/path;f.parent.mkdir(parents=True,exist_ok=True);f.write_text(content,encoding='utf-8');sources.append(f)
  base=repo/'fabric/src/main/java'
- for rel in ['com/lx862/jcm/nativeapi/NativeScriptManager.java','com/lx862/jcm/nativeapi/NativeApiSession.java','com/lx862/jcm/nativeapi/NativeContentSnapshot.java','com/lx862/jcm/nativeapi/NativeChannel.java','com/lx862/jcm/nativeapi/NativeShm.java','com/lx862/jcm/nativeapi/NativeArenaView.java','com/lx862/jcm/nativeapi/PanamaFfmChannel.java','com/lx862/jcm/nativeapi/PanamaFfmUpcalls.java','com/lx862/jcm/nativeapi/ShmPoller.java']:
+ for rel in ['com/lx862/jcm/nativeapi/NativeScriptManager.java','com/lx862/jcm/nativeapi/NativeApiSession.java','com/lx862/jcm/nativeapi/NativeContentSnapshot.java','com/lx862/jcm/nativeapi/NativeChannel.java','com/lx862/jcm/nativeapi/NativeShm.java','com/lx862/jcm/nativeapi/NativeArenaView.java','com/lx862/jcm/nativeapi/PanamaFfmChannel.java','com/lx862/jcm/nativeapi/PanamaFfmUpcalls.java','com/lx862/jcm/nativeapi/ShmPoller.java','com/lx862/jcm/nativeapi/FangSuStopStatus.java']:
   f=work/'src'/rel;f.parent.mkdir(parents=True,exist_ok=True)
   f.write_text(manifold_preprocess((base/rel).read_text(encoding='utf-8')),encoding='utf-8');sources.append(f)
  test=work/'src/com/lx862/jcm/nativeapi/NativeIntegrationTest.java'

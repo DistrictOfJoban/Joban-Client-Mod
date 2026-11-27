@@ -26,6 +26,9 @@
  */
 #include <mtr/ffm_host.h>
 #include <mtr/shm_channel.h>
+#include <mtr/mtr_native.h> /* MTR_NATIVE_ABI_VERSION — the content probe is
+                               built against the current SDK headers, so its
+                               reported ABI tracks the header, not a literal. */
 
 #include <cstdio>
 #include <cstring>
@@ -253,7 +256,8 @@ int main(int argc, char** argv) {
     /* ---- 3. api upcalls through the vtable (content probe) ---------- */
     const int64_t content = jcm_module_open(contentPath,
             static_cast<int32_t>(std::strlen(contentPath)));
-    CHECK(content != 0 && jcm_module_abi(content) == 13, "content probe opened");
+    CHECK(content != 0 && jcm_module_abi(content) == MTR_NATIVE_ABI_VERSION,
+          "content probe opened");
     const int invokesBefore = g_invoke_calls;
     status = jcm_module_render(content, "inst", 4,
             reinterpret_cast<int64_t>(snapshot), 256, 1, desc);
