@@ -4,6 +4,11 @@ function create(ctx, state, pids) {
 }
 
 function render(ctx, state, pids) {
+    let scale = 1;
+    if (pids.type == "pids_projector") {
+        scale = 0.791672;
+    }
+
     let linesLeft = [];
     let linesRight = [];
     let linesColor = [];
@@ -68,19 +73,19 @@ function render(ctx, state, pids) {
             continue;
         }
 
-        let textWidth = 27.5;
+        let textWidth = 33.5;
         if (linesLeft[i] == "" || linesRight[i] == "") {
-            textWidth = 55;
+            textWidth = 72;
         }
 
         if (linesLeft[i] != "") {
             Text.create()
                 .text(TextUtil.cycleString(linesLeft[i]))
-                .scale(0.9)
-                .size(textWidth, 10)
+                .scale(scale)
+                .size(textWidth, 10 * scale)
                 .stretchXY()
                 .fontMC()
-                .pos(5, 5 + i * 8.36)
+                .pos(5 * scale, 5 * scale + i * (164 / 16 * scale) * 1.04)
                 .color(linesColor[i])
                 .draw(ctx);
         }
@@ -88,11 +93,11 @@ function render(ctx, state, pids) {
         if (linesRight[i] != "") {
             Text.create()
                 .text(TextUtil.cycleString(linesRight[i]))
-                .scale(0.9)
-                .size(textWidth, 10)
+                .scale(scale)
+                .size(textWidth, 10 * scale)
                 .stretchXY()
                 .fontMC()
-                .pos(60, 5 + i * 8.36)
+                .pos(77 * scale, 5 * scale + i * (164 / 16 * scale) * 1.04)
                 .color(linesColor[i])
                 .rightAlign()
                 .draw(ctx);
