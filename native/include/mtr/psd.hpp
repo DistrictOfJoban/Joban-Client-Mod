@@ -48,6 +48,27 @@ public:
     /* 0 NONE, 1 CLOCKWISE, 2 ANTICLOCKWISE. */
     uint8_t route_circular_state() const { return stop_->route_circular_state; }
 
+    /* ---- v14 (ABI 14): FangSu 暂缓开通 / RouteStopStatus ----
+       PSD route-strip stops are NOT filtered by FangSu, so unlike the
+       vehicle snapshot these carry live statuses — this is where a glass
+       / top-panel script learns that a stop is deferred (strike-through,
+       "暂缓开通" annotation, gray-out, ...). */
+
+    StopStatus stopStatus() const { return static_cast<StopStatus>(stop_->stop_status); }
+    StrView getStopStatus() const {
+        switch (stop_->stop_status) {
+            case 1: return make_view(stop_status::DISABLED, 8);
+            case 2: return make_view(stop_status::SKIPPED, 7);
+            default: return make_view(stop_status::NORMAL, 6);
+        }
+    }
+    bool isStationDeferred() const { return stop_->station_deferred != 0; }
+    /* Display convenience: not served normally (disabled / skipped /
+    station deferred) — how FangSu's own displays decide to strike a stop. */
+    bool isDeferredStop() const {
+        return stop_->stop_status != 0 || stop_->station_deferred != 0;
+    }
+
     int32_t interchange_count() const { return stop_->interchange_count; }
     struct Interchange {
         int32_t color;

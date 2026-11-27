@@ -1,5 +1,13 @@
 # 更新日志 / Changelog
 
+## 2.4.0-1.0.2（2026-11-27 C++ 脚本暂缓开通 API / FangSu 软集成）
+
+- **新增（C++ 原生脚本）：`JcmStop` 停靠状态与车站暂缓开通 API（原生 ABI 14）——将方速（FangSu，`FangSu_For_MTR_4` dev/1.5.0）新增的暂缓开通 / RouteStopStatus 数据模型引入 C++ 脚本快照**。JS 脚本侧的集成已由方速自身完成（其 mixin 了 mtrscripting 的停靠数据管线）；本版补齐 C++ 侧：每个 `JcmStop`（车辆快照与 PSD 路线条共用同一布局）的原填充字节 82/83 升格为 `stop_status`（0 normal / 1 disabled / 2 skipped——方速 `RouteStopStatus` 的 DISABLED=划线通过、SKIPPED=同站越行）与 `station_deferred`（车站级暂缓开通标记）。C++ SDK：`mtr::Stop` / `mtr::PsdStop` 新增 `stopStatus()`（类型枚举）、`getStopStatus()`（字符串 `"normal"` / `"disabled"` / `"skipped"`，与 `mtr::stop_status` 常量比较，同 transport_type / door_direction 的命名惯例）、`isStationDeferred()` 与显示便捷方法 `isDeferredStop()`（非正常停靠或车站暂缓——方速自身显示划线判定的同一裁决）。
+- **软依赖语义（用户要求的行为契约）**：`FangSuStopStatus` 以纯反射实现——启动时（及每秒一次的重探测，容忍加载顺序）解析 `com.fangsu.mtr.StationOpening` / `RouteStopStatus$Holder` duck 接口；**仅在安装方速时返回真实值；未安装方速（或方速内部结构变化、mixin 未应用）时一律返回非暂缓开通值**（status=`normal`、deferred=false），即与无暂缓开通时的返回值完全一致，脚本无需感知方速是否存在。值经身份缓存（MTR 数据重同步会替换数据对象，身份失效即自动刷新；容量守卫整体清空，沿用 ExitCache 模式）。无编译期依赖：JCM 不声明对方速的任何依赖。
+- **取值来源与语义对齐**：车站级来自方速随 MTR 站点数据同步的 `fangsu_station_deferred`；站序级来自随简化路线（SimplifiedRoute）平台同步的 `fangsu_stop_status`；复合语义严格镜像方速 `StationOpening.displayStatus`（车站暂缓时无论平台自身状态一律 DISABLED）。**PSD（屏蔽门玻璃/顶板）路线条停靠列表不经方速过滤、携带实时状态，是本 API 的主要消费面**（车辆停靠列表受方速服务端集成过滤，实践中恒为 normal——已在 SDK 文档注明）。示例 `psd_glass.cpp` 演示暂缓站点灰色绘制。
+- **ABI 兼容性**：`JcmStop` 布局（88 字节）与全部既有 ABI 组不变——两个新字节此前即是被写零且从未被读取的填充；宿主 ABI 升至 14（加载 ABI 6–14，ABI 13 宿主拒绝 14 模块以免其读到常零填充），无方速时两字节恒 0、与 ABI≤13 的零填充逐字节一致。`mtr_native.h` / `vehicle.hpp` / `psd.hpp` / `NativeScriptManager` / `NativeSnapshot` / `NativeContentSnapshot` 配套；`static_assert(sizeof(JcmStop) == 88)` 守卫不变。
+- **版本**：`2.4.0-1.0.2`（新增 API，次版本号递增）；gradle.properties 同步。
+
 ## 2.3.0-1.0.1-hotfix.3（2026-11-25 网络包、脚本引擎与 GUI 路径审查加固）
 
 - **修复（客户端 / 网络）：服务端与客户端版本不匹配（或数据包损坏）时，未知枚举名直接断开客户端——`PSDScriptsS2CPacket` 的 `PSDWrapper.PSDType.valueOf` 与 `EnquiryUpdateGUIPacket` 的 `EnquiryScreenType.valueOf` 均抛 `IllegalArgumentException`**。版本不匹配是升级期间的真实场景：新服务端发给旧客户端一个旧端不认识的枚举名，旧端解码即崩。修复（流位置均在 `valueOf` 之前读取完毕，容错不影响后续字段）：未知 PSD 脚本类型跳过该条绑定并记录警告（其余绑定正常应用——绑定列表按解码逐条增长，不依赖不可信的 size 声明）；未知问询屏类型回退 `CLASSIC`（回退通过非 final 局部变量完成——blank final 无法在 catch 块中赋值，此前版本以「variable parsedType might already have been assigned」打断全部 gradle 编译腿，本版一并修正）。配套：`DoorDirectionsS2CPacket` 负的门方向数量以带明确信息的 `IllegalArgumentException` 拒绝（与 `PSDScriptsS2CPacket` 既有的负 count 防护一致），不再以裸 `NegativeArraySizeException` 崩出。Fabric 与 Forge 共源（`setupFiles` 同步），两端同修。

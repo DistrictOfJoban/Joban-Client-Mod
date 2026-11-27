@@ -282,6 +282,43 @@ method directly: `vehicle.getDirectionOfDoorOpening()`. Snapshot field:
 `MtrDoorDirection`) — it replaces the former `_pad0`, so older modules and
 the ABI 9/10 layouts are unaffected.
 
+## Stop status / 暂缓开通 (ABI 14)
+
+`stop.getStopStatus()` reports how the train serves a stop, as one of
+`"normal"`, `"disabled"`, `"skipped"`. The vocabulary is the FangSu (方速)
+addon's 暂缓开通 / RouteStopStatus model: `"disabled"` means the station is in
+deferred-opening state (暂缓开通) or the platform is crossed out — trains pass
+through; `"skipped"` means the train takes the station's passing (越行)
+track. `stop.isStationDeferred()` answers the station-level question
+directly, and `stop.isDeferredStop()` is the display convenience ("strike
+this stop through") — `stopStatus() != NORMAL || isStationDeferred()` —
+exactly the verdict FangSu's own displays use.
+
+The integration is strictly optional and reflection-based: with FangSu
+installed the values come from its data (the `fangsu_stop_status` /
+`fangsu_station_deferred` fields that ride along MTR's own client sync);
+without it every stop reports `"normal"` / not deferred — the same return
+values as the non-deferred case, so scripts written against the API work
+unchanged on any mod list. FangSu takes care of the JavaScript surface
+itself (its server-side integration also filters non-normal stops out of
+the vehicle stop lists, so vehicle scripts mostly see `"normal"`); the PSD
+route-strip stop lists are **not** filtered and carry live statuses — a
+glass/top-panel route strip is the natural consumer.
+
+```cpp
+const mtr::PsdStopList stops = route.stops();
+for (int32_t i = 0; i < stops.size(); i++) {
+    const mtr::PsdStop stop = stops.at(i);
+    const uint32_t color = stop.isDeferredStop() ? 0x555555 : routeColor;
+    /* ... or compare the string form: */
+    if (stop.getStopStatus() == mtr::stop_status::DISABLED) drawStrikethrough(i);
+}
+```
+
+Snapshot fields: `JcmStop.stop_status` and `JcmStop.station_deferred`
+(bytes, ABI 14) — they replace the former `_pad0[2]` in every layout group,
+so older modules and the ABI 6–13 layouts are unaffected.
+
 ## Interchange transport mode and type
 
 JavaScript now supports `interchange.getTransportMode()` plus

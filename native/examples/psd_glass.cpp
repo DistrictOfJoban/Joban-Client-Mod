@@ -99,17 +99,23 @@ struct NextArrivalGlass : mtr::PsdScript<GlassState> {
                 .color(arrival.door_count() > 0 ? 0x00C853 : 0x888888)
                 .draw(ctx);
 
-        /* Route strip: every station of the first route, interchange-colored. */
+        /* Route strip: every station of the first route, interchange-colored.
+           ABI 14: stops of a deferred (暂缓开通) station or crossed-out
+           platform draw gray — isDeferredStop() is the same verdict FangSu's
+           own displays use; without the FangSu addon installed it is always
+           false and the strip looks exactly like before. */
         const mtr::PsdRouteList routes = psd.routes();
         if (routes.size() > 0 && !routes.at(0).stops().empty()) {
             const mtr::PsdStopList stops = routes.at(0).stops();
             const double cell = (psd.width() - 6.0) / stops.size();
             for (int32_t i = 0; i < stops.size(); i++) {
                 const mtr::PsdStop stop = stops.at(i);
+                const uint32_t color = stop.isDeferredStop() ? 0x555555
+                        : stop.interchange_count() > 0 ? 0xFC9700 : 0x1E64C8;
                 mtr::Rect::create()
                         .pos(3 + cell * i, psd.height() - 6)
                         .size(cell * 0.7, 4)
-                        .color(stop.interchange_count() > 0 ? 0xFC9700 : 0x1E64C8)
+                        .color(color)
                         .draw(ctx);
             }
         }

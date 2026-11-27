@@ -133,13 +133,21 @@ public final class NativeScriptManager {
        the complete station info of the JS psd.stop() wrapper. ABI 12
        modules remain loadable (the repurposed field was pure padding);
        an ABI 13 module is refused by an ABI 12 host (its station-drawing
-       scripts would silently see no station data). */
-    private static final int ABI_VERSION = 13;
+       scripts would silently see no station data).
+       v14 adds the FangSu (方速) 暂缓开通 / RouteStopStatus data to every
+       JcmStop: offsets 82/83 (former padding) become stop_status (0
+       normal / 1 disabled / 2 skipped) and station_deferred. Purely
+       additive — the stop layout, every other struct and the host-services
+       table are byte-identical to ABI 13 — and without FangSu installed
+       both bytes are always 0, the exact non-deferred answers. The bump
+       keeps an ABI 14 module away from an ABI 13 host, which would
+       otherwise feed it zero padding. An ABI 14 host loads ABI 6–14. */
+    private static final int ABI_VERSION = 14;
 
     private static boolean supportedAbi(int version) {
-        /* Contiguous 6..current: 6, 7, 8, 9, 10, 11 and 12 are all explicitly
+        /* Contiguous 6..current: 6 through 13 are all explicitly
            loadable by this host, same as their own hosts did. */
-        return (version >= 6 && version <= 12) || version == ABI_VERSION;
+        return (version >= 6 && version <= 13) || version == ABI_VERSION;
     }
 
     /* Route.CircularState mapping (v2 snapshots). */

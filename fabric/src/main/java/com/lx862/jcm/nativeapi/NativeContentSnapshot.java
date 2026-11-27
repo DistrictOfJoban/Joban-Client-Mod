@@ -39,6 +39,15 @@ public final class NativeContentSnapshot {
     private static long day() {
         return MinecraftClient.getInstance().getWorldMapped() == null ? 0 : com.lx862.mtrscripting.core.integration.MinecraftClientWrapper.worldDayTime();
     }
+
+    /** Client {@code SimplifiedRoute} by id — the same map
+     *  {@code PSDWrapper.routes()} reads, and the object each route's stop
+     *  list was built from, so the FangSu status lookup (ABI 14) matches the
+     *  exact platforms the stop wrappers came from. Null when not synced. */
+    private static org.mtr.core.data.SimplifiedRoute simplifiedOf(long routeId) {
+        return org.mtr.mod.client.MinecraftClientData.getInstance().simplifiedRouteIdMap.get(routeId);
+    }
+
     private ByteBuffer finish() { buffer.flip(); return buffer; }
 
     public static ByteBuffer pids(ByteBuffer buffer, PIDSWrapper pids) {
@@ -80,7 +89,11 @@ public final class NativeContentSnapshot {
      *  (JcmArrival + door refs), JcmPsdRoute 48, stops/interchanges/exits
      *  reuse the vehicle JcmStop layout. ABI 13 adds the station pools:
      *  JcmPsdStation 96 at snapshot offset 124 (formerly padding),
-     *  JcmPsdStationInterchange 32, JcmPsdStationConnectingGroup 16. */
+     *  JcmPsdStationInterchange 32, JcmPsdStationConnectingGroup 16.
+     *  ABI 14 fills the JcmStop padding bytes 82/83 with the FangSu
+     *  暂缓开通 / RouteStopStatus data (FangSuStopStatus) — unlike the
+     *  vehicle path, PSD route-strip stops are NOT filtered by FangSu, so
+     *  these carry live values and are the primary consumer of the API. */
     public static ByteBuffer psd(ByteBuffer buffer, com.lx862.jcm.mod.scripting.psd.PSDWrapper psd) {
         final com.lx862.jcm.mod.scripting.psd.PSDWallScanner.WallRun wallRun = psd.wallRun();
         final List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDDoorWrapper> doors = psd.doors();
@@ -265,7 +278,13 @@ public final class NativeContentSnapshot {
                 buffer.putInt(q + 72, exits.size());
                 buffer.putInt(q + 76, exits.isEmpty() ? 0 : exitOffsetsPerRoute.get(r).get(s));
                 buffer.put(q + 80, (byte) route.circularState().ordinal());
-                buffer.put(q + 81, (byte) 0); buffer.put(q + 82, (byte) 0); buffer.put(q + 83, (byte) 0);
+                buffer.put(q + 81, (byte) 0);
+                /* ABI 14: FangSu 暂缓开通 / RouteStopStatus. The stop list is
+                   built from the client's SimplifiedRoute platforms, so the
+                   status resolves through the same route's platform list. */
+                buffer.put(q + 82, FangSuStopStatus.stopStatus(
+                        simplifiedOf(route.id()), stopPlatform == null ? 0 : stopPlatform.getId(), stopStation));
+                buffer.put(q + 83, (byte) (FangSuStopStatus.stationDeferred(stopStation) ? 1 : 0));
 
                 for (int j = 0; j < interchanges.size(); j++) {
                     final com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDInterchangeWrapper interchange = interchanges.get(j);

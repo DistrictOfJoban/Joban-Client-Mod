@@ -98,8 +98,19 @@ extern "C" {
    struct, record format and host-services slot is byte-identical to
    ABI 12. An ABI 13 host loads ABI 6–13 modules; an ABI 12 host refuses
    ABI 13 modules (their station-drawing scripts would silently see no
-   station data). */
-#define MTR_NATIVE_ABI_VERSION 13
+   station data).
+   ABI 14 adds the FangSu (方速) 暂缓开通 / RouteStopStatus model to every
+   JcmStop: the struct's former _pad0[2] (offsets 82/83) become
+   stop_status (0 normal, 1 disabled, 2 skipped) and station_deferred
+   (1 = the stop's station is in deferred-opening state). Purely additive —
+   the struct size/offsets and every layout group are unchanged, the bytes
+   were reserved padding in every ABI≤13 layout and no older module reads
+   them, and without the FangSu addon installed both bytes are always 0
+   ("normal" / not deferred — identical return values to the
+   non-deferred case). The bump keeps the invariant that an ABI 14 host
+   loads ABI 6–14 modules while an ABI 13 host refuses ABI 14 modules
+   (their stop-status-aware scripts would otherwise silently read padding). */
+#define MTR_NATIVE_ABI_VERSION 14
 
 /* Resource kinds, identical to JCM script contexts. */
 enum MtrResourceKind {
@@ -300,7 +311,18 @@ typedef struct JcmStop {
        a vehicle continues onto a different route. */
     uint8_t  route_circular_state;
     uint8_t  is_route_switchover;
-    uint8_t  _pad0[2];
+    /* v14 (ABI 14): FangSu's RouteStopStatus for this stop — 0 NORMAL
+       (train stops), 1 DISABLED (station 暂缓开通/deferred opening, or the
+       platform is crossed out — trains pass through), 2 SKIPPED (train
+       takes the station's passing/越行 track). Without the FangSu addon
+       the host always writes 0; see FangSuStopStatus.java for the
+       soft-dependency probe. Mirrors the mtr::StopStatus enum and the
+       mtr::stop_status string ids in vehicle.hpp. */
+    uint8_t  stop_status;
+    /* v14 (ABI 14): 1 when this stop's station carries FangSu's 暂缓开通
+       (deferred opening) flag — the station-level cause behind
+       stop_status == DISABLED. Always 0 without FangSu. */
+    uint8_t  station_deferred;
 } JcmStop;
 
 typedef struct JcmInterchange {

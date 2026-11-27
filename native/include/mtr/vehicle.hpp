@@ -56,6 +56,33 @@ namespace door_direction {
     constexpr const char* ALL = "all";
 }
 
+/*
+ * Stop status ids (ABI 14) — the FangSu (方速) addon's 暂缓开通 /
+ * RouteStopStatus model, as the lowercase strings a C++ script compares
+ * against (same convention as transport_type / door_direction):
+ *   "normal"   — the train stops here (also the value WITHOUT FangSu
+ *                installed: the API degrades to the non-deferred answers)
+ *   "disabled" — the station is in deferred-opening state (暂缓开通) or the
+ *                platform is crossed out; trains pass through
+ *   "skipped"  — the train takes the station's passing/越行 track
+ * Note: on the VEHICLE snapshot FangSu's own server-side integration
+ * filters non-normal stops out of the synced stop lists, so vehicle
+ * scripts mostly see "normal"; the PSD route-strip stop lists are not
+ * filtered and carry live statuses.
+ */
+namespace stop_status {
+    constexpr const char* NORMAL = "normal";
+    constexpr const char* DISABLED = "disabled";
+    constexpr const char* SKIPPED = "skipped";
+}
+
+/* Typed form of JcmStop.stop_status (values documented in mtr_native.h). */
+enum class StopStatus : uint8_t {
+    NORMAL   = 0,
+    DISABLED = 1,
+    SKIPPED  = 2
+};
+
 /* Typed form of JcmVehicleSnapshot.door_direction (values match
    MtrDoorDirection in mtr_native.h). */
 enum class DoorDirection : uint8_t {
@@ -88,6 +115,35 @@ public:
     /* v5: this stop's route CircularState (JS: stop.route.getCircularState()).
        0 NONE, 1 CLOCKWISE, 2 ANTICLOCKWISE. */
     uint8_t route_circular_state() const { return stop_->route_circular_state; }
+
+    /* ---- v14 (ABI 14): FangSu 暂缓开通 / RouteStopStatus ---- */
+
+    /* Typed stop status; StopStatus::NORMAL for every stop when the
+       FangSu addon is not installed. */
+    StopStatus stopStatus() const { return static_cast<StopStatus>(stop_->stop_status); }
+
+    /* String form — compare with the mtr::stop_status constants:
+       "normal" / "disabled" / "skipped". */
+    StrView getStopStatus() const {
+        switch (stop_->stop_status) {
+            case 1: return make_view(stop_status::DISABLED, 8);
+            case 2: return make_view(stop_status::SKIPPED, 7);
+            default: return make_view(stop_status::NORMAL, 6);
+        }
+    }
+
+    /* 1 when this stop's STATION carries FangSu's 暂缓开通 (deferred
+       opening) flag — the station-level cause behind DISABLED. Always
+       false without FangSu. */
+    bool isStationDeferred() const { return stop_->station_deferred != 0; }
+
+    /* Display convenience: true when this stop is not served normally —
+       stopStatus() != NORMAL (disabled or skipped) OR the station is
+       deferred. Equivalent to how FangSu's own displays decide to strike
+       a stop through. */
+    bool isDeferredStop() const {
+        return stop_->stop_status != 0 || stop_->station_deferred != 0;
+    }
 
     int32_t interchange_count() const { return stop_->interchange_count; }
     /* i-th interchange: { color, name } (mirrors Stop.RouteInterchange). */

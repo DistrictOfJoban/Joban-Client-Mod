@@ -47,6 +47,13 @@ import java.util.Map;
  * 12-byte interchange stride. The host picks the layout per module with
  * {@link #groupOf(int)}.
  *
+ * <h2>ABI 14 (FangSu 暂缓开通)</h2>
+ * {@code JcmStop} offsets 82/83 (former padding) carry the stop's
+ * RouteStopStatus (0 normal / 1 disabled / 2 skipped) and the station's
+ * deferred-opening flag, resolved through {@link FangSuStopStatus}'s
+ * optional reflection bridge. Without the FangSu addon both bytes are
+ * always 0 — byte-identical to the ABI≤13 zero padding.
+ *
  * <h2>Per-frame garbage</h2>
  * This builder runs per vehicle per frame. Every container it used to
  * allocate (stop lists, offset arrays, the string pool's HashMap nodes and
@@ -129,6 +136,9 @@ public final class NativeSnapshot {
     private static final int STOP_EXIT_OFFSET = 76;
     private static final int STOP_ROUTE_CIRCULAR = 80;
     private static final int STOP_SWITCHOVER = 81;
+    /* ABI 14 (FangSu 暂缓开通): the former two padding bytes. */
+    private static final int STOP_STATUS = 82;
+    private static final int STOP_STATION_DEFERRED = 83;
 
     /* ---- JcmInterchange / JcmExit / JcmStrRef ---- */
     private static final int SZ_INTERCHANGE_9 = 24;
@@ -414,8 +424,14 @@ public final class NativeSnapshot {
             /* v5: use this stop's route rather than the current route. */
             out.put(p + STOP_ROUTE_CIRCULAR, (byte) circularOrdinal(stop.route));
             out.put(p + STOP_SWITCHOVER, (byte) (stop.isRouteSwitchoverStop ? 1 : 0));
-            out.put(p + STOP_SWITCHOVER + 1, (byte) 0);
-            out.put(p + STOP_SWITCHOVER + 2, (byte) 0);
+            /* ABI 14: FangSu's RouteStopStatus / station deferred-opening
+               state, soft-probed (FangSuStopStatus) so the values are 0/0 —
+               i.e. "normal" / not deferred — whenever the addon is absent.
+               Mirrors StationOpening.displayStatus: a deferred station
+               reports DISABLED regardless of the platform's own status. */
+            out.put(p + STOP_STATUS, FangSuStopStatus.stopStatus(
+                    stop.route, stop.platform == null ? 0 : stop.platform.getId(), stop.station));
+            out.put(p + STOP_STATION_DEFERRED, (byte) (FangSuStopStatus.stationDeferred(stop.station) ? 1 : 0));
         }
 
         out.position(poolEnd);
