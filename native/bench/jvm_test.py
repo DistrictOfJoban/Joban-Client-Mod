@@ -101,7 +101,7 @@ def main():
  for path,content in STUBS.items():
   f=work/'src'/path;f.parent.mkdir(parents=True,exist_ok=True);f.write_text(content,encoding='utf-8');sources.append(f)
  base=repo/'fabric/src/main/java'
- for rel in ['com/lx862/jcm/nativeapi/NativeScriptManager.java','com/lx862/jcm/nativeapi/NativeApiSession.java','com/lx862/jcm/nativeapi/NativeContentSnapshot.java','com/lx862/jcm/nativeapi/NativeChannel.java','com/lx862/jcm/nativeapi/NativeShm.java','com/lx862/jcm/nativeapi/NativeArenaView.java','com/lx862/jcm/nativeapi/PanamaFfmChannel.java','com/lx862/jcm/nativeapi/PanamaFfmUpcalls.java','com/lx862/jcm/nativeapi/ShmPoller.java','com/lx862/jcm/nativeapi/FangSuStopStatus.java']:
+ for rel in ['com/lx862/jcm/nativeapi/NativeScriptManager.java','com/lx862/jcm/nativeapi/NativeApiSession.java','com/lx862/jcm/nativeapi/NativeContentSnapshot.java','com/lx862/jcm/nativeapi/NativeChannel.java','com/lx862/jcm/nativeapi/NativeShm.java','com/lx862/jcm/nativeapi/NativeArenaView.java','com/lx862/jcm/nativeapi/PanamaFfmChannel.java','com/lx862/jcm/nativeapi/PanamaFfmUpcalls.java','com/lx862/jcm/nativeapi/ShmPoller.java','com/lx862/jcm/nativeapi/FangSuStopStatus.java','com/lx862/jcm/nativeapi/NativePerfCounters.java','com/lx862/jcm/nativeapi/FangSuServiceInfo.java']:
   f=work/'src'/rel;f.parent.mkdir(parents=True,exist_ok=True)
   f.write_text(manifold_preprocess((base/rel).read_text(encoding='utf-8')),encoding='utf-8');sources.append(f)
  test=work/'src/com/lx862/jcm/nativeapi/NativeIntegrationTest.java'

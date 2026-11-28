@@ -56,7 +56,7 @@ public class NativeIntegrationTest {
   Path libs=Path.of(args[0]);org.mtr.mapping.mapper.ResourceManagerHelper.root=libs;
   String ext=System.getProperty("os.name").toLowerCase().contains("win")?".dll":System.getProperty("os.name").toLowerCase().contains("mac")?".dylib":".so";
   String prefix=ext.equals(".dll")?"":"lib";
-  /* ABI 15 weather fixture: the stubbed MinecraftClientWrapper reads the
+  /* Weather fixture (ABI 15+): the stubbed MinecraftClientWrapper reads the
      world state from these properties, so every snapshot the harness
      writes carries a live RAIN byte the C++ content probes must read
      back — an end-to-end check of the weather marshal path. */
@@ -72,7 +72,7 @@ public class NativeIntegrationTest {
   System.out.println("Session plane: "+(isPollerPlane?"shared-memory poller (no JNI)":"Panama FFM (no JNI)"));
   if(isPollerPlane) check(PanamaFfmChannel.reason()!=null&&!PanamaFfmChannel.reason().isEmpty(),"poller-plane session: FFM unavailability has a reason: "+PanamaFfmChannel.reason());
   else check(PanamaFfmChannel.hostReady(),"FFM session: host upcall vtable installed");
-  check(module!=null&&module.getAbiVersion()==15,"ABI 15 loaded from resource declaration");
+  check(module!=null&&module.getAbiVersion()==16,"ABI 16 loaded from resource declaration");
   Fixture first=new Fixture(),second=new Fixture();
   NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
   ByteBuffer snapshot=ByteBuffer.allocateDirect(184).order(ByteOrder.nativeOrder());snapshot.limit(184);
@@ -215,7 +215,7 @@ public class NativeIntegrationTest {
    module=NativeScriptManager.loadFromDeclaration("test:probe",new JsonPrimitive("test:"+prefix+"api_probe"+ext));
    check(ShmPoller.active(),"poller attached to the shared region");
    check(NativeChannel.describe().contains("no JNI"),"census advertises the JNI-free poller plane: "+NativeChannel.describe());
-   check(module!=null&&module.getAbiVersion()==15,"module loads over the poller CMD_OPEN");
+   check(module!=null&&module.getAbiVersion()==16,"module loads over the poller CMD_OPEN");
    check("test:api_probe".equals(module.getScriptId()),"module identity over the poller commands");
    NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
    Fixture poller=new Fixture();
@@ -246,7 +246,7 @@ public class NativeIntegrationTest {
    check(NativeChannel.activeTransport()==NativeChannel.Transport.PANAMA_FFM,"PANAMA_FFM selected");
    check(NativeChannel.describe().contains("no JNI"),"census advertises the JNI-free FFM plane");
    module=NativeScriptManager.loadFromDeclaration("test:probe",new JsonPrimitive("test:"+prefix+"api_probe"+ext));
-   check(module!=null&&module.getAbiVersion()==15,"module loads over jcm_module_open");
+   check(module!=null&&module.getAbiVersion()==16,"module loads over jcm_module_open");
    check("test:api_probe".equals(module.getScriptId()),"module identity via jcm_module_script_id");
    NativeScriptManager.configure("test:probe",JsonParser.parseString("{\"message\":\"原生 API\"}"),"test:natives/api_probe");
    Fixture ffm=new Fixture();
