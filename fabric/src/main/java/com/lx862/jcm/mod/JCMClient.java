@@ -18,6 +18,9 @@ public class JCMClient {
         new LegacyClientConfig().migrate();
         JCMClientConfig.init();
         configureNativeTransportFromConfig();
+        /* ABI 16 era dev feature: resource-pack hot reload (no-op when the
+           scripting.nativeHotReload config is off). */
+        com.lx862.jcm.nativeapi.NativeHotReload.startIfEnabled();
         MTRScriptingModClient.init();
         JCMRegistryClient.register();
         JCMScripting.register();

@@ -48,6 +48,8 @@ public class Events {
             VehicleDataCache.tick();
             JCMPatchForMTR.tick();
             com.lx862.jcm.mod.scripting.psd.PSDClientBindings.tick();
+            /* ABI 16: block-script bindings reload per dimension. */
+            com.lx862.jcm.mod.scripting.block.NativeBlockScriptBindings.tick();
 
             if(MinecraftClient.getInstance().getWorldMapped() == null) {
                 VehicleDataCache.clearData();
@@ -55,6 +57,7 @@ public class Events {
                 com.lx862.jcm.mod.scripting.psd.PSDRouteStopCache.reset();
                 com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDStationWrapper.resetCache();
                 com.lx862.jcm.mod.scripting.psd.PSDClientBindings.reset();
+                com.lx862.jcm.mod.scripting.block.NativeBlockScriptBindings.reset();
                 /* Yanyang: drop the cached server door-direction answers
                    while out of a world; a fresh join re-requests what the
                    render path actually needs. (The old client-side on-disk
@@ -71,6 +74,9 @@ public class Events {
         });
 
         JCMRegistryClient.REGISTRY_CLIENT.eventRegistryClient.registerEndClientTick(() -> {
+            if(KeyBinds.SCRIPT_BROWSER.wasPressed()) {
+                com.lx862.jcm.mod.gui.screen.ModrinthBrowserScreen.open();
+            }
             if(JCMClientConfig.INSTANCE.scripting.scriptDebugMode.value() && KeyBinds.SCRIPT_DEBUG_SOURCE_PREV.wasPressed()) {
                 MTRScriptDebugOverlay.previousSource();
             }

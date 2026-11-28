@@ -118,6 +118,10 @@ public:
         r.model_handle = -1;
         r.pose_offset = -1;
         r.pose_count = 0;
+        /* ABI 16: tint 0 = untinted (the zeroed default already says
+           this; the explicit store documents the contract and survives
+           a future default-record change). */
+        r.tint = 0;
         return r;
     }
 

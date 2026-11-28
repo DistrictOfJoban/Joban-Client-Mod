@@ -24,6 +24,8 @@ public class MtrScriptingResourceManager {
     public static final EyecandyResourceProvider eyecandy = new EyecandyResourceProvider();
     public static final LiftResourceProvider lift = new LiftResourceProvider();
     public static final PSDResourceProvider psd = new PSDResourceProvider();
+    /* ABI 16: the three FangSu-anchored block-script kinds. */
+    public static final BlockScriptResourceProvider blockScripts = new BlockScriptResourceProvider();
 
     public static void reload() {
         MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Loading MTR scripts...");
@@ -49,6 +51,7 @@ public class MtrScriptingResourceManager {
         eyecandy.reset();
         lift.reset();
         psd.reset();
+        blockScripts.reset();
         ScriptResourceUtil.resetCache();
         RhinoParsedScript.clearScriptCache();
         ConfigResponderStorage.reset();
@@ -94,6 +97,7 @@ public class MtrScriptingResourceManager {
                 eyecandy.parseMtrResources(rootObject, isLegacyResource);
                 lift.parseMtrResources(rootObject, isLegacyResource);
                 psd.parseMtrResources(rootObject, isLegacyResource);
+                blockScripts.parseMtrResources(rootObject, isLegacyResource);
             } catch (Exception e) {
                 ScriptResourceProvider.logError("parsing scripts in mtr_custom_resources.json", e);
             }
@@ -107,5 +111,6 @@ public class MtrScriptingResourceManager {
         eyecandy.validate();
         lift.validate();
         psd.validate();
+        blockScripts.validate();
     }
 }

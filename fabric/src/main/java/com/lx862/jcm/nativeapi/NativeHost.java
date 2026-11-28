@@ -123,6 +123,7 @@ public final class NativeHost {
     /** ABI 7 font callbacks. The invocation planes pass resource IDs and
      *     text as UTF-8 raw addresses. */
     public double[] measureFontText(byte[] font, byte[] text, double size, double sx, double sy) {
+		NativePerfCounters.hostCall();
         return fontRenderer.measure(font, text, size, sx, sy);
     }
 
@@ -130,6 +131,7 @@ public final class NativeHost {
                               double sx, double sy, double compression, int color,
                               int clipX0, int clipY0, int clipX1, int clipY1,
                               java.nio.ByteBuffer pixels, int width, int height) {
+		NativePerfCounters.hostCall();
         return fontRenderer.draw(font, text, size, x, baseline, sx, sy, compression, color,
                 clipX0, clipY0, clipX1, clipY1, pixels, width, height);
     }
@@ -139,6 +141,7 @@ public final class NativeHost {
     public int rasterizeText(byte[] utf8, int x, int y, int maxWidth,
                              int red, int green, int blue, java.nio.ByteBuffer pixels,
                              int width, int height) {
+		NativePerfCounters.hostCall();
         if (utf8 == null || pixels == null || maxWidth <= 1) return -1;
         final String text = new String(utf8, java.nio.charset.StandardCharsets.UTF_8);
         if (nativeFont == null) nativeFont = ScriptResourceUtil.getSystemFont("Noto Sans");
@@ -236,6 +239,7 @@ public final class NativeHost {
     public int[] createResources(int[] widths, int[] heights,
                                  float[] quadVertices, float[] quadUv,
                                  int[] quadTextureSlot, int[] quadStages) {
+		NativePerfCounters.hostCall();
         final int texCount = widths == null ? 0 : widths.length;
         final int quadCount = quadTextureSlot == null ? 0 : quadTextureSlot.length;
         final int[] out = new int[texCount + quadCount];
@@ -366,6 +370,7 @@ public final class NativeHost {
      * int[] is both correct and far cheaper than per-pixel calls.
      */
     public void uploadPixels(int textureHandle, int x, int y, int width, int height, byte[] rgba) {
+		NativePerfCounters.hostCall();
         if (rgba == null || width <= 0 || height <= 0
                 || (long) width * height * 4 > rgba.length) return;
         final GraphicsTexture tex = texture(textureHandle, activeInstanceKey);
@@ -437,6 +442,7 @@ public final class NativeHost {
      */
     private final Map<String, java.util.Set<Integer>> externalModels = new java.util.HashMap<>();
     public int acquireModel(String path) {
+		NativePerfCounters.hostCall();
         com.lx862.mtrscripting.core.util.model.RawModelJS raw = ModelManagerJS.loadModel(new Identifier(path));
         if(raw==null) return -1;
         ModelJS model=ModelJS.uploadRawModel(raw);

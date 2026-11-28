@@ -98,6 +98,28 @@ public class ItemPSDScriptEditor extends ItemExtension {
             }
             return ActionResult.SUCCESS;
         }
+        /* ABI 16: the three FangSu-anchored block-script kinds — right-click
+           a FangSu level crossing / ticket machine / announcement speaker
+           to bind a levelCrossingScripts / fareMachineScripts /
+           announcementScripts entry (client-local, visual-only — see
+           NativeBlockScriptBindings). The anchor probe is reflective, so a
+           dedicated server or a world without FangSu just falls through. */
+        if (world.isClient()) {
+            final int anchorKind = com.lx862.jcm.mod.scripting.block.NativeBlockScriptBindings.anchorKindOf(pos);
+            if (anchorKind != 0) {
+                ClientHelper.openBlockScriptSelectionScreen(pos, kindName(anchorKind));
+                return ActionResult.SUCCESS;
+            }
+        }
         return super.useOnBlock2(context);
+    }
+
+    private static String kindName(int anchorKind) {
+        switch (anchorKind) {
+            case 1: return com.lx862.jcm.mod.scripting.block.NativeBlockScriptBindings.KIND_LEVEL_CROSSING;
+            case 2: return com.lx862.jcm.mod.scripting.block.NativeBlockScriptBindings.KIND_FARE_MACHINE;
+            case 3: return com.lx862.jcm.mod.scripting.block.NativeBlockScriptBindings.KIND_ANNOUNCEMENT;
+            default: return "";
+        }
     }
 }

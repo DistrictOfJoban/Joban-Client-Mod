@@ -113,6 +113,11 @@ public final class NativeSnapshot {
        sharing stays byte-compatible while ABI 15 modules see live
        values. */
     private static final int OFF_WEATHER = 165;
+    /* ABI 16: service flags (bit0 express / bit1 hidden route) and the
+       signal state byte — the former _pad1[1]/[2], written for every
+       layout group under the same sharing rule as weather. */
+    private static final int OFF_SERVICE_FLAGS = 166;
+    private static final int OFF_SIGNAL_STATE = 167;
     private static final int OFF_SIDING_NAME_OFFSET = 168;
     private static final int OFF_SIDING_NAME_LEN = 172;
     private static final int OFF_STRING_POOL_OFFSET = 176;
@@ -399,7 +404,8 @@ public final class NativeSnapshot {
         out.putInt(OFF_NEXT_ROUTE_STOP_COUNT, nextRouteStops.size());
         out.putInt(OFF_NEXT_ROUTE_STOP_OFFSET,
                 stopOffset + (allStopCount + thisRouteStops.size()) * SZ_STOP);
-        out.putInt(OFF_NEXT_STOP_INDEX, v.getNextStopIndex(thisRouteStops));
+        final int nextStopIndex = v.getNextStopIndex(thisRouteStops);
+        out.putInt(OFF_NEXT_STOP_INDEX, nextStopIndex);
         out.putInt(OFF_ROUTE_NAME_OFFSET, Pool.offset(routeNameRef));
         out.putInt(OFF_ROUTE_NAME_LEN, Pool.length(routeNameRef));
         out.putInt(OFF_ROUTE_COLOR, route == null ? 0 : (route.getColor() | 0xFF000000));
@@ -407,6 +413,15 @@ public final class NativeSnapshot {
         /* ABI 15 (weather) is written for every layout group, same sharing
            rule as the door-direction byte above. */
         out.put(OFF_WEATHER, NativeContentSnapshot.weatherCode());
+        /* ABI 16: FangSu service flags + the NTE-style signal state, both
+           former padding. service_flags bit0 = the vehicle's NEXT stop is
+           an express ServiceStop (the stop-status byte of ABI 14 already
+           carries the SKIPPED/DISABLED view); bit1 = the current route
+           only exists in FangSu's hidden-route cache. Both 0 without
+           FangSu. signal_state comes from the NativeSignalState provider
+           registry (0 = unknown without a provider). */
+        out.put(OFF_SERVICE_FLAGS, vehicleServiceFlags(route, thisRouteStops, nextStopIndex));
+        out.put(OFF_SIGNAL_STATE, NativeSignalState.get(v.getId()));
         out.putInt(OFF_SIDING_NAME_OFFSET, Pool.offset(sidingRef));
         out.putInt(OFF_SIDING_NAME_LEN, Pool.length(sidingRef));
         out.putInt(OFF_STRING_POOL_OFFSET, poolStart);
@@ -454,6 +469,32 @@ public final class NativeSnapshot {
         out.position(poolEnd);
         out.flip();
         return out;
+    }
+
+    /* ------------------------------------------------------------------ */
+
+    /** ABI 16 service flag byte: express (next stop's ServiceStop) plus
+     *  hidden-route (current route id only in FangSu's cache). */
+    private static byte vehicleServiceFlags(SimplifiedRoute route,
+                                            java.util.List<VehicleWrapper.Stop> thisRouteStops,
+                                            int nextStopIndex) {
+        byte flags = 0;
+        if (route != null && FangSuServiceInfo.isHiddenRoute(route.getId())) {
+            flags |= FangSuServiceInfo.FLAG_HIDDEN_ROUTE;
+        }
+        if (!thisRouteStops.isEmpty() && FangSuServiceInfo.isExpressService(route, nextStopPlatformId(thisRouteStops, nextStopIndex))) {
+            flags |= FangSuServiceInfo.FLAG_EXPRESS;
+        }
+        return flags;
+    }
+
+    /** The platform id of the vehicle's next stop (or the route's first
+     *  stop when the index is out of range — a departing train). */
+    private static long nextStopPlatformId(java.util.List<VehicleWrapper.Stop> thisRouteStops, int nextStopIndex) {
+        final int count = thisRouteStops.size();
+        final int index = nextStopIndex >= 0 && nextStopIndex < count ? nextStopIndex : 0;
+        final VehicleWrapper.Stop stop = thisRouteStops.get(index);
+        return stop.platform == null ? 0 : stop.platform.getId();
     }
 
     /* ------------------------------------------------------------------ */

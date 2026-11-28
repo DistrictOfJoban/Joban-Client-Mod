@@ -39,6 +39,10 @@ public class RenderVehiclesMixin {
            OptimizedRendererMixin redirect). */
         if(OptimizedRenderer.renderingShadows()) return;
         NativeVehicleDriver.beginFrame();
+        /* ABI 16: the three block-script kinds (level crossing / fare
+           machine / announcement) — same once-per-frame render-thread hook,
+           same shadow-pass guard. No-op without bindings. */
+        com.lx862.jcm.mod.scripting.block.NativeBlockScriptDriver.frame();
         /* Per-frame live-vehicle id set for the JS instances' shouldInvalidate
            (see VehicleScriptInstance.beginFrame) — one O(V) pass here replaces
            one O(V) stream scan per scripted vehicle per frame. */

@@ -52,6 +52,13 @@ public final class NativeModelDrawCall extends RenderDrawCall<NativeModelDrawCal
 
     private int modelHandle;
 
+    /* ABI 16 record style: ARGB tint (0 = none), emissive (full-brightness
+       light) and translucent bits from the JcmDrawModel header flags + the
+       trailing tint field (only present when record_size >= 28). */
+    private int tint;
+    private boolean emissive;
+    private boolean translucent;
+
     /**
      * Pose matrices flattened into this instance's own store (16 floats per
      * slot), copied out of the frame arena when {@link #pose} runs. Grows on
@@ -100,9 +107,21 @@ public final class NativeModelDrawCall extends RenderDrawCall<NativeModelDrawCal
         if (call != null) {
             call.inPool = false;
             call.modelHandle = modelHandle;
+            call.tint = 0;
+            call.emissive = false;
+            call.translucent = false;
             return call;
         }
         return new NativeModelDrawCall(modelHandle);
+    }
+
+    /** ABI 16 style captured from the record (flags byte + optional tint
+     *  field). Called before the render-manager draw. */
+    public NativeModelDrawCall style(int tint, boolean emissive, boolean translucent) {
+        this.tint = tint;
+        this.emissive = emissive;
+        this.translucent = translucent;
+        return this;
     }
 
     @Override
@@ -160,8 +179,21 @@ public final class NativeModelDrawCall extends RenderDrawCall<NativeModelDrawCal
         super.run(world, storedMatrixTransformations, facing, light);
         final ModelJS model = NativeHost.get().model(modelHandle);
         if (model == null) return;   /* instance rebuilt between capture and replay */
-        model.draw(storedMatrixTransformations, light);
+        /* ABI 16: emissive draws at the host's full-brightness light (the
+           same value the eyecandy fullBrightness path uses); tint /
+           translucent route through ModelJS's material-level variant. */
+        if (emissive) light = FULL_BRIGHTNESS;
+        if (tint != 0 || translucent) {
+            model.draw(storedMatrixTransformations, light, tint, translucent);
+        } else {
+            model.draw(storedMatrixTransformations, light);
+        }
     }
+
+    private static final class FullBrightness {
+        static final int VALUE = org.mtr.mapping.mapper.GraphicsHolder.getDefaultLight();
+    }
+    private static final int FULL_BRIGHTNESS = FullBrightness.VALUE;
 
     @Override
     public void validate() {

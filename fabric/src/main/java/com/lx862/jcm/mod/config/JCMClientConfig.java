@@ -60,6 +60,11 @@ public class JCMClientConfig extends ReflectiveConfig {
         @Comment("SHARED_MEMORY (default) maps a file-backed region and lets C++ read Java's snapshot straight out of it - fastest, tiny stability risk.")
         @Comment("Every transport now runs JNI-free on every JVM: the FFM plane (libraryLookup + downcalls + upcall vtable, JDK 22+) or the shared-memory poller plane (filesystem handshake + shared-page commands + SVC host services, JDK 16+). The 'JNI' name is kept only so existing config files keep parsing.")
         public final TrackedValue<JavaCppCommunication> javaCppCommunication = value(JavaCppCommunication.SHARED_MEMORY);
+
+        @Comment("Watch resource pack files for changes and auto-reload the script runtime (the same reload F3+T performs).")
+        @Comment("Lets you rebuild a native .so (or edit a .js) and see the result without leaving the game - intended for script development.")
+        @Comment("Off by default: a pack editor saving files mid-session triggers reload hitches you did not ask for.")
+        public final TrackedValue<Boolean> nativeHotReload = value(false);
     }
 
     @DisplayName("MTR Enhancements")

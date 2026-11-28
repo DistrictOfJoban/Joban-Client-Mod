@@ -110,6 +110,24 @@ public:
         }
     }
 
+    /* ABI 16 styled variant — tint / emissive / translucent. The style
+       mirrors VehicleContext::ModelStyle; the header flag bits and the
+       trailing tint field are the same on both kinds. */
+    void draw_model(int32_t model_handle, const Matrices* matrices,
+                    uint32_t tint_argb, bool emissive, bool translucent) {
+        JcmDrawModel& r = frame_->push_model();
+        r.model_handle = model_handle;
+        r.car = 0;
+        r.bogie = 0xFF;
+        if (matrices) {
+            r.pose_offset = matrices->compile();
+            r.pose_count = 1;
+        }
+        r.tint = static_cast<int32_t>(tint_argb);
+        if (emissive) r.header.flags |= MTR_RECORD_FLAG_EMISSIVE;
+        if (translucent) r.header.flags |= MTR_RECORD_FLAG_TRANSLUCENT;
+    }
+
     void play_sound(const char* sound, float volume, float pitch) {
         JcmDrawSound& r = frame_->push_sound(JCM_DRAW_SOUND);
         r.x = r.y = r.z = 0;

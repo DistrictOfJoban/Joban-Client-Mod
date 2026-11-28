@@ -139,8 +139,16 @@ public class MTRScriptDebugOverlay {
         graphicsHolder.translate(0, 12, 0);
         graphicsHolder.translate(10, 0, 0);
 
+        /* ABI 16 era perf panel: host crossings (Java upcalls from C++),
+           snapshot marshal bytes and the native mtrRender time, as
+           per-second rates sampled between HUD frames. The counters are
+           cumulative; the deltas make them per-frame readable. */
+        drawNativePerfPanel(graphicsHolder);
+
         for(NativeScriptManager.NativeScriptModule module : nativeModules) {
-            graphicsHolder.drawText(String.format("%s (%s, ABI %d, %d B state)", module.getScriptId(), module.getScriptType(), module.getAbiVersion(), module.getStateSize()), 0, 0, COLOR_BLUE, true, MAX_LIGHT);
+            graphicsHolder.drawText(String.format("%s (%s, ABI %d, %d B state, avg %.2f ms)",
+                    module.getScriptId(), module.getScriptType(), module.getAbiVersion(), module.getStateSize(),
+                    module.getAverageRenderMillis()), 0, 0, COLOR_BLUE, true, MAX_LIGHT);
             graphicsHolder.translate(0, 10, 0);
         }
 
@@ -154,6 +162,31 @@ public class MTRScriptDebugOverlay {
         }
 
         graphicsHolder.translate(-10, 0, 0);
+    }
+
+    /* Delta-sampling state for the native perf panel. */
+    private static long perfLastHostCalls, perfLastSnapshotBytes, perfLastRenderCalls, perfLastNativeMicros, perfLastSampleNanos;
+
+    private static void drawNativePerfPanel(GraphicsHolder graphicsHolder) {
+        final long now = System.nanoTime();
+        final long hostCalls = com.lx862.jcm.nativeapi.NativePerfCounters.hostCalls();
+        final long snapshotBytes = com.lx862.jcm.nativeapi.NativePerfCounters.snapshotBytes();
+        final long renderCalls = com.lx862.jcm.nativeapi.NativePerfCounters.renderCalls();
+        final long nativeMicros = com.lx862.jcm.nativeapi.NativePerfCounters.nativeMicros();
+        final double seconds = Math.max(1e-6, (now - perfLastSampleNanos) / 1e9);
+        final double hostPerSec = (hostCalls - perfLastHostCalls) / seconds;
+        final double snapshotKiBPerSec = (snapshotBytes - perfLastSnapshotBytes) / 1024.0 / seconds;
+        final double renderPerSec = (renderCalls - perfLastRenderCalls) / seconds;
+        final double nativeMsPerSec = (nativeMicros - perfLastNativeMicros) / 1000.0 / 1000.0 / seconds;
+        perfLastHostCalls = hostCalls;
+        perfLastSnapshotBytes = snapshotBytes;
+        perfLastRenderCalls = renderCalls;
+        perfLastNativeMicros = nativeMicros;
+        perfLastSampleNanos = now;
+
+        graphicsHolder.drawText(String.format("native: %.2f ms/s | %d renders/s | host calls %.1f/s | snapshot %.2f KiB/s",
+                nativeMsPerSec, Math.round(renderPerSec), hostPerSec, snapshotKiBPerSec), 0, 0, COLOR_YELLOW, true, MAX_LIGHT);
+        graphicsHolder.translate(0, 10, 0);
     }
 
     private static int getScriptInstanceSortScore(ScriptInstance<?> scriptInstance) {

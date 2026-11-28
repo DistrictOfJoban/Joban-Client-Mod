@@ -42,6 +42,9 @@ int main() {
     FIELD(OFF_CIRCULAR_STATE, JcmVehicleSnapshot, circular_state);
     /* ABI 15: the weather byte (former padding after circular_state). */
     FIELD(OFF_VEHICLE_WEATHER, JcmVehicleSnapshot, weather);
+    /* ABI 16: service flags + signal state (former _pad1[1]/[2]). */
+    FIELD(OFF_VEHICLE_SERVICE_FLAGS, JcmVehicleSnapshot, service_flags);
+    FIELD(OFF_VEHICLE_SIGNAL_STATE, JcmVehicleSnapshot, signal_state);
     FIELD(OFF_SIDING_NAME_OFFSET, JcmVehicleSnapshot, siding_name_offset);
     FIELD(OFF_SIDING_NAME_LEN, JcmVehicleSnapshot, siding_name_len);
     FIELD(OFF_STRING_POOL_OFFSET, JcmVehicleSnapshot, string_pool_offset);
@@ -135,4 +138,48 @@ int main() {
     FIELD(PSD_STATION_CG_NAME_OFFSET, JcmPsdStationConnectingGroup, station_name_offset);
     FIELD(PSD_STATION_CG_ROUTE_COUNT, JcmPsdStationConnectingGroup, route_count);
     FIELD(PSD_STATION_CG_ROUTE_OFFSET, JcmPsdStationConnectingGroup, route_offset);
+    /* ABI 16: arrival flags byte, PSD route flags byte, the grown model
+       record and the three new block-script snapshot layouts. */
+    FIELD(OFF_ARRIVAL_FLAGS, JcmArrival, flags);
+    FIELD(OFF_PSD_ROUTE_FLAGS, JcmPsdRoute, route_flags);
+    SIZE(SZ_DRAW_MODEL, JcmDrawModel);
+    FIELD(OFF_MODEL_TINT, JcmDrawModel, tint);
+    SIZE(SZ_CROSSING_APPROACH, JcmCrossingApproach);
+    SIZE(SZ_LEVEL_CROSSING, JcmLevelCrossingSnapshot);
+    FIELD(LC_APPROACH_COUNT, JcmLevelCrossingSnapshot, approach_count);
+    FIELD(LC_APPROACH_OFFSET, JcmLevelCrossingSnapshot, approach_offset);
+    FIELD(LC_POOL_OFFSET, JcmLevelCrossingSnapshot, string_pool_offset);
+    FIELD(LC_WARNING_STATE, JcmLevelCrossingSnapshot, warning_state);
+    FIELD(LC_BARRIER_TARGET, JcmLevelCrossingSnapshot, barrier_target);
+    FIELD(LC_WEATHER, JcmLevelCrossingSnapshot, weather);
+    FIELD(LC_FANGSU_PRESENT, JcmLevelCrossingSnapshot, fangsu_present);
+    SIZE(SZ_FARE_MACHINE, JcmFareMachineSnapshot);
+    FIELD(FM_DOOR_VALUE, JcmFareMachineSnapshot, door_value);
+    FIELD(FM_FARE_TYPE, JcmFareMachineSnapshot, fare_type);
+    FIELD(FM_FARE_VALUE, JcmFareMachineSnapshot, fare_value);
+    FIELD(FM_PLAYER_BALANCE, JcmFareMachineSnapshot, player_balance);
+    FIELD(FM_ARRIVAL_COUNT, JcmFareMachineSnapshot, arrival_count);
+    FIELD(FM_ARRIVAL_OFFSET, JcmFareMachineSnapshot, arrival_offset);
+    FIELD(FM_STATION_NAME_OFFSET, JcmFareMachineSnapshot, station_name_offset);
+    FIELD(FM_POOL_OFFSET, JcmFareMachineSnapshot, string_pool_offset);
+    FIELD(FM_OPEN, JcmFareMachineSnapshot, open);
+    FIELD(FM_EXIT_SIDE, JcmFareMachineSnapshot, exit_side);
+    FIELD(FM_FACING, JcmFareMachineSnapshot, facing);
+    FIELD(FM_MACHINE_TYPE, JcmFareMachineSnapshot, machine_type);
+    FIELD(FM_WEATHER, JcmFareMachineSnapshot, weather);
+    FIELD(FM_FANGSU_PRESENT, JcmFareMachineSnapshot, fangsu_present);
+    SIZE(SZ_ANNOUNCE_ARRIVAL, JcmAnnounceArrival);
+    SIZE(SZ_ANNOUNCEMENT, JcmAnnouncementSnapshot);
+    FIELD(AN_LEAD_SECONDS, JcmAnnouncementSnapshot, lead_seconds);
+    FIELD(AN_BINDING_COUNT, JcmAnnouncementSnapshot, binding_count);
+    FIELD(AN_BINDING_OFFSET, JcmAnnouncementSnapshot, binding_offset);
+    FIELD(AN_ARRIVAL_COUNT, JcmAnnouncementSnapshot, arrival_count);
+    FIELD(AN_ARRIVAL_OFFSET, JcmAnnouncementSnapshot, arrival_offset);
+    FIELD(AN_TEMPLATE_OFFSET, JcmAnnouncementSnapshot, template_offset);
+    FIELD(AN_VARIANT_OFFSET, JcmAnnouncementSnapshot, variant_offset);
+    FIELD(AN_POOL_OFFSET, JcmAnnouncementSnapshot, string_pool_offset);
+    FIELD(AN_ALL_STOPS, JcmAnnouncementSnapshot, all_stops);
+    FIELD(AN_WEATHER, JcmAnnouncementSnapshot, weather);
+    FIELD(AN_FANGSU_PRESENT, JcmAnnouncementSnapshot, fangsu_present);
+    FIELD(AN_ARRIVAL_FLAGS, JcmAnnounceArrival, flags);
 }

@@ -1,4 +1,22 @@
 {
     "block.jsblock.auto_iron_door": "Automatické železné dveře",
-    "block.jsblock.block.rv_pids_pole": "Musí být umístěno na vrch odjezdové tabule"
+    "block.jsblock.block.rv_pids_pole": "Musí být umístěno na vrch odjezdové tabule",
+    "gui.jsblock.block_script.kind.announcement": "announcement speaker",
+    "gui.jsblock.block_script.kind.fare_machine": "fare machine",
+    "gui.jsblock.block_script.kind.level_crossing": "level crossing",
+    "gui.jsblock.block_script.subtitle": "Choose a native script for this %s (client-local binding)",
+    "gui.jsblock.block_script.title": "Block Script",
+    "gui.jsblock.keybinds.script_browser": "Open script browser (Modrinth)",
+    "gui.jsblock.modrinth.downloading": "Downloading %s...",
+    "gui.jsblock.modrinth.error": "Modrinth error: %s",
+    "gui.jsblock.modrinth.install": "Install",
+    "gui.jsblock.modrinth.installed": "Installed %s - enable it in the resource pack screen, then F3+T",
+    "gui.jsblock.modrinth.no_results": "No results",
+    "gui.jsblock.modrinth.ready": "Search Modrinth for script resource packs; installed packs land in resourcepacks/",
+    "gui.jsblock.modrinth.resolving": "Resolving %s...",
+    "gui.jsblock.modrinth.results": "%s result(s)",
+    "gui.jsblock.modrinth.search": "Search",
+    "gui.jsblock.modrinth.search_hint": "Search scripts (e.g. MTR PIDS, JCM)",
+    "gui.jsblock.modrinth.searching": "Searching...",
+    "gui.jsblock.modrinth.title": "Script Browser"
 }

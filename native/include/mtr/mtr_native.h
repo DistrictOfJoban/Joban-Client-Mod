@@ -123,8 +123,44 @@ extern "C" {
    whenever the client world is absent. The bump keeps the invariant that
    an ABI 15 host loads ABI 6–15 modules while an ABI 14 host refuses
    ABI 15 modules (their weather-aware scripts would otherwise silently
-   read padding). */
-#define MTR_NATIVE_ABI_VERSION 15
+   read padding).
+   ABI 16 extends the frame contract in four directions, all purely
+   additive:
+   (1) FangSu (方速) service metadata: JcmArrival._pad0 (offset 59)
+       becomes a flags byte (bit 0 express service, bit 1 hidden route —
+       see MTR_ARRIVAL_FLAG_* below), JcmVehicleSnapshot._pad1[0]
+       (offset 166) becomes service_flags with the same two bits, and
+       JcmPsdRoute._pad0[0] (offset 13) becomes route flags for the PSD
+       route strips. Without FangSu every bit reads 0 — the exact
+       non-express / non-hidden answers.
+   (2) The NTE-style signal extension: JcmVehicleSnapshot._pad1[1]
+       (offset 167) becomes signal_state (0 unknown, 1 clear, 2 caution,
+       3 danger), fed by the host's NativeSignalState provider registry —
+       signal mods (mtr-nte bridges and friends) push per-vehicle states
+       through that public extension point, and without any provider the
+       byte stays 0 ("unknown").
+   (3) JcmDrawModel grows 24 -> 28 bytes: the new tint field (offset 24,
+       ARGB, 0 = untouched) plus the header-flag bits
+       MTR_RECORD_FLAG_EMISSIVE / _TRANSLUCENT unlock emissive (full-
+       brightness), translucent and tinted model draws. Records emitted
+       by ABI<=15 modules stay 24 bytes: hosts and the bridge validate
+       kind-3 records against the 24-byte ABI 15 minimum (see
+       MTR_MODEL_RECORD_MIN) and only read tint when record_size >= 28,
+       so old modules keep rendering byte-for-byte while new modules get
+       the richer records.
+   (4) Three new script kinds: MTR_RESOURCE_LEVEL_CROSSING (5),
+       MTR_RESOURCE_FARE_MACHINE (6) and MTR_RESOURCE_ANNOUNCEMENT (7)
+       with their snapshot layouts (JcmLevelCrossingSnapshot /
+       JcmFareMachineSnapshot / JcmAnnouncementSnapshot below). The kinds
+       anchor on FangSu's level-crossing / ticket-barrier / announcement-
+       speaker blocks via the block-script bindings; with FangSu absent
+       nothing drives them, exactly like the psd kind before a binding
+       exists.
+   The bump keeps the standing invariant: an ABI 16 host loads ABI
+   6–16 modules, an ABI 15 host refuses ABI 16 modules (their express /
+   signal / tint / new-kind scripts would otherwise silently read
+   padding or see their kind go undriven). */
+#define MTR_NATIVE_ABI_VERSION 16
 
 /* Resource kinds, identical to JCM script contexts. */
 enum MtrResourceKind {
@@ -134,7 +170,23 @@ enum MtrResourceKind {
     MTR_RESOURCE_LIFT     = 3,
     /* ABI 12: platform screen door glass / top-panel scripts, driven by
        the JCM "屏蔽门脚本编辑器" (PSD Script Editor) item binding. */
-    MTR_RESOURCE_PSD      = 4
+    MTR_RESOURCE_PSD      = 4,
+    /* ABI 16: road/rail level crossing scripts — anchored on FangSu's
+       level_crossing blocks via the block-script bindings. The snapshot
+       carries the crossing geometry summary plus the approaching-train
+       pool; the script draws barrier arms, lamps and signage. */
+    MTR_RESOURCE_LEVEL_CROSSING = 5,
+    /* ABI 16: fare machine scripts (ticket barriers / ticket machines) —
+       anchored on FangSu's ticket_barrier / ticket_machine blocks. The
+       snapshot carries barrier state, fares, the client player's balance
+       and nearby arrivals for congestion / prompt rendering. */
+    MTR_RESOURCE_FARE_MACHINE  = 6,
+    /* ABI 16: station announcement scripts — anchored on FangSu's
+       announcement_speaker blocks. The snapshot carries the speaker's
+       route/platform bindings, lead seconds and the arrival pool; the
+       script schedules audio through the JCM_DRAW_SOUND /
+       JCM_DRAW_LOCAL_SOUND records (the unified audio scheduling API). */
+    MTR_RESOURCE_ANNOUNCEMENT  = 7
 };
 
 /* ------------------------------------------------------------------ */
@@ -203,7 +255,18 @@ enum MtrDrawKind {
 #define MTR_RECORD_FLAG_NATURAL_LIGHT 0x01u  /* Text/Texture/Rect: take the
                                                 world light value instead of
                                                 MAX_RENDER_LIGHT (mirrors the
-                                                JS wrappers' naturalLight()) */
+                                                JS wrappers' naturalLight()).
+                                                ABI 16 model records: same
+                                                meaning. */
+#define MTR_RECORD_FLAG_EMISSIVE 0x02u      /* ABI 16, model records: draw
+                                                with the host's full-brightness
+                                                light (night headlight glass,
+                                                lit signs) — mirrors the
+                                                eyecandy fullBrightness flag. */
+#define MTR_RECORD_FLAG_TRANSLUCENT 0x04u   /* ABI 16, model records: draw
+                                                through the translucent render
+                                                pass instead of the opaque one
+                                                (window glass, fog effects). */
 
 /* Every frame record starts with this header. Records are laid out
    SEQUENTIALLY (variable size): walk with pos += header.record_size.
@@ -248,7 +311,15 @@ typedef struct JcmDrawTexture {
 } JcmDrawTexture;
 
 /* Model draw: vehicle car body / bogie or eyecandy model.
-   Mirrors VehicleScriptContext.drawCarModel / EyeCandyScriptContext.drawModel. */
+   Mirrors VehicleScriptContext.drawCarModel / EyeCandyScriptContext.drawModel.
+   ABI 16 grows the record 24 -> 28 bytes with the trailing tint field; see
+   the ABI 16 note above — hosts accept BOTH sizes (24 from ABI<=15 modules,
+   28 from ABI 16 ones) because the record stream is walked by
+   header.record_size. */
+#define MTR_MODEL_RECORD_MIN 24            /* ABI 15 sizeof(JcmDrawModel):
+                                              the minimum a host accepts for
+                                              a kind-3 record; older modules
+                                              emit exactly this. */
 typedef struct JcmDrawModel {
     JcmRecordHeader header;     /* JCM_DRAW_MODEL */
     uint8_t  car;             /* vehicle car index (eyecandy: 0) */
@@ -257,6 +328,12 @@ typedef struct JcmDrawModel {
     int32_t  model_handle;    /* host-side ModelJS handle (see host acquire_model) */
     int32_t  pose_offset;     /* matrix index into frame matrix arena, -1 = identity */
     int32_t  pose_count;
+    /* v16 (ABI 16): ARGB tint — 0 (the record default) means "untinted";
+       any other value multiplies the model's vertex colour, with the alpha
+       byte usable together with MTR_RECORD_FLAG_TRANSLUCENT for faded glass
+       (alpha < 255 only shows on the translucent pass). Read only when
+       record_size >= 28. */
+    int32_t  tint;
 } JcmDrawModel;
 
 typedef struct JcmDrawSound {
@@ -368,6 +445,18 @@ typedef struct JcmStrRef {
     int32_t len;
 } JcmStrRef;
 
+/* ABI 16: arrival flag bits (JcmArrival.flags / JcmPsdRoute.route_flags
+   / JcmVehicleSnapshot.service_flags). Without the FangSu addon every bit
+   is 0 — the exact non-express, non-hidden answers, matching the
+   pre-FangSu behaviour byte for byte. */
+#define MTR_ARRIVAL_FLAG_EXPRESS     0x01u  /* the arrival runs a FangSu
+                                               ServiceStop express service —
+                                               it overtakes / passes
+                                               non-express stations */
+#define MTR_ARRIVAL_FLAG_HIDDEN_ROUTE 0x02u /* the arrival's route only
+                                               exists in FangSu's hidden-route
+                                               client cache (Route.getHidden) */
+
 /* Mirrors ArrivalWrapper. */
 typedef struct JcmArrival {
     int64_t  arrival_epoch_millis;   /* already server-offset corrected */
@@ -381,7 +470,10 @@ typedef struct JcmArrival {
     uint8_t  realtime;
     uint8_t  is_terminating;
     uint8_t  circular_state;       /* 0 none, 1 clockwise, 2 anticlockwise */
-    uint8_t  _pad0;
+    /* v16 (ABI 16): FangSu service flags — see MTR_ARRIVAL_FLAG_*. Pure
+       padding (_pad0) in every ABI<=15 layout, never read by older
+       modules, so the struct size/offsets are unchanged. */
+    uint8_t  flags;
     int32_t  route_number_offset;  /* UTF-8 strings into snapshot pool */
     int32_t  route_number_len;
     int32_t  route_name_offset;
@@ -459,7 +551,19 @@ typedef struct JcmVehicleSnapshot {
        in every ABI<=14 layout, never read by older modules, so the layout
        and the group-9 blob sharing are unchanged. */
     uint8_t  weather;
-    uint8_t  _pad1[2];
+    /* v16 (ABI 16): FangSu service flags — bit 0 MTR_ARRIVAL_FLAG_EXPRESS
+       (this vehicle's next stop is a ServiceStop express service), bit 1
+       MTR_ARRIVAL_FLAG_HIDDEN_ROUTE (the current route only exists in
+       FangSu's hidden-route cache). Former _pad1[0]; pure padding in every
+       ABI<=15 layout. Without FangSu the byte is 0. */
+    uint8_t  service_flags;
+    /* v16 (ABI 16): the signal state ahead of the vehicle, pushed through
+       the host's NativeSignalState registry by signal mods (mtr-nte
+       bridges etc.): 0 unknown (no provider / not probed), 1 clear
+       (proceed), 2 caution, 3 danger (stop). Former _pad1[1]; pure padding
+       in every ABI<=15 layout — see mtr::signal_state. */
+    uint8_t  signal_state;
+    uint8_t  _pad1[1];
     /* v2: siding display name (JS: vehicle.getSiding().getName()) —
        can contain a user-defined name or description. */
     int32_t  siding_name_offset;
@@ -542,7 +646,13 @@ typedef struct JcmPsdRoute {
     int64_t  route_id;
     int32_t  route_color;         /* ARGB */
     uint8_t  circular_state;      /* 0 none, 1 clockwise, 2 anticlockwise */
-    uint8_t  _pad0[3];
+    /* v16 (ABI 16): FangSu service flags for this route's stop at the
+       PSD's platform — bit 0 MTR_ARRIVAL_FLAG_EXPRESS (the route runs an
+       express ServiceStop here, so its stops carry SKIPPED statuses),
+       bit 1 MTR_ARRIVAL_FLAG_HIDDEN_ROUTE. Former _pad0[0]; pure padding
+       in every ABI<=15 layout. */
+    uint8_t  route_flags;
+    uint8_t  _pad0[2];
     int32_t  name_offset;         /* UTF-8 into string pool */
     int32_t  name_len;
     int32_t  number_offset;       /* route number, may be empty */
@@ -732,6 +842,134 @@ typedef struct JcmEyecandySnapshot {
     int32_t  _pad1;
 } JcmEyecandySnapshot;
 
+/* ------------------------------------------------------------------ */
+/* ABI 16: level crossing / fare machine / announcement snapshots      */
+/*                                                                     */
+/* The three new script kinds of ABI 16, driven by the JCM block-script */
+/* bindings. Same offset convention as the rest of the snapshot        */
+/* family: every *_offset is a byte offset relative to the START of    */
+/* the snapshot blob (the pointer passed as JcmFrameInput.snapshot).   */
+/* All three anchor on FangSu blocks and are inert without that addon; */
+/* the hosts still marshal valid zeroed/empty snapshots in that case   */
+/* (fangsu_present = 0), so a module always reads defined data.        */
+/* ------------------------------------------------------------------ */
+
+/* One approaching train at a level crossing — the host derives the pool
+   from the client vehicle table (horizontal distance to the crossing,
+   speed, arrival estimate). 64 bytes, 8-aligned for pools. */
+typedef struct JcmCrossingApproach {
+    int64_t  vehicle_id;
+    int64_t  route_id;
+    int64_t  arrival_millis;     /* host-corrected clock, 0 = unknown */
+    double   distance_blocks;    /* horizontal distance, -1 = unknown */
+    double   speed_kmh;
+    double   seconds_to_arrival; /* -1 = unknown */
+    int32_t  car_count;
+    int32_t  destination_offset; /* UTF-8 into string pool, "" = unknown */
+    int32_t  destination_len;
+    int32_t  _pad0;              /* keeps 8-alignment in pools */
+} JcmCrossingApproach;           /* 64 bytes */
+
+/* The level crossing snapshot: the bound block's position, the primary
+   track direction (from FangSu's geometry snapshot when available), the
+   host-derived warning state and barrier target, and the approaching
+   train pool. 72 bytes. */
+typedef struct JcmLevelCrossingSnapshot {
+    int64_t  block_pos[3];
+    int64_t  game_time_millis;
+    int64_t  in_game_time;
+    double   track_yaw_degrees;  /* primary track yaw, -1 = unknown */
+    int32_t  approach_count;     /* JcmCrossingApproach[] */
+    int32_t  approach_offset;
+    int32_t  string_pool_offset;
+    int32_t  string_pool_len;
+    uint8_t  warning_state;      /* 0 idle, 1 warning (train approaching) */
+    uint8_t  barrier_target;     /* 0 open (raised), 1 closed (lowered) */
+    uint8_t  weather;            /* ABI 15 semantics: 0/1/2 */
+    uint8_t  fangsu_present;     /* 1 = the bound block is FangSu's */
+    uint8_t  _pad0[4];
+} JcmLevelCrossingSnapshot;      /* 72 bytes */
+
+/* The fare machine snapshot (ticket barrier or ticket machine): the
+   bound block's position, the barrier state (open flag + the host's
+   time-derived wing animation value), the configured fares, the client
+   player's mtr_balance scoreboard value and the nearest platform's
+   arrivals (congestion / prompt content). 96 bytes. */
+typedef struct JcmFareMachineSnapshot {
+    int64_t  block_pos[3];
+    int64_t  game_time_millis;
+    int64_t  in_game_time;
+    double   door_value;        /* wing animation 0 (open) .. 1 (closed) */
+    int32_t  fare_type;         /* 0 zone-based (MTR), 1 flat fare */
+    int32_t  fare_value;        /* flat fare price (fare_type 1) */
+    int32_t  player_balance;    /* client player's scoreboard, -1 unknown */
+    int32_t  arrival_count;     /* JcmArrival[] at the nearest platform */
+    int32_t  arrival_offset;
+    int32_t  station_name_offset; /* UTF-8 into string pool, "" = none */
+    int32_t  station_name_len;
+    int32_t  string_pool_offset;
+    int32_t  string_pool_len;
+    uint8_t  open;              /* barrier currently open */
+    uint8_t  exit_side;         /* 1 = exit side (zone fares) */
+    uint8_t  facing;            /* 0..5 MC Direction */
+    uint8_t  machine_type;      /* 0 barrier, 1 ticket machine */
+    uint8_t  weather;           /* ABI 15 semantics: 0/1/2 */
+    uint8_t  fangsu_present;    /* 1 = the bound block is FangSu's */
+    uint8_t  _pad0[6];
+} JcmFareMachineSnapshot;       /* 96 bytes */
+
+/* One arrival entry of the announcement snapshot — the compact fields an
+   announcement script needs (identity, timing, destination). 56 bytes. */
+typedef struct JcmAnnounceArrival {
+    int64_t  arrival_millis;    /* host-corrected clock */
+    int64_t  departure_millis;
+    int64_t  route_id;
+    int64_t  platform_id;
+    int32_t  car_count;
+    uint8_t  realtime;
+    uint8_t  terminating;
+    uint8_t  flags;             /* MTR_ARRIVAL_FLAG_* (express / hidden) */
+    uint8_t  _pad0;
+    int32_t  destination_offset; /* UTF-8 into string pool */
+    int32_t  destination_len;
+    int32_t  route_name_offset;
+    int32_t  route_name_len;
+} JcmAnnounceArrival;           /* 56 bytes */
+
+/* The announcement speaker snapshot: the bound block's position, the
+   speaker's route/platform bindings (int64[2] pairs), its lead seconds
+   and template identity, plus the arrival pool for every bound
+   platform. 88 bytes. */
+typedef struct JcmAnnouncementSnapshot {
+    int64_t  block_pos[3];
+    int64_t  game_time_millis;
+    int64_t  in_game_time;
+    int32_t  lead_seconds;      /* configured lead time, 1..180 */
+    int32_t  binding_count;     /* int64[2] pairs at binding_offset:
+                                   (route_id, platform_id) */
+    int32_t  binding_offset;
+    int32_t  arrival_count;     /* JcmAnnounceArrival[] */
+    int32_t  arrival_offset;
+    int32_t  template_offset;   /* UTF-8 template id, "" = unset */
+    int32_t  template_len;
+    int32_t  variant_offset;    /* UTF-8 variant, "" = unset */
+    int32_t  variant_len;
+    int32_t  string_pool_offset;
+    int32_t  string_pool_len;
+    uint8_t  all_stops;         /* announce non-full services too */
+    uint8_t  weather;           /* ABI 15 semantics: 0/1/2 */
+    uint8_t  fangsu_present;    /* 1 = the bound block is FangSu's */
+    uint8_t  _pad0;
+} JcmAnnouncementSnapshot;      /* 88 bytes */
+
+#ifdef __cplusplus
+static_assert(sizeof(JcmCrossingApproach)      == 64, "JcmCrossingApproach layout changed");
+static_assert(sizeof(JcmLevelCrossingSnapshot) == 72, "JcmLevelCrossingSnapshot layout changed");
+static_assert(sizeof(JcmFareMachineSnapshot)   == 96, "JcmFareMachineSnapshot layout changed");
+static_assert(sizeof(JcmAnnounceArrival)       == 56, "JcmAnnounceArrival layout changed");
+static_assert(sizeof(JcmAnnouncementSnapshot)  == 88, "JcmAnnouncementSnapshot layout changed");
+#endif
+
 /* Generic envelope the host passes in; kind selects the snapshot union. */
 typedef struct JcmFrameInput {
     uint32_t abi_version;
@@ -888,7 +1126,8 @@ struct JcmHostServices {
 /* Returns MTR_NATIVE_ABI_VERSION. Host refuses mismatches. */
 MTR_NATIVE_EXPORT uint32_t mtrNativeAbiVersion(void);
 
-/* "vehicle" | "pids" | "eyecandy" | "lift" | "psd" (ABI 12). */
+/* "vehicle" | "pids" | "eyecandy" | "lift" | "psd" (ABI 12) |
+   "level_crossing" | "fare_machine" | "announcement" (ABI 16). */
 MTR_NATIVE_EXPORT const char* mtrScriptType(void);
 
 /* Script id, e.g. "example:vehicle_status". Must match mtr_custom_resources.json. */

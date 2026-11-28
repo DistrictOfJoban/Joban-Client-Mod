@@ -42,6 +42,21 @@ public:
     /* CircularState: 0 NONE, 1 CLOCKWISE, 2 ANTI_CLOCKWISE. */
     int32_t circular_state() const { return arr_->circular_state; }
 
+    /* ---- v16 (ABI 16): FangSu service flags ---- */
+
+    /* True when this arrival runs a FangSu ServiceStop express service
+       (快车 — it overtakes non-express stations, so PIDS scripts can
+       render a "express passes" style). Always false without FangSu. */
+    bool isExpress() const { return (arr_->flags & MTR_ARRIVAL_FLAG_EXPRESS) != 0; }
+
+    /* True when the arrival's route only exists in FangSu's hidden-route
+       client cache — a "hidden route arriving" hint for PIDS/PSD
+       scripts. Always false without FangSu. */
+    bool isHiddenRoute() const { return (arr_->flags & MTR_ARRIVAL_FLAG_HIDDEN_ROUTE) != 0; }
+
+    /* Raw flag byte (mtr::service_flags bit values). */
+    uint8_t flags() const { return arr_->flags; }
+
 private:
     int64_t now() const { return snap_->game_time_millis; }
     StrView pool(int32_t offset, int32_t len) const {

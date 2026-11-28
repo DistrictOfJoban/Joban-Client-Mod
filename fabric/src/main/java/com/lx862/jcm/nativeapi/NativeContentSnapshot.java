@@ -58,6 +58,23 @@ public final class NativeContentSnapshot {
         return org.mtr.mod.client.MinecraftClientData.getInstance().simplifiedRouteIdMap.get(routeId);
     }
 
+    /** ABI 16: the FangSu service flag byte for one arrival (route id +
+     *  platform id pair). Express needs the platform's ServiceStop record
+     *  on the client-side simplified route; hidden-route needs FangSu's
+     *  supplementary cache. Both bits 0 without FangSu. */
+    static byte arrivalFlags(long routeId, long platformId) {
+        byte flags = 0;
+        final org.mtr.core.data.SimplifiedRoute route = simplifiedOf(routeId);
+        if (FangSuServiceInfo.isExpressService(route, platformId)) flags |= FangSuServiceInfo.FLAG_EXPRESS;
+        if (FangSuServiceInfo.isHiddenRoute(routeId)) flags |= FangSuServiceInfo.FLAG_HIDDEN_ROUTE;
+        return flags;
+    }
+
+    /** ABI 16: the FangSu service flag byte for one PSD route strip. */
+    private static byte routeFlags(long routeId, long platformId) {
+        return arrivalFlags(routeId, platformId);
+    }
+
     private ByteBuffer finish() { buffer.flip(); return buffer; }
 
     public static ByteBuffer pids(ByteBuffer buffer, PIDSWrapper pids) {
@@ -88,6 +105,9 @@ public final class NativeContentSnapshot {
             buffer.putInt(at+48,arrival.routeColor()); buffer.putInt(at+52,arrival.carCount());
             buffer.put(at+56,(byte)(arrival.realtime()?1:0)); buffer.put(at+57,(byte)(arrival.terminating()?1:0));
             buffer.put(at+58,(byte)arrival.circularState().ordinal());
+            /* ABI 16: FangSu service flags (former padding at offset 59) —
+               express / hidden-route. Both bits 0 without FangSu. */
+            buffer.put(at+59,arrivalFlags(arrival.routeId(),arrival.platformId()));
             out.string(at+60,arrival.routeNumber()); out.string(at+68,arrival.routeName());
             out.string(at+76,arrival.destination()); out.string(at+84,arrival.platformName());
         }
@@ -250,6 +270,8 @@ public final class NativeContentSnapshot {
             buffer.putInt(p + 48, arrival.routeColor()); buffer.putInt(p + 52, arrival.carCount());
             buffer.put(p + 56, (byte) (arrival.realtime() ? 1 : 0)); buffer.put(p + 57, (byte) (arrival.terminating() ? 1 : 0));
             buffer.put(p + 58, (byte) arrival.circularState().ordinal());
+            /* ABI 16: FangSu service flags (former padding at offset 59). */
+            buffer.put(p + 59, arrivalFlags(arrival.routeId(), arrival.platformId()));
             out.string(p + 60, arrival.routeNumber()); out.string(p + 68, arrival.routeName());
             out.string(p + 76, arrival.destination()); out.string(p + 84, arrival.platformName());
             final List<Integer> numbers = arrival.doorNumbers();
@@ -267,7 +289,11 @@ public final class NativeContentSnapshot {
             buffer.putLong(p, route.id());
             buffer.putInt(p + 8, route.color() | 0xFF000000);
             buffer.put(p + 12, (byte) route.circularState().ordinal());
-            buffer.put(p + 13, (byte) 0); buffer.put(p + 14, (byte) 0); buffer.put(p + 15, (byte) 0);
+            /* ABI 16: FangSu service flags for this route at the PSD's
+               platform (former padding at offset 13) — express (the route
+               runs a ServiceStop here) / hidden route. */
+            buffer.put(p + 13, routeFlags(route.id(), platform == null ? 0 : platform.getId()));
+            buffer.put(p + 14, (byte) 0); buffer.put(p + 15, (byte) 0);
             out.string(p + 16, route.name());
             out.string(p + 24, route.routeNumber());
             out.string(p + 32, route.getTransportType());
@@ -436,6 +462,220 @@ public final class NativeContentSnapshot {
             ScriptVector3f floorPos=floor.getPos(); buffer.putDouble(at+8,floorPos.x()); buffer.putDouble(at+16,floorPos.y()); buffer.putDouble(at+24,floorPos.z());
             out.string(at+32,floor.getNumber()); out.string(at+40,floor.getDescription());
         }
+        return out.finish();
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* ABI 16: the three block-script snapshots (level crossing / fare    */
+    /* machine / announcement). Layouts pinned by the static_asserts in   */
+    /* mtr_native.h; every *_offset is blob-relative, strings share the   */
+    /* string pool like everywhere else.                                  */
+    /* ------------------------------------------------------------------ */
+
+    /** One approaching train at a level crossing (JcmCrossingApproach). */
+    public static final class CrossingApproachData {
+        public long vehicleId;
+        public long routeId;
+        public long arrivalMillis;      /* 0 = unknown */
+        public double distanceBlocks = -1;
+        public double speedKmh;
+        public double secondsToArrival = -1;
+        public int carCount;
+        public String destination = "";
+    }
+
+    /** JcmLevelCrossingSnapshot payload (header 72 bytes). */
+    public static final class CrossingData {
+        public org.mtr.mapping.holder.BlockPos pos;
+        public double trackYawDegrees = -1;
+        public boolean warning;
+        public boolean barrierTarget;   /* true = closed (lowered) */
+        public boolean fangsuPresent;
+        public final java.util.List<CrossingApproachData> approaches = new java.util.ArrayList<>();
+    }
+
+    /** JcmFareMachineSnapshot payload (header 96 bytes). */
+    public static final class FareData {
+        public org.mtr.mapping.holder.BlockPos pos;
+        public double doorValue;         /* 0 open .. 1 closed */
+        public int fareType;             /* 0 zone, 1 flat */
+        public int fareValue;
+        public int playerBalance = -1;
+        public boolean open;
+        public boolean exitSide;
+        public int facing;               /* MC Direction ordinal */
+        public int machineType;          /* 0 barrier, 1 ticket machine */
+        public boolean fangsuPresent;
+        public String stationName = "";
+        public final java.util.List<ArrivalLite> arrivals = new java.util.ArrayList<>();
+    }
+
+    /** Compact arrival for the fare machine pool (96-byte JcmArrival). */
+    public static final class ArrivalLite {
+        public long arrivalTime, departureTime;
+        public long routeId, platformId;
+        public int routeColor;
+        public int carCount;
+        public boolean realtime, terminating;
+        public String routeNumber = "", routeName = "", destination = "", platformName = "";
+
+        public ArrivalLite(long arrivalTime, long departureTime, long routeId, long platformId,
+                           int routeColor, int carCount, boolean realtime, boolean terminating,
+                           String routeNumber, String routeName, String destination, String platformName) {
+            this.arrivalTime = arrivalTime; this.departureTime = departureTime;
+            this.routeId = routeId; this.platformId = platformId;
+            this.routeColor = routeColor; this.carCount = carCount;
+            this.realtime = realtime; this.terminating = terminating;
+            this.routeNumber = routeNumber; this.routeName = routeName;
+            this.destination = destination; this.platformName = platformName;
+        }
+    }
+
+    /** One announcement arrival entry (JcmAnnounceArrival, 56 bytes). */
+    public static final class AnnounceArrivalData {
+        public long arrivalMillis, departureMillis;
+        public long routeId, platformId;
+        public int carCount;
+        public boolean realtime, terminating;
+        public String destination = "", routeName = "";
+
+        public AnnounceArrivalData(long arrivalMillis, long departureMillis, long routeId, long platformId,
+                                   int carCount, boolean realtime, boolean terminating,
+                                   String destination, String routeName) {
+            this.arrivalMillis = arrivalMillis; this.departureMillis = departureMillis;
+            this.routeId = routeId; this.platformId = platformId;
+            this.carCount = carCount; this.realtime = realtime; this.terminating = terminating;
+            this.destination = destination; this.routeName = routeName;
+        }
+    }
+
+    /** JcmAnnouncementSnapshot payload (header 88 bytes). */
+    public static final class SpeakerData {
+        public org.mtr.mapping.holder.BlockPos pos;
+        public int leadSeconds = 30;
+        public boolean allStops;
+        public String template = "", variant = "";
+        public boolean fangsuPresent;
+        public final java.util.List<long[]> bindings = new java.util.ArrayList<>(); /* {routeId, platformId} */
+        public final java.util.List<AnnounceArrivalData> arrivals = new java.util.ArrayList<>();
+    }
+
+    /** JcmLevelCrossingSnapshot (ABI 16) — 72-byte header, 64-byte
+     *  JcmCrossingApproach pool, shared string pool. */
+    public static ByteBuffer levelCrossing(ByteBuffer buffer, CrossingData data) {
+        final NativeContentSnapshot out = new NativeContentSnapshot(buffer, 72);
+        buffer.putLong(0, data.pos.getX()); buffer.putLong(8, data.pos.getY()); buffer.putLong(16, data.pos.getZ());
+        buffer.putLong(24, System.currentTimeMillis()); buffer.putLong(32, day());
+        buffer.putDouble(40, data.trackYawDegrees);
+        final int approachOffset = out.reserve(data.approaches.size() * 64, 8);
+        buffer.putInt(48, data.approaches.size()); buffer.putInt(52, approachOffset);
+        final int pool = buffer.position();
+        buffer.putInt(56, pool); buffer.putInt(60, 0);
+        buffer.put(64, (byte) (data.warning ? 1 : 0));
+        buffer.put(65, (byte) (data.barrierTarget ? 1 : 0));
+        buffer.put(66, weatherCode());
+        buffer.put(67, (byte) (data.fangsuPresent ? 1 : 0));
+        for (int i = 0; i < data.approaches.size(); i++) {
+            final CrossingApproachData ap = data.approaches.get(i);
+            final int at = approachOffset + i * 64;
+            buffer.putLong(at, ap.vehicleId); buffer.putLong(at + 8, ap.routeId);
+            buffer.putLong(at + 16, ap.arrivalMillis);
+            buffer.putDouble(at + 24, ap.distanceBlocks);
+            buffer.putDouble(at + 32, ap.speedKmh);
+            buffer.putDouble(at + 40, ap.secondsToArrival);
+            buffer.putInt(at + 48, ap.carCount);
+        }
+        for (int i = 0; i < data.approaches.size(); i++) {
+            final CrossingApproachData ap = data.approaches.get(i);
+            final int at = approachOffset + i * 64;
+            out.string(at + 52, ap.destination);
+            buffer.putInt(at + 60, 0);
+        }
+        buffer.putInt(60, buffer.position() - pool);
+        return out.finish();
+    }
+
+    /** JcmFareMachineSnapshot (ABI 16) — 96-byte header, JcmArrival pool.
+     *  Byte fields: open/exit/facing/machine/weather/fangsu at 84..89,
+     *  station_name at 68/72, string pool at 76/80. */
+    public static ByteBuffer fareMachine(ByteBuffer buffer, FareData data) {
+        final NativeContentSnapshot out = new NativeContentSnapshot(buffer, 96);
+        buffer.putLong(0, data.pos.getX()); buffer.putLong(8, data.pos.getY()); buffer.putLong(16, data.pos.getZ());
+        buffer.putLong(24, System.currentTimeMillis()); buffer.putLong(32, day());
+        buffer.putDouble(40, data.doorValue);
+        buffer.putInt(48, data.fareType); buffer.putInt(52, data.fareValue);
+        buffer.putInt(56, data.playerBalance);
+        final int arrivalOffset = out.reserve(data.arrivals.size() * 96, 8);
+        buffer.putInt(60, data.arrivals.size()); buffer.putInt(64, arrivalOffset);
+        final int pool = buffer.position();
+        buffer.putInt(76, pool);
+        buffer.put(84, (byte) (data.open ? 1 : 0));
+        buffer.put(85, (byte) (data.exitSide ? 1 : 0));
+        buffer.put(86, (byte) data.facing);
+        buffer.put(87, (byte) data.machineType);
+        buffer.put(88, weatherCode());
+        buffer.put(89, (byte) (data.fangsuPresent ? 1 : 0));
+        for (int i = 0; i < data.arrivals.size(); i++) {
+            final ArrivalLite a = data.arrivals.get(i);
+            final int at = arrivalOffset + i * 96;
+            buffer.putLong(at, a.arrivalTime); buffer.putLong(at + 8, a.departureTime);
+            buffer.putLong(at + 16, 0); buffer.putLong(at + 24, 0);
+            buffer.putLong(at + 32, a.routeId); buffer.putLong(at + 40, a.platformId);
+            buffer.putInt(at + 48, a.routeColor); buffer.putInt(at + 52, a.carCount);
+            buffer.put(at + 56, (byte) (a.realtime ? 1 : 0));
+            buffer.put(at + 57, (byte) (a.terminating ? 1 : 0));
+            buffer.put(at + 58, (byte) 0);
+            buffer.put(at + 59, arrivalFlags(a.routeId, a.platformId));
+            out.string(at + 60, a.routeNumber); out.string(at + 68, a.routeName);
+            out.string(at + 76, a.destination); out.string(at + 84, a.platformName);
+        }
+        out.string(68, data.stationName);
+        buffer.putInt(80, buffer.position() - pool);
+        return out.finish();
+    }
+
+    /** JcmAnnouncementSnapshot (ABI 16) — 88-byte header, int64[2]
+     *  binding pool, JcmAnnounceArrival pool. template at 60/64, variant
+     *  at 68/72, string pool at 76/80, byte fields at 84..87. */
+    public static ByteBuffer announcement(ByteBuffer buffer, SpeakerData data) {
+        final NativeContentSnapshot out = new NativeContentSnapshot(buffer, 88);
+        buffer.putLong(0, data.pos.getX()); buffer.putLong(8, data.pos.getY()); buffer.putLong(16, data.pos.getZ());
+        buffer.putLong(24, System.currentTimeMillis()); buffer.putLong(32, day());
+        buffer.putInt(40, data.leadSeconds);
+        final int bindingOffset = out.reserve(data.bindings.size() * 16, 8);
+        buffer.putInt(44, data.bindings.size()); buffer.putInt(48, bindingOffset);
+        final int arrivalOffset = out.reserve(data.arrivals.size() * 56, 8);
+        buffer.putInt(52, data.arrivals.size()); buffer.putInt(56, arrivalOffset);
+        final int pool = buffer.position();
+        buffer.putInt(76, pool);
+        buffer.put(84, (byte) (data.allStops ? 1 : 0));
+        buffer.put(85, weatherCode());
+        buffer.put(86, (byte) (data.fangsuPresent ? 1 : 0));
+        for (int i = 0; i < data.bindings.size(); i++) {
+            final long[] pair = data.bindings.get(i);
+            buffer.putLong(bindingOffset + i * 16, pair[0]);
+            buffer.putLong(bindingOffset + i * 16 + 8, pair[1]);
+        }
+        for (int i = 0; i < data.arrivals.size(); i++) {
+            final AnnounceArrivalData a = data.arrivals.get(i);
+            final int at = arrivalOffset + i * 56;
+            buffer.putLong(at, a.arrivalMillis); buffer.putLong(at + 8, a.departureMillis);
+            buffer.putLong(at + 16, a.routeId); buffer.putLong(at + 24, a.platformId);
+            buffer.putInt(at + 32, a.carCount);
+            buffer.put(at + 36, (byte) (a.realtime ? 1 : 0));
+            buffer.put(at + 37, (byte) (a.terminating ? 1 : 0));
+            buffer.put(at + 38, arrivalFlags(a.routeId, a.platformId));
+            buffer.put(at + 39, (byte) 0);
+        }
+        out.string(60, data.template);
+        out.string(68, data.variant);
+        for (int i = 0; i < data.arrivals.size(); i++) {
+            final AnnounceArrivalData a = data.arrivals.get(i);
+            final int at = arrivalOffset + i * 56;
+            out.string(at + 40, a.destination);
+            out.string(at + 48, a.routeName);
+        }
+        buffer.putInt(80, buffer.position() - pool);
         return out.finish();
     }
 }

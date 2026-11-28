@@ -350,6 +350,109 @@ JavaScript calls the same-named method directly (`pids.getWeather()`,
 (`isThundering()` beats `isRaining()`, mirroring MTR's own weather PIDS
 components).
 
+## Express / hidden-route flags (ABI 16)
+
+The FangSu (方速) service model feeds every arrival, every PSD route strip
+and the vehicle header with two flag bits — `mtr::service_flags::EXPRESS`
+(the arrival runs a ServiceStop express service, it overtakes non-express
+stations) and `HIDDEN_ROUTE` (the route only exists in FangSu's
+hidden-route client cache):
+
+```cpp
+if (arrival.isExpress()) drawExpressStyle();
+if (vehicle.isHiddenRoute()) drawHiddenRouteHint();
+```
+
+Without the FangSu addon both bits are always 0 — the exact
+non-express / non-hidden answers (same soft-dependency contract as the
+ABI 14 stop statuses). Fields: `JcmArrival.flags` (offset 59, former
+padding), `JcmPsdRoute.route_flags` (13), `JcmVehicleSnapshot.service_flags`
+(166, former `_pad1[1]`).
+
+## Signal state (ABI 16)
+
+`JcmVehicleSnapshot.signal_state` (offset 167, former `_pad1[2]`) carries
+the signal state ahead of a vehicle: `vehicle.signalState()` returns
+`mtr::SignalState::UNKNOWN / CLEAR / CAUTION / DANGER` and
+`getSignalState()` the string id. The host side resolves it through the
+`NativeSignalState` provider registry — a public extension point
+(`com.lx862.jcm.nativeapi.NativeSignalState.set(vehicleId, state)`) that
+signal mods (mtr-nte bridges and friends) push through; without a
+provider every vehicle reports "unknown", byte-identical to the
+pre-ABI-16 padding.
+
+```cpp
+if (vehicle.signalState() == mtr::SignalState::DANGER) brakeLightsOn();
+```
+
+## Styled model draws (ABI 16)
+
+`JcmDrawModel` grows 24 → 28 bytes with a trailing ARGB `tint` field plus
+two new header flag bits: `MTR_RECORD_FLAG_EMISSIVE` (draw at the host's
+full-brightness light — night headlights, lit signs) and
+`MTR_RECORD_FLAG_TRANSLUCENT` (draw through the translucent material
+pass — window glass; alpha tints below 0xFF force it automatically):
+
+```cpp
+ctx.draw_car_model(model, car, mats,
+                   mtr::VehicleContext::ModelStyle()
+                       .tint(0x80FF8000)
+                       .emissive()
+                       .translucent());
+ctx.draw_model(lamp, nullptr, 0, true, false);          /* eyecandy / crossing */
+```
+
+Records emitted by ABI ≤ 15 modules stay 24 bytes and keep rendering
+byte-for-byte — hosts accept both sizes (walked by `record_size`, tint
+read only when present).
+
+## Block scripts: crossing / fare machine / announcement (ABI 16)
+
+Three new script kinds anchor on FangSu blocks through client-local
+bindings (edited with the PSD Script Editor item — right-click the
+block, pick a script):
+
+| Kind | Resource id | Anchor | Registration |
+|---|---|---|---|
+| Level crossing | `MTR_RESOURCE_LEVEL_CROSSING` (5) | FangSu `level_crossing` | `MTR_REGISTER_LEVEL_CROSSING_SCRIPT` |
+| Fare machine | `MTR_RESOURCE_FARE_MACHINE` (6) | FangSu `ticket_barrier` / `ticket_machine` | `MTR_REGISTER_FARE_MACHINE_SCRIPT` |
+| Announcement | `MTR_RESOURCE_ANNOUNCEMENT` (7) | FangSu `announcement_speaker` | `MTR_REGISTER_ANNOUNCEMENT_SCRIPT` |
+
+- The crossing snapshot carries the geometry summary (primary track yaw)
+  plus a `JcmCrossingApproach[]` pool (vehicle id, route, distance,
+  speed, arrival estimate) and host-derived `warning_state` /
+  `barrier_target` — the script animates its barrier arms itself.
+- The fare machine snapshot carries the barrier state (open flag +
+  the host's time-derived wing animation), the fares, the client
+  player's `mtr_balance` and the nearest platform's arrivals.
+- The announcement snapshot carries the speaker's route/platform
+  bindings, lead seconds and an arrival pool; the script plays audio
+  through the unified sound records — `ctx.play_sound` (positional) and
+  `ctx.play_local_sound` (riding players only) — the same
+  ScriptSoundManager the PIDS path uses.
+
+Declared in `mtr_custom_resources.json` under `levelCrossingScripts` /
+`fareMachineScripts` / `announcementScripts`, same native declaration
+forms as every other kind. Without FangSu the kinds are inert.
+
+## Developer tooling (ABI 16 era)
+
+- **Hot reload** (`scripting.nativeHotReload` config, off by default): a
+  watcher fingerprints `resourcepacks/` (and the dev `resources/`
+  folder); a changed `.so`/`.js` triggers the same reload F3+T performs
+  — rebuild your module, see it without leaving the game.
+- **CMake scaffold** (`template/` in the SDK):
+  `cmake -B build -DJCM_SDK=<sdk>` builds a ready pids/vehicle/crossing
+  skeleton project.
+- **Perf panel**: the debug overlay's native section now shows the
+  per-module average `mtrRender` time, host crossings (Java upcalls)
+  per second, snapshot marshal bytes per second and render calls per
+  second.
+- **JS → C++ migration**: `docs/js-to-cpp.md` maps the wrapper APIs
+  one-to-one; `tools/js2cpp.py` performs the mechanical renames
+  (forEach loops, Text chains, property→method) and leaves TODO
+  markers where a human must decide.
+
 ## Persistent script data store ("数据存储")
 
 `context.getDataStore()` returns a JSON-file-backed key-value store scoped

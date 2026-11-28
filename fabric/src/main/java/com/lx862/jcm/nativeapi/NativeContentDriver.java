@@ -294,6 +294,17 @@ public final class NativeContentDriver {
             if(kind==3) {
                 NativeModelDrawCall call=NativeModelDrawCall.create(records.getInt(pos+12));
                 call.pose(frame.matrixArena,records.getInt(pos+16),records.getInt(pos+20));
+                /* ABI 16: model style — the header flags byte (emissive /
+                   translucent / natural light) always present, the trailing
+                   tint field only when the record grew to the 28-byte
+                   ABI 16 form (records from ABI<=15 modules stay 24 bytes
+                   and carry no tint — reading them would run past the
+                   record's own bytes). */
+                final int modelFlags=records.get(pos+1)&255;
+                final int modelTint=size>=28?records.getInt(pos+24):0;
+                if(modelTint!=0||(modelFlags&0x06)!=0) {
+                    call.style(modelTint,(modelFlags&0x02)!=0,(modelFlags&0x04)!=0);
+                }
                 renderManager(context).draw(call);
             } else if(kind==4||kind==5) {
                 org.mtr.mapping.holder.Identifier id=identifier(frame.stringArena,records.getInt(pos+32),records.getInt(pos+36));

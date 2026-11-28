@@ -1489,7 +1489,12 @@ void patch_frame_handles(const Instance& inst, const JcmFrameOutput& out,
                 keep = false;   /* unknown slot: nothing to upload into */
             }
         } else if (h->kind == JCM_DRAW_MODEL) {
-            if (size < static_cast<int32_t>(sizeof(JcmDrawModel))) break;
+            /* ABI 16: the record grew 24 -> 28 bytes (trailing tint field).
+               ABI<=15 modules emit the 24-byte form — validate against the
+               ABI 15 minimum (MTR_MODEL_RECORD_MIN), not the current
+               sizeof, so old modules keep rendering on this host. The
+               bridge itself only reads fields < 24 either way. */
+            if (size < MTR_MODEL_RECORD_MIN) break;
             JcmDrawModel* m = reinterpret_cast<JcmDrawModel*>(p);
             const int32_t slot = m->model_handle;
             if (slot >= 0 && (slot & 0x40000000)) m->model_handle = slot & ~0x40000000;

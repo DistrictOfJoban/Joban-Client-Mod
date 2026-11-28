@@ -154,13 +154,28 @@ public final class NativeScriptManager {
        and without a client world every byte stays 0 ("clear"). An
        ABI 15 host loads ABI 6–15; an ABI 14 host refuses ABI 15 modules
        (their weather-aware scripts would otherwise silently read
-       padding). */
-    private static final int ABI_VERSION = 15;
+       padding).
+       v16 (see mtr_native.h's ABI 16 note for the full layout contract):
+       (1) FangSu service metadata — arrival/vehicle/route flags bytes
+       (express / hidden route, offsets that were pure padding in ABI
+       15); without FangSu every bit stays 0. (2) the NTE-style signal
+       extension — JcmVehicleSnapshot.signal_state at offset 167, fed by
+       the NativeSignalState provider registry; 0 (unknown) without a
+       provider. (3) JcmDrawModel grows 24 -> 28 with a trailing ARGB
+       tint field plus EMISSIVE/TRANSLUCENT header flags; kind-3 records
+       from ABI<=15 modules (24 bytes) stay loadable — the replay reads
+       tint only when record_size >= 28. (4) three new script kinds —
+       MTR_RESOURCE_LEVEL_CROSSING (5), MTR_RESOURCE_FARE_MACHINE (6),
+       MTR_RESOURCE_ANNOUNCEMENT (7) with their snapshot layouts
+       (JcmLevelCrossingSnapshot / JcmFareMachineSnapshot /
+       JcmAnnouncementSnapshot), driven by the block-script bindings on
+       FangSu's crossing / ticket / speaker blocks. */
+    private static final int ABI_VERSION = 16;
 
     private static boolean supportedAbi(int version) {
-        /* Contiguous 6..current: 6 through 14 are all explicitly
+        /* Contiguous 6..current: 6 through 15 are all explicitly
            loadable by this host, same as their own hosts did. */
-        return (version >= 6 && version <= 14) || version == ABI_VERSION;
+        return (version >= 6 && version <= 15) || version == ABI_VERSION;
     }
 
     /* Route.CircularState mapping (v2 snapshots). */
@@ -855,6 +870,10 @@ public final class NativeScriptManager {
             case MTR_RESOURCE_EYECANDY: return "eyecandy";
             case MTR_RESOURCE_LIFT: return "lift";
             case MTR_RESOURCE_PSD: return "psd";
+            /* ABI 16: the three block-script kinds. */
+            case MTR_RESOURCE_LEVEL_CROSSING: return "level_crossing";
+            case MTR_RESOURCE_FARE_MACHINE: return "fare_machine";
+            case MTR_RESOURCE_ANNOUNCEMENT: return "announcement";
             default: throw new IllegalArgumentException("Unknown native script kind " + kind);
         }
     }
@@ -983,6 +1002,10 @@ public final class NativeScriptManager {
     public static final int MTR_RESOURCE_LIFT = 3;
     /* ABI 12: platform screen door glass / top-panel scripts. */
     public static final int MTR_RESOURCE_PSD = 4;
+    /* ABI 16: the three block-script kinds (FangSu-anchored). */
+    public static final int MTR_RESOURCE_LEVEL_CROSSING = 5;
+    public static final int MTR_RESOURCE_FARE_MACHINE = 6;
+    public static final int MTR_RESOURCE_ANNOUNCEMENT = 7;
 
     /* ------------------------------------------------------------------ */
     /* shared sweep tuning (NativeVehicleDriver / NativeContentDriver)    */
@@ -1013,7 +1036,9 @@ public final class NativeScriptManager {
      * time-based eviction entirely (instances of living owners are then kept
      * until the owner is removed — JavaScript-script parity).
      */
-    static final long IDLE_DISPOSE_NANOS = idleDisposeNanos();
+    /* Public since ABI 16: the block-script driver sweep (a different
+       package) shares the same idle valve. */
+    public static final long IDLE_DISPOSE_NANOS = idleDisposeNanos();
 
     /**
      * How many vehicle instances may stay warm while unrendered (behind the
@@ -1450,8 +1475,33 @@ public final class NativeScriptManager {
             snapshot.order(ByteOrder.nativeOrder());
             /* Transport dispatch (direct call / shared memory / Panama FFM):
                NativeChannel owns the how; everything else in the pipeline
-               is transport-agnostic. */
-            return NativeChannel.render(this, instanceKey, snapshot, snapshot.limit(), resourceKind);
+               is transport-agnostic. Timed for the debug overlay's perf
+               panel (NativePerfCounters). */
+            final long start = System.nanoTime();
+            final NativeFrame frame = NativeChannel.render(this, instanceKey, snapshot, snapshot.limit(), resourceKind);
+            NativePerfCounters.render(snapshot.limit(), (System.nanoTime() - start) / 1000);
+            if (frame != null) {
+                frameCount++;
+                renderMicros += (System.nanoTime() - start) / 1000;
+            }
+            return frame;
+        }
+
+        /* Per-module rolling render stats for the debug overlay. Volatile
+           longs: the overlay reads them from the HUD thread while the
+           render thread writes. */
+        private volatile long frameCount;
+        private volatile long renderMicros;
+
+        /** Average native mtrRender time in millis (0 when never rendered). */
+        public double getAverageRenderMillis() {
+            final long frames = frameCount;
+            return frames == 0 ? 0 : renderMicros / 1000.0 / frames;
+        }
+
+        /** Total mtrRender calls issued (incl. frames that produced no records). */
+        public long getRenderCount() {
+            return frameCount;
         }
 
         synchronized void dispose() {

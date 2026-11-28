@@ -32,6 +32,9 @@
 #include "psd.hpp"
 #include "eyecandy.hpp"
 #include "lift.hpp"
+#include "levelcrossing.hpp"
+#include "faremachine.hpp"
+#include "announcement.hpp"
 #include "api.hpp"
 #include <cstring>
 #include <new>
@@ -209,6 +212,51 @@ struct PsdAdapter {
     }
 };
 
+/* ABI 16: the three block-script kinds (level crossing / fare machine /
+   announcement), anchored on FangSu blocks via the block-script
+   bindings. Same adapter contract as the five above. */
+struct LevelCrossingAdapter {
+    static constexpr int RESOURCE_ID = MTR_RESOURCE_LEVEL_CROSSING;
+    static constexpr const char* TYPE = "level_crossing";
+    using Context = LevelCrossingContext;
+    using Wrapper = LevelCrossing;
+    using Snapshot = JcmLevelCrossingSnapshot;
+    static LevelCrossingContext make_context(FrameRecorder& f, const JcmFrameInput& in) {
+        return LevelCrossingContext(f, in);
+    }
+    static LevelCrossing make_wrapper(const void* snap) {
+        return LevelCrossing(static_cast<const JcmLevelCrossingSnapshot*>(snap));
+    }
+};
+
+struct FareMachineAdapter {
+    static constexpr int RESOURCE_ID = MTR_RESOURCE_FARE_MACHINE;
+    static constexpr const char* TYPE = "fare_machine";
+    using Context = FareMachineContext;
+    using Wrapper = FareMachine;
+    using Snapshot = JcmFareMachineSnapshot;
+    static FareMachineContext make_context(FrameRecorder& f, const JcmFrameInput& in) {
+        return FareMachineContext(f, in);
+    }
+    static FareMachine make_wrapper(const void* snap) {
+        return FareMachine(static_cast<const JcmFareMachineSnapshot*>(snap));
+    }
+};
+
+struct AnnouncementAdapter {
+    static constexpr int RESOURCE_ID = MTR_RESOURCE_ANNOUNCEMENT;
+    static constexpr const char* TYPE = "announcement";
+    using Context = AnnouncementContext;
+    using Wrapper = Announcement;
+    using Snapshot = JcmAnnouncementSnapshot;
+    static AnnouncementContext make_context(FrameRecorder& f, const JcmFrameInput& in) {
+        return AnnouncementContext(f, in);
+    }
+    static Announcement make_wrapper(const void* snap) {
+        return Announcement(static_cast<const JcmAnnouncementSnapshot*>(snap));
+    }
+};
+
 } /* namespace detail */
 
 } /* namespace mtr */
@@ -261,6 +309,16 @@ class EyecandyScript : public ScriptBase<State, detail::EyecandyAdapter> {};
 /* ABI 12: platform screen door glass / top-panel scripts. */
 template <typename State>
 class PsdScript : public ScriptBase<State, detail::PsdAdapter> {};
+
+/* ABI 16: the three block-script kinds. */
+template <typename State>
+class LevelCrossingScript : public ScriptBase<State, detail::LevelCrossingAdapter> {};
+
+template <typename State>
+class FareMachineScript : public ScriptBase<State, detail::FareMachineAdapter> {};
+
+template <typename State>
+class AnnouncementScript : public ScriptBase<State, detail::AnnouncementAdapter> {};
 
 } /* namespace mtr */
 
@@ -316,6 +374,13 @@ class PsdScript : public ScriptBase<State, detail::PsdAdapter> {};
     MTR_INTERNAL_EXPORTS(S, "eyecandy", S::ID)
 #define MTR_REGISTER_PSD_SCRIPT(S) \
     MTR_INTERNAL_EXPORTS(S, "psd", S::ID)
+/* ABI 16: block-script kinds (FangSu-anchored). */
+#define MTR_REGISTER_LEVEL_CROSSING_SCRIPT(S) \
+    MTR_INTERNAL_EXPORTS(S, "level_crossing", S::ID)
+#define MTR_REGISTER_FARE_MACHINE_SCRIPT(S) \
+    MTR_INTERNAL_EXPORTS(S, "fare_machine", S::ID)
+#define MTR_REGISTER_ANNOUNCEMENT_SCRIPT(S) \
+    MTR_INTERNAL_EXPORTS(S, "announcement", S::ID)
 
 namespace mtr { namespace detail {
 

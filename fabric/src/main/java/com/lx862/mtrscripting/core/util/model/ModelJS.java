@@ -102,6 +102,66 @@ public class ModelJS {
         }
     }
 
+    /* ---- ABI 16: tint / emissive / translucent model draws (native
+       scripts' MTR_RECORD_FLAG_EMISSIVE / _TRANSLUCENT + the JcmDrawModel
+       tint field). The tinted/translucent variant is a material-level
+       COPY of the uploaded model — new VertexArray(part, newProps) — so
+       the original stays untouched and shared. Cached single-entry:
+       scripts draw a given model with one steady style, and a style change
+       rebuilds once. */
+    private volatile int tintedKey;
+    private volatile ModelJS tintedCache;
+    private static final int TINT_NONE = 0;
+
+    /** Draws with an ARGB tint (0 = untinted) and/or the translucent
+     *  material pass. Alpha below 255 forces the translucent pass (the
+     *  opaque shaders ignore it). */
+    @ApiInternal
+    public void draw(StoredMatrixTransformations storedMatrixTransformations, int light, int colorARGB, boolean translucent) {
+        if (colorARGB == TINT_NONE && !translucent) {
+            draw(storedMatrixTransformations, light);
+            return;
+        }
+        final int argb = colorARGB == TINT_NONE ? 0xFFFFFFFF : colorARGB;
+        if (!translucent && (argb >>> 24) < 0xFF) translucent = true;
+        final int key = argb | (translucent ? 0x100 : 0);
+        ModelJS variant = tintedCache;
+        if (variant == null || tintedKey != key) {
+            variant = buildTintedVariant(argb, translucent);
+            if (variant == null) {
+                /* Shader/material copy failed (headless, odd part shape) —
+                   degrade to the untinted draw instead of losing the model. */
+                draw(storedMatrixTransformations, light);
+                return;
+            }
+            tintedCache = variant;
+            tintedKey = key;
+        }
+        variant.draw(storedMatrixTransformations, light);
+    }
+
+    private ModelJS buildTintedVariant(int argb, boolean translucent) {
+        try {
+            OptimizedModel optimizedModel = ((OptimizedModelWrapperAccessor)(Object)model).getOptimizedModel();
+            List<VertexArray> vertexArrays =
+                    ((OptimizedModelAccessor)(Object)optimizedModel).getUploadedParts().stream().map(e -> {
+                        MaterialProperties oldProp = e.materialProperties;
+                        /* The translucent pass swaps the shader type the way
+                           a model JSON's render_stage would; the tint feeds
+                           the vertex-colour attribute every stage reads. */
+                        MaterialProperties newProp = new MaterialProperties(
+                                translucent ? org.mtr.mod.resource.RenderStage.INTERIOR_TRANSLUCENT.shaderType
+                                        : oldProp.shaderType,
+                                oldProp.getTexture(), argb);
+                        return new VertexArray(e, newProp);
+                    }).toList();
+            OptimizedModel newModel = new OptimizedModel(vertexArrays);
+            return new ModelJS(OptimizedModelWrapperAccessor.createNew(newModel));
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
     @ApiInternal
     public OptimizedModelWrapper getUnderlyingModel() {
         return this.model;

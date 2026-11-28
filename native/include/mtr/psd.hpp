@@ -164,6 +164,12 @@ public:
     /* 0 NONE, 1 CLOCKWISE, 2 ANTICLOCKWISE. */
     uint8_t circular_state() const { return route_->circular_state; }
 
+    /* ---- v16 (ABI 16): FangSu service flags for this route at the
+       PSD's platform. Both false without the FangSu addon. ---- */
+    bool isExpress() const { return (route_->route_flags & MTR_ARRIVAL_FLAG_EXPRESS) != 0; }
+    bool isHiddenRoute() const { return (route_->route_flags & MTR_ARRIVAL_FLAG_HIDDEN_ROUTE) != 0; }
+    uint8_t routeFlags() const { return route_->route_flags; }
+
     StrView name() const { return pool(route_->name_offset, route_->name_len); }
     StrView route_number() const { return pool(route_->number_offset, route_->number_len); }
     /* Canonical transport type id ("train", "train_metro", ...). */
@@ -232,6 +238,11 @@ public:
     bool terminating() const { return arr_->arrival.is_terminating != 0; }
     /* 0 NONE, 1 CLOCKWISE, 2 ANTICLOCKWISE. */
     uint8_t circular_state() const { return arr_->arrival.circular_state; }
+
+    /* ---- v16 (ABI 16): FangSu service flags — see mtr::service_flags.
+       Both false without the FangSu addon. ---- */
+    bool isExpress() const { return (arr_->arrival.flags & MTR_ARRIVAL_FLAG_EXPRESS) != 0; }
+    bool isHiddenRoute() const { return (arr_->arrival.flags & MTR_ARRIVAL_FLAG_HIDDEN_ROUTE) != 0; }
 
     /* The door unit numbers (1-based, see Psd::doors()) that will open for
        this train — the actual open units once the train dwells, an

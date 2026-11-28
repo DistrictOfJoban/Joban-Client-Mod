@@ -1,1 +1,20 @@
-{}
+{
+    "gui.jsblock.block_script.kind.announcement": "gui.jsblock.block_script.kind.announcement",
+    "gui.jsblock.block_script.kind.fare_machine": "gui.jsblock.block_script.kind.fare_machine",
+    "gui.jsblock.block_script.kind.level_crossing": "gui.jsblock.block_script.kind.level_crossing",
+    "gui.jsblock.block_script.subtitle": "gui.jsblock.block_script.subtitle",
+    "gui.jsblock.block_script.title": "gui.jsblock.block_script.title",
+    "gui.jsblock.keybinds.script_browser": "gui.jsblock.keybinds.script_browser",
+    "gui.jsblock.modrinth.downloading": "gui.jsblock.modrinth.downloading",
+    "gui.jsblock.modrinth.error": "gui.jsblock.modrinth.error",
+    "gui.jsblock.modrinth.install": "gui.jsblock.modrinth.install",
+    "gui.jsblock.modrinth.installed": "gui.jsblock.modrinth.installed",
+    "gui.jsblock.modrinth.no_results": "gui.jsblock.modrinth.no_results",
+    "gui.jsblock.modrinth.ready": "gui.jsblock.modrinth.ready",
+    "gui.jsblock.modrinth.resolving": "gui.jsblock.modrinth.resolving",
+    "gui.jsblock.modrinth.results": "gui.jsblock.modrinth.results",
+    "gui.jsblock.modrinth.search": "gui.jsblock.modrinth.search",
+    "gui.jsblock.modrinth.search_hint": "gui.jsblock.modrinth.search_hint",
+    "gui.jsblock.modrinth.searching": "gui.jsblock.modrinth.searching",
+    "gui.jsblock.modrinth.title": "gui.jsblock.modrinth.title"
+}

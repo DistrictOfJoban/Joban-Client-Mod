@@ -60,4 +60,10 @@ public final class ClientHelper {
 	public static void openPSDScriptSelectionScreen(List<BlockPos> positions, PSDWrapper.PSDType type) {
 		MinecraftClient.getInstance().openScreen(new Screen(new PSDScriptSelectionScreen(positions, type)));
 	}
+
+	/* ABI 16: the block-script kinds' selection screen, opened from the
+	   same (client-only) helper for the same dedicated-server reason. */
+	public static void openBlockScriptSelectionScreen(BlockPos pos, String kind) {
+		MinecraftClient.getInstance().openScreen(new Screen(new com.lx862.jcm.mod.gui.screen.BlockScriptSelectionScreen(pos, kind)));
+	}
 }

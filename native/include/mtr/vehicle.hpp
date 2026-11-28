@@ -92,6 +92,43 @@ enum class DoorDirection : uint8_t {
     ALL   = 3
 };
 
+/*
+ * Signal state ids (ABI 16) — the NTE-style signal extension point. The
+ * host's NativeSignalState registry is fed by signal mods (mtr-nte
+ * bridges and friends); without any provider every vehicle reports
+ * "unknown", which is also the pre-ABI-16 answer. Scripts use it for
+ * PIDS "train held at signal" notices or headlight logic.
+ */
+namespace signal_state {
+    constexpr const char* UNKNOWN = "unknown";
+    constexpr const char* CLEAR = "clear";
+    constexpr const char* CAUTION = "caution";
+    constexpr const char* DANGER = "danger";
+}
+
+/* Typed form of JcmVehicleSnapshot.signal_state (values documented in
+   mtr_native.h). */
+enum class SignalState : uint8_t {
+    UNKNOWN = 0,
+    CLEAR   = 1,
+    CAUTION = 2,
+    DANGER  = 3
+};
+
+/*
+ * FangSu service flag bits (ABI 16) — shared by the vehicle
+ * service_flags byte, the arrival flags byte and the PSD route flags
+ * byte. "express" mirrors FangSu's ServiceStop.express (the 快车 service
+ * that overtakes non-express stations via the 越行 bypass tracks);
+ * "hidden_route" marks a route that only exists in FangSu's
+ * hidden-route client cache (Route.getHidden). Both read false without
+ * the FangSu addon.
+ */
+namespace service_flags {
+    constexpr uint8_t EXPRESS = MTR_ARRIVAL_FLAG_EXPRESS;
+    constexpr uint8_t HIDDEN_ROUTE = MTR_ARRIVAL_FLAG_HIDDEN_ROUTE;
+}
+
 class Stop {
 public:
     Stop(const JcmVehicleSnapshot* snap, const JcmStop* stop)
@@ -327,6 +364,37 @@ public:
        returns to JS scripts, so both sides share layout logic. */
     StrView getWeather() const { return weather_name(snap_->weather); }
 
+    /* ---- v16 (ABI 16): FangSu service flags ---- */
+
+    /* True when the vehicle's next stop is a FangSu ServiceStop express
+       service (快车 — it overtakes non-express stations). Always false
+       without the FangSu addon. */
+    bool isExpressService() const { return (snap_->service_flags & MTR_ARRIVAL_FLAG_EXPRESS) != 0; }
+
+    /* True when the vehicle's current route only exists in FangSu's
+       hidden-route client cache. Always false without FangSu. */
+    bool isHiddenRoute() const { return (snap_->service_flags & MTR_ARRIVAL_FLAG_HIDDEN_ROUTE) != 0; }
+
+    /* Raw service flag byte (mtr::service_flags bit values). */
+    uint8_t serviceFlags() const { return snap_->service_flags; }
+
+    /* ---- v16 (ABI 16): signal state (NTE-style extension) ---- */
+
+    /* Typed signal state ahead of the vehicle; SignalState::UNKNOWN
+       when no signal provider pushed a state. */
+    SignalState signalState() const { return static_cast<SignalState>(snap_->signal_state); }
+
+    /* String form — compare with the mtr::signal_state constants:
+       "unknown" / "clear" / "caution" / "danger". */
+    StrView getSignalState() const {
+        switch (snap_->signal_state) {
+            case 1: return make_view(signal_state::CLEAR, 5);
+            case 2: return make_view(signal_state::CAUTION, 7);
+            case 3: return make_view(signal_state::DANGER, 6);
+            default: return make_view(signal_state::UNKNOWN, 7);
+        }
+    }
+
     Car car(int32_t i) const {
         if (i < 0 || i >= snap_->car_count) throw std::out_of_range("Vehicle car index");
         const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);
@@ -425,8 +493,40 @@ public:
     VehicleContext(FrameRecorder& frame, const JcmFrameInput& in)
         : frame_(&frame), input_(&in) {}
 
+    /* Model draw style (ABI 16): tint + emissive + translucent bits,
+    mirroring the JS wrappers' naturalLight() on steroids. Chain it:
+        ctx.draw_car_model(m, 0, mats,
+                           mtr::ModelStyle().tint(0x80FF8000)
+                                             .emissive()
+                                             .translucent());
+    The default-constructed style draws exactly like the pre-ABI-16
+    path (no tint, opaque, world light). */
+    struct ModelStyle {
+        int32_t tint_ = 0;            /* 0 = untinted */
+        bool emissive_ = false;
+        bool translucent_ = false;
+        bool natural_light_ = false;
+
+        ModelStyle& tint(uint32_t argb) { tint_ = static_cast<int32_t>(argb); return *this; }
+        ModelStyle& emissive() { emissive_ = true; return *this; }
+        ModelStyle& translucent() { translucent_ = true; return *this; }
+        ModelStyle& natural_light() { natural_light_ = true; return *this; }
+
+        void apply(JcmDrawModel& r) const {
+            r.tint = tint_;
+            if (emissive_) r.header.flags |= MTR_RECORD_FLAG_EMISSIVE;
+            if (translucent_) r.header.flags |= MTR_RECORD_FLAG_TRANSLUCENT;
+            if (natural_light_) r.header.flags |= MTR_RECORD_FLAG_NATURAL_LIGHT;
+        }
+    };
+
     /* ctx.drawCarModel(model, carIndex, matrices) */
     void draw_car_model(int32_t model_handle, int32_t car, const Matrices* matrices) {
+        draw_car_model(model_handle, car, matrices, ModelStyle{});
+    }
+
+    void draw_car_model(int32_t model_handle, int32_t car, const Matrices* matrices,
+                        const ModelStyle& style) {
         JcmDrawModel& r = frame_->push_model();
         r.model_handle = model_handle;
         r.car = static_cast<uint8_t>(car);
@@ -435,11 +535,17 @@ public:
             r.pose_offset = matrices->compile();
             r.pose_count = 1;
         }
+        style.apply(r);
     }
 
     /* Bogie variant: ctx.getCarBogieRenderManager(car, bogie).drawModel(...) */
     void draw_bogie_model(int32_t model_handle, int32_t car, int32_t bogie,
                           const Matrices* matrices) {
+        draw_bogie_model(model_handle, car, bogie, matrices, ModelStyle{});
+    }
+
+    void draw_bogie_model(int32_t model_handle, int32_t car, int32_t bogie,
+                          const Matrices* matrices, const ModelStyle& style) {
         JcmDrawModel& r = frame_->push_model();
         r.model_handle = model_handle;
         r.car = static_cast<uint8_t>(car);
@@ -448,6 +554,7 @@ public:
             r.pose_offset = matrices->compile();
             r.pose_count = 1;
         }
+        style.apply(r);
     }
 
     /* ctx.playCarSound(sound, car, x, y, z, volume, pitch) */
