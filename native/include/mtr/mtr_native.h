@@ -554,18 +554,20 @@ typedef struct JcmVehicleSnapshot {
     /* v16 (ABI 16): FangSu service flags — bit 0 MTR_ARRIVAL_FLAG_EXPRESS
        (this vehicle's next stop is a ServiceStop express service), bit 1
        MTR_ARRIVAL_FLAG_HIDDEN_ROUTE (the current route only exists in
-       FangSu's hidden-route cache). Former _pad1[0]; pure padding in every
+       FangSu's hidden-route cache). Former _pad1[1]; pure padding in every
        ABI<=15 layout. Without FangSu the byte is 0. */
     uint8_t  service_flags;
     /* v16 (ABI 16): the signal state ahead of the vehicle, pushed through
        the host's NativeSignalState registry by signal mods (mtr-nte
        bridges etc.): 0 unknown (no provider / not probed), 1 clear
-       (proceed), 2 caution, 3 danger (stop). Former _pad1[1]; pure padding
+       (proceed), 2 caution, 3 danger (stop). Former _pad1[2]; pure padding
        in every ABI<=15 layout — see mtr::signal_state. */
     uint8_t  signal_state;
-    uint8_t  _pad1[1];
     /* v2: siding display name (JS: vehicle.getSiding().getName()) —
-       can contain a user-defined name or description. */
+       can contain a user-defined name or description. The two promoted
+       v15/v16 bytes exactly consumed the former _pad1[3] (165..167), so
+       siding_name_offset keeps its ABI<=14 offset 168 and the struct its
+       192 bytes (pinned by native_sdk_test / native_abi_layout). */
     int32_t  siding_name_offset;
     int32_t  siding_name_len;
     int32_t  string_pool_offset;  /* shared string pool */

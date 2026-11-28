@@ -137,11 +137,23 @@ public final class ModrinthApi {
                 if (response.statusCode() / 100 != 2) {
                     throw new IOException("HTTP " + response.statusCode());
                 }
-                return JsonParser.parseString(response.body()).getAsJsonObject();
+                return parseJson(response.body()).getAsJsonObject();
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage() == null ? e.toString() : e.getMessage(), e);
             }
         });
+    }
+
+    /* MC 1.17.1 bundles Gson 2.8.0, which predates the static
+     * JsonParser.parseString (added in Gson 2.8.6); every other target
+     * version ships a newer Gson. Manifold picks the right call per
+     * version — same pattern as NativeApiSession.parseJson. */
+    private static JsonElement parseJson(String json) {
+        #if MC_VERSION <= "11701"
+        return new JsonParser().parse(json);
+        #else
+        return JsonParser.parseString(json);
+        #endif
     }
 
     private static String string(JsonObject object, String key) {

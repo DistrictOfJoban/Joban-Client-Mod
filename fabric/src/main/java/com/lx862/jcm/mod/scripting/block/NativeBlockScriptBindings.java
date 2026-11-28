@@ -137,7 +137,7 @@ public final class NativeBlockScriptBindings {
         if (!Files.isRegularFile(file)) return;
         try {
             final String text = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
-            final JsonObject root = JsonParser.parseString(text).getAsJsonObject();
+            final JsonObject root = parseJson(text).getAsJsonObject();
             synchronized (BY_DIMENSION) {
                 for (Map.Entry<String, JsonElement> dimensionEntry : root.entrySet()) {
                     final Map<BlockPos, Binding> map = new HashMap<>();
@@ -171,6 +171,18 @@ public final class NativeBlockScriptBindings {
 
     private static boolean validKind(String kind) {
         return KIND_LEVEL_CROSSING.equals(kind) || KIND_FARE_MACHINE.equals(kind) || KIND_ANNOUNCEMENT.equals(kind);
+    }
+
+    /* MC 1.17.1 bundles Gson 2.8.0, which predates the static
+     * JsonParser.parseString (added in Gson 2.8.6); every other target
+     * version ships a newer Gson. Manifold picks the right call per
+     * version — same pattern as NativeApiSession.parseJson. */
+    private static JsonElement parseJson(String json) {
+        #if MC_VERSION <= "11701"
+        return new JsonParser().parse(json);
+        #else
+        return JsonParser.parseString(json);
+        #endif
     }
 
     private static void saveIfDirty() {
