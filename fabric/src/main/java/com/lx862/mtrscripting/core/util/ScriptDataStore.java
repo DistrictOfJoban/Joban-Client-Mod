@@ -284,7 +284,7 @@ public class ScriptDataStore {
         try {
             if (Files.isRegularFile(file)) {
                 final String content = Files.readString(file, StandardCharsets.UTF_8);
-                final JsonElement parsed = JsonParser.parseString(content);
+                final JsonElement parsed = parseJson(content);
                 if (parsed.isJsonObject()) {
                     for (Map.Entry<String, JsonElement> entry : parsed.getAsJsonObject().entrySet()) {
                         if (values.size() < MAX_KEYS) values.put(entry.getKey(), entry.getValue());
@@ -296,6 +296,18 @@ public class ScriptDataStore {
                empty store; the next successful flush replaces it. */
             com.lx862.jcm.mod.util.JCMLogger.warn("Discarding unreadable script data store {}: {}", scriptId, e.toString());
         }
+    }
+
+    /* MC 1.17.1 bundles Gson 2.8.0, which predates the static
+       JsonParser.parseString (added in Gson 2.8.6); every other target
+       version ships a newer Gson. Manifold picks the right call per
+       version — same pattern as NativeApiSession.parseJson. */
+    private static JsonElement parseJson(String json) {
+        #if MC_VERSION <= "11701"
+        return new JsonParser().parse(json);
+        #else
+        return JsonParser.parseString(json);
+        #endif
     }
 
     private void writeNow() throws IOException {

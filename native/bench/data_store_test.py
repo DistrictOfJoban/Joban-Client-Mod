@@ -11,9 +11,13 @@ import argparse
 import hashlib
 import os
 import subprocess
+import sys
 import time
 import urllib.request
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from jvm_test import manifold_preprocess  # noqa: E402 — same #if semantics as the gradle build
 
 STUBS = {
     'com/lx862/jcm/mod/util/JCMLogger.java': 'package com.lx862.jcm.mod.util; public class JCMLogger { public static void warn(String s,Object... a) {} }',
@@ -87,7 +91,7 @@ def main():
     ]:
         f = work / 'src' / rel
         f.parent.mkdir(parents=True, exist_ok=True)
-        f.write_text((base / rel).read_text(encoding='utf-8'), encoding='utf-8')
+        f.write_text(manifold_preprocess((base / rel).read_text(encoding='utf-8')), encoding='utf-8')
         sources.append(f)
     test = work / 'src/com/lx862/mtrscripting/core/util/DataStoreTest.java'
     test.parent.mkdir(parents=True, exist_ok=True)
