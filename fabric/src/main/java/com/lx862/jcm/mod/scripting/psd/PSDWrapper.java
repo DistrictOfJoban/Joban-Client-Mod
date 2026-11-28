@@ -2,6 +2,7 @@ package com.lx862.jcm.mod.scripting.psd;
 
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
+import com.lx862.mtrscripting.core.integration.MinecraftClientWrapper;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalWrapper;
 import com.lx862.mtrscripting.mod.impl.mtr.vehicle.MagicRouteTypes;
@@ -198,6 +199,18 @@ public class PSDWrapper {
     /** Whether any door unit of this wall is currently open. */
     public boolean isDoorOpen() {
         return wallRun.doorValue > 0;
+    }
+
+    /**
+     * The client world's weather: {@code "clear"}, {@code "rain"} or
+     * {@code "thunder"} — the same value the native PSD snapshot's
+     * weather byte (ABI 15, offset 128) carries for C++ scripts, so JS
+     * and C++ glass/top-panel logic can share layout decisions (e.g.
+     * "rain: mind the gap" notices). Always {@code "clear"} without a
+     * loaded world.
+     */
+    public String getWeather() {
+        return MinecraftClientWrapper.worldWeather();
     }
 
     /* ---------------- Arrivals ---------------- */

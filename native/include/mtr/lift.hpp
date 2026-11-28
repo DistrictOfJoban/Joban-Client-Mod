@@ -18,6 +18,18 @@ public:
     double angle_degrees() const { return snapshot_->angle_degrees; }
     double angle_radians() const { return snapshot_->angle_radians; }
     int direction() const { return snapshot_->direction; }
+
+    /* ---- v15 (ABI 15): weather (JS: lift.getWeather()) ---- */
+
+    /* Typed weather state; CLEAR when no client world is loaded. */
+    Weather weather() const { return static_cast<Weather>(snapshot_->weather); }
+
+    /* String form — compare with the mtr::weather constants:
+       "clear" / "rain" / "thunder". Same value LiftWrapper.getWeather()
+       returns to JS scripts, so both sides share display logic (e.g.
+       lobby weather indicators). */
+    StrView getWeather() const { return weather_name(snapshot_->weather); }
+
     int floor_count() const { return snapshot_->floor_count; }
     const JcmLiftFloor& floor(int index) const {
         if (index < 0 || index >= floor_count()) throw std::out_of_range("Lift floor index");

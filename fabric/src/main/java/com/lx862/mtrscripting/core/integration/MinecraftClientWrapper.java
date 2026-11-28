@@ -26,6 +26,26 @@ public class MinecraftClientWrapper {
                 && MinecraftClient.getInstance().getWorldMapped().isThundering();
     }
 
+    /**
+     * The client world's weather as the canonical id every scripting
+     * wrapper's {@code getWeather()} returns: {@code "thunder"} when the
+     * world is thundering, {@code "rain"} when it is raining (a
+     * thunderstorm always reports rain too, so thunder wins), and
+     * {@code "clear"} otherwise — including when no client world is
+     * loaded. Mirrors the C++ {@code mtr::weather} string constants and
+     * the snapshot weather byte (0/1/2) of native ABI 15.
+     */
+    public static String worldWeather() {
+        if (worldIsThundering()) return WEATHER_THUNDER;
+        if (worldIsRaining()) return WEATHER_RAIN;
+        return WEATHER_CLEAR;
+    }
+
+    /** Weather ids shared by every scripting wrapper (JS + C++ ABI 15). */
+    public static final String WEATHER_CLEAR = "clear";
+    public static final String WEATHER_RAIN = "rain";
+    public static final String WEATHER_THUNDER = "thunder";
+
     public static boolean worldIsRainingAt(ScriptVector3f pos) {
         return MinecraftClient.getInstance().getWorldMapped() != null
                 && LoaderImpl.isRainingAt(World.cast(MinecraftClient.getInstance().getWorldMapped()), pos.rawBlockPos());

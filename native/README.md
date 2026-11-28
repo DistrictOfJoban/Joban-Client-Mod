@@ -319,6 +319,80 @@ Snapshot fields: `JcmStop.stop_status` and `JcmStop.station_deferred`
 (bytes, ABI 14) — they replace the former `_pad0[2]` in every layout group,
 so older modules and the ABI 6–13 layouts are unaffected.
 
+## Weather (ABI 15)
+
+Every snapshot now carries the client world's weather: `weather()` returns
+the typed `mtr::Weather` (`CLEAR` / `RAIN` / `THUNDER`) and `getWeather()`
+returns the string id `"clear"` / `"rain"` / `"thunder"` — the exact string
+the JS wrappers' `getWeather()` returns, so JS and C++ scripts share layout
+logic. Without a client world the value is always `"clear"`.
+
+```cpp
+if (psd.getWeather() == mtr::weather::RAIN) drawWetFloorNotice();
+switch (vehicle.weather()) {
+    case mtr::Weather::RAIN:    drawRainOverlay(); break;
+    case mtr::Weather::THUNDER: drawThunderOverlay(); break;
+    default: break;
+}
+```
+
+Snapshot fields (bytes, ABI 15): `JcmVehicleSnapshot.weather` (offset 165,
+former `_pad1[0]`), `JcmPidsSnapshot.weather` (63, former `_pad0`),
+`JcmEyecandySnapshot.weather` (67, former `_pad0`),
+`JcmLiftSnapshot.weather` (127, former `_pad0`); `JcmPsdSnapshot` — the
+only struct with no spare byte — grows 128 → 136 with `weather` at offset
+128. All are zeroed padding in the ABI ≤ 14 layouts, so older modules and
+the vehicle group-9 blob sharing are unaffected.
+
+JavaScript calls the same-named method directly (`pids.getWeather()`,
+`vehicle.getWeather()`, `psd.getWeather()`, `lift.getWeather()`,
+`eyecandy.getWeather()`); the value comes straight from the client world
+(`isThundering()` beats `isRaining()`, mirroring MTR's own weather PIDS
+components).
+
+## Persistent script data store ("数据存储")
+
+`context.getDataStore()` returns a JSON-file-backed key-value store scoped
+to the **script id** — shared by every instance of the script and persisted
+across game restarts under `<run dir>/data/mtrscripting/stores/`. Use it
+for counters, remembered destinations, or values an administrator edits by
+hand. JS scripts call `ctx.getDataStore()` and get a plain Java object;
+C++ scripts reach the very same object through the Api bridge:
+
+```cpp
+mtr::Api api(ctx.input());
+mtr::Api::Object store = api.context().call("getDataStore");
+double counted = store.call("getNumber", {"trains.counted", 0.0}).as<double>();
+store.call("set", {"trains.counted", counted + 1});
+const std::string dest = store.call("getString", {"last.destination", ""}).as<std::string>();
+bool known = store.call("has", {"setup.done"}).as<bool>();
+store.call("delete", {"last.destination"});
+```
+
+Members: `get(key)` (decoded JSON: string/number/boolean/null/list/map),
+typed getters `getString(key, def)` / `getNumber(key, def)` /
+`getBoolean(key, def)`, `set(key, value)`, `has(key)`, `delete(key)`
+(returns whether the key existed), `size()`, `keys()`, `clear()`. Values
+are JSON data — strings, numbers, booleans, null, arrays and nested
+objects (JS scripts may pass JS objects/arrays directly). The store is
+size-capped (256 keys / 64 KB serialized / 128-char keys / 32-level
+nesting) so a runaway script cannot grow the data directory unchecked;
+violations throw to the script's error path.
+
+Writes are debounced (one flush per store per ~1.6 s from the client tick,
+plus flushes on resource reload and JVM shutdown) and atomic
+(temp file + move), so a crash mid-write degrades to the previous good
+file. Per-**instance** state (per PIDS block, per PSD panel) is addressed
+by keying with the identity the wrapper already exposes:
+
+```cpp
+std::snprintf(key, sizeof(key), "x%ld.y%ld.z%ld", psd.block_pos(0), psd.block_pos(1), psd.block_pos(2));
+```
+
+The store lives in the run directory (like `Files.readData/saveData`
+data), not in the world save — the same script id shares data across
+worlds and servers.
+
 ## Interchange transport mode and type
 
 JavaScript now supports `interchange.getTransportMode()` plus

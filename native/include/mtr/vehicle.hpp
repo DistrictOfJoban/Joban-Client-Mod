@@ -317,6 +317,16 @@ public:
     int64_t game_time_millis() const { return snap_->game_time_millis; }
     int64_t in_game_time() const { return snap_->in_game_time; }
 
+    /* ---- v15 (ABI 15): weather (JS: vehicle.getWeather()) ---- */
+
+    /* Typed weather state; CLEAR when no client world is loaded. */
+    Weather weather() const { return static_cast<Weather>(snap_->weather); }
+
+    /* String form — compare with the mtr::weather constants:
+       "clear" / "rain" / "thunder". Same value VehicleWrapper.getWeather()
+       returns to JS scripts, so both sides share layout logic. */
+    StrView getWeather() const { return weather_name(snap_->weather); }
+
     Car car(int32_t i) const {
         if (i < 0 || i >= snap_->car_count) throw std::out_of_range("Vehicle car index");
         const uint8_t* base = reinterpret_cast<const uint8_t*>(snap_);

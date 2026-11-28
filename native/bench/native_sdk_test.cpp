@@ -19,6 +19,15 @@ int main() {
   static_assert(sizeof(JcmEyecandySnapshot)==88);
   static_assert(sizeof(JcmLiftSnapshot)==136);
   static_assert(sizeof(JcmLiftFloor)==48);
+  /* ABI 15: the weather byte rides the former padding of every struct
+     (vehicle _pad1[0] at 165, PIDS/eyecandy/lift _pad0); JcmPsdSnapshot —
+     the only struct without a spare byte — grows 128 -> 136. */
+  static_assert(offsetof(JcmVehicleSnapshot,weather)==165);
+  static_assert(offsetof(JcmPidsSnapshot,weather)==63);
+  static_assert(offsetof(JcmEyecandySnapshot,weather)==67);
+  static_assert(offsetof(JcmLiftSnapshot,weather)==127);
+  static_assert(sizeof(JcmPsdSnapshot)==136);
+  static_assert(offsetof(JcmPsdSnapshot,weather)==128);
   static_assert(offsetof(JcmDrawText,text_offset)==96);
   static_assert(offsetof(JcmDrawTexture,texture_offset)==68);
   /* Header flags byte (natural light): the old _pad0[0] at offset 1 —

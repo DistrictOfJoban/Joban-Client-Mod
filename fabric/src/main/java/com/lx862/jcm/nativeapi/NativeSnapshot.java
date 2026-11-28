@@ -54,6 +54,14 @@ import java.util.Map;
  * optional reflection bridge. Without the FangSu addon both bytes are
  * always 0 — byte-identical to the ABI≤13 zero padding.
  *
+ * <h2>ABI 15 (weather)</h2>
+ * {@code JcmVehicleSnapshot} offset 165 (the former padding byte after
+ * {@code circular_state}) carries the client world's weather state
+ * (0 clear / 1 rain / 2 thunder, mirroring
+ * {@link VehicleWrapper#getWeather()}). Pure padding in every ABI≤14
+ * layout, so the struct size, every other offset and the group-9 blob
+ * sharing are unchanged; the byte is written for every layout group.
+ *
  * <h2>Per-frame garbage</h2>
  * This builder runs per vehicle per frame. Every container it used to
  * allocate (stop lists, offset arrays, the string pool's HashMap nodes and
@@ -99,6 +107,12 @@ public final class NativeSnapshot {
     private static final int OFF_ROUTE_NAME_LEN = 156;
     private static final int OFF_ROUTE_COLOR = 160;
     private static final int OFF_CIRCULAR_STATE = 164;
+    /* ABI 15: the vehicle snapshot's weather byte — the former _pad1[0]
+       (offset 165). Written for every layout group: pure padding in the
+       ABI<=14 headers, never read by older modules, so the group-9 blob
+       sharing stays byte-compatible while ABI 15 modules see live
+       values. */
+    private static final int OFF_WEATHER = 165;
     private static final int OFF_SIDING_NAME_OFFSET = 168;
     private static final int OFF_SIDING_NAME_LEN = 172;
     private static final int OFF_STRING_POOL_OFFSET = 176;
@@ -390,6 +404,9 @@ public final class NativeSnapshot {
         out.putInt(OFF_ROUTE_NAME_LEN, Pool.length(routeNameRef));
         out.putInt(OFF_ROUTE_COLOR, route == null ? 0 : (route.getColor() | 0xFF000000));
         out.put(OFF_CIRCULAR_STATE, (byte) circularOrdinal(route));
+        /* ABI 15 (weather) is written for every layout group, same sharing
+           rule as the door-direction byte above. */
+        out.put(OFF_WEATHER, NativeContentSnapshot.weatherCode());
         out.putInt(OFF_SIDING_NAME_OFFSET, Pool.offset(sidingRef));
         out.putInt(OFF_SIDING_NAME_LEN, Pool.length(sidingRef));
         out.putInt(OFF_STRING_POOL_OFFSET, poolStart);

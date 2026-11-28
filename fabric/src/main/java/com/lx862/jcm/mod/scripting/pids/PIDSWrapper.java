@@ -3,6 +3,7 @@ package com.lx862.jcm.mod.scripting.pids;
 import com.lx862.jcm.mod.block.entity.PIDSBlockEntity;
 import com.lx862.mtrscripting.core.annotation.ApiInternal;
 import com.lx862.mtrscripting.core.annotation.ValueNullable;
+import com.lx862.mtrscripting.core.integration.MinecraftClientWrapper;
 import com.lx862.mtrscripting.core.util.ScriptVector3f;
 import com.lx862.mtrscripting.mod.impl.mtr.pids.ArrivalsWrapper;
 import org.mtr.core.data.Station;
@@ -91,6 +92,17 @@ public class PIDSWrapper {
 
     public boolean isPlatformAutoDetected() {
         return this.isAutoDetectPlatform;
+    }
+
+    /**
+     * The client world's weather: {@code "clear"}, {@code "rain"} or
+     * {@code "thunder"} — the same value the native snapshot's weather
+     * byte (ABI 15) carries for C++ scripts, so JS and C++ PIDS logic can
+     * share layout decisions. Always {@code "clear"} without a loaded
+     * world.
+     */
+    public String getWeather() {
+        return MinecraftClientWrapper.worldWeather();
     }
 
     public @ValueNullable Station station() {

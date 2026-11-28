@@ -1,6 +1,7 @@
 package com.lx862.mtrscripting.mod.impl.mtr;
 
 import com.lx862.jcm.mod.config.JCMClientConfig;
+import com.lx862.mtrscripting.core.util.ScriptDataStore;
 import com.lx862.mtrscripting.mod.gui.hud.MTRScriptDebugOverlay;
 import com.lx862.mtrscripting.mod.MTRScriptingModClient;
 import com.lx862.mtrscripting.mod.impl.mtr.util.ante.ANTEComponentUtilJS;
@@ -85,13 +86,22 @@ public class MTRContentScripting {
         if(clearedInstance > 0 && JCMClientConfig.INSTANCE.debugMode.value()) {
             MTRScriptingModClient.LOGGER.info("[MTR Scripting via JCM] Removed {} dead MTR script instance", clearedInstance);
         }
+        /* Script data stores: debounce disk writes to one flush window. */
+        if((tickCounter++ & 31) == 0) { /* every 32 client ticks (1.6 s) */
+            ScriptDataStore.flushAll();
+        }
     }
+
+    private static int tickCounter = 0;
 
     public static List<ExecutorService> getScriptExecutors() {
         return new ArrayList<>(scriptExecutors);
     }
 
     public static void reset() {
+        /* Persist every store before the script registry is wiped, then
+           drop the caches — the next getDataStore() reloads from disk. */
+        ScriptDataStore.reset();
         scriptManager.reset();
     }
 }

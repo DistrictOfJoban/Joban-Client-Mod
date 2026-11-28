@@ -40,6 +40,16 @@ public final class NativeContentSnapshot {
         return MinecraftClient.getInstance().getWorldMapped() == null ? 0 : com.lx862.mtrscripting.core.integration.MinecraftClientWrapper.worldDayTime();
     }
 
+    /** ABI 15: the client world's weather state, the same answer the JS
+     *  wrappers' getWeather() returns — 0 clear, 1 rain, 2 thunder.
+     *  Always 0 ("clear") when no client world is loaded, matching the
+     *  former zero padding byte for byte. */
+    static byte weatherCode() {
+        if (com.lx862.mtrscripting.core.integration.MinecraftClientWrapper.worldIsThundering()) return 2;
+        if (com.lx862.mtrscripting.core.integration.MinecraftClientWrapper.worldIsRaining()) return 1;
+        return 0;
+    }
+
     /** Client {@code SimplifiedRoute} by id — the same map
      *  {@code PSDWrapper.routes()} reads, and the object each route's stop
      *  list was built from, so the FangSu status lookup (ABI 14) matches the
@@ -58,6 +68,8 @@ public final class NativeContentSnapshot {
         buffer.putLong(32,System.currentTimeMillis()); buffer.putLong(40,day());
         buffer.putInt(48,pids.width); buffer.putInt(52,pids.height); buffer.putInt(56,pids.rows);
         buffer.put(61,(byte)(pids.isKeyBlock()?1:0)); buffer.put(62,(byte)(pids.isPlatformNumberHidden()?1:0));
+        /* ABI 15: the weather byte — the header's former _pad0 (offset 63). */
+        buffer.put(63,weatherCode());
         int rows=0; for (int i=0;i<Math.min(pids.rows,32);i++) if(pids.isRowHidden(i)) rows |= 1 << i;
         buffer.putInt(72,rows);
         List<ArrivalWrapper> arrivals = new ArrayList<>(); pids.arrivals().forEach(arrivals::add);
@@ -85,15 +97,21 @@ public final class NativeContentSnapshot {
     }
 
     /** JcmPsdSnapshot (ABI 12) — layout pinned by the static_asserts in
-     *  mtr_native.h. Header 128, JcmPsdDoor 32, JcmPsdArrival 104
-     *  (JcmArrival + door refs), JcmPsdRoute 48, stops/interchanges/exits
-     *  reuse the vehicle JcmStop layout. ABI 13 adds the station pools:
-     *  JcmPsdStation 96 at snapshot offset 124 (formerly padding),
-     *  JcmPsdStationInterchange 32, JcmPsdStationConnectingGroup 16.
+     *  mtr_native.h. Header 128 (136 since ABI 15, see below), JcmPsdDoor 32,
+     *  JcmPsdArrival 104 (JcmArrival + door refs), JcmPsdRoute 48,
+     *  stops/interchanges/exits reuse the vehicle JcmStop layout. ABI 13
+     *  adds the station pools: JcmPsdStation 96 at snapshot offset 124
+     *  (formerly padding), JcmPsdStationInterchange 32,
+     *  JcmPsdStationConnectingGroup 16.
      *  ABI 14 fills the JcmStop padding bytes 82/83 with the FangSu
      *  暂缓开通 / RouteStopStatus data (FangSuStopStatus) — unlike the
      *  vehicle path, PSD route-strip stops are NOT filtered by FangSu, so
-     *  these carry live values and are the primary consumer of the API. */
+     *  these carry live values and are the primary consumer of the API.
+     *  ABI 15 grows the header 128 -> 136 and puts the weather byte at
+     *  offset 128 — the struct had no spare byte left. Every pool the
+     *  writer places after the header moves with it, but all pool offsets
+     *  are blob-relative and host-computed, so ABI 12-14 modules (which
+     *  read only offsets < 128) are unaffected. */
     public static ByteBuffer psd(ByteBuffer buffer, com.lx862.jcm.mod.scripting.psd.PSDWrapper psd) {
         final com.lx862.jcm.mod.scripting.psd.PSDWallScanner.WallRun wallRun = psd.wallRun();
         final List<com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDDoorWrapper> doors = psd.doors();
@@ -105,7 +123,7 @@ public final class NativeContentSnapshot {
             routeStops.add(route.stops());
         }
 
-        final NativeContentSnapshot out = new NativeContentSnapshot(buffer, 128);
+        final NativeContentSnapshot out = new NativeContentSnapshot(buffer, 136);
         final org.mtr.core.data.Platform platform = psd.platformData();
 
         /* Header (absolute puts; pools are reserved below). */
@@ -117,6 +135,10 @@ public final class NativeContentSnapshot {
         buffer.putDouble(56, wallRun.doorValue);
         buffer.putInt(64, psd.type == com.lx862.jcm.mod.scripting.psd.PSDWrapper.PSDType.TOP ? 1 : 0);
         buffer.putInt(68, psd.width); buffer.putInt(72, psd.height);
+        /* ABI 15: the weather byte at offset 128 — the struct's only free
+           slot required growing the header 128 -> 136 (see the method
+           javadoc above for the ABI 12-14 compatibility argument). */
+        buffer.put(128, weatherCode());
 
         /* ---- reserve every struct pool (all offsets blob-relative) ---- */
         final int doorOffset = out.reserve(doors.size() * 32, 8);
@@ -388,6 +410,8 @@ public final class NativeContentSnapshot {
         buffer.putFloat(52,block.getRotateX()); buffer.putFloat(56,block.getRotateY()); buffer.putFloat(60,block.getRotateZ());
         buffer.put(64,(byte)(block.getFullBrightness()?1:0)); buffer.put(65,(byte)block.facing().ordinal());
         buffer.put(66,(byte)(block.isCrosshairTarget()?1:0)); buffer.putInt(68,block.redstoneLevel());
+        /* ABI 15: the weather byte — the header's former _pad0 (offset 67). */
+        buffer.put(67,weatherCode());
         buffer.putInt(80,used?1:0); out.string(72,block.getModelId());
         return out.finish();
     }
@@ -402,6 +426,8 @@ public final class NativeContentSnapshot {
         buffer.putDouble(96,lift.getAngleDegrees()); buffer.putDouble(104,lift.getAngleRadians()); buffer.putDouble(112,lift.getDoorValue());
         buffer.putInt(120,lift.getDirection()); buffer.put(124,(byte)(lift.shouldRender()?1:0));
         buffer.put(125,(byte)(lift.isDoubleSided()?1:0)); buffer.put(126,(byte)(lift.isClientPlayerRiding()?1:0));
+        /* ABI 15: the weather byte — the header's former _pad0 (offset 127). */
+        buffer.put(127,weatherCode());
         List<LiftWrapper.Floor> floors=lift.getFloors(); int floorOffset=out.reserve(floors.size()*48,8);
         buffer.putInt(128,floors.size()); buffer.putInt(132,floorOffset);
         for(int i=0;i<floors.size();i++) {

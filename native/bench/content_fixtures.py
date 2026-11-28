@@ -3,7 +3,7 @@ STUBS = {
  'com/lx862/mtrscripting/core/util/ScriptVector3f.java': 'package com.lx862.mtrscripting.core.util; public record ScriptVector3f(float x,float y,float z){public org.mtr.mapping.holder.BlockPos rawBlockPos(){return new org.mtr.mapping.holder.BlockPos((int)x,(int)y,(int)z);}}',
  'org/mtr/mapping/holder/BlockPos.java': 'package org.mtr.mapping.holder; public class BlockPos {final int x,y,z; public BlockPos(int x,int y,int z){this.x=x;this.y=y;this.z=z;} public int getX(){return x;} public int getY(){return y;} public int getZ(){return z;}}',
  'org/mtr/mapping/holder/MinecraftClient.java': 'package org.mtr.mapping.holder; public class MinecraftClient {public static MinecraftClient getInstance(){return new MinecraftClient();} public Object getWorldMapped(){return this;}}',
- 'com/lx862/mtrscripting/core/integration/MinecraftClientWrapper.java': 'package com.lx862.mtrscripting.core.integration; public class MinecraftClientWrapper {public static long worldDayTime(){return 12000;}}',
+ 'com/lx862/mtrscripting/core/integration/MinecraftClientWrapper.java': 'package com.lx862.mtrscripting.core.integration; public class MinecraftClientWrapper {public static long worldDayTime(){return 12000;} public static boolean worldIsRaining(){return Boolean.getBoolean("jcm.test.worldRain");} public static boolean worldIsThundering(){return Boolean.getBoolean("jcm.test.worldThunder");}}',
  'org/mtr/core/data/SavedRailBase.java': 'package org.mtr.core.data; public class SavedRailBase {}',
  'org/mtr/core/data/Route.java': '''package org.mtr.core.data;
  public class Route {

@@ -61,6 +61,18 @@ public:
     int64_t game_time_millis() const { return snap_->game_time_millis; }
     int64_t in_game_time() const { return snap_->in_game_time; }
 
+    /* ---- v15 (ABI 15): weather (JS: eyecandy.getWeather()) ---- */
+
+    /* Typed weather state; CLEAR when no client world is loaded. */
+    Weather weather() const { return static_cast<Weather>(snap_->weather); }
+
+    /* String form — compare with the mtr::weather constants:
+       "clear" / "rain" / "thunder". Same value
+       EyecandyBlockEntityWrapper.getWeather() returns to JS scripts, so
+       both sides share display decisions (e.g. rain-only awning
+       variants). */
+    StrView getWeather() const { return weather_name(snap_->weather); }
+
     /* Pending onBlockUse events this frame (bitmask; the host coalesces
        multiple clicks per frame — the JS event queue behaves the same). */
     uint32_t block_use_events() const { return snap_->block_use_events; }

@@ -109,8 +109,22 @@ extern "C" {
    ("normal" / not deferred — identical return values to the
    non-deferred case). The bump keeps the invariant that an ABI 14 host
    loads ABI 6–14 modules while an ABI 13 host refuses ABI 14 modules
-   (their stop-status-aware scripts would otherwise silently read padding). */
-#define MTR_NATIVE_ABI_VERSION 14
+   (their stop-status-aware scripts would otherwise silently read padding).
+   ABI 15 adds the weather byte to every snapshot kind: JcmVehicleSnapshot
+   offset 165 (former _pad1[0]), JcmPidsSnapshot offset 63 (former _pad0),
+   JcmLiftSnapshot offset 127 (former _pad0), JcmEyecandySnapshot offset 67
+   (former _pad0), and — the only struct with no spare byte — JcmPsdSnapshot
+   grows 128 -> 136 with weather at offset 128 (every pool the host writes
+   moves with it, all pool offsets are blob-relative and host-computed, so
+   ABI 12–14 modules reading only offsets < 128 are unaffected). The value
+   mirrors the JS wrappers' getWeather(): 0 "clear", 1 "rain", 2 "thunder",
+   straight from the client world. Purely additive — every repurposed byte
+   was zeroed padding no older module reads, and the host still writes 0
+   whenever the client world is absent. The bump keeps the invariant that
+   an ABI 15 host loads ABI 6–15 modules while an ABI 14 host refuses
+   ABI 15 modules (their weather-aware scripts would otherwise silently
+   read padding). */
+#define MTR_NATIVE_ABI_VERSION 15
 
 /* Resource kinds, identical to JCM script contexts. */
 enum MtrResourceKind {
@@ -439,7 +453,13 @@ typedef struct JcmVehicleSnapshot {
     int32_t  route_name_len;
     int32_t  route_color;         /* ARGB, host-safe default 0xFF009BC0 */
     uint8_t  circular_state;      /* 0 none, 1 clockwise, 2 anticlockwise */
-    uint8_t  _pad1[3];
+    /* v15 (ABI 15): the client world's weather state — 0 clear, 1 rain,
+       2 thunder — mirroring VehicleWrapper.getWeather(). The host writes
+       0 whenever no client world is loaded. Former _pad1[0]; pure padding
+       in every ABI<=14 layout, never read by older modules, so the layout
+       and the group-9 blob sharing are unchanged. */
+    uint8_t  weather;
+    uint8_t  _pad1[2];
     /* v2: siding display name (JS: vehicle.getSiding().getName()) —
        can contain a user-defined name or description. */
     int32_t  siding_name_offset;
@@ -479,7 +499,10 @@ typedef struct JcmPidsSnapshot {
     int8_t   pids_type;           /* 0 single, 1 double-sided ... */
     uint8_t  key_block;
     uint8_t  platform_number_hidden;
-    uint8_t  _pad0;
+    /* v15 (ABI 15): the client world's weather state — 0 clear, 1 rain,
+       2 thunder — mirroring PIDSWrapper.getWeather(); 0 without a world.
+       Former _pad0; pure padding in every ABI<=14 layout. */
+    uint8_t  weather;
     int32_t  arrival_count;
     int32_t  arrival_offset;      /* JcmArrival[] */
     int32_t  row_hidden_bits;     /* bit i = row i hidden (mirrors isRowHidden) */
@@ -582,6 +605,14 @@ typedef struct JcmPsdSnapshot {
        ABI 12 (zeroed by the writer, never read by any module), so the
        snapshot layout is unchanged and ABI 12 modules keep loading. */
     int32_t  station_offset;
+    /* v15 (ABI 15): the client world's weather state — 0 clear, 1 rain,
+       2 thunder — mirroring PSDWrapper.getWeather(); 0 without a world.
+       JcmPsdSnapshot had no spare byte, so the struct grows 128 -> 136:
+       every pool the host writes moves with it, but all pool offsets are
+       blob-relative and host-computed, so ABI 12-14 modules (which read
+       only offsets < 128) are unaffected. */
+    uint8_t  weather;
+    uint8_t  _pad0[7];
 } JcmPsdSnapshot;
 
 #ifdef __cplusplus
@@ -591,7 +622,7 @@ typedef struct JcmPsdSnapshot {
 static_assert(sizeof(JcmPsdArrival) == 104, "JcmPsdArrival layout changed");
 static_assert(sizeof(JcmPsdRoute)   == 48,  "JcmPsdRoute layout changed");
 static_assert(sizeof(JcmPsdDoor)    == 32,  "JcmPsdDoor layout changed");
-static_assert(sizeof(JcmPsdSnapshot) == 128, "JcmPsdSnapshot layout changed");
+static_assert(sizeof(JcmPsdSnapshot) == 136, "JcmPsdSnapshot layout changed");
 #endif
 
 /* ABI 13: the station a PSD belongs to — mirrors the JS psd.stop()
@@ -672,7 +703,10 @@ typedef struct JcmLiftSnapshot {
     double angle_degrees, angle_radians, door_value;
     int32_t direction;
     uint8_t should_render, double_sided, player_riding;
-    uint8_t _pad0;
+    /* v15 (ABI 15): the client world's weather state — 0 clear, 1 rain,
+       2 thunder — mirroring LiftWrapper.getWeather(); 0 without a world.
+       Former _pad0; pure padding in every ABI<=14 layout. */
+    uint8_t weather;
     int32_t floor_count, floor_offset;
 } JcmLiftSnapshot;
 
@@ -686,7 +720,11 @@ typedef struct JcmEyecandySnapshot {
     uint8_t  full_brightness;
     uint8_t  facing;              /* 0..5 like MC Direction */
     uint8_t  crosshair_target;
-    uint8_t  _pad0;
+    /* v15 (ABI 15): the client world's weather state — 0 clear, 1 rain,
+       2 thunder — mirroring EyecandyBlockEntityWrapper.getWeather(); 0
+       without a world. Former _pad0; pure padding in every ABI<=14
+       layout. */
+    uint8_t  weather;
     int32_t  redstone_level;      /* 0..15 */
     int32_t  model_id_offset;     /* UTF-8 into pool */
     int32_t  model_id_len;

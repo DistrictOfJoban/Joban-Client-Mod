@@ -46,6 +46,42 @@ inline StrView make_view(const char* data, int32_t len) {
     return v;
 }
 
+/*
+ * Weather ids (ABI 15) — the exact strings the JS wrappers' getWeather()
+ * returns, so scripts compare identically on both sides (same convention
+ * as transport_type / door_direction / stop_status):
+ *   "clear"   — no rain (also the value when no client world is loaded)
+ *   "rain"    — the world is raining
+ *   "thunder" — the world is in a thunderstorm (a storm rains too, but
+ *               thunder wins the classification)
+ * Snapshot fields: JcmVehicleSnapshot.weather (offset 165),
+ * JcmPidsSnapshot.weather (63), JcmPsdSnapshot.weather (128),
+ * JcmLiftSnapshot.weather (127), JcmEyecandySnapshot.weather (67).
+ */
+namespace weather {
+    constexpr const char* CLEAR   = "clear";
+    constexpr const char* RAIN    = "rain";
+    constexpr const char* THUNDER = "thunder";
+}
+
+/* Typed form of every snapshot's weather byte (values documented in
+   mtr_native.h). */
+enum class Weather : uint8_t {
+    CLEAR   = 0,
+    RAIN    = 1,
+    THUNDER = 2
+};
+
+/* Shared weather accessors: every typed wrapper exposes weather()
+   (typed) and getWeather() (the string id) through these one-liners. */
+inline StrView weather_name(uint8_t code) {
+    switch (code) {
+        case 1:  return make_view(weather::RAIN, 4);
+        case 2:  return make_view(weather::THUNDER, 7);
+        default: return make_view(weather::CLEAR, 5);
+    }
+}
+
 /**
  * StateTracker — 1:1 port of StateTrackerJS. The JS class is constructed
  * with `new StateTracker()` and reads Timing.globalElapsed() itself; the

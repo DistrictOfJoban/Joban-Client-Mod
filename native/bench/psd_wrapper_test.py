@@ -16,6 +16,9 @@ STUBS = dict(WALL_STUBS)
 del STUBS['com/lx862/jcm/mod/scripting/psd/PSDWrapper.java']
 STUBS['com/lx862/mtrscripting/core/util/ScriptVector3f.java'] = BINDING_STUBS['com/lx862/mtrscripting/core/util/ScriptVector3f.java']
 STUBS.update({
+    # The real PSDWrapper.getWeather() (ABI 15) reads the world state
+    # through MinecraftClientWrapper.worldWeather().
+    'com/lx862/mtrscripting/core/integration/MinecraftClientWrapper.java': 'package com.lx862.mtrscripting.core.integration; public class MinecraftClientWrapper { public static String worldWeather() { return "clear"; } }',
     'org/mtr/core/data/SavedRailBase.java': 'package org.mtr.core.data; public class SavedRailBase {}',
     'org/mtr/core/data/Platform.java': '''package org.mtr.core.data;
 import java.util.*;

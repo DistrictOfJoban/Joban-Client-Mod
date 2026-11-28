@@ -40,6 +40,8 @@ int main() {
     FIELD(OFF_ROUTE_NAME_LEN, JcmVehicleSnapshot, route_name_len);
     FIELD(OFF_ROUTE_COLOR, JcmVehicleSnapshot, route_color);
     FIELD(OFF_CIRCULAR_STATE, JcmVehicleSnapshot, circular_state);
+    /* ABI 15: the weather byte (former padding after circular_state). */
+    FIELD(OFF_VEHICLE_WEATHER, JcmVehicleSnapshot, weather);
     FIELD(OFF_SIDING_NAME_OFFSET, JcmVehicleSnapshot, siding_name_offset);
     FIELD(OFF_SIDING_NAME_LEN, JcmVehicleSnapshot, siding_name_len);
     FIELD(OFF_STRING_POOL_OFFSET, JcmVehicleSnapshot, string_pool_offset);
@@ -103,6 +105,8 @@ int main() {
        pools (pinned by the static_asserts in mtr_native.h and hard-coded
        in NativeContentSnapshot.psd). */
     FIELD(PSD_STATION_OFFSET, JcmPsdSnapshot, station_offset);
+    /* ABI 15: the weather byte — the struct's growth from 128 to 136. */
+    FIELD(PSD_WEATHER, JcmPsdSnapshot, weather);
     SIZE(SZ_PSD_STATION_INTERCHANGE, JcmPsdStationInterchange);
     SIZE(SZ_PSD_STATION_CONNECTING_GROUP, JcmPsdStationConnectingGroup);
     SIZE(SZ_PSD_STATION, JcmPsdStation);

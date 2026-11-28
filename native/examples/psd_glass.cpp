@@ -99,6 +99,22 @@ struct NextArrivalGlass : mtr::PsdScript<GlassState> {
                 .color(arrival.door_count() > 0 ? 0x00C853 : 0x888888)
                 .draw(ctx);
 
+        /* ABI 15 (weather): a rain/thunder notice line, e.g. the transit
+           "雨天请注意地滑" (mind the wet floor) notice — the same string
+           the JS psd.getWeather() returns, so both script kinds share the
+           layout logic. */
+        if (psd.weather() != mtr::Weather::CLEAR) {
+            std::snprintf(buffer, sizeof(buffer), "%s · 小心地滑 Mind the wet floor",
+                          psd.getWeather() == mtr::weather::THUNDER ? "雷暴" : "雨天");
+            mtr::Text::create()
+                    .text(buffer)
+                    .pos(3, 66)
+                    .size(psd.width() - 6, 10)
+                    .stretch_xy()
+                    .color(0x64B5F6)
+                    .draw(ctx);
+        }
+
         /* Route strip: every station of the first route, interchange-colored.
            ABI 14: stops of a deferred (暂缓开通) station or crossed-out
            platform draw gray — isDeferredStop() is the same verdict FangSu's

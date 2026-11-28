@@ -481,6 +481,18 @@ public class VehicleWrapper {
     public boolean isClientPlayerRiding() {
         return VehicleRidingMovement.isRiding(vehicleExtension.getId());
     }
+
+    /**
+     * The client world's weather: {@code "clear"}, {@code "rain"} or
+     * {@code "thunder"} — the same value the native vehicle snapshot's
+     * weather byte (ABI 15, offset 165) carries for C++ scripts, so JS
+     * and C++ vehicle logic can share layout decisions. Always
+     * {@code "clear"} without a loaded world.
+     */
+    public String getWeather() {
+        return com.lx862.mtrscripting.core.integration.MinecraftClientWrapper.worldWeather();
+    }
+
     public VehicleExtension getMtrVehicle() {
         return this.vehicleExtension;
     }

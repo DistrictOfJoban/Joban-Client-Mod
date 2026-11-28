@@ -86,6 +86,17 @@ public class LiftWrapper {
         return this.liftObject;
     }
 
+    /**
+     * The client world's weather: {@code "clear"}, {@code "rain"} or
+     * {@code "thunder"} — the same value the native lift snapshot's
+     * weather byte (ABI 15, offset 127) carries for C++ scripts, so JS
+     * and C++ lift logic can share display decisions (e.g. lobby weather
+     * indicators). Always {@code "clear"} without a loaded world.
+     */
+    public String getWeather() {
+        return com.lx862.mtrscripting.core.integration.MinecraftClientWrapper.worldWeather();
+    }
+
     public boolean shouldRender() {
         return this.shouldRender;
     }

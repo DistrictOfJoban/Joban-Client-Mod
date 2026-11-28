@@ -66,6 +66,17 @@ public class EyecandyBlockEntityWrapper {
         return this.prefabId;
     }
 
+    /**
+     * The client world's weather: {@code "clear"}, {@code "rain"} or
+     * {@code "thunder"} — the same value the native eyecandy snapshot's
+     * weather byte (ABI 15, offset 67) carries for C++ scripts, so JS
+     * and C++ eyecandy logic can share display decisions (e.g. rain-only
+     * awning variants). Always {@code "clear"} without a loaded world.
+     */
+    public String getWeather() {
+        return com.lx862.mtrscripting.core.integration.MinecraftClientWrapper.worldWeather();
+    }
+
     public float getTranslateX() {
         return this.translateX;
     }

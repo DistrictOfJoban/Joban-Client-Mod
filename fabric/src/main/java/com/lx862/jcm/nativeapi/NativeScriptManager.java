@@ -141,13 +141,26 @@ public final class NativeScriptManager {
        table are byte-identical to ABI 13 — and without FangSu installed
        both bytes are always 0, the exact non-deferred answers. The bump
        keeps an ABI 14 module away from an ABI 13 host, which would
-       otherwise feed it zero padding. An ABI 14 host loads ABI 6–14. */
-    private static final int ABI_VERSION = 14;
+       otherwise feed it zero padding. An ABI 14 host loads ABI 6–14.
+       v15 adds the weather byte to every snapshot kind (mirroring the
+       JS wrappers' getWeather(): 0 "clear", 1 "rain", 2 "thunder" from the
+       client world): JcmVehicleSnapshot offset 165 (former _pad1[0]),
+       JcmPidsSnapshot offset 63 (former _pad0), JcmLiftSnapshot offset 127
+       (former _pad0), JcmEyecandySnapshot offset 67 (former _pad0), and
+       JcmPsdSnapshot grows 128 -> 136 with weather at offset 128 (all
+       pool offsets are blob-relative and host-computed, so ABI 12-14
+       modules reading only offsets < 128 are unaffected). Purely additive
+       — every repurposed byte was zeroed padding no older module reads,
+       and without a client world every byte stays 0 ("clear"). An
+       ABI 15 host loads ABI 6–15; an ABI 14 host refuses ABI 15 modules
+       (their weather-aware scripts would otherwise silently read
+       padding). */
+    private static final int ABI_VERSION = 15;
 
     private static boolean supportedAbi(int version) {
-        /* Contiguous 6..current: 6 through 13 are all explicitly
+        /* Contiguous 6..current: 6 through 14 are all explicitly
            loadable by this host, same as their own hosts did. */
-        return (version >= 6 && version <= 13) || version == ABI_VERSION;
+        return (version >= 6 && version <= 14) || version == ABI_VERSION;
     }
 
     /* Route.CircularState mapping (v2 snapshots). */

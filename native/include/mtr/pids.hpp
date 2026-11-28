@@ -120,6 +120,16 @@ public:
     int64_t game_time_millis() const { return snap_->game_time_millis; }
     int64_t in_game_time() const { return snap_->in_game_time; }
 
+    /* ---- v15 (ABI 15): weather (JS: pids.getWeather()) ---- */
+
+    /* Typed weather state; CLEAR when no client world is loaded. */
+    Weather weather() const { return static_cast<Weather>(snap_->weather); }
+
+    /* String form — compare with the mtr::weather constants:
+       "clear" / "rain" / "thunder". Same value PIDSWrapper.getWeather()
+       returns to JS scripts, so both sides share layout logic. */
+    StrView getWeather() const { return weather_name(snap_->weather); }
+
     bool is_row_hidden(int32_t i) const {
         if (i < 0 || i >= 32) return false;
         return (snap_->row_hidden_bits >> i) & 1;

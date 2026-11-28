@@ -7,38 +7,40 @@
 
 int main() {
     /* Station pools must stay within the validated PSD snapshot extent,
-       including nested routes/exits and hostile offsets/counts. */
+       including nested routes/exits and hostile offsets/counts. ABI 15
+       grew the snapshot header 128 -> 136 (weather byte), so every pool
+       offset below starts at 136 or later. */
     {
         alignas(8) uint8_t blob[512]{};
         auto* snap = reinterpret_cast<JcmPsdSnapshot*>(blob);
         snap->string_pool_offset = 400;
         snap->string_pool_len = 3;
-        snap->station_offset = 128;
-        auto* station = reinterpret_cast<JcmPsdStation*>(blob + 128);
+        snap->station_offset = 136;
+        auto* station = reinterpret_cast<JcmPsdStation*>(blob + 136);
         station->station_id = 42;
         station->name_offset = 400;
         station->name_len = 3;
-        station->interchange_offset = 224;
+        station->interchange_offset = 232;
         station->interchange_count = 1;
-        station->connecting_offset = 256;
+        station->connecting_offset = 264;
         station->connecting_count = 1;
-        station->exit_offset = 272;
+        station->exit_offset = 280;
         station->exit_count = 1;
-        station->platform_offset = 288;
+        station->platform_offset = 296;
         station->platform_count = 1;
-        station->connected_station_offset = 288;
+        station->connected_station_offset = 296;
         station->connected_station_count = 1;
-        auto* interchange = reinterpret_cast<JcmPsdStationInterchange*>(blob + 224);
+        auto* interchange = reinterpret_cast<JcmPsdStationInterchange*>(blob + 232);
         interchange->route_id = 43;
         interchange->name_offset = 400;
         interchange->name_len = 3;
-        auto* group = reinterpret_cast<JcmPsdStationConnectingGroup*>(blob + 256);
-        group->route_offset = 224;
+        auto* group = reinterpret_cast<JcmPsdStationConnectingGroup*>(blob + 264);
+        group->route_offset = 232;
         group->route_count = 1;
-        auto* exit = reinterpret_cast<JcmExit*>(blob + 272);
-        exit->destination_offset = 288;
+        auto* exit = reinterpret_cast<JcmExit*>(blob + 280);
+        exit->destination_offset = 296;
         exit->destination_count = 1;
-        auto* ref = reinterpret_cast<JcmStrRef*>(blob + 288);
+        auto* ref = reinterpret_cast<JcmStrRef*>(blob + 296);
         ref->offset = 400;
         ref->len = 3;
         std::memcpy(blob + 400, "PSD", 3);
@@ -59,14 +61,17 @@ int main() {
                 || value.platform(0) != "" || value.connected_station(0) != "") {
             std::fprintf(stderr, "FAIL: malformed PSD nested pools were not bounded\n"); return 1;
         }
-        for (int32_t offset : {-1, 0, 129, 400, INT32_MAX}) {
+        /* -1/0/129/135 land inside (or before) the ABI 15 header, 400
+           collides with the string pool, INT32_MAX is hostile. */
+        for (int32_t offset : {-1, 0, 129, 135, 400, INT32_MAX}) {
             snap->station_offset = offset;
             if (mtr::Psd(snap, 403).has_station()) {
                 std::fprintf(stderr, "FAIL: malformed PSD station offset accepted\n"); return 1;
             }
         }
-        snap->station_offset = 128;
+        snap->station_offset = 136;
         if (mtr::Psd(snap, 127).has_station() || mtr::Psd(snap, 402).has_station()
+                || mtr::Psd(snap, 135).has_station()
                 || mtr::Psd(nullptr, 0).stop().ok()) {
             std::fprintf(stderr, "FAIL: short PSD snapshot accepted\n"); return 1;
         }

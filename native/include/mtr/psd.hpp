@@ -562,6 +562,19 @@ public:
     int64_t game_time_millis() const { return snap_->game_time_millis; }
     int64_t in_game_time() const { return snap_->in_game_time; }
 
+    /* ---- v15 (ABI 15): weather (JS: psd.getWeather()) ----
+       The struct had no spare byte, so ABI 15 grows the snapshot header
+       128 -> 136 with the weather byte at offset 128. */
+
+    /* Typed weather state; CLEAR when no client world is loaded. */
+    Weather weather() const { return static_cast<Weather>(snap_->weather); }
+
+    /* String form — compare with the mtr::weather constants:
+       "clear" / "rain" / "thunder". Same value PSDWrapper.getWeather()
+       returns to JS scripts, so both sides share layout logic (e.g.
+       "rain: mind the gap" notices on glass panels). */
+    StrView getWeather() const { return weather_name(snap_->weather); }
+
     /** Current door open amount of the wall, 0..1. */
     double door_value() const { return snap_->door_value; }
     bool is_door_open() const { return snap_->door_value > 0; }

@@ -22,6 +22,10 @@ struct ContentProbe : mtr::ScriptBase<ContentState, Adapter> {
     void render(Adapter::Context& context,ContentState& state,const Adapter::Wrapper& wrapper) override {
         mtr::Api api(context.input());
         if(api.context().call("largeId").as<int64_t>()!=9223372036854775000LL) throw std::runtime_error("content context");
+        /* ABI 15: the weather byte — the harness sets the stubbed world to
+           rain, so every snapshot kind must read it back as RAIN (both the
+           typed enum and the string id the JS side returns). */
+        if(wrapper.weather()!=mtr::Weather::RAIN || wrapper.getWeather()!=mtr::weather::RAIN) throw std::runtime_error("weather snapshot");
 #if CONTENT_KIND == 1
         if(wrapper.width()!=42 || wrapper.arrivals().size()!=1 || wrapper.arrivals().at(0).destination()!="测试终点") throw std::runtime_error("PIDS snapshot");
         if(wrapper.get_custom_message(0)!="自定义") throw std::runtime_error("PIDS custom message");
